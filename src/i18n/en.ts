@@ -1,4 +1,4 @@
-// İngilizce sözlük (anahtar: Türkçe kaynak metin). scripts/i18n-merge.cjs ile üretilir.
+// EN sözlük (anahtar: Türkçe kaynak metin). scripts/i18n-merge.cjs ile üretilir.
 export const EN: Record<string, string> = {
   "DÖVÜŞ": "FIGHT",
   "KEMER": "BELT",

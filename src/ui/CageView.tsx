@@ -30,24 +30,24 @@ function classify(line: string, fs: FightState): Ev {
   const pi = t.indexOf(fs.pAd.toLocaleLowerCase(LOC));
   const oi = t.indexOf(fs.oAd.toLocaleLowerCase(LOC));
   let kim: Side = pi >= 0 && (oi < 0 || pi < oi) ? 'p' : oi >= 0 ? 'o' : 'p';
-  if (oi >= 0 && /seni |sana |gözlerini açtığında|tap attın|yığıldın|yakaladı seni|you |your |caught you|you tapped|you collapse|you open your eyes/.test(t)) kim = 'o';
-  const miss = /boşa|ıskal|savuştur|bloke|kaçtı|sıyrıl|okudu|savundu|kaçındı|miss|block|slip|dodge|parr|read it|defend|avoid|escape|sprawl/.test(t);
-  const escape = /sıyrıl|kurtul|kilidinden çık|ayağa kalk|açıldı|kaçtı|escape|broke free|breaks free|got out|gets out|back up|to (his|her|their|your) feet/.test(t);
-  const tap = /tap att|tapped|taps out/.test(t);
-  const sub = /rnc|arkadan|sırtını al|rear-naked|the back/.test(t) ? 'rnc' : /üçgen|triangle/.test(t) && !/arm-triangle/.test(t) ? 'triangle' : /giyotin|guillotine|d'arce|anakonda|anaconda|arm-triangle/.test(t) ? 'guillotine' : 'armbar';
-  const kick = /kafa(ya)? .*tekme|yüksek tekme|head kick|high kick/.test(t) ? 'headKick' : /bacağ|low kick|alçak|leg kick|calf/.test(t) ? 'lowKick' : 'bodyKick';
-  const strike = /dönerek|spinning/.test(t) ? 'spin' : /aparkat|uppercut/.test(t) ? 'upper' : /kroşe|hook/.test(t) && !/heel hook/.test(t) ? 'hook' : /dirsek|elbow/.test(t) ? 'elbow' : /jab/.test(t) ? 'jab' : /diz|knee/.test(t) ? 'knee' : 'cross';
+  if (oi >= 0 && /seni |sana |gözlerini açtığında|tap attın|yığıldın|yakaladı seni|\byou |\byour |caught you|you tapped|you collapse|you open your eyes|\bte |\btu |abriste los ojos|te rendiste|te desplomaste/.test(t)) kim = 'o';
+  const miss = /boşa|ıskal|savuştur|bloke|kaçtı|sıyrıl|okudu|savundu|kaçındı|miss|block|slip|dodge|parr|read it|defend|avoid|escape|sprawl|falló|bloque|esquiv|defendi|leyó|evit|escap/.test(t);
+  const escape = /sıyrıl|kurtul|kilidinden çık|ayağa kalk|açıldı|kaçtı|escape|broke free|breaks free|got out|gets out|back up|to (his|her|their|your) feet|escap|se levant|zaf/.test(t);
+  const tap = /tap att|tapped|taps out|se rindió|te rendiste/.test(t);
+  const sub = /rnc|arkadan|sırtını al|rear-naked|the back|mataleón|la espalda/.test(t) ? 'rnc' : /üçgen|triangle|triángulo/.test(t) && !/arm-triangle/.test(t) ? 'triangle' : /giyotin|guillotine|guillotina|d'arce|anakonda|anaconda|arm-triangle/.test(t) ? 'guillotine' : 'armbar';
+  const kick = /kafa(ya)? .*tekme|yüksek tekme|head kick|high kick|patada a la cabeza|patada alta/.test(t) ? 'headKick' : /bacağ|low kick|alçak|leg kick|calf|a la pierna/.test(t) ? 'lowKick' : 'bodyKick';
+  const strike = /dönerek|spinning|giratori/.test(t) ? 'spin' : /aparkat|uppercut/.test(t) ? 'upper' : /kroşe|hook|gancho/.test(t) && !/heel hook/.test(t) ? 'hook' : /dirsek|elbow|codazo|codos/.test(t) ? 'elbow' : /jab/.test(t) ? 'jab' : /diz|knee|rodill/.test(t) ? 'knee' : 'cross';
   const E = (tur: string, alt = ''): Ev => ({ tur, alt, kim, miss, escape, tap });
-  if (/^— \d+\. raunt|^— round \d+/.test(t)) return E('round');
-  if (/nakavt|uyuttu|bilinçsiz|yere yığıl|ışıklar söndü|hakem (araya|durdurdu|hemen)|havlu|tko|knockout|knocked out|to sleep|unconscious|lights (went|go) out|referee (jumps|steps|stops|waves)|towel|stoppage/.test(t)) return E('ko', /tekme|kick/.test(t) ? 'headKick' : strike);
-  if (/tap att|kilidi|kilid|boğma|armbar|kimura|giyotin|heel hook|kneebar|üçgen|arm-triangle|anakonda|d'arce|submission|🔒|tapped|choke|guillotine|triangle|anaconda|lock/.test(t)) return E('sub', sub);
-  if (/sarsıl|sendeled|bacakları titr|yere düştü|knockdown|yere gönderdi|dizleri|rocked|stagger|wobbl|legs shaking|dropped|goes down|went down|hurt/.test(t)) return E('rock', /tekme|kick/.test(t) ? 'headKick' : strike);
-  if (/ground and pound|ground & pound|üstten|yerde (sert|vur|ağır)|mount|yağdır|from the top|on top|rains down/.test(t)) return E('gnp');
-  if (/yere indir|takedown|bacaklarına dal|seviye değiştir|suplex|yere çal|dalış|double-leg|single-leg|shoots|slam|to the mat|hip-toss/.test(t)) return E('td');
-  if (/yerde|guard|sırtüstü|yan kontrol|on the ground|side control|on their back|on the mat/.test(t)) return E('gnp');
-  if (/clinch|kafese daya|kafese yasl|ense|thai|against the cage|pins .* to the cage/.test(t)) return E('clinch', /diz|knee/.test(t) ? 'knee' : /dirsek|elbow/.test(t) ? 'elbow' : '');
-  if (/tekme|kick/.test(t)) return E('kick', kick);
-  if (/yumruk|jab|kroşe|aparkat|overhand|kombinasyon|isabet|vurdu|vuruş|sağ el|sol el|kontra|dirsek|💥|🎯|punch|hook|uppercut|cross|combo|combination|lands|right hand|left hand|counter|elbow|strike|landed/.test(t)) return E('strike', strike);
+  if (/^— \d+\. raunt|^— round \d+|^— asalto \d+/.test(t)) return E('round');
+  if (/nakavt|uyuttu|bilinçsiz|yere yığıl|ışıklar söndü|hakem (araya|durdurdu|hemen)|havlu|tko|knockout|knocked out|to sleep|unconscious|lights (went|go) out|referee (jumps|steps|stops|waves)|towel|stoppage|nocaut|durmió|inconsciente|se apagaron las luces|árbitro (se lanza|intervien|lo detuvo)|toalla|tko/.test(t)) return E('ko', /tekme|kick|patada/.test(t) ? 'headKick' : strike);
+  if (/tap att|kilidi|kilid|boğma|armbar|kimura|giyotin|heel hook|kneebar|üçgen|arm-triangle|anakonda|d'arce|submission|🔒|tapped|choke|guillotine|triangle|anaconda|lock|se rindió|llave|estrangula|guillotina|triángulo|palanca|mataleón/.test(t)) return E('sub', sub);
+  if (/sarsıl|sendeled|bacakları titr|yere düştü|knockdown|yere gönderdi|dizleri|rocked|stagger|wobbl|legs shaking|dropped|goes down|went down|hurt|sacudido|tambale|le tiemblan|en la lona|derribado/.test(t)) return E('rock', /tekme|kick|patada/.test(t) ? 'headKick' : strike);
+  if (/ground and pound|ground & pound|üstten|yerde (sert|vur|ağır)|mount|yağdır|from the top|on top|rains down|montada|desde arriba|llueve|lloviendo/.test(t)) return E('gnp');
+  if (/yere indir|takedown|bacaklarına dal|seviye değiştir|suplex|yere çal|dalış|double-leg|single-leg|shoots|slam|to the mat|hip-toss|derrib|doble pierna|proyect|estrell|a la lona/.test(t)) return E('td');
+  if (/yerde|guard|sırtüstü|yan kontrol|on the ground|side control|on their back|on the mat|en el suelo|control lateral|guardia/.test(t)) return E('gnp');
+  if (/clinch|kafese daya|kafese yasl|ense|thai|against the cage|pins .* to the cage|contra la reja|clava/.test(t)) return E('clinch', /diz|knee|rodill/.test(t) ? 'knee' : /dirsek|elbow|codazo/.test(t) ? 'elbow' : '');
+  if (/tekme|kick|patada/.test(t)) return E('kick', kick);
+  if (/yumruk|jab|kroşe|aparkat|overhand|kombinasyon|isabet|vurdu|vuruş|sağ el|sol el|kontra|dirsek|💥|🎯|punch|hook|uppercut|cross|combo|combination|lands|right hand|left hand|counter|elbow|strike|landed|golpe|gancho|recto|combinación|conecta|derecha|izquierda|contragolpe|codazo/.test(t)) return E('strike', strike);
   return E('move');
 }
 
@@ -319,7 +319,7 @@ export function CageView({ fs, shown, pLook, oLook, speed = 1 }: { fs: FightStat
           queue(other(hurt), [['stance', 300, { x: GAP - 44 }]]);
         } else {
           const t = (fs.subAdi ?? '').toLocaleLowerCase(LOC);
-          const alt = /rnc|arkadan|rear-naked|the back/.test(t) ? 'rnc' : /üçgen|triangle/.test(t) && !/arm-triangle/.test(t) ? 'triangle' : /giyotin|guillotine|d'arce|anakonda|anaconda|arm-triangle/.test(t) ? 'guillotine' : 'armbar';
+          const alt = /rnc|arkadan|rear-naked|the back|mataleón|la espalda/.test(t) ? 'rnc' : /üçgen|triangle|triángulo/.test(t) && !/arm-triangle/.test(t) ? 'triangle' : /giyotin|guillotine|guillotina|d'arce|anakonda|anaconda|arm-triangle/.test(t) ? 'guillotine' : 'armbar';
           subScene(kr === 'subFirsat' ? 'p' : 'o', alt, false, false);
         }
       } else setCaption('');

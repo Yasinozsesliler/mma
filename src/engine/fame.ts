@@ -18,7 +18,7 @@ const damp = (s: GameState, F: number) => Math.max(0.08, 1 - F / SOFT_CAP[s.stag
 export function fmtFollowers(n: number) {
   const a = Math.abs(n);
   const sign = n < 0 ? '-' : '';
-  const dec = LANG === 'tr' ? ',' : '.';
+  const dec = LANG === 'en' ? '.' : ',';
   if (a >= 1e6) return `${sign}${(a / 1e6).toFixed(a >= 1e7 ? 0 : 1).replace('.', dec)}M`;
   if (a >= 1e3) return `${sign}${(a / 1e3).toFixed(a >= 1e5 ? 0 : 1).replace('.', dec)}${LANG === 'tr' ? 'B' : 'K'}`;
   return `${sign}${Math.round(a)}`;
