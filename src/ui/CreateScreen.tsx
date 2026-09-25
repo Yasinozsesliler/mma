@@ -4,7 +4,7 @@ import { generateBackstory, growthMultiplier, rollStartingStats, type NewFighter
 import { BACKGROUNDS, COUNTRIES, WEIGHT_CLASSES, WEIGHT_MODS } from '../engine/data';
 import { gymsFor } from '../engine/gyms';
 import type { Appearance } from '../engine/types';
-import { BEARDS, DEFAULT_LOOK, EYE_COLORS, FighterAvatar, HAIR_COLORS, HAIR_STYLES, SKIN_TONES } from './FighterAvatar';
+import { BEARDS, BROWS, DEFAULT_LOOK, EYE_COLORS, EYE_SHAPES, FACE_SHAPES, FighterAvatar, HAIR_COLORS, HAIR_STYLES, LIPS, NOSES, SKIN_TONES } from './FighterAvatar';
 import { START_POINTS } from '../engine/progression';
 import type { Background, Stats, WeightClass } from '../engine/types';
 import { STAT_KEYS, STAT_LABELS } from '../engine/types';
@@ -373,14 +373,25 @@ function LookPicker({ look, onChange }: { look: Appearance; onChange: (g: Appear
       <Swatches colors={EYE_COLORS} value={look.goz} onPick={(goz) => set({ goz })} />
       <Text style={cs.label}>SAKAL</Text>
       <Chips items={BEARDS} value={look.sakal} onPick={(sakal) => set({ sakal })} />
+      <Text style={cs.label}>YÜZ ŞEKLİ</Text>
+      <Chips items={FACE_SHAPES} value={String(look.yuz ?? 0)} onPick={(k) => set({ yuz: Number(k) })} />
+      <Text style={cs.label}>GÖZLER</Text>
+      <Chips items={EYE_SHAPES} value={String(look.gozSekil ?? 1)} onPick={(k) => set({ gozSekil: Number(k) })} />
+      <Text style={cs.label}>BURUN</Text>
+      <Chips items={NOSES} value={String(look.burun ?? 0)} onPick={(k) => set({ burun: Number(k) })} />
+      <Text style={cs.label}>DUDAKLAR</Text>
+      <Chips items={LIPS} value={String(look.dudak ?? 1)} onPick={(k) => set({ dudak: Number(k) })} />
+      <Text style={cs.label}>KAŞLAR</Text>
+      <Chips items={BROWS} value={String(look.kas ?? 1)} onPick={(k) => set({ kas: Number(k) })} />
       <Text style={cs.label}>DETAYLAR</Text>
       <Chips
         items={[
           { key: 'yara', ad: look.yara ? '✓ Kaşta yara izi' : 'Kaşta yara izi' },
           { key: 'dovme', ad: look.dovme ? '✓ Omuz dövmesi' : 'Omuz dövmesi' },
+          { key: 'kulak', ad: look.kulak ? '✓ Dövüşçü kulağı' : 'Dövüşçü kulağı' },
         ]}
         value={(look.yara ? 'yara' : '') as 'yara'}
-        onPick={(k) => set(k === 'yara' ? { yara: !look.yara } : { dovme: !look.dovme })}
+        onPick={(k) => set(k === 'yara' ? { yara: !look.yara } : k === 'dovme' ? { dovme: !look.dovme } : { kulak: look.kulak ? 0 : 1 })}
       />
       <View style={{ marginTop: 12 }}>
         <Button
@@ -396,6 +407,12 @@ function LookPicker({ look, onChange }: { look: Appearance; onChange: (g: Appear
               sakal: rnd(BEARDS).key,
               yara: Math.random() < 0.25,
               dovme: Math.random() < 0.3,
+              yuz: Math.floor(Math.random() * FACE_SHAPES.length),
+              burun: Math.floor(Math.random() * NOSES.length),
+              gozSekil: Math.floor(Math.random() * EYE_SHAPES.length),
+              dudak: Math.floor(Math.random() * LIPS.length),
+              kas: Math.floor(Math.random() * BROWS.length),
+              kulak: Math.random() < 0.3 ? 1 : 0,
             })
           }
         />

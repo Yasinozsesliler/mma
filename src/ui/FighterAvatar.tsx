@@ -25,6 +25,52 @@ export const BEARDS: { key: Appearance['sakal']; ad: string }[] = [
   { key: 'biyik', ad: 'Bıyık' },
 ];
 
+export const FACE_SHAPES = [
+  { key: '0', ad: 'Oval' },
+  { key: '1', ad: 'Köşeli' },
+  { key: '2', ad: 'Yuvarlak' },
+  { key: '3', ad: 'Uzun' },
+  { key: '4', ad: 'Üçgen' },
+];
+export const NOSES = [
+  { key: '0', ad: 'Düz' },
+  { key: '1', ad: 'Geniş' },
+  { key: '2', ad: 'Kırık' },
+  { key: '3', ad: 'Kemerli' },
+];
+export const EYE_SHAPES = [
+  { key: '0', ad: 'Kısık' },
+  { key: '1', ad: 'Normal' },
+  { key: '2', ad: 'İri' },
+];
+export const LIPS = [
+  { key: '0', ad: 'İnce' },
+  { key: '1', ad: 'Normal' },
+  { key: '2', ad: 'Dolgun' },
+];
+export const BROWS = [
+  { key: '0', ad: 'İnce' },
+  { key: '1', ad: 'Normal' },
+  { key: '2', ad: 'Kalın, sert' },
+];
+
+/** Yüz hattı: [elmacık yarı genişliği, çene yarı genişliği, çene ucu y, çene köşesi keskinliği] */
+const FACE_GEO: [number, number, number, number][] = [
+  [19, 16.5, 68.5, 0], // oval
+  [19.5, 19, 67.5, 1], // köşeli
+  [20, 18, 66.5, 0], // yuvarlak
+  [18, 15.5, 71, 0], // uzun
+  [19.5, 13.5, 69, 0], // üçgen
+];
+
+function facePath(shape: number) {
+  const [cw, jw, cy, sq] = FACE_GEO[shape] ?? FACE_GEO[0];
+  const L = 50 - cw;
+  const Rr = 50 + cw;
+  const jy = sq ? 60 : 56.5;
+  return `M${L} 41 Q${L - 0.5} 21 50 19.5 Q${Rr + 0.5} 21 ${Rr} 41 Q${Rr + 0.5} ${sq ? 56 : 50} ${50 + jw} ${jy} Q${50 + jw * (sq ? 0.95 : 0.7)} ${cy - (sq ? 1 : 2)} 50 ${cy} Q${50 - jw * (sq ? 0.95 : 0.7)} ${cy - (sq ? 1 : 2)} ${50 - jw} ${jy} Q${L - 0.5} ${sq ? 56 : 50} ${L} 41 Z`;
+}
+
 export const DEFAULT_LOOK: Appearance = { ten: 2, sac: 'kisa', sacRenk: 0, goz: 0, sakal: 'kirli', yara: false, dovme: false };
 
 function shade(hex: string, amt: number) {
@@ -55,8 +101,20 @@ export function FighterAvatar({ look = DEFAULT_LOOK, size = 72, ring = '#e63946'
   const uid = useId().replace(/[^a-zA-Z0-9]/g, '');
   const id = (n: string) => `${n}${uid}`;
   const brow = look.sac === 'kel' ? shade(skin, -90) : hair;
-  // Yüz hattı: elmacık kemikleri ve köşeli çene
-  const FACE = 'M31 41 Q30.5 21 50 19.5 Q69.5 21 69 41 Q69.5 50 66.5 56.5 Q62 66.5 50 68.5 Q38 66.5 33.5 56.5 Q30.5 50 31 41 Z';
+  // Yüz hatları: şekil, göz, burun, dudak, kaş, kulak
+  const yuz = look.yuz ?? 0;
+  const burun = look.burun ?? 0;
+  const gs = look.gozSekil ?? 1;
+  const dudak = look.dudak ?? 1;
+  const kas = look.kas ?? 1;
+  const FACE = facePath(yuz);
+  const chinY = (FACE_GEO[yuz] ?? FACE_GEO[0])[2];
+  const eyeW = [4.4, 4.2, 4.5][gs];
+  const eyeH = [1.7, 2.6, 3.3][gs];
+  const irisR = [1.6, 1.95, 2.25][gs];
+  const browW = [1.5, 2.3, 3.3][kas];
+  const browTilt = kas === 2 ? 1.6 : 0;
+  const eyePath = (cx: number) => `M${cx - eyeW} 44.2 Q${cx} ${44.2 - eyeH * 1.25} ${cx + eyeW} 44.2 Q${cx} ${44.2 + eyeH * 0.95} ${cx - eyeW} 44.2 Z`;
 
   return (
     <Svg width={size} height={size} viewBox="0 0 100 100">
@@ -119,17 +177,26 @@ export function FighterAvatar({ look = DEFAULT_LOOK, size = 72, ring = '#e63946'
         <Path d="M43 62 L46 71 M57 62 L54 71" stroke={skinD} strokeWidth={1} opacity={0.6} />
 
         {/* Kulaklar (dövüşçü kulağı) */}
-        <Ellipse cx={30.2} cy={44} rx={3.8} ry={6.2} fill={skinD} />
-        <Ellipse cx={69.8} cy={44} rx={3.8} ry={6.2} fill={skinD} />
-        <Path d="M30 40 q-1.6 4 0 8 M70 40 q1.6 4 0 8" stroke={skinDD} strokeWidth={1} fill="none" />
+        <Ellipse cx={30.2} cy={44} rx={look.kulak ? 4.8 : 3.8} ry={look.kulak ? 6.8 : 6.2} fill={skinD} />
+        <Ellipse cx={69.8} cy={44} rx={look.kulak ? 4.8 : 3.8} ry={look.kulak ? 6.8 : 6.2} fill={skinD} />
+        {look.kulak ? (
+          <G fill={skinDD} opacity={0.7}>
+            <Circle cx={28.6} cy={41} r={1.4} />
+            <Circle cx={29} cy={45.5} r={1.6} />
+            <Circle cx={71.4} cy={42} r={1.5} />
+            <Circle cx={71} cy={46.5} r={1.3} />
+          </G>
+        ) : (
+          <Path d="M30 40 q-1.6 4 0 8 M70 40 q1.6 4 0 8" stroke={skinDD} strokeWidth={1} fill="none" />
+        )}
 
         {/* Yüz */}
         <Path d={FACE} fill={`url(#${id('face')})`} />
         {/* Elmacık ışığı, şakak ve çene gölgesi */}
         <Ellipse cx={39} cy={50} rx={4.5} ry={2.2} fill="#ffffff" opacity={0.12} />
         <Ellipse cx={61} cy={50} rx={4.5} ry={2.2} fill="#ffffff" opacity={0.08} />
-        <Path d="M33.5 56.5 Q38 66.5 50 68.5 Q62 66.5 66.5 56.5 Q62 63 50 64.5 Q38 63 33.5 56.5 Z" fill={skinDD} opacity={0.3} />
-        <Path d="M49 66.5 q1 -1.5 2 0" stroke={skinDD} strokeWidth={0.7} fill="none" opacity={0.5} />
+        <Path d={`M34 57 Q38.5 ${chinY - 2} 50 ${chinY} Q61.5 ${chinY - 2} 66 57 Q62 ${chinY - 5} 50 ${chinY - 4} Q38 ${chinY - 5} 34 57 Z`} fill={skinDD} opacity={0.3} />
+        <Path d={`M49 ${chinY - 2} q1 -1.5 2 0`} stroke={skinDD} strokeWidth={0.7} fill="none" opacity={0.5} />
         <Path d="M69 41 Q69.5 50 66.5 56.5" stroke={ring} strokeWidth={1} fill="none" opacity={0.5} />
 
         {/* Saç (ön) */}
@@ -163,33 +230,43 @@ export function FighterAvatar({ look = DEFAULT_LOOK, size = 72, ring = '#e63946'
 
         {/* Kaş kemeri gölgesi ve kaşlar */}
         <Path d="M36 40.5 Q43 38 48 41 M52 41 Q57 38 64 40.5" stroke={skinDD} strokeWidth={3.2} fill="none" opacity={0.22} strokeLinecap="round" />
-        <Path d="M37.5 38.3 Q42 35.3 47 37.6" stroke={brow} strokeWidth={2.3} strokeLinecap="round" fill="none" />
-        <Path d="M53 37.6 Q58 35.3 62.5 38.3" stroke={brow} strokeWidth={2.3} strokeLinecap="round" fill="none" />
+        <Path d={`M37.5 38.3 Q42 ${35.3 + browTilt * 0.3} 47 ${37.6 + browTilt}`} stroke={brow} strokeWidth={browW} strokeLinecap="round" fill="none" />
+        <Path d={`M53 ${37.6 + browTilt} Q58 ${35.3 + browTilt * 0.3} 62.5 38.3`} stroke={brow} strokeWidth={browW} strokeLinecap="round" fill="none" />
         {look.yara ? <Path d="M57 32 L61.5 43" stroke="#b5485a" strokeWidth={1.3} strokeLinecap="round" opacity={0.85} /> : null}
 
         {/* Gözler: çukur, akı, iris, kapak, ışık */}
         <Ellipse cx={42.5} cy={44} rx={5.6} ry={3.6} fill={skinDD} opacity={0.2} />
         <Ellipse cx={57.5} cy={44} rx={5.6} ry={3.6} fill={skinDD} opacity={0.2} />
-        <Path d="M38.3 44.2 Q42.5 41 46.7 44.2 Q42.5 46.6 38.3 44.2 Z" fill="#efe9df" />
-        <Path d="M53.3 44.2 Q57.5 41 61.7 44.2 Q57.5 46.6 53.3 44.2 Z" fill="#efe9df" />
-        <Circle cx={42.7} cy={44} r={1.95} fill={`url(#${id('iris')})`} />
-        <Circle cx={57.3} cy={44} r={1.95} fill={`url(#${id('iris')})`} />
+        <Path d={eyePath(42.5)} fill="#efe9df" />
+        <Path d={eyePath(57.5)} fill="#efe9df" />
+        <Circle cx={42.7} cy={44} r={irisR} fill={`url(#${id('iris')})`} />
+        <Circle cx={57.3} cy={44} r={irisR} fill={`url(#${id('iris')})`} />
         <Circle cx={42.7} cy={44} r={0.85} fill="#050505" />
         <Circle cx={57.3} cy={44} r={0.85} fill="#050505" />
         <Circle cx={42.1} cy={43.3} r={0.5} fill="#ffffff" />
         <Circle cx={56.7} cy={43.3} r={0.5} fill="#ffffff" />
-        <Path d="M38.1 44 Q42.5 40.6 46.9 44 M53.1 44 Q57.5 40.6 61.9 44" stroke={skinDD} strokeWidth={1.1} fill="none" />
+        <Path d={`M${42.5 - eyeW - 0.2} 44 Q42.5 ${44 - eyeH * 1.3} ${42.5 + eyeW + 0.2} 44 M${57.5 - eyeW - 0.2} 44 Q57.5 ${44 - eyeH * 1.3} ${57.5 + eyeW + 0.2} 44`} stroke={skinDD} strokeWidth={gs === 0 ? 1.5 : 1.1} fill="none" />
 
         {/* Burun */}
-        <Path d="M49.2 44 L48.4 51.5" stroke="#ffffff" strokeWidth={1} opacity={0.18} />
-        <Path d="M51.5 45 Q52.8 50.5 53.3 53" stroke={skinD} strokeWidth={1.2} fill="none" opacity={0.7} />
-        <Path d="M46.5 53.6 Q50 56.3 53.5 53.6" stroke={skinDD} strokeWidth={1.3} fill="none" strokeLinecap="round" />
-        <Ellipse cx={47.8} cy={54.1} rx={1.1} ry={0.7} fill={skinDD} opacity={0.7} />
-        <Ellipse cx={52.2} cy={54.1} rx={1.1} ry={0.7} fill={skinDD} opacity={0.7} />
+        {burun === 2 ? (
+          <Path d="M49.5 44 L48.4 47.5 L50.2 50 L49 52.5" stroke="#ffffff" strokeWidth={1} opacity={0.2} fill="none" />
+        ) : (
+          <Path d="M49.2 44 L48.4 51.5" stroke="#ffffff" strokeWidth={1} opacity={0.18} />
+        )}
+        {burun === 3 ? (
+          <Path d="M51.2 44.5 Q54.5 48 53.6 53.4" stroke={skinD} strokeWidth={1.5} fill="none" opacity={0.8} />
+        ) : burun === 2 ? (
+          <Path d="M51.5 45 L53 48 L51.8 50.5 L53.3 53" stroke={skinD} strokeWidth={1.2} fill="none" opacity={0.75} />
+        ) : (
+          <Path d="M51.5 45 Q52.8 50.5 53.3 53" stroke={skinD} strokeWidth={1.2} fill="none" opacity={0.7} />
+        )}
+        <Path d={burun === 1 ? 'M45.3 53.6 Q50 57 54.7 53.6' : 'M46.5 53.6 Q50 56.3 53.5 53.6'} stroke={skinDD} strokeWidth={1.3} fill="none" strokeLinecap="round" />
+        <Ellipse cx={burun === 1 ? 47.1 : 47.8} cy={54.1} rx={burun === 1 ? 1.5 : 1.1} ry={burun === 1 ? 0.9 : 0.7} fill={skinDD} opacity={0.7} />
+        <Ellipse cx={burun === 1 ? 52.9 : 52.2} cy={54.1} rx={burun === 1 ? 1.5 : 1.1} ry={burun === 1 ? 0.9 : 0.7} fill={skinDD} opacity={0.7} />
 
         {/* Dudaklar */}
-        <Path d="M44.8 59 Q47.5 57.8 50 58.6 Q52.5 57.8 55.2 59 Q50 60.2 44.8 59 Z" fill={shade(skin, -45)} />
-        <Path d="M45.5 59.3 Q50 62.4 54.5 59.3 Q50 60.6 45.5 59.3 Z" fill={shade(skin, -18)} />
+        <Path d={`M${45 - dudak * 0.4} 59 Q47.5 ${58.2 - dudak * 0.4} 50 58.8 Q52.5 ${58.2 - dudak * 0.4} ${55 + dudak * 0.4} 59 Q50 60.2 ${45 - dudak * 0.4} 59 Z`} fill={shade(skin, -45)} />
+        <Path d={`M${45.6 - dudak * 0.3} 59.3 Q50 ${60.8 + dudak * 1.1} ${54.4 + dudak * 0.3} 59.3 Q50 60.6 ${45.6 - dudak * 0.3} 59.3 Z`} fill={shade(skin, -18)} />
         <Path d="M47.5 60.7 Q50 61.4 52.5 60.7" stroke="#ffffff" strokeWidth={0.5} opacity={0.25} fill="none" />
 
         {/* Sakal */}
