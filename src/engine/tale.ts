@@ -10,13 +10,32 @@ function hash(t: string) {
   return h >>> 0;
 }
 
-const BASE_BOY: Record<WeightClass, number> = { sinek: 165, horoz: 170, tuy: 173, hafif: 177, welter: 181, orta: 185, yariagir: 189, agir: 193 };
+export const BASE_BOY: Record<WeightClass, number> = { sinek: 165, horoz: 170, tuy: 173, hafif: 177, welter: 181, orta: 185, yariagir: 189, agir: 193 };
+
+/** Karakter oluştururken seçilebilecek boylar (sıklete göre). */
+export const heightOptions = (siklet: WeightClass) => [-8, -4, 0, 4, 8].map((d) => BASE_BOY[siklet] + d);
+
+/** Boyun etkisi: uzun boy uzanma = vuruş; kısa boy düşük ağırlık merkezi = güreş. */
+export function heightMods(boy: number, siklet: WeightClass): { vurus?: number; gures?: number } {
+  const d = Math.round((boy - BASE_BOY[siklet]) / 4);
+  return d === 0 ? {} : { vurus: d, gures: -d };
+}
+
+/** Uzanma: boya bağlı, isme göre sabit küçük fark. */
+export const reachFor = (boy: number, seed: string) => boy + ((hash(seed) >>> 5) % 9) - 2;
+
+/** Oyuncunun fiziği: kayıtlı boy/uzanma kullanılır, maçtan maça değişmez. */
+export function playerPhysique(f: { ad: string; soyad: string; siklet: WeightClass; boy?: number; uzanma?: number }) {
+  const base = physique(f.ad + f.soyad, f.siklet);
+  const boy = f.boy ?? base.boy;
+  return { ...base, boy, uzanma: f.uzanma ?? reachFor(boy, f.ad + f.soyad) };
+}
 
 export function physique(seed: string, siklet: WeightClass) {
   const h = hash(seed);
   const boy = BASE_BOY[siklet] + ((h % 11) - 5);
-  const uzanma = boy + (((h >> 5) % 13) - 4);
-  const durus = (h >> 9) % 5 === 0 ? 'Southpaw (solak)' : (h >> 9) % 7 === 0 ? 'Switch' : 'Orthodox';
+  const uzanma = boy + (((h >>> 5) % 13) - 4);
+  const durus = (h >>> 9) % 5 === 0 ? 'Southpaw (solak)' : (h >>> 9) % 7 === 0 ? 'Switch' : 'Orthodox';
   return { boy, uzanma, durus };
 }
 

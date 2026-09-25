@@ -5,6 +5,7 @@ import { gymById, gymsFor } from './gyms';
 import { START_POINTS } from './progression';
 import { initialFollowers } from './fame';
 import { startingTechniques } from './techniques';
+import { BASE_BOY, heightMods, reachFor } from './tale';
 import type { Appearance, Background, Fighter, GameState, OrgId, Stats, StatKey, WeightClass } from './types';
 import { STAT_KEYS } from './types';
 
@@ -20,16 +21,18 @@ export interface NewFighterInput {
   hikaye: string;
   salonId?: string;
   gorunum?: Appearance;
+  boy?: number;
 }
 
 /** noise=false: zar atmadan beklenen değerler (seçim ekranındaki önizleme için). */
-export function rollStartingStats(input: Pick<NewFighterInput, 'uyruk' | 'yas' | 'siklet' | 'gecmis'>, withNoise = true): Stats {
+export function rollStartingStats(input: Pick<NewFighterInput, 'uyruk' | 'yas' | 'siklet' | 'gecmis' | 'boy'>, withNoise = true): Stats {
   const country = COUNTRIES[input.uyruk];
   const level = 33 + country.egitim * 0.6 + (input.yas - 18) * 0.45;
   const stats = baseStatsFor(input.gecmis, level);
   const wm = WEIGHT_MODS[input.siklet];
+  const hm: Partial<Stats> = input.boy ? heightMods(input.boy, input.siklet) : {};
   STAT_KEYS.forEach((k) => {
-    stats[k] = Math.round(clamp(stats[k] + (wm[k] ?? 0) + (withNoise ? noise(3) : 0), 10, 68));
+    stats[k] = Math.round(clamp(stats[k] + (wm[k] ?? 0) + (hm[k] ?? 0) + (withNoise ? noise(3) : 0), 10, 68));
   });
   return stats;
 }
@@ -49,6 +52,8 @@ export function createGame(input: NewFighterInput, stats: Stats): GameState {
     gecmis: input.gecmis,
     hikaye: input.hikaye.trim(),
     gorunum: input.gorunum,
+    boy: input.boy ?? BASE_BOY[input.siklet],
+    uzanma: reachFor(input.boy ?? BASE_BOY[input.siklet], input.ad.trim() + input.soyad.trim()),
     stats,
   };
   return {

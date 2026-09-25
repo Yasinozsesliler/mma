@@ -1,5 +1,6 @@
 import { istat } from './engine/istat';
 import { startingTechniques } from './engine/techniques';
+import { playerPhysique } from './engine/tale';
 import { initialFollowers } from './engine/fame';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ensureDivision } from './engine/division';
@@ -90,6 +91,12 @@ export async function loadGame(slot: Slot = 1): Promise<GameState | null> {
     }
     s.yatirimlar ??= [];
     s.teknik ??= startingTechniques(s.fighter.gecmis);
+    if (!s.fighter.boy) {
+      // Boy artık sabit: eski kayıtta o anki değer kalıcı olur.
+      const p = playerPhysique(s.fighter);
+      s.fighter.boy = p.boy;
+      s.fighter.uzanma = p.uzanma;
+    }
     s.takipci ??= initialFollowers(s.populerlik);
     if (!s.eslesmeler && s.adaylar) {
       s.eslesmeler = s.adaylar.list.filter((c) => c.seviye > 0 || c.id === s.iliski?.id);

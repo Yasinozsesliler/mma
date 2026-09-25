@@ -1,75 +1,144 @@
 import { useId } from 'react';
-import Svg, { Defs, Ellipse, G, LinearGradient, Path, Polygon, Rect, Stop, Text as SvgText } from 'react-native-svg';
+import Svg, { Circle, Defs, Ellipse, G, LinearGradient, Path, RadialGradient, Rect, Stop, Text as SvgText } from 'react-native-svg';
 import { ORGS } from '../engine/data';
 import type { OrgId, WeightClass } from '../engine/types';
 import { WEIGHT_CLASSES } from '../engine/data';
-import { octPoints } from './components';
 
-/** Organizasyona göre kemer renkleri: [metal açık, metal koyu, kayış, taş]. */
-const PALETTE: Record<OrgId, [string, string, string, string]> = {
-  ufc: ['#ffe08a', '#b8862b', '#0b0b0c', '#d7263d'],
-  pfl: ['#f0f2f5', '#8a929e', '#0e1116', '#3a86ff'],
-  one: ['#ffe39a', '#c18f2a', '#5a0b10', '#f2c14e'],
-  mvp: ['#ffd98a', '#9c6d1c', '#14110b', '#2ec4b6'],
-  cfc: ['#e8ebf0', '#7d8591', '#3a0a0f', '#e63946'],
-  oktagon: ['#ffe08a', '#b8862b', '#0a1a3a', '#e63946'],
-  dwcs: ['#ffe08a', '#b8862b', '#0b0b0c', '#d7263d'],
-  amator: ['#d9d9d9', '#8a8a8a', '#222', '#e63946'],
+/** Organizasyona göre kemer renkleri: [metal açık, metal koyu, kayış, taş, logo]. */
+const PALETTE: Record<OrgId, [string, string, string, string, string]> = {
+  ufc: ['#ffe9a8', '#b8862b', '#0b0b0c', '#d7263d', '#d20a0a'],
+  pfl: ['#f4f6f9', '#8a929e', '#0e1116', '#3a86ff', '#1c4fc4'],
+  one: ['#ffe39a', '#c18f2a', '#4a080d', '#f2c14e', '#c8102e'],
+  mvp: ['#ffd98a', '#9c6d1c', '#14110b', '#2ec4b6', '#0f8a80'],
+  cfc: ['#e8ebf0', '#7d8591', '#2a080c', '#e63946', '#e63946'],
+  oktagon: ['#ffe08a', '#b8862b', '#0a1a3a', '#e63946', '#e63946'],
+  dwcs: ['#ffe9a8', '#b8862b', '#0b0b0c', '#d7263d', '#d20a0a'],
+  amator: ['#d9d9d9', '#8a8a8a', '#222', '#e63946', '#e63946'],
 };
 
-/** UFC tarzı şampiyonluk kemeri (300×120). */
+const VB_W = 300;
+const VB_H = 130;
+
+/** UFC kemerini andıran şampiyonluk kemeri: deri kayış, oymalı yan plakalar, küreli büyük orta plaka. */
 export function Belt({ org, siklet, width = 300, dim = false }: { org: OrgId; siklet?: WeightClass; width?: number; dim?: boolean }) {
-  const [hi, lo, strap, gem] = PALETTE[org];
+  const [hi, lo, strap, gem, logo] = PALETTE[org];
   const id = useId().replace(/[^a-zA-Z0-9]/g, '');
-  const g1 = `m${id}`;
-  const g2 = `s${id}`;
-  const plate = (x: number) => (
+  const gold = `g${id}`;
+  const goldH = `h${id}`;
+  const leather = `l${id}`;
+  const globe = `o${id}`;
+  const cx = 150;
+  const cy = 64;
+
+  /** Yan plaka: eğimli altın levha, oyma çerçeve, ortada taş ve dört perçin. */
+  const sidePlate = (x: number, w: number) => (
     <G key={x}>
-      <Rect x={x} y={40} width={28} height={40} rx={5} fill={`url(#${g1})`} stroke={lo} strokeWidth={1.5} />
-      <Rect x={x + 5} y={46} width={18} height={28} rx={3} fill="none" stroke={lo} strokeWidth={1} />
-      <Ellipse cx={x + 14} cy={60} rx={5} ry={7} fill={gem} stroke={lo} strokeWidth={1} />
-      <Ellipse cx={x + 12.5} cy={57} rx={1.6} ry={2.4} fill="#ffffff" opacity={0.6} />
+      <Rect x={x} y={38} width={w} height={52} rx={6} fill={`url(#${gold})`} stroke={lo} strokeWidth={1.4} />
+      <Rect x={x + 4} y={42} width={w - 8} height={44} rx={4} fill="none" stroke={lo} strokeWidth={0.9} />
+      <Path d={`M${x + 8} ${50} Q${x + w / 2} ${44} ${x + w - 8} ${50}`} stroke={lo} strokeWidth={0.8} fill="none" />
+      <Path d={`M${x + 8} ${78} Q${x + w / 2} ${84} ${x + w - 8} ${78}`} stroke={lo} strokeWidth={0.8} fill="none" />
+      <Circle cx={x + w / 2} cy={64} r={6.5} fill={strap} stroke={lo} strokeWidth={1} />
+      <Circle cx={x + w / 2} cy={64} r={4.2} fill={gem} />
+      <Ellipse cx={x + w / 2 - 1.3} cy={62.5} rx={1.3} ry={1.6} fill="#fff" opacity={0.7} />
+      {[
+        [x + 7, 46],
+        [x + w - 7, 46],
+        [x + 7, 82],
+        [x + w - 7, 82],
+      ].map(([px, py]) => (
+        <Circle key={`${px}-${py}`} cx={px} cy={py} r={1.6} fill={hi} stroke={lo} strokeWidth={0.5} />
+      ))}
     </G>
   );
+
+  // Orta plakanın kenarındaki boncuk dizisi
+  const beads = Array.from({ length: 36 }, (_, i) => {
+    const a = (i / 36) * Math.PI * 2;
+    return <Circle key={i} cx={cx + Math.cos(a) * 66} cy={cy + Math.sin(a) * 58} r={2.3} fill={hi} stroke={lo} strokeWidth={0.5} />;
+  });
+
   return (
-    <Svg width={width} height={(width * 120) / 300} viewBox="0 0 300 120" opacity={dim ? 0.35 : 1}>
+    <Svg width={width} height={(width * VB_H) / VB_W} viewBox={`0 0 ${VB_W} ${VB_H}`} opacity={dim ? 0.35 : 1}>
       <Defs>
-        <LinearGradient id={g1} x1="0" y1="0" x2="0" y2="1">
+        <LinearGradient id={gold} x1="0" y1="0" x2="0" y2="1">
+          <Stop offset="0" stopColor={hi} />
+          <Stop offset="0.45" stopColor={lo} />
+          <Stop offset="0.55" stopColor={lo} />
+          <Stop offset="1" stopColor={hi} />
+        </LinearGradient>
+        <LinearGradient id={goldH} x1="0" y1="0" x2="1" y2="1">
           <Stop offset="0" stopColor={hi} />
           <Stop offset="0.5" stopColor={lo} />
           <Stop offset="1" stopColor={hi} />
         </LinearGradient>
-        <LinearGradient id={g2} x1="0" y1="0" x2="0" y2="1">
-          <Stop offset="0" stopColor={strap} />
-          <Stop offset="0.5" stopColor="#2a2a2e" />
-          <Stop offset="1" stopColor={strap} />
+        <LinearGradient id={leather} x1="0" y1="0" x2="0" y2="1">
+          <Stop offset="0" stopColor="#2a2a2e" />
+          <Stop offset="0.5" stopColor={strap} />
+          <Stop offset="1" stopColor="#2a2a2e" />
         </LinearGradient>
+        <RadialGradient id={globe} cx="42%" cy="38%" r="65%">
+          <Stop offset="0" stopColor={hi} />
+          <Stop offset="0.7" stopColor={lo} />
+          <Stop offset="1" stopColor="#6b4a12" />
+        </RadialGradient>
       </Defs>
-      {/* Deri kayış */}
-      <Rect x={4} y={36} width={292} height={48} rx={12} fill={`url(#${g2})`} />
-      <Rect x={10} y={41} width={280} height={38} rx={9} fill="none" stroke={hi} strokeWidth={1} strokeDasharray="3 3" opacity={0.55} />
-      {[22, 56, 216, 250].map(plate)}
-      {/* Orta plaka */}
-      <Path
-        d="M150 4 L196 14 L214 40 L214 80 L196 106 L150 116 L104 106 L86 80 L86 40 L104 14 Z"
-        fill={`url(#${g1})`}
-        stroke={lo}
-        strokeWidth={2}
-      />
-      <Path d="M150 12 L190 21 L205 43 L205 77 L190 99 L150 108 L110 99 L95 77 L95 43 L110 21 Z" fill="none" stroke={lo} strokeWidth={1.4} />
-      <Polygon points={octPoints(30, 150, 60)} fill={strap} stroke={hi} strokeWidth={2.5} />
-      <Polygon points={octPoints(25, 150, 60)} fill="none" stroke={gem} strokeWidth={1.2} />
-      <SvgText x={150} y={58} fill={hi} fontSize={org === 'oktagon' ? 11 : 17} fontWeight="bold" textAnchor="middle" letterSpacing={1}>
+
+      {/* Deri kayış ve altın dikiş rayları */}
+      <Rect x={2} y={34} width={296} height={60} rx={14} fill={`url(#${leather})`} />
+      <Rect x={8} y={39} width={284} height={50} rx={10} fill="none" stroke={hi} strokeWidth={0.9} strokeDasharray="3 2.5" opacity={0.7} />
+      {[16, 284].map((x) => (
+        <G key={x}>
+          <Circle cx={x} cy={52} r={2.2} fill="#111" stroke={lo} strokeWidth={0.8} />
+          <Circle cx={x} cy={76} r={2.2} fill="#111" stroke={lo} strokeWidth={0.8} />
+        </G>
+      ))}
+
+      {/* Yan plakalar */}
+      {sidePlate(24, 30)}
+      {sidePlate(58, 26)}
+      {sidePlate(216, 26)}
+      {sidePlate(246, 30)}
+
+      {/* Orta plaka: boncuklu kenar, eğimli altın gövde */}
+      <Ellipse cx={cx} cy={cy} rx={70} ry={62} fill={`url(#${goldH})`} stroke={lo} strokeWidth={2} />
+      {beads}
+      <Ellipse cx={cx} cy={cy} rx={60} ry={52} fill={`url(#${gold})`} stroke={lo} strokeWidth={1.4} />
+      <Ellipse cx={cx} cy={cy} rx={55} ry={47} fill="none" stroke={hi} strokeWidth={0.8} opacity={0.8} />
+
+      {/* Yanlarda kırmızı taşlar */}
+      {[cx - 64, cx + 64].map((x) => (
+        <G key={x}>
+          <Ellipse cx={x} cy={cy} rx={5} ry={7.5} fill={gem} stroke={lo} strokeWidth={1} />
+          <Ellipse cx={x - 1.4} cy={cy - 2.5} rx={1.4} ry={2.2} fill="#fff" opacity={0.6} />
+        </G>
+      ))}
+
+      {/* Dünya küresi */}
+      <Circle cx={cx} cy={cy + 4} r={30} fill={`url(#${globe})`} stroke={lo} strokeWidth={1.4} />
+      {[-18, -6, 6, 18].map((dy) => (
+        <Ellipse key={dy} cx={cx} cy={cy + 4 + dy} rx={Math.sqrt(900 - dy * dy)} ry={2.5} fill="none" stroke={lo} strokeWidth={0.7} opacity={0.75} />
+      ))}
+      {[10, 20].map((rx) => (
+        <Ellipse key={rx} cx={cx} cy={cy + 4} rx={rx} ry={30} fill="none" stroke={lo} strokeWidth={0.7} opacity={0.75} />
+      ))}
+      <Path d={`M${cx} ${cy - 26} L${cx} ${cy + 34}`} stroke={lo} strokeWidth={0.7} opacity={0.75} />
+      <Path d={`M${cx - 16} ${cy - 10} q10 -6 18 2 q6 8 -4 14 q-10 2 -14 -6 z`} fill={lo} opacity={0.5} />
+      <Path d={`M${cx + 4} ${cy + 12} q10 -4 14 4 q-4 10 -14 8 z`} fill={lo} opacity={0.5} />
+
+      {/* Üstte logo plakası */}
+      <Rect x={cx - 34} y={cy - 54} width={68} height={24} rx={6} fill="#0b0b0c" stroke={hi} strokeWidth={1.6} />
+      <SvgText x={cx} y={cy - 36} fill={logo} fontSize={org === 'oktagon' ? 11 : 17} fontWeight="bold" fontStyle="italic" textAnchor="middle" letterSpacing={1}>
         {ORGS[org].kisa}
       </SvgText>
-      <SvgText x={150} y={72} fill={hi} fontSize={7} textAnchor="middle" letterSpacing={1.5}>
-        {siklet ? WEIGHT_CLASSES[siklet].ad.toLocaleUpperCase('tr-TR') : 'CHAMPION'}
+
+      {/* Altta kurdele */}
+      <Path d={`M${cx - 52} ${cy + 36} L${cx + 52} ${cy + 36} L${cx + 46} ${cy + 50} L${cx - 46} ${cy + 50} Z`} fill="#0b0b0c" stroke={hi} strokeWidth={1.2} />
+      <SvgText x={cx} y={cy + 45} fill={hi} fontSize={6.5} fontWeight="bold" textAnchor="middle" letterSpacing={1.2}>
+        {`WORLD CHAMPION${siklet ? ' · ' + WEIGHT_CLASSES[siklet].ad.toLocaleUpperCase('tr-TR') : ''}`}
       </SvgText>
-      <Ellipse cx={150} cy={17} rx={5} ry={4} fill={gem} />
-      <Ellipse cx={150} cy={103} rx={5} ry={4} fill={gem} />
-      <Ellipse cx={98} cy={60} rx={3} ry={5} fill={gem} />
-      <Ellipse cx={202} cy={60} rx={3} ry={5} fill={gem} />
-      <Path d="M112 22 L150 14 L188 22" stroke="#ffffff" strokeWidth={2} opacity={0.35} fill="none" />
+
+      {/* Parlama */}
+      <Path d={`M${cx - 44} ${cy - 38} Q${cx} ${cy - 58} ${cx + 44} ${cy - 38}`} stroke="#ffffff" strokeWidth={2.4} opacity={0.3} fill="none" />
     </Svg>
   );
 }

@@ -9,6 +9,8 @@ import { CRITICAL_OPTIONS, TACTICS } from '../engine/narration';
 import { oppRecord } from '../engine/opponents';
 import type { CriticalKind, FightState, GameState, Tactic } from '../engine/types';
 import type { Act } from './GameScreens';
+import { CageView } from './CageView';
+import { lookFor } from '../engine/tale';
 import { Bar, Button, Card, Choice, Icon, P, Screen, Section, upName, type IconName } from './components';
 import { C, F, G, R } from './theme';
 
@@ -233,6 +235,7 @@ export function FightScreen({ s, act }: { s: GameState; act: Act }) {
   return (
     <Screen footer={footer}>
       <Scoreboard fs={view} org={org} pUyruk={s.fighter.uyruk} />
+      <CageView fs={fs} shown={shown} pLook={s.fighter.gorunum} oLook={lookFor(fs.opp)} />
       {!fresh ? <Momentum fs={view} shown={shown} logLen={fs.log.length} /> : null}
 
       {fresh ? (

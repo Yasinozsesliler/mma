@@ -36,6 +36,7 @@ import { CampLengthStep, CampSummary, CampWeeksStep, FreeWeeksStep } from './Cam
 import { TechniquePanel } from './TechniquePanel';
 import { FaceOffStage } from './FaceOffStage';
 import { RankingsTab } from './P4PPanel';
+import { FightHistoryPanel } from './FightHistoryPanel';
 import { PlanPicker } from './PlanPicker';
 import { coachIntro } from '../engine/coach';
 import { Compare } from './Compare';
@@ -222,14 +223,6 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
   );
 }
 
-function ResultBadge({ r }: { r: 'G' | 'M' | 'B' }) {
-  const col = r === 'G' ? C.green : r === 'M' ? C.red : C.gold;
-  return (
-    <View style={[gs.resBadge, { backgroundColor: col + '22', borderColor: col }]}>
-      <Text style={[gs.resBadgeText, { color: col }]}>{r}</Text>
-    </View>
-  );
-}
 
 function History({ s }: { s: GameState }) {
   return (
@@ -240,21 +233,7 @@ function History({ s }: { s: GameState }) {
           {s.fighter.hikaye || '—'}
         </P>
       </Card>
-      <Section>DÖVÜŞ GEÇMİŞİ</Section>
-      {s.gecmis.length === 0 ? <P dim>Henüz dövüş yok.</P> : null}
-      <Card style={{ paddingVertical: 6 }}>
-        {s.gecmis.map((h, i) => (
-          <View key={i} style={[gs.histRow, i > 0 && { borderTopWidth: 1, borderTopColor: C.border }]}>
-            <ResultBadge r={h.sonuc} />
-            <View style={{ flex: 1 }}>
-              <Text style={gs.histName}>{h.rakip}</Text>
-              <Text style={gs.meta}>
-                {h.yontem} · R{h.raunt} · {ORGS[h.org].kisa} · {h.yas} yaş
-              </Text>
-            </View>
-          </View>
-        ))}
-      </Card>
+      <FightHistoryPanel s={s} />
     </>
   );
 }

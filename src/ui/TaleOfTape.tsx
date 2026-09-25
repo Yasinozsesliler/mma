@@ -2,7 +2,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { StyleSheet, Text, View } from 'react-native';
 import { statAverage } from '../engine/character';
 import { BACKGROUNDS, WEIGHT_CLASSES } from '../engine/data';
-import { lookFor, physique } from '../engine/tale';
+import { lookFor, physique, playerPhysique } from '../engine/tale';
 import type { GameState } from '../engine/types';
 import { SLANT, upName } from './components';
 import { FighterAvatar } from './FighterAvatar';
@@ -14,7 +14,7 @@ export function TaleOfTape({ s }: { s: GameState }) {
   const o = s.pending.rakip!;
   const f = s.fighter;
   const limit = WEIGHT_CLASSES[f.siklet].kg;
-  const pp = physique(f.ad + f.soyad, f.siklet);
+  const pp = playerPhysique(f);
   const op = physique(o.id, f.siklet);
   const oYas = 22 + (o.id.charCodeAt(0) % 14);
   const rows: [string, string, string][] = [

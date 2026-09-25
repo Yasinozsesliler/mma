@@ -64,6 +64,9 @@ export interface Fighter {
   hikaye: string;
   hakkinda?: string;
   gorunum?: Appearance;
+  /** Oluştururken bir kez seçilir, kariyer boyunca değişmez (cm) */
+  boy?: number;
+  uzanma?: number;
   stats: Stats;
 }
 

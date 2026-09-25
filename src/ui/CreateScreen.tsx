@@ -9,7 +9,8 @@ import { START_POINTS } from '../engine/progression';
 import type { Background, Stats, WeightClass } from '../engine/types';
 import { STAT_KEYS, STAT_LABELS } from '../engine/types';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Button, Card, Choice, OctIcon, P, Pill, Screen, SLANT, Title, type IconName } from './components';
+import { Button, Card, Choice, OctIcon, P, Pill, Screen, Section, SLANT, Title, type IconName } from './components';
+import { BASE_BOY, heightMods, heightOptions } from '../engine/tale';
 import { C, F, R } from './theme';
 
 const STEPS = 9;
@@ -157,9 +158,24 @@ export function CreateScreen({ onDone, onBack }: { onDone: (input: NewFighterInp
 ${modText(WEIGHT_MODS[w]) || 'Dengeli: etki yok'}`}
               selected={inp.siklet === w}
               tone="plain"
-              onPress={() => set({ siklet: w })}
+              onPress={() => set({ siklet: w, boy: BASE_BOY[w] })}
             />
           ))}
+          <Section>BOYUN</Section>
+          <Text style={cs.heightHint}>Bir kez seçilir, kariyer boyunca değişmez. Uzun boy uzanma (vuruş), kısa boy düşük ağırlık merkezi (güreş) getirir.</Text>
+          <View style={cs.heights}>
+            {heightOptions(inp.siklet).map((h) => {
+              const on = (inp.boy ?? BASE_BOY[inp.siklet]) === h;
+              const m = heightMods(h, inp.siklet);
+              return (
+                <Pressable key={h} onPress={() => set({ boy: h })} style={[cs.height, on && cs.heightOn]}>
+                  <Text style={[cs.heightVal, on && { color: '#fff' }]}>{h}</Text>
+                  <Text style={[cs.heightUnit, on && { color: '#fff' }]}>cm</Text>
+                  <Text style={[cs.heightMod, on && { color: '#fff' }]}>{m.vurus ? `${m.vurus > 0 ? '+' : ''}${m.vurus} Vuruş\n${m.gures! > 0 ? '+' : ''}${m.gures} Güreş` : 'Dengeli'}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
         </>
       )}
 
@@ -398,6 +414,13 @@ function Field({ label, value, onChange, placeholder }: { label: string; value: 
 }
 
 const cs = StyleSheet.create({
+  heightHint: { color: C.faint, fontFamily: F.body, fontSize: 12, lineHeight: 17, marginBottom: 8 },
+  heights: { flexDirection: 'row', gap: 6, marginBottom: 8 },
+  height: { flex: 1, alignItems: 'center', backgroundColor: C.card, borderRadius: R, borderWidth: 1, borderColor: C.border, paddingVertical: 10 },
+  heightOn: { backgroundColor: C.red, borderColor: C.red },
+  heightVal: { color: C.text, fontFamily: F.display, fontSize: 20 },
+  heightUnit: { color: C.faint, fontFamily: F.display, fontSize: 10, letterSpacing: 1 },
+  heightMod: { color: C.dim, fontFamily: F.body, fontSize: 10, textAlign: 'center', marginTop: 4, lineHeight: 13 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 8, marginBottom: 12 },
   swatches: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 8, marginBottom: 14 },
   swatch: { width: 34, height: 34, borderRadius: 17, borderWidth: 2, borderColor: '#000' },

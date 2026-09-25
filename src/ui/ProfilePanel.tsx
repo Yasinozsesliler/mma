@@ -17,6 +17,7 @@ import { C, F, R } from './theme';
 export function ProfilePanel({ s, act }: { s: GameState; act: Act }) {
   const [bio, setBio] = useState(s.fighter.hakkinda ?? '');
   const [saved, setSaved] = useState(false);
+  const [showCol, setShowCol] = useState(false);
   const score = legacyScore(s);
   const tier = legacyTier(score);
   const aktif = activeBelts(s);
@@ -73,8 +74,16 @@ export function ProfilePanel({ s, act }: { s: GameState; act: Act }) {
         const houses = owned.filter((x) => x!.art!.kind === 'house');
         return owned.length ? (
           <>
-            <Section>{`KOLEKSİYON · ${cars.length} ARABA · ${houses.length} MÜLK · ${owned.length - cars.length - houses.length} EŞYA`}</Section>
-            <View style={pf.gallery}>
+            <Section>KOLEKSİYON</Section>
+            <Pressable onPress={() => setShowCol(!showCol)} style={pf.colHead}>
+              <Icon name="garage-variant" size={20} color={C.gold} />
+              <Text style={pf.colText}>
+                {cars.length} araba · {houses.length} mülk · {owned.length - cars.length - houses.length} eşya
+              </Text>
+              <Text style={pf.colBtn}>{showCol ? 'GİZLE' : 'GÖSTER'}</Text>
+              <Icon name={showCol ? 'chevron-up' : 'chevron-down'} size={18} color={C.dim} />
+            </Pressable>
+            {showCol ? <View style={pf.gallery}>
               {owned.map((it) => (
                 <View key={it!.id} style={pf.galleryItem}>
                   <ItemArt art={it!.art!} width={150} />
@@ -83,7 +92,7 @@ export function ProfilePanel({ s, act }: { s: GameState; act: Act }) {
                   </Text>
                 </View>
               ))}
-            </View>
+            </View> : null}
           </>
         ) : null;
       })()}
@@ -152,6 +161,9 @@ const pf = StyleSheet.create({
   petItem: { width: '31.5%', backgroundColor: C.card, borderRadius: R, borderWidth: 1, borderColor: C.border, padding: 8, alignItems: 'center', gap: 2 },
   ach: { width: '31.5%', alignItems: 'center', backgroundColor: C.card, borderRadius: R, borderWidth: 1, borderColor: C.border, padding: 8, gap: 4 },
   achName: { color: C.gold, fontFamily: F.display, fontSize: 12, textAlign: 'center' },
+  colHead: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: C.card, borderRadius: R, borderWidth: 1, borderColor: C.border, padding: 12, marginBottom: 8 },
+  colText: { flex: 1, color: C.text, fontFamily: F.semi, fontSize: 13 },
+  colBtn: { color: C.dim, fontFamily: F.display, fontSize: 11, letterSpacing: 1 },
   achLink: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: R, borderWidth: 1, borderColor: C.goldDeep, padding: 12 },
   achDesc: { color: C.faint, fontFamily: F.body, fontSize: 10, textAlign: 'center', lineHeight: 13 },
 });
