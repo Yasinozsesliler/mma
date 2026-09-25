@@ -34,7 +34,7 @@ function levelFor(s: GameState, org: OrgId, zorluk: number, rank: number | null,
   if (champion) tb += 17;
   const pa = statAverage(s.fighter.stats);
   // Oyuncu güçlendikçe rakipler de güçlenir: rekabet hep canlı kalır.
-  return tb * 0.62 + pa * 0.38 + zorluk * 5 + noise(2);
+  return tb * 0.55 + pa * 0.45 + zorluk * 5 + noise(2);
 }
 
 function recordFor(org: OrgId, rank: number | null, champion: boolean) {

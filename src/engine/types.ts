@@ -317,7 +317,33 @@ export type Phase =
   | 'sosyal'
   | 'kutlama'
   | 'gece'
+  | 'basarimlar'
   | 'emeklilik';
+
+export interface Istat {
+  enIyiSeri: number;
+  r1: number;
+  bonus: number;
+  unvanMaci: number;
+  donus: number;
+  kdKalk: number;
+  surpriz: number;
+  sampiyonYen: number;
+  sonNefes: number;
+  maraton: number;
+  temiz: number;
+  inat: number;
+  bitirisSeri: number;
+  enIyiBitirisSeri: number;
+  tatil: number;
+  gonderi: number;
+  eslesme: number;
+  sevgili: number;
+  maxPara: number;
+  sikletler: string[];
+  yenilmezZirve?: number;
+  rovans?: number;
+}
 
 export interface GameState {
   v: 1;
@@ -346,9 +372,15 @@ export interface GameState {
   gece?: { risk: number; ziyaret: number };
   hastalik?: { ad: string; hafta: number; tedaviBitis?: number };
   iliski?: { id: string; ad: string; meslek: string; emoji: string; durum: 'sevgili'; hafta: number };
-  adaylar?: { hafta: number; list: Candidate[] };
+  /** Haftanın kaydırma destesi (Tinder) */
+  adaylar?: { hafta: number; list: Candidate[]; super?: boolean };
+  /** Sağa kaydırılıp eşleşilen kişiler */
+  eslesmeler?: Candidate[];
+  istat?: Istat;
+  /** Onur Listesi'ne (Hall of Fame) seçilme */
+  hof?: { hafta: number; yas: number; skor: number; goruldu?: boolean };
   patron?: Partial<Record<OrgId, number>>;
-  kutlama?: { tur: 'kemer' | 'cift' | 'savunma'; org: OrgId; siklet: WeightClass };
+  kutlama?: { tur: 'kemer' | 'cift' | 'savunma'; org: OrgId; siklet: WeightClass; sayi?: number };
   kumar?: { oynanan: number; net: number; sonHafta?: number; uyari?: string };
   sosyal?: Post[];
   /** Organizasyonun sıklet sıralaması (oyuncu hariç). */

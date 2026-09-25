@@ -8,7 +8,7 @@
 
     <!-- PWA -->
     <link rel="manifest" href="/manifest.json" />
-    <meta name="theme-color" content="#0d0e11" />
+    <meta name="theme-color" content="#040405" />
     <meta name="description" content="Sıfırdan UFC kemerine: seçim odaklı MMA kariyer oyunu." />
     <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
     <!-- iPhone: ana ekrana eklendiğinde tam ekran açılır -->
@@ -20,19 +20,27 @@
 
     <!-- The `react-native-web` recommended style reset: https://necolas.github.io/react-native-web/docs/setup/#root-element -->
     <style id="expo-reset">
+      /* iOS ana ekran (standalone) modunda %100 yükseklik durum çubuğu kadar kısa kalıyor ve
+         altta boş bir şerit oluşuyor. Kök elemanlar tüm ekranı kaplayacak şekilde sabitlenir. */
       html,
       body {
         height: 100%;
-        background-color: #0d0e11;
+        height: 100vh;
+        height: 100dvh;
+        margin: 0;
+        background-color: #040405;
       }
       body {
+        position: fixed;
+        inset: 0;
         overflow: hidden;
         -webkit-tap-highlight-color: transparent;
         overscroll-behavior: none;
       }
       #root {
+        position: absolute;
+        inset: 0;
         display: flex;
-        height: 100%;
         flex: 1;
       }
     </style>

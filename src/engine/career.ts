@@ -6,8 +6,9 @@ import { maybeEvent } from './events';
 import { ensureDivision, syncDivision } from './division';
 import { imposedOpponent, opponentChoices } from './matchmaking';
 import { applyInterview, buildInterview, interviewTargets, type InterviewCtx } from './interview';
-import { activeBelts, checkAchievements, defendBelt, loseBelt, vacateOrg, winBelt } from './legacy';
+import { activeBelts, champLabel, checkAchievements, defendBelt, loseBelt, vacateOrg, winBelt } from './legacy';
 import { fightPoints } from './progression';
+import { istat } from './istat';
 import { banLabel, banned, banWeeksLeft, dopingFallout, dopingTest } from './doping';
 import { paySponsors, refreshSponsorOffers } from './sponsors';
 import { prAdjust } from './staff';
@@ -268,11 +269,41 @@ export function finishFight(s: GameState) {
   }
 
   updateRival(s, opp, won, draw, r.yontem === 'SD' || finishMethod);
+  if (!caught) {
+    const st = istat(s);
+    if (pro && !st.sikletler.includes(s.fighter.siklet)) st.sikletler.push(s.fighter.siklet);
+    if (pro && (opp.champion || wasChampion)) st.unvanMaci++;
+    if (pro && won) {
+      st.enIyiSeri = Math.max(st.enIyiSeri, s.seri);
+      if (s.rekor.m === 0) st.yenilmezZirve = Math.max(st.yenilmezZirve ?? 0, s.rekor.g);
+      st.bonus += bonusSay;
+      if (finishMethod && r.raunt === 1) st.r1++;
+      if (finishMethod && r.raunt === fs.maxRaunt) st.sonNefes++;
+      if (!finishMethod && fs.maxRaunt === 5) st.maraton++;
+      if (fs.pHasar < 8) st.temiz++;
+      if (fs.pKnockdown > 0) st.kdKalk++;
+      if (opp.zorluk === 1) st.surpriz++;
+      if (opp.champion) st.sampiyonYen++;
+      if (opp.sonSonuc === 'M') st.rovans = (st.rovans ?? 0) + 1;
+      if (fs.rauntFarklari.length > 1 && fs.rauntFarklari.slice(0, -1).filter((d) => d < 0).length >= Math.ceil((fs.rauntFarklari.length - 1) / 2)) st.donus++;
+      st.bitirisSeri = finishMethod ? st.bitirisSeri + 1 : 0;
+      st.enIyiBitirisSeri = Math.max(st.enIyiBitirisSeri, st.bitirisSeri);
+    } else if (pro) st.bitirisSeri = 0;
+    if (r.sakatlik) st.inat++;
+  }
   checkAchievements(s).forEach((a) => lines.push(`⭐ Yeni başarım: ${a}`));
   if (caught) lines.push(...dopingFallout(s, banWeeks!));
   const teklif = refreshSponsorOffers(s, won && !caught);
   if (teklif) lines.push(teklif);
-  advanceWeeks(s, 2);
+  // Toparlanma ve yeni maç görüşmeleri: kampla birlikte bir dövüş döngüsü yaklaşık 90-100 gün sürer.
+  const kampHafta = kamp.hafta ?? 8;
+  let ara = Math.max(pro ? 4 : 3, (pro ? randInt(13, 14) : randInt(10, 11)) - kampHafta);
+  if (!won && (r.yontem === 'KO' || r.yontem === 'TKO')) {
+    ara += 4;
+    lines.push('🩺 Nakavt sonrası zorunlu sağlık ertelemesi: +4 hafta kafese çıkamazsın.');
+  }
+  lines.push(`📅 Toparlanma ve yeni maç görüşmeleri: ${ara} hafta. Son kamptan bu yana ${(kampHafta + ara) * 7} gün geçecek.`);
+  advanceWeeks(s, ara);
 
   s.haberler.unshift(
     `${won ? '✅' : draw ? '➖' : '❌'} ${orgInfo.kisa}: ${fullName(s.fighter)} ${
@@ -331,12 +362,14 @@ function updateRank(s: GameState, opp: Opponent, won: boolean, draw: boolean): s
     s.rank = null;
     s.savunma = 0;
     const title = `${ORGS[org].ad} ${WEIGHT_CLASSES[s.fighter.siklet].ad} Sıklet Şampiyonu`;
-    const cift = winBelt(s, org, s.fighter.siklet) === 'cift';
+    const sayi = winBelt(s, org, s.fighter.siklet);
     s.unvanlar.push(title);
-    if (cift) {
-      s.populerlik = clamp(s.populerlik + 10, 0, 100);
-      s.haberler.unshift(`🏆🏆 TARİH YAZILDI! ${fullName(s.fighter)} artık ${ORGS[org].kisa} ÇİFT SIKLET ŞAMPİYONU!`);
-      return `🏆🏆 ÇİFT SIKLET ŞAMPİYONU! ${title}! (Popülerlik +10)`;
+    if (sayi >= 2) {
+      const lbl = champLabel(sayi);
+      const bonus = sayi >= 3 ? 15 : 10;
+      s.populerlik = clamp(s.populerlik + bonus, 0, 100);
+      s.haberler.unshift(`🏆🏆 TARİH YAZILDI! ${fullName(s.fighter)} artık ${ORGS[org].kisa} ${lbl.tr} (${lbl.en})!`);
+      return `🏆🏆 ${lbl.en}! ${title}! (Popülerlik +${bonus})`;
     }
     s.haberler.unshift(`🏆🏆 YENİ ŞAMPİYON! ${fullName(s.fighter)} artık ${title}!`);
     return `🏆 KEMER SENİN! ${title}!`;

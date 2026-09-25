@@ -32,6 +32,9 @@ import { SocialScreen } from './src/ui/SocialScreen';
 import { TeamScreen } from './src/ui/TeamScreen';
 import { CelebrationScreen } from './src/ui/CelebrationScreen';
 import { NightlifeScreen } from './src/ui/NightlifeScreen';
+import { AchievementsScreen } from './src/ui/AchievementsScreen';
+import { AchievementToast } from './src/ui/AchievementToast';
+import { checkAchievements } from './src/engine/legacy';
 import { socialWelcome } from './src/engine/social';
 import { HasTopBar, TopBar } from './src/ui/components';
 import { C } from './src/ui/theme';
@@ -51,6 +54,7 @@ const PHASE_LABELS: Record<Phase, string> = {
   sosyal: 'Sosyal Medya',
   kutlama: 'Şampiyonluk',
   gece: 'Gece Hayatı',
+  basarimlar: 'Başarımlar',
   emeklilik: 'Emeklilik',
 };
 
@@ -58,6 +62,7 @@ type View_ = 'loading' | 'menu' | 'create' | 'game';
 
 export default function App() {
   const [view, setView] = useState<View_>('loading');
+  const [toast, setToast] = useState<string[]>([]);
   const [game, setGameState] = useState<GameState | null>(null);
   // act her zaman en güncel duruma bakar; gecikmeli çağrılar (ör. blackjack) eski durumu ezmesin.
   const gameRef = useRef<GameState | null>(null);
@@ -90,6 +95,9 @@ export default function App() {
     if (!cur) return;
     const next: GameState = JSON.parse(JSON.stringify(cur));
     fn(next);
+    // Kafes dışındaki başarımlar da (ev, araba, sevgili…) anında açılır.
+    const yeni = next.phase === 'emeklilik' ? [] : checkAchievements(next);
+    if (yeni.length) setToast(yeni);
     setGame(next);
     saveGame(next);
   };
@@ -158,6 +166,9 @@ export default function App() {
       case 'gece':
         content = <NightlifeScreen {...props} />;
         break;
+      case 'basarimlar':
+        content = <AchievementsScreen {...props} />;
+        break;
       case 'kutlama':
         content = game.kutlama ? <CelebrationScreen {...props} /> : <HubScreen {...props} />;
         break;
@@ -176,6 +187,7 @@ export default function App() {
         <View style={{ flex: 1, width: '100%', maxWidth: 560, alignSelf: 'center' }}>
           {topLabel ? <TopBar label={topLabel} onMenu={() => setView('menu')} /> : null}
           <HasTopBar.Provider value={!!topLabel}>{content}</HasTopBar.Provider>
+          {view === 'game' ? <AchievementToast items={toast} onDone={() => setToast([])} /> : null}
         </View>
       </View>
       <StatusBar style="light" />

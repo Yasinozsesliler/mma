@@ -3,6 +3,7 @@ import { addStat } from './character';
 import { riskyAct, treatmentCost } from './nightlifeCore';
 import { chance, clamp, pick, randInt, uid } from './rng';
 import { lifestylePost } from './social';
+import { bump } from './istat';
 import { prAdjust } from './staff';
 import type { GameState } from './types';
 
@@ -67,6 +68,12 @@ export interface Candidate {
   uyum: number; // 0-100
   unlu: boolean;
   seviye: number; // ilişki puanı 0-100
+  bio?: string;
+  ilgi?: string[];
+  renk?: [string, string];
+  mesafe?: number;
+  /** Profil fotoğrafı yerine geçen kişi emojisi */
+  foto?: string;
 }
 
 const NAMES = ['Derya', 'Melis', 'Aslı', 'Cansu', 'Buse', 'İrem', 'Ceren', 'Ezgi', 'Lara', 'Sofia', 'Mia', 'Elena', 'Nadia', 'Yasmin', 'Kaan', 'Deniz', 'Arda', 'Ege', 'Jade', 'Chloe'];
@@ -94,17 +101,123 @@ export const DATE_TIERS = [
 
 export const yatVar = (s: GameState) => (s.envanter ?? []).includes('yat');
 
-/** Her hafta yeni tanışma adayları (sevgili listede kalır). */
-export function candidates(s: GameState): Candidate[] {
-  if (s.adaylar && s.adaylar.hafta === s.hafta) return s.adaylar.list;
-  const keep = s.adaylar?.list.filter((c) => c.seviye >= 30 || c.id === s.iliski?.id) ?? [];
-  const list = [...keep];
-  while (list.length < keep.length + 3) {
-    const [meslek, emoji, unlu] = pick(JOBS);
-    list.push({ id: uid(), ad: pick(NAMES.filter((n) => !list.some((c) => c.ad === n))), yas: randInt(21, 34), meslek, emoji, uyum: randInt(25, 95), unlu, seviye: 0 });
+const BIOS = [
+  'Hafta sonları dağ yürüyüşü, hafta içi kahve bağımlısı ☕',
+  'Dövüş izlemeyi severim ama ringe çıkmam 😅',
+  'İyi bir pizza ve kötü bir film. Başka ne lazım?',
+  'Kedim benden daha popüler. Onunla anlaşman şart 🐱',
+  'Spontane geziler ve gün batımı fotoğrafları 🌅',
+  'Sabah 6’da spor salonundayım. Sen de mi?',
+  'Kitap önerisi ver, ben de sana şarkı önereyim 🎶',
+  'Espri anlayışı olmayanlar sola kaydırsın lütfen',
+  'Deniz kenarında büyüdüm, hâlâ denizsiz yapamam 🌊',
+  'Yemek yapmayı severim, yemeyi daha çok 🍝',
+  'Ciddi bir ilişki arıyorum. Oyun yok, dürüstlük var.',
+  'Konserler, festivaller, kalabalık masalar 🎉',
+  'Önce arkadaş olalım, sonrası kendiliğinden gelir.',
+  'Gece kuşuyum. Saat 2’de mesaj atarsan cevap veririm 🦉',
+  'Hayat kısa, tatlıyı önce ye 🍰',
+  'Dünyanın 20 ülkesini gezdim, sıradaki rotayı birlikte seçelim ✈️',
+  'Sakin bir akşam, iyi bir şarap ve uzun bir sohbet 🍷',
+  'Sporcuları severim ama maç günü beni aramayın 😄',
+];
+const INTERESTS = ['🎵 Müzik', '✈️ Seyahat', '🍣 Suşi', '🐶 Köpekler', '🏖️ Plaj', '🎮 Oyun', '📚 Kitap', '🧘 Yoga', '🍷 Şarap', '⚽ Futbol', '🎨 Sanat', '🥊 MMA', '☕ Kahve', '🎬 Sinema', '🏋️ Spor', '📸 Fotoğraf', '🍳 Yemek', '💃 Dans'];
+const PHOTO: [string, string][] = [
+  ['#fd267a', '#ff6036'],
+  ['#7b2ff7', '#f107a3'],
+  ['#0f9b8e', '#1e3c72'],
+  ['#f7971e', '#d4145a'],
+  ['#4568dc', '#b06ab3'],
+  ['#e65c00', '#8e0e00'],
+  ['#11998e', '#38ef7d'],
+  ['#c94b4b', '#4b134f'],
+];
+export const DECK_SIZE = 10;
+const MALE = new Set(['Kaan', 'Arda', 'Ege']);
+const FACES_F = ['👩', '👱‍♀️', '👩‍🦰', '👩‍🦱', '👩🏽', '👩🏻', '👩🏾‍🦱', '👩🏼‍🦰'];
+const FACES_M = ['👨', '👱‍♂️', '👨‍🦱', '🧔', '👨🏽', '👨🏻‍🦰'];
+const FACES_N = ['🧑', '🧑‍🦱', '🧑🏽', '👱'];
+const faceFor = (ad: string) => pick(MALE.has(ad) ? FACES_M : ad === 'Deniz' ? FACES_N : FACES_F);
+
+function newCandidate(s: GameState, taken: string[]): Candidate {
+  const [meslek, emoji, unlu] = pick(JOBS);
+  const free = NAMES.filter((n) => !taken.includes(n));
+  const ilgi: string[] = [];
+  while (ilgi.length < 3) {
+    const i = pick(INTERESTS);
+    if (!ilgi.includes(i)) ilgi.push(i);
   }
-  s.adaylar = { hafta: s.hafta, list: list.slice(0, 6) };
-  return s.adaylar.list;
+  const ad = pick(free.length ? free : NAMES);
+  return {
+    id: uid(),
+    ad,
+    foto: faceFor(ad),
+    yas: randInt(21, 34),
+    meslek,
+    emoji,
+    uyum: randInt(25, 95),
+    unlu,
+    seviye: 0,
+    bio: pick(BIOS),
+    ilgi,
+    renk: pick(PHOTO),
+    mesafe: randInt(1, 25),
+  };
+}
+
+export const matches = (s: GameState) => s.eslesmeler ?? [];
+
+/** Haftalık kaydırma destesi: her hafta yeni profiller. */
+export function deck(s: GameState): Candidate[] {
+  if (s.adaylar && s.adaylar.hafta === s.hafta) return s.adaylar.list;
+  const taken = matches(s).map((c) => c.ad);
+  const list: Candidate[] = [];
+  while (list.length < DECK_SIZE) {
+    const c = newCandidate(s, [...taken, ...list.map((x) => x.ad)]);
+    list.push(c);
+  }
+  s.adaylar = { hafta: s.hafta, list, super: false };
+  return list;
+}
+/** Eski adıyla da çağrılabilsin. */
+export const candidates = deck;
+
+/** Eşleşme ihtimali: uyum, popülerlik; ünlüler daha seçici. */
+export function matchChance(s: GameState, c: Candidate, superLike = false) {
+  return clamp(c.uyum / 130 + s.populerlik / 250 + (c.unlu ? -0.12 : 0.05) + (superLike ? 0.35 : 0), 0.1, 0.95);
+}
+
+export type SwipeDir = 'sol' | 'sag' | 'super';
+
+/** Profili kaydır. Sağa (ya da süper beğeni) kaydırınca eşleşme şansı var. */
+export function swipe(s: GameState, id: string, dir: SwipeDir): { eslesme: boolean; aday?: Candidate } {
+  const d = deck(s);
+  const c = d.find((x) => x.id === id);
+  if (!c) return { eslesme: false };
+  s.adaylar!.list = d.filter((x) => x.id !== id);
+  if (dir === 'sol') return { eslesme: false };
+  if (dir === 'super') {
+    if (s.adaylar!.super) return { eslesme: false };
+    s.adaylar!.super = true;
+  }
+  if (!chance(matchChance(s, c, dir === 'super'))) return { eslesme: false };
+  const list = [c, ...matches(s)];
+  // Liste şişmesin: en eski, ilerlemeyen eşleşmeler düşer.
+  while (list.length > 12) {
+    const drop = [...list].reverse().find((x) => x.seviye < 30 && x.id !== s.iliski?.id);
+    if (!drop) break;
+    list.splice(list.indexOf(drop), 1);
+  }
+  s.eslesmeler = list;
+  bump(s, 'eslesme');
+  return { eslesme: true, aday: c };
+}
+
+export function unmatch(s: GameState, id: string): string {
+  const c = matches(s).find((x) => x.id === id);
+  if (!c || s.iliski?.id === id) return '';
+  s.eslesmeler = matches(s).filter((x) => x.id !== id);
+  return `${c.ad} ile eşleşmeyi kaldırdın.`;
 }
 
 function cheatCheck(s: GameState, c: Candidate): string {
@@ -119,7 +232,7 @@ function cheatCheck(s: GameState, c: Candidate): string {
 }
 
 export function goOnDate(s: GameState, id: string, tier: number): string {
-  const c = candidates(s).find((x) => x.id === id);
+  const c = matches(s).find((x) => x.id === id);
   if (!c) return '';
   const t = DATE_TIERS[tier];
   const cost = tier === 3 && yatVar(s) ? 1500 : t.fiyat;
@@ -145,7 +258,7 @@ export function goOnDate(s: GameState, id: string, tier: number): string {
 }
 
 export function spendNight(s: GameState, id: string): string {
-  const c = candidates(s).find((x) => x.id === id);
+  const c = matches(s).find((x) => x.id === id);
   if (!c || c.seviye < 30) return '';
   const partner = s.iliski?.id === c.id;
   const ad = riskyAct(s, partner ? 0.15 : 1.5);
@@ -155,9 +268,10 @@ export function spendNight(s: GameState, id: string): string {
 }
 
 export function makePartner(s: GameState, id: string): string {
-  const c = candidates(s).find((x) => x.id === id);
+  const c = matches(s).find((x) => x.id === id);
   if (!c || c.seviye < 70) return '';
-  s.iliski = { id: c.id, ad: c.ad, meslek: c.meslek, emoji: c.emoji, durum: 'sevgili', hafta: s.hafta };
+  s.iliski = { id: c.id, ad: c.ad, meslek: c.meslek, emoji: c.foto ?? c.emoji, durum: 'sevgili', hafta: s.hafta };
+  bump(s, 'sevgili');
   const v = pop(s, c.unlu ? 4 : 2);
   lifestylePost(s, `yeni sevgilisi ${c.ad} ile el ele`);
   return `💞 ${c.ad} artık sevgilin! Kamp motivasyonu +1. (Popülerlik +${v})`;

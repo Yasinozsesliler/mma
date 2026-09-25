@@ -4,7 +4,7 @@ import { Animated, Dimensions, StyleSheet, Text, View } from 'react-native';
 import { endCelebration } from '../engine/career';
 import { fullName } from '../engine/character';
 import { ORGS, WEIGHT_CLASSES } from '../engine/data';
-import { activeBelts } from '../engine/legacy';
+import { activeBelts, champLabel } from '../engine/legacy';
 import type { GameState } from '../engine/types';
 import { Belt } from './Belt';
 import { Button, Screen, SLANT } from './components';
@@ -71,10 +71,11 @@ export function CelebrationScreen({ s, act }: { s: GameState; act: Act }) {
   }, [scale]);
   const belts = k.tur === 'cift' ? activeBelts(s).filter((b) => b.org === k.org) : activeBelts(s).filter((b) => b.org === k.org && b.siklet === k.siklet);
   const belt = belts.find((b) => b.siklet === k.siklet);
-  const baslik = k.tur === 'cift' ? 'DOUBLE CHAMP!' : k.tur === 'savunma' ? 'KEMER KORUNDU!' : 'YENİ ŞAMPİYON!';
+  const sayi = k.sayi ?? belts.length;
+  const baslik = k.tur === 'cift' ? `${champLabel(sayi).en}!` : k.tur === 'savunma' ? 'KEMER KORUNDU!' : 'YENİ ŞAMPİYON!';
   const alt =
     k.tur === 'cift'
-      ? `${ORGS[k.org].ad} tarihine geçtin: aynı anda iki sıklette şampiyon!`
+      ? `${ORGS[k.org].ad} tarihine geçtin: aynı anda ${sayi} sıklette şampiyon!`
       : k.tur === 'savunma'
         ? `${belt?.savunma ?? 1}. kemer savunması. Hükümdarlığın sürüyor.`
         : `${ORGS[k.org].ad} ${WEIGHT_CLASSES[k.siklet].ad} Sıklet Şampiyonu`;

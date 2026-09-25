@@ -302,7 +302,8 @@ const EVENTS: Record<string, EventDef> = {
     },
   },
   cagri: {
-    kosul: (s) => s.rakipler.some((r) => r.rivalry >= 2),
+    // Kalıcı rakipler kaldırıldı: bu olay artık havuza girmez.
+    kosul: () => false,
     agirlik: 2,
     kur: (s) => {
       const r = pick(s.rakipler.filter((x) => x.rivalry >= 2));

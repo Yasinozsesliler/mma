@@ -6,14 +6,24 @@ import { VACATIONS } from '../engine/gyms';
 import { buy, fightItemMods, itemBonusTotal, itemEffects, ITEM_STAT_CAP, ITEM_TOTAL_CAP, outclassed, owns, SHOP, takeVacation, type ShopCategory, type ShopItem } from '../engine/shop';
 import { STAT_LABELS } from '../engine/types';
 import type { GameState } from '../engine/types';
-import { Button, Card, OctIcon, P, Pill, Screen, SLANT, Title, type IconName } from './components';
+import { Button, Card, Icon, OctIcon, P, Pill, Screen, SLANT, Title, type IconName } from './components';
 import type { Act } from './GameScreens';
 import { InvestPanel } from './InvestPanel';
 import { PetPanel } from './PetPanel';
-import { CarArt, HouseArt } from './VisualArt';
+import { ItemArt } from './ItemArt';
 import { C, F, R } from './theme';
 
 type Tab = ShopCategory | 'yatirim' | 'tatil' | 'hayvan';
+
+const SUBS: [NonNullable<ShopItem['alt']>, string, IconName][] = [
+  ['ev', 'EV', 'home-city'],
+  ['araba', 'ARABA', 'car-sports'],
+  ['saat', 'SAAT & TAKI', 'watch'],
+  ['teknoloji', 'TEKNOLOJİ', 'controller-classic'],
+  ['moda', 'MODA', 'hanger'],
+  ['tasit', 'TAŞIT', 'airplane'],
+  ['diger', 'DİĞER', 'palette'],
+];
 const TABS: { key: Tab; label: string; icon: IconName }[] = [
   { key: 'ekipman', label: 'EKİPMAN', icon: 'boxing-glove' },
   { key: 'yasam', label: 'YAŞAM', icon: 'home-heart' },
@@ -31,7 +41,7 @@ function ItemCard({ s, it, act, onMsg }: { s: GameState; it: ShopItem; act: Act;
     <View style={[sh.card, have && { borderColor: C.green }]}>
       {it.art ? (
         <View style={sh.art}>
-          {it.art.kind === 'car' ? <CarArt model={it.art.model} color={it.art.color} width={260} /> : <HouseArt model={it.art.model} width={260} />}
+          <ItemArt art={it.art} width={280} />
         </View>
       ) : null}
       <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
@@ -68,8 +78,9 @@ function ItemCard({ s, it, act, onMsg }: { s: GameState; it: ShopItem; act: Act;
 
 export function ShopScreen({ s, act }: { s: GameState; act: Act }) {
   const [tab, setTab] = useState<Tab>('ekipman');
+  const [alt, setAlt] = useState<NonNullable<ShopItem['alt']>>('ev');
   const [msg, setMsg] = useState<string | null>(null);
-  const items = SHOP.filter((i) => i.kategori === tab).sort((a, b) => a.fiyat - b.fiyat);
+  const items = SHOP.filter((i) => i.kategori === tab && (tab !== 'yasam' || (i.alt ?? 'diger') === alt)).sort((a, b) => a.fiyat - b.fiyat);
   return (
     <Screen footer={<Button label="Kariyere dön" icon="arrow-left" tone="ghost" onPress={() => act((x) => (x.phase = 'hub'))} />}>
       <Title kicker="DÖVÜŞÇÜ MAĞAZASI" sub="Ekipmanlar kafeste kalıcı bonus verir. Yaşam eşyaları popülerlik, motivasyon ve daha hızlı iyileşme sağlar.">
@@ -101,6 +112,16 @@ export function ShopScreen({ s, act }: { s: GameState; act: Act }) {
             {Object.entries(fightItemMods(s)).map(([k, v]) => `+${v} ${STAT_LABELS[k as keyof typeof STAT_LABELS]}`).join(' · ') || 'Henüz ekipman bonusun yok.'}
             {`\nBir istatistiğe en fazla +${ITEM_STAT_CAP}, toplamda en fazla +${ITEM_TOTAL_CAP} ekipman bonusu gelir.`}
           </Text>
+        </View>
+      ) : null}
+      {tab === 'yasam' ? (
+        <View style={sh.subs}>
+          {SUBS.map(([k, l, ic]) => (
+            <Pressable key={k} onPress={() => setAlt(k)} style={[sh.sub, alt === k && sh.subOn]}>
+              <Icon name={ic} size={14} color={alt === k ? '#1f1605' : C.dim} />
+              <Text style={[sh.subText, alt === k && { color: '#1f1605' }]}>{l}</Text>
+            </Pressable>
+          ))}
         </View>
       ) : null}
       {tab === 'yatirim' ? <InvestPanel s={s} act={act} onMsg={setMsg} /> : null}
@@ -145,6 +166,10 @@ export function ShopScreen({ s, act }: { s: GameState; act: Act }) {
 }
 
 const sh = StyleSheet.create({
+  subs: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 12 },
+  sub: { flexDirection: 'row', alignItems: 'center', gap: 5, borderWidth: 1, borderColor: C.border, backgroundColor: C.card, borderRadius: 3, paddingHorizontal: 10, paddingVertical: 7, transform: [{ skewX: '-8deg' }] },
+  subOn: { backgroundColor: C.gold, borderColor: C.gold },
+  subText: { color: C.dim, fontFamily: F.display, fontSize: 12, letterSpacing: 0.6 },
   art: { alignItems: 'center', backgroundColor: '#07080b', borderRadius: 6, paddingVertical: 6, marginBottom: 10 },
   capBox: { backgroundColor: C.card, borderWidth: 1, borderColor: C.goldDeep, borderRadius: R, padding: 12, marginBottom: 12 },
   capLabel: { color: C.gold, fontFamily: F.display, fontSize: 12, letterSpacing: 1.5 },

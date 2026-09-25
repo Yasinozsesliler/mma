@@ -215,7 +215,7 @@ const LINES: Line[] = [
   },
   {
     id: 'cift', ozel: true, when: (c) => !!c.cift,
-    text: ['İKİ KEMER! Bunu yapabilen çok az insan var. Tarihe geçtim!', 'Double champ, baby! Sıkletler bana dar geliyor!', 'Bir omzumda bir kemer, diğerinde bir kemer. Kral geri döndü!'],
+    text: ['Aynı anda birden fazla kemer! Bunu yapabilen çok az insan var. Tarihe geçtim!', 'Sıkletler bana dar geliyor! Kemerleri say bakalım!', 'Omuzlarımda kemerler, kral geri döndü!'],
     apply: (c, s) => pick(['Dünya basını manşette: TARİH YAZILDI!', 'Organizasyon başkanı iki kemeri birlikte taktı. Salon yıkıldı.']) + mot(s, 2) + pop(s, 8),
   },
   {

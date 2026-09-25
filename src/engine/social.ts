@@ -1,5 +1,6 @@
 // Sosyal medya: dövüşçüler atışır, taraftarlar yorum yapar, maçların hikâyesi yazılır.
 import { fullName, statAverage } from './character';
+import { bump } from './istat';
 import { BACKGROUNDS, COUNTRIES, JOURNALISTS, ORGS } from './data';
 import { currentOrg } from './character';
 import { chance, clamp, fill, pick, randInt, uid } from './rng';
@@ -191,6 +192,7 @@ function findMention(s: GameState, text: string): Opponent | null {
 export function playerPost(s: GameState, text: string): string {
   const metin = text.trim().slice(0, 280);
   if (!metin) return 'Boş bir paylaşım yapamazsın.';
+  bump(s, 'gonderi');
   const t = metin.toLocaleLowerCase('tr-TR');
   const trash = TRASH_WORDS.some((w) => t.includes(w));
   const respect = RESPECT_WORDS.some((w) => t.includes(w));

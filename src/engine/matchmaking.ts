@@ -2,7 +2,7 @@
 import { currentOrg } from './character';
 import { ORGS } from './data';
 import { divisionChampion, ensureDivision, rankedOpponent } from './division';
-import { eligibleRivals, generateOpponent, refreshRival, riskText, rivalCandidate } from './opponents';
+import { generateOpponent, riskText } from './opponents';
 import { chance, clamp, randInt } from './rng';
 import type { GameState, Opponent } from './types';
 
@@ -71,7 +71,7 @@ export function opponentChoices(s: GameState): Opponent[] {
   });
   if (L && !s.sampiyon && r != null && (r === 1 || (r <= 2 && s.seri >= 2)) && !titleBlocked(s)) opts[2] = titleFight(s);
   else {
-    const special = calledOut(s) ?? rivalCandidate(s);
+    const special = calledOut(s);
     if (special) opts[2] = special;
   }
   if (s.sampiyon) {
@@ -93,14 +93,13 @@ export function imposedOpponent(s: GameState): Opponent {
     return o;
   }
   if (s.sampiyon) {
-    const rival = eligibleRivals(s).find((x) => x.rivalry >= 2 && chance(0.3));
-    const o = rival ? refreshRival(s, rival) : ranked(s, randInt(1, 3), 1);
+    const o = ranked(s, randInt(1, 3), 1);
     o.etiket = '🏆 UNVAN SAVUNMASI';
     o.riskMetni = 'Kemerin masada. Kaybedersen tahtın gider.';
     return o;
   }
   if (s.rank != null && (s.rank === 1 || (s.rank <= 2 && s.seri >= 3)) && !titleBlocked(s)) return titleFight(s);
-  const special = calledOut(s) ?? rivalCandidate(s);
+  const special = calledOut(s);
   if (special) return special;
   let rank: number | null;
   if (s.rank == null) rank = chance(0.5) ? null : randInt(L - 3, L);

@@ -1,3 +1,4 @@
+import { istat } from './engine/istat';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ensureDivision } from './engine/division';
 import { gymsFor } from './engine/gyms';
@@ -63,7 +64,17 @@ export async function loadGame(): Promise<GameState | null> {
       s.envanter = s.envanter.filter((x) => x !== 'kopek');
     }
     s.yatirimlar ??= [];
-    checkAchievements(s);
+    if (!s.eslesmeler && s.adaylar) {
+      s.eslesmeler = s.adaylar.list.filter((c) => c.seviye > 0 || c.id === s.iliski?.id);
+      s.adaylar = undefined;
+    }
+    if (!s.istat) {
+      const st = istat(s);
+      st.enIyiSeri = Math.max(0, s.seri);
+      if (s.stage !== 'amator') st.sikletler = [s.fighter.siklet];
+      st.maxPara = s.para;
+    }
+    checkAchievements(s, true);
     ensureDivision(s);
     return s;
   } catch {

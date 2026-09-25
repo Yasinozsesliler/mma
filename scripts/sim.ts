@@ -1,5 +1,6 @@
 // Motor denge testi: botlar tam kariyerleri otomatik oynar.
 // Çalıştırma: npx tsx scripts/sim.ts [kariyerSayisi]
+import { legacyScore } from '../src/engine/legacy';
 import { campChoose } from '../src/engine/camp';
 import {
   acceptOffer,
@@ -40,6 +41,13 @@ const stats = {
   byBg: {} as Record<string, { w: number; l: number }>,
   crashes: 0,
   stageFights: {} as Record<string, number>,
+  rec25: [] as string[],
+  fights25: [] as number[],
+  totalFights: [] as number[],
+  retireAge: [] as number[],
+  hof: 0,
+  ach: [] as number[],
+  legacy: [] as number[],
   stageCareers: {} as Record<string, number>,
   critAll: 0,
   repeatFights: 0,
@@ -65,6 +73,7 @@ function playCareer() {
   stats.careers++;
   stats.byBg[bg] ??= { w: 0, l: 0 };
   let pro = false, big = false, ufc = false, fights = 0;
+  let rec25 = '';
   const seen = new Set<string>();
   const metIds = new Map<string, number>();
   const metNames = new Map<string, string>();
@@ -79,6 +88,7 @@ function playCareer() {
     spendAll();
     switch (s.phase) {
       case 'hub':
+        if (s.fighter.yas >= 25 && !rec25 && input.yas <= 20) { rec25 = `${s.rekor.g}-${s.rekor.m}`; stats.rec25.push(rec25); stats.fights25.push(s.rekor.g + s.rekor.m + s.rekor.b + s.amator.g + s.amator.m + s.amator.b); }
         if (s.gecmis.length >= 90) return finalize();
         if (s.saglik < 55 || s.sakatliklar.length) rest(s);
         else findNextFight(s);
@@ -163,6 +173,11 @@ function playCareer() {
     if (big) stats.reachedBig++;
     if (ufc) stats.reachedUfc++;
     if (s.unvanlar.length) stats.anyTitle++;
+    if (s.hof) stats.hof++;
+    stats.ach.push((s.basarimlar ?? []).length);
+    stats.legacy.push(legacyScore(s));
+    stats.totalFights.push(fights);
+    stats.retireAge.push(s.fighter.yas);
     if (s.unvanlar.some((u) => u.startsWith('UFC'))) stats.ufcChamp++;
   }
 }
@@ -177,6 +192,10 @@ for (let i = 0; i < N; i++) {
 }
 
 const pct = (a: number, b: number) => `${((a / Math.max(1, b)) * 100).toFixed(1)}%`;
+const mean = (a: number[]) => (a.reduce((x, y) => x + y, 0) / Math.max(1, a.length)).toFixed(1);
+console.log(`18-20 yaşında başlayanlar, 25 yaşında: toplam dövüş ort. ${mean(stats.fights25)}, pro karne örnekleri: ${stats.rec25.slice(0, 12).join(', ')}`);
+console.log(`Kariyer boyu dövüş ort. ${mean(stats.totalFights)}, bitiş yaşı ort. ${mean(stats.retireAge)}`);
+console.log(`Başarım ort. ${mean(stats.ach)}, maks ${Math.max(...stats.ach)} · Efsane puanı ort. ${mean(stats.legacy)}, maks ${Math.max(...stats.legacy)} · Hall of Fame: ${((stats.hof / N) * 100).toFixed(1)}%`);
 console.log(`Kariyer: ${stats.careers}, dövüş: ${stats.fights}, çökme: ${stats.crashes}`);
 console.log(`G/M/B: ${pct(stats.wins, stats.fights)} / ${pct(stats.losses, stats.fights)} / ${pct(stats.draws, stats.fights)}`);
 console.log('Yöntemler:', Object.entries(stats.methods).map(([k, v]) => `${k} ${pct(v, stats.fights)}`).join(', '));

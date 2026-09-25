@@ -1,13 +1,15 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { money } from '../engine/career';
 import { enterCasino } from '../engine/casino';
-import { breakUp, candidates, DATE_TIERS, goOnDate, makePartner, spendNight, STRIP_OPTIONS, stripPrice, treatDisease, visitStripClub, yatVar } from '../engine/nightlife';
+import { breakUp, deck, DATE_TIERS, goOnDate, makePartner, matches, spendNight, STRIP_OPTIONS, stripPrice, treatDisease, unmatch, visitStripClub, yatVar, type Candidate } from '../engine/nightlife';
 import { treatmentCost } from '../engine/nightlifeCore';
 import type { GameState } from '../engine/types';
 import { Bar, Button, Card, Choice, Icon, P, Pill, Screen, Section, SLANT, Title, type IconName } from './components';
 import type { Act } from './GameScreens';
+import { FighterAvatar } from './FighterAvatar';
+import { SwipeDeck, TINDER } from './SwipeDeck';
 import { C, F, R } from './theme';
 
 function HealthBanner({ s, act, onMsg }: { s: GameState; act: Act; onMsg: (m: string) => void }) {
@@ -48,9 +50,98 @@ function Strip({ s, act, onMsg }: { s: GameState; act: Act; onMsg: (m: string) =
   );
 }
 
+function MatchModal({ s, c, onClose, onDate }: { s: GameState; c: Candidate | null; onClose: () => void; onDate: () => void }) {
+  return (
+    <Modal visible={!!c} transparent animationType="fade" onRequestClose={onClose}>
+      <View style={nl.modalBg}>
+        {c ? (
+          <View style={nl.modalBox}>
+            <Text style={[nl.matchTitle, SLANT]}>EŞLEŞME!</Text>
+            <Text style={nl.matchSub}>Sen ve {c.ad} birbirinizi beğendiniz.</Text>
+            <View style={nl.matchPics}>
+              <View style={[nl.matchPic, { transform: [{ rotate: '-8deg' }] }]}>
+                <FighterAvatar look={s.fighter.gorunum} size={104} ring="#fff" />
+              </View>
+              <LinearGradient colors={c.renk ?? TINDER} style={[nl.matchPic, nl.matchEmoji, { transform: [{ rotate: '8deg' }] }]}>
+                <Text style={{ fontSize: 64 }}>{c.foto ?? c.emoji}</Text>
+              </LinearGradient>
+            </View>
+            <Pressable onPress={onDate}>
+              <LinearGradient colors={TINDER} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={nl.matchBtn}>
+                <Icon name="calendar-heart" size={18} color="#fff" />
+                <Text style={nl.matchBtnText}>RANDEVU PLANLA</Text>
+              </LinearGradient>
+            </Pressable>
+            <Pressable onPress={onClose} style={[nl.matchBtn, nl.matchGhost]}>
+              <Text style={nl.matchBtnText}>KAYDIRMAYA DEVAM ET</Text>
+            </Pressable>
+          </View>
+        ) : null}
+      </View>
+    </Modal>
+  );
+}
+
+function MatchCard({ s, act, onMsg, c }: { s: GameState; act: Act; onMsg: (m: string) => void; c: Candidate }) {
+  const partner = s.iliski?.id === c.id;
+  return (
+    <View style={[nl.card, partner && { borderColor: '#e0457b' }]}>
+      <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
+        <LinearGradient colors={c.renk ?? TINDER} style={nl.avatar}>
+          <Text style={{ fontSize: 28 }}>{c.foto ?? c.emoji}</Text>
+        </LinearGradient>
+        <View style={{ flex: 1 }}>
+          <Text style={nl.name}>
+            {c.ad}, {c.yas}
+          </Text>
+          <Text style={nl.meta}>
+            {c.meslek}
+            {c.unlu ? ' · ⭐ Ünlü' : ''} · Uyum %{c.uyum}
+          </Text>
+        </View>
+        {partner ? (
+          <Pill text="SEVGİLİN" icon="heart" color="#e0457b" />
+        ) : (
+          <Pressable onPress={() => act((x) => onMsg(unmatch(x, c.id)))} hitSlop={8}>
+            <Icon name="close-circle-outline" size={22} color={C.faint} />
+          </Pressable>
+        )}
+      </View>
+      {c.bio ? <Text style={[nl.meta, { marginTop: 6, fontStyle: 'italic' }]}>“{c.bio}”</Text> : null}
+      <Bar value={c.seviye} color="#e0457b" label="İlişki" right={`${c.seviye}/100`} />
+      <View style={nl.tiers}>
+        {DATE_TIERS.map((t, i) => {
+          const cost = i === 3 && yatVar(s) ? 1500 : t.fiyat;
+          return (
+            <Pressable key={t.ad} disabled={s.para < cost} onPress={() => act((x) => onMsg(goOnDate(x, c.id, i)))} style={[nl.tier, s.para < cost && { opacity: 0.3 }]}>
+              <Icon name={t.ikon as IconName} size={16} color={C.text} />
+              <Text style={nl.tierText}>{t.ad}</Text>
+              <Text style={nl.tierPrice}>{money(cost)}</Text>
+            </Pressable>
+          );
+        })}
+      </View>
+      <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
+        {c.seviye >= 30 ? (
+          <Pressable onPress={() => act((x) => onMsg(spendNight(x, c.id)))} style={[nl.small, { flex: 1 }]}>
+            <Text style={nl.smallText}>GECEYİ BİRLİKTE GEÇİR</Text>
+          </Pressable>
+        ) : null}
+        {c.seviye >= 70 && !partner ? (
+          <Pressable onPress={() => act((x) => onMsg(makePartner(x, c.id)))} style={[nl.small, { flex: 1, backgroundColor: '#e0457b' }]}>
+            <Text style={nl.smallText}>💞 SEVGİLİ OL</Text>
+          </Pressable>
+        ) : null}
+      </View>
+    </View>
+  );
+}
+
 function Dates({ s, act, onMsg }: { s: GameState; act: Act; onMsg: (m: string) => void }) {
-  // Liste act() ile üretilir (NightlifeScreen'deki efekt); çizim sırasında durum değiştirilmez.
-  const list = s.adaylar?.hafta === s.hafta ? s.adaylar.list : [];
+  const [sub, setSub] = useState<'kesfet' | 'eslesme'>('kesfet');
+  const [match, setMatch] = useState<Candidate | null>(null);
+  const list = matches(s);
+  const sorted = [...list].sort((a, b) => (b.id === s.iliski?.id ? 1 : 0) - (a.id === s.iliski?.id ? 1 : 0) || b.seviye - a.seviye);
   return (
     <>
       {s.iliski ? (
@@ -66,55 +157,44 @@ function Dates({ s, act, onMsg }: { s: GameState; act: Act; onMsg: (m: string) =
           </Pressable>
         </LinearGradient>
       ) : null}
-      <Section>BU HAFTANIN TANIŞMALARI</Section>
-      {list.map((c) => {
-        const partner = s.iliski?.id === c.id;
-        return (
-          <View key={c.id} style={[nl.card, partner && { borderColor: '#e0457b' }]}>
-            <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
-              <View style={nl.avatar}>
-                <Text style={{ fontSize: 30 }}>{c.emoji}</Text>
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={nl.name}>
-                  {c.ad}, {c.yas}
-                </Text>
-                <Text style={nl.meta}>
-                  {c.meslek}
-                  {c.unlu ? ' · ⭐ Ünlü' : ''} · Uyum %{c.uyum}
-                </Text>
-              </View>
-              {partner ? <Pill text="SEVGİLİN" icon="heart" color="#e0457b" /> : null}
-            </View>
-            <Bar value={c.seviye} color="#e0457b" label="İlişki" right={`${c.seviye}/100`} />
-            <View style={nl.tiers}>
-              {DATE_TIERS.map((t, i) => {
-                const cost = i === 3 && yatVar(s) ? 1500 : t.fiyat;
-                return (
-                  <Pressable key={t.ad} disabled={s.para < cost} onPress={() => act((x) => onMsg(goOnDate(x, c.id, i)))} style={[nl.tier, s.para < cost && { opacity: 0.3 }]}>
-                    <Icon name={t.ikon as IconName} size={16} color={C.text} />
-                    <Text style={nl.tierText}>{t.ad}</Text>
-                    <Text style={nl.tierPrice}>{money(cost)}</Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-            <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
-              {c.seviye >= 30 ? (
-                <Pressable onPress={() => act((x) => onMsg(spendNight(x, c.id)))} style={[nl.small, { flex: 1 }]}>
-                  <Text style={nl.smallText}>GECEYİ BİRLİKTE GEÇİR</Text>
-                </Pressable>
-              ) : null}
-              {c.seviye >= 70 && !partner ? (
-                <Pressable onPress={() => act((x) => onMsg(makePartner(x, c.id)))} style={[nl.small, { flex: 1, backgroundColor: '#e0457b' }]}>
-                  <Text style={nl.smallText}>💞 SEVGİLİ OL</Text>
-                </Pressable>
-              ) : null}
-            </View>
-          </View>
-        );
-      })}
-      <P dim>Tanışma listesi her hafta yenilenir; ilişkin ilerleyenler listede kalır.</P>
+      <View style={nl.appHead}>
+        <LinearGradient colors={TINDER} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={nl.appLogo}>
+          <Icon name="fire" size={20} color="#fff" />
+        </LinearGradient>
+        <Text style={nl.appName}>kıvılcım</Text>
+        <View style={nl.segment}>
+          {(
+            [
+              ['kesfet', 'KEŞFET'],
+              ['eslesme', `EŞLEŞMELER${list.length ? ` (${list.length})` : ''}`],
+            ] as const
+          ).map(([k, l]) => (
+            <Pressable key={k} onPress={() => setSub(k)} style={[nl.segBtn, sub === k && nl.segOn]}>
+              <Text style={[nl.segText, sub === k && { color: '#fff' }]}>{l}</Text>
+            </Pressable>
+          ))}
+        </View>
+      </View>
+      {sub === 'kesfet' ? (
+        <SwipeDeck s={s} act={act} onMatch={setMatch} />
+      ) : sorted.length ? (
+        sorted.map((c) => <MatchCard key={c.id} s={s} act={act} onMsg={onMsg} c={c} />)
+      ) : (
+        <Card>
+          <P dim style={{ marginBottom: 0 }}>
+            Henüz eşleşmen yok. KEŞFET’te sağa kaydır; karşı taraf da seni beğenirse eşleşirsiniz.
+          </P>
+        </Card>
+      )}
+      <MatchModal
+        s={s}
+        c={match}
+        onClose={() => setMatch(null)}
+        onDate={() => {
+          setMatch(null);
+          setSub('eslesme');
+        }}
+      />
     </>
   );
 }
@@ -124,7 +204,7 @@ export function NightlifeScreen({ s, act }: { s: GameState; act: Act }) {
   const [msg, setMsg] = useState<string | null>(null);
   const risk = s.gece?.risk ?? 0;
   useEffect(() => {
-    if (s.adaylar?.hafta !== s.hafta) act((x) => void candidates(x));
+    if (s.adaylar?.hafta !== s.hafta) act((x) => void deck(x));
   }, [s.hafta, s.adaylar?.hafta, act]);
   return (
     <Screen footer={<Button label="Kariyere dön" icon="arrow-left" tone="ghost" onPress={() => act((x) => (x.phase = 'hub'))} />}>
@@ -178,12 +258,29 @@ const nl = StyleSheet.create({
   heroSub: { color: C.dim, fontFamily: F.body, fontSize: 13, lineHeight: 19 },
   partner: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: R, borderWidth: 1, borderColor: '#e0457b', padding: 12, marginBottom: 6 },
   card: { backgroundColor: C.card, borderRadius: R, borderWidth: 1, borderColor: C.border, padding: 12, marginBottom: 10 },
-  avatar: { width: 50, height: 50, borderRadius: 25, backgroundColor: '#e0457b22', borderWidth: 1, borderColor: '#e0457b', alignItems: 'center', justifyContent: 'center' },
+  avatar: { width: 50, height: 50, borderRadius: 25, alignItems: 'center', justifyContent: 'center' },
   name: { color: C.text, fontFamily: F.display, fontSize: 18 },
   tiers: { flexDirection: 'row', gap: 6, marginTop: 8 },
   tier: { flex: 1, alignItems: 'center', gap: 2, backgroundColor: C.cardAlt, borderRadius: 6, paddingVertical: 7, borderWidth: 1, borderColor: C.border },
   tierText: { color: C.text, fontFamily: F.semi, fontSize: 10, textAlign: 'center' },
   tierPrice: { color: C.gold, fontFamily: F.display, fontSize: 11 },
   small: { backgroundColor: C.cardAlt, borderRadius: 3, paddingHorizontal: 10, paddingVertical: 8, alignItems: 'center', transform: [{ skewX: '-8deg' }] },
+  appHead: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6, marginBottom: 12 },
+  appLogo: { width: 32, height: 32, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  appName: { color: '#ff5a5f', fontFamily: F.black, fontSize: 22, letterSpacing: -0.5 },
+  segment: { flex: 1, flexDirection: 'row', justifyContent: 'flex-end', gap: 4 },
+  segBtn: { paddingHorizontal: 10, paddingVertical: 7, borderRadius: 16, borderWidth: 1, borderColor: C.border, backgroundColor: C.card },
+  segOn: { backgroundColor: '#fd267a', borderColor: '#fd267a' },
+  segText: { color: C.dim, fontFamily: F.display, fontSize: 11, letterSpacing: 0.6 },
+  modalBg: { flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', alignItems: 'center', justifyContent: 'center', padding: 20 },
+  modalBox: { width: '100%', maxWidth: 420, alignItems: 'center' },
+  matchTitle: { color: '#fff', fontFamily: F.display, fontSize: 58, letterSpacing: 2, textShadowColor: '#fd267a', textShadowRadius: 22 },
+  matchSub: { color: '#eee', fontFamily: F.semi, fontSize: 15, marginBottom: 22 },
+  matchPics: { flexDirection: 'row', gap: 0, marginBottom: 30 },
+  matchPic: { width: 124, height: 124, borderRadius: 62, borderWidth: 3, borderColor: '#fff', alignItems: 'center', justifyContent: 'center', backgroundColor: '#15161a', marginHorizontal: -6, overflow: 'hidden' },
+  matchEmoji: {},
+  matchBtn: { flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', width: 300, paddingVertical: 14, borderRadius: 30, marginBottom: 10 },
+  matchGhost: { borderWidth: 1.5, borderColor: '#fff' },
+  matchBtnText: { color: '#fff', fontFamily: F.display, fontSize: 15, letterSpacing: 1.2 },
   smallText: { color: '#fff', fontFamily: F.display, fontSize: 12, letterSpacing: 0.8 },
 });

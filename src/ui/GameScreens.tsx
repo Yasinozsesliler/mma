@@ -143,6 +143,7 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
           {resting ? <RestPicker s={s} act={act} onDone={() => setResting(false)} /> : null}
           <Choice icon="shopping" label="Mağaza, yatırım ve tatil" desc={`Ekipman, yaşam, işletmeler, yatırımlar ve tatiller.${weeklyBusinessIncome(s) ? ` İşletme geliri: $${weeklyBusinessIncome(s).toLocaleString('tr-TR')}/hafta` : ''}`} onPress={() => act((x) => (x.phase = 'magaza'))} tone="gold" />
           <Choice icon="whistle" label="Takım ve sponsorlar" desc={`Salon, menajer ve sponsorluklar.${(s.sponsorTeklif ?? []).length ? ` 💼 ${(s.sponsorTeklif ?? []).length} yeni sponsor teklifi!` : ''} Aktif sponsor: ${(s.sponsorlar ?? []).length}`} onPress={() => act((x) => (x.phase = 'takim'))} tone="plain" />
+          <Choice icon="medal" label="Başarımlar ve Hall of Fame" desc={`${(s.basarimlar ?? []).length}/100 başarım açıldı.${s.hof ? ' 🏛 Onur Listesi üyesisin!' : ' Onur Listesi eşiklerini takip et.'}`} onPress={() => act((x) => (x.phase = 'basarimlar'))} tone={s.hof ? 'gold' : 'plain'} />
           <Choice icon="cellphone-message" label="Sosyal medya" desc={`${(s.sosyal ?? []).length} paylaşım · Rakiplerin ne diyor, maçların hikâyesi ne?`} onPress={() => act((x) => (x.phase = 'sosyal'))} tone="plain" />
           <Choice icon="glass-cocktail" label="Gece hayatı" desc={`Randevular, striptiz kulübü, kumarhane.${s.iliski ? ` 💞 Sevgilin: ${s.iliski.ad}` : ''}`} onPress={() => act((x) => (x.phase = 'gece'))} tone="plain" />
           {s.stage !== 'amator' ? (
@@ -230,22 +231,6 @@ function History({ s }: { s: GameState }) {
           {s.fighter.hikaye || '—'}
         </P>
       </Card>
-      <Section>KALICI RAKİPLER</Section>
-      {s.rakipler.length === 0 ? <P dim>Henüz kimse seni unutamayacak kadar tanımıyor.</P> : null}
-      {s.rakipler.map((r) => (
-        <Card key={r.id} accent={r.rivalry >= 3 ? C.red : C.orange}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Text style={gs.oppName}>{upName(`${r.ad} ${r.soyad}`, r.uyruk)}</Text>
-            {r.rivalry >= 3 ? <Pill text="EZELİ" icon="sword-cross" color={C.red} /> : <Pill text="RAKİP" color={C.orange} />}
-          </View>
-          <Text style={gs.meta}>
-            “{r.lakap}” · {r.uyruk} · {oppRecord(r)} · {r.kisilik}
-          </Text>
-          <Text style={gs.meta}>
-            {r.karsilasma} karşılaşma · Son: {r.sonSonuc === 'G' ? 'sen kazandın' : r.sonSonuc === 'M' ? 'o kazandı' : 'berabere'}
-          </Text>
-        </Card>
-      ))}
       <Section>DÖVÜŞ GEÇMİŞİ</Section>
       {s.gecmis.length === 0 ? <P dim>Henüz dövüş yok.</P> : null}
       <Card style={{ paddingVertical: 6 }}>
@@ -716,12 +701,6 @@ export function RetireScreen({ s, onNew }: { s: GameState; onNew: () => void }) 
       </Card>
       <Section>ÜNVANLAR</Section>
       {s.unvanlar.length ? s.unvanlar.map((u, i) => <P key={i}>🏆 {u}</P>) : <P dim>Kemer yok. Ama yol yürünmüştü.</P>}
-      <Section>EZELİ RAKİPLER</Section>
-      {s.rakipler.slice(0, 3).map((x) => (
-        <P key={x.id} dim>
-          {x.ad} “{x.lakap}” {x.soyad} ({x.karsilasma} karşılaşma)
-        </P>
-      ))}
     </Screen>
   );
 }

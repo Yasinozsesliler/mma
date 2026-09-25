@@ -7,9 +7,9 @@ export const START_POINTS = 3;
 
 /** +1 için gereken puan; yükseldikçe pahalılaşır. */
 export function statCost(v: number) {
-  if (v < 50) return 1;
-  if (v < 70) return 2;
-  if (v < 85) return 3;
+  if (v < 60) return 1;
+  if (v < 78) return 2;
+  if (v < 90) return 3;
   return 4;
 }
 
@@ -24,7 +24,7 @@ export function spendPoint(s: GameState, k: StatKey) {
   s.fighter.stats[k]++;
 }
 
-const CAMP_BASE: Record<Intensity, number> = { dusuk: 1, orta: 2, yuksek: 3 };
+const CAMP_BASE: Record<Intensity, number> = { dusuk: 0.8, orta: 1.4, yuksek: 2 };
 
 /** Kamp puanı: yoğunluk, yaş, antrenör kalitesi ve motivasyona bağlı. */
 export function campPoints(s: GameState, intensity: Intensity, kisaHaber: boolean) {
@@ -34,11 +34,11 @@ export function campPoints(s: GameState, intensity: Intensity, kisaHaber: boolea
     growthMultiplier(s.fighter.yas) *
     (0.8 + s.takim.antrenorKalite * 0.04) *
     (1 + s.motivasyon * 0.1);
-  return clamp(Math.round(p), 1, 6);
+  return clamp(Math.round(p), 1, 2);
 }
 
 /** Dövüş puanı: kaybetmek de öğretir, ama kazanmak daha çok kazandırır. */
 export function fightPoints(o: { won: boolean; draw: boolean; finish: boolean; bonus: number; title: boolean }) {
   if (o.draw || !o.won) return 1;
-  return 2 + (o.finish ? 1 : 0) + o.bonus + (o.title ? 2 : 0);
+  return 2 + (o.finish ? 1 : 0) + (o.bonus > 0 ? 1 : 0) + (o.title ? 1 : 0);
 }

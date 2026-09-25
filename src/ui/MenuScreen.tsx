@@ -25,8 +25,9 @@ const GUIDE: { baslik: string; icon: IconName; icerik: string[] }[] = [
     baslik: 'Gelişim Puanı',
     icon: 'star-four-points',
     icerik: [
-      'Kariyere 5 puanla başlarsın. Her antrenman kampı 1-10 puan verir (yoğunluk, yaş, hoca kalitesi ve motivasyona bağlı).',
-      'Dövüşler de puan verir: galibiyet 3, bitiriş +1, her bonus +1, kemer +3. Mağlubiyet 1, beraberlik 2 puan.',
+      'Kariyere 3 puanla başlarsın. Her antrenman kampı 1-3 puan verir (yoğunluk, yaş, kamp yeri, hoca ve kadro kalitesine bağlı). Kampın odak alanı ayrıca +1-3 gelişir.',
+      'Dövüşler de puan verir: galibiyet 2, bitiriş +1, bonus +1, kemer +1. Mağlubiyet ve beraberlik 1 puan.',
+      '📅 Bir dövüş döngüsü (kamp + toparlanma) yaklaşık 90-100 gün sürer. Yılda 3-4 kez dövüşürsün; her karar önemli.',
       'Puanı istediğin istatistiğe harcarsın. 50’ye kadar +1 için 1 puan, 70’e kadar 2, 85’e kadar 3, sonrası 4 puan gerekir.',
       'Kamp sonunda tartıdan önce, dövüş sonrasında ya da Kariyer ekranındaki GELİŞİM sekmesinden harcayabilirsin.',
     ],
@@ -101,7 +102,6 @@ export function MenuScreen({ save, onNew, onContinue }: { save: GameState | null
                 text={`Son dövüş: ${save.gecmis[0].sonuc === 'G' ? 'Galibiyet' : save.gecmis[0].sonuc === 'M' ? 'Mağlubiyet' : 'Beraberlik'} · ${save.gecmis[0].rakip} (${save.gecmis[0].yontem})`}
               />
             ) : null}
-            {save.rakipler[0] ? <Row icon="sword-cross" text={`Baş rakip: ${save.rakipler[0].ad} “${save.rakipler[0].lakap}” ${save.rakipler[0].soyad}`} /> : null}
             {save.fighter.hikaye ? <Text style={[ms.line, { fontStyle: 'italic', marginTop: 6 }]}>“{save.fighter.hikaye}”</Text> : null}
           </Card>
         </>

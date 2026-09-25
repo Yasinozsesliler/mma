@@ -3,13 +3,13 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { fullName } from '../engine/character';
 import { ORGS, WEIGHT_CLASSES } from '../engine/data';
-import { ACHIEVEMENTS, activeBelts, legacyScore, legacyTier } from '../engine/legacy';
+import { ACHIEVEMENTS, activeBelts, champLabel, legacyScore, legacyTier, maxHeldBelts } from '../engine/legacy';
 import type { GameState } from '../engine/types';
 import { Belt } from './Belt';
 import { Card, Icon, OctIcon, P, Pill, Section, SLANT, type IconName } from './components';
 import { FighterAvatar } from './FighterAvatar';
 import { PetBadge } from './PetPanel';
-import { CarArt, HouseArt } from './VisualArt';
+import { ItemArt } from './ItemArt';
 import { itemById } from '../engine/shop';
 import { petType } from '../engine/pets';
 import type { Act } from './GameScreens';
@@ -22,7 +22,8 @@ export function ProfilePanel({ s, act }: { s: GameState; act: Act }) {
   const tier = legacyTier(score);
   const belts = s.kemerler ?? [];
   const aktif = activeBelts(s);
-  const double = new Set(aktif.map((b) => `${b.org}`)).size < aktif.length;
+  const held = maxHeldBelts(s);
+  const double = held >= 2;
   const earned = new Set(s.basarimlar ?? []);
   return (
     <>
@@ -71,16 +72,16 @@ export function ProfilePanel({ s, act }: { s: GameState; act: Act }) {
       </Card>
 
       {(() => {
-        const owned = (s.envanter ?? []).map(itemById).filter((x) => x?.art);
+        const owned = (s.envanter ?? []).map(itemById).filter((x) => x?.art && x.kategori === 'yasam');
         const cars = owned.filter((x) => x!.art!.kind === 'car');
         const houses = owned.filter((x) => x!.art!.kind === 'house');
         return owned.length ? (
           <>
-            <Section>{`GARAJ VE EMLAK · ${cars.length} ARABA · ${houses.length} MÜLK`}</Section>
+            <Section>{`KOLEKSİYON · ${cars.length} ARABA · ${houses.length} MÜLK · ${owned.length - cars.length - houses.length} EŞYA`}</Section>
             <View style={pf.gallery}>
               {owned.map((it) => (
                 <View key={it!.id} style={pf.galleryItem}>
-                  {it!.art!.kind === 'car' ? <CarArt model={it!.art!.model} color={it!.art!.color} width={150} /> : <HouseArt model={it!.art!.model} width={150} />}
+                  <ItemArt art={it!.art!} width={150} />
                   <Text style={pf.galleryName} numberOfLines={1}>
                     {it!.ad}
                   </Text>
@@ -116,7 +117,7 @@ export function ProfilePanel({ s, act }: { s: GameState; act: Act }) {
       {double ? (
         <LinearGradient colors={['#4a3508', '#1a1508']} style={pf.double}>
           <Icon name="trophy-variant" size={22} color={C.gold} />
-          <Text style={[pf.doubleText, SLANT]}>DOUBLE CHAMP · AYNI ANDA İKİ KEMER</Text>
+          <Text style={[pf.doubleText, SLANT]}>{champLabel(held).en} · AYNI ANDA {held} KEMER</Text>
         </LinearGradient>
       ) : null}
       {belts.length === 0 ? (
@@ -150,22 +151,18 @@ export function ProfilePanel({ s, act }: { s: GameState; act: Act }) {
       )}
 
       <Section>{`BAŞARIMLAR · ${earned.size}/${ACHIEVEMENTS.length}`}</Section>
-      <View style={pf.grid}>
-        {ACHIEVEMENTS.map((a) => {
-          const ok = earned.has(a.id);
-          return (
-            <View key={a.id} style={[pf.ach, ok && { borderColor: C.goldDeep, backgroundColor: '#16110a' }]}>
-              <OctIcon name={(ok ? a.ikon : 'lock') as IconName} color={ok ? C.gold : C.faint} size={38} />
-              <Text style={[pf.achName, !ok && { color: C.faint }]} numberOfLines={1}>
-                {a.ad}
-              </Text>
-              <Text style={pf.achDesc} numberOfLines={2}>
-                {a.aciklama}
-              </Text>
-            </View>
-          );
-        })}
-      </View>
+      <Pressable onPress={() => act((x) => (x.phase = 'basarimlar'))}>
+        <LinearGradient colors={s.hof ? ['#3a2a07', '#140f04'] : ['#16110a', '#0c0d10']} style={pf.achLink}>
+          <OctIcon name={s.hof ? 'pillar' : 'medal'} color={C.gold} size={46} />
+          <View style={{ flex: 1 }}>
+            <Text style={[pf.achName, { textAlign: 'left', fontSize: 16 }]}>{s.hof ? '🏛 HALL OF FAME ÜYESİ' : 'BAŞARIMLAR VE HALL OF FAME'}</Text>
+            <Text style={pf.meta}>
+              {earned.size}/{ACHIEVEMENTS.length} başarım açıldı. Tümünü ve Onur Listesi eşiklerini gör.
+            </Text>
+          </View>
+          <Icon name="chevron-right" size={22} color={C.gold} />
+        </LinearGradient>
+      </Pressable>
     </>
   );
 }
@@ -193,5 +190,6 @@ const pf = StyleSheet.create({
   petItem: { width: '31.5%', backgroundColor: C.card, borderRadius: R, borderWidth: 1, borderColor: C.border, padding: 8, alignItems: 'center', gap: 2 },
   ach: { width: '31.5%', alignItems: 'center', backgroundColor: C.card, borderRadius: R, borderWidth: 1, borderColor: C.border, padding: 8, gap: 4 },
   achName: { color: C.gold, fontFamily: F.display, fontSize: 12, textAlign: 'center' },
+  achLink: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: R, borderWidth: 1, borderColor: C.goldDeep, padding: 12 },
   achDesc: { color: C.faint, fontFamily: F.body, fontSize: 10, textAlign: 'center', lineHeight: 13 },
 });

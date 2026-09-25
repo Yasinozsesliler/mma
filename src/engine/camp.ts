@@ -169,7 +169,7 @@ function runCamp(s: GameState) {
   // Gelişim
   if (k.focus) {
     const g =
-      (1.5 + rand() * 1.5) *
+      (0.9 + rand() * 1.1) *
       intensity.carpan *
       growthMultiplier(f.yas) *
       (0.7 + coachQ * 0.06) *
@@ -179,13 +179,13 @@ function runCamp(s: GameState) {
       staffGrowth(s, k.focus) *
       (k.focus === 'kondisyon' && petRunner(s) ? 1.1 : 1) *
       (1 + (s.motivasyon + campMotivation(s)) * 0.1);
-    const d = addStat(f.stats, k.focus, Math.max(1, Math.round(g)));
+    const d = addStat(f.stats, k.focus, clamp(Math.round(g), 1, 3));
     k.ozet.push(`📈 ${STAT_LABELS[k.focus]} +${d} (${f.stats[k.focus]})`);
     if (k.focus === site.bonusStat) k.ozet.push(`🔥 ${site.ad} tam bu alanda uzman: gelişim arttı.`);
     else if (site.salonUcreti && k.focus === s.takim.uzmanlik) k.ozet.push(`🔥 ${s.takim.antrenor} bu alanın ustası: gelişim arttı.`);
   }
   s.motivasyon += campMotivation(s);
-  const puan = campPoints(s, k.intensity ?? 'orta', !!k.kisaHaber) + site.puan + staffCampPoints(s);
+  const puan = Math.min(3, campPoints(s, k.intensity ?? 'orta', !!k.kisaHaber) + site.puan + staffCampPoints(s));
   s.puan += puan;
   k.ozet.push(`⭐ +${puan} gelişim puanı (toplam ${s.puan}). Tartıdan önce harcayabilirsin.`);
   s.motivasyon = 0;
