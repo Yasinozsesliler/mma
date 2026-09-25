@@ -235,7 +235,7 @@ export function FightScreen({ s, act }: { s: GameState; act: Act }) {
   return (
     <Screen footer={footer}>
       <Scoreboard fs={view} org={org} pUyruk={s.fighter.uyruk} />
-      <CageView fs={fs} shown={shown} pLook={s.fighter.gorunum} oLook={lookFor(fs.opp)} />
+      <CageView fs={fs} shown={shown} speed={speed} pLook={s.fighter.gorunum} oLook={lookFor(fs.opp)} />
       {!fresh ? <Momentum fs={view} shown={shown} logLen={fs.log.length} /> : null}
 
       {fresh ? (
