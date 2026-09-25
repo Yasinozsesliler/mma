@@ -8,6 +8,8 @@ import { TaleOfTape } from './TaleOfTape';
 import { CAMP_SITES } from '../engine/gyms';
 import { enterCasino } from '../engine/casino';
 import { banned, banWeeksLeft, dopingActive, serveBan } from '../engine/doping';
+import { untreated } from '../engine/nightlifeCore';
+import { OWNERS } from '../engine/owners';
 import {
   acceptOffer,
   continueAfterPost,
@@ -104,6 +106,16 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
               <Button label="Cezanı çek (zamanı ilerlet)" icon="timer-sand" tone="ghost" onPress={() => act((x) => { x.haberler.unshift(serveBan(x)); })} />
             </Card>
           ) : null}
+          {untreated(s) ? (
+            <Card accent={C.red}>
+              <P style={{ marginBottom: 0 }}>⚠️ Tedavi edilmemiş bir enfeksiyonun var ({s.hastalik!.ad}). Sağlığın her hafta düşüyor ve maç öncesi sağlık kontrolünde yakalanabilirsin. Gece hayatı ekranından tedavi ol.</P>
+            </Card>
+          ) : null}
+          {(s.hayvanlar ?? []).some((p) => p.hasta || p.mutluluk < 30) ? (
+            <Card accent={C.orange}>
+              <P style={{ marginBottom: 0 }}>🐾 {(s.hayvanlar ?? []).filter((p) => p.hasta || p.mutluluk < 30).map((p) => p.ad).join(', ')} ilgi bekliyor. Mağaza → Hayvan sekmesinden bak.</P>
+            </Card>
+          ) : null}
           {dopingActive(s) ? (
             <Card accent={C.orange}>
               <P style={{ marginBottom: 0 }}>💉 Doping kürün etkide: {s.doping!.kalan} dövüş kaldı. Her dövüşten sonra test riski var.</P>
@@ -132,7 +144,7 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
           <Choice icon="shopping" label="Mağaza, yatırım ve tatil" desc={`Ekipman, yaşam, işletmeler, yatırımlar ve tatiller.${weeklyBusinessIncome(s) ? ` İşletme geliri: $${weeklyBusinessIncome(s).toLocaleString('tr-TR')}/hafta` : ''}`} onPress={() => act((x) => (x.phase = 'magaza'))} tone="gold" />
           <Choice icon="whistle" label="Takım ve sponsorlar" desc={`Salon, menajer ve sponsorluklar.${(s.sponsorTeklif ?? []).length ? ` 💼 ${(s.sponsorTeklif ?? []).length} yeni sponsor teklifi!` : ''} Aktif sponsor: ${(s.sponsorlar ?? []).length}`} onPress={() => act((x) => (x.phase = 'takim'))} tone="plain" />
           <Choice icon="cellphone-message" label="Sosyal medya" desc={`${(s.sosyal ?? []).length} paylaşım · Rakiplerin ne diyor, maçların hikâyesi ne?`} onPress={() => act((x) => (x.phase = 'sosyal'))} tone="plain" />
-          <Choice icon="cards-playing" label="Kumarhane" desc="Slot, blackjack, rulet. Kasa her zaman kazanır. Gece hayatı disiplini bozar (motivasyon ve kondisyon)." onPress={() => act((x) => { x.phase = 'kumarhane'; enterCasino(x); })} tone="plain" />
+          <Choice icon="glass-cocktail" label="Gece hayatı" desc={`Randevular, striptiz kulübü, kumarhane.${s.iliski ? ` 💞 Sevgilin: ${s.iliski.ad}` : ''}`} onPress={() => act((x) => (x.phase = 'gece'))} tone="plain" />
           {s.stage !== 'amator' ? (
             <Choice
               icon="scale-balance"
@@ -274,9 +286,15 @@ export function EventScreen({ s, act }: { s: GameState; act: Act }) {
   const ev = s.pending.olay!;
   return (
     <Screen footer={ev.sonuc ? <Button label="Devam" icon="arrow-right" onPress={() => act(closeEvent)} /> : undefined}>
-      <View style={gs.eventIcon}>
-        <Icon name={EVENT_ICONS[ev.id] ?? 'star-four-points'} size={34} color={C.gold} />
-      </View>
+      {ev.id.startsWith('patron_') && OWNERS[s.contract?.org ?? 'ufc'] ? (
+        <View style={{ marginBottom: 10 }}>
+          <FighterAvatar look={lookFor({ id: `owner-${OWNERS[s.contract?.org ?? 'ufc']!.ad}`, uyruk: OWNERS[s.contract?.org ?? 'ufc']!.uyruk })} size={80} ring={C.gold} />
+        </View>
+      ) : (
+        <View style={gs.eventIcon}>
+          <Icon name={EVENT_ICONS[ev.id] ?? 'star-four-points'} size={34} color={C.gold} />
+        </View>
+      )}
       <Title kicker="DÖVÜŞ DIŞI">{ev.baslik.replace(/^\S+\s/, '')}</Title>
       <Card>
         <P style={{ marginBottom: 0 }}>{ev.metin}</P>

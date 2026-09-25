@@ -8,6 +8,10 @@ import type { GameState } from '../engine/types';
 import { Belt } from './Belt';
 import { Card, Icon, OctIcon, P, Pill, Section, SLANT, type IconName } from './components';
 import { FighterAvatar } from './FighterAvatar';
+import { PetBadge } from './PetPanel';
+import { CarArt, HouseArt } from './VisualArt';
+import { itemById } from '../engine/shop';
+import { petType } from '../engine/pets';
 import type { Act } from './GameScreens';
 import { C, F, R } from './theme';
 
@@ -65,6 +69,48 @@ export function ProfilePanel({ s, act }: { s: GameState; act: Act }) {
           </Pressable>
         </View>
       </Card>
+
+      {(() => {
+        const owned = (s.envanter ?? []).map(itemById).filter((x) => x?.art);
+        const cars = owned.filter((x) => x!.art!.kind === 'car');
+        const houses = owned.filter((x) => x!.art!.kind === 'house');
+        return owned.length ? (
+          <>
+            <Section>{`GARAJ VE EMLAK · ${cars.length} ARABA · ${houses.length} MÜLK`}</Section>
+            <View style={pf.gallery}>
+              {owned.map((it) => (
+                <View key={it!.id} style={pf.galleryItem}>
+                  {it!.art!.kind === 'car' ? <CarArt model={it!.art!.model} color={it!.art!.color} width={150} /> : <HouseArt model={it!.art!.model} width={150} />}
+                  <Text style={pf.galleryName} numberOfLines={1}>
+                    {it!.ad}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          </>
+        ) : null;
+      })()}
+      {(s.hayvanlar ?? []).length || s.iliski ? (
+        <>
+          <Section>AİLE</Section>
+          <View style={pf.gallery}>
+            {s.iliski ? (
+              <View style={pf.petItem}>
+                <Text style={{ fontSize: 34 }}>{s.iliski.emoji}</Text>
+                <Text style={pf.galleryName}>💞 {s.iliski.ad}</Text>
+                <Text style={pf.achDesc}>{s.iliski.meslek}</Text>
+              </View>
+            ) : null}
+            {(s.hayvanlar ?? []).map((p) => (
+              <View key={p.id} style={pf.petItem}>
+                <PetBadge turId={p.tur} size={52} />
+                <Text style={pf.galleryName}>{p.ad}</Text>
+                <Text style={pf.achDesc}>{petType(p.tur)?.ad}</Text>
+              </View>
+            ))}
+          </View>
+        </>
+      ) : null}
 
       <Section>ÖDÜL VİTRİNİ</Section>
       {double ? (
@@ -141,6 +187,10 @@ const pf = StyleSheet.create({
   beltInfo: { flexDirection: 'row', alignItems: 'center', marginTop: 8 },
   beltTitle: { color: C.text, fontFamily: F.display, fontSize: 16 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  gallery: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 6 },
+  galleryItem: { width: '48.5%', backgroundColor: C.card, borderRadius: R, borderWidth: 1, borderColor: C.border, padding: 6, alignItems: 'center' },
+  galleryName: { color: C.text, fontFamily: F.semi, fontSize: 11, marginTop: 4, textAlign: 'center' },
+  petItem: { width: '31.5%', backgroundColor: C.card, borderRadius: R, borderWidth: 1, borderColor: C.border, padding: 8, alignItems: 'center', gap: 2 },
   ach: { width: '31.5%', alignItems: 'center', backgroundColor: C.card, borderRadius: R, borderWidth: 1, borderColor: C.border, padding: 8, gap: 4 },
   achName: { color: C.gold, fontFamily: F.display, fontSize: 12, textAlign: 'center' },
   achDesc: { color: C.faint, fontFamily: F.body, fontSize: 10, textAlign: 'center', lineHeight: 13 },

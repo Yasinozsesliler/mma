@@ -10,6 +10,8 @@ import { activeBelts, checkAchievements, defendBelt, loseBelt, vacateOrg, winBel
 import { fightPoints } from './progression';
 import { banLabel, banned, banWeeksLeft, dopingFallout, dopingTest } from './doping';
 import { paySponsors, refreshSponsorOffers } from './sponsors';
+import { prAdjust } from './staff';
+import { OWNER_EVENTS, ownerReaction, ownerRel } from './owners';
 import { socialAfterFight, socialTick } from './social';
 import { merchIncome, restMultiplier } from './shop';
 import { chance, clamp, pick, rand, randInt, uid } from './rng';
@@ -217,7 +219,7 @@ export function finishFight(s: GameState) {
   if (won && opp.champion) pop += 10;
   if (won && opp.rivalry >= 2) pop += 3;
   pop += (fs.sov ?? 0) * (won ? 2 : -1);
-  pop = Math.round(pop * exposure);
+  pop = prAdjust(s, Math.round(pop * exposure));
   s.populerlik = clamp(s.populerlik + pop, 0, 100);
   lines.push(`🔥 Popülerlik ${pop >= 0 ? '+' : ''}${pop} → ${s.populerlik}/100`);
   if (!won && s.trashTalk) lines.push('Trash talk yaptıktan sonra kaybetmek… sosyal medya acımasız.');
@@ -429,7 +431,7 @@ export function afterPostFight(s: GameState) {
     return;
   } else {
     const cut =
-      (org === 'ufc' && s.seri <= -2 && s.rank == null && !s.sampiyon) || (s.seri <= -3 && !s.sampiyon);
+      ((org === 'ufc' && s.seri <= -2 && s.rank == null && !s.sampiyon) || (s.seri <= -3 && !s.sampiyon)) && ownerRel(s) < 25;
     if (cut) {
       s.haberler.unshift(`✂️ ${ORGS[org].kisa}, ${fullName(s.fighter)} ile kontratını feshetti.`);
       s.contract = null;
@@ -452,6 +454,13 @@ export function afterPostFight(s: GameState) {
       openOffers(s, 'dwcsDavet', `📞 Telefon çaldı. Arayan: Dana White. “Seni izliyorum evlat. Contender Series’e gel, kendini göster.”`);
       return;
     }
+  }
+  // Patron tepkisi: büyük galibiyetten sonra tebrik, mağlubiyet serisinde uyarı.
+  const pe = ownerReaction(s, won, finishMethod);
+  if (pe) {
+    s.pending.olay = { id: pe, ...OWNER_EVENTS[pe].kur(s) };
+    s.phase = 'event';
+    return;
   }
   maybeEvent(s);
 }
@@ -610,7 +619,7 @@ export function negotiateOffer(s: GameState, id: string): string {
   const offers = s.pending.teklifler!;
   const o = offers.find((x) => x.id === id)!;
   o.pazarlikYapildi = true;
-  const p = 0.25 + s.takim.menajerKalite * 0.05 + s.populerlik / 250 + (offers.length > 1 ? 0.1 : 0);
+  const p = 0.25 + s.takim.menajerKalite * 0.05 + s.populerlik / 250 + (offers.length > 1 ? 0.1 : 0) + ownerRel(s, o.org) / 200;
   if (chance(p)) {
     const inc = 1.15 + rand() * 0.2;
     o.ucret = Math.round((o.ucret * inc) / 100) * 100;

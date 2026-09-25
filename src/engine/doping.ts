@@ -3,6 +3,7 @@ import { advanceWeeks } from './character';
 import { chance, clamp, randInt, weighted } from './rng';
 import { lifestylePost } from './social';
 import { scandal } from './sponsors';
+import { prAdjust } from './staff';
 import type { GameState, Stats } from './types';
 
 export const DOPING_FIGHTS = 3;
@@ -61,7 +62,7 @@ export const banLabel = (w: number) => (w >= 104 ? '2 yıl' : w >= 52 ? '1 yıl'
 
 /** Yakalanma sonrası itibar ve sponsor bedeli. */
 export function dopingFallout(s: GameState, weeks: number): string[] {
-  const pop = randInt(8, 14);
+  const pop = -prAdjust(s, -randInt(8, 14));
   s.populerlik = clamp(s.populerlik - pop, 0, 100);
   s.motivasyon = -2;
   const lines = [`🚫 DOPİNG TESTİ POZİTİF! ${banLabel(weeks)} men cezası.`, `📉 Popülerlik -${pop}`, ...scandal(s)];

@@ -49,6 +49,19 @@ export async function loadGame(): Promise<GameState | null> {
       if (s.envanter.includes(eski) && !s.isletmeler!.some((x) => x.id === yeni)) s.isletmeler!.push({ id: yeni, seviye: 1 });
     });
     s.envanter = s.envanter.filter((x) => !(x in devir));
+    // Eski mağaza fizyoterapist/diyetisyen ürünleri kadroya (Deneyimli) taşınır.
+    s.kadro ??= [];
+    const kadroDevir: Record<string, string> = { fizyo: 'fizyo', diyetisyen: 'diyetisyen' };
+    Object.entries(kadroDevir).forEach(([eski, rol]) => {
+      if (s.envanter.includes(eski) && !s.kadro!.some((x) => x.rol === rol)) s.kadro!.push({ rol, seviye: 2, ad: rol === 'fizyo' ? 'Selin Aydın' : 'Murat Kaya' });
+    });
+    s.envanter = s.envanter.filter((x) => !(x in kadroDevir));
+    // Eski mağaza "Pitbull Yavrusu" gerçek bir evcil hayvana dönüşür.
+    s.hayvanlar ??= [];
+    if (s.envanter.includes('kopek')) {
+      s.hayvanlar.push({ id: 'rocky', tur: 'pitbull', ad: 'Rocky', mutluluk: 80, saglik: 100, hasta: false });
+      s.envanter = s.envanter.filter((x) => x !== 'kopek');
+    }
     s.yatirimlar ??= [];
     checkAchievements(s);
     ensureDivision(s);

@@ -29,7 +29,7 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "sim": "npx --yes tsx scripts/sim.ts",
-    "build:web": "expo export --platform web",
+    "build:web": "expo export --platform web && node scripts/build-sw.mjs",
     "tactics": "npx --yes tsx scripts/tactics.ts"
   },
   "private": true,

@@ -149,7 +149,7 @@ function addDmg(fs: FightState, victim: Side, d0: number) {
   const d = d0 * SC;
   if (victim === 'p') fs.pHasar = clamp(fs.pHasar + d, 0, 100);
   else fs.oHasar = clamp(fs.oHasar + d, 0, 100);
-  if (victim === 'p' && !fs.kesik && fs.pHasar > 35 && chance(0.06)) {
+  if (victim === 'p' && !fs.kesik && fs.pHasar > 35 && chance(0.06 * (1 - (fs.mods.cutman ?? 0) * 0.2))) {
     fs.kesik = true;
     fs.log.push('🩸 Kaşının üstünde kesik açıldı! Kan gözüne akıyor.');
   }
@@ -730,7 +730,7 @@ function endRound(fs: FightState) {
     return;
   }
   // Köşe durdurmaları
-  if (fs.kesik && fs.pHasar > 70 && chance(0.2)) {
+  if (fs.kesik && fs.pHasar > 70 && chance(0.2 * (1 - (fs.mods.cutman ?? 0) * 0.3))) {
     finish(fs, 'o', 'TKO', '🩺 Ringside doktoru kesiğe bakıp başını salladı. Maç durduruldu. Doktor kararıyla TKO.', 2);
     return;
   }

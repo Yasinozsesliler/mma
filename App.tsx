@@ -1,5 +1,11 @@
-import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold, Inter_800ExtraBold } from '@expo-google-fonts/inter';
-import { Oswald_500Medium, Oswald_700Bold } from '@expo-google-fonts/oswald';
+// Fontlar tek tek içe aktarılır: paket girişinden almak kullanılmayan tüm varyantları da pakete sokar (çevrimdışı indirme boyutu şişer).
+import { Inter_400Regular } from '@expo-google-fonts/inter/400Regular';
+import { Inter_500Medium } from '@expo-google-fonts/inter/500Medium';
+import { Inter_600SemiBold } from '@expo-google-fonts/inter/600SemiBold';
+import { Inter_700Bold } from '@expo-google-fonts/inter/700Bold';
+import { Inter_800ExtraBold } from '@expo-google-fonts/inter/800ExtraBold';
+import { Oswald_500Medium } from '@expo-google-fonts/oswald/500Medium';
+import { Oswald_700Bold } from '@expo-google-fonts/oswald/700Bold';
 import { useFonts } from 'expo-font';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef, useState } from 'react';
@@ -25,6 +31,7 @@ import { CasinoScreen } from './src/ui/CasinoScreen';
 import { SocialScreen } from './src/ui/SocialScreen';
 import { TeamScreen } from './src/ui/TeamScreen';
 import { CelebrationScreen } from './src/ui/CelebrationScreen';
+import { NightlifeScreen } from './src/ui/NightlifeScreen';
 import { socialWelcome } from './src/engine/social';
 import { HasTopBar, TopBar } from './src/ui/components';
 import { C } from './src/ui/theme';
@@ -43,6 +50,7 @@ const PHASE_LABELS: Record<Phase, string> = {
   kumarhane: 'Kumarhane',
   sosyal: 'Sosyal Medya',
   kutlama: 'Şampiyonluk',
+  gece: 'Gece Hayatı',
   emeklilik: 'Emeklilik',
 };
 
@@ -146,6 +154,9 @@ export default function App() {
         break;
       case 'sosyal':
         content = <SocialScreen {...props} />;
+        break;
+      case 'gece':
+        content = <NightlifeScreen {...props} />;
         break;
       case 'kutlama':
         content = game.kutlama ? <CelebrationScreen {...props} /> : <HubScreen {...props} />;

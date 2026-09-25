@@ -9,13 +9,16 @@ import type { GameState } from '../engine/types';
 import { Button, Card, OctIcon, P, Pill, Screen, SLANT, Title, type IconName } from './components';
 import type { Act } from './GameScreens';
 import { InvestPanel } from './InvestPanel';
+import { PetPanel } from './PetPanel';
+import { CarArt, HouseArt } from './VisualArt';
 import { C, F, R } from './theme';
 
-type Tab = ShopCategory | 'yatirim' | 'tatil';
+type Tab = ShopCategory | 'yatirim' | 'tatil' | 'hayvan';
 const TABS: { key: Tab; label: string; icon: IconName }[] = [
   { key: 'ekipman', label: 'EKİPMAN', icon: 'boxing-glove' },
   { key: 'yasam', label: 'YAŞAM', icon: 'home-heart' },
   { key: 'yatirim', label: 'YATIRIM', icon: 'chart-line' },
+  { key: 'hayvan', label: 'HAYVAN', icon: 'paw' },
   { key: 'tatil', label: 'TATİL', icon: 'beach' },
 ];
 
@@ -26,8 +29,13 @@ function ItemCard({ s, it, act, onMsg }: { s: GameState; it: ShopItem; act: Act;
   const color = it.kategori === 'ekipman' ? C.red : '#b57bff';
   return (
     <View style={[sh.card, have && { borderColor: C.green }]}>
+      {it.art ? (
+        <View style={sh.art}>
+          {it.art.kind === 'car' ? <CarArt model={it.art.model} color={it.art.color} width={260} /> : <HouseArt model={it.art.model} width={260} />}
+        </View>
+      ) : null}
       <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
-        <OctIcon name={it.ikon as IconName} color={have ? C.green : color} size={50} />
+        {it.art ? null : <OctIcon name={it.ikon as IconName} color={have ? C.green : color} size={50} />}
         <View style={{ flex: 1 }}>
           <Text style={sh.name}>{it.ad}</Text>
           <Text style={sh.desc}>{it.aciklama}</Text>
@@ -96,7 +104,8 @@ export function ShopScreen({ s, act }: { s: GameState; act: Act }) {
         </View>
       ) : null}
       {tab === 'yatirim' ? <InvestPanel s={s} act={act} onMsg={setMsg} /> : null}
-      {tab === 'yatirim' ? null : tab === 'tatil'
+      {tab === 'hayvan' ? <PetPanel s={s} act={act} onMsg={setMsg} /> : null}
+      {tab === 'yatirim' || tab === 'hayvan' ? null : tab === 'tatil'
         ? VACATIONS.map((v) => {
             const afford = s.para >= v.fiyat;
             return (
@@ -136,6 +145,7 @@ export function ShopScreen({ s, act }: { s: GameState; act: Act }) {
 }
 
 const sh = StyleSheet.create({
+  art: { alignItems: 'center', backgroundColor: '#07080b', borderRadius: 6, paddingVertical: 6, marginBottom: 10 },
   capBox: { backgroundColor: C.card, borderWidth: 1, borderColor: C.goldDeep, borderRadius: R, padding: 12, marginBottom: 12 },
   capLabel: { color: C.gold, fontFamily: F.display, fontSize: 12, letterSpacing: 1.5 },
   capBar: { height: 8, backgroundColor: '#060607', borderRadius: 2, overflow: 'hidden', marginVertical: 8, borderWidth: 1, borderColor: C.border },

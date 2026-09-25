@@ -3,6 +3,9 @@ import { clamp } from './rng';
 import { addStat, advanceWeeks } from './character';
 import { VACATIONS } from './gyms';
 import { lifestylePost, socialTick } from './social';
+import { staffCut, staffInjury, staffMotivation, staffRest } from './staff';
+import { petMotivation } from './pets';
+import { partnerMotivation } from './nightlifeCore';
 import type { GameState, Stats } from './types';
 
 export type ShopCategory = 'ekipman' | 'yasam';
@@ -33,6 +36,8 @@ export interface ShopItem {
   merch?: number;
   /** Her dövüşten sabit pasif gelir (işletmeler) */
   gelir?: number;
+  /** Görsel: araba modeli ya da ev tipi */
+  art?: { kind: 'car' | 'house'; model: string; color?: string };
 }
 
 export const SHOP: ShopItem[] = [
@@ -47,23 +52,14 @@ export const SHOP: ShopItem[] = [
   { id: 'maske', ad: 'İrtifa Antrenman Maskesi', kategori: 'ekipman', fiyat: 11000, ikon: 'gas-cylinder', aciklama: 'Nefesini zorlar, ciğerlerini genişletir.', dovus: { kondisyon: 2 } },
   { id: 'kask', ad: 'Sparring Kaskı ve Koruyucular', kategori: 'ekipman', fiyat: 3000, ikon: 'hard-hat', aciklama: 'Kampta sakatlanma riski %30 azalır.', sakatlikRiski: 0.7 },
   { id: 'analiz', ad: 'Video Analiz Yazılımı', kategori: 'ekipman', fiyat: 38000, ikon: 'monitor-eye', aciklama: 'Rakiplerini kare kare incele.', dovus: { iq: 2 } },
-  { id: 'diyetisyen', ad: 'Kişisel Diyetisyen (yıllık)', kategori: 'ekipman', fiyat: 45000, ikon: 'food-apple', aciklama: 'Kilo verme çok daha güvenli olur.', kilo: 0.08 },
-  { id: 'fizyo', ad: 'Kişisel Fizyoterapist', kategori: 'ekipman', fiyat: 120000, ikon: 'medical-bag', aciklama: 'Dinlenme ve kamplarda %40 daha hızlı iyileşirsin. Sakatlık riski de düşer.', dinlenme: 0.4, sakatlikRiski: 0.8 },
   { id: 'kriyo', ad: 'Kriyoterapi Kabini', kategori: 'ekipman', fiyat: 220000, ikon: 'snowflake', aciklama: 'Elit toparlanma. Kondisyon ve iyileşme artar.', dovus: { kondisyon: 1 }, dinlenme: 0.25 },
 
   // ---- Yaşam ----
   { id: 'konsol', ad: 'Oyun Konsolu', kategori: 'yasam', fiyat: 600, ikon: 'controller-classic', aciklama: 'Kamp arası kafa dağıtmak için. Dinlenme biraz daha verimli.', dinlenme: 0.08 },
   { id: 'pc', ad: 'Oyun Bilgisayarı ve Yayın Seti', kategori: 'yasam', fiyat: 3500, ikon: 'desktop-tower-monitor', aciklama: 'Twitch’te yayın aç, taraftarlarla oyna.', populerlik: 3, dinlenme: 0.05 },
-  { id: 'kopek', ad: 'Pitbull Yavrusu', kategori: 'yasam', fiyat: 1500, ikon: 'dog', aciklama: 'Sabah koşularının yeni ortağı. Her kampta motivasyon.', motivasyon: 1 },
   { id: 'zincir', ad: 'Altın Zincir', kategori: 'yasam', fiyat: 8000, ikon: 'necklace', aciklama: 'Basın toplantılarında parlamak için.', populerlik: 3 },
   { id: 'saat', ad: 'İsviçre Lüks Saat', kategori: 'yasam', fiyat: 28000, ikon: 'watch', aciklama: 'Zaman senin tarafında.', populerlik: 4 },
   { id: 'merch', ad: 'Kendi Merch Serin', kategori: 'yasam', fiyat: 5000, ikon: 'tshirt-crew', aciklama: 'Tişört, şapka, sticker. Her dövüşte popülerliğine göre gelir getirir.', merch: 40 },
-  { id: 'araba1', ad: 'İkinci El Hatchback', kategori: 'yasam', grup: 'araba', seviye: 1, fiyat: 6000, ikon: 'car-hatchback', aciklama: 'Salona otobüsle gitmeye son.', populerlik: 1, dinlenme: 0.03 },
-  { id: 'araba2', ad: 'Alman Sedan', kategori: 'yasam', grup: 'araba', seviye: 2, fiyat: 55000, ikon: 'car-side', aciklama: 'Konforlu, güvenilir, prestijli.', populerlik: 3, dinlenme: 0.05 },
-  { id: 'araba3', ad: 'İtalyan Süper Spor', kategori: 'yasam', grup: 'araba', seviye: 3, fiyat: 340000, ikon: 'car-sports', aciklama: 'Her paylaşımın viral olur.', populerlik: 9 },
-  { id: 'ev1', ad: 'Kiralık 1+1 Daire', kategori: 'yasam', grup: 'ev', seviye: 1, fiyat: 2500, ikon: 'home-outline', aciklama: 'Salona yakın, sessiz bir oda. Uyku kalitesi artar.', dinlenme: 0.1, motivasyon: 1 },
-  { id: 'ev2', ad: 'Şehir Merkezinde Daire', kategori: 'yasam', grup: 'ev', seviye: 2, fiyat: 90000, ikon: 'home-city', aciklama: 'Kendi evin. Aileni yanına alabilirsin.', dinlenme: 0.2, motivasyon: 1, populerlik: 2 },
-  { id: 'ev3', ad: 'Deniz Manzaralı Villa', kategori: 'yasam', grup: 'ev', seviye: 3, fiyat: 850000, ikon: 'home-heart', aciklama: 'Özel spor salonu, havuz, sauna. Bir şampiyonun evi.', dinlenme: 0.35, motivasyon: 2, populerlik: 6 },
   { id: 'motor', ad: 'Naked Motosiklet', kategori: 'yasam', fiyat: 22000, ikon: 'motorbike', aciklama: 'Hafta sonu sahil yolu keyfi.', populerlik: 2, motivasyon: 1 },
   { id: 'giyim', ad: 'Tasarım Takım Elbise Koleksiyonu', kategori: 'yasam', fiyat: 15000, ikon: 'hanger', aciklama: 'Tartıya ve basın toplantılarına şık gir.', populerlik: 2 },
   { id: 'fotograf', ad: 'Profesyonel Fotoğraf Çekimi', kategori: 'yasam', fiyat: 4000, ikon: 'camera', aciklama: 'Sosyal medyan dergi kapağı gibi olur.', populerlik: 2 },
@@ -71,6 +67,24 @@ export const SHOP: ShopItem[] = [
   { id: 'vakif', ad: 'Hayır Vakfı', kategori: 'yasam', fiyat: 120000, ikon: 'hand-heart', aciklama: 'Yoksul çocuklara spor bursu. Taraftar sevgisi çok artar.', populerlik: 8, motivasyon: 1 },
   { id: 'yat', ad: 'Lüks Yat', kategori: 'yasam', fiyat: 2400000, ikon: 'ferry', aciklama: 'Kamp arası denizde sessizlik. Paparazziler de peşinde.', populerlik: 10, dinlenme: 0.2 },
   { id: 'jet', ad: 'Özel Jet', kategori: 'yasam', fiyat: 9000000, ikon: 'airplane', aciklama: 'Dünyanın her yerine kendi uçağınla. Efsane statüsü.', populerlik: 15, dinlenme: 0.15 },
+  // ---- Garaj (koleksiyon: hepsini alabilirsin, etkiyi en iyisi verir) ----
+  { id: 'araba1', ad: 'İkinci El Hatchback', kategori: 'yasam', grup: 'araba', seviye: 1, fiyat: 6000, ikon: 'car-hatchback', aciklama: 'Salona otobüsle gitmeye son.', populerlik: 1, dinlenme: 0.03, art: { kind: 'car', model: 'hatch', color: '#8a8f99' } },
+  { id: 'araba4', ad: 'Kompakt Sedan', kategori: 'yasam', grup: 'araba', seviye: 2, fiyat: 22000, ikon: 'car', aciklama: 'Güvenilir, ekonomik, yeni.', populerlik: 1, dinlenme: 0.04, art: { kind: 'car', model: 'sedan', color: '#3a86ff' } },
+  { id: 'araba2', ad: 'Alman Sedan', kategori: 'yasam', grup: 'araba', seviye: 3, fiyat: 55000, ikon: 'car-side', aciklama: 'Konforlu, güvenilir, prestijli.', populerlik: 3, dinlenme: 0.05, art: { kind: 'car', model: 'sedan', color: '#1b1e24' } },
+  { id: 'araba5', ad: 'Lüks SUV', kategori: 'yasam', grup: 'araba', seviye: 4, fiyat: 95000, ikon: 'car-estate', aciklama: 'Yüksek sürüş, geniş bagaj, tüm ekipman sığar.', populerlik: 3, dinlenme: 0.06, art: { kind: 'car', model: 'suv', color: '#2d6a4f' } },
+  { id: 'araba6', ad: 'Amerikan Muscle Car', kategori: 'yasam', grup: 'araba', seviye: 5, fiyat: 120000, ikon: 'car-sports', aciklama: 'V8 kükremesi. Walkout müziği gibi.', populerlik: 4, art: { kind: 'car', model: 'muscle', color: '#e63946' } },
+  { id: 'araba7', ad: 'Elektrikli Spor Sedan', kategori: 'yasam', grup: 'araba', seviye: 6, fiyat: 180000, ikon: 'car-electric', aciklama: 'Sessiz ama 0-100 üç saniye.', populerlik: 4, dinlenme: 0.06, art: { kind: 'car', model: 'electric', color: '#e9ecef' } },
+  { id: 'araba3', ad: 'İtalyan Süper Spor', kategori: 'yasam', grup: 'araba', seviye: 7, fiyat: 340000, ikon: 'car-sports', aciklama: 'Her paylaşımın viral olur.', populerlik: 9, art: { kind: 'car', model: 'super', color: '#f2c14e' } },
+  { id: 'araba8', ad: 'Hiper Otomobil', kategori: 'yasam', grup: 'araba', seviye: 8, fiyat: 2200000, ikon: 'car-sports', aciklama: 'Dünyada sadece 99 tane var. Biri senin.', populerlik: 14, art: { kind: 'car', model: 'hyper', color: '#0b0b0c' } },
+  // ---- Emlak ----
+  { id: 'ev1', ad: 'Kiralık 1+1 Daire', kategori: 'yasam', grup: 'ev', seviye: 1, fiyat: 2500, ikon: 'home-outline', aciklama: 'Salona yakın, sessiz bir oda.', dinlenme: 0.1, motivasyon: 1, art: { kind: 'house', model: 'flat' } },
+  { id: 'ev4', ad: 'Stüdyo Loft', kategori: 'yasam', grup: 'ev', seviye: 2, fiyat: 25000, ikon: 'home-variant', aciklama: 'Tuğla duvarlar, büyük pencereler, köşede bir torba.', dinlenme: 0.13, motivasyon: 1, art: { kind: 'house', model: 'loft' } },
+  { id: 'ev2', ad: 'Şehir Merkezinde Daire', kategori: 'yasam', grup: 'ev', seviye: 3, fiyat: 90000, ikon: 'home-city', aciklama: 'Kendi evin. Aileni yanına alabilirsin.', dinlenme: 0.2, motivasyon: 1, populerlik: 2, art: { kind: 'house', model: 'apartment' } },
+  { id: 'ev5', ad: 'Bahçeli Müstakil Ev', kategori: 'yasam', grup: 'ev', seviye: 4, fiyat: 220000, ikon: 'home-group', aciklama: 'Bahçede antrenman alanı, garajda salon.', dinlenme: 0.25, motivasyon: 1, populerlik: 2, art: { kind: 'house', model: 'house' } },
+  { id: 'ev6', ad: 'Deniz Kenarı Bungalov', kategori: 'yasam', grup: 'ev', seviye: 5, fiyat: 400000, ikon: 'beach', aciklama: 'Sabah koşuları kumda, akşamları dalga sesi.', dinlenme: 0.3, motivasyon: 2, populerlik: 3, art: { kind: 'house', model: 'bungalow' } },
+  { id: 'ev3', ad: 'Deniz Manzaralı Villa', kategori: 'yasam', grup: 'ev', seviye: 6, fiyat: 850000, ikon: 'home-heart', aciklama: 'Özel salon, havuz, sauna. Bir şampiyonun evi.', dinlenme: 0.35, motivasyon: 2, populerlik: 6, art: { kind: 'house', model: 'villa' } },
+  { id: 'ev7', ad: 'Gökdelen Penthouse', kategori: 'yasam', grup: 'ev', seviye: 7, fiyat: 2500000, ikon: 'office-building', aciklama: 'Şehir ayaklarının altında. Terasta helikopter pisti.', dinlenme: 0.38, motivasyon: 2, populerlik: 8, art: { kind: 'house', model: 'penthouse' } },
+  { id: 'ev8', ad: 'Malikâne', kategori: 'yasam', grup: 'ev', seviye: 8, fiyat: 6000000, ikon: 'castle', aciklama: 'Kapılar, havuzlar, at ahırı. Efsanelere yakışır.', dinlenme: 0.42, motivasyon: 2, populerlik: 12, art: { kind: 'house', model: 'mansion' } },
 ];
 
 export const itemById = (id: string) => SHOP.find((i) => i.id === id);
@@ -91,7 +105,7 @@ export const owns = (s: GameState, id: string) => (s.envanter ?? []).includes(id
 
 /** Aynı gruptan daha iyisi zaten varsa almaya gerek yok. */
 export function outclassed(s: GameState, it: ShopItem) {
-  if (!it.grup) return false;
+  if (!it.grup || it.grup === 'araba' || it.grup === 'ev') return false;
   return activeItems(s).some((x) => x.grup === it.grup && (x.seviye ?? 0) >= (it.seviye ?? 0));
 }
 
@@ -140,10 +154,12 @@ export const itemBonusTotal = (s: GameState) => Object.values(fightItemMods(s)).
 /** Popülerlik etkisi azalan verimli: zaten ünlüysen bir yat daha az ses getirir. */
 export const itemPopGain = (s: GameState, it: ShopItem) => Math.max(it.populerlik ? 1 : 0, Math.round((it.populerlik ?? 0) * (1 - s.populerlik / 130)));
 
-export const restMultiplier = (s: GameState) => 1 + activeItems(s).reduce((a, it) => a + (it.dinlenme ?? 0), 0);
-export const injuryMultiplier = (s: GameState) => activeItems(s).reduce((a, it) => a * (it.sakatlikRiski ?? 1), 1);
-export const campMotivation = (s: GameState) => activeItems(s).reduce((a, it) => a + (it.motivasyon ?? 0), 0);
-export const cutBonus = (s: GameState) => activeItems(s).reduce((a, it) => a + (it.kilo ?? 0), 0);
+export const restMultiplier = (s: GameState) => 1 + activeItems(s).reduce((a, it) => a + (it.dinlenme ?? 0), 0) + staffRest(s);
+export const injuryMultiplier = (s: GameState) => activeItems(s).reduce((a, it) => a * (it.sakatlikRiski ?? 1), 1) * staffInjury(s);
+/** Kamp motivasyonu: eşyalar + kadro (psikolog) + evcil hayvan + sevgili. */
+export const campMotivation = (s: GameState) =>
+  activeItems(s).reduce((a, it) => a + (it.motivasyon ?? 0), 0) + staffMotivation(s) + petMotivation(s) + partnerMotivation(s);
+export const cutBonus = (s: GameState) => activeItems(s).reduce((a, it) => a + (it.kilo ?? 0), 0) + staffCut(s);
 export const merchIncome = (s: GameState) =>
   activeItems(s).reduce((a, it) => a + (it.merch ?? 0), 0) * s.populerlik + activeItems(s).reduce((a, it) => a + (it.gelir ?? 0), 0);
 

@@ -3,6 +3,7 @@ import { randomInjury } from './camp';
 import { AGENTS, JOURNALISTS } from './data';
 import { gymsFor } from './gyms';
 import { applyGym } from './team';
+import { OWNER_EVENTS } from './owners';
 import { banned, dopingActive, dopingCost, DOPING_FIGHTS, takeDoping } from './doping';
 import { chance, clamp, fill, pick, rand, weighted } from './rng';
 import type { GameState } from './types';
@@ -352,12 +353,15 @@ const EVENTS: Record<string, EventDef> = {
   },
 };
 
+// Patron olayları da aynı sistemde çalışır (ağırlığı 0 olanlar yalnızca dövüş sonrası tetiklenir).
+Object.assign(EVENTS, OWNER_EVENTS);
+
 export function maybeEvent(s: GameState) {
   if (!chance(0.65)) {
     s.phase = 'hub';
     return;
   }
-  const pool = Object.entries(EVENTS).filter(([, e]) => e.kosul(s));
+  const pool = Object.entries(EVENTS).filter(([, e]) => e.agirlik > 0 && e.kosul(s));
   if (!pool.length) {
     s.phase = 'hub';
     return;

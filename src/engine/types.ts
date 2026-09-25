@@ -1,5 +1,7 @@
 import type { InterviewCtx } from './interview';
 import type { SponsorDeal } from './sponsors';
+import type { Pet } from './pets';
+import type { Candidate } from './nightlife';
 
 export type StatKey = 'vurus' | 'gures' | 'yer' | 'kondisyon' | 'cene' | 'hiz' | 'iq';
 export type Stats = Record<StatKey, number>;
@@ -208,6 +210,7 @@ export interface FightMods {
   plan: PlanKey;
   planUyum: boolean;
   oppStats: Partial<Stats>;
+  cutman?: number;
 }
 
 export interface FightResult {
@@ -313,6 +316,7 @@ export type Phase =
   | 'kumarhane'
   | 'sosyal'
   | 'kutlama'
+  | 'gece'
   | 'emeklilik';
 
 export interface GameState {
@@ -337,6 +341,13 @@ export interface GameState {
   doping?: { kalan: number };
   dopingSayisi?: number;
   ceza?: { bitis: number; sebep: string };
+  kadro?: { rol: string; seviye: number; ad: string }[];
+  hayvanlar?: Pet[];
+  gece?: { risk: number; ziyaret: number };
+  hastalik?: { ad: string; hafta: number; tedaviBitis?: number };
+  iliski?: { id: string; ad: string; meslek: string; emoji: string; durum: 'sevgili'; hafta: number };
+  adaylar?: { hafta: number; list: Candidate[] };
+  patron?: Partial<Record<OrgId, number>>;
   kutlama?: { tur: 'kemer' | 'cift' | 'savunma'; org: OrgId; siklet: WeightClass };
   kumar?: { oynanan: number; net: number; sonHafta?: number; uyari?: string };
   sosyal?: Post[];

@@ -6,6 +6,10 @@ import { siteById, CAMP_SITES, type CampSite } from './gyms';
 import { campPoints } from './progression';
 import { socialCampStart, socialTick } from './social';
 import { dopingActive, DOPING_MODS } from './doping';
+import { prAdjust, staffCampHealth, staffCampPoints, staffCutman, staffFreeCut, staffGrowth } from './staff';
+import { petRunner } from './pets';
+import { diseaseMods, untreated } from './nightlifeCore';
+import { scandal } from './sponsors';
 import { campMotivation, cutBonus, fightItemMods, injuryMultiplier, owns, restMultiplier } from './shop';
 import { chance, clamp, pick, rand, randInt } from './rng';
 import type {
@@ -54,7 +58,7 @@ export function randomInjury(minW: number, maxW: number): Injury {
 const STAGE_ORDER = ['amator', 'bolgesel', 'buyuk', 'ufc'];
 
 export function cutCost(s: GameState) {
-  return owns(s, 'diyetisyen') ? 0 : { amator: 150, bolgesel: 800, buyuk: 2500, ufc: 4000 }[s.stage];
+  return owns(s, 'diyetisyen') || staffFreeCut(s) ? 0 : { amator: 150, bolgesel: 800, buyuk: 2500, ufc: 4000 }[s.stage];
 }
 
 /** Kamp masrafı dökümü: salon ücreti + kamp yeri ücreti. Oyuncu seçmeden önce görür. */
@@ -172,6 +176,8 @@ function runCamp(s: GameState) {
       site.carpan *
       (k.focus === site.bonusStat ? 1.3 : 1) *
       (site.salonUcreti && k.focus === s.takim.uzmanlik ? 1.35 : 1) *
+      staffGrowth(s, k.focus) *
+      (k.focus === 'kondisyon' && petRunner(s) ? 1.1 : 1) *
       (1 + (s.motivasyon + campMotivation(s)) * 0.1);
     const d = addStat(f.stats, k.focus, Math.max(1, Math.round(g)));
     k.ozet.push(`📈 ${STAT_LABELS[k.focus]} +${d} (${f.stats[k.focus]})`);
@@ -179,11 +185,11 @@ function runCamp(s: GameState) {
     else if (site.salonUcreti && k.focus === s.takim.uzmanlik) k.ozet.push(`🔥 ${s.takim.antrenor} bu alanın ustası: gelişim arttı.`);
   }
   s.motivasyon += campMotivation(s);
-  const puan = campPoints(s, k.intensity ?? 'orta', !!k.kisaHaber) + site.puan;
+  const puan = campPoints(s, k.intensity ?? 'orta', !!k.kisaHaber) + site.puan + staffCampPoints(s);
   s.puan += puan;
   k.ozet.push(`⭐ +${puan} gelişim puanı (toplam ${s.puan}). Tartıdan önce harcayabilirsin.`);
   s.motivasyon = 0;
-  s.saglik = clamp(s.saglik + (k.kisaHaber ? 0 : Math.round(intensity.saglik * restMultiplier(s))), 0, 100);
+  s.saglik = clamp(s.saglik + (k.kisaHaber ? 0 : Math.round(intensity.saglik * restMultiplier(s)) + staffCampHealth(s)), 0, 100);
 
   // Masraf
   let cost = campQuote(s, site.id, k.hafta).toplam;
@@ -285,6 +291,13 @@ function weighIn(s: GameState) {
       s.populerlik = clamp(s.populerlik - 3, 0, 100);
     }
   }
+  if (!k.iptal && untreated(s) && s.stage !== 'amator' && chance(0.6)) {
+    const v = prAdjust(s, -4);
+    s.populerlik = clamp(s.populerlik + v, 0, 100);
+    lines.push(`🩺 Maç öncesi sağlık kontrolünde ${s.hastalik!.ad} tespit edildi! Komisyon maçı iptal etti. (Popülerlik ${v})`, ...scandal(s));
+    s.haberler.unshift(`🩺 ${s.fighter.soyad}, sağlık kontrolünden geçemedi; maç iptal.`);
+    k.iptal = true;
+  }
   if (!k.iptal && chance(0.05)) {
     lines.push(`😏 ${s.pending.rakip!.soyad} tartıyı kaçırdı! Ücretinin %20’si sana geliyor ve o yorgun çıkacak.`);
     k.rakipCeza = true;
@@ -305,6 +318,7 @@ function beginFight(s: GameState) {
   const opp = s.pending.rakip!;
   const mods: Partial<Stats> = { ...k.mods };
   Object.entries(fightItemMods(s)).forEach(([st, v]) => (mods[st as StatKey] = (mods[st as StatKey] ?? 0) + (v ?? 0)));
+  Object.entries(diseaseMods(s)).forEach(([st, v]) => (mods[st as StatKey] = (mods[st as StatKey] ?? 0) + (v ?? 0)));
   if (dopingActive(s)) {
     Object.entries(DOPING_MODS).forEach(([st, v]) => (mods[st as StatKey] = (mods[st as StatKey] ?? 0) + (v ?? 0)));
     s.saglik = Math.max(5, s.saglik - 4);
@@ -318,7 +332,7 @@ function beginFight(s: GameState) {
     pAd: s.fighter.lakap || s.fighter.soyad,
     koseAdi: s.takim.antrenor,
     opp,
-    mods: { stats: mods, plan: k.plan ?? 'ayakta', planUyum: !!k.planUyum, oppStats: k.oppMods },
+    mods: { stats: mods, plan: k.plan ?? 'ayakta', planUyum: !!k.planUyum, oppStats: k.oppMods, cutman: staffCutman(s) },
     maxRaunt: unvan || anaMac ? 5 : 3,
     unvanMaci: unvan,
     anaMac,

@@ -1,6 +1,9 @@
 // Ekonomi: yükseltilebilir işletmeler (haftalık gelir) ve dalgalanan yatırımlar.
 // Bilinçli olarak character.ts'i içe aktarmaz; advanceWeeks buradan beslenir.
 import { clamp, noise } from './rng';
+import { nightTick } from './nightlifeCore';
+import { petTick, weeklyPetCost } from './pets';
+import { weeklyStaffCost } from './staff';
 import type { GameState } from './types';
 
 const $ = (n: number) => `$${Math.round(n).toLocaleString('tr-TR')}`;
@@ -124,6 +127,17 @@ export function economyTick(s: GameState, weeks: number): string[] {
     s.para += gelir;
     notes.push(`🏪 İşletme gelirleri: +${$(gelir)}`);
   }
+  const kadro = weeklyStaffCost(s) * weeks;
+  if (kadro > 0) {
+    s.para -= kadro;
+    notes.push(`🧑‍⚕️ Kadro maaşları: -${$(kadro)}`);
+  }
+  const bakim = weeklyPetCost(s) * weeks;
+  if (bakim > 0) {
+    s.para -= bakim;
+    notes.push(`🐾 Hayvan bakımı: -${$(bakim)}`);
+  }
+  notes.push(...petTick(s, weeks, s.para < 0), ...nightTick(s, weeks));
   (s.yatirimlar ?? []).forEach((y) => {
     const d = investDef(y.id);
     if (!d) return;

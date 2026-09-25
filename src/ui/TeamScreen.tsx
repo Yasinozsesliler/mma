@@ -8,6 +8,7 @@ import type { GameState } from '../engine/types';
 import { STAT_LABELS } from '../engine/types';
 import { Button, Card, OctIcon, P, Pill, Screen, Section, SLANT, Title } from './components';
 import type { Act } from './GameScreens';
+import { StaffPanel } from './StaffPanel';
 import { C, F, R } from './theme';
 
 function Stars({ n }: { n: number }) {
@@ -21,7 +22,7 @@ function Stars({ n }: { n: number }) {
 }
 
 export function TeamScreen({ s, act }: { s: GameState; act: Act }) {
-  const [tab, setTab] = useState<'salon' | 'menajer' | 'sponsor'>((s.sponsorTeklif ?? []).length ? 'sponsor' : 'salon');
+  const [tab, setTab] = useState<'salon' | 'menajer' | 'sponsor' | 'kadro'>((s.sponsorTeklif ?? []).length ? 'sponsor' : 'kadro');
   const [msg, setMsg] = useState<string | null>(null);
   const gyms = availableGyms(s);
   return (
@@ -52,16 +53,18 @@ export function TeamScreen({ s, act }: { s: GameState; act: Act }) {
         </Card>
       ) : null}
       <View style={tm.tabs}>
-        {(['salon', 'menajer', 'sponsor'] as const).map((t) => (
+        {(['kadro', 'salon', 'menajer', 'sponsor'] as const).map((t) => (
           <Pressable key={t} onPress={() => setTab(t)} style={[tm.tab, tab === t && tm.tabOn]}>
             <Text style={[tm.tabText, tab === t && { color: '#fff' }]}>
-              {t === 'salon' ? 'SALONLAR' : t === 'menajer' ? 'MENAJER' : `SPONSOR${(s.sponsorTeklif ?? []).length ? ` (${(s.sponsorTeklif ?? []).length})` : ''}`}
+              {t === 'kadro' ? 'KADRO' : t === 'salon' ? 'SALON' : t === 'menajer' ? 'MENAJER' : `SPONSOR${(s.sponsorTeklif ?? []).length ? ` (${(s.sponsorTeklif ?? []).length})` : ''}`}
             </Text>
           </Pressable>
         ))}
       </View>
 
-      {tab === 'sponsor' ? (
+      {tab === 'kadro' ? (
+        <StaffPanel s={s} act={act} onMsg={setMsg} />
+      ) : tab === 'sponsor' ? (
         <>
           <Section>{`AKTİF SPONSORLAR · ${(s.sponsorlar ?? []).length}/${sponsorSlots(s)} SLOT`}</Section>
           {(s.sponsorlar ?? []).length === 0 ? <P dim>Henüz sponsorun yok. Dövüş kazandıkça ve popülerleştikçe markalar kapını çalar.</P> : null}
@@ -216,7 +219,7 @@ const tm = StyleSheet.create({
   tabs: { flexDirection: 'row', gap: 8, marginBottom: 6 },
   tab: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 4, borderWidth: 1, borderColor: C.border, backgroundColor: C.card, transform: [{ skewX: '-8deg' }] },
   tabOn: { backgroundColor: C.red, borderColor: C.red },
-  tabText: { color: C.dim, fontFamily: F.display, fontSize: 14, letterSpacing: 1.5 },
+  tabText: { color: C.dim, fontFamily: F.display, fontSize: 11, letterSpacing: 0.6 },
   card: { backgroundColor: C.card, borderRadius: R, borderWidth: 1, borderColor: C.border, padding: 14, marginBottom: 10 },
   name: { color: C.text, fontFamily: F.display, fontSize: 17, textTransform: 'uppercase' },
   footer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: C.border },
