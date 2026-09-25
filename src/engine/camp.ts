@@ -254,7 +254,7 @@ function runCamp(s: GameState) {
     saglikDelta: s.saglik - saglikOnce,
     planUyum,
     yer: site.ad,
-    teknik: (k.haftaLog ?? []).filter((l) => /seviye atladı|ustalığı|leveled up|mastery \+|subió de nivel|Maestría de/.test(l)).map((l) => l.replace(/^(\d+\. hafta|Week \d+|Semana \d+) · /, '')),
+    teknik: (k.haftaLog ?? []).filter((l) => /seviye atladı|ustalığı|leveled up|mastery \+|subió de nivel|Maestría de|subiu de nível|Maestria de/.test(l)).map((l) => l.replace(/^(\d+\. hafta|Week \d+|Semana \d+) · /, '')),
   };
 
   // Basın toplantısı

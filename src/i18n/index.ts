@@ -3,6 +3,7 @@
 // Dil değişince uygulama yeniden başlatılır.
 import { EN } from './en';
 import { ES } from './es';
+import { PT } from './pt';
 
 export type Lang = 'tr' | 'en' | 'es' | 'pt' | 'ru';
 
@@ -10,7 +11,7 @@ export const LANGS: { id: Lang; ad: string; bayrak: string; hazir: boolean }[] =
   { id: 'tr', ad: 'Türkçe', bayrak: '🇹🇷', hazir: true },
   { id: 'en', ad: 'English', bayrak: '🇬🇧', hazir: true },
   { id: 'es', ad: 'Español', bayrak: '🇪🇸', hazir: true },
-  { id: 'pt', ad: 'Português', bayrak: '🇧🇷', hazir: false },
+  { id: 'pt', ad: 'Português', bayrak: '🇧🇷', hazir: true },
   { id: 'ru', ad: 'Русский', bayrak: '🇷🇺', hazir: false },
 ];
 
@@ -35,7 +36,7 @@ try {
 /** Büyük/küçük harf ve sayı biçimi için yerel ayar (Türkçede i→İ; İngilizcede i→I). */
 export const LOC = ({ tr: 'tr-TR', en: 'en-US', es: 'es-ES', pt: 'pt-BR', ru: 'ru-RU' } as const)[LANG];
 
-const DICT: Record<string, string> = LANG === 'en' ? EN : LANG === 'es' ? ES : {};
+const DICT: Record<string, string> = LANG === 'en' ? EN : LANG === 'es' ? ES : LANG === 'pt' ? PT : {};
 
 /** Çeviri: Türkçe metni (şablon) seçili dile çevirir ve {0}, {ad} gibi yer tutucuları doldurur. */
 export function L(s: string, vars?: readonly unknown[] | Record<string, unknown>): string {

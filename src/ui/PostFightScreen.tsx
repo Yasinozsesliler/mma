@@ -22,7 +22,7 @@ const TONES: Record<'win' | 'loss' | 'draw' | 'nc', Tone> = {
 };
 
 // Üstteki kutucuklarda zaten gösterilen satırlar rapora tekrar yazılmaz.
-const IN_TILES = [/^🔥 (Popülerlik|Popularity|Popularidad)/, /^📲 (Takipçi|Followers|Seguidores)/, /^⭐ \+\d+ (gelişim|skill|puntos)/, /^🩹 (Sağlık|Temiz|Health|You came out clean|Salud|Saliste limpio)/];
+const IN_TILES = [/^🔥 (Popülerlik|Popularity|Popularidad|Popularidade)/, /^📲 (Takipçi|Followers|Seguidores)/, /^⭐ \+\d+ (gelişim|skill|puntos)/, /^🩹 (Sağlık|Temiz|Health|You came out clean|Salud|Saliste limpio|Saúde|Você saiu ileso)/];
 
 function splitEmoji(line: string): [string, string] {
   const i = line.indexOf(' ');
