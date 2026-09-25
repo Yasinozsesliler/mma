@@ -3,7 +3,7 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { createContext, useContext, useEffect, useRef, type ComponentProps, type ReactNode } from 'react';
 import { Animated, Pressable, ScrollView, StyleSheet, Text, View, type ViewStyle } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Defs, Path, Pattern, Polygon, Rect } from 'react-native-svg';
 import { C, F, G, R } from './theme';
 
@@ -106,14 +106,16 @@ function FadeIn({ children }: { children: ReactNode }) {
 
 export function Screen({ children, footer }: { children: ReactNode; footer?: ReactNode }) {
   const topBar = useContext(HasTopBar);
+  // Alt güvenli alan (iPhone ana ekran çubuğu) ayrıca eklenmez; alt boşluk ile birleştirilir, çift boşluk oluşmaz.
+  const bottom = useSafeAreaInsets().bottom;
   return (
-    <SafeAreaView style={st.safe} edges={topBar ? ['bottom'] : ['top', 'bottom']}>
+    <SafeAreaView style={st.safe} edges={topBar ? [] : ['top']}>
       <CageBg />
       <LinearGradient colors={['rgba(200,20,35,0.14)', 'rgba(4,4,5,0)']} style={st.glow} pointerEvents="none" />
-      <ScrollView contentContainerStyle={st.scroll} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={[st.scroll, !footer && { paddingBottom: 32 + bottom }]} keyboardShouldPersistTaps="handled">
         <FadeIn>{children}</FadeIn>
       </ScrollView>
-      {footer ? <View style={st.footer}>{footer}</View> : null}
+      {footer ? <View style={[st.footer, { paddingBottom: Math.max(12, bottom - 4) }]}>{footer}</View> : null}
     </SafeAreaView>
   );
 }

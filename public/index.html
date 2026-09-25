@@ -25,14 +25,15 @@
       html,
       body {
         height: 100%;
-        height: 100vh;
-        height: 100dvh;
+        height: var(--app-h, 100dvh);
         margin: 0;
         background-color: #040405;
       }
       body {
         position: fixed;
-        inset: 0;
+        top: 0;
+        left: 0;
+        right: 0;
         overflow: hidden;
         -webkit-tap-highlight-color: transparent;
         overscroll-behavior: none;
@@ -46,6 +47,27 @@
     </style>
 
     <script>
+      // iPhone ana ekran uygulamasında (şeffaf durum çubuğu) iOS, sayfa yüksekliğini durum çubuğu kadar kısa
+      // bildiriyor ve altta siyah bir şerit kalıyor. Bu modda gerçek ekran yüksekliği kullanılır.
+      (function () {
+        var ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        var standalone = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
+        function fit() {
+          var h = window.innerHeight;
+          if (ios && standalone) {
+            var portrait = window.matchMedia('(orientation: portrait)').matches;
+            var full = portrait ? Math.max(screen.width, screen.height) : Math.min(screen.width, screen.height);
+            if (full > h) h = full;
+          }
+          document.documentElement.style.setProperty('--app-h', h + 'px');
+        }
+        fit();
+        window.addEventListener('resize', fit);
+        window.addEventListener('orientationchange', function () {
+          setTimeout(fit, 300);
+        });
+      })();
+
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
           navigator.serviceWorker
