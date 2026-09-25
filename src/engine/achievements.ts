@@ -1,6 +1,7 @@
 // 100 başarım. Bazıları kolay, bazıları bir kariyer boyu sürer. 🏛 işaretliler Onur Listesi (Hall of Fame) eşikleridir.
 import { MAX_LEVEL, weeklyBusinessIncome } from './economy';
 import { readIstat } from './istat';
+import { followers } from './fame';
 import type { GameState, Istat } from './types';
 
 export type AchCategory = 'dovus' | 'kemer' | 'kariyer' | 'servet' | 'yasam' | 'sohret';
@@ -183,14 +184,14 @@ export const ACHIEVEMENTS: Achievement[] = [
   a({ id: 'eslesme10', ad: 'Kalp Kırıcı', aciklama: '10 eşleşme yakala.', ikon: 'heart-multiple', kat: 'yasam', tier: 'gumus', get: (s) => I(s).eslesme, hedef: 10 }),
 
   // ---------------- ŞÖHRET (4) ----------------
-  a({ id: 'pop50', ad: 'Tanınan Yüz', aciklama: 'Popülerlik 50.', ikon: 'account-eye', kat: 'sohret', tier: 'bronz', get: (s) => s.populerlik, hedef: 50 }),
-  a({ id: 'pop80', ad: 'Yıldız', aciklama: 'Popülerlik 80.', ikon: 'star-face', kat: 'sohret', tier: 'gumus', get: (s) => s.populerlik, hedef: 80 }),
-  a({ id: 'pop100', ad: 'Süperstar', aciklama: 'Popülerlik 100.', ikon: 'star-shooting', kat: 'sohret', tier: 'altin', get: (s) => s.populerlik, hedef: 100 }),
+  a({ id: 'pop50', ad: 'Tanınan Yüz', aciklama: '50 bin takipçi.', ikon: 'account-eye', kat: 'sohret', tier: 'bronz', get: followers, hedef: 50_000 }),
+  a({ id: 'pop80', ad: 'Yıldız', aciklama: '1 milyon takipçi.', ikon: 'star-face', kat: 'sohret', tier: 'gumus', get: followers, hedef: 1_000_000 }),
+  a({ id: 'pop100', ad: 'Süperstar', aciklama: '10 milyon takipçi.', ikon: 'star-shooting', kat: 'sohret', tier: 'altin', get: followers, hedef: 10_000_000 }),
   a({ id: 'gonderi20', ad: 'İçerik Üreticisi', aciklama: 'Sosyal medyada 20 paylaşım yap.', ikon: 'cellphone-text', kat: 'sohret', tier: 'bronz', get: (s) => I(s).gonderi, hedef: 20 }),
 ];
 
 // ---------- Onur Listesi (Hall of Fame) ----------
 
-export const HOF_SCORE = 750;
+export const HOF_SCORE = 800;
 export const HOF_PILLARS = 6;
 export const HOF_ACHIEVEMENTS = ACHIEVEMENTS.filter((x) => x.hof);

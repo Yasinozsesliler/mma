@@ -1,3 +1,4 @@
+import { fmtFollowers, followers } from '../engine/fame';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { fullName } from '../engine/character';
@@ -25,7 +26,6 @@ const TUR: Record<Post['tur'], { renk: string; ikon: IconName; etiket: string }>
 };
 
 const ago = (s: GameState, h: number) => (s.hafta - h <= 0 ? 'bu hafta' : `${s.hafta - h} hf önce`);
-const kfmt = (n: number) => (n >= 1000000 ? `${(n / 1000000).toFixed(1)}M` : n >= 1000 ? `${(n / 1000).toFixed(1)}B` : `${n}`);
 
 function Avatar({ name, color }: { name: string; color: string }) {
   const ini = name
@@ -67,7 +67,7 @@ function PostCard({ s, p, act, onMsg }: { s: GameState; p: Post; act: Act; onMsg
           <Text style={[so.text, story && { fontFamily: F.semi }]}>{p.metin}</Text>
           <View style={so.stats}>
             <Icon name="heart" size={13} color={C.red} />
-            <Text style={so.statText}>{kfmt(p.begeni)}</Text>
+            <Text style={so.statText}>{fmtFollowers(p.begeni)}</Text>
             <Icon name="message-reply-text" size={13} color={C.faint} />
             <Text style={so.statText}>{p.yanitlar?.length ?? 0}</Text>
           </View>
@@ -98,7 +98,7 @@ export function SocialScreen({ s, act }: { s: GameState; act: Act }) {
   const [msg, setMsg] = useState<string | null>(null);
   const [filter, setFilter] = useState<'hepsi' | 'dovuscu' | 'hikaye'>('hepsi');
   const posts = (s.sosyal ?? []).filter((p) => filter === 'hepsi' || p.tur === filter || (filter === 'dovuscu' && p.tur === 'oyuncu'));
-  const takipci = Math.round(200 + s.populerlik * s.populerlik * 45);
+  const takipci = followers(s);
   const send = () => {
     if (!text.trim()) return;
     act((x) => setMsg(playerPost(x, text)));
@@ -117,7 +117,7 @@ export function SocialScreen({ s, act }: { s: GameState; act: Act }) {
           {s.fighter.hakkinda ? <Text style={[so.replyText, { marginTop: 4 }]} numberOfLines={3}>{s.fighter.hakkinda}</Text> : null}
         </View>
         <View style={{ alignItems: 'flex-end' }}>
-          <Text style={[so.follow, SLANT]}>{kfmt(takipci)}</Text>
+          <Text style={[so.follow, SLANT]}>{fmtFollowers(takipci)}</Text>
           <Text style={so.handle}>takipçi</Text>
         </View>
       </View>

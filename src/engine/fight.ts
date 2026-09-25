@@ -1,4 +1,5 @@
 import { SUBMISSIONS } from './data';
+import { bestLevel, bestSpecial, pickTech, TECHNIQUES, techById, type TechDef } from './techniques';
 import { CRITICAL_INTRO, evenLine, groundLine, strikeLine, TACTICS, tdLine } from './narration';
 import { chance, clamp, fill, noise, pick, rand, randInt, weighted } from './rng';
 import type {
@@ -179,18 +180,34 @@ function sure(beat: number) {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 }
 
+/** Metinde adı geçen submission tekniğini bulur. */
+const subFromText = (t: string) => TECHNIQUES.find((x) => x.tur === 'sub' && t.toLocaleLowerCase('tr-TR').includes(x.ad.toLocaleLowerCase('tr-TR')));
+const techLv = (fs: FightState, id?: string) => (id ? fs.mods.teknik?.[id] ?? 0 : 0);
+
 function finish(fs: FightState, kazanan: Side, yontem: Method, aciklama: string, beat: number, sakatlik = false) {
   fs.karar = null;
   fs.sonuc = { kazanan, yontem, raunt: fs.raunt, sure: sure(beat), aciklama, sakatlik };
   fs.durum = 'bitti';
   fs.kritik = null;
   fs.log.push(aciklama);
+  // Oyuncunun bitirişi: hangi hareketle bitirdiğini kaydet (o hareket ustalık kazanır).
+  if (kazanan === 'p' && (yontem === 'KO' || yontem === 'TKO' || yontem === 'SUB')) {
+    const t =
+      (fs.pTeknik ? techById(fs.pTeknik) : undefined) ??
+      (yontem === 'SUB' ? subFromText(aciklama) ?? pickTech(fs.mods.teknik, 'sub') : pickTech(fs.mods.teknik, 'vurus'));
+    if (t) {
+      fs.sonuc.teknik = t.id;
+      fs.log.push(`🎯 Bitiren hareket: ${t.ad}`);
+    }
+  }
 }
 
 function setCritical(fs: FightState, kind: CriticalKind) {
   fs.kritik = kind;
   fs.durum = 'kritik';
-  if (kind === 'subFirsat' || kind === 'subTehlike') fs.subAdi = pick(SUBMISSIONS);
+  // Oyuncunun fırsatında bildiği (ve iyi olduğu) teknikler öne çıkar.
+  if (kind === 'subFirsat') fs.subAdi = pickTech(fs.mods.teknik, 'sub').ad;
+  else if (kind === 'subTehlike') fs.subAdi = pick(SUBMISSIONS);
   const introKey =
     fs.yerde && kind === 'rakipSersem' ? 'rakipSersemYerde' : fs.yerde && kind === 'sarsildin' ? 'sarsildinYerde' : kind;
   fs.kritikMetni = fill(pick(CRITICAL_INTRO[introKey]), { o: fs.oAd, sub: fs.subAdi });
@@ -242,6 +259,7 @@ function groundPhase(fs: FightState, top: Side, beat: number): boolean {
   addDmg(fs, other(top), gnp);
   let subP = clamp(0.1 + (T.grappling - B.grappling) / 110, 0.03, 0.4);
   if (top === 'p' && fs.mods.plan === 'yer') subP += fs.mods.planUyum ? 0.14 : 0.08;
+  if (top === 'p') subP += bestLevel(fs.mods.teknik, 'sub') * 0.006;
   if (chance(subP * SC)) {
     setCritical(fs, top === 'p' ? 'subFirsat' : 'subTehlike');
     return true;
@@ -453,7 +471,60 @@ const tired = (fs: FightState, d: number) => (fs.pKondisyon = clamp(fs.pKondisyo
  * Karar anları. Seçenekler bedava değildir: bağlama uyan doğru seçim üstünlük verir,
  * yanlış okuma ceza getirir. Rastgele seçen oyuncu ortalamada kazanamaz.
  */
+/** Özel hareket denemesi: seviye ve hız farkı isabeti belirler. Iskalarsan ağır bedel. */
+function specialMove(fs: FightState, t: TechDef): string {
+  fs.ozelKullanildi = true;
+  const lv = techLv(fs, t.id);
+  const o = oStats(fs);
+  const p = clamp(0.2 + lv * 0.06 + (fs.pStats[t.stat] - o.hiz) / 220, 0.12, 0.6);
+  if (!chance(p)) {
+    addDmg(fs, 'p', 5);
+    addPts(fs, 'o', 2);
+    tired(fs, -6);
+    boost(fs, -0.04, 2);
+    return pick([`${t.ad} boşa gitti! Dengeni kaybettin, ${fs.oAd} üstüne çullandı.`, `${fs.oAd} ${t.ad.toLocaleLowerCase('tr-TR')} hareketini okudu, kontra yedin!`]);
+  }
+  addPts(fs, 'p', 3);
+  if (t.id === 'imanari') {
+    setCritical(fs, 'subFirsat');
+    fs.subAdi = 'Heel hook';
+    return `🌀 ${t.ad}! Yuvarlanıp bacağı yakaladın, heel hook kuruluyor!`;
+  }
+  if (t.id === 'suplex') {
+    addDmg(fs, 'o', 14 + lv * 2);
+    fs.yerde = true;
+    boost(fs, 0.08, 2);
+    return `💥 ${t.ad}! ${fs.oAd} kafesin zeminine çakıldı, salon ayağa kalktı!`;
+  }
+  addDmg(fs, 'o', 12 + lv * 3);
+  if (chance(0.15 + lv * 0.04 + fs.oHasar / 300)) {
+    fs.pTeknik = t.id;
+    finish(fs, 'p', 'KO', `⚡⚡ ${t.ad.toUpperCase()}! ${fs.oAd} bilinçsiz yere yığıldı! Bu gece haftanın, belki yılın nakavtı!`, fs.vurusSira);
+    return `${t.ad} tam isabet!`;
+  }
+  boost(fs, 0.08, 2);
+  if (fs.oHasar > 40) setCritical(fs, 'rakipSersem');
+  return `⚡ ${t.ad} tam isabet! ${fs.oAd} sarsıldı, bacakları titriyor!`;
+}
+
 const DECISIONS: DecDef[] = [
+  {
+    tip: 'ozel',
+    agirlik: (fs) => (bestSpecial(fs.mods.teknik) && !fs.ozelKullanildi ? 1.4 + techLv(fs, bestSpecial(fs.mods.teknik)!.id) * 0.3 : 0),
+    metin: (fs) => {
+      const t = bestSpecial(fs.mods.teknik)!;
+      return t.yer
+        ? `⚡ ${fs.oAd} ağırlığını öne verdi. ${t.ad} için kusursuz bir an!`
+        : pick([`⚡ ${fs.oAd} başını düşürerek dalıyor… ${t.ad} için tam zamanı!`, `⚡ Mesafe tam. ${fs.oAd} dikkatini kaybetti. ${t.ad} şimdi!`]);
+    },
+    secenekler: (fs) => {
+      const t = bestSpecial(fs.mods.teknik)!;
+      return [
+        { ad: `${t.ad}!`, aciklama: `Özel hareket (seviye ${techLv(fs, t.id)}). Yüksek risk, yüksek ödül.`, apply: (x) => specialMove(x, t) },
+        { ad: 'Riske girme', aciklama: 'Temel tekniklere sadık kal.', apply: () => 'Sabırlı davranıyorsun, fırsatı geçtin.' },
+      ];
+    },
+  },
   {
     tip: 'kontra_firsat',
     agirlik: (fs) => (pressing(fs) ? 3 : 0.8),
@@ -561,7 +632,8 @@ export function resolveDecision(prev: FightState, idx: number): FightState {
   fs.karar = null;
   fs.durum = 'taktik';
   if (opt) fs.log.push(`➤ ${opt.apply(fs)}`);
-  runBeats(fs);
+  // Özel hareket maçı bitirmiş ya da kritik an açmış olabilir.
+  if (fs.durum === 'taktik') runBeats(fs);
   return fs;
 }
 
@@ -594,7 +666,7 @@ export function resolveCritical(prev: FightState, choice: number): FightState {
   fs.durum = 'taktik';
 
   if (kind === 'rakipSersem') {
-    const fp = clamp(0.4 + (fs.pStats.vurus - o.cene) / 140 + fs.oHasar / 200, 0.15, 0.85);
+    const fp = clamp(0.4 + (fs.pStats.vurus - o.cene) / 140 + fs.oHasar / 200 + bestLevel(fs.mods.teknik, 'vurus') * 0.012, 0.15, 0.86);
     if (choice === 0) {
       drain(fs, 'p', 'baski', 6);
       if (chance(fp)) {
@@ -634,7 +706,7 @@ export function resolveCritical(prev: FightState, choice: number): FightState {
         finish(fs, 'p', 'TKO', `🔨 ${fs.pAd} yerde mount aldı, ground and pound yağdırıyor, hakem durdurdu! TKO!`, b);
         return fs;
       } else if (chance(clamp(0.25 + (P.grappling - O.grappling) / 90, 0.08, 0.6))) {
-        const sub = pick(SUBMISSIONS);
+        const sub = pickTech(fs.mods.teknik, 'sub').ad;
         finish(fs, 'p', 'SUB', `🔒 ${fs.pAd} sersem rakibin sırtını aldı ve ${sub} ile tap attırdı!`, b);
         return fs;
       } else {
@@ -678,7 +750,7 @@ export function resolveCritical(prev: FightState, choice: number): FightState {
     }
   } else if (kind === 'subFirsat') {
     if (choice === 0) {
-      const sp = clamp(0.32 + (P.grappling - O.grappling) / 90 + (100 - fs.oKondisyon) / 400, 0.1, 0.88);
+      const sp = clamp(0.32 + (P.grappling - O.grappling) / 90 + (100 - fs.oKondisyon) / 400 + techLv(fs, subFromText(fs.subAdi)?.id) * 0.03, 0.1, 0.88);
       drain(fs, 'p', 'clinch', 3);
       if (chance(sp)) {
         finish(fs, 'p', 'SUB', `🔒 ${fs.pAd} ${fs.subAdi} kilidini sonuna kadar sıktı… ${fs.oAd} TAP ATTI!`, b);

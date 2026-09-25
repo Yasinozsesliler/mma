@@ -1,4 +1,6 @@
 import { istat } from './engine/istat';
+import { startingTechniques } from './engine/techniques';
+import { initialFollowers } from './engine/fame';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ensureDivision } from './engine/division';
 import { gymsFor } from './engine/gyms';
@@ -64,6 +66,8 @@ export async function loadGame(): Promise<GameState | null> {
       s.envanter = s.envanter.filter((x) => x !== 'kopek');
     }
     s.yatirimlar ??= [];
+    s.teknik ??= startingTechniques(s.fighter.gecmis);
+    s.takipci ??= initialFollowers(s.populerlik);
     if (!s.eslesmeler && s.adaylar) {
       s.eslesmeler = s.adaylar.list.filter((c) => c.seviye > 0 || c.id === s.iliski?.id);
       s.adaylar = undefined;

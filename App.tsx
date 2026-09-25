@@ -35,6 +35,7 @@ import { NightlifeScreen } from './src/ui/NightlifeScreen';
 import { AchievementsScreen } from './src/ui/AchievementsScreen';
 import { AchievementToast } from './src/ui/AchievementToast';
 import { checkAchievements } from './src/engine/legacy';
+import { popToFollowers } from './src/engine/fame';
 import { socialWelcome } from './src/engine/social';
 import { HasTopBar, TopBar } from './src/ui/components';
 import { C } from './src/ui/theme';
@@ -95,6 +96,8 @@ export default function App() {
     if (!cur) return;
     const next: GameState = JSON.parse(JSON.stringify(cur));
     fn(next);
+    // Olaylar, sosyal medya, gece hayatı…: popülerlik değişimi takipçiye yansır (maç sonucu kendi hesabını yapar).
+    if (!(cur.phase === 'dovus' && next.phase === 'dovusSonrasi') && next.populerlik !== cur.populerlik) popToFollowers(next, next.populerlik - cur.populerlik);
     // Kafes dışındaki başarımlar da (ev, araba, sevgili…) anında açılır.
     const yeni = next.phase === 'emeklilik' ? [] : checkAchievements(next);
     if (yeni.length) setToast(yeni);

@@ -3,6 +3,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { money } from '../engine/career';
+import { fmtFollowers, followers } from '../engine/fame';
 import { currentOrg, statAverage } from '../engine/character';
 import { ORGS, WEIGHT_CLASSES } from '../engine/data';
 import type { GameState } from '../engine/types';
@@ -44,6 +45,8 @@ export function HubHero({ s }: { s: GameState }) {
             {`${f.ad} ${f.soyad}`.toLocaleUpperCase('tr-TR')}
           </Text>
           <View style={hh.chips}>
+            <Text style={hh.chip}>{f.yas} YAŞ</Text>
+            <Text style={hh.dot}>•</Text>
             <Text style={hh.chip}>{WEIGHT_CLASSES[f.siklet].ad.toLocaleUpperCase('tr-TR')}</Text>
             <Text style={hh.dot}>•</Text>
             <Text style={[hh.chip, { color: C.blue }]}>{org.kisa}</Text>
@@ -61,7 +64,7 @@ export function HubHero({ s }: { s: GameState }) {
         <Meter label={amator ? 'AMATÖR' : 'KARNE'} value={`${r.g}-${r.m}-${r.b}`} />
         <Meter label="PARA" value={money(s.para)} color={s.para < 0 ? '#ff4d5e' : C.green} />
         <Meter label="SAĞLIK" value={`${s.saglik}`} color={health} sub={s.saglik} />
-        <Meter label="POPÜLER" value={`${s.populerlik}`} color={C.gold} sub={s.populerlik} />
+        <Meter label="TAKİPÇİ" value={fmtFollowers(followers(s))} color={C.gold} />
       </View>
     </LinearGradient>
   );

@@ -44,6 +44,8 @@ const stats = {
   rec25: [] as string[],
   fights25: [] as number[],
   totalFights: [] as number[],
+  gaps: [] as number[],
+  followers: [] as number[],
   retireAge: [] as number[],
   hof: 0,
   ach: [] as number[],
@@ -74,6 +76,7 @@ function playCareer() {
   stats.byBg[bg] ??= { w: 0, l: 0 };
   let pro = false, big = false, ufc = false, fights = 0;
   let rec25 = '';
+  let lastFightWeek: number | null = null;
   const seen = new Set<string>();
   const metIds = new Map<string, number>();
   const metNames = new Map<string, string>();
@@ -103,6 +106,9 @@ function playCareer() {
       case 'kamp': {
         const k = s.pending.kamp!;
         const vals: Record<string, string | number> = {
+          sure: Math.min(8, k.macHafta ?? 8),
+          takvim: 'hizli',
+          haftalik: 'hepsi',
           yer: s.para > 20000 ? 'irtifa' : 'salon',
           focus: STAT_KEYS.reduce((a, b) => (s.fighter.stats[b] < s.fighter.stats[a] ? b : a)),
           plan: PLAN_FOR[weakest(s.pending.rakip!)],
@@ -144,7 +150,10 @@ function playCareer() {
         if (r.kazanan === 'p') { stats.wins++; stats.byBg[bg].w++; }
         else if (r.kazanan === 'o') { stats.losses++; stats.byBg[bg].l++; }
         else stats.draws++;
+        const hafta0 = s.hafta;
         finishFight(s);
+        if (lastFightWeek != null) stats.gaps.push((hafta0 - lastFightWeek) * 7);
+        lastFightWeek = hafta0;
         break;
       }
       case 'dovusSonrasi':
@@ -178,6 +187,7 @@ function playCareer() {
     stats.legacy.push(legacyScore(s));
     stats.totalFights.push(fights);
     stats.retireAge.push(s.fighter.yas);
+    stats.followers.push(s.takipci ?? 0);
     if (s.unvanlar.some((u) => u.startsWith('UFC'))) stats.ufcChamp++;
   }
 }
@@ -194,6 +204,7 @@ for (let i = 0; i < N; i++) {
 const pct = (a: number, b: number) => `${((a / Math.max(1, b)) * 100).toFixed(1)}%`;
 const mean = (a: number[]) => (a.reduce((x, y) => x + y, 0) / Math.max(1, a.length)).toFixed(1);
 console.log(`18-20 yaşında başlayanlar, 25 yaşında: toplam dövüş ort. ${mean(stats.fights25)}, pro karne örnekleri: ${stats.rec25.slice(0, 12).join(', ')}`);
+console.log(`Maçlar arası gün ort. ${mean(stats.gaps)} (min ${Math.min(...stats.gaps)}, maks ${Math.max(...stats.gaps)}) · Kariyer sonu takipçi ort. ${Math.round(Number(mean(stats.followers))).toLocaleString('tr-TR')}, maks ${Math.max(...stats.followers).toLocaleString('tr-TR')}`);
 console.log(`Kariyer boyu dövüş ort. ${mean(stats.totalFights)}, bitiş yaşı ort. ${mean(stats.retireAge)}`);
 console.log(`Başarım ort. ${mean(stats.ach)}, maks ${Math.max(...stats.ach)} · Efsane puanı ort. ${mean(stats.legacy)}, maks ${Math.max(...stats.legacy)} · Hall of Fame: ${((stats.hof / N) * 100).toFixed(1)}%`);
 console.log(`Kariyer: ${stats.careers}, dövüş: ${stats.fights}, çökme: ${stats.crashes}`);

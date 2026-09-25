@@ -2,6 +2,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { StyleSheet, Text, View } from 'react-native';
 import Svg, { Polygon } from 'react-native-svg';
 import { money, rankLabel, STAGE_LABELS } from '../engine/career';
+import { fmtFollowers, followers, followerTier } from '../engine/fame';
 import { currentOrg, statAverage } from '../engine/character';
 import { BACKGROUNDS, COUNTRIES, ORGS, WEIGHT_CLASSES } from '../engine/data';
 import type { GameState } from '../engine/types';
@@ -102,7 +103,7 @@ export function StatusPanel({ s, compact }: { s: GameState; compact?: boolean })
         <Info wide icon="trophy-outline" label={amator ? 'Amatör karne' : 'Profesyonel karne'} value={`${r.g}-${r.m}-${r.b}  ·  KO ${r.ko} · SUB ${r.sub} · KRR ${r.karar}`} />
         {!amator && a.g + a.m + a.b > 0 ? <Info wide icon="school-outline" label="Amatör karne" value={`${a.g}-${a.m}-${a.b}  ·  KO ${a.ko} · SUB ${a.sub} · KRR ${a.karar}`} /> : null}
         <Info icon="cash" label="Para" value={money(s.para)} color={s.para < 0 ? C.red : undefined} />
-        <Info icon="fire" label="Popülerlik" value={`${s.populerlik}/100`} />
+        <Info icon="account-group" label="Takipçi" value={`${fmtFollowers(followers(s))} · ${followerTier(followers(s))}`} />
         <Info icon="heart-pulse" label="Sağlık" value={`${s.saglik}/100`} color={s.saglik < 60 ? C.orange : undefined} />
         <Info icon="file-sign" label="Kontrat" value={s.contract ? `${s.contract.kalan} dövüş kaldı` : 'Yok'} />
         <Info icon="stairs-up" label="Aşama" value={STAGE_LABELS[s.stage].replace(/^Aşama \d · /, '')} />

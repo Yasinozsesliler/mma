@@ -9,6 +9,9 @@ import { applyInterview, buildInterview, interviewTargets, type InterviewCtx } f
 import { activeBelts, champLabel, checkAchievements, defendBelt, loseBelt, vacateOrg, winBelt } from './legacy';
 import { fightPoints } from './progression';
 import { istat } from './istat';
+import { leadWeeks } from './calendar';
+import { addFollowers, fightFollowers, fmtDelta, fmtFollowers, followers } from './fame';
+import { addTechXp, techById } from './techniques';
 import { banLabel, banned, banWeeksLeft, dopingFallout, dopingTest } from './doping';
 import { paySponsors, refreshSponsorOffers } from './sponsors';
 import { prAdjust } from './staff';
@@ -51,11 +54,12 @@ export function findNextFight(s: GameState) {
     const o = imposedOpponent(s);
     if (s.kisaHaber) {
       o.etiket = '⏱️ KISA HABER';
-      o.riskMetni = 'Sadece 3 hafta var. Kamp kısa, rakip hazır. Kazanırsan adını herkes öğrenir.';
+      o.riskMetni = 'Kamp süresi yok denecek kadar kısa, rakip hazır. Kazanırsan adını herkes öğrenir.';
     }
     s.pending.secenekler = [o];
     s.pending.dayatma = true;
   }
+  s.pending.secenekler.forEach((o) => (o.macHafta = leadWeeks(s, o, s.kisaHaber)));
   s.phase = 'rakipSecimi';
 }
 
@@ -159,6 +163,12 @@ export function finishFight(s: GameState) {
     raunt: r.raunt,
     yas: s.fighter.yas,
   });
+  // Bitiren hareket ustalık kazanır (maçı hangi teknikle bitirdiysen).
+  let teknikNot: string | undefined;
+  if (won && !caught && finishMethod && r.teknik) {
+    teknikNot = addTechXp(s, r.teknik, 2);
+    lines.push(`🎯 Bitiren hareket: ${techById(r.teknik)?.ad} · ${teknikNot}`);
+  }
   const oldSeri = s.seri;
   s.seri = won ? Math.max(1, s.seri + 1) : draw ? 0 : Math.min(-1, s.seri - 1);
 
@@ -223,6 +233,10 @@ export function finishFight(s: GameState) {
   pop = prAdjust(s, Math.round(pop * exposure));
   s.populerlik = clamp(s.populerlik + pop, 0, 100);
   lines.push(`🔥 Popülerlik ${pop >= 0 ? '+' : ''}${pop} → ${s.populerlik}/100`);
+  const tDelta = caught
+    ? addFollowers(s, -followers(s) * 0.08)
+    : fightFollowers(s, { won, draw, finish: finishMethod, bonus: bonusSay, title: won && opp.champion, koLoss: !won && !draw && (r.yontem === 'KO' || r.yontem === 'TKO'), trash: s.trashTalk });
+  lines.push(`📲 Takipçi ${fmtDelta(tDelta)} → ${fmtFollowers(followers(s))}`);
   if (!won && s.trashTalk) lines.push('Trash talk yaptıktan sonra kaybetmek… sosyal medya acımasız.');
   const trashOnce = s.trashTalk;
   s.trashTalk = false;
@@ -295,14 +309,13 @@ export function finishFight(s: GameState) {
   if (caught) lines.push(...dopingFallout(s, banWeeks!));
   const teklif = refreshSponsorOffers(s, won && !caught);
   if (teklif) lines.push(teklif);
-  // Toparlanma ve yeni maç görüşmeleri: kampla birlikte bir dövüş döngüsü yaklaşık 90-100 gün sürer.
-  const kampHafta = kamp.hafta ?? 8;
-  let ara = Math.max(pro ? 4 : 3, (pro ? randInt(13, 14) : randInt(10, 11)) - kampHafta);
+  // Toparlanma: maçtan sonra kısa bir ara. Sıradaki maçın tarihi teklifte belirlenir (toplam ~60-90 gün).
+  let ara = 2;
   if (!won && (r.yontem === 'KO' || r.yontem === 'TKO')) {
     ara += 4;
     lines.push('🩺 Nakavt sonrası zorunlu sağlık ertelemesi: +4 hafta kafese çıkamazsın.');
   }
-  lines.push(`📅 Toparlanma ve yeni maç görüşmeleri: ${ara} hafta. Son kamptan bu yana ${(kampHafta + ara) * 7} gün geçecek.`);
+  lines.push(`📅 Toparlanma: ${ara} hafta. Sıradaki maçın tarihi teklifle birlikte belirlenecek.`);
   advanceWeeks(s, ara);
 
   s.haberler.unshift(
@@ -368,6 +381,10 @@ export function finishFight(s: GameState) {
       bonus: bonusSay,
       nc: caught && won,
       unvan: won && (opp.champion || wasChampion) && !caught,
+      teknik: won && finishMethod && r.teknik ? techById(r.teknik)?.ad : undefined,
+      teknikNot,
+      takipci: followers(s),
+      takipciDelta: tDelta,
     },
     roportajSecenekleri: roportaj.map((x) => x.text),
     roportaj,

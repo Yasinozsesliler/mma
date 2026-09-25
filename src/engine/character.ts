@@ -3,6 +3,8 @@ import { clamp, fill, noise, pick } from './rng';
 import { economyTick } from './economy';
 import { gymById, gymsFor } from './gyms';
 import { START_POINTS } from './progression';
+import { initialFollowers } from './fame';
+import { startingTechniques } from './techniques';
 import type { Appearance, Background, Fighter, GameState, OrgId, Stats, StatKey, WeightClass } from './types';
 import { STAT_KEYS } from './types';
 
@@ -64,6 +66,8 @@ export function createGame(input: NewFighterInput, stats: Stats): GameState {
     bolum: null,
     cagri: null,
     populerlik: Math.round(country.taraftar * 1.2),
+    takipci: initialFollowers(Math.round(country.taraftar * 1.2)),
+    teknik: startingTechniques(input.gecmis),
     rank: null,
     sampiyon: false,
     savunma: 0,

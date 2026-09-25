@@ -33,6 +33,8 @@ import { STAT_KEYS, STAT_LABELS } from '../engine/types';
 import { Button, Card, Choice, Icon, P, Pill, Screen, Section, SLANT, Title, upName, type IconName } from './components';
 import { NewsFeed, RankingList, RestPicker } from './HubParts';
 import { ActionGrid, ActionTile, FightCTA, HubHero, Notice } from './HubHome';
+import { CampLengthStep, CampSummary, CampWeeksStep, FreeWeeksStep } from './CampCalendar';
+import { TechniquePanel } from './TechniquePanel';
 import { Compare } from './Compare';
 import { ProfilePanel } from './ProfilePanel';
 import { SkillPanel } from './SkillPanel';
@@ -200,7 +202,10 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
           ) : null}
         </>
       ) : tab === 'gelisim' ? (
-        <SkillPanel s={s} act={act} />
+        <>
+          <SkillPanel s={s} act={act} />
+          <TechniquePanel s={s} act={act} />
+        </>
       ) : tab === 'siralama' ? (
         <RankingList s={s} />
       ) : (
@@ -327,6 +332,18 @@ function OpponentCard({ o, me }: { o: Opponent; me: Stats }) {
   );
 }
 
+function FightDate({ o }: { o: Opponent }) {
+  if (!o.macHafta) return null;
+  return (
+    <View style={gs.date}>
+      <Icon name="calendar-clock" size={16} color={C.gold} />
+      <Text style={gs.dateText}>
+        Maç tarihi: <Text style={{ color: C.text }}>{o.macHafta} hafta sonra</Text> · {o.macHafta * 7} gün
+      </Text>
+    </View>
+  );
+}
+
 export function OpponentScreen({ s, act }: { s: GameState; act: Act }) {
   const list = s.pending.secenekler!;
   const me = s.fighter.stats;
@@ -347,6 +364,7 @@ export function OpponentScreen({ s, act }: { s: GameState; act: Act }) {
         </Title>
         <Card accent={C.red}>
           <OpponentCard o={o} me={me} />
+          <FightDate o={o} />
         </Card>
         {s.reddedilen > 0 ? <P style={{ color: C.orange }}>⚠️ Bu {s.reddedilen + 1}. reddedişin olur. Üçüncüde kontratın feshedilir.</P> : null}
       </Screen>
@@ -360,6 +378,7 @@ export function OpponentScreen({ s, act }: { s: GameState; act: Act }) {
       {list.map((o, i) => (
         <Card key={o.id} accent={o.zorluk === 1 ? C.red : o.zorluk === -1 ? C.green : C.gold}>
           <OpponentCard o={o} me={me} />
+          <FightDate o={o} />
           <View style={{ marginTop: 12 }}>
             <Button label="Bu rakibi seç" icon="sword-cross" tone={i === 1 ? 'red' : 'ghost'} onPress={() => act((x) => pickOpponent(x, i))} />
           </View>
@@ -372,13 +391,15 @@ export function OpponentScreen({ s, act }: { s: GameState; act: Act }) {
 // ---------- Kamp ----------
 
 const CAMP_STEPS: { key: CampState['step'][]; label: string }[] = [
+  { key: ['sure', 'takvim'], label: 'Takvim' },
   { key: ['yer'], label: 'Yer' },
   { key: ['focus'], label: 'Odak' },
   { key: ['plan'], label: 'Plan' },
   { key: ['intensity'], label: 'Yoğunluk' },
   { key: ['kilo'], label: 'Kilo' },
   { key: ['basin'], label: 'Basın' },
-  { key: ['sakatlik', 'ozet', 'tarti', 'yuzyuze'], label: 'Tartı' },
+  { key: ['haftalik', 'sakatlik', 'ozet'], label: 'Kamp' },
+  { key: ['tarti', 'yuzyuze'], label: 'Tartı' },
 ];
 
 const PLAN_ICONS: Record<PlanKey, IconName> = { ayakta: 'boxing-glove', gures: 'arm-flex', yer: 'lock', tempo: 'lungs', kontra: 'shield-sword' };
@@ -423,6 +444,10 @@ export function CampScreen({ s, act }: { s: GameState; act: Act }) {
   const o = s.pending.rakip!;
   const choose = (v: string | number) => act((x) => campChoose(x, v));
   const header = <CampHeader s={s} k={k} />;
+  if (k.step === 'sure') return <CampLengthStep s={s} header={header} choose={choose} />;
+  if (k.step === 'takvim') return <FreeWeeksStep s={s} header={header} choose={choose} />;
+  if (k.step === 'haftalik') return <CampWeeksStep s={s} header={header} choose={choose} />;
+  if (k.step === 'ozet') return <CampSummary s={s} act={act} choose={choose} />;
 
   if (k.step === 'yer') {
     const open = availableSites(s);
@@ -530,19 +555,6 @@ export function CampScreen({ s, act }: { s: GameState; act: Act }) {
         </Card>
         <Choice icon="boxing-glove" label="Yine de dövüş" desc="Ücret ve sıralama fırsatı kaçmasın." onPress={() => choose(0)} />
         <Choice icon="medical-bag" label="Maçtan çekil" desc="Ücret yok, popülerlik -3. Ama sağlığın önemli." tone="plain" onPress={() => choose(1)} />
-      </Screen>
-    );
-  if (k.step === 'ozet')
-    return (
-      <Screen footer={<Button label="Tartıya çık" icon="scale-bathroom" onPress={() => choose(0)} />}>
-        {header}
-        <Title kicker="KAMP TAMAMLANDI">Kamp Özeti</Title>
-        <Card accent={C.green}>
-          {k.ozet.map((l, i) => (
-            <P key={i}>{l}</P>
-          ))}
-        </Card>
-        <SkillPanel s={s} act={act} title="DÖVÜŞTEN ÖNCE GÜÇLEN" />
       </Screen>
     );
   if (k.step === 'yuzyuze')
@@ -679,6 +691,8 @@ export function RetireScreen({ s, onNew }: { s: GameState; onNew: () => void }) 
 }
 
 const gs = StyleSheet.create({
+  date: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 10, backgroundColor: '#1a1407', borderRadius: 8, borderWidth: 1, borderColor: '#4a3810', paddingHorizontal: 10, paddingVertical: 8 },
+  dateText: { color: C.gold, fontFamily: F.semi, fontSize: 13 },
   tabs: { flexDirection: 'row', backgroundColor: C.card, borderRadius: R, borderWidth: 1, borderColor: C.border, padding: 4, marginBottom: 4 },
   tab: { flex: 1, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 6, paddingVertical: 10, borderRadius: R - 4 },
   tabOn: { backgroundColor: C.red, transform: [{ skewX: '-8deg' }] },

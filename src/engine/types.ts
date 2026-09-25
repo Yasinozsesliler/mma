@@ -89,6 +89,8 @@ export interface Opponent {
   etiket?: string;
   riskMetni?: string;
   zorluk?: -1 | 0 | 1;
+  /** Maçın kaç hafta sonra olacağı (teklif anında) */
+  macHafta?: number;
 }
 
 export interface Record3 {
@@ -176,7 +178,7 @@ export type WeightCut = 'kademeli' | 'normal' | 'sert';
 export type PressChoice = 'saygili' | 'trash' | 'sessiz';
 
 export interface CampState {
-  step: 'yer' | 'focus' | 'plan' | 'intensity' | 'kilo' | 'basin' | 'sakatlik' | 'ozet' | 'tarti' | 'yuzyuze';
+  step: 'sure' | 'takvim' | 'yer' | 'focus' | 'plan' | 'intensity' | 'kilo' | 'basin' | 'haftalik' | 'sakatlik' | 'ozet' | 'tarti' | 'yuzyuze';
   pKilo?: number;
   oKilo?: number;
   kafesKilo?: number;
@@ -198,6 +200,40 @@ export interface CampState {
   ucretCeza: number;
   rakipCeza: boolean;
   iptal: boolean;
+  /** Teklif anında maça kalan hafta */
+  macHafta?: number;
+  /** Kamptan önce kalan serbest hafta */
+  serbest?: number;
+  /** Serbest haftalarda planlanmış etkinlikler (idx: kaçıncı serbest hafta) */
+  olaylar?: CalEvent[];
+  takvimLog?: string[];
+  takvimIdx?: number;
+  /** Kampta simüle edilen hafta sayısı ve hafta hafta günlük */
+  kampIdx?: number;
+  haftaLog?: string[];
+  /** Kamp sonu ekranı için yapılandırılmış özet */
+  sonuc?: {
+    focus?: StatKey;
+    artis: number;
+    yeni: number;
+    puan: number;
+    maliyet: number;
+    saglik: number;
+    saglikDelta: number;
+    planUyum: boolean;
+    yer: string;
+    teknik: string[];
+  };
+}
+
+export interface CalEvent {
+  idx: number;
+  id: string;
+  baslik: string;
+  metin: string;
+  ikon: string;
+  secenekler: { ad: string; aciklama: string }[];
+  sonuc?: string;
 }
 
 // ---------- Dövüş ----------
@@ -211,6 +247,7 @@ export interface FightMods {
   planUyum: boolean;
   oppStats: Partial<Stats>;
   cutman?: number;
+  teknik?: Record<string, number>;
 }
 
 export interface FightResult {
@@ -221,6 +258,7 @@ export interface FightResult {
   aciklama: string;
   kartlar?: string;
   sakatlik?: boolean;
+  teknik?: string;
 }
 
 export interface FightSnap {
@@ -276,6 +314,9 @@ export interface FightState {
   anlar?: FightSnap[];
   kesik: boolean;
   yerde?: boolean;
+  /** Oyuncunun bitirişte kullandığı teknik */
+  pTeknik?: string;
+  ozelKullanildi?: boolean;
   sonuc?: FightResult;
   mods: FightMods;
   unvanMaci: boolean;
@@ -324,6 +365,10 @@ export interface PostFight {
     bonus: number;
     nc: boolean;
     unvan: boolean;
+    teknik?: string;
+    teknikNot?: string;
+    takipci?: number;
+    takipciDelta?: number;
   };
 }
 
@@ -401,6 +446,10 @@ export interface GameState {
   /** Sağa kaydırılıp eşleşilen kişiler */
   eslesmeler?: Candidate[];
   istat?: Istat;
+  /** Sınırsız şöhret göstergesi (sosyal medya takipçisi) */
+  takipci?: number;
+  /** Bitiriş teknikleri: seviye (0-5) ve ustalık */
+  teknik?: Record<string, { sv: number; xp: number }>;
   /** Onur Listesi'ne (Hall of Fame) seçilme */
   hof?: { hafta: number; yas: number; skor: number; goruldu?: boolean };
   patron?: Partial<Record<OrgId, number>>;

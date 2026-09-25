@@ -2,6 +2,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { continueAfterPost, interview, money } from '../engine/career';
 import { ORGS } from '../engine/data';
+import { fmtDelta, fmtFollowers } from '../engine/fame';
 import { lookFor } from '../engine/tale';
 import type { Appearance, GameState } from '../engine/types';
 import { Button, Icon, Screen, Section, SLANT, upName, type IconName } from './components';
@@ -20,7 +21,7 @@ const TONES: Record<'win' | 'loss' | 'draw' | 'nc', Tone> = {
 };
 
 // Üstteki kutucuklarda zaten gösterilen satırlar rapora tekrar yazılmaz.
-const IN_TILES = [/^🔥 Popülerlik/, /^⭐ \+\d+ gelişim/, /^🩹 (Sağlık|Temiz)/];
+const IN_TILES = [/^🔥 Popülerlik/, /^📲 Takipçi/, /^⭐ \+\d+ gelişim/, /^🩹 (Sağlık|Temiz)/];
 
 function splitEmoji(line: string): [string, string] {
   const i = line.indexOf(' ');
@@ -96,6 +97,13 @@ export function PostFightScreen({ s, act }: { s: GameState; act: Act }) {
         {o ? (
           <>
             <Text style={[pf.method, { color: t.ana }]}>{o.yontem.toLocaleUpperCase('tr-TR')}</Text>
+            {o.teknik ? (
+              <View style={[pf.techTag, { borderColor: t.ana + '88' }]}>
+                <Icon name="target" size={13} color={t.ana} />
+                <Text style={[pf.techText, { color: t.ana }]}>{o.teknik.toLocaleUpperCase('tr-TR')}</Text>
+                {o.teknikNot ? <Text style={pf.techNote}> · {o.teknikNot}</Text> : null}
+              </View>
+            ) : null}
             <Text style={pf.when}>
               {o.raunt}. RAUNT · {o.sure}
             </Text>
@@ -119,7 +127,7 @@ export function PostFightScreen({ s, act }: { s: GameState; act: Act }) {
       {o ? (
         <View style={pf.tiles}>
           <Tile label="KAZANÇ" icon="cash" value={o.kazanc > 0 ? `+${money(o.kazanc)}` : '$0'} sub={o.bonus ? `${o.bonus} bonus dahil` : o.amator ? 'Amatör' : 'Net'} color={o.kazanc > 0 ? C.green : C.dim} />
-          <Tile label="POPÜLERLİK" icon="fire" value={`${o.popDelta >= 0 ? '+' : ''}${o.popDelta}`} sub={`Şimdi ${o.populerlik}/100`} color={o.popDelta >= 0 ? C.gold : '#ff4d5e'} />
+          <Tile label="TAKİPÇİ" icon="account-group" value={o.takipciDelta != null ? fmtDelta(o.takipciDelta) : `${o.popDelta >= 0 ? '+' : ''}${o.popDelta}`} sub={o.takipci != null ? `Toplam ${fmtFollowers(o.takipci)}` : undefined} color={(o.takipciDelta ?? o.popDelta) >= 0 ? C.gold : '#ff4d5e'} />
           <Tile label="GELİŞİM" icon="star-four-points" value={`+${o.puan}`} sub="puan" color={C.blue} />
           <Tile label="SAĞLIK" icon="heart-pulse" value={`${o.saglik}`} sub={o.hasar ? `-${o.hasar} bu gece` : 'Temiz çıktın'} color={o.saglik < 50 ? '#ff4d5e' : o.saglik < 75 ? C.orange : C.green} />
         </View>
@@ -200,6 +208,9 @@ const pf = StyleSheet.create({
   title: { color: '#fff', fontFamily: F.display, fontSize: 54, lineHeight: 62, letterSpacing: 1, marginTop: 6 },
   titleGlow: { textShadowColor: 'rgba(242,193,78,0.55)', textShadowRadius: 22 },
   method: { fontFamily: F.display, fontSize: 22, letterSpacing: 2, textAlign: 'center' },
+  techTag: { flexDirection: 'row', alignItems: 'center', gap: 5, borderWidth: 1, borderRadius: 20, paddingHorizontal: 10, paddingVertical: 3, marginVertical: 4, flexWrap: 'wrap', justifyContent: 'center' },
+  techText: { fontFamily: F.display, fontSize: 12, letterSpacing: 1 },
+  techNote: { color: C.dim, fontFamily: F.body, fontSize: 11 },
   when: { color: C.dim, fontFamily: F.semi, fontSize: 13, letterSpacing: 1.5, marginTop: 2 },
   cards: { color: C.faint, fontFamily: F.body, fontSize: 12, marginTop: 4 },
   corners: { flexDirection: 'row', alignItems: 'flex-start', marginTop: 16, alignSelf: 'stretch' },

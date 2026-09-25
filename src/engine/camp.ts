@@ -1,10 +1,13 @@
-import { addStat, advanceWeeks, currentOrg, growthMultiplier, fullName } from './character';
+import { addStat, currentOrg, growthMultiplier, fullName } from './character';
 import { ORGS, WEIGHT_CLASSES } from './data';
 import { PLANS, startFight } from './fight';
 import { weakest } from './opponents';
 import { siteById, CAMP_SITES, type CampSite } from './gyms';
 import { campPoints } from './progression';
-import { socialCampStart, socialTick } from './social';
+import { autoFreeWeeks, campWeek, CAMP_LENGTH_INFO, freeWeek, setCampLength } from './calendar';
+import { techLevels } from './techniques';
+import { trashTalkFollowers } from './fame';
+import { socialCampStart } from './social';
 import { dopingActive, DOPING_MODS } from './doping';
 import { prAdjust, staffCampHealth, staffCampPoints, staffCutman, staffFreeCut, staffGrowth } from './staff';
 import { petRunner } from './pets';
@@ -81,11 +84,15 @@ export function availableSites(s: GameState): CampSite[] {
 export function startCamp(s: GameState) {
   const kisa = s.kisaHaber;
   s.kisaHaber = false;
-  const hafta = kisa ? 3 : s.stage === 'amator' ? 6 : s.pending.rakip?.champion || s.sampiyon ? 10 : 8;
+  // Maç tarihi teklifte belirlenmişti; kamp süresini oyuncu seçer, kalan haftalar serbest takvimdir.
+  const mac = s.pending.rakip?.macHafta ?? (kisa ? 3 : s.stage === 'amator' ? 6 : 9);
+  const hafta = kisa ? mac : Math.min(8, mac);
   s.pending.kamp = {
-    step: kisa ? 'plan' : 'yer',
+    step: kisa ? 'plan' : 'sure',
     yer: kisa ? 'salon' : undefined,
     hafta,
+    macHafta: mac,
+    serbest: 0,
     kisaHaber: kisa,
     ozet: [],
     mods: {},
@@ -96,7 +103,6 @@ export function startCamp(s: GameState) {
   };
   s.phase = 'kamp';
   socialCampStart(s);
-  socialTick(s, hafta);
 }
 
 const hasPress = (s: GameState) => s.stage !== 'amator';
@@ -105,6 +111,18 @@ const hasPress = (s: GameState) => s.stage !== 'amator';
 export function campChoose(s: GameState, value: string | number) {
   const k = s.pending.kamp!;
   switch (k.step) {
+    case 'sure':
+      setCampLength(s, Number(value));
+      return;
+    case 'takvim':
+      if (value === 'hizli') autoFreeWeeks(s);
+      else freeWeek(s, String(value));
+      return;
+    case 'haftalik':
+      if (value === 'hepsi') while ((k.kampIdx ?? 0) < k.hafta) campWeek(s);
+      else campWeek(s);
+      if ((k.kampIdx ?? 0) >= k.hafta) runCamp(s);
+      return;
     case 'yer':
       k.yer = String(value);
       k.step = 'focus';
@@ -124,11 +142,11 @@ export function campChoose(s: GameState, value: string | number) {
     case 'kilo':
       k.kilo = value as WeightCut;
       if (hasPress(s)) k.step = 'basin';
-      else runCamp(s);
+      else startCampWeeks(s);
       return;
     case 'basin':
       k.basin = value as PressChoice;
-      runCamp(s);
+      startCampWeeks(s);
       return;
     case 'sakatlik':
       if (value === 0) {
@@ -156,6 +174,14 @@ export function campChoose(s: GameState, value: string | number) {
   }
 }
 
+/** Ayarlar bitti: kamp hafta hafta oynanır. */
+function startCampWeeks(s: GameState) {
+  const k = s.pending.kamp!;
+  k.kampIdx = 0;
+  k.haftaLog = [];
+  k.step = 'haftalik';
+}
+
 function runCamp(s: GameState) {
   const k = s.pending.kamp!;
   const f = s.fighter;
@@ -163,10 +189,14 @@ function runCamp(s: GameState) {
   const intensity = INTENSITY[k.intensity ?? 'orta'];
   const site = siteById(k.yer ?? 'salon');
   const coachQ = site.salonUcreti ? s.takim.antrenorKalite : (site.kalite ?? 5);
-  const notes = advanceWeeks(s, k.hafta);
+  // Haftalar zaten tek tek oynandı (campWeek).
+  const notes: string[] = [];
+  const saglikOnce = s.saglik;
+  const len = CAMP_LENGTH_INFO[k.hafta] ?? { carpan: k.hafta / 8, risk: 1 };
   k.ozet.push(`📍 Kamp yeri: ${site.ad}${site.salonUcreti ? ` (${s.takim.antrenor})` : ''}`);
 
   // Gelişim
+  let artis = 0;
   if (k.focus) {
     const g =
       (2 + rand() * 1.4) *
@@ -178,9 +208,11 @@ function runCamp(s: GameState) {
       (site.salonUcreti && k.focus === s.takim.uzmanlik ? 1.35 : 1) *
       staffGrowth(s, k.focus) *
       (k.focus === 'kondisyon' && petRunner(s) ? 1.1 : 1) *
-      (1 + (s.motivasyon + campMotivation(s)) * 0.1);
+      (1 + (s.motivasyon + campMotivation(s)) * 0.1) *
+      (k.kisaHaber ? 1 : len.carpan);
     // Kamp odak alanı en kötü +2 gelişir; iyi koşullarda +5'e kadar.
     const d = addStat(f.stats, k.focus, clamp(Math.round(g), 2, 5), 2);
+    artis = d;
     k.ozet.push(`📈 ${STAT_LABELS[k.focus]} +${d} (${f.stats[k.focus]})`);
     if (k.focus === site.bonusStat) k.ozet.push(`🔥 ${site.ad} tam bu alanda uzman: gelişim arttı.`);
     else if (site.salonUcreti && k.focus === s.takim.uzmanlik) k.ozet.push(`🔥 ${s.takim.antrenor} bu alanın ustası: gelişim arttı.`);
@@ -210,6 +242,18 @@ function runCamp(s: GameState) {
         : `🎯 Oyun planı: ${PLANS[k.plan].ad}.`,
     );
   k.planUyum = planUyum;
+  k.sonuc = {
+    focus: k.focus,
+    artis,
+    yeni: k.focus ? f.stats[k.focus] : 0,
+    puan,
+    maliyet: cost,
+    saglik: s.saglik,
+    saglikDelta: s.saglik - saglikOnce,
+    planUyum,
+    yer: site.ad,
+    teknik: (k.haftaLog ?? []).filter((l) => /seviye atladı|ustalığı/.test(l)).map((l) => l.replace(/^\d+\. hafta · /, '')),
+  };
 
   // Basın toplantısı
   if (k.basin === 'trash') {
@@ -218,10 +262,12 @@ function runCamp(s: GameState) {
     k.oppMods = { vurus: 2, kondisyon: 2 };
     if (chance(0.45 + f.stats.iq / 250 + s.populerlik / 300)) {
       s.populerlik = clamp(s.populerlik + 6, 0, 100);
-      k.ozet.push(`🎤 Trash talk tuttu! Video milyonlarca izlendi. Popülerlik +6. ${opp.soyad} ise seni öldürmeye geliyor.`);
+      const t = trashTalkFollowers(s, true);
+      k.ozet.push(`🎤 Trash talk tuttu! Video milyonlarca izlendi. ${t.metin}. ${opp.soyad} ise seni öldürmeye geliyor.`);
     } else {
       s.populerlik = clamp(s.populerlik - 2, 0, 100);
-      k.ozet.push(`🎤 Sözlerin ters tepti, sosyal medyada alay konusu oldun. Popülerlik -2. ${opp.soyad} gaza geldi.`);
+      const t = trashTalkFollowers(s, false);
+      k.ozet.push(`🎤 Dengeyi kaçırdın: sözlerin ters tepti, sosyal medyada alay konusu oldun. ${t.metin}. ${opp.soyad} gaza geldi.`);
     }
   } else if (k.basin === 'saygili') {
     s.trashTalk = false;
@@ -235,7 +281,7 @@ function runCamp(s: GameState) {
   k.ozet.push(...notes);
 
   // Sakatlık zarı
-  const risk = intensity.risk * (1.3 - s.saglik / 200) * (k.kisaHaber ? 0.5 : 1) * injuryMultiplier(s) * site.risk;
+  const risk = intensity.risk * (1.3 - s.saglik / 200) * (k.kisaHaber ? 0.5 : len.risk) * injuryMultiplier(s) * site.risk;
   if (chance(risk)) {
     const inj = randomInjury(3, 8);
     s.sakatliklar.push(inj);
@@ -333,7 +379,7 @@ function beginFight(s: GameState) {
     pAd: s.fighter.lakap || s.fighter.soyad,
     koseAdi: s.takim.antrenor,
     opp,
-    mods: { stats: mods, plan: k.plan ?? 'ayakta', planUyum: !!k.planUyum, oppStats: k.oppMods, cutman: staffCutman(s) },
+    mods: { stats: mods, plan: k.plan ?? 'ayakta', planUyum: !!k.planUyum, oppStats: k.oppMods, cutman: staffCutman(s), teknik: techLevels(s) },
     maxRaunt: unvan || anaMac ? 5 : 3,
     unvanMaci: unvan,
     anaMac,
