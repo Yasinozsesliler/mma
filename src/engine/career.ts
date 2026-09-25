@@ -10,6 +10,7 @@ import { activeBelts, champLabel, checkAchievements, defendBelt, loseBelt, vacat
 import { fightPoints } from './progression';
 import { istat } from './istat';
 import { leadWeeks } from './calendar';
+import { updateP4P } from './p4p';
 import { addFollowers, fightFollowers, fmtDelta, fmtFollowers, followers } from './fame';
 import { addTechXp, techById } from './techniques';
 import { banLabel, banned, banWeeksLeft, dopingFallout, dopingTest } from './doping';
@@ -271,6 +272,13 @@ export function finishFight(s: GameState) {
   const rankNote = caught ? null : updateRank(s, opp, won, draw);
   if (rankNote) lines.push(rankNote);
   const divNotes = syncDivision(s, opp, won, draw, won && opp.champion, wasChampion && !won && !draw);
+  if (org === 'ufc') {
+    const p4pNote = updateP4P(s);
+    if (p4pNote) {
+      lines.push(p4pNote);
+      s.haberler.unshift(p4pNote);
+    }
+  }
   divNotes.forEach((n) => s.haberler.unshift(n));
   socialAfterFight(s, opp, won, draw, methodLabel(r.yontem), divNotes);
   if (s.seri >= 3) lines.push(`🔥 ${s.seri} maçlık galibiyet serisi!`);

@@ -29,12 +29,15 @@ import { chooseEvent, closeEvent } from '../engine/events';
 import { describeOpponent, oppRecord } from '../engine/opponents';
 import type { CampState, GameState, Intensity, Opponent, PressChoice, StatKey, Stats, WeightCut } from '../engine/types';
 import { STAT_KEYS, STAT_LABELS } from '../engine/types';
-import { Button, Card, Choice, Icon, P, Pill, Screen, Section, SLANT, Title, upName, type IconName } from './components';
-import { NewsFeed, RankingList, RestPicker } from './HubParts';
+import { Button, Card, Choice, Icon, P, Pill, Screen, Section, Title, upName, type IconName } from './components';
+import { NewsFeed, RestPicker } from './HubParts';
 import { ActionGrid, ActionTile, FightCTA, HubHero, Notice } from './HubHome';
 import { CampLengthStep, CampSummary, CampWeeksStep, FreeWeeksStep } from './CampCalendar';
 import { TechniquePanel } from './TechniquePanel';
+import { FaceOffStage } from './FaceOffStage';
+import { RankingsTab } from './P4PPanel';
 import { PlanPicker } from './PlanPicker';
+import { coachIntro } from '../engine/coach';
 import { Compare } from './Compare';
 import { ProfilePanel } from './ProfilePanel';
 import { SkillPanel } from './SkillPanel';
@@ -207,7 +210,7 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
           <TechniquePanel s={s} act={act} />
         </>
       ) : tab === 'siralama' ? (
-        <RankingList s={s} />
+        <RankingsTab s={s} act={act} />
       ) : (
         <>
           <StatusPanel s={s} />
@@ -497,7 +500,7 @@ export function CampScreen({ s, act }: { s: GameState; act: Act }) {
     return (
       <Screen>
         {header}
-        <Title kicker="OYUN PLANI" sub={`${s.takim.antrenor}: “Bu adamı nasıl yeneceğiz?”`}>
+        <Title kicker="OYUN PLANI" sub={coachIntro(s, o)}>
           Strateji Odası
         </Title>
         <PlanPicker s={s} onPick={(p) => choose(p)} />
@@ -562,21 +565,15 @@ export function CampScreen({ s, act }: { s: GameState; act: Act }) {
         <Title kicker="TARTI SAHNESİ" sub="Kameralar flaş patlatıyor. Güvenlik görevlileri hazırda bekliyor.">
           Face to Face
         </Title>
-        <LinearGradient colors={['#1a0508', '#060607']} style={gs.faceoff}>
-          <FighterAvatar look={s.fighter.gorunum} size={130} ring={C.red} />
-          <Text style={[gs.faceVs, SLANT]}>⚡</Text>
-          <FighterAvatar look={lookFor(o)} size={130} ring={C.blue} />
-        </LinearGradient>
-        <Text style={[gs.faceNames, SLANT]}>
-          {upName(s.fighter.soyad, s.fighter.uyruk)} <Text style={{ color: C.gold }}>vs</Text> {upName(o.soyad, o.uyruk)}
-        </Text>
-        {k.yuzyuze ? (
-          <Card accent={C.gold}>
-            <P style={{ marginBottom: 0 }}>{k.yuzyuze}</P>
-          </Card>
-        ) : (
-          FACEOFF.map((f, i) => <Choice key={f.key} n={i + 1} label={f.ad} desc={f.aciklama} tone="gold" onPress={() => choose(f.key)} />)
-        )}
+        <FaceOffStage s={s} />
+        {!k.yuzyuze ? (
+          <>
+            <Text style={gs.faceAsk}>{k.rakipHamle ? 'Tepkini seç' : 'İlk hamle senin'}</Text>
+            {FACEOFF.map((f, i) => (
+              <Choice key={f.key} n={i + 1} icon={f.ikon as IconName} label={f.ad} desc={f.aciklama} tone="gold" onPress={() => choose(f.key)} />
+            ))}
+          </>
+        ) : null}
       </Screen>
     );
   // tarti
@@ -668,7 +665,7 @@ export function RetireScreen({ s, onNew }: { s: GameState; onNew: () => void }) 
   const r = s.rekor;
   const ufcChamp = s.unvanlar.some((u) => u.startsWith('UFC'));
   return (
-    <Screen footer={<Button label="Yeni kariyer" icon="restart" onPress={onNew} />}>
+    <Screen footer={<Button label="Kariyer yuvalarına dön" icon="folder-account" onPress={onNew} />}>
       <LinearGradient colors={['#3a2a0a', '#0a0b0e']} style={gs.banner}>
         <Icon name={ufcChamp ? 'crown' : 'flag-checkered'} size={40} color={C.gold} />
         <Text style={gs.bannerTitle}>{ufcChamp ? 'BİR EFSANE VEDA EDİYOR' : 'SON ZİL'}</Text>
@@ -690,6 +687,7 @@ export function RetireScreen({ s, onNew }: { s: GameState; onNew: () => void }) 
 }
 
 const gs = StyleSheet.create({
+  faceAsk: { color: C.faint, fontFamily: F.display, fontSize: 12, letterSpacing: 1.5, marginBottom: 6 },
   date: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 10, backgroundColor: '#1a1407', borderRadius: 8, borderWidth: 1, borderColor: '#4a3810', paddingHorizontal: 10, paddingVertical: 8 },
   dateText: { color: C.gold, fontFamily: F.semi, fontSize: 13 },
   tabs: { flexDirection: 'row', backgroundColor: C.card, borderRadius: R, borderWidth: 1, borderColor: C.border, padding: 4, marginBottom: 4 },

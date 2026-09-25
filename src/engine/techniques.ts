@@ -74,7 +74,7 @@ export function startingTechniques(bg: Background): Record<string, { sv: number;
 
 export const techLevel = (s: GameState, id: string) => s.teknik?.[id]?.sv ?? 0;
 /** Seviye atlamak için gereken ustalık. */
-export const xpNeed = (sv: number) => (sv + 1) * 4;
+export const xpNeed = (sv: number) => (sv + 1) * 3;
 /** Puanla geliştirme maliyeti: öğrenmek 2, sonra seviye+1. */
 export const techCost = (sv: number) => (sv === 0 ? 2 : sv + 1);
 
@@ -110,7 +110,7 @@ export function addTechXp(s: GameState, id: string, n: number): string {
   }
   if (cur.sv >= MAX_TECH) cur.xp = 0;
   s.teknik[id] = cur;
-  return up ? `${t.ad} seviye atladı → ${cur.sv}/${MAX_TECH}!` : `${t.ad} ustalığı +${n}`;
+  return up ? `${t.ad} seviye atladı → ${cur.sv}/${MAX_TECH}!` : `${t.ad} ustalığı +${n} (${cur.xp}/${xpNeed(cur.sv)})`;
 }
 
 /** Dövüş motoruna giden seviyeler. */

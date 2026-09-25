@@ -61,7 +61,7 @@ export function setCampLength(s: GameState, weeks: number) {
 // ---------- Serbest haftalar ----------
 
 export const FREE_ACTS = [
-  { id: 'teknik', ad: 'Teknik çalışması', ikon: 'target-account', aciklama: 'Bir bitiriş tekniğine yüklen: ustalık +1 (iyi hocayla +2).' },
+  { id: 'teknik', ad: 'Teknik çalışması', ikon: 'target-account', aciklama: 'Bir bitiriş tekniğine yüklen: ustalık +3 (iyi hocayla +4).' },
   { id: 'spar', ad: 'Spar', ikon: 'boxing-glove', aciklama: 'Başka bir dövüşçüyle sert spar. Ustalık ve IQ şansı, küçük sakatlık riski.' },
   { id: 'dinlen', ad: 'Dinlen', ikon: 'bed', aciklama: 'Vücudunu toparla: sağlık artar.' },
   { id: 'medya', ad: 'Medya ve reklam', ikon: 'camera', aciklama: 'Röportaj, reklam çekimi: popülerlik, bazen para.' },
@@ -238,7 +238,7 @@ export function freeWeek(s: GameState, act: string): string {
     msg = `${ev.baslik}: ${resolveEvent(s, ev, Number(act.slice(5)))}`;
     ev.sonuc = msg;
   } else if (act.startsWith('teknik:')) {
-    msg = `🎯 Teknik çalışması: ${addTechXp(s, act.slice(7), 1 + (s.takim.antrenorKalite >= 7 ? 1 : 0))}.`;
+    msg = `🎯 Teknik çalışması: ${addTechXp(s, act.slice(7), 3 + (s.takim.antrenorKalite >= 7 ? 1 : 0))}.`;
   } else if (act === 'spar') {
     const n = partnerName(s);
     const t = randomKnown(s);
@@ -305,7 +305,7 @@ export function campWeek(s: GameState): string {
       msg = `🥊 ${partnerName(s)} ile spar: ${pick(['temposu yüksek 5 raunt', 'sert ama öğretici', 'rakibinin stilini taklit etti'])}.${xp}`;
     } else if (r === 2) {
       const t = randomKnown(s, 'sub') ?? randomKnown(s);
-      msg = t ? `🎯 Teknik günü: ${addTechXp(s, t.id, 1)}.` : '🎯 Teknik günü: temel hareketler.';
+      msg = t ? `🎯 Teknik günü: ${addTechXp(s, t.id, 2)}.` : '🎯 Teknik günü: temel hareketler.';
     } else if (r === 3) msg = `🎬 Video analizi: ${opp.soyad} dövüşleri izlendi, ${STAT_LABELS[k.focus ?? 'iq']} çalışmasına yüklenildi.`;
     else msg = pick(['🏃 Kondisyon haftası: tepe koşuları ve sprint.', '🏋️ Kuvvet haftası: ağır idmanlar.', '🧊 Toparlanma: buz banyosu ve masaj.', '🩸 Sparda burnun kanadı ama devam ettin.']);
   }

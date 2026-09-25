@@ -5,6 +5,7 @@ import { BACKGROUNDS, COUNTRIES, JOURNALISTS, ORGS } from './data';
 import { currentOrg } from './character';
 import { chance, clamp, fill, pick, randInt, uid } from './rng';
 import type { GameState, Opponent, Post } from './types';
+import { followers, npcFollowers } from './fame';
 
 const MAX_POSTS = 60;
 
@@ -24,8 +25,12 @@ export const handleOf = (ad: string, soyad: string) => `@${slug(ad)}${slug(soyad
 export const playerHandle = (s: GameState) => handleOf(s.fighter.ad, s.fighter.soyad);
 const oppHandle = (o: Opponent) => handleOf(o.ad, o.soyad);
 
+/** Dövüşçünün paylaşımı kendi takipçisine göre beğeni alır. */
+const npcLikes = (s: GameState, o: Opponent) => Math.round(npcFollowers(s, o) * 0.03 * (0.5 + Math.random()));
+
+/** Beğeni sayısı takipçiye göre: büyüdükçe paylaşımların da büyür. */
 function likes(s: GameState, base = 1) {
-  return Math.round((20 + s.populerlik * s.populerlik * 3) * base * (0.5 + Math.random()));
+  return Math.round((10 + followers(s) * 0.035) * base * (0.5 + Math.random()));
 }
 
 export function addPost(s: GameState, p: Omit<Post, 'id' | 'hafta' | 'begeni'> & { begeni?: number }) {
@@ -293,17 +298,35 @@ const RUMOR = [
   'KULİS: {p} için birden fazla sponsor teklif hazırlığında.',
   'KULİS: {c} bir sonraki kemer savunmasında sürpriz bir isimle karşılaşabilir.',
   'KULİS: {a} sıklet değiştirmeyi düşünüyor.',
+  'KULİS: {b} menajeriyle yollarını ayırdı. Kontrat müzakereleri tıkandı.',
+  'KULİS: {org} gelecek ay büyük bir organizasyon için {p} adını listeye yazdı.',
+  'KULİS: {a} ve {b} arasında salon kavgası iddiası! Görgü tanıkları konuşuyor.',
+  'KULİS: {c} kemeri boşaltmayı düşünüyor mu? Yakın çevresi sessiz.',
+  'KULİS: {p} ile ilgilenen bir film yapımcısı olduğu söyleniyor. 🎬',
+  'KULİS: {a} doping testinden geçemedi mi? Resmi açıklama bekleniyor.',
+  'KULİS: {b} emekliliği düşünüyor. Son maçını memleketinde yapmak istiyor.',
 ];
 const POLL = [
   'ANKET: {a} vs {p} olsa kim kazanır? 🗳️ {a} %{x} · {p} %{y}',
   'ANKET: Sıkletin en iyi vuruşçusu kim? 🗳️ {a} %{x} · {p} %{y}',
   'ANKET: {c} kemeri daha kaç maç tutar? 🗳️ 1-2 maç %{x} · 3+ maç %{y}',
+  'ANKET: Yılın nakavtı kimin? 🗳️ {p} %{y} · {b} %{x}',
+  'ANKET: {p} ayakta mı daha tehlikeli, yerde mi? 🗳️ Ayakta %{x} · Yerde %{y}',
+  'ANKET: {a} trash talk’ta haklı mı? 🗳️ Evet %{x} · Hayır %{y}',
+  'ANKET: Sıklette bir sonraki şampiyon kim olur? 🗳️ {p} %{y} · {b} %{x}',
+  'ANKET: {org} en iyi maçı hangisiydi? 🗳️ {a} vs {b} %{x} · {p} maçı %{y}',
 ];
 const ANALIZ = [
   '📊 ANALİZ: {p} son maçlarında {stat} istatistiğinde ciddi gelişme gösterdi. Sıklet dikkat!',
   '📊 ANALİZ: {a} takedown savunması sıkletin en iyisi. Güreşçiler için kâbus.',
   '📊 ANALİZ: {c} şampiyonluğunu kaybetmesi için bir “stil” gerekiyor: sabırlı bir kontra dövüşçüsü.',
   '📊 ANALİZ: {p} popülerlik grafiği son 3 ayda dikey çıkışta.',
+  '📊 ANALİZ: {b} üçüncü rauntlarda düşüyor. Tempo onu yıkabilir.',
+  '📊 ANALİZ: {a} dakikada ortalama 5,2 isabetli vuruş atıyor. Sıklet rekoru.',
+  '📊 ANALİZ: {p} maçlarının yarısından fazlasını bitirişle kazandı. Hakemlere iş bırakmıyor.',
+  '📊 ANALİZ: {c} son beş maçta hiç yere düşmedi. Çenesi çelik gibi.',
+  '📊 ANALİZ: {b} submission savunmasında zayıf. Grappler’lar sıraya girer.',
+  '📊 ANALİZ: {p} ile {a} eşleşmesi stil olarak sıkletin en ilginç maçı olur.',
 ];
 const TRAINING = [
   'Sabah 5’te koşu, öğlen sparring, akşam grappling. Tatil yok. 💪 #Kamp',
@@ -311,22 +334,122 @@ const TRAINING = [
   'Kilo kontrolde, zihin net. Kim hazırsa gelsin.',
   'Yeni hocamla ilk hafta. Her şey değişiyor. 🔥',
   'Dinlenme günü. Ailemle kahvaltı. Savaşçılar da insan. ❤️',
+  'Tepe koşusu günü. Bacaklar yok ama kalp var. ⛰️',
+  'Yoga + nefes çalışması. Kafes bir zihin oyunu. 🧘',
+  'Bugün bir gençle spar yaptım, beni çok zorladı. Gelecek parlak!',
+  'Buz banyosu sonrası tüm hücrelerim uyandı. 🧊',
+  'Yeni bir kombinasyon: jab, düşük tekme, overhand. Sıradaki rakip görecek.',
+  'Antrenman bitti, protein zamanı. 🥩',
+  'Güreş hocam bugün beni 8 kez yere indirdi. Maç gecesi tersi olacak.',
+  'Gece 11’de hâlâ salondayım. Işıkları kapatan son kişi benim.',
+  'Kamp bitti. Şimdi sadece ağırlık ve sabır.',
 ];
 const CHAMP_FLEX = [
   'Kemer uyurken bile yanımda. 🏆 Sıradaki kim?',
   'Sıklette herkes birbirine laf atıyor. Ben ise kemerimle kahve içiyorum. ☕🏆',
   'Tahtımı isteyen çok. Hak eden yok.',
+  'Kemerin ağırlığını sadece taşıyan bilir. 🏆',
+  'Listeye bakıyorum, hepsini daha önce izledim. Sıkıcı. 🥱',
+  'Şampiyonluk bir unvan değil, bir yaşam biçimi.',
+  'Herkes “sıradaki” olmak istiyor. Önce sıraya girin.',
+  'Bir savunma daha, bir tarih daha. 👑',
 ];
 const TROLL = [
   '{p} sosyal medyada daha iyi dövüşüyor 😂',
   '{p}’ın çenesi cam mı plastik mi, tartışalım.',
   'Unpopular opinion: {p} abartılıyor.',
   '{p} fanları bu yorumu beğenmeyecek ama… 🤷',
+  '{p} maç gecesi değil, fotoğraf çekiminde parlıyor.',
+  'Organizasyon {p}’ı korumak için kolay rakipler buluyor. Kanıtlayamazsınız 😏',
+  '{p} bir gün gerçek bir güreşçiyle eşleşirse görürüz.',
+  'Benim dedem {p}’dan iyi jab atar 👴🥊',
+  '{p} hype makinesi. Değiştirin fikrimi.',
+  '{p}’ın kondisyonu 2 raunt, gerisi dua. 🙏',
 ];
-const FAN_ART = ['{p} fan çizimim! 🎨 Etiketleyin görsün 🙏', '{p} temalı pasta yaptım, nişanıma 🎂🥊', 'Oğlumun ilk kelimesi “{p}” oldu 😂'];
-const SPONSOR = ['{brand}: Şampiyonların tercihi. Yakında büyük bir isimle anlaşma duyurusu… 👀', '{brand} indirimi başladı! Kafes kodu ile %20 🥊'];
-const BRANDS = ['Kuvvet Protein', 'Arslan Enerji', 'Kafes Giyim', 'Titan Eldiven', 'Demir Spor'];
+const FAN_ART = [
+  '{p} fan çizimim! 🎨 Etiketleyin görsün 🙏',
+  '{p} temalı pasta yaptım, nişanıma 🎂🥊',
+  'Oğlumun ilk kelimesi “{p}” oldu 😂',
+  '{p} dövmesi yaptırdım, sonsuza kadar benimle 🖋️',
+  'Okulda “büyüyünce ne olacaksın” dediler, “{p}” dedim. 🥊',
+  '{p} maskesiyle cadılar bayramına gittim, herkes tanıdı 🎭',
+  'Kedime {p} adını verdim. O da yerde çok iyi 🐱',
+  'Mahallede {p} maçını dev ekranda izledik, sokak inledi! 📺',
+];
+const SPONSOR = [
+  '{brand}: Şampiyonların tercihi. Yakında büyük bir isimle anlaşma duyurusu… 👀',
+  '{brand} indirimi başladı! Kafes kodu ile %20 🥊',
+  '{brand} yeni koleksiyon: kafesten ilham alındı. 🔥',
+  'Maç gecesi {brand} standında imza günü! Kaçırmayın.',
+  '{brand} ailesi büyüyor. Yeni elçimizi yakında açıklıyoruz. 🤝',
+  '{brand}: Ter senin, güç bizden. 💪',
+];
+const MEME = [
+  '{p} tartıya çıkarken vs. kafese girerken 😂 [meme]',
+  'Hakemler {a} maçını izlerken: 👀🤡',
+  'Ben: diyete başladım. Kamp haftası pizza kokusu: 🍕😭',
+  '{p} jab atıyor, rakip: “ne oldu bana?” 😵',
+  'Maç gecesi tahmini yapan her uzman: 🧙‍♂️ Maç sonucu: 🤡',
+];
+const HIGHLIGHT = [
+  '🎥 GÜNÜN KLİBİ: {p}’ın son maçındaki o an. 1 milyon izlenmeye koşuyor.',
+  '🎥 HAFTANIN EN İYİ 5 BİTİRİŞİ: 3 numara {p}! Sizce birinci olmalı mıydı?',
+  '🎥 ARŞİVDEN: {c} şampiyonluğa giden yolda en zor maçı.',
+  '🎥 YAVAŞ ÇEKİM: {a}’nın o spinning tekmesi. Fizik kuralları mı?',
+];
+const ODDS = [
+  '💰 BAHİS: {org} yaklaşan kartta {p} favori (1.{x}). Sürpriz arayanlara {b} (2.{y}).',
+  '💰 BAHİS: {c} kemer savunmasında 1.{x} ile önde. Uzmanlar temkinli.',
+  '💰 BAHİS: Kitaplar {p} maçının bitirişle sonlanmasına 1.{x} veriyor.',
+];
+const ORG_NEWS = [
+  '📢 {org} RESMİ: Gelecek ayın ana kartı açıklandı! {a} vs {b} ana maç.',
+  '📢 {org}: Yeni sezon takvimi yayında. Bilet satışları pazartesi başlıyor. 🎟️',
+  '📢 {org}: Gecenin Performansı bonusları artırıldı. Bitirin, kazanın!',
+  '📢 {org}: Sıralamalar güncellendi. {p} için büyük sıçrama.',
+];
+const COACH = [
+  '{hoca}: “{p} bu kampta hiç olmadığı kadar aç. Bu hafta çok şey gördüm.”',
+  '{hoca}: “İnsanlar sonuçları görüyor, biz sabah 6’yı görüyoruz.”',
+  '{hoca}: “{p}’ın en büyük silahı kafası. Gerisi detay.”',
+  '{hoca}: “Bu salondan bir şampiyon çıkacak. Yazın bir kenara.”',
+];
+const FIGHTER_LIFE = [
+  'Memleketime döndüm, mahalledeki çocuklarla antrenman yaptık. ❤️',
+  'Yeni köpeğimle tanışın: adı Nakavt. 🐶',
+  'Bugün annemin yemekleri. Diyet yarın. 🍲',
+  'Kızımın okul gösterisindeydim. En zor maçım buydu 😅',
+  'Tatil bitti, kampa dönüş. Batarya %100. 🔋',
+  'Yeni tattoo! Anlamını tahmin edin 👇',
+  'Kitap önerisi: “Savaş Sanatı”. Her dövüşçü okumalı. 📖',
+  'Bugün bir çocuk hastanesini ziyaret ettik. Asıl kahramanlar onlar. 🙏',
+];
+const FIGHTER_CALLOUT = [
+  '{p}, sıralamada fazla hızlı yükseliyorsun. Seni yavaşlatmaya geliyorum.',
+  'Herkes {p}’ı konuşuyor. Ben de konuşayım: kafeste görüşürüz.',
+  '{p} iyi ama henüz benim gibi biriyle karşılaşmadı. 😏',
+  '{org}, beni {p} ile eşleştirin. Taraftar bunu istiyor.',
+  '{p}’ın son maçını izledim. Açıklarını not aldım. ✍️',
+];
+const FIGHTER_THANKS = [
+  'Dün geceki destek için teşekkürler! Sizler olmasanız bu yol yürünmezdi. ❤️',
+  '1 yıl önce kimse adımı bilmiyordu. Bugün buradayız. Teşekkürler. 🙏',
+  'Mesajlarınızın hepsini okuyorum. Söz, sizi utandırmayacağım.',
+  'Takımıma, hocama, aileme: her şey sizin için.',
+];
+const BRANDS = ['Kuvvet Protein', 'Arslan Enerji', 'Kafes Giyim', 'Titan Eldiven', 'Demir Spor', 'Oktagon Su', 'Pençe Ayakkabı', 'Bozkurt Kulaklık'];
 const STATS_TR: Record<string, string> = { vurus: 'vuruş', gures: 'güreş', yer: 'yer dövüşü', kondisyon: 'kondisyon', cene: 'çene', hiz: 'hız', iq: 'dövüş zekâsı' };
+
+/** Son paylaşımlarda geçmeyen bir metin seçer (akış tekrar etmesin). */
+function fresh(s: GameState, pool: string[], v: Record<string, string | number>) {
+  const recent = new Set((s.sosyal ?? []).slice(0, 25).map((p) => p.metin));
+  const order = [...pool].sort(() => Math.random() - 0.5);
+  for (const t of order) {
+    const txt = fill(t, v);
+    if (!recent.has(txt)) return txt;
+  }
+  return fill(pick(pool), v);
+}
 
 function handleName(o: Opponent) {
   return { yazar: `${o.ad} ${o.soyad}`, kullanici: oppHandle(o) };
@@ -351,18 +474,27 @@ export function socialTick(s: GameState, weeks = 1) {
     y: 100 - x,
     stat: STATS_TR[bestStat],
     brand: pick(BRANDS),
+    hoca: s.takim.antrenor,
   };
   const n = Math.min(3, 1 + Math.floor(weeks / 3) + (chance(0.5) ? 1 : 0));
   const gens: (() => void)[] = [
-    () => addPost(s, { yazar: 'MMA Kulis', kullanici: '@mmakulis', tur: 'medya', metin: fill(pick(RUMOR), v) }),
-    () => addPost(s, { yazar: pick(JOURNALISTS).split(' (')[0], kullanici: '@kafespostasi', tur: 'medya', metin: fill(pick(POLL), v), begeni: likes(s, 0.5) }),
-    () => addPost(s, { yazar: 'Kafes Analiz', kullanici: '@kafesanaliz', tur: 'medya', metin: fill(pick(ANALIZ), v) }),
-    () => a && addPost(s, { ...handleName(a), tur: 'dovuscu', metin: pick(TRAINING), renk: '#f2c14e' }),
-    () => champ && addPost(s, { ...handleName(champ), tur: 'dovuscu', metin: pick(CHAMP_FLEX), renk: '#f2c14e', hedefId: s.rakipler.some((r) => r.id === champ.id) ? champ.id : undefined }),
-    () => addPost(s, { yazar: pick(['Troll Tayfun', 'Keyboard Kaan', 'Hater Hakan']), kullanici: `@anonim${randInt(100, 9999)}`, tur: 'taraftar', metin: fill(pick(TROLL), v), begeni: likes(s, 0.1) }),
-    () => addPost(s, { yazar: pick(['Çizer Ceren', 'Fan Fatih', 'Maç Anası Melek']), kullanici: `@fan${randInt(10, 999)}`, tur: 'taraftar', metin: fill(pick(FAN_ART), v) }),
-    () => addPost(s, { yazar: v.brand, kullanici: `@${slug(v.brand)}`, tur: 'organizasyon', metin: fill(pick(SPONSOR), v) }),
+    () => addPost(s, { yazar: 'MMA Kulis', kullanici: '@mmakulis', tur: 'medya', metin: fresh(s, RUMOR, v) }),
+    () => addPost(s, { yazar: pick(JOURNALISTS).split(' (')[0], kullanici: '@kafespostasi', tur: 'medya', metin: fresh(s, POLL, v), begeni: likes(s, 0.5) }),
+    () => addPost(s, { yazar: 'Kafes Analiz', kullanici: '@kafesanaliz', tur: 'medya', metin: fresh(s, ANALIZ, v) }),
+    () => a && addPost(s, { ...handleName(a), tur: 'dovuscu', metin: fresh(s, TRAINING, v), renk: '#f2c14e' }),
+    () => champ && addPost(s, { ...handleName(champ), tur: 'dovuscu', metin: fresh(s, CHAMP_FLEX, v), renk: '#f2c14e', hedefId: s.rakipler.some((r) => r.id === champ.id) ? champ.id : undefined }),
+    () => addPost(s, { yazar: pick(['Troll Tayfun', 'Keyboard Kaan', 'Hater Hakan', 'Anonim Arif', 'Yorumcu Yılmaz']), kullanici: `@anonim${randInt(100, 9999)}`, tur: 'taraftar', metin: fresh(s, TROLL, v), begeni: likes(s, 0.1) }),
+    () => addPost(s, { yazar: pick(['Çizer Ceren', 'Fan Fatih', 'Maç Anası Melek', 'Tribün Tuna', 'Kafes Kızı Kübra']), kullanici: `@fan${randInt(10, 999)}`, tur: 'taraftar', metin: fresh(s, FAN_ART, v) }),
+    () => addPost(s, { yazar: v.brand, kullanici: `@${slug(v.brand)}`, tur: 'organizasyon', metin: fresh(s, SPONSOR, v) }),
+    () => addPost(s, { yazar: 'MMA Mizah', kullanici: '@mmamizah', tur: 'taraftar', metin: fresh(s, MEME, v), begeni: likes(s, 0.8) }),
+    () => addPost(s, { yazar: 'Kafes TV', kullanici: '@kafestv', tur: 'medya', metin: fresh(s, HIGHLIGHT, v), begeni: likes(s, 1.2) }),
+    () => s.stage !== 'amator' && addPost(s, { yazar: 'Oran Ustası', kullanici: '@oranustasi', tur: 'medya', metin: fresh(s, ODDS, { ...v, x: randInt(20, 80), y: randInt(10, 90) }) }),
+    () => s.stage !== 'amator' && addPost(s, { yazar: ORGS[currentOrg(s)].ad, kullanici: `@${slug(ORGS[currentOrg(s)].kisa)}`, tur: 'organizasyon', metin: fresh(s, ORG_NEWS, v) }),
+    () => addPost(s, { yazar: s.takim.antrenor, kullanici: `@${slug(s.takim.antrenor).slice(0, 14)}coach`, tur: 'dovuscu', metin: fresh(s, COACH, v), renk: '#3ecf7a' }),
     () => a && b && npcFeud(s),
+    () => a && addPost(s, { ...handleName(a), tur: 'dovuscu', metin: fresh(s, FIGHTER_LIFE, v), renk: '#f2c14e', begeni: npcLikes(s, a) }),
+    () => b && addPost(s, { ...handleName(b), tur: 'dovuscu', metin: fresh(s, FIGHTER_THANKS, v), renk: '#f2c14e', begeni: npcLikes(s, b) }),
+    () => a && s.stage !== 'amator' && addPost(s, { ...handleName(a), tur: 'dovuscu', metin: fresh(s, FIGHTER_CALLOUT, v), renk: '#e63946', hedefId: a.id, begeni: npcLikes(s, a) }),
   ];
   for (let i = 0; i < n; i++) pick(gens)();
 }

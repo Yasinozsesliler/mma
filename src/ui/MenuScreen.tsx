@@ -2,12 +2,14 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useState, type ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { STAGE_LABELS } from '../engine/career';
+import { WEIGHT_CLASSES } from '../engine/data';
+import { SLOTS, type Slot } from '../storage';
+import { FighterAvatar } from './FighterAvatar';
 import { BACKGROUNDS } from '../engine/data';
 import type { Background, GameState } from '../engine/types';
-import { Button, Card, Icon, Logo, Pill, Screen, Section, type IconName } from './components';
-import { StatusPanel } from './StatusPanel';
+import { Button, Card, Icon, Logo, Pill, Screen, Section, SLANT, upName, type IconName } from './components';
 import { useOfflineStatus } from './offline';
-import { C, F } from './theme';
+import { C, F, R } from './theme';
 
 const GUIDE: { baslik: string; icon: IconName; icerik: string[] }[] = [
   {
@@ -61,28 +63,107 @@ function Collapsible({ baslik, icon, children, open, onToggle }: { baslik: strin
   );
 }
 
-function Row({ icon, text }: { icon: IconName; text: string }) {
+
+function SlotCard({ n, save, active, onNew, onContinue, onDelete }: { n: Slot; save: GameState | null; active: boolean; onNew: () => void; onContinue: () => void; onDelete: () => void }) {
+  const [sure, setSure] = useState(false);
+  if (!save)
+    return (
+      <Pressable onPress={onNew} style={({ pressed }) => [ms.slotEmpty, pressed && { borderColor: C.red }]}>
+        <Text style={ms.slotNo}>YUVA {n}</Text>
+        <Icon name="plus-circle-outline" size={30} color={C.faint} />
+        <Text style={ms.emptyTitle}>BOŞ YUVA</Text>
+        <Text style={ms.emptySub}>Yeni bir kariyere başla</Text>
+      </Pressable>
+    );
+  const f = save.fighter;
+  const retired = save.phase === 'emeklilik';
+  const pro = save.stage !== 'amator';
+  const r = pro ? save.rekor : save.amator;
+  const belts = (save.kemerler ?? []).filter((b) => b.aktif).length;
   return (
-    <View style={ms.row}>
-      <Icon name={icon} size={15} color={C.faint} />
-      <Text style={ms.line}>{text}</Text>
-    </View>
+    <LinearGradient colors={active ? ['#2a0a10', '#0e0f12'] : ['#121317', '#0b0c0e']} style={[ms.slot, active && { borderColor: C.red }]}>
+      <View style={ms.slotHead}>
+        <Text style={ms.slotNo}>YUVA {n}{active ? ' · SON OYNANAN' : ''}</Text>
+        {retired ? <Pill text="EMEKLİ" icon="flag-checkered" color={C.faint} /> : null}
+      </View>
+      <View style={ms.slotBody}>
+        <FighterAvatar look={f.gorunum} size={62} ring={belts ? C.gold : active ? C.red : '#3a3d45'} />
+        <View style={{ flex: 1 }}>
+          {f.lakap ? <Text style={ms.slotNick}>“{f.lakap.toLocaleUpperCase('tr-TR')}”</Text> : null}
+          <Text style={[ms.slotName, SLANT]} numberOfLines={1}>
+            {upName(`${f.ad} ${f.soyad}`, f.uyruk)}
+          </Text>
+          <Text style={ms.slotMeta} numberOfLines={1}>
+            {f.yas} yaş · {WEIGHT_CLASSES[f.siklet].ad} · {STAGE_LABELS[save.stage].replace(/^Aşama \d · /, '')}
+          </Text>
+          <Text style={ms.slotRec}>
+            {pro ? '' : 'Amatör '}
+            {r.g}-{r.m}-{r.b}
+            {belts ? `  ·  🏆 ${belts}` : ''}
+          </Text>
+        </View>
+      </View>
+      {sure ? (
+        <View style={ms.confirm}>
+          <Text style={ms.confirmText}>Bu kariyer kalıcı olarak silinecek. Emin misin?</Text>
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            <Pressable onPress={() => setSure(false)} style={[ms.smallBtn, { flex: 1 }]}>
+              <Text style={ms.smallText}>VAZGEÇ</Text>
+            </Pressable>
+            <Pressable onPress={onDelete} style={[ms.smallBtn, { flex: 1, backgroundColor: '#5a0f16', borderColor: C.red }]}>
+              <Text style={ms.smallText}>EVET, SİL</Text>
+            </Pressable>
+          </View>
+        </View>
+      ) : (
+        <View style={ms.slotActions}>
+          {retired ? (
+            <Pressable onPress={onNew} style={[ms.mainBtn, { backgroundColor: C.red }]}>
+              <Icon name="plus" size={16} color="#fff" />
+              <Text style={ms.mainText}>YENİ KARİYER</Text>
+            </Pressable>
+          ) : (
+            <Pressable onPress={onContinue} style={[ms.mainBtn, { backgroundColor: active ? C.gold : C.red }]}>
+              <Icon name="play" size={16} color={active ? '#000' : '#fff'} />
+              <Text style={[ms.mainText, active && { color: '#000' }]}>DEVAM ET</Text>
+            </Pressable>
+          )}
+          <Pressable onPress={() => setSure(true)} style={ms.delBtn} hitSlop={6}>
+            <Icon name="trash-can-outline" size={18} color={C.faint} />
+          </Pressable>
+        </View>
+      )}
+    </LinearGradient>
   );
 }
 
-export function MenuScreen({ save, onNew, onContinue }: { save: GameState | null; onNew: () => void; onContinue: () => void }) {
-  const [open, setOpen] = useState<number | null>(save ? null : 0);
-  const retired = save?.phase === 'emeklilik';
-  const active = save && !retired;
+export function MenuScreen({
+  saves,
+  active,
+  onNew,
+  onContinue,
+  onDelete,
+}: {
+  saves: (GameState | null)[];
+  active: Slot;
+  onNew: (slot: Slot) => void;
+  onContinue: (slot: Slot) => void;
+  onDelete: (slot: Slot) => void;
+}) {
+  const any = saves.some(Boolean);
+  const [open, setOpen] = useState<number | null>(any ? null : 0);
   const off = useOfflineStatus();
+  const cur = saves[active - 1];
+  const canContinue = !!cur && cur.phase !== 'emeklilik';
+  const firstEmpty = SLOTS.find((x) => !saves[x - 1]);
   return (
     <Screen
       footer={
-        <>
-          {active ? <Button label="Devam et" icon="play" tone="gold" onPress={onContinue} /> : null}
-          <Button label="Yeni kariyer" icon="plus" onPress={onNew} tone={active ? 'ghost' : 'red'} />
-          {active ? <Text style={ms.warn}>Yeni kariyer tamamlandığında mevcut kayıt silinir.</Text> : null}
-        </>
+        canContinue ? (
+          <Button label={`Devam et · ${cur!.fighter.ad} ${cur!.fighter.soyad}`} icon="play" tone="gold" onPress={() => onContinue(active)} />
+        ) : firstEmpty ? (
+          <Button label="Yeni kariyer" icon="plus" onPress={() => onNew(firstEmpty)} />
+        ) : undefined
       }
     >
       <LinearGradient colors={['#3b0d14', 'rgba(10,11,14,0)']} style={ms.hero}>
@@ -104,29 +185,18 @@ export function MenuScreen({ save, onNew, onContinue }: { save: GameState | null
         ) : null}
       </LinearGradient>
 
-      {save ? (
-        <>
-          <Section>{retired ? 'SON KARİYER (EMEKLİ)' : 'MEVCUT KARİYER'}</Section>
-          <StatusPanel s={save} />
-          <Card>
-            <Row icon="stairs-up" text={`${STAGE_LABELS[save.stage]} · Amatör ${save.amator.g}-${save.amator.m}-${save.amator.b}`} />
-            {save.gecmis[0] ? (
-              <Row
-                icon="history"
-                text={`Son dövüş: ${save.gecmis[0].sonuc === 'G' ? 'Galibiyet' : save.gecmis[0].sonuc === 'M' ? 'Mağlubiyet' : 'Beraberlik'} · ${save.gecmis[0].rakip} (${save.gecmis[0].yontem})`}
-              />
-            ) : null}
-            {save.fighter.hikaye ? <Text style={[ms.line, { fontStyle: 'italic', marginTop: 6 }]}>“{save.fighter.hikaye}”</Text> : null}
-          </Card>
-        </>
-      ) : (
+      <Section>KARİYER YUVALARI</Section>
+      {SLOTS.map((x) => (
+        <SlotCard key={x} n={x} save={saves[x - 1]} active={x === active && !!saves[x - 1]} onNew={() => onNew(x)} onContinue={() => onContinue(x)} onDelete={() => onDelete(x)} />
+      ))}
+      {!any ? (
         <Card>
           <Text style={ms.intro}>Saat gece 02:14. Şehrin kenarında, tabelasının yarısı yanmayan bir spor salonu var.</Text>
           <Text style={ms.intro}>İçeride tek bir ampul yanıyor. Duvarda solmuş bir poster var: sekizgen bir kafes ve havaya kaldırılmış altın bir kemer.</Text>
           <Text style={[ms.intro, { color: C.gold, fontStyle: 'italic' }]}>“Herkes kemeri ister. Pek azı yolu yürür.”</Text>
           <Text style={[ms.intro, { color: C.text, fontFamily: F.bold, marginBottom: 0 }]}>Bu senin hikâyen. Her yumruk, her karar, her hata senin.</Text>
         </Card>
-      )}
+      ) : null}
 
       <Section>REHBER</Section>
       {GUIDE.map((g, i) => (
@@ -167,6 +237,25 @@ const ms = StyleSheet.create({
   heroSub: { color: C.dim, fontFamily: F.body, fontSize: 14, marginTop: 4, textAlign: 'center' },
   off: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 10, borderWidth: 1, borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4 },
   offText: { fontFamily: F.semi, fontSize: 11 },
+  slot: { borderRadius: R + 2, borderWidth: 1, borderColor: C.border, padding: 12, marginBottom: 10 },
+  slotEmpty: { borderRadius: R + 2, borderWidth: 1, borderStyle: 'dashed', borderColor: '#3a3d45', padding: 16, marginBottom: 10, alignItems: 'center', gap: 4, backgroundColor: '#0a0b0d' },
+  slotHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
+  slotNo: { color: C.faint, fontFamily: F.display, fontSize: 10, letterSpacing: 2, alignSelf: 'flex-start' },
+  slotBody: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  slotNick: { color: C.gold, fontFamily: F.displayMed, fontSize: 11, letterSpacing: 1 },
+  slotName: { color: C.text, fontFamily: F.display, fontSize: 20, lineHeight: 24 },
+  slotMeta: { color: C.dim, fontFamily: F.body, fontSize: 12 },
+  slotRec: { color: C.text, fontFamily: F.display, fontSize: 15, marginTop: 2, letterSpacing: 0.5 },
+  slotActions: { flexDirection: 'row', gap: 8, marginTop: 12, alignItems: 'center' },
+  mainBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 11, borderRadius: 4, transform: [{ skewX: '-8deg' }] },
+  mainText: { color: '#fff', fontFamily: F.display, fontSize: 14, letterSpacing: 1.2 },
+  delBtn: { width: 44, height: 42, borderRadius: 4, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center' },
+  emptyTitle: { color: C.dim, fontFamily: F.display, fontSize: 16, letterSpacing: 1.5 },
+  emptySub: { color: C.faint, fontFamily: F.body, fontSize: 12 },
+  confirm: { marginTop: 12, gap: 8 },
+  confirmText: { color: C.text, fontFamily: F.semi, fontSize: 13 },
+  smallBtn: { alignItems: 'center', paddingVertical: 10, borderRadius: 4, borderWidth: 1, borderColor: C.border, backgroundColor: C.cardAlt },
+  smallText: { color: '#fff', fontFamily: F.display, fontSize: 12, letterSpacing: 1 },
   intro: { color: C.dim, fontFamily: F.body, fontSize: 15, lineHeight: 23, marginBottom: 10 },
   row: { flexDirection: 'row', gap: 8, alignItems: 'center', marginBottom: 6 },
   line: { flex: 1, color: C.dim, fontFamily: F.body, fontSize: 13, lineHeight: 19 },

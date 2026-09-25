@@ -5,7 +5,8 @@ import { PLANS, type PlanGroup } from '../engine/fight';
 import { describeOpponent, strongest, weakest } from '../engine/opponents';
 import { lookFor } from '../engine/tale';
 import type { GameState, PlanKey } from '../engine/types';
-import { STAT_LABELS } from '../engine/types';
+import { STAT_KEYS, STAT_LABELS } from '../engine/types';
+import { coachNoFit, coachPlanAdvice } from '../engine/coach';
 import { Icon, OctIcon, Section, SLANT, upName, type IconName } from './components';
 import { FighterAvatar } from './FighterAvatar';
 import { C, F, R } from './theme';
@@ -49,14 +50,16 @@ export function PlanPicker({ s, onPick }: { s: GameState; onPick: (p: PlanKey) =
             <Text style={pp.traitNum}>{o.stats[strong]}</Text>
           </View>
         </View>
-        {rec ? (
-          <View style={pp.coach}>
-            <Icon name="whistle" size={16} color={C.gold} />
-            <Text style={pp.coachText}>
-              {s.takim.antrenor}: “{STAT_LABELS[weak]} tarafı zayıf. <Text style={{ color: C.gold }}>{PLANS[rec].ad}</Text> ile gidersek plan tam oturur.”
-            </Text>
-          </View>
-        ) : null}
+        <View style={pp.coach}>
+          <Icon name="whistle" size={16} color={C.gold} />
+          <Text style={pp.coachText}>
+            <Text style={{ color: C.gold, fontStyle: 'normal', fontFamily: F.display }}>{s.takim.antrenor.toLocaleUpperCase('tr-TR')}: </Text>“
+            {rec
+              ? coachPlanAdvice(s, o, weak, strong, PLANS[rec].ad, fits[1] ? PLANS[fits[1]].ad : undefined)
+              : coachNoFit(s, o, STAT_KEYS.reduce((a, b) => (s.fighter.stats[b] > s.fighter.stats[a] ? b : a)))}
+            ”
+          </Text>
+        </View>
       </LinearGradient>
 
       <Text style={pp.hint}>Zaafa uygun plan dövüşte etkisini ikiye katlar. Her planın bir bedeli var.</Text>

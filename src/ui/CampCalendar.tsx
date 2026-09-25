@@ -5,12 +5,13 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { campLengthsFor, CAMP_LENGTH_INFO, currentEvent, FREE_ACTS } from '../engine/calendar';
 import { campQuote } from '../engine/camp';
 import { money } from '../engine/career';
-import { TECHNIQUES, techLevel, MAX_TECH } from '../engine/techniques';
+import { TECHNIQUES, techLevel, MAX_TECH, xpNeed } from '../engine/techniques';
 import type { GameState } from '../engine/types';
 import { STAT_LABELS } from '../engine/types';
 import { Button, Icon, Screen, Section, SLANT, type IconName } from './components';
 import type { Act } from './GameScreens';
 import { SkillPanel } from './SkillPanel';
+import { TechniquePanel } from './TechniquePanel';
 import { C, F, R } from './theme';
 
 type Choose = (v: string | number) => void;
@@ -153,7 +154,9 @@ export function FreeWeeksStep({ s, header, choose }: { s: GameState; header: Rea
               <Pressable key={t.id} onPress={() => { setPickTech(false); choose(`teknik:${t.id}`); }} style={({ pressed }) => [cc.techRow, pressed && { backgroundColor: '#15161b' }]}>
                 <Icon name={t.ikon as IconName} size={18} color={C.gold} />
                 <Text style={cc.techName}>{t.ad}</Text>
-                <Text style={cc.techLv}>Sv {techLevel(s, t.id)}</Text>
+                <Text style={cc.techLv}>
+                  Sv {techLevel(s, t.id)} · {s.teknik?.[t.id]?.xp ?? 0}/{xpNeed(techLevel(s, t.id))}
+                </Text>
               </Pressable>
             ))
           ) : (
@@ -319,6 +322,7 @@ export function CampSummary({ s, act, choose }: { s: GameState; act: Act; choose
       ) : null}
 
       <SkillPanel s={s} act={act} title="DÖVÜŞTEN ÖNCE GÜÇLEN" />
+      <TechniquePanel s={s} act={act} />
     </Screen>
   );
 }

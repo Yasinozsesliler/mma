@@ -516,6 +516,54 @@ const tired = (fs: FightState, d: number) => (fs.pKondisyon = clamp(fs.pKondisyo
  * Karar anları. Seçenekler bedava değildir: bağlama uyan doğru seçim üstünlük verir,
  * yanlış okuma ceza getirir. Rastgele seçen oyuncu ortalamada kazanamaz.
  */
+/** Oyuncunun bildiği teknikler: seviyeye göre sıralı, en fazla n tane (seçenek listesi sabit kalsın). */
+const knownOf = (fs: FightState, tur: TechDef['tur'], n = 3) =>
+  TECHNIQUES.filter((t) => t.tur === tur && techLv(fs, t.id) > 0)
+    .sort((a, b) => techLv(fs, b.id) - techLv(fs, a.id) || a.id.localeCompare(b.id))
+    .slice(0, n);
+
+/** Ayakta açık yakalandı: seçilen vuruş tekniği denenir. */
+function strikeMove(fs: FightState, t: TechDef): string {
+  const lv = techLv(fs, t.id);
+  const o = oStats(fs);
+  const p = clamp(0.3 + lv * 0.055 + (fs.pStats.vurus - o.hiz) / 220, 0.18, 0.68);
+  if (!chance(p)) {
+    addDmg(fs, 'p', 4);
+    addPts(fs, 'o', 1.5);
+    return pick([`${t.ad} savuşturuldu, kontrayı sen yedin.`, `${fs.oAd} ${t.ad.toLocaleLowerCase('tr-TR')} hareketini gördü, geri çekildi ve cevap verdi.`]);
+  }
+  addDmg(fs, 'o', 8 + lv * 2.5);
+  addPts(fs, 'p', 2);
+  if (chance(0.07 + lv * 0.03 + fs.oHasar / 350)) {
+    fs.pTeknik = t.id;
+    finish(fs, 'p', t.id === 'karaciger' ? 'TKO' : 'KO', `💥 ${t.ad.toUpperCase()}! ${fs.oAd} yıkıldı, hakem hemen araya girdi!`, fs.vurusSira);
+    return `${t.ad} tam yerine oturdu!`;
+  }
+  if (fs.oHasar > 45 && chance(0.4)) setCritical(fs, 'rakipSersem');
+  return pick([`🎯 ${t.ad} temiz isabet! ${fs.oAd} sarsıldı.`, `🎯 ${t.ad}! Salon ayağa kalktı, ${fs.oAd} geri adım attı.`]);
+}
+
+/** Yerde üstte: seçilen submission denenir. */
+function subMove(fs: FightState, t: TechDef): string {
+  const lv = techLv(fs, t.id);
+  const P = sideDom(fs, 'p');
+  const O = sideDom(fs, 'o');
+  const p = clamp(0.12 + lv * 0.055 + (P.grappling - O.grappling) / 120 + (100 - fs.oKondisyon) / 500, 0.06, 0.6);
+  drain(fs, 'p', 'clinch', 2);
+  if (chance(p)) {
+    fs.pTeknik = t.id;
+    finish(fs, 'p', 'SUB', `🔒 ${fs.pAd} ${t.ad} kilidini kurdu ve sıktı… ${fs.oAd} TAP ATTI!`, fs.vurusSira);
+    return `${t.ad} tam oturdu!`;
+  }
+  addPts(fs, 'p', 1);
+  if (chance(0.35)) {
+    fs.yerde = false;
+    addPts(fs, 'o', 1);
+    return `${fs.oAd} ${t.ad.toLocaleLowerCase('tr-TR')} kilidinden sıyrılıp ayağa kalktı.`;
+  }
+  return `${t.ad} denemesi savunuldu ama üstteki pozisyonu korudun.`;
+}
+
 /** Özel hareket denemesi: seviye ve hız farkı isabeti belirler. Iskalarsan ağır bedel. */
 function specialMove(fs: FightState, t: TechDef): string {
   fs.ozelKullanildi = true;
@@ -555,20 +603,45 @@ function specialMove(fs: FightState, t: TechDef): string {
 const DECISIONS: DecDef[] = [
   {
     tip: 'ozel',
-    agirlik: (fs) => (bestSpecial(fs.mods.teknik) && !fs.ozelKullanildi ? 1.4 + techLv(fs, bestSpecial(fs.mods.teknik)!.id) * 0.3 : 0),
-    metin: (fs) => {
-      const t = bestSpecial(fs.mods.teknik)!;
-      return t.yer
-        ? `⚡ ${fs.oAd} ağırlığını öne verdi. ${t.ad} için kusursuz bir an!`
-        : pick([`⚡ ${fs.oAd} başını düşürerek dalıyor… ${t.ad} için tam zamanı!`, `⚡ Mesafe tam. ${fs.oAd} dikkatini kaybetti. ${t.ad} şimdi!`]);
-    },
-    secenekler: (fs) => {
-      const t = bestSpecial(fs.mods.teknik)!;
-      return [
-        { ad: `${t.ad}!`, aciklama: `Özel hareket (seviye ${techLv(fs, t.id)}). Yüksek risk, yüksek ödül.`, apply: (x) => specialMove(x, t) },
-        { ad: 'Riske girme', aciklama: 'Temel tekniklere sadık kal.', apply: () => 'Sabırlı davranıyorsun, fırsatı geçtin.' },
-      ];
-    },
+    agirlik: (fs) => (knownOf(fs, 'ozel').length && !fs.ozelKullanildi ? 1.4 + techLv(fs, bestSpecial(fs.mods.teknik)!.id) * 0.3 : 0),
+    metin: (fs) =>
+      pick([
+        `⚡ ${fs.oAd} başını düşürerek dalıyor… Özel bir hareket için tam zamanı!`,
+        `⚡ Mesafe tam, ${fs.oAd} dikkatini kaybetti. Gösteri zamanı!`,
+        `⚡ ${fs.oAd} ağırlığını öne verdi. Kusursuz bir an!`,
+      ]),
+    secenekler: (fs) => [
+      ...knownOf(fs, 'ozel').map((t) => ({ ad: `${t.ad}!`, aciklama: `Özel hareket · seviye ${techLv(fs, t.id)}. Yüksek risk, yüksek ödül.`, apply: (x: FightState) => specialMove(x, t) })),
+      { ad: 'Riske girme', aciklama: 'Temel tekniklere sadık kal.', apply: () => 'Sabırlı davranıyorsun, fırsatı geçtin.' },
+    ],
+  },
+  {
+    tip: 'vurus_firsat',
+    agirlik: (fs) => (!fs.yerde && knownOf(fs, 'vurus').length ? 0.8 : 0),
+    metin: (fs) =>
+      pick([
+        `🎯 ${fs.oAd} gardını düşürdü, çenesi açıkta!`,
+        `🎯 ${fs.oAd} yorgun bir jab attı ve geri çekilmeyi unuttu.`,
+        `🎯 ${fs.oAd} kafesin kenarında sıkıştı, açık bir hedef var.`,
+      ]),
+    secenekler: (fs) => [
+      ...knownOf(fs, 'vurus').map((t) => ({ ad: t.ad, aciklama: `Seviye ${techLv(fs, t.id)} · ${t.aciklama}`, apply: (x: FightState) => strikeMove(x, t) })),
+      { ad: 'Jab ile puan topla', aciklama: 'Güvenli, küçük üstünlük.', apply: (x: FightState) => (addPts(x, 'p', 1), 'Jab’lerle puan topluyorsun.') },
+    ],
+  },
+  {
+    tip: 'sub_karar',
+    agirlik: (fs) => (fs.yerde && knownOf(fs, 'sub').length ? 1.0 : 0),
+    metin: (fs) =>
+      pick([
+        `🔒 Üstteyken ${fs.oAd} kolunu açıkta bıraktı. Hangi kilide gideceksin?`,
+        `🔒 ${fs.oAd} sırtını dönmek üzere, bir kilit fırsatı var!`,
+        `🔒 Yerde kontrol sende. ${fs.oAd} panikte, bitirme şansı!`,
+      ]),
+    secenekler: (fs) => [
+      ...knownOf(fs, 'sub').map((t) => ({ ad: t.ad, aciklama: `Seviye ${techLv(fs, t.id)} · ${t.aciklama}`, apply: (x: FightState) => subMove(x, t) })),
+      { ad: 'Ground & pound', aciklama: 'Kilide gitme, üstten vur.', apply: (x: FightState) => (addDmg(x, 'o', 6), addPts(x, 'p', 1.5), 'Üstten sert vuruşlar indiriyorsun.') },
+    ],
   },
   {
     tip: 'kontra_firsat',
@@ -929,10 +1002,15 @@ function decision(fs: FightState) {
 function cornerAdvice(fs: FightState, diff: number): string {
   const lines: string[] = [];
   const c = fs.koseAdi;
-  if (diff > 2) lines.push(`${c}: "Bu raunt bizim, net! Aynen devam."`);
-  else if (diff > 0) lines.push(`${c}: "Raundu aldık gibi ama yakındı. Hakemlere bırakma."`);
-  else if (diff > -2) lines.push(`${c}: "Başa baş gidiyor. Bir şeyi değiştirmemiz lazım."`);
-  else lines.push(`${c}: "Bu raundu kaybettik, dinle beni! Planı değiştiriyoruz."`);
+  const open =
+    diff > 2
+      ? ['Bu raunt bizim, net! Aynen devam.', 'Harika gidiyorsun, bozma sakın!', 'Onu kırdın, gözlerinden okunuyor!', 'Temiz raunt. Nefesini topla, aynısı.']
+      : diff > 0
+        ? ['Raundu aldık gibi ama yakındı. Hakemlere bırakma.', 'Önündeyiz ama fark az, uyuma!', 'İyi ama yeterli değil. Biraz daha bastır.', 'Kartlarda öndeyiz sanırım. Riske girme ama geri de durma.']
+        : diff > -2
+          ? ['Başa baş gidiyor. Bir şeyi değiştirmemiz lazım.', 'Çok yakın bir raunttu, kimin aldığı belli değil.', 'Ortada kaldık. Bu raunt farkı açmalısın.', 'Denk gidiyor, fark yaratacak olan sensin.']
+          : ['Bu raundu kaybettik, dinle beni! Planı değiştiriyoruz.', 'Uyan! Bu gidişle kartlar onun!', 'Kötü raunt. Unut onu, sıfırdan başla.', 'Onun oyununu oynuyoruz. Hemen değiştir!'];
+  lines.push(`${c}: "${pick(open)}"`);
 
   const counts = new Map<Tactic, number>();
   fs.rakipTaktikGecmisi.forEach((t) => counts.set(t, (counts.get(t) ?? 0) + 1));
@@ -946,17 +1024,17 @@ function cornerAdvice(fs: FightState, diff: number): string {
       clinch: 'clinch’e girmeye çalışıyor',
       mesafe: 'dışarıda dans ediyor',
     };
-    lines.push(`"Adam ${favText[fav]}. ${TACTICS[counter].ad} ile cezalandır."`);
+    lines.push(pick([`"Adam ${favText[fav]}. ${TACTICS[counter].ad} ile cezalandır."`, `"Gördün mü? ${favText[fav]}. Cevabı ${TACTICS[counter].ad.toLocaleLowerCase('tr-TR')}."`, `"Hep aynısını yapıyor, ${favText[fav]}. ${TACTICS[counter].ad}!"`]));
   }
   const o = oStats(fs);
   const weak = STAT_KEYS.reduce((a, b) => (o[b] < o[a] ? b : a));
-  if (chance(0.5)) lines.push(`"Unutma, ${STAT_LABELS[weak].toLowerCase()} konusunda zayıf. Oraya yüklen."`);
+  if (chance(0.5)) lines.push(pick([`"Unutma, ${STAT_LABELS[weak].toLocaleLowerCase('tr-TR')} konusunda zayıf. Oraya yüklen."`, `"Zayıf noktası ${STAT_LABELS[weak].toLocaleLowerCase('tr-TR')}. Oraya git!"`, `"${STAT_LABELS[weak]} tarafını zorla, orada çöküyor."`]));
   const ph = fs.oyuncuTaktikGecmisi ?? [];
   const cur = ph[ph.length - 1];
-  if (cur && streak(ph, cur) >= 2) lines.push(`"Hep ${TACTICS[cur].ad.toLowerCase()} yapıyorsun, adam seni okudu! Bu raunt başka bir şey dene."`);
-  else if (cur && streak(ph, cur) === 1 && chance(0.5)) lines.push('"Aynı şeyi tekrar yaparsan seni okur. Onu şaşırt."');
-  if (fs.pKondisyon < 45) lines.push('"Nefesin gitmiş! Tempoyu düşür, akıllı dövüş."');
-  if (fs.oKondisyon < 45) lines.push('"O yoruldu! Şimdi bas, şimdi!"');
+  if (cur && streak(ph, cur) >= 2) lines.push(pick([`"Hep ${TACTICS[cur].ad.toLocaleLowerCase('tr-TR')} yapıyorsun, adam seni okudu! Bu raunt başka bir şey dene."`, '"Seni çözdü! Ritmi değiştir, başka bir şey göster."', '"Aynı kaseti çalıyorsun. Onu şaşırt!"']));
+  else if (cur && streak(ph, cur) === 1 && chance(0.5)) lines.push(pick(['"Aynı şeyi tekrar yaparsan seni okur. Onu şaşırt."', '"Tahmin edilebilir olma. Karıştır."']));
+  if (fs.pKondisyon < 45) lines.push(pick(['"Nefesin gitmiş! Tempoyu düşür, akıllı dövüş."', '"Ağzın açık nefes alıyorsun, sakin! Ayaklarını kullan."', '"Gazın bitiyor, enerjini doğru yerde harca."']));
+  if (fs.oKondisyon < 45) lines.push(pick(['"O yoruldu! Şimdi bas, şimdi!"', '"Elleri düştü, gördün mü? Şimdi zamanı!"', '"Adam bitmek üzere. Tempoyu artır!"']));
   if (fs.pHasar > 55) lines.push('"Çok darbe alıyorsun, ellerini kaldır. Çenen sonsuz değil."');
   if (fs.kesik) lines.push('Cutman kaşına vazelin sürüyor, kanamayı durdurmaya çalışıyor.');
   return lines.join('\n');

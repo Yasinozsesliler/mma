@@ -165,6 +165,7 @@ export function campChoose(s: GameState, value: string | number) {
         s.phase = 'hub';
       } else {
         k.step = 'yuzyuze';
+        k.rakipHamle = planRivalMove(s);
       }
       return;
     case 'yuzyuze':
@@ -390,49 +391,103 @@ function beginFight(s: GameState) {
 // ---------- Face to face ----------
 
 export const FACEOFF = [
-  { key: 'sakin', ad: 'Soğukkanlı bak', aciklama: 'Hiç kıpırdama. Zihnin net kalır.' },
-  { key: 'alin', ad: 'Alın alına ver', aciklama: 'Gerilimi tırmandır. Popülerlik getirir, ortalık karışabilir.' },
-  { key: 'el', ad: 'Elini uzat', aciklama: 'Sportmenlik göster.' },
-  { key: 'laf', ad: 'Kulağına fısılda', aciklama: 'Kafasına gir… ya da senin kafan karışsın.' },
+  { key: 'sakin', ad: 'Soğukkanlı bak', aciklama: 'Hiç kıpırdama. Gözünü ilk o kaçırsın.', ikon: 'eye' },
+  { key: 'alin', ad: 'Alın alına ver', aciklama: 'Gerilimi tırmandır. Kim geri adım atacak?', ikon: 'head-alert' },
+  { key: 'bagir', ad: 'Gözdağı ver', aciklama: 'Yüzüne bağır. Ya korkar ya da gülünç duruma düşersin.', ikon: 'bullhorn' },
+  { key: 'laf', ad: 'Kulağına fısılda', aciklama: 'Kafasına gir… ya da senin kafan karışsın.', ikon: 'message-text' },
+  { key: 'el', ad: 'Elini uzat', aciklama: 'Sportmenlik göster. Kabul eder mi?', ikon: 'handshake' },
 ] as const;
 
 const TRASHY = ['Trash talk ustası', 'Kibirli', 'Öfkeli', 'Şovmen'];
 
+/** Rakip bazen ilk hamleyi yapar: seçimin bir tepkiye dönüşür. */
+export const RIVAL_MOVES: Record<string, { metin: (o: string) => string; anim: string }> = {
+  it: { metin: (o) => `${o} yaklaşır yaklaşmaz göğsüne iki eliyle itti!`, anim: 'oppush' },
+  alin: { metin: (o) => `${o} alnını senin alnına dayadı, geri çekilmiyor.`, anim: 'forehead' },
+  sirit: { metin: (o) => `${o} sana bakıp alaycı bir şekilde sırıtıyor.`, anim: 'smirk' },
+  laf: { metin: (o) => `${o} eğilip kulağına bir şeyler fısıldadı.`, anim: 'oppwhisper' },
+};
+
+function planRivalMove(s: GameState): string | undefined {
+  const o = s.pending.rakip!;
+  const trashy = TRASHY.includes(o.kisilik);
+  if (!chance(trashy ? 0.55 : 0.3)) return undefined;
+  return pick(trashy ? ['it', 'alin', 'sirit', 'laf'] : ['alin', 'sirit', 'laf']);
+}
+
+type FaceResult = { anim: string; kazanan: 'p' | 'o' | null; baslik: string; metin: string; etkiler: string[] };
+
 function faceOff(s: GameState, key: string) {
   const k = s.pending.kamp!;
   const o = s.pending.rakip!;
+  const f = s.fighter;
   const add = (m: Partial<Stats>, st: StatKey, v: number) => (m[st] = (m[st] ?? 0) + v);
   const pop = (d: number) => (s.populerlik = clamp(s.populerlik + d, 0, 100));
+  const trashy = TRASHY.includes(o.kisilik);
+  const edge = (f.stats.iq - o.stats.iq) / 200 + (s.populerlik - 50) / 500;
+  const hamle = k.rakipHamle;
+  // Rakip üstüne geldiyse sakin kalmak daha değerli, karşılık vermek daha riskli.
+  const bonus = hamle === 'it' || hamle === 'alin' ? (key === 'sakin' ? 0.12 : key === 'alin' ? -0.05 : 0) : 0;
+  const win = (base: number) => chance(clamp(base + edge + bonus, 0.15, 0.85));
+  let r: FaceResult;
+
   if (key === 'sakin') {
-    add(k.mods, 'iq', 1);
-    k.yuzyuze = `Gözünü kırpmadan baktın. ${o.soyad} bakışlarını kaçırdı. Zihnin berrak. (Dövüşte IQ +1)`;
+    if (win(0.55)) {
+      add(k.mods, 'iq', 1);
+      r = { anim: 'stare', kazanan: 'p', baslik: 'GÖZÜNÜ O KAÇIRDI', metin: `Gözünü kırpmadan baktın. ${o.soyad} bakışlarını ilk kaçıran oldu.`, etkiler: ['Senin IQ +1'] };
+    } else {
+      add(k.mods, 'iq', -1);
+      add(k.oppMods, 'iq', 1);
+      r = { anim: 'stareLose', kazanan: 'o', baslik: 'SEN KIRPTIN', metin: `${o.soyad} sabit baktı, sen istemsizce gözlerini kırptın. Kameralar yakaladı.`, etkiler: ['Senin IQ -1', 'Rakip IQ +1'] };
+    }
   } else if (key === 'alin') {
     pop(2);
-    if (chance(0.35)) {
+    if (rand() < 0.3) {
       pop(2);
       o.rivalry = Math.max(o.rivalry, 1) + 1;
       add(k.oppMods, 'vurus', 1);
-      k.yuzyuze = `Alın alına geldiniz… ve ${o.soyad} seni itti! Güvenlik araya girdi, görüntüler viral. Rekabet kızıştı, rakip öfkeli. (Popülerlik +4)`;
-    } else {
+      add(k.mods, 'vurus', 1);
+      r = { anim: 'brawl', kazanan: null, baslik: 'ORTALIK KARIŞTI', metin: `Alınlar çarpıştı, ${o.soyad} itti, sen de ittin! Güvenlik araya girdi, görüntüler viral.`, etkiler: ['Popülerlik +4', 'İki tarafın da vuruşu +1', 'Rekabet kızıştı'] };
+    } else if (win(0.5)) {
       add(k.oppMods, 'iq', -1);
-      k.yuzyuze = `Alnını dayadın, ${o.soyad} geri adım attı. Psikolojik üstünlük sende. (Popülerlik +2, rakibin IQ -1)`;
-    }
-  } else if (key === 'el') {
-    if (TRASHY.includes(o.kisilik) && chance(0.6)) {
-      pop(1);
-      k.yuzyuze = `Elini uzattın, ${o.soyad} elini itip güldü. Salon yuhaladı, taraftarlar senin tarafında. (Popülerlik +1)`;
+      r = { anim: 'forehead', kazanan: 'p', baslik: 'GERİ ADIM ATTI', metin: `Alnını dayadın, bastırdın. ${o.soyad} bir adım geri çekildi.`, etkiler: ['Popülerlik +2', 'Rakip IQ -1'] };
     } else {
-      pop(1);
-      o.rivalry = Math.max(0, o.rivalry - 1);
-      k.yuzyuze = `Tokalaştınız. Saygılı bir an. Kameralar bu kareyi sevdi. (Popülerlik +1)`;
+      add(k.mods, 'kondisyon', -2);
+      add(k.oppMods, 'iq', 1);
+      r = { anim: 'pushed', kazanan: 'o', baslik: 'SENİ GERİ İTTİ', metin: `${o.soyad} daha sert bastırdı, dengeni kaybedip geri sendeledin. Salon uğulduyor.`, etkiler: ['Popülerlik +2', 'Senin kondisyon -2', 'Rakip IQ +1'] };
     }
-  } else {
-    if (chance(0.5 + (s.fighter.stats.iq - o.stats.iq) / 200)) {
+  } else if (key === 'bagir') {
+    if (win(trashy ? 0.4 : 0.52)) {
+      pop(2);
+      add(k.oppMods, 'cene', -1);
+      r = { anim: 'yell', kazanan: 'p', baslik: 'İRKİLDİ', metin: `Yüzüne öyle bir bağırdın ki ${o.soyad} irkildi. Tribünler çıldırdı.`, etkiler: ['Popülerlik +2', 'Rakip çene -1'] };
+    } else {
+      pop(-1);
+      add(k.mods, 'iq', -1);
+      r = { anim: 'laughed', kazanan: 'o', baslik: 'GÜLÜP GEÇTİ', metin: `Bağırdın ama ${o.soyad} kahkaha attı. Sosyal medyada caps oldun.`, etkiler: ['Popülerlik -1', 'Senin IQ -1'] };
+    }
+  } else if (key === 'laf') {
+    if (win(0.5)) {
       add(k.oppMods, 'iq', -2);
-      k.yuzyuze = `Kulağına bir şey fısıldadın. ${o.soyad}’ın yüzü kıpkırmızı oldu, sinirlendi. (Rakibin IQ -2)`;
+      r = { anim: 'whisper', kazanan: 'p', baslik: 'KAFASINA GİRDİN', metin: `Kulağına bir şey fısıldadın. ${o.soyad} kıpkırmızı oldu.`, etkiler: ['Rakip IQ -2'] };
     } else {
       add(k.mods, 'iq', -1);
-      k.yuzyuze = `Fısıldadın ama ${o.soyad} gülüp cevap verdi. Bu kez aklını karıştıran o oldu. (IQ -1)`;
+      r = { anim: 'whisperBack', kazanan: 'o', baslik: 'CEVABI YAPIŞTIRDI', metin: `Fısıldadın ama ${o.soyad} gülüp daha ağır bir cevap verdi. Bu kez kafası karışan sensin.`, etkiler: ['Senin IQ -1'] };
     }
+  } else if (trashy && chance(0.6)) {
+    if (chance(0.5)) {
+      pop(2);
+      r = { anim: 'refuse', kazanan: 'p', baslik: 'SALON SENİN TARAFINDA', metin: `Elini uzattın, ${o.soyad} elini itip güldü. Salon onu yuhaladı.`, etkiler: ['Popülerlik +2'] };
+    } else {
+      add(k.mods, 'iq', -1);
+      r = { anim: 'pulled', kazanan: 'o', baslik: 'TUZAĞA DÜŞTÜN', metin: 'Elini sıktı, seni kendine çekip kulağına hakaret etti. Sinirlendin.', etkiler: ['Senin IQ -1'] };
+    }
+  } else {
+    pop(1);
+    o.rivalry = Math.max(0, o.rivalry - 1);
+    r = { anim: 'handshake', kazanan: null, baslik: 'SAYGI', metin: 'Tokalaştınız. Saygılı bir an. Kameralar bu kareyi sevdi.', etkiler: ['Popülerlik +1'] };
   }
+  const pre = hamle ? `${RIVAL_MOVES[hamle].metin(o.soyad)} ` : '';
+  k.yuzyuze = `${pre}${r.metin}`;
+  k.yuzyuzeSonuc = { anim: r.anim, kazanan: r.kazanan, baslik: r.baslik, etkiler: r.etkiler };
 }

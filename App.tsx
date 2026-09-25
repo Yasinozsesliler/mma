@@ -13,7 +13,7 @@ import { ActivityIndicator, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { createGame } from './src/engine/character';
 import type { GameState } from './src/engine/types';
-import { loadGame, saveGame } from './src/storage';
+import { deleteGame, getActiveSlot, loadAllSlots, saveGame, setActiveSlot, type Slot } from './src/storage';
 import { CreateScreen } from './src/ui/CreateScreen';
 import { FightScreen } from './src/ui/FightScreen';
 import {
@@ -65,6 +65,16 @@ export default function App() {
   const [view, setView] = useState<View_>('loading');
   const [toast, setToast] = useState<string[]>([]);
   const [game, setGameState] = useState<GameState | null>(null);
+  // 3 kayıt yuvası: menüde hepsi görünür, oyun aktif yuvaya kaydedilir.
+  const [saves, setSaves] = useState<(GameState | null)[]>([null, null, null]);
+  const [slot, setSlotState] = useState<Slot>(1);
+  const slotRef = useRef<Slot>(1);
+  const setSlot = (x: Slot) => {
+    slotRef.current = x;
+    setSlotState(x);
+    setActiveSlot(x);
+  };
+  const putSave = (x: Slot, g: GameState | null) => setSaves((cur) => cur.map((v, i) => (i === x - 1 ? g : v)));
   // act her zaman en güncel duruma bakar; gecikmeli çağrılar (ör. blackjack) eski durumu ezmesin.
   const gameRef = useRef<GameState | null>(null);
   const setGame = (g: GameState | null) => {
@@ -84,8 +94,11 @@ export default function App() {
   const ready = fontsLoaded || !!fontError;
 
   useEffect(() => {
-    loadGame().then((s) => {
-      setGame(s);
+    Promise.all([loadAllSlots(), getActiveSlot()]).then(([all, active]) => {
+      setSaves(all);
+      slotRef.current = active;
+      setSlotState(active);
+      setGame(all[active - 1]);
       setView('menu');
     });
   }, []);
@@ -102,11 +115,26 @@ export default function App() {
     const yeni = next.phase === 'emeklilik' ? [] : checkAchievements(next);
     if (yeni.length) setToast(yeni);
     setGame(next);
-    saveGame(next);
+    saveGame(next, slotRef.current);
+    putSave(slotRef.current, next);
   };
 
-  // Eski kayıt ancak yeni karakter tamamlanınca üzerine yazılır; oluşturmadan geri dönülürse kaybolmaz.
-  const newCareer = () => setView('create');
+  // Yuvadaki eski kayıt ancak yeni karakter tamamlanınca üzerine yazılır; oluşturmadan geri dönülürse kaybolmaz.
+  const [createSlot, setCreateSlot] = useState<Slot>(1);
+  const newCareer = (x: Slot = slotRef.current) => {
+    setCreateSlot(x);
+    setView('create');
+  };
+  const continueSlot = (x: Slot) => {
+    setSlot(x);
+    setGame(saves[x - 1]);
+    setView('game');
+  };
+  const removeSlot = (x: Slot) => {
+    deleteGame(x);
+    putSave(x, null);
+    if (x === slotRef.current) setGame(null);
+  };
 
   let content;
   if (view === 'loading' || !ready) {
@@ -116,7 +144,7 @@ export default function App() {
       </View>
     );
   } else if (view === 'menu') {
-    content = <MenuScreen save={game} onNew={newCareer} onContinue={() => setView('game')} />;
+    content = <MenuScreen saves={saves} active={slot} onNew={newCareer} onContinue={continueSlot} onDelete={removeSlot} />;
   } else if (view === 'create') {
     content = (
       <CreateScreen
@@ -124,8 +152,10 @@ export default function App() {
         onDone={(input, stats) => {
           const s = createGame(input, stats);
           socialWelcome(s);
+          setSlot(createSlot);
           setGame(s);
-          saveGame(s);
+          saveGame(s, createSlot);
+          putSave(createSlot, s);
           setView('game');
         }}
       />
@@ -176,7 +206,7 @@ export default function App() {
         content = game.kutlama ? <CelebrationScreen {...props} /> : <HubScreen {...props} />;
         break;
       case 'emeklilik':
-        content = <RetireScreen s={game} onNew={newCareer} />;
+        content = <RetireScreen s={game} onNew={() => setView('menu')} />;
         break;
     }
   }

@@ -183,6 +183,10 @@ export interface CampState {
   oKilo?: number;
   kafesKilo?: number;
   yuzyuze?: string;
+  /** Rakibin face to face'te ilk hamlesi (varsa) */
+  rakipHamle?: string;
+  /** Face to face sonucu: animasyon ve kimin üstün geldiği */
+  yuzyuzeSonuc?: { anim: string; kazanan: 'p' | 'o' | null; baslik: string; etkiler: string[] };
   yer?: string;
   hafta: number;
   focus?: StatKey;
@@ -414,6 +418,18 @@ export interface Istat {
   rovans?: number;
 }
 
+export interface P4PEntry {
+  id: string;
+  ad: string;
+  soyad: string;
+  lakap: string;
+  uyruk: string;
+  siklet: WeightClass;
+  rekor: { g: number; m: number; b: number };
+  puan: number;
+  sampiyon: boolean;
+}
+
 export interface GameState {
   v: 1;
   phase: Phase;
@@ -448,6 +464,8 @@ export interface GameState {
   istat?: Istat;
   /** Sınırsız şöhret göstergesi (sosyal medya takipçisi) */
   takipci?: number;
+  /** UFC Pound for Pound listesi (oyuncu hariç) ve oyuncunun son sırası */
+  p4p?: { liste: P4PEntry[]; sira: number | null };
   /** Bitiriş teknikleri: seviye (0-5) ve ustalık */
   teknik?: Record<string, { sv: number; xp: number }>;
   /** Onur Listesi'ne (Hall of Fame) seçilme */

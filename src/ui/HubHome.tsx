@@ -7,7 +7,7 @@ import { fmtFollowers, followers } from '../engine/fame';
 import { currentOrg, statAverage } from '../engine/character';
 import { ORGS, WEIGHT_CLASSES } from '../engine/data';
 import type { GameState } from '../engine/types';
-import { CageBg, Icon, SLANT, type IconName } from './components';
+import { CageBg, Icon, SLANT, upName, type IconName } from './components';
 import { FighterAvatar } from './FighterAvatar';
 import { OvrBadge } from './StatusPanel';
 import { C, F, R } from './theme';
@@ -42,7 +42,7 @@ export function HubHero({ s }: { s: GameState }) {
         <View style={{ flex: 1 }}>
           {f.lakap ? <Text style={hh.nick}>“{f.lakap.toLocaleUpperCase('tr-TR')}”</Text> : null}
           <Text style={[hh.name, SLANT]} numberOfLines={1} adjustsFontSizeToFit>
-            {`${f.ad} ${f.soyad}`.toLocaleUpperCase('tr-TR')}
+            {upName(`${f.ad} ${f.soyad}`, f.uyruk)}
           </Text>
           <View style={hh.chips}>
             <Text style={hh.chip}>{f.yas} YAŞ</Text>

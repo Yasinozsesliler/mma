@@ -1,6 +1,7 @@
-import { fmtFollowers, followers } from '../engine/fame';
+import { fmtFollowers, followerBoard, followers } from '../engine/fame';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { IDEA_KATS, postIdeas, type IdeaKat } from '../engine/postIdeas';
 import { fullName } from '../engine/character';
 import { playerHandle, playerPost, REPLY_TONES, replyToPost } from '../engine/social';
 import type { GameState, Post } from '../engine/types';
@@ -9,12 +10,6 @@ import type { Act } from './GameScreens';
 import { FighterAvatar } from './FighterAvatar';
 import { C, F, R } from './theme';
 
-const TEMPLATES = [
-  'Kampa başladım. Kimse beni durduramaz. 🥊',
-  'Sıradaki kim? Sıklette korkan herkes kaçıyor.',
-  'Taraftarlarıma teşekkür ederim, siz olmasanız bu yol yürünmezdi. 🙏',
-  'Şampiyon, kemerini hazırla. Geliyorum.',
-];
 
 const TUR: Record<Post['tur'], { renk: string; ikon: IconName; etiket: string }> = {
   oyuncu: { renk: C.red, ikon: 'account', etiket: 'SEN' },
@@ -93,10 +88,49 @@ function PostCard({ s, p, act, onMsg }: { s: GameState; p: Post; act: Act; onMsg
   );
 }
 
+function FollowerBoard({ s }: { s: GameState }) {
+  const all = followerBoard(s);
+  const myIdx = all.findIndex((r) => r.oyuncu);
+  const top = all.slice(0, 10);
+  const rows = myIdx >= 10 ? [...top, all[myIdx]] : top;
+  const max = all[0]?.takipci || 1;
+  return (
+    <View style={so.board}>
+      <Text style={so.boardTitle}>EN ÇOK TAKİP EDİLENLER</Text>
+      <Text style={so.boardSub}>
+        {s.stage === 'ufc' ? 'Sıkletin ve UFC’nin P4P yıldızları' : 'Sıkletindeki dövüşçüler'} · Sıran: #{myIdx + 1} / {all.length}
+      </Text>
+      {rows.map((r) => {
+        const i = all.indexOf(r);
+        return (
+          <View key={r.id} style={[so.boardRow, r.oyuncu && so.boardMe]}>
+            <Text style={[so.boardRank, i < 3 && { color: C.gold }]}>{i + 1}</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={so.boardName} numberOfLines={1}>
+                {r.ad}
+                {r.sampiyon ? ' 👑' : ''}
+                {r.oyuncu ? <Text style={{ color: C.red }}>  SEN</Text> : null}
+              </Text>
+              <View style={so.boardBar}>
+                <View style={{ width: `${Math.max(3, (r.takipci / max) * 100)}%`, height: '100%', borderRadius: 2, backgroundColor: r.oyuncu ? C.red : i < 3 ? C.gold : '#3aa8ff' }} />
+              </View>
+              <Text style={so.boardAlt}>{r.alt}</Text>
+            </View>
+            <Text style={[so.boardVal, r.oyuncu && { color: C.red }]}>{fmtFollowers(r.takipci)}</Text>
+          </View>
+        );
+      })}
+    </View>
+  );
+}
+
 export function SocialScreen({ s, act }: { s: GameState; act: Act }) {
   const [text, setText] = useState('');
   const [msg, setMsg] = useState<string | null>(null);
-  const [filter, setFilter] = useState<'hepsi' | 'dovuscu' | 'hikaye'>('hepsi');
+  const [filter, setFilter] = useState<'hepsi' | 'dovuscu' | 'hikaye' | 'takipci'>('hepsi');
+  const [kat, setKat] = useState<IdeaKat>(s.pending.rakip ? 'trash' : s.gecmis.length ? 'sonuc' : 'kamp');
+  const [tur, setTur] = useState(0);
+  const ideas = postIdeas(s, kat, tur);
   const posts = (s.sosyal ?? []).filter((p) => filter === 'hepsi' || p.tur === filter || (filter === 'dovuscu' && p.tur === 'oyuncu'));
   const takipci = followers(s);
   const send = () => {
@@ -132,14 +166,26 @@ export function SocialScreen({ s, act }: { s: GameState; act: Act }) {
           multiline
           maxLength={280}
         />
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={so.kats}>
+          {IDEA_KATS.map((k) => (
+            <Pressable key={k.id} onPress={() => { setKat(k.id); setTur(0); }} style={[so.kat, kat === k.id && so.katOn]}>
+              <Icon name={k.ikon as IconName} size={12} color={kat === k.id ? '#fff' : C.dim} />
+              <Text style={[so.katText, kat === k.id && { color: '#fff' }]}>{k.ad}</Text>
+            </Pressable>
+          ))}
+        </ScrollView>
         <View style={so.tpls}>
-          {TEMPLATES.map((t) => (
-            <Pressable key={t} onPress={() => setText(t)} style={so.tpl}>
-              <Text style={so.tplText} numberOfLines={1}>
+          {ideas.map((t) => (
+            <Pressable key={t} onPress={() => setText(t)} style={({ pressed }) => [so.tpl, pressed && { borderColor: C.red }]}>
+              <Text style={so.tplText} numberOfLines={2}>
                 {t}
               </Text>
             </Pressable>
           ))}
+          <Pressable onPress={() => setTur(tur + 1)} style={so.shuffle}>
+            <Icon name="shuffle-variant" size={14} color={C.gold} />
+            <Text style={so.shuffleText}>BAŞKA ÖNERİLER</Text>
+          </Pressable>
         </View>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
           <Text style={so.handle}>{text.length}/280</Text>
@@ -161,6 +207,7 @@ export function SocialScreen({ s, act }: { s: GameState; act: Act }) {
             ['hepsi', 'AKIŞ'],
             ['dovuscu', 'DÖVÜŞÇÜLER'],
             ['hikaye', 'HİKÂYELER'],
+            ['takipci', 'TAKİPÇİ'],
           ] as const
         ).map(([k, l]) => (
           <Pressable key={k} onPress={() => setFilter(k)} style={[so.filter, filter === k && so.filterOn]}>
@@ -168,22 +215,44 @@ export function SocialScreen({ s, act }: { s: GameState; act: Act }) {
           </Pressable>
         ))}
       </View>
-      {posts.length === 0 ? <P dim>Henüz paylaşım yok. İlk dövüşünden sonra ortalık hareketlenecek.</P> : null}
-      {posts.map((p) => (
-        <PostCard key={p.id} s={s} p={p} act={act} onMsg={setMsg} />
-      ))}
+      {filter === 'takipci' ? (
+        <FollowerBoard s={s} />
+      ) : (
+        <>
+          {posts.length === 0 ? <P dim>Henüz paylaşım yok. İlk dövüşünden sonra ortalık hareketlenecek.</P> : null}
+          {posts.map((p) => (
+            <PostCard key={p.id} s={s} p={p} act={act} onMsg={setMsg} />
+          ))}
+        </>
+      )}
     </Screen>
   );
 }
 
 const so = StyleSheet.create({
+  board: { backgroundColor: C.card, borderRadius: R, borderWidth: 1, borderColor: C.border, padding: 12 },
+  boardTitle: { color: C.gold, fontFamily: F.display, fontSize: 16, letterSpacing: 1.5 },
+  boardSub: { color: C.faint, fontFamily: F.body, fontSize: 12, marginBottom: 8 },
+  boardRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 8, borderTopWidth: 1, borderTopColor: C.border },
+  boardMe: { backgroundColor: '#2a0a10', borderRadius: 6, paddingHorizontal: 6 },
+  boardRank: { width: 24, color: C.dim, fontFamily: F.display, fontSize: 18, textAlign: 'center' },
+  boardName: { color: C.text, fontFamily: F.semi, fontSize: 14 },
+  boardBar: { height: 4, backgroundColor: '#15161a', borderRadius: 2, marginTop: 4, overflow: 'hidden' },
+  boardAlt: { color: C.faint, fontFamily: F.body, fontSize: 11, marginTop: 2 },
+  boardVal: { color: C.text, fontFamily: F.display, fontSize: 16, minWidth: 56, textAlign: 'right' },
+  kats: { gap: 6, paddingVertical: 8 },
+  kat: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 16, borderWidth: 1, borderColor: C.border, backgroundColor: C.cardAlt },
+  katOn: { backgroundColor: C.red, borderColor: C.red },
+  katText: { color: C.dim, fontFamily: F.semi, fontSize: 12 },
+  shuffle: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 8 },
+  shuffleText: { color: C.gold, fontFamily: F.display, fontSize: 11, letterSpacing: 1 },
   profile: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: C.card, borderRadius: R, borderWidth: 1, borderColor: C.border, padding: 12, marginBottom: 10 },
   follow: { color: C.text, fontFamily: F.display, fontSize: 22 },
   compose: { backgroundColor: C.card, borderRadius: R, borderWidth: 1, borderColor: C.red + '66', padding: 12, marginBottom: 12, gap: 10 },
   input: { color: C.text, fontFamily: F.body, fontSize: 15, minHeight: 70, textAlignVertical: 'top', backgroundColor: '#060607', borderRadius: 6, padding: 10, borderWidth: 1, borderColor: C.border },
-  tpls: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  tpl: { maxWidth: '100%', borderWidth: 1, borderColor: C.border, borderRadius: 3, paddingHorizontal: 8, paddingVertical: 4, backgroundColor: C.cardAlt },
-  tplText: { color: C.dim, fontFamily: F.body, fontSize: 12 },
+  tpls: { gap: 6, marginBottom: 6 },
+  tpl: { borderWidth: 1, borderColor: C.border, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8, backgroundColor: C.cardAlt },
+  tplText: { color: C.text, fontFamily: F.body, fontSize: 13, lineHeight: 18 },
   send: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: C.red, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 3, transform: [{ skewX: '-10deg' }] },
   sendText: { color: '#fff', fontFamily: F.display, fontSize: 14, letterSpacing: 1 },
   filters: { flexDirection: 'row', gap: 6, marginBottom: 10 },

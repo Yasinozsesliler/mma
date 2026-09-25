@@ -9,11 +9,34 @@ import { checkAchievements } from './engine/legacy';
 import type { OrgId, WeightClass } from './engine/types';
 import type { GameState } from './engine/types';
 
-const KEY = 'yol_kariyer_v1';
+// 3 kayıt yuvası. 1. yuva eski tek kaydın anahtarını kullanır: güncellemeden önceki kariyer kaybolmaz.
+export type Slot = 1 | 2 | 3;
+export const SLOTS: Slot[] = [1, 2, 3];
+const keyOf = (slot: Slot) => (slot === 1 ? 'yol_kariyer_v1' : `yol_kariyer_s${slot}`);
+const ACTIVE_KEY = 'yol_aktif_yuva';
 
-export async function loadGame(): Promise<GameState | null> {
+export async function getActiveSlot(): Promise<Slot> {
   try {
-    const raw = await AsyncStorage.getItem(KEY);
+    const v = Number(await AsyncStorage.getItem(ACTIVE_KEY));
+    return v === 2 || v === 3 ? v : 1;
+  } catch {
+    return 1;
+  }
+}
+
+export async function setActiveSlot(slot: Slot) {
+  try {
+    await AsyncStorage.setItem(ACTIVE_KEY, String(slot));
+  } catch {}
+}
+
+export async function loadAllSlots(): Promise<(GameState | null)[]> {
+  return Promise.all(SLOTS.map((x) => loadGame(x)));
+}
+
+export async function loadGame(slot: Slot = 1): Promise<GameState | null> {
+  try {
+    const raw = await AsyncStorage.getItem(keyOf(slot));
     if (!raw) return null;
     const s = JSON.parse(raw) as GameState;
     if (s.v !== 1) return null;
@@ -86,16 +109,16 @@ export async function loadGame(): Promise<GameState | null> {
   }
 }
 
-export async function saveGame(s: GameState) {
+export async function saveGame(s: GameState, slot: Slot = 1) {
   try {
-    await AsyncStorage.setItem(KEY, JSON.stringify(s));
+    await AsyncStorage.setItem(keyOf(slot), JSON.stringify(s));
   } catch {
     // Kayıt başarısız olsa da oyun devam eder; bir sonraki hamlede tekrar denenir.
   }
 }
 
-export async function deleteGame() {
+export async function deleteGame(slot: Slot = 1) {
   try {
-    await AsyncStorage.removeItem(KEY);
+    await AsyncStorage.removeItem(keyOf(slot));
   } catch {}
 }

@@ -1,7 +1,7 @@
 // Takipçi: sınırsız şöhret göstergesi. Kazandıkça artar, kaybettikçe erir; trash talk ile büyük kazanır ya da kaybedersin.
 // (İç mekaniklerdeki 0-100 popülerlik ayrı tutulur; oyuncunun gördüğü ve kovaladığı sayı takipçidir.)
 import { chance, clamp, rand } from './rng';
-import type { GameState } from './types';
+import type { GameState, Opponent, P4PEntry } from './types';
 
 /** Eski kayıtlarla uyumlu başlangıç: sosyal medya ekranının eski formülü. */
 export const initialFollowers = (pop: number) => Math.round(200 + pop * pop * 45);
@@ -67,3 +67,55 @@ export const followerTier = (n: number) =>
   n >= 10e6 ? 'Küresel ikon' : n >= 1e6 ? 'Süperstar' : n >= 250e3 ? 'Yıldız' : n >= 50e3 ? 'Tanınan yüz' : n >= 10e3 ? 'Yükselen isim' : 'Yerel dövüşçü';
 
 export const clampPop = (v: number) => clamp(v, 0, 100);
+
+function hash01(id: string) {
+  let h = 2166136261;
+  for (let i = 0; i < id.length; i++) h = Math.imul(h ^ id.charCodeAt(i), 16777619);
+  return (Math.abs(h) % 1000) / 1000;
+}
+
+/** Diğer dövüşçülerin takipçisi: aşama, sıralama, rekor ve şampiyonluk; kişiye özel sabit bir çarpan. */
+export function npcFollowers(s: GameState, o: Opponent) {
+  const base = { amator: 8_000, bolgesel: 45_000, buyuk: 250_000, ufc: 900_000 }[s.stage];
+  const L = 15;
+  const rankF = o.rank != null ? 1 + ((L - Math.min(o.rank, L)) / L) * 2.5 : 0.8;
+  const winF = 1 + o.rekor.g / 25;
+  return Math.round(base * rankF * winF * (o.champion ? 3.5 : 1) * (0.45 + hash01(o.id) * 1.3));
+}
+
+export function p4pFollowers(e: P4PEntry) {
+  return Math.round(1_500_000 * (1 + (e.puan - 70) / 10) * (e.sampiyon ? 2 : 1) * (0.5 + hash01(e.id) * 1.2));
+}
+
+export interface FollowerRow {
+  id: string;
+  ad: string;
+  alt: string;
+  takipci: number;
+  oyuncu?: boolean;
+  sampiyon?: boolean;
+}
+
+/** Takipçi sıralaması: sıkletindeki dövüşçüler, UFC'de P4P yıldızları ve sen. */
+export function followerBoard(s: GameState): FollowerRow[] {
+  const rows: FollowerRow[] = [];
+  const seen = new Set<string>();
+  const addOpp = (o: Opponent) => {
+    if (seen.has(o.id)) return;
+    seen.add(o.id);
+    rows.push({ id: o.id, ad: `${o.ad} ${o.soyad}`, alt: o.champion ? 'Şampiyon' : o.rank != null ? `#${o.rank}` : 'Sıralamasız', takipci: npcFollowers(s, o), sampiyon: o.champion });
+  };
+  if (s.bolum?.sampiyon) addOpp(s.bolum.sampiyon);
+  (s.bolum?.liste ?? []).forEach(addOpp);
+  // Amatörde sıralama yok: karşılaştığın ve önerilen rakipler de listede.
+  s.rakipler.forEach(addOpp);
+  (s.pending.secenekler ?? []).forEach(addOpp);
+  if (s.stage === 'ufc')
+    (s.p4p?.liste ?? []).forEach((e) => {
+      if (seen.has(e.id)) return;
+      seen.add(e.id);
+      rows.push({ id: e.id, ad: `${e.ad} ${e.soyad}`, alt: `P4P · ${e.sampiyon ? 'Şampiyon' : 'Yıldız'}`, takipci: p4pFollowers(e), sampiyon: e.sampiyon });
+    });
+  rows.push({ id: 'oyuncu', ad: `${s.fighter.ad} ${s.fighter.soyad}`, alt: 'Sen', takipci: followers(s), oyuncu: true });
+  return rows.sort((a, b) => b.takipci - a.takipci);
+}
