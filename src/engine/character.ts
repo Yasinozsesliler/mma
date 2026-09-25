@@ -119,10 +119,11 @@ export function growthMultiplier(yas: number) {
 }
 
 /** Yüksek seviyede gelişim yavaşlar. */
-export function addStat(stats: Stats, k: StatKey, amount: number): number {
+/** 70'in üstünde gelişim yavaşlar. `min` verilirse artış bundan aşağı düşmez (ör. kamp en az +2). */
+export function addStat(stats: Stats, k: StatKey, amount: number, min = 0): number {
   const before = stats[k];
   let gain = amount;
-  if (amount > 0 && before > 70) gain = amount * ((100 - before) / 30);
+  if (amount > 0 && before > 70) gain = Math.max(min, amount * ((100 - before) / 30));
   stats[k] = Math.round(clamp(before + gain, 1, 99));
   return stats[k] - before;
 }

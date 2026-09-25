@@ -191,6 +191,6 @@ export const ACHIEVEMENTS: Achievement[] = [
 
 // ---------- Onur Listesi (Hall of Fame) ----------
 
-export const HOF_SCORE = 600;
-export const HOF_PILLARS = 5;
+export const HOF_SCORE = 750;
+export const HOF_PILLARS = 6;
 export const HOF_ACHIEVEMENTS = ACHIEVEMENTS.filter((x) => x.hof);

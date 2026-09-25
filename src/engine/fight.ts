@@ -32,7 +32,7 @@ export const BEATS = 5;
 const BEAT_SCALE = 3 / BEATS;
 let SC = 1;
 
-const DRAIN: Record<Tactic, number> = { baski: 9, kontra: 4, takedown: 8, clinch: 8, mesafe: 5 };
+const DRAIN: Record<Tactic, number> = { baski: 12, kontra: 6, takedown: 11, clinch: 10, mesafe: 7 };
 
 const STYLE_TACTICS: Record<Background, [Tactic, number][]> = {
   boks: [['baski', 3], ['kontra', 3], ['mesafe', 2], ['clinch', 0.5], ['takedown', 0.2]],
@@ -149,6 +149,9 @@ function addDmg(fs: FightState, victim: Side, d0: number) {
   const d = d0 * SC;
   if (victim === 'p') fs.pHasar = clamp(fs.pHasar + d, 0, 100);
   else fs.oHasar = clamp(fs.oHasar + d, 0, 100);
+  // Darbe almak nefesi de keser (özellikle gövdeye).
+  if (victim === 'p') fs.pKondisyon = clamp(fs.pKondisyon - d * 0.4, 5, 100);
+  else fs.oKondisyon = clamp(fs.oKondisyon - d * 0.4, 5, 100);
   if (victim === 'p' && !fs.kesik && fs.pHasar > 35 && chance(0.06 * (1 - (fs.mods.cutman ?? 0) * 0.2))) {
     fs.kesik = true;
     fs.log.push('🩸 Kaşının üstünde kesik açıldı! Kan gözüne akıyor.');
@@ -738,8 +741,10 @@ function endRound(fs: FightState) {
     finish(fs, 'p', 'TKO', `🏳️ ${fs.oAd} köşesi havlu attı! Rakip raunda çıkamıyor. TKO!`, 2);
     return;
   }
-  fs.pKondisyon = clamp(fs.pKondisyon + 8 + fs.pStats.kondisyon * 0.1, 0, 100);
-  fs.oKondisyon = clamp(fs.oKondisyon + 8 + oStats(fs).kondisyon * 0.1, 0, 100);
+  // Raunt arası dinlenme: kısmi toparlanma. Yorgunluk birikir, her rauntta tavan düşer.
+  const tavan = (k: number) => 100 - fs.raunt * (9 - k / 20);
+  fs.pKondisyon = clamp(Math.min(fs.pKondisyon + 3 + fs.pStats.kondisyon * 0.08, tavan(fs.pStats.kondisyon)), 5, 100);
+  fs.oKondisyon = clamp(Math.min(fs.oKondisyon + 3 + oStats(fs).kondisyon * 0.08, tavan(oStats(fs).kondisyon)), 5, 100);
   fs.kose = cornerAdvice(fs, diff);
   fs.durum = 'rauntSonu';
 }

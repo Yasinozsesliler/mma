@@ -6,7 +6,7 @@ import { enterCasino } from '../engine/casino';
 import { breakUp, deck, DATE_TIERS, goOnDate, makePartner, matches, spendNight, STRIP_OPTIONS, stripPrice, treatDisease, unmatch, visitStripClub, yatVar, type Candidate } from '../engine/nightlife';
 import { treatmentCost } from '../engine/nightlifeCore';
 import type { GameState } from '../engine/types';
-import { Bar, Button, Card, Choice, Icon, P, Pill, Screen, Section, SLANT, Title, type IconName } from './components';
+import { Bar, Button, Card, Choice, Icon, P, Pill, Screen, SLANT, Title, type IconName } from './components';
 import type { Act } from './GameScreens';
 import { FighterAvatar } from './FighterAvatar';
 import { SwipeDeck, TINDER } from './SwipeDeck';
@@ -82,6 +82,29 @@ function MatchModal({ s, c, onClose, onDate }: { s: GameState; c: Candidate | nu
   );
 }
 
+function BreakUpButton({ act, onMsg, ad, flex }: { act: Act; onMsg: (m: string) => void; ad: string; flex?: boolean }) {
+  const [sure, setSure] = useState(false);
+  if (!sure)
+    return (
+      <Pressable onPress={() => setSure(true)} style={[nl.small, nl.breakBtn, flex && { flex: 1 }]}>
+        <Text style={nl.smallText}>💔 AYRIL</Text>
+      </Pressable>
+    );
+  return (
+    <View style={[nl.confirm, flex && { flex: 1 }]}>
+      <Text style={nl.confirmText}>{ad} ile ayrılmak istediğine emin misin? (Motivasyon -1)</Text>
+      <View style={{ flexDirection: 'row', gap: 8 }}>
+        <Pressable onPress={() => setSure(false)} style={[nl.small, { flex: 1 }]}>
+          <Text style={nl.smallText}>VAZGEÇ</Text>
+        </Pressable>
+        <Pressable onPress={() => act((x) => onMsg(breakUp(x)))} style={[nl.small, nl.breakBtn, { flex: 1 }]}>
+          <Text style={nl.smallText}>EVET, AYRIL</Text>
+        </Pressable>
+      </View>
+    </View>
+  );
+}
+
 function MatchCard({ s, act, onMsg, c }: { s: GameState; act: Act; onMsg: (m: string) => void; c: Candidate }) {
   const partner = s.iliski?.id === c.id;
   return (
@@ -121,12 +144,13 @@ function MatchCard({ s, act, onMsg, c }: { s: GameState; act: Act; onMsg: (m: st
           );
         })}
       </View>
-      <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
         {c.seviye >= 30 ? (
           <Pressable onPress={() => act((x) => onMsg(spendNight(x, c.id)))} style={[nl.small, { flex: 1 }]}>
             <Text style={nl.smallText}>GECEYİ BİRLİKTE GEÇİR</Text>
           </Pressable>
         ) : null}
+        {partner ? <BreakUpButton act={act} onMsg={onMsg} ad={c.ad} flex /> : null}
         {c.seviye >= 70 && !partner ? (
           <Pressable onPress={() => act((x) => onMsg(makePartner(x, c.id)))} style={[nl.small, { flex: 1, backgroundColor: '#e0457b' }]}>
             <Text style={nl.smallText}>💞 SEVGİLİ OL</Text>
@@ -152,10 +176,12 @@ function Dates({ s, act, onMsg }: { s: GameState; act: Act; onMsg: (m: string) =
             <Text style={[nl.name, SLANT]}>💞 {s.iliski.ad.toLocaleUpperCase('tr-TR')}</Text>
             <Text style={nl.meta}>{s.iliski.meslek} · Kamp motivasyonu +1. Başkalarıyla görüşürsen yakalanabilirsin.</Text>
           </View>
-          <Pressable onPress={() => act((x) => onMsg(breakUp(x)))} style={nl.small}>
-            <Text style={nl.smallText}>AYRIL</Text>
-          </Pressable>
         </LinearGradient>
+      ) : null}
+      {s.iliski ? (
+        <View style={{ marginBottom: 8 }}>
+          <BreakUpButton act={act} onMsg={onMsg} ad={s.iliski.ad} />
+        </View>
       ) : null}
       <View style={nl.appHead}>
         <LinearGradient colors={TINDER} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={nl.appLogo}>
@@ -282,5 +308,8 @@ const nl = StyleSheet.create({
   matchBtn: { flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', width: 300, paddingVertical: 14, borderRadius: 30, marginBottom: 10 },
   matchGhost: { borderWidth: 1.5, borderColor: '#fff' },
   matchBtnText: { color: '#fff', fontFamily: F.display, fontSize: 15, letterSpacing: 1.2 },
+  breakBtn: { backgroundColor: '#5a0f22', borderWidth: 1, borderColor: '#e0457b' },
+  confirm: { backgroundColor: '#1a0710', borderRadius: 8, borderWidth: 1, borderColor: '#e0457b', padding: 10, gap: 8 },
+  confirmText: { color: C.text, fontFamily: F.semi, fontSize: 13, lineHeight: 18 },
   smallText: { color: '#fff', fontFamily: F.display, fontSize: 12, letterSpacing: 0.8 },
 });

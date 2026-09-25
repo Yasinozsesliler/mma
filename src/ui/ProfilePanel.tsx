@@ -2,11 +2,10 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { fullName } from '../engine/character';
-import { ORGS, WEIGHT_CLASSES } from '../engine/data';
-import { ACHIEVEMENTS, activeBelts, champLabel, legacyScore, legacyTier, maxHeldBelts } from '../engine/legacy';
+import { ACHIEVEMENTS, activeBelts, legacyScore, legacyTier } from '../engine/legacy';
 import type { GameState } from '../engine/types';
-import { Belt } from './Belt';
-import { Card, Icon, OctIcon, P, Pill, Section, SLANT, type IconName } from './components';
+import { BeltShowcase } from './BeltShowcase';
+import { Card, Icon, OctIcon, Section, SLANT } from './components';
 import { FighterAvatar } from './FighterAvatar';
 import { PetBadge } from './PetPanel';
 import { ItemArt } from './ItemArt';
@@ -20,10 +19,7 @@ export function ProfilePanel({ s, act }: { s: GameState; act: Act }) {
   const [saved, setSaved] = useState(false);
   const score = legacyScore(s);
   const tier = legacyTier(score);
-  const belts = s.kemerler ?? [];
   const aktif = activeBelts(s);
-  const held = maxHeldBelts(s);
-  const double = held >= 2;
   const earned = new Set(s.basarimlar ?? []);
   return (
     <>
@@ -114,41 +110,7 @@ export function ProfilePanel({ s, act }: { s: GameState; act: Act }) {
       ) : null}
 
       <Section>ÖDÜL VİTRİNİ</Section>
-      {double ? (
-        <LinearGradient colors={['#4a3508', '#1a1508']} style={pf.double}>
-          <Icon name="trophy-variant" size={22} color={C.gold} />
-          <Text style={[pf.doubleText, SLANT]}>{champLabel(held).en} · AYNI ANDA {held} KEMER</Text>
-        </LinearGradient>
-      ) : null}
-      {belts.length === 0 ? (
-        <Card>
-          <P dim style={{ marginBottom: 0 }}>
-            Vitrin boş. İlk kemerin burada parlayacak.
-          </P>
-        </Card>
-      ) : (
-        belts
-          .slice()
-          .reverse()
-          .map((b, i) => (
-            <View key={i} style={[pf.belt, b.aktif && { borderColor: C.goldDeep }]}>
-              <View style={{ alignItems: 'center' }}>
-                <Belt org={b.org} siklet={b.siklet} width={280} dim={!b.aktif} />
-              </View>
-              <View style={pf.beltInfo}>
-                <View style={{ flex: 1 }}>
-                  <Text style={[pf.beltTitle, SLANT]}>
-                    {ORGS[b.org].kisa} · {WEIGHT_CLASSES[b.siklet].ad.toLocaleUpperCase('tr-TR')}
-                  </Text>
-                  <Text style={pf.meta}>
-                    {b.yas} yaşında kazanıldı · {b.savunma} savunma
-                  </Text>
-                </View>
-                <Pill text={b.aktif ? 'AKTİF' : 'GEÇMİŞ'} icon={b.aktif ? 'crown' : 'history'} color={b.aktif ? C.gold : C.faint} />
-              </View>
-            </View>
-          ))
-      )}
+      <BeltShowcase s={s} />
 
       <Section>{`BAŞARIMLAR · ${earned.size}/${ACHIEVEMENTS.length}`}</Section>
       <Pressable onPress={() => act((x) => (x.phase = 'basarimlar'))}>

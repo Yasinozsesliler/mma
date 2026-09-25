@@ -6,16 +6,13 @@ import { lookFor } from '../engine/tale';
 import { FighterAvatar } from './FighterAvatar';
 import { TaleOfTape } from './TaleOfTape';
 import { CAMP_SITES } from '../engine/gyms';
-import { enterCasino } from '../engine/casino';
 import { banned, banWeeksLeft, dopingActive, serveBan } from '../engine/doping';
 import { untreated } from '../engine/nightlifeCore';
 import { OWNERS } from '../engine/owners';
 import {
   acceptOffer,
-  continueAfterPost,
   campCostPreview,
   findNextFight,
-  interview,
   money,
   negotiateOffer,
   pickOpponent,
@@ -35,6 +32,7 @@ import type { CampState, GameState, Intensity, Opponent, PlanKey, PressChoice, S
 import { STAT_KEYS, STAT_LABELS } from '../engine/types';
 import { Button, Card, Choice, Icon, P, Pill, Screen, Section, SLANT, Title, upName, type IconName } from './components';
 import { NewsFeed, RankingList, RestPicker } from './HubParts';
+import { ActionGrid, ActionTile, FightCTA, HubHero, Notice } from './HubHome';
 import { Compare } from './Compare';
 import { ProfilePanel } from './ProfilePanel';
 import { SkillPanel } from './SkillPanel';
@@ -81,11 +79,12 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
   const [confirmRetire, setConfirmRetire] = useState(false);
   const [resting, setResting] = useState(false);
   const [weightOpen, setWeightOpen] = useState(false);
+  const [newsAll, setNewsAll] = useState(false);
   const org = ORGS[currentOrg(s)];
   const injured = s.sakatliklar.length > 0;
   return (
     <Screen>
-      <StatusPanel s={s} />
+      <HubHero s={s} />
       <Tabs
         value={tab}
         onChange={setTab}
@@ -99,63 +98,55 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
 
       {tab === 'ana' ? (
         <>
-          <Section>NE YAPACAKSIN?</Section>
           {banned(s) ? (
-            <Card accent={C.red}>
-              <P style={{ marginBottom: 6 }}>🚫 {s.ceza?.sebep}. Men cezan sürüyor: {banWeeksLeft(s)} hafta kaldı. Bu sürede dövüşemezsin.</P>
-              <Button label="Cezanı çek (zamanı ilerlet)" icon="timer-sand" tone="ghost" onPress={() => act((x) => { x.haberler.unshift(serveBan(x)); })} />
-            </Card>
+            <Notice color={C.red} icon="cancel" action={<Button label="Cezanı çek (zamanı ilerlet)" icon="timer-sand" tone="ghost" onPress={() => act((x) => { x.haberler.unshift(serveBan(x)); })} />}>
+              {s.ceza?.sebep}. Men cezan sürüyor: {banWeeksLeft(s)} hafta kaldı.
+            </Notice>
           ) : null}
           {untreated(s) ? (
-            <Card accent={C.red}>
-              <P style={{ marginBottom: 0 }}>⚠️ Tedavi edilmemiş bir enfeksiyonun var ({s.hastalik!.ad}). Sağlığın her hafta düşüyor ve maç öncesi sağlık kontrolünde yakalanabilirsin. Gece hayatı ekranından tedavi ol.</P>
-            </Card>
+            <Notice color={C.red} icon="alert">
+              Tedavi edilmemiş enfeksiyon ({s.hastalik!.ad}). Sağlığın her hafta düşüyor. Gece hayatı ekranından tedavi ol.
+            </Notice>
           ) : null}
           {(s.hayvanlar ?? []).some((p) => p.hasta || p.mutluluk < 30) ? (
-            <Card accent={C.orange}>
-              <P style={{ marginBottom: 0 }}>🐾 {(s.hayvanlar ?? []).filter((p) => p.hasta || p.mutluluk < 30).map((p) => p.ad).join(', ')} ilgi bekliyor. Mağaza → Hayvan sekmesinden bak.</P>
-            </Card>
+            <Notice color={C.orange} icon="paw">
+              {(s.hayvanlar ?? []).filter((p) => p.hasta || p.mutluluk < 30).map((p) => p.ad).join(', ')} ilgi bekliyor (Mağaza → Hayvan).
+            </Notice>
           ) : null}
           {dopingActive(s) ? (
-            <Card accent={C.orange}>
-              <P style={{ marginBottom: 0 }}>💉 Doping kürün etkide: {s.doping!.kalan} dövüş kaldı. Her dövüşten sonra test riski var.</P>
-            </Card>
+            <Notice color={C.orange} icon="needle">
+              Doping kürü etkide: {s.doping!.kalan} dövüş kaldı. Her dövüşten sonra test riski var.
+            </Notice>
           ) : null}
-          <Choice
-            disabled={banned(s)}
-            icon="sword-cross"
-            label="Sıradaki dövüşü ayarla"
-            desc={
-              (org.rakipSecimi ? 'Rakibini kendin seç.' : `${org.kisa} sana rakip önerecek.`) +
-              (injured ? '\n⚠️ Aktif sakatlığın var, kafeste zayıf olursun.' : '') +
-              (s.stage !== 'amator' ? `\nTahmini kamp masrafı: ${money(campCostPreview(s))}` : '')
+          {s.hof && !s.hof.goruldu ? (
+            <Notice color={C.gold} icon="pillar" action={<Button label="Töreni gör" icon="pillar" tone="gold" onPress={() => act((x) => (x.phase = 'basarimlar'))} />}>
+              Hall of Fame’e seçildin! Adın artık ölümsüz.
+            </Notice>
+          ) : null}
+
+          <FightCTA
+            title={banned(s) ? 'MEN CEZASI' : 'DÖVÜŞ AYARLA'}
+            sub={
+              (org.rakipSecimi ? 'Rakibini kendin seç' : `${org.kisa} rakip önerecek`) +
+              (s.stage !== 'amator' ? ` · Kamp ~${money(campCostPreview(s))}` : '') +
+              (injured ? ' · ⚠️ Sakatsın' : '')
             }
+            disabled={banned(s)}
             onPress={() => act(findNextFight)}
           />
-          <Choice
-            icon="bed"
-            label="Dinlen ve iyileş"
-            desc={`Süreyi sen seç. Şu an sağlık ${s.saglik}/100${s.sakatliklar.length ? `, ${s.sakatliklar.length} sakatlık` : ''}.`}
-            onPress={() => setResting(!resting)}
-            selected={resting}
-            tone="plain"
-          />
+
+          <ActionGrid>
+            <ActionTile icon="bed" label="Dinlen" sub={`Sağlık ${s.saglik}/100`} accent={C.green} selected={resting} onPress={() => { setResting(!resting); setWeightOpen(false); }} badge={s.sakatliklar.length || null} />
+            <ActionTile icon="shopping" label="Mağaza" sub={weeklyBusinessIncome(s) ? `+${money(weeklyBusinessIncome(s))}/hafta` : 'Ekipman · yaşam · tatil'} accent={C.gold} onPress={() => act((x) => (x.phase = 'magaza'))} />
+            <ActionTile icon="whistle" label="Takım" sub={`${(s.sponsorlar ?? []).length} sponsor`} accent={C.blue} badge={(s.sponsorTeklif ?? []).length || null} onPress={() => act((x) => (x.phase = 'takim'))} />
+            <ActionTile icon="medal" label="Başarımlar" sub={s.hof ? '🏛 Hall of Fame' : `${(s.basarimlar ?? []).length}/100`} accent={C.gold} onPress={() => act((x) => (x.phase = 'basarimlar'))} />
+            <ActionTile icon="cellphone-message" label="Sosyal medya" sub={`${(s.sosyal ?? []).length} paylaşım`} accent="#3aa8ff" onPress={() => act((x) => (x.phase = 'sosyal'))} />
+            <ActionTile icon="glass-cocktail" label="Gece hayatı" sub={s.iliski ? `💞 ${s.iliski.ad}` : 'Randevu · kulüp · kumar'} accent="#fd267a" onPress={() => act((x) => (x.phase = 'gece'))} />
+            {s.stage !== 'amator' ? (
+              <ActionTile icon="scale-balance" label="Sıklet" sub={s.sampiyon ? 'Çift kemere git' : WEIGHT_CLASSES[s.fighter.siklet].ad} accent={C.orange} selected={weightOpen} onPress={() => { setWeightOpen(!weightOpen); setResting(false); }} />
+            ) : null}
+          </ActionGrid>
           {resting ? <RestPicker s={s} act={act} onDone={() => setResting(false)} /> : null}
-          <Choice icon="shopping" label="Mağaza, yatırım ve tatil" desc={`Ekipman, yaşam, işletmeler, yatırımlar ve tatiller.${weeklyBusinessIncome(s) ? ` İşletme geliri: $${weeklyBusinessIncome(s).toLocaleString('tr-TR')}/hafta` : ''}`} onPress={() => act((x) => (x.phase = 'magaza'))} tone="gold" />
-          <Choice icon="whistle" label="Takım ve sponsorlar" desc={`Salon, menajer ve sponsorluklar.${(s.sponsorTeklif ?? []).length ? ` 💼 ${(s.sponsorTeklif ?? []).length} yeni sponsor teklifi!` : ''} Aktif sponsor: ${(s.sponsorlar ?? []).length}`} onPress={() => act((x) => (x.phase = 'takim'))} tone="plain" />
-          <Choice icon="medal" label="Başarımlar ve Hall of Fame" desc={`${(s.basarimlar ?? []).length}/100 başarım açıldı.${s.hof ? ' 🏛 Onur Listesi üyesisin!' : ' Onur Listesi eşiklerini takip et.'}`} onPress={() => act((x) => (x.phase = 'basarimlar'))} tone={s.hof ? 'gold' : 'plain'} />
-          <Choice icon="cellphone-message" label="Sosyal medya" desc={`${(s.sosyal ?? []).length} paylaşım · Rakiplerin ne diyor, maçların hikâyesi ne?`} onPress={() => act((x) => (x.phase = 'sosyal'))} tone="plain" />
-          <Choice icon="glass-cocktail" label="Gece hayatı" desc={`Randevular, striptiz kulübü, kumarhane.${s.iliski ? ` 💞 Sevgilin: ${s.iliski.ad}` : ''}`} onPress={() => act((x) => (x.phase = 'gece'))} tone="plain" />
-          {s.stage !== 'amator' ? (
-            <Choice
-              icon="scale-balance"
-              label="Sıklet değiştir"
-              desc={s.sampiyon ? '🏆 Şampiyonsun: yeni sıklette doğrudan ünvan maçı alırsın. Çift sıklet şampiyonluğu seni bekliyor!' : `Şu an ${WEIGHT_CLASSES[s.fighter.siklet].ad}. Değiştirirsen sıralamasız başlarsın.`}
-              onPress={() => setWeightOpen(!weightOpen)}
-              selected={weightOpen}
-              tone={s.sampiyon ? 'gold' : 'plain'}
-            />
-          ) : null}
           {weightOpen ? (
             <Card accent={C.gold}>
               {weightOptions(s).map((w) => {
@@ -181,7 +172,12 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
               })}
             </Card>
           ) : null}
-          {confirmRetire ? (
+          {!confirmRetire ? (
+            <Pressable onPress={() => setConfirmRetire(true)} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 8 }}>
+              <Icon name="flag-checkered" size={14} color={C.faint} />
+              <Text style={{ color: C.faint, fontFamily: F.display, fontSize: 12, letterSpacing: 1 }}>EMEKLİ OL</Text>
+            </Pressable>
+          ) : (
             <Card accent={C.red}>
               <P>Emin misin? Kariyerin burada sona erecek.</P>
               <View style={{ flexDirection: 'row', gap: 8 }}>
@@ -193,11 +189,15 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
                 </View>
               </View>
             </Card>
-          ) : (
-            <Choice icon="flag-checkered" label="Emekli ol" desc="Eldivenleri as. Kariyer burada biter." tone="plain" onPress={() => setConfirmRetire(true)} />
           )}
+
           <Section>DÖVÜŞ HABERLERİ</Section>
-          <NewsFeed items={s.haberler.slice(0, 7)} />
+          <NewsFeed items={s.haberler.slice(0, newsAll ? 12 : 4)} />
+          {s.haberler.length > 4 ? (
+            <Pressable onPress={() => setNewsAll(!newsAll)} style={{ alignItems: 'center', paddingVertical: 8 }}>
+              <Text style={{ color: C.dim, fontFamily: F.display, fontSize: 12, letterSpacing: 1 }}>{newsAll ? 'DAHA AZ GÖSTER' : 'TÜM HABERLER'}</Text>
+            </Pressable>
+          ) : null}
         </>
       ) : tab === 'gelisim' ? (
         <SkillPanel s={s} act={act} />
@@ -205,6 +205,7 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
         <RankingList s={s} />
       ) : (
         <>
+          <StatusPanel s={s} />
           <ProfilePanel s={s} act={act} />
           <History s={s} />
         </>
@@ -586,35 +587,7 @@ export function CampScreen({ s, act }: { s: GameState; act: Act }) {
 
 // ---------- Dövüş sonrası ----------
 
-export function PostFightScreen({ s, act }: { s: GameState; act: Act }) {
-  const ps = s.pending.sonrasi!;
-  const colors = ps.kazandi ? (['#1f6b3f', '#0f2a1b'] as const) : ps.berabere ? (['#7a5a14', '#2a200b'] as const) : (['#7a1420', '#2a0b10'] as const);
-  return (
-    <Screen footer={ps.roportajSonucu ? <Button label={s.kutlama ? 'Kutlamaya geç' : 'Devam'} icon={s.kutlama ? 'trophy' : 'arrow-right'} tone={s.kutlama ? 'gold' : 'red'} onPress={() => act(continueAfterPost)} /> : undefined}>
-      <LinearGradient colors={colors} style={gs.banner}>
-        <Icon name={ps.kazandi ? 'trophy' : ps.berabere ? 'scale-balance' : 'heart-broken'} size={36} color="#fff" />
-        <Text style={gs.bannerTitle}>{ps.kazandi ? 'ELİN HAVAYA KALKTI' : ps.berabere ? 'KİMSE KAZANMADI' : 'BU GECE SENİN DEĞİLDİ'}</Text>
-        <Text style={gs.bannerSub}>{ps.satirlar[0]}</Text>
-      </LinearGradient>
-      <Card>
-        {ps.satirlar.slice(1).map((l, i) => (
-          <Text key={i} style={[gs.line, i > 0 && { borderTopWidth: 1, borderTopColor: C.border }]}>
-            {l}
-          </Text>
-        ))}
-      </Card>
-      <Section>KAFES İÇİ RÖPORTAJ</Section>
-      {ps.roportajSonucu ? (
-        <Card accent={C.gold}>
-          <P style={{ marginBottom: 0 }}>{ps.roportajSonucu}</P>
-        </Card>
-      ) : (
-        ps.roportajSecenekleri.map((o, i) => <Choice key={i} icon="microphone-variant" label={`“${o}”`} onPress={() => act((x) => interview(x, i))} />)
-      )}
-      {ps.roportajSonucu && s.puan > 0 ? <SkillPanel s={s} act={act} /> : null}
-    </Screen>
-  );
-}
+export { PostFightScreen } from './PostFightScreen';
 
 // ---------- Teklifler ----------
 

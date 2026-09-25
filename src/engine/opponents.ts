@@ -8,11 +8,11 @@ const TIER_BASE: Record<OrgId, number> = {
   amator: 35,
   cfc: 45,
   oktagon: 46,
-  pfl: 57,
-  one: 56,
-  mvp: 55,
-  dwcs: 61,
-  ufc: 64,
+  pfl: 60,
+  one: 59,
+  mvp: 58,
+  dwcs: 64,
+  ufc: 69,
 };
 
 const STYLE_WEIGHTS: [Background, number][] = [
@@ -34,7 +34,7 @@ function levelFor(s: GameState, org: OrgId, zorluk: number, rank: number | null,
   if (champion) tb += 17;
   const pa = statAverage(s.fighter.stats);
   // Oyuncu güçlendikçe rakipler de güçlenir: rekabet hep canlı kalır.
-  return tb * 0.55 + pa * 0.45 + zorluk * 5 + noise(2);
+  return tb * 0.5 + pa * 0.5 + zorluk * 5 + noise(2);
 }
 
 function recordFor(org: OrgId, rank: number | null, champion: boolean) {

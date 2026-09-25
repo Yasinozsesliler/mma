@@ -301,6 +301,30 @@ export interface PostFight {
   roportajSonucu?: string;
   kazandi: boolean;
   berabere: boolean;
+  /** Maç sonu ekranı için yapılandırılmış özet */
+  ozet?: {
+    yontem: string;
+    kod: string;
+    raunt: number;
+    sure: string;
+    kartlar?: string;
+    org: OrgId;
+    rakip: string;
+    rakipLakap: string;
+    rakipUyruk: string;
+    rakipRekor: string;
+    rekor: string;
+    amator: boolean;
+    kazanc: number;
+    populerlik: number;
+    popDelta: number;
+    puan: number;
+    saglik: number;
+    hasar: number;
+    bonus: number;
+    nc: boolean;
+    unvan: boolean;
+  };
 }
 
 export type Phase =
