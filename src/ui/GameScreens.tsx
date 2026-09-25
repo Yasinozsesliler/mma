@@ -26,15 +26,15 @@ import {
 import { currentOrg, fullName, statAverage } from '../engine/character';
 import { ORGS, WEIGHT_CLASSES } from '../engine/data';
 import { chooseEvent, closeEvent } from '../engine/events';
-import { PLANS } from '../engine/fight';
 import { describeOpponent, oppRecord } from '../engine/opponents';
-import type { CampState, GameState, Intensity, Opponent, PlanKey, PressChoice, StatKey, Stats, WeightCut } from '../engine/types';
+import type { CampState, GameState, Intensity, Opponent, PressChoice, StatKey, Stats, WeightCut } from '../engine/types';
 import { STAT_KEYS, STAT_LABELS } from '../engine/types';
 import { Button, Card, Choice, Icon, P, Pill, Screen, Section, SLANT, Title, upName, type IconName } from './components';
 import { NewsFeed, RankingList, RestPicker } from './HubParts';
 import { ActionGrid, ActionTile, FightCTA, HubHero, Notice } from './HubHome';
 import { CampLengthStep, CampSummary, CampWeeksStep, FreeWeeksStep } from './CampCalendar';
 import { TechniquePanel } from './TechniquePanel';
+import { PlanPicker } from './PlanPicker';
 import { Compare } from './Compare';
 import { ProfilePanel } from './ProfilePanel';
 import { SkillPanel } from './SkillPanel';
@@ -402,7 +402,6 @@ const CAMP_STEPS: { key: CampState['step'][]; label: string }[] = [
   { key: ['tarti', 'yuzyuze'], label: 'Tartı' },
 ];
 
-const PLAN_ICONS: Record<PlanKey, IconName> = { ayakta: 'boxing-glove', gures: 'arm-flex', yer: 'lock', tempo: 'lungs', kontra: 'shield-sword' };
 const INT_ICONS: Record<Intensity, IconName> = { dusuk: 'meditation', orta: 'dumbbell', yuksek: 'weight-lifter' };
 const CUT_ICONS: Record<WeightCut, IconName> = { kademeli: 'food-apple', normal: 'scale-bathroom', sert: 'alert-octagon' };
 const PRESS_ICONS: Record<PressChoice, IconName> = { saygili: 'handshake', trash: 'microphone-variant', sessiz: 'account-voice' };
@@ -498,10 +497,10 @@ export function CampScreen({ s, act }: { s: GameState; act: Act }) {
     return (
       <Screen>
         {header}
-        <Title sub={`${s.takim.antrenor}: “Bu adamı nasıl yeneceğiz?”`}>Oyun Planı</Title>
-        {(Object.keys(PLANS) as PlanKey[]).map((p) => (
-          <Choice key={p} icon={PLAN_ICONS[p]} label={PLANS[p].ad} desc={PLANS[p].aciklama} onPress={() => choose(p)} />
-        ))}
+        <Title kicker="OYUN PLANI" sub={`${s.takim.antrenor}: “Bu adamı nasıl yeneceğiz?”`}>
+          Strateji Odası
+        </Title>
+        <PlanPicker s={s} onPick={(p) => choose(p)} />
       </Screen>
     );
   if (k.step === 'intensity')

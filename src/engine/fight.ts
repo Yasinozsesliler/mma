@@ -47,15 +47,35 @@ const STYLE_TACTICS: Record<Background, [Tactic, number][]> = {
   sokak: [['baski', 5], ['kontra', 0.5], ['clinch', 1], ['mesafe', 0.3], ['takedown', 0.5]],
 };
 
-export const PLANS: Record<PlanKey, { ad: string; aciklama: string; hedef: string[] }> = {
-  ayakta: { ad: 'Ayakta kal, vuruşla boz', aciklama: 'Baskı ve mesafe taktikleri güçlenir.', hedef: ['vurus', 'cene', 'hiz'] },
-  gures: { ad: 'Güreşle yere indir, kontrol et', aciklama: 'Takedown ve clinch güçlenir.', hedef: ['gures'] },
-  yer: { ad: 'Yere götür, submission ara', aciklama: 'Yerde submission şansı artar.', hedef: ['yer'] },
-  tempo: { ad: 'Tempoyu yükselt, kondisyonla boğ', aciklama: 'Rakip daha hızlı yorulur.', hedef: ['kondisyon'] },
-  kontra: { ad: 'Sabırlı ol, kontra dövüş', aciklama: 'Kontra taktiği güçlenir.', hedef: ['iq', 'hiz'] },
+export type PlanGroup = 'ayakta' | 'yer' | 'strateji';
+
+export interface PlanDef {
+  ad: string;
+  kisa: string;
+  aciklama: string;
+  avantaj: string;
+  risk: string;
+  ikon: string;
+  grup: PlanGroup;
+  /** Rakibin zayıf yönü bunlardan biriyse plan "zaafa uygun" olur ve etkisi ikiye katlanır. */
+  hedef: string[];
+}
+
+export const PLANS: Record<PlanKey, PlanDef> = {
+  ayakta: { ad: 'Ayakta kal, vuruşla boz', kisa: 'Striking', aciklama: 'Ayakta kal, kombinasyonlarla puan ve hasar topla.', avantaj: 'Baskı ve mesafe güçlenir', risk: 'Güreşçi rakip seni indirirse plan çöker', ikon: 'boxing-glove', grup: 'ayakta', hedef: ['vurus', 'cene', 'hiz'] },
+  kontra: { ad: 'Sabırlı ol, kontra dövüş', kisa: 'Kontra', aciklama: 'Onun gelmesini bekle, açığını yakala.', avantaj: 'Kontra taktiği çok güçlenir', risk: 'Rakip beklerse puan kaybedersin', ikon: 'shield-sword', grup: 'ayakta', hedef: ['iq', 'hiz'] },
+  bacak: { ad: 'Bacak tekmeleriyle kes', kisa: 'Low kick', aciklama: 'Ön bacağını sök, hareketini raunt raunt öldür.', avantaj: 'Rakibin hızı her raunt düşer', risk: 'Etkisi geç gelir, ilk raunt zayıf', ikon: 'shoe-sneaker', grup: 'ayakta', hedef: ['hiz'] },
+  govde: { ad: 'Gövdeye çalış, sonra kafa', kisa: 'Gövde', aciklama: 'Karaciğere ve kaburgaya yüklen; eller düşünce kafaya çık.', avantaj: 'Rakip daha çok yorulur, geç rauntlarda sarsma şansı artar', risk: 'Erken bitiriş beklenmez', ikon: 'target', grup: 'ayakta', hedef: ['kondisyon', 'cene'] },
+  blitz: { ad: 'İlk raunt blitz', kisa: 'Blitz', aciklama: 'Zil çalar çalmaz üstüne yürü, ilk rauntta bitir.', avantaj: '1. rauntta baskı çok güçlü', risk: 'Bitiremezsen nefesin erken tükenir', ikon: 'flash', grup: 'ayakta', hedef: ['cene'] },
+  gures: { ad: 'Güreşle indir, kontrol et', kisa: 'Güreş', aciklama: 'Takedown, kafes kenarı, üstte kontrol.', avantaj: 'Takedown ve clinch güçlenir', risk: 'İyi sprawl yapan rakipte yorulursun', ikon: 'arm-flex', grup: 'yer', hedef: ['gures'] },
+  gnp: { ad: 'İndir ve ez (ground & pound)', kisa: 'GnP', aciklama: 'Yere indir, üstten yumruk ve dirsek yağdır.', avantaj: 'Takedown güçlenir, yerde vuruş hasarı artar', risk: 'Alttan submission riski', ikon: 'hammer', grup: 'yer', hedef: ['yer', 'cene'] },
+  yer: { ad: 'Yere götür, submission ara', kisa: 'Submission', aciklama: 'Pozisyon al, boyna ve kollara git.', avantaj: 'Yerde submission şansı artar', risk: 'Ayakta kalırsa elin boş', ikon: 'lock', grup: 'yer', hedef: ['yer'] },
+  kafes: { ad: 'Kafese sıkıştır', kisa: 'Kafes', aciklama: 'Onu kafese daya, clinch’te yıprat, nefes aldırma.', avantaj: 'Clinch güçlenir, hareketli rakip kapana kısılır', risk: 'Güçlü clinch’çiye karşı riskli', ikon: 'fence', grup: 'strateji', hedef: ['hiz', 'kondisyon'] },
+  tempo: { ad: 'Tempoyu yükselt', kisa: 'Tempo', aciklama: 'Durmadan bas, kondisyonuyla boğ.', avantaj: 'Rakip çok daha hızlı yorulur', risk: 'Senin de kondisyonun iyi olmalı', ikon: 'lungs', grup: 'strateji', hedef: ['kondisyon'] },
+  puan: { ad: 'Puanla kazan, riske girme', kisa: 'Puan', aciklama: 'Temiz vuruş, iyi savunma, hakemlere oyna.', avantaj: 'Daha az hasar alırsın, mesafe ve kontra güçlenir', risk: 'Bitiriş şansı düşer', ikon: 'clipboard-check', grup: 'strateji', hedef: ['iq', 'vurus'] },
 };
 
-function planBonus(mods: FightMods, t: Tactic): number {
+function planBonus(mods: FightMods, t: Tactic, raunt = 1): number {
   const m = mods.planUyum ? 2 : 1;
   switch (mods.plan) {
     case 'ayakta':
@@ -68,7 +88,20 @@ function planBonus(mods: FightMods, t: Tactic): number {
       return t === 'takedown' ? 0.025 * m : 0;
     case 'tempo':
       return t === 'baski' ? 0.02 * m : 0;
+    case 'bacak':
+      return t === 'mesafe' ? 0.02 * m : t === 'baski' ? 0.01 * m : 0;
+    case 'govde':
+      return t === 'baski' ? 0.02 * m : 0;
+    case 'blitz':
+      return t === 'baski' ? (raunt === 1 ? 0.09 * m : 0) : t === 'clinch' && raunt === 1 ? 0.03 * m : 0;
+    case 'gnp':
+      return t === 'takedown' ? 0.04 * m : 0;
+    case 'kafes':
+      return t === 'clinch' ? 0.028 * m : 0;
+    case 'puan':
+      return t === 'mesafe' || t === 'kontra' ? 0.025 * m : 0;
   }
+  return 0;
 }
 
 function withMods(base: Stats, mods: Partial<Stats>): Stats {
@@ -136,7 +169,12 @@ export function startFight(opts: {
   };
 }
 
-const oStats = (fs: FightState) => withMods(fs.opp.stats, fs.mods.oppStats);
+const oStats = (fs: FightState) => {
+  const st = withMods(fs.opp.stats, fs.mods.oppStats);
+  // Bacak tekmesi planı: rakibin hızı raunt raunt düşer.
+  if (fs.mods.plan === 'bacak') st.hiz = Math.max(1, st.hiz - (fs.raunt - 1) * (fs.mods.planUyum ? 5 : 3));
+  return st;
+};
 const names = (fs: FightState): Record<Side, string> => ({ p: fs.pAd, o: fs.oAd });
 const clone = (fs: FightState): FightState => JSON.parse(JSON.stringify(fs));
 
@@ -147,7 +185,8 @@ function sideDom(fs: FightState, s: Side) {
 }
 
 function addDmg(fs: FightState, victim: Side, d0: number) {
-  const d = d0 * SC;
+  // Puan planı: savunmaya öncelik, daha az hasar.
+  const d = d0 * SC * (victim === 'p' && fs.mods.plan === 'puan' ? (fs.mods.planUyum ? 0.85 : 0.92) : 1);
   if (victim === 'p') fs.pHasar = clamp(fs.pHasar + d, 0, 100);
   else fs.oHasar = clamp(fs.oHasar + d, 0, 100);
   // Darbe almak nefesi de keser (özellikle gövdeye).
@@ -169,6 +208,9 @@ function drain(fs: FightState, s: Side, t: Tactic, extra = 0) {
   const st = s === 'p' ? fs.pStats : oStats(fs);
   let d = (DRAIN[t] + extra) * (1.45 - st.kondisyon / 100) * SC;
   if (s === 'o' && fs.mods.plan === 'tempo') d *= fs.mods.planUyum ? 1.3 : 1.15;
+  if (s === 'o' && fs.mods.plan === 'govde') d *= fs.mods.planUyum ? 1.18 : 1.08;
+  if (s === 'o' && fs.mods.plan === 'kafes' && t === 'clinch') d *= 1.1;
+  if (s === 'p' && fs.mods.plan === 'blitz' && fs.raunt === 1) d *= 1.15;
   if (s === 'p') fs.pKondisyon = clamp(fs.pKondisyon - d, 5, 100);
   else fs.oKondisyon = clamp(fs.oKondisyon - d, 5, 100);
 }
@@ -217,7 +259,10 @@ function setCritical(fs: FightState, kind: CriticalKind) {
 function rockCheck(fs: FightState, victim: Side, dmg: number, beat: number): boolean {
   const vHasar = victim === 'p' ? fs.pHasar : fs.oHasar;
   const cene = victim === 'p' ? fs.pStats.cene : oStats(fs).cene;
-  const p = (dmg * SC * (1.5 - cene / 100) * (0.4 + vHasar / 80)) / 38;
+  let p = (dmg * SC * (1.5 - cene / 100) * (0.4 + vHasar / 80)) / 38;
+  // Gövde planı: geç rauntlarda düşen eller, sarsılan rakip.
+  if (victim === 'o' && fs.mods.plan === 'govde' && fs.raunt >= 2) p *= fs.mods.planUyum ? 1.25 : 1.12;
+  if (victim === 'o' && fs.mods.plan === 'puan') p *= 0.85;
   if (!chance(p)) return false;
   const att = other(victim);
   const kd = chance(0.5);
@@ -255,7 +300,7 @@ function groundPhase(fs: FightState, top: Side, beat: number): boolean {
   fs.log.push(groundLine(top, names(fs)));
   fs.yerde = true;
   addPts(fs, top, 1);
-  const gnp = (3 + T.power / 20) * (0.6 + rand() * 0.8);
+  const gnp = (3 + T.power / 20) * (0.6 + rand() * 0.8) * (top === 'p' && fs.mods.plan === 'gnp' ? (fs.mods.planUyum ? 1.45 : 1.25) : 1);
   addDmg(fs, other(top), gnp);
   let subP = clamp(0.1 + (T.grappling - B.grappling) / 110, 0.03, 0.4);
   if (top === 'p' && fs.mods.plan === 'yer') subP += fs.mods.planUyum ? 0.14 : 0.08;
@@ -279,7 +324,7 @@ function takedownBeat(fs: FightState, shooter: Side, beat: number): boolean {
   const tA = shooter === 'p' ? fs.taktik! : fs.rakipTaktik!;
   const tD = shooter === 'p' ? fs.rakipTaktik! : fs.taktik!;
   let p = 0.38 + (A.wrestling - D.wrestling) / 55 + ADV[tA][tD] * 1.5;
-  if (shooter === 'p') p += planBonus(fs.mods, 'takedown') - (fs.okunma ?? 0) * 1.5 + anlik(fs) * 1.5;
+  if (shooter === 'p') p += planBonus(fs.mods, 'takedown', fs.raunt) - (fs.okunma ?? 0) * 1.5 + anlik(fs) * 1.5;
   p = clamp(p, 0.08, 0.9);
   const ok = chance(p);
   fs.log.push(tdLine(shooter, ok, names(fs)));
@@ -300,7 +345,7 @@ function clinchBeat(fs: FightState, beat: number): boolean {
   const pc = P.striking * 0.5 + P.wrestling * 0.5;
   const oc = O.striking * 0.5 + O.wrestling * 0.5;
   let r = pc / (pc + oc) + ADV[fs.taktik!][fs.rakipTaktik!] - (fs.okunma ?? 0) + anlik(fs) + noise(0.09);
-  if (fs.taktik === 'clinch') r += planBonus(fs.mods, 'clinch');
+  if (fs.taktik === 'clinch') r += planBonus(fs.mods, 'clinch', fs.raunt);
   const w: Side = r >= 0.5 ? 'p' : 'o';
   drain(fs, 'p', 'clinch');
   drain(fs, 'o', 'clinch');
@@ -323,7 +368,7 @@ function strikeBeat(fs: FightState, beat: number): boolean {
   const O = sideDom(fs, 'o');
   const pt = fs.taktik!;
   const ot = fs.rakipTaktik!;
-  let r = P.striking / (P.striking + O.striking) + ADV[pt][ot] + planBonus(fs.mods, pt) - (fs.okunma ?? 0) + anlik(fs) + noise(0.1);
+  let r = P.striking / (P.striking + O.striking) + ADV[pt][ot] + planBonus(fs.mods, pt, fs.raunt) - (fs.okunma ?? 0) + anlik(fs) + noise(0.1);
   drain(fs, 'p', pt);
   drain(fs, 'o', ot);
   // Hakemler kafesi kontrol eden, ileri yürüyen tarafı ödüllendirir.

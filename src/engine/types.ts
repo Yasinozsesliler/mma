@@ -172,7 +172,7 @@ export interface FightHistory {
 }
 
 // ---------- Kamp ----------
-export type PlanKey = 'ayakta' | 'gures' | 'yer' | 'tempo' | 'kontra';
+export type PlanKey = 'ayakta' | 'gures' | 'yer' | 'tempo' | 'kontra' | 'govde' | 'kafes' | 'bacak' | 'blitz' | 'puan' | 'gnp';
 export type Intensity = 'dusuk' | 'orta' | 'yuksek';
 export type WeightCut = 'kademeli' | 'normal' | 'sert';
 export type PressChoice = 'saygili' | 'trash' | 'sessiz';
