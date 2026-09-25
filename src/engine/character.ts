@@ -1,3 +1,4 @@
+import { L } from '../i18n';
 import { BACKGROUNDS, COUNTRIES, WEIGHT_CLASSES, WEIGHT_MODS, baseStatsFor } from './data';
 import { clamp, fill, noise, pick } from './rng';
 import { economyTick } from './economy';
@@ -98,8 +99,8 @@ export function createGame(input: NewFighterInput, stats: Stats): GameState {
     trashTalk: false,
     kisaHaber: false,
     haberler: [
-      `⭐ ${START_POINTS} gelişim puanın var. “GELİŞİM” sekmesinden istatistiklerine harca.`,
-      `${fighter.ad} ${fighter.soyad}, ${fighter.memleket} sokaklarından çıkıp ${country.salon} kapısını çaldı. Yol burada başlıyor.`,
+      L("⭐ {0} gelişim puanın var. “GELİŞİM” sekmesinden istatistiklerine harca.", [START_POINTS]),
+      L("{0} {1}, {2} sokaklarından çıkıp {3} kapısını çaldı. Yol burada başlıyor.", [fighter.ad, fighter.soyad, fighter.memleket, country.salon]),
     ],
     pending: {},
   };
@@ -146,7 +147,7 @@ export function advanceWeeks(s: GameState, weeks: number): string[] {
   const yeniYas = s.fighter.baslangicYasi + Math.floor(s.hafta / 52);
   while (s.fighter.yas < yeniYas) {
     s.fighter.yas++;
-    notes.push(`🎂 ${s.fighter.yas} yaşına girdin.`);
+    notes.push(L("🎂 {0} yaşına girdin.", [s.fighter.yas]));
     if (s.fighter.yas >= 34) {
       const st = s.fighter.stats;
       const d = s.fighter.yas >= 38 ? 2 : 1;
@@ -154,13 +155,13 @@ export function advanceWeeks(s: GameState, weeks: number): string[] {
       addStat(st, 'cene', -d);
       addStat(st, 'kondisyon', -Math.ceil(d / 2));
       addStat(st, 'iq', 1);
-      notes.push('Yıllar hissettiriyor: hız ve çene biraz düştü, ama tecrübe arttı.');
+      notes.push(L("Yıllar hissettiriyor: hız ve çene biraz düştü, ama tecrübe arttı."));
     }
   }
   s.sakatliklar = s.sakatliklar
     .map((i) => ({ ...i, hafta: i.hafta - weeks }))
     .filter((i) => {
-      if (i.hafta <= 0) notes.push(`🩹 ${i.ad} iyileşti.`);
+      if (i.hafta <= 0) notes.push(L("🩹 {0} iyileşti.", [i.ad]));
       return i.hafta > 0;
     });
   notes.push(...econ);
@@ -168,10 +169,10 @@ export function advanceWeeks(s: GameState, weeks: number): string[] {
 }
 
 const STORY_TEMPLATES = [
-  '{memleket}’in arka sokaklarında büyüdün. Babanın tamirhanesinde çalışırken bir gün mahalledeki {gecmis} salonunun camından içeri baktın ve bir daha o camın önünden ayrılamadın. Paran yoktu, salonu temizleyerek antrenman parası ödedin. Şimdi {yas} yaşındasın ve herkesin sana "hayal" dediği şeyi gerçeğe çevirmek istiyorsun.',
-  'Ailende herkes sana üniversite okumanı söyledi. Sen ise gece gizlice {gecmis} antrenmanlarına gittin. {memleket}’te yerel turnuvalarda adını duyurdun, ama bu kafes başka bir dünya. {yas} yaşında, cebinde birkaç yüz dolar ve kafanda tek bir hedefle geldin: kemer.',
-  'Kardeşin bir zamanlar umut vadeden bir dövüşçüydü, ama sakatlık onun kariyerini bitirdi. Onun eldivenleri artık sende. {memleket}’ten çıktın, {gecmis} altyapınla bu sporda iz bırakmak ve onun yarım kalan hikâyesini tamamlamak istiyorsun.',
-  '{memleket}’te bir fabrikada vardiyalı çalışıyordun. Bir gece internette izlediğin bir UFC maçı her şeyi değiştirdi. Zaten yıllardır {gecmis} yapıyordun; şimdi {yas} yaşında, işinden istifa edip her şeyi bu yola koydun. Geri dönüş yok.',
+  L("{memleket}’in arka sokaklarında büyüdün. Babanın tamirhanesinde çalışırken bir gün mahalledeki {gecmis} salonunun camından içeri baktın ve bir daha o camın önünden ayrılamadın. Paran yoktu, salonu temizleyerek antrenman parası ödedin. Şimdi {yas} yaşındasın ve herkesin sana \"hayal\" dediği şeyi gerçeğe çevirmek istiyorsun."),
+  L("Ailende herkes sana üniversite okumanı söyledi. Sen ise gece gizlice {gecmis} antrenmanlarına gittin. {memleket}’te yerel turnuvalarda adını duyurdun, ama bu kafes başka bir dünya. {yas} yaşında, cebinde birkaç yüz dolar ve kafanda tek bir hedefle geldin: kemer."),
+  L("Kardeşin bir zamanlar umut vadeden bir dövüşçüydü, ama sakatlık onun kariyerini bitirdi. Onun eldivenleri artık sende. {memleket}’ten çıktın, {gecmis} altyapınla bu sporda iz bırakmak ve onun yarım kalan hikâyesini tamamlamak istiyorsun."),
+  L("{memleket}’te bir fabrikada vardiyalı çalışıyordun. Bir gece internette izlediğin bir UFC maçı her şeyi değiştirdi. Zaten yıllardır {gecmis} yapıyordun; şimdi {yas} yaşında, işinden istifa edip her şeyi bu yola koydun. Geri dönüş yok."),
 ];
 
 export function generateBackstory(input: Pick<NewFighterInput, 'memleket' | 'gecmis' | 'yas' | 'uyruk'>) {
@@ -184,5 +185,5 @@ export function generateBackstory(input: Pick<NewFighterInput, 'memleket' | 'gec
 
 export function weightLabel(w: WeightClass) {
   const c = WEIGHT_CLASSES[w];
-  return `${c.ad} (${c.kg} kg)`;
+  return L("{0} ({1} kg)", [c.ad, c.kg]);
 }

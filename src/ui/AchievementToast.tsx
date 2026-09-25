@@ -1,3 +1,4 @@
+import { L } from '../i18n';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
@@ -21,15 +22,15 @@ export function AchievementToast({ items, onDone }: { items: string[]; onDone: (
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
   if (!items.length) return null;
-  const hof = items.includes('HALL OF FAME');
+  const hof = items.includes(L("HALL OF FAME"));
   return (
     <Animated.View pointerEvents="none" style={[ts.wrap, { transform: [{ translateY: y }] }]}>
       <LinearGradient colors={hof ? ['#f7d57a', '#c8902e'] : ['#231a07', '#0c0d10']} style={ts.box}>
         <Icon name={hof ? 'pillar' : 'trophy'} size={26} color={hof ? '#000' : C.gold} />
         <View style={{ flex: 1 }}>
-          <Text style={[ts.kicker, hof && { color: '#3a2a07' }]}>{hof ? 'ONUR LİSTESİ' : items.length > 1 ? `${items.length} BAŞARIM AÇILDI` : 'BAŞARIM AÇILDI'}</Text>
+          <Text style={[ts.kicker, hof && { color: '#3a2a07' }]}>{hof ? L("ONUR LİSTESİ") : items.length > 1 ? L("{0} BAŞARIM AÇILDI", [items.length]) : L("BAŞARIM AÇILDI")}</Text>
           <Text style={[ts.text, hof && { color: '#000' }]} numberOfLines={2}>
-            {hof ? 'Hall of Fame’e seçildin!' : items.join(' · ')}
+            {hof ? L("Hall of Fame’e seçildin!") : items.join(' · ')}
           </Text>
         </View>
       </LinearGradient>

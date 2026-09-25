@@ -1,4 +1,5 @@
 // Yalnızca kullanılan ikon seti içe aktarılır (diğer setler paketi ve çevrimdışı indirmeyi şişirir).
+import { L, LANG, LOC } from '../i18n';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { createContext, useContext, useEffect, useRef, type ComponentProps, type ReactNode } from 'react';
@@ -10,8 +11,8 @@ import { C, F, G, R } from './theme';
 export type IconName = ComponentProps<typeof MaterialCommunityIcons>['name'];
 
 /** İsimleri büyük harfe çevirir: Türkçe/Azerice isimlerde Türkçe kural (i→İ), yabancı isimlerde standart (Whitlock → WHITLOCK). */
-const TR_NAMES = new Set(['tr', 'az', 'Türkiye', 'Azerbaycan']);
-export const upName = (n: string, uyruk?: string) => (uyruk && TR_NAMES.has(uyruk) ? n.toLocaleUpperCase('tr-TR') : n.toUpperCase());
+const TR_NAMES = new Set(['tr', 'az', L("Türkiye"), L("Azerbaycan")]);
+export const upName = (n: string, uyruk?: string) => (LANG === 'tr' && uyruk && TR_NAMES.has(uyruk) ? n.toLocaleUpperCase('tr-TR') : n.toUpperCase());
 
 /** UFC yayın grafiklerindeki eğik (italik) duruş. */
 export const SLANT = { transform: [{ skewX: '-8deg' }] } as const;
@@ -77,13 +78,13 @@ export function TopBar({ label, onMenu }: { label: string; onMenu: () => void })
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
           <Logo size={30} />
           <View>
-            <Text style={st.topBrand}>YOL · KAFESTEN KEMERE</Text>
-            <Text style={[st.topLabel, SLANT]}>{label.toLocaleUpperCase('tr-TR')}</Text>
+            <Text style={st.topBrand}>{L("YOL · KAFESTEN KEMERE")}</Text>
+            <Text style={[st.topLabel, SLANT]}>{label.toLocaleUpperCase(LOC)}</Text>
           </View>
         </View>
         <Pressable onPress={onMenu} style={({ pressed }) => [st.topBtn, { opacity: pressed ? 0.6 : 1 }]}>
           <Icon name="menu" size={16} color={C.text} />
-          <Text style={st.topBtnText}>ANA MENÜ</Text>
+          <Text style={st.topBtnText}>{L("ANA MENÜ")}</Text>
         </Pressable>
       </View>
       <LinearGradient colors={[C.red, C.redDeep, 'transparent']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ height: 2 }} />
@@ -215,7 +216,7 @@ export function Button({
   const inner = (
     <View style={st.btnInner}>
       {icon ? <Icon name={icon} size={18} color={textColor} /> : null}
-      <Text style={[st.btnText, { color: textColor }]}>{label.toLocaleUpperCase('tr-TR')}</Text>
+      <Text style={[st.btnText, { color: textColor }]}>{label.toLocaleUpperCase(LOC)}</Text>
     </View>
   );
   return (

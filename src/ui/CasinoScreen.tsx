@@ -1,3 +1,4 @@
+import { L } from '../i18n';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -61,14 +62,14 @@ function Slot({ s, act }: { s: GameState; act: Act }) {
       const side = payout(x, bet, win);
       setReels(r.reels);
       setMsg({
-        t: (r.carpan >= 6 ? `🎉 JACKPOT! ×${r.carpan} → +${money(win)}` : win > 0 ? `${money(win)} geri aldın (×${r.carpan})` : `Kaybettin: -${money(bet)}`) + (side ? `\n${side}` : ''),
+        t: (r.carpan >= 6 ? L("🎉 JACKPOT! ×{0} → +{1}", [r.carpan, money(win)]) : win > 0 ? L("{0} geri aldın (×{1})", [money(win), r.carpan]) : L("Kaybettin: -{0}", [money(bet)])) + (side ? `\n${side}` : ''),
         g: win > bet,
       });
     });
   return (
     <>
       <LinearGradient colors={['#2a0608', '#0a0203']} style={cz.machine}>
-        <Text style={[cz.machineTitle, SLANT]}>KAFES SLOT</Text>
+        <Text style={[cz.machineTitle, SLANT]}>{L("KAFES SLOT")}</Text>
         <View style={cz.reels}>
           {reels.map((r, i) => (
             <View key={i} style={cz.reel}>
@@ -76,10 +77,10 @@ function Slot({ s, act }: { s: GameState; act: Act }) {
             </View>
           ))}
         </View>
-        <Text style={cz.pay}>3× 7️⃣ = ×150 · 3× 🏆 = ×50 · 3× 💰 = ×20 · 3× 🔥 = ×12 · 3× 🥊/🥋 = ×6 · ikili = ×1</Text>
+        <Text style={cz.pay}>{L("3× 7️⃣ = ×150 · 3× 🏆 = ×50 · 3× 💰 = ×20 · 3× 🔥 = ×12 · 3× 🥊/🥋 = ×6 · ikili = ×1")}</Text>
       </LinearGradient>
       <BetPicker s={s} bet={bet} setBet={setBet} />
-      <Button label={`Çevir (${money(bet)})`} icon="slot-machine" tone="gold" disabled={s.para < bet} onPress={spin} />
+      <Button label={L("Çevir ({0})", [money(bet)])} icon="slot-machine" tone="gold" disabled={s.para < bet} onPress={spin} />
       <Result text={msg?.t ?? null} good={msg?.g} />
     </>
   );
@@ -117,8 +118,8 @@ function Blackjack({ s, act }: { s: GameState; act: Act }) {
     const win = Math.round(st * r.carpan);
     act((x) => {
       const side = payout(x, st, win);
-      const label = { blackjack: '🂡 BLACKJACK! ', kazandin: '✅ Kazandın! ', kaybettin: '❌ Kaybettin. ', berabere: '➖ Berabere. ' }[r.sonuc];
-      setMsg({ t: `${label}${win > st ? `+${money(win - st)}` : win === st ? 'Bahis iade' : `-${money(st)}`}${side ? `\n${side}` : ''}`, g: win > st });
+      const label = { blackjack: L("🂡 BLACKJACK! "), kazandin: L("✅ Kazandın! "), kaybettin: L("❌ Kaybettin. "), berabere: L("➖ Berabere. ") }[r.sonuc];
+      setMsg({ t: `${label}${win > st ? `+${money(win - st)}` : win === st ? L("Bahis iade") : `-${money(st)}`}${side ? `\n${side}` : ''}`, g: win > st });
     });
     setD(dealer);
     setPhase('done');
@@ -153,20 +154,20 @@ function Blackjack({ s, act }: { s: GameState; act: Act }) {
   return (
     <>
       <LinearGradient colors={['#0c3a1f', '#04150b']} style={cz.table}>
-        <Text style={cz.tableLabel}>KRUPİYE {phase !== 'bet' ? `· ${phase === 'play' ? '?' : handValue(d)}` : ''}</Text>
+        <Text style={cz.tableLabel}>{L("KRUPİYE")}{' '}{phase !== 'bet' ? `· ${phase === 'play' ? '?' : handValue(d)}` : ''}</Text>
         <View style={cz.hand}>{d.map((c, i) => <CardView key={i} c={c} hidden={phase === 'play' && i === 1} />)}</View>
         <View style={{ height: 18 }} />
         <Text style={cz.tableLabel}>SEN {p.length ? `· ${handValue(p)}` : ''}</Text>
         <View style={cz.hand}>{p.map((c, i) => <CardView key={i} c={c} />)}</View>
-        {phase !== 'bet' ? <Text style={[cz.tableLabel, { marginTop: 10 }]}>BAHİS: {money(stake)}</Text> : null}
+        {phase !== 'bet' ? <Text style={[cz.tableLabel, { marginTop: 10 }]}>{L("BAHİS:")}{' '}{money(stake)}</Text> : null}
       </LinearGradient>
       {phase === 'play' ? (
         <View style={{ flexDirection: 'row', gap: 8 }}>
           <View style={{ flex: 1 }}>
-            <Button label="Kart çek" onPress={hit} />
+            <Button label={L("Kart çek")} onPress={hit} />
           </View>
           <View style={{ flex: 1 }}>
-            <Button label="Dur" tone="gold" onPress={() => finish(p, d, stake)} />
+            <Button label={L("Dur")} tone="gold" onPress={() => finish(p, d, stake)} />
           </View>
           {p.length === 2 && s.para >= stake ? (
             <View style={{ flex: 1 }}>
@@ -177,7 +178,7 @@ function Blackjack({ s, act }: { s: GameState; act: Act }) {
       ) : (
         <>
           <BetPicker s={s} bet={bet} setBet={setBet} />
-          <Button label={`Dağıt (${money(bet)})`} icon="cards-playing" tone="gold" disabled={s.para < bet} onPress={deal} />
+          <Button label={L("Dağıt ({0})", [money(bet)])} icon="cards-playing" tone="gold" disabled={s.para < bet} onPress={deal} />
         </>
       )}
       <Result text={msg?.t ?? null} good={msg?.g} />
@@ -188,10 +189,10 @@ function Blackjack({ s, act }: { s: GameState; act: Act }) {
 // ---------- Rulet ----------
 
 const RBETS: { key: RouletteBet; ad: string; renk: string }[] = [
-  { key: 'kirmizi', ad: 'KIRMIZI', renk: '#c1121f' },
-  { key: 'siyah', ad: 'SİYAH', renk: '#222' },
-  { key: 'tek', ad: 'TEK', renk: C.cardAlt },
-  { key: 'cift', ad: 'ÇİFT', renk: C.cardAlt },
+  { key: 'kirmizi', ad: L("KIRMIZI"), renk: '#c1121f' },
+  { key: 'siyah', ad: L("SİYAH"), renk: '#222' },
+  { key: 'tek', ad: L('TEK'), renk: C.cardAlt },
+  { key: 'cift', ad: L("ÇİFT"), renk: C.cardAlt },
   { key: 'dusuk', ad: '1-18', renk: C.cardAlt },
   { key: 'yuksek', ad: '19-36', renk: C.cardAlt },
 ];
@@ -218,7 +219,7 @@ function Roulette({ s, act }: { s: GameState; act: Act }) {
         <View style={[cz.ball, { backgroundColor: last == null ? C.cardAlt : col(last) }]}>
           <Text style={cz.ballText}>{last ?? '?'}</Text>
         </View>
-        <Text style={[cz.tableLabel, { marginTop: 8 }]}>RENK/TEK-ÇİFT/YARI ×2 · TEK SAYI ×36</Text>
+        <Text style={[cz.tableLabel, { marginTop: 8 }]}>{L("RENK/TEK-ÇİFT/YARI ×2 · TEK SAYI ×36")}</Text>
       </LinearGradient>
       <View style={cz.rbets}>
         {RBETS.map((b) => (
@@ -239,7 +240,7 @@ function Roulette({ s, act }: { s: GameState; act: Act }) {
         </Pressable>
       </View>
       <BetPicker s={s} bet={bet} setBet={setBet} />
-      <Button label={`Çevir (${money(bet)})`} icon="poker-chip" tone="gold" disabled={s.para < bet} onPress={spin} />
+      <Button label={L("Çevir ({0})", [money(bet)])} icon="poker-chip" tone="gold" disabled={s.para < bet} onPress={spin} />
       <Result text={msg?.t ?? null} good={msg?.g} />
     </>
   );
@@ -251,9 +252,10 @@ export function CasinoScreen({ s, act }: { s: GameState; act: Act }) {
   const [game, setGame] = useState<'slot' | 'bj' | 'rulet'>('slot');
   const net = s.kumar?.net ?? 0;
   return (
-    <Screen footer={<Button label="Kumarhaneden çık" icon="arrow-left" tone="ghost" onPress={() => act((x) => (x.phase = 'hub'))} />}>
-      <Title kicker="GECE HAYATI" sub="Kasa her zaman kazanır. Büyük bahisler paparazzilerin dikkatini çeker.">
-        Kumarhane
+    <Screen footer={<Button label={L("Kumarhaneden çık")} icon="arrow-left" tone="ghost" onPress={() => act((x) => (x.phase = 'hub'))} />}>
+      <Title kicker={L("GECE HAYATI")} sub={L("Kasa her zaman kazanır. Büyük bahisler paparazzilerin dikkatini çeker.")}>
+        
+        {L("Kumarhane")}
       </Title>
       {s.kumar?.uyari && s.kumar.sonHafta === s.hafta ? (
         <Card accent={C.orange}>
@@ -262,11 +264,11 @@ export function CasinoScreen({ s, act }: { s: GameState; act: Act }) {
       ) : null}
       <View style={cz.wallet}>
         <View>
-          <Text style={cz.walletLabel}>BAKİYE</Text>
+          <Text style={cz.walletLabel}>{L("BAKİYE")}</Text>
           <Text style={[cz.walletVal, SLANT]}>{money(s.para)}</Text>
         </View>
         <View style={{ alignItems: 'flex-end' }}>
-          <Text style={cz.walletLabel}>KUMAR NET</Text>
+          <Text style={cz.walletLabel}>{L("KUMAR NET")}</Text>
           <Text style={[cz.walletNet, { color: net >= 0 ? C.green : C.red }]}>
             {net >= 0 ? '+' : ''}
             {money(net)}
@@ -277,8 +279,8 @@ export function CasinoScreen({ s, act }: { s: GameState; act: Act }) {
         {(
           [
             ['slot', 'SLOT'],
-            ['bj', 'BLACKJACK'],
-            ['rulet', 'RULET'],
+            ['bj', L("BLACKJACK")],
+            ['rulet', L("RULET")],
           ] as const
         ).map(([k, l]) => (
           <Pressable key={k} onPress={() => setGame(k)} style={[cz.tab, game === k && cz.tabOn]}>
@@ -289,7 +291,7 @@ export function CasinoScreen({ s, act }: { s: GameState; act: Act }) {
       {game === 'slot' ? <Slot s={s} act={act} /> : game === 'bj' ? <Blackjack s={s} act={act} /> : <Roulette s={s} act={act} />}
       {s.para < 100 ? (
         <Card accent={C.red}>
-          <P style={{ marginBottom: 0 }}>Cebinde oynayacak para kalmadı. Belki de kafese dönme vakti.</P>
+          <P style={{ marginBottom: 0 }}>{L("Cebinde oynayacak para kalmadı. Belki de kafese dönme vakti.")}</P>
         </Card>
       ) : null}
     </Screen>

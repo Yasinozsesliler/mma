@@ -1,3 +1,4 @@
+import { L } from '../i18n';
 import type { InterviewCtx } from './interview';
 import type { SponsorDeal } from './sponsors';
 import type { Pet } from './pets';
@@ -8,12 +9,12 @@ export type Stats = Record<StatKey, number>;
 
 export const STAT_KEYS: StatKey[] = ['vurus', 'gures', 'yer', 'kondisyon', 'cene', 'hiz', 'iq'];
 export const STAT_LABELS: Record<StatKey, string> = {
-  vurus: 'Vuruş',
-  gures: 'Güreş',
-  yer: 'Yer',
-  kondisyon: 'Kondisyon',
-  cene: 'Çene',
-  hiz: 'Hız',
+  vurus: L("Vuruş"),
+  gures: L("Güreş"),
+  yer: L("Yer"),
+  kondisyon: L("Kondisyon"),
+  cene: L("Çene"),
+  hiz: L("Hız"),
   iq: 'IQ',
 };
 

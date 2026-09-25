@@ -1,5 +1,6 @@
 // Takipçi: sınırsız şöhret göstergesi. Kazandıkça artar, kaybettikçe erir; trash talk ile büyük kazanır ya da kaybedersin.
 // (İç mekaniklerdeki 0-100 popülerlik ayrı tutulur; oyuncunun gördüğü ve kovaladığı sayı takipçidir.)
+import { L, LANG } from '../i18n';
 import { chance, clamp, rand } from './rng';
 import type { GameState, Opponent, P4PEntry } from './types';
 
@@ -17,8 +18,9 @@ const damp = (s: GameState, F: number) => Math.max(0.08, 1 - F / SOFT_CAP[s.stag
 export function fmtFollowers(n: number) {
   const a = Math.abs(n);
   const sign = n < 0 ? '-' : '';
-  if (a >= 1e6) return `${sign}${(a / 1e6).toFixed(a >= 1e7 ? 0 : 1).replace('.', ',')}M`;
-  if (a >= 1e3) return `${sign}${(a / 1e3).toFixed(a >= 1e5 ? 0 : 1).replace('.', ',')}B`;
+  const dec = LANG === 'tr' ? ',' : '.';
+  if (a >= 1e6) return `${sign}${(a / 1e6).toFixed(a >= 1e7 ? 0 : 1).replace('.', dec)}M`;
+  if (a >= 1e3) return `${sign}${(a / 1e3).toFixed(a >= 1e5 ? 0 : 1).replace('.', dec)}${LANG === 'tr' ? 'B' : 'K'}`;
   return `${sign}${Math.round(a)}`;
 }
 
@@ -57,14 +59,14 @@ export function trashTalkFollowers(s: GameState, basari: boolean): { delta: numb
   if (basari && chance(0.15)) {
     // Çizgiyi aştı: konuşulan sensin ama bir kesim takibi bıraktı.
     const d = addFollowers(s, -F * (0.04 + rand() * 0.05));
-    return { delta: d, metin: `Sözlerin çizgiyi aştı, bir kesim takibi bıraktı. (${fmtDelta(d)} takipçi)` };
+    return { delta: d, metin: L("Sözlerin çizgiyi aştı, bir kesim takibi bıraktı. ({0} takipçi)", [fmtDelta(d)]) };
   }
   const d = basari ? addFollowers(s, F * (0.06 + rand() * 0.08) * damp(s, F) + STAGE_BASE[s.stage] * 4) : addFollowers(s, -F * (0.03 + rand() * 0.05));
-  return { delta: d, metin: `${fmtDelta(d)} takipçi` };
+  return { delta: d, metin: L("{0} takipçi", [fmtDelta(d)]) };
 }
 
 export const followerTier = (n: number) =>
-  n >= 10e6 ? 'Küresel ikon' : n >= 1e6 ? 'Süperstar' : n >= 250e3 ? 'Yıldız' : n >= 50e3 ? 'Tanınan yüz' : n >= 10e3 ? 'Yükselen isim' : 'Yerel dövüşçü';
+  n >= 10e6 ? L("Küresel ikon") : n >= 1e6 ? L("Süperstar") : n >= 250e3 ? L("Yıldız") : n >= 50e3 ? L("Tanınan yüz") : n >= 10e3 ? L("Yükselen isim") : L("Yerel dövüşçü");
 
 export const clampPop = (v: number) => clamp(v, 0, 100);
 
@@ -103,7 +105,7 @@ export function followerBoard(s: GameState): FollowerRow[] {
   const addOpp = (o: Opponent) => {
     if (seen.has(o.id)) return;
     seen.add(o.id);
-    rows.push({ id: o.id, ad: `${o.ad} ${o.soyad}`, alt: o.champion ? 'Şampiyon' : o.rank != null ? `#${o.rank}` : 'Sıralamasız', takipci: npcFollowers(s, o), sampiyon: o.champion });
+    rows.push({ id: o.id, ad: `${o.ad} ${o.soyad}`, alt: o.champion ? L("Şampiyon") : o.rank != null ? `#${o.rank}` : L("Sıralamasız"), takipci: npcFollowers(s, o), sampiyon: o.champion });
   };
   if (s.bolum?.sampiyon) addOpp(s.bolum.sampiyon);
   (s.bolum?.liste ?? []).forEach(addOpp);
@@ -114,8 +116,8 @@ export function followerBoard(s: GameState): FollowerRow[] {
     (s.p4p?.liste ?? []).forEach((e) => {
       if (seen.has(e.id)) return;
       seen.add(e.id);
-      rows.push({ id: e.id, ad: `${e.ad} ${e.soyad}`, alt: `P4P · ${e.sampiyon ? 'Şampiyon' : 'Yıldız'}`, takipci: p4pFollowers(e), sampiyon: e.sampiyon });
+      rows.push({ id: e.id, ad: `${e.ad} ${e.soyad}`, alt: L("P4P · {0}", [e.sampiyon ? L("Şampiyon") : L("Yıldız")]), takipci: p4pFollowers(e), sampiyon: e.sampiyon });
     });
-  rows.push({ id: 'oyuncu', ad: `${s.fighter.ad} ${s.fighter.soyad}`, alt: 'Sen', takipci: followers(s), oyuncu: true });
+  rows.push({ id: 'oyuncu', ad: `${s.fighter.ad} ${s.fighter.soyad}`, alt: L("Sen"), takipci: followers(s), oyuncu: true });
   return rows.sort((a, b) => b.takipci - a.takipci);
 }

@@ -1,14 +1,15 @@
+import { L } from '../i18n';
 import { StyleSheet, Text, View } from 'react-native';
 import type { Stats } from '../engine/types';
 import { STAT_KEYS, STAT_LABELS } from '../engine/types';
 import { C, F } from './theme';
 
 /** Oyuncu (kırmızı) ile rakibin (mavi) istatistiklerini yan yana gösterir. */
-export function Compare({ me, opp, oppLabel = 'RAKİP' }: { me: Stats; opp: Stats; oppLabel?: string }) {
+export function Compare({ me, opp, oppLabel = L("RAKİP") }: { me: Stats; opp: Stats; oppLabel?: string }) {
   return (
     <View style={{ marginTop: 10 }}>
       <View style={cm.head}>
-        <Text style={[cm.headText, { color: C.red }]}>SEN</Text>
+        <Text style={[cm.headText, { color: C.red }]}>{L('SEN')}</Text>
         <Text style={[cm.headText, { color: C.blue }]}>{oppLabel}</Text>
       </View>
       {STAT_KEYS.map((k) => {

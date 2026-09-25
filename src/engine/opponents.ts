@@ -1,3 +1,4 @@
+import { L } from '../i18n';
 import { BACKGROUNDS, NAME_POOLS, NICKNAMES, ORGS, PERSONALITIES, baseStatsFor } from './data';
 import { currentOrg, statAverage } from './character';
 import { chance, clamp, noise, pick, randInt, uid, weighted } from './rng';
@@ -132,10 +133,10 @@ export function describeOpponent(o: Opponent) {
 export function riskText(zorluk: number, stage: string) {
   if (zorluk < 0)
     return stage === 'amator'
-      ? 'Düşük risk. Kazanman beklenir, fazla ses getirmez.'
-      : 'Düşük risk, düşük getiri. Kazanırsan sıralamada az ilerlersin, kaybedersen ciddi düşersin.';
-  if (zorluk === 0) return 'Dengeli eşleşme. Kazanan bir basamak yukarı çıkar.';
-  return 'Yüksek risk! Kazanırsan büyük sıçrama yaparsın, kaybedersen kimse şaşırmaz.';
+      ? L("Düşük risk. Kazanman beklenir, fazla ses getirmez.")
+      : L("Düşük risk, düşük getiri. Kazanırsan sıralamada az ilerlersin, kaybedersen ciddi düşersin.");
+  if (zorluk === 0) return L("Dengeli eşleşme. Kazanan bir basamak yukarı çıkar.");
+  return L("Yüksek risk! Kazanırsan büyük sıçrama yaparsın, kaybedersen kimse şaşırmaz.");
 }
 
 /** Kalıcı rakibi oyuncunun güncel seviyesine taşır. */
@@ -149,11 +150,11 @@ export function refreshRival(s: GameState, r: Opponent): Opponent {
     ...r,
     stats,
     rekor: { ...r.rekor, g: r.rekor.g + randInt(1, 3), m: r.rekor.m + randInt(0, 1) },
-    etiket: r.rivalry >= 3 ? '⚔️ EZELİ RAKİP' : r.sonSonuc === 'M' ? '🔁 RÖVANŞ FIRSATI' : '🔁 RÖVANŞ İSTİYOR',
+    etiket: r.rivalry >= 3 ? L("⚔️ EZELİ RAKİP") : r.sonSonuc === 'M' ? L("🔁 RÖVANŞ FIRSATI") : L("🔁 RÖVANŞ İSTİYOR"),
     riskMetni:
       r.sonSonuc === 'M'
-        ? 'Seni yenen adam. İntikam, taraftarı ve basını ateşler.'
-        : 'Seni unutmadı. Bu dövüş kişisel ve çok konuşulacak.',
+        ? L("Seni yenen adam. İntikam, taraftarı ve basını ateşler.")
+        : L("Seni unutmadı. Bu dövüş kişisel ve çok konuşulacak."),
     zorluk: 1,
     champion: false,
   };

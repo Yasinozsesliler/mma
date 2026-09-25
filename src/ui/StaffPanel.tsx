@@ -1,3 +1,4 @@
+import { L, LOC } from '../i18n';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { money } from '../engine/career';
 import { OWNERS, ownerRel } from '../engine/owners';
@@ -19,13 +20,13 @@ export function OwnerCard({ s }: { s: GameState }) {
     <View style={sf.owner}>
       <FighterAvatar look={lookFor({ id: `owner-${o.ad}`, uyruk: o.uyruk })} size={60} ring={C.gold} />
       <View style={{ flex: 1 }}>
-        <Text style={sf.label}>ORGANİZASYON PATRONU</Text>
-        <Text style={[sf.name, SLANT]}>{o.ad.toLocaleUpperCase('tr-TR')}</Text>
+        <Text style={sf.label}>{L("ORGANİZASYON PATRONU")}</Text>
+        <Text style={[sf.name, SLANT]}>{o.ad.toLocaleUpperCase(LOC)}</Text>
         <Text style={sf.meta}>
           {o.unvan} · {o.tarz}
         </Text>
-        <Bar value={(rel + 50)} color={rel >= 15 ? C.green : rel <= -15 ? C.red : C.gold} label="İlişki" right={`${rel > 0 ? '+' : ''}${rel}`} />
-        <Text style={sf.meta}>İyi ilişki pazarlıkları kolaylaştırır ve kötü bir seride seni kovulmaktan korur.</Text>
+        <Bar value={(rel + 50)} color={rel >= 15 ? C.green : rel <= -15 ? C.red : C.gold} label={L("İlişki")} right={`${rel > 0 ? '+' : ''}${rel}`} />
+        <Text style={sf.meta}>{L("İyi ilişki pazarlıkları kolaylaştırır ve kötü bir seride seni kovulmaktan korur.")}</Text>
       </View>
     </View>
   );
@@ -35,7 +36,7 @@ export function StaffPanel({ s, act, onMsg }: { s: GameState; act: Act; onMsg: (
   return (
     <>
       <OwnerCard s={s} />
-      <Section>{`KADRO · HAFTALIK MAAŞ ${money(weeklyStaffCost(s))}`}</Section>
+      <Section>{L("KADRO · HAFTALIK MAAŞ {0}", [money(weeklyStaffCost(s))])}</Section>
       {(Object.keys(STAFF) as StaffRole[]).map((r) => {
         const d = STAFF[r];
         const m = staffMember(s, r);
@@ -49,7 +50,7 @@ export function StaffPanel({ s, act, onMsg }: { s: GameState; act: Act; onMsg: (
               </View>
               {m ? (
                 <Pressable onPress={() => act((x) => onMsg(fireStaff(x, r)))} style={sf.fire}>
-                  <Text style={sf.fireText}>ÇIKAR</Text>
+                  <Text style={sf.fireText}>{L("ÇIKAR")}</Text>
                 </Pressable>
               ) : null}
             </View>
@@ -64,10 +65,10 @@ export function StaffPanel({ s, act, onMsg }: { s: GameState; act: Act; onMsg: (
                     onPress={() => act((x) => onMsg(hireStaff(x, r, l)))}
                     style={[sf.tier, cur && sf.tierOn, !cur && s.para < fee && { opacity: 0.35 }]}
                   >
-                    <Text style={[sf.tierName, cur && { color: '#fff' }]}>{TIER_NAMES[l - 1].toLocaleUpperCase('tr-TR')}</Text>
+                    <Text style={[sf.tierName, cur && { color: '#fff' }]}>{TIER_NAMES[l - 1].toLocaleUpperCase(LOC)}</Text>
                     <Text style={sf.tierSalary}>{money(d.maas[l - 1])}/hf</Text>
                     <Text style={sf.tierFx}>{d.etki(l)}</Text>
-                    {!cur ? <Text style={sf.tierFee}>İmza {money(fee)}</Text> : <Pill text="AKTİF" color={C.green} />}
+                    {!cur ? <Text style={sf.tierFee}>{L("İmza")}{' '}{money(fee)}</Text> : <Pill text={L("AKTİF")} color={C.green} />}
                   </Pressable>
                 );
               })}

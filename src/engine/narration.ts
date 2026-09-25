@@ -1,5 +1,6 @@
 // Şablon anlatımlar. {p} = oyuncu, {o} = rakip, {sub} = submission adı.
 // İsimler hep yalın halde kullanılır, çünkü Türkçe ek uyumu isimden isime değişir.
+import { L } from '../i18n';
 import { fill, pick } from './rng';
 import type { Tactic } from './types';
 
@@ -7,48 +8,48 @@ type Side = 'p' | 'o';
 
 const STRIKE: Record<Exclude<Tactic, 'takedown'>, string[]> = {
   baski: [
-    '{A} rakibini kafese dayıyor ve sol-sağ-sol hook serisini boşaltıyor!',
-    '{A} ileri yürüyor, gövdeye gömülen bir hook ile rakibinin nefesini kesiyor.',
-    '{A} durmadan bastırıyor; ağır bir sağ el yüze temiz iniyor!',
-    '{A} rakibini köşeye sıkıştırıp dirsekle tamamlanan bir kombinasyon bağlıyor.',
+    L("{A} rakibini kafese dayıyor ve sol-sağ-sol hook serisini boşaltıyor!"),
+    L("{A} ileri yürüyor, gövdeye gömülen bir hook ile rakibinin nefesini kesiyor."),
+    L("{A} durmadan bastırıyor; ağır bir sağ el yüze temiz iniyor!"),
+    L("{A} rakibini köşeye sıkıştırıp dirsekle tamamlanan bir kombinasyon bağlıyor."),
   ],
   kontra: [
-    '{B} saldırıya geliyor ama {A} tam zamanında bir kontra sağ krosla karşılıyor!',
-    '{A} geri adım atıyor, rakip boşluğa düşüyor ve kısa bir sol hook yiyor.',
-    '{A} sabırla bekliyor… ve {B} içeri girdiği anda sert bir kontra patlıyor!',
+    L("{B} saldırıya geliyor ama {A} tam zamanında bir kontra sağ krosla karşılıyor!"),
+    L("{A} geri adım atıyor, rakip boşluğa düşüyor ve kısa bir sol hook yiyor."),
+    L("{A} sabırla bekliyor… ve {B} içeri girdiği anda sert bir kontra patlıyor!"),
   ],
   mesafe: [
-    '{A} jab ile mesafeyi yönetiyor, rakibin yüzü kızarmaya başladı.',
-    '{A} dışarıdan sert bir low kick yapıştırıp çıkıyor. Ön bacak zorlanıyor.',
-    '{A} açıdan çıkıp jab-kros ile puan topluyor, rakibi boşa savuruyor.',
-    '{A} uzun bir ön tekme ile rakibin atağını durduruyor.',
+    L("{A} jab ile mesafeyi yönetiyor, rakibin yüzü kızarmaya başladı."),
+    L("{A} dışarıdan sert bir low kick yapıştırıp çıkıyor. Ön bacak zorlanıyor."),
+    L("{A} açıdan çıkıp jab-kros ile puan topluyor, rakibi boşa savuruyor."),
+    L("{A} uzun bir ön tekme ile rakibin atağını durduruyor."),
   ],
   clinch: [
-    '{A} clinch’te ense kontrolü aldı, dizler gövdeye art arda iniyor!',
-    '{A} clinch’ten çıkarken kısa bir dirsek savuruyor, kaşın üstüne değdi!',
-    '{A} rakibini kafese yaslayıp kirli boksla yıpratıyor.',
+    L("{A} clinch’te ense kontrolü aldı, dizler gövdeye art arda iniyor!"),
+    L("{A} clinch’ten çıkarken kısa bir dirsek savuruyor, kaşın üstüne değdi!"),
+    L("{A} rakibini kafese yaslayıp kirli boksla yıpratıyor."),
   ],
 };
 
 const TD_OK = [
-  '{A} seviye değiştirip çift bacak dalıyor… ve rakibini yere çarpıyor!',
-  '{A} clinch’ten kalça atarak rakibini yere savuruyor. Temiz fırlatma!',
-  '{A} tek bacağı yakaladı, kafese yaslayıp rakibini yere indirdi.',
+  L("{A} seviye değiştirip çift bacak dalıyor… ve rakibini yere çarpıyor!"),
+  L("{A} clinch’ten kalça atarak rakibini yere savuruyor. Temiz fırlatma!"),
+  L("{A} tek bacağı yakaladı, kafese yaslayıp rakibini yere indirdi."),
 ];
 const TD_FAIL = [
-  '{A} takedown’a dalıyor ama {B} sprawl ile savunuyor ve ayağa dönüyor.',
-  '{A} bacağa gidiyor, {B} kafese yaslanıp dengesini koruyor. Boşa enerji.',
-  '{A} dalış yaptı ama {B} diz kaldırarak girişi cezalandırdı!',
+  L("{A} takedown’a dalıyor ama {B} sprawl ile savunuyor ve ayağa dönüyor."),
+  L("{A} bacağa gidiyor, {B} kafese yaslanıp dengesini koruyor. Boşa enerji."),
+  L("{A} dalış yaptı ama {B} diz kaldırarak girişi cezalandırdı!"),
 ];
 const GROUND = [
-  '{A} üstte ağır basıyor, ground and pound ile rakibini hırpalıyor.',
-  '{A} half guard’dan geçip yan kontrole kuruldu, dirsekler iniyor.',
-  '{A} mount’a çıktı! Seyirci ayağa kalkıyor.',
-  '{A} sırtı aldı, iki kanca içeride. Tehlike büyük!',
+  L("{A} üstte ağır basıyor, ground and pound ile rakibini hırpalıyor."),
+  L("{A} half guard’dan geçip yan kontrole kuruldu, dirsekler iniyor."),
+  L("{A} mount’a çıktı! Seyirci ayağa kalkıyor."),
+  L("{A} sırtı aldı, iki kanca içeride. Tehlike büyük!"),
 ];
 const EXCHANGE_EVEN = [
-  'İki dövüşçü ortada karşılıklı vuruşuyor, net bir üstünlük yok.',
-  'Temkinli bir bölüm; ikisi de fint atıyor, kimse ilk hatayı yapmak istemiyor.',
+  L("İki dövüşçü ortada karşılıklı vuruşuyor, net bir üstünlük yok."),
+  L("Temkinli bir bölüm; ikisi de fint atıyor, kimse ilk hatayı yapmak istemiyor."),
 ];
 
 export function strikeLine(att: Side, tactic: Tactic, names: Record<Side, string>) {
@@ -69,45 +70,45 @@ export function evenLine() {
 
 export const CRITICAL_INTRO = {
   rakipSersem: [
-    '💥 {o} SARSILDI! Dizleri titriyor, gözleri boşluğa bakıyor!',
-    '💥 {o} YERE GİTTİ! Hemen doğrulmaya çalışıyor ama bacakları tutmuyor!',
+    L("💥 {o} SARSILDI! Dizleri titriyor, gözleri boşluğa bakıyor!"),
+    L("💥 {o} YERE GİTTİ! Hemen doğrulmaya çalışıyor ama bacakları tutmuyor!"),
   ],
   sarsildin: [
-    '⚠️ Karanlık… Kulakların uğulduyor. {o} seni fena yakaladı!',
-    '⚠️ YERDESİN! Tavan dönüyor, {o} üstüne geliyor!',
+    L("⚠️ Karanlık… Kulakların uğulduyor. {o} seni fena yakaladı!"),
+    L("⚠️ YERDESİN! Tavan dönüyor, {o} üstüne geliyor!"),
   ],
-  rakipSersemYerde: ['💥 {o} yerde sersemledi! Dirsekler art arda iniyor, kendini koruyamıyor!'],
-  sarsildinYerde: ['⚠️ Altta ağır darbeler yiyorsun, görüşün bulanıklaşıyor! {o} üstünde durmuyor!'],
-  subFirsat: ['🔒 {sub} için boşluk var! Kolu/boynu yakaladın, {o} panikte!'],
-  subTehlike: ['🔒 {o} {sub} kilidini oturttu! Nefesin daralıyor, zaman azalıyor!'],
+  rakipSersemYerde: [L("💥 {o} yerde sersemledi! Dirsekler art arda iniyor, kendini koruyamıyor!")],
+  sarsildinYerde: [L("⚠️ Altta ağır darbeler yiyorsun, görüşün bulanıklaşıyor! {o} üstünde durmuyor!")],
+  subFirsat: [L("🔒 {sub} için boşluk var! Kolu/boynu yakaladın, {o} panikte!")],
+  subTehlike: [L("🔒 {o} {sub} kilidini oturttu! Nefesin daralıyor, zaman azalıyor!")],
 };
 
 export const TACTICS: Record<Tactic, { ad: string; aciklama: string }> = {
-  baski: { ad: 'Baskı kur', aciklama: 'İleri yürü, rakibi kafese daya. Çok hasar, çok yorgunluk.' },
-  kontra: { ad: 'Kontra bekle', aciklama: 'Rakip gelsin, açığını cezalandır. Baskıcılara karşı etkili.' },
-  takedown: { ad: 'Takedown dene', aciklama: 'Yere indir, kontrol et, submission ara.' },
-  clinch: { ad: 'Clinch’e gir', aciklama: 'Yakın mesafe: diz, dirsek, fırlatma. Hızlı rakibi yavaşlatır.' },
-  mesafe: { ad: 'Mesafeyi koru', aciklama: 'Hareketli kal, jab ile puan topla, takedown’ları savun.' },
+  baski: { ad: L("Baskı kur"), aciklama: L("İleri yürü, rakibi kafese daya. Çok hasar, çok yorgunluk.") },
+  kontra: { ad: L("Kontra bekle"), aciklama: L("Rakip gelsin, açığını cezalandır. Baskıcılara karşı etkili.") },
+  takedown: { ad: L("Takedown dene"), aciklama: L("Yere indir, kontrol et, submission ara.") },
+  clinch: { ad: L("Clinch’e gir"), aciklama: L("Yakın mesafe: diz, dirsek, fırlatma. Hızlı rakibi yavaşlatır.") },
+  mesafe: { ad: L("Mesafeyi koru"), aciklama: L("Hareketli kal, jab ile puan topla, takedown’ları savun.") },
 };
 
 export const CRITICAL_OPTIONS = {
   rakipSersem: [
-    { ad: 'Bitirmeye git!', aciklama: 'Her şeyi sal. Yüksek bitirme şansı ama kontra riski ve büyük yorgunluk.' },
-    { ad: 'Kontrollü baskı', aciklama: 'Hedef seç, açık verme. Güvenli, bitirme şansı düşük.' },
-    { ad: 'Yere indir, ground & pound', aciklama: 'Güreşine güveniyorsan hakem durdurana kadar vur.' },
+    { ad: L("Bitirmeye git!"), aciklama: L("Her şeyi sal. Yüksek bitirme şansı ama kontra riski ve büyük yorgunluk.") },
+    { ad: L("Kontrollü baskı"), aciklama: L("Hedef seç, açık verme. Güvenli, bitirme şansı düşük.") },
+    { ad: L("Yere indir, ground & pound"), aciklama: L("Güreşine güveniyorsan hakem durdurana kadar vur.") },
   ],
   sarsildin: [
-    { ad: 'Clinch’e yapış', aciklama: 'Sarıl, zaman kazan, kafanı toparla.' },
-    { ad: 'Geri çekil, mesafe aç', aciklama: 'Ayakların seni taşırsa kurtulursun.' },
-    { ad: 'Karşılık ver!', aciklama: 'Kumar: rakibi de sarsabilirsin… ya da ışıklar söner.' },
+    { ad: L("Clinch’e yapış"), aciklama: L("Sarıl, zaman kazan, kafanı toparla.") },
+    { ad: L("Geri çekil, mesafe aç"), aciklama: L("Ayakların seni taşırsa kurtulursun.") },
+    { ad: L("Karşılık ver!"), aciklama: L("Kumar: rakibi de sarsabilirsin… ya da ışıklar söner.") },
   ],
   subFirsat: [
-    { ad: 'Sık, bitir!', aciklama: 'Tüm gücünle kilitle. Kaçarsa pozisyonu kaybedebilirsin.' },
-    { ad: 'Pozisyonu koru', aciklama: 'Riske girme, üstte kal ve puan topla.' },
+    { ad: L("Sık, bitir!"), aciklama: L("Tüm gücünle kilitle. Kaçarsa pozisyonu kaybedebilirsin.") },
+    { ad: L("Pozisyonu koru"), aciklama: L("Riske girme, üstte kal ve puan topla.") },
   ],
   subTehlike: [
-    { ad: 'Sabırla savun', aciklama: 'Tekniğe güven, elleri kontrol et, açıyı kır.' },
-    { ad: 'Patlayıcı kaçış', aciklama: 'Güreş gücüyle köprü kur ve sıyrıl. Çok yorar.' },
-    { ad: 'Tap at (pes et)', aciklama: 'Maçı kaybedersin ama sakatlanmazsın.' },
+    { ad: L("Sabırla savun"), aciklama: L("Tekniğe güven, elleri kontrol et, açıyı kır.") },
+    { ad: L("Patlayıcı kaçış"), aciklama: L("Güreş gücüyle köprü kur ve sıyrıl. Çok yorar.") },
+    { ad: L("Tap at (pes et)"), aciklama: L("Maçı kaybedersin ama sakatlanmazsın.") },
   ],
 };

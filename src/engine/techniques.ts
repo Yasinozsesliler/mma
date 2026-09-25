@@ -1,5 +1,6 @@
 // Bitiriş teknikleri: submission'lar, vuruşlar ve özel hareketler. Her birinin 0-5 seviyesi ve ustalık (XP) çubuğu var.
 // Puanla geliştirilir, antrenmanda/sparda çalışılır; bir maçı hangi hareketle bitirirsen o hareket ustalık kazanır.
+import { L } from '../i18n';
 import { pick, weighted } from './rng';
 import type { Background, GameState, StatKey } from './types';
 
@@ -18,37 +19,37 @@ export interface TechDef {
 
 export const TECHNIQUES: TechDef[] = [
   // Submission
-  { id: 'rnc', ad: 'Arkadan boğma (RNC)', tur: 'sub', ikon: 'account-arrow-left', stat: 'yer', aciklama: 'Sırtı aldığında en güvenilir bitiriş.' },
-  { id: 'giyotin', ad: 'Giyotin', tur: 'sub', ikon: 'account-alert', stat: 'yer', aciklama: 'Takedown’a dalan rakibin boynunu yakala.' },
-  { id: 'armbar', ad: 'Armbar', tur: 'sub', ikon: 'arm-flex', stat: 'yer', aciklama: 'Guard’dan ya da mount’tan dirseği ters çevir.' },
-  { id: 'ucgen', ad: 'Üçgen boğma', tur: 'sub', ikon: 'triangle-outline', stat: 'yer', aciklama: 'Alttayken bacaklarınla kurulan tuzak.' },
-  { id: 'kimura', ad: 'Kimura', tur: 'sub', ikon: 'rotate-3d-variant', stat: 'yer', aciklama: 'Omzu kilitleyen güçlü bir anahtar.' },
-  { id: 'darce', ad: "D'arce boğma", tur: 'sub', ikon: 'vector-curve', stat: 'yer', aciklama: 'Sprawl sonrası kolun altından boğma.' },
-  { id: 'anakonda', ad: 'Anakonda', tur: 'sub', ikon: 'snake', stat: 'yer', aciklama: 'Önden sarıp yuvarlanarak sıkan boğma.' },
-  { id: 'heelhook', ad: 'Heel hook', tur: 'sub', ikon: 'shoe-sneaker', stat: 'yer', aciklama: 'En tehlikeli bacak kilidi. Tap atmayan diz bağlarını kaybeder.' },
-  { id: 'kneebar', ad: 'Kneebar', tur: 'sub', ikon: 'human-male-height', stat: 'yer', aciklama: 'Dizi ters yöne büken bacak kilidi.' },
-  { id: 'armtriangle', ad: 'Arm-triangle', tur: 'sub', ikon: 'triangle', stat: 'gures', aciklama: 'Üstten, omuz baskısıyla boğma. Güreşçilerin favorisi.' },
+  { id: 'rnc', ad: L("Arkadan boğma (RNC)"), tur: 'sub', ikon: 'account-arrow-left', stat: 'yer', aciklama: L("Sırtı aldığında en güvenilir bitiriş.") },
+  { id: 'giyotin', ad: L("Giyotin"), tur: 'sub', ikon: 'account-alert', stat: 'yer', aciklama: L("Takedown’a dalan rakibin boynunu yakala.") },
+  { id: 'armbar', ad: L("Armbar"), tur: 'sub', ikon: 'arm-flex', stat: 'yer', aciklama: L("Guard’dan ya da mount’tan dirseği ters çevir.") },
+  { id: 'ucgen', ad: L("Üçgen boğma"), tur: 'sub', ikon: 'triangle-outline', stat: 'yer', aciklama: L("Alttayken bacaklarınla kurulan tuzak.") },
+  { id: 'kimura', ad: L("Kimura"), tur: 'sub', ikon: 'rotate-3d-variant', stat: 'yer', aciklama: L("Omzu kilitleyen güçlü bir anahtar.") },
+  { id: 'darce', ad: L("D'arce boğma"), tur: 'sub', ikon: 'vector-curve', stat: 'yer', aciklama: L("Sprawl sonrası kolun altından boğma.") },
+  { id: 'anakonda', ad: L("Anakonda"), tur: 'sub', ikon: 'snake', stat: 'yer', aciklama: L("Önden sarıp yuvarlanarak sıkan boğma.") },
+  { id: 'heelhook', ad: L("Heel hook"), tur: 'sub', ikon: 'shoe-sneaker', stat: 'yer', aciklama: L("En tehlikeli bacak kilidi. Tap atmayan diz bağlarını kaybeder.") },
+  { id: 'kneebar', ad: L("Kneebar"), tur: 'sub', ikon: 'human-male-height', stat: 'yer', aciklama: L("Dizi ters yöne büken bacak kilidi.") },
+  { id: 'armtriangle', ad: 'Arm-triangle', tur: 'sub', ikon: 'triangle', stat: 'gures', aciklama: L("Üstten, omuz baskısıyla boğma. Güreşçilerin favorisi.") },
   // Vuruş
-  { id: 'overhand', ad: 'Overhand sağ', tur: 'vurus', ikon: 'boxing-glove', stat: 'vurus', aciklama: 'Yukarıdan kavis çizen nakavt yumruğu.' },
-  { id: 'krose', ad: 'Sol kroşe', tur: 'vurus', ikon: 'hand-back-left', stat: 'vurus', aciklama: 'Kısa mesafede çeneye giden kroşe.' },
-  { id: 'aparkat', ad: 'Aparkat', tur: 'vurus', ikon: 'arrow-up-bold', stat: 'vurus', aciklama: 'Eğilen rakibe aşağıdan yukarı.' },
-  { id: 'headkick', ad: 'Kafaya yüksek tekme', tur: 'vurus', ikon: 'karate', stat: 'vurus', aciklama: 'İsabet ederse ışıklar söner.' },
-  { id: 'karaciger', ad: 'Karaciğere tekme', tur: 'vurus', ikon: 'target', stat: 'vurus', aciklama: 'Gövdeye giden, rakibi dizüstü çöktüren tekme.' },
-  { id: 'dirsek', ad: 'Dirsek', tur: 'vurus', ikon: 'arm-flex-outline', stat: 'vurus', aciklama: 'Clinch ve yerde kesen, bitiren silah.' },
+  { id: 'overhand', ad: L("Overhand sağ"), tur: 'vurus', ikon: 'boxing-glove', stat: 'vurus', aciklama: L("Yukarıdan kavis çizen nakavt yumruğu.") },
+  { id: 'krose', ad: L("Sol kroşe"), tur: 'vurus', ikon: 'hand-back-left', stat: 'vurus', aciklama: L("Kısa mesafede çeneye giden kroşe.") },
+  { id: 'aparkat', ad: L("Aparkat"), tur: 'vurus', ikon: 'arrow-up-bold', stat: 'vurus', aciklama: L("Eğilen rakibe aşağıdan yukarı.") },
+  { id: 'headkick', ad: L("Kafaya yüksek tekme"), tur: 'vurus', ikon: 'karate', stat: 'vurus', aciklama: L("İsabet ederse ışıklar söner.") },
+  { id: 'karaciger', ad: L("Karaciğere tekme"), tur: 'vurus', ikon: 'target', stat: 'vurus', aciklama: L("Gövdeye giden, rakibi dizüstü çöktüren tekme.") },
+  { id: 'dirsek', ad: L("Dirsek"), tur: 'vurus', ikon: 'arm-flex-outline', stat: 'vurus', aciklama: L("Clinch ve yerde kesen, bitiren silah.") },
   // Özel hareketler
-  { id: 'ucandiz', ad: 'Uçan diz', tur: 'ozel', ikon: 'rocket-launch', stat: 'hiz', aciklama: 'Dalan rakibe havadan diz. Tarihe geçen nakavtlar.' },
-  { id: 'spinning', ad: 'Dönerek yumruk', tur: 'ozel', ikon: 'rotate-right', stat: 'hiz', aciklama: 'Spinning backfist: beklenmedik açıdan gelir.' },
-  { id: 'superman', ad: 'Superman yumruğu', tur: 'ozel', ikon: 'flash', stat: 'hiz', aciklama: 'Tekme çalımıyla havalanıp yumruk.' },
-  { id: 'donertopuk', ad: 'Dönerek topuk tekmesi', tur: 'ozel', ikon: 'autorenew', stat: 'vurus', aciklama: 'Spinning heel kick: en riskli, en görkemli.' },
-  { id: 'suplex', ad: 'Suplex slam', tur: 'ozel', ikon: 'weight-lifter', stat: 'gures', aciklama: 'Rakibi kaldırıp kafesin zeminine çarp.', yer: true },
-  { id: 'imanari', ad: 'Imanari roll', tur: 'ozel', ikon: 'sync', stat: 'yer', aciklama: 'Yuvarlanarak bacağa dal, heel hook’a bağla.', yer: true },
+  { id: 'ucandiz', ad: L("Uçan diz"), tur: 'ozel', ikon: 'rocket-launch', stat: 'hiz', aciklama: L("Dalan rakibe havadan diz. Tarihe geçen nakavtlar.") },
+  { id: 'spinning', ad: L("Dönerek yumruk"), tur: 'ozel', ikon: 'rotate-right', stat: 'hiz', aciklama: L("Spinning backfist: beklenmedik açıdan gelir.") },
+  { id: 'superman', ad: L("Superman yumruğu"), tur: 'ozel', ikon: 'flash', stat: 'hiz', aciklama: L("Tekme çalımıyla havalanıp yumruk.") },
+  { id: 'donertopuk', ad: L("Dönerek topuk tekmesi"), tur: 'ozel', ikon: 'autorenew', stat: 'vurus', aciklama: L("Spinning heel kick: en riskli, en görkemli.") },
+  { id: 'suplex', ad: L("Suplex slam"), tur: 'ozel', ikon: 'weight-lifter', stat: 'gures', aciklama: L("Rakibi kaldırıp kafesin zeminine çarp."), yer: true },
+  { id: 'imanari', ad: L("Imanari roll"), tur: 'ozel', ikon: 'sync', stat: 'yer', aciklama: L("Yuvarlanarak bacağa dal, heel hook’a bağla."), yer: true },
 ];
 
 export const MAX_TECH = 5;
 export const TECH_KINDS: { id: TechKind; ad: string; ikon: string }[] = [
-  { id: 'sub', ad: 'SUBMISSION', ikon: 'lock' },
-  { id: 'vurus', ad: 'VURUŞ', ikon: 'boxing-glove' },
-  { id: 'ozel', ad: 'ÖZEL HAREKET', ikon: 'star-shooting' },
+  { id: 'sub', ad: L("SUBMISSION"), ikon: 'lock' },
+  { id: 'vurus', ad: L("VURUŞ"), ikon: 'boxing-glove' },
+  { id: 'ozel', ad: L("ÖZEL HAREKET"), ikon: 'star-shooting' },
 ];
 
 export const techById = (id: string) => TECHNIQUES.find((t) => t.id === id);
@@ -99,7 +100,7 @@ export function addTechXp(s: GameState, id: string, n: number): string {
   const cur = s.teknik[id] ?? { sv: 0, xp: 0 };
   if (cur.sv >= MAX_TECH) {
     s.teknik[id] = cur;
-    return `${t.ad} zaten ustalık seviyesinde.`;
+    return L("{0} zaten ustalık seviyesinde.", [t.ad]);
   }
   cur.xp += n;
   let up = false;
@@ -110,7 +111,7 @@ export function addTechXp(s: GameState, id: string, n: number): string {
   }
   if (cur.sv >= MAX_TECH) cur.xp = 0;
   s.teknik[id] = cur;
-  return up ? `${t.ad} seviye atladı → ${cur.sv}/${MAX_TECH}!` : `${t.ad} ustalığı +${n} (${cur.xp}/${xpNeed(cur.sv)})`;
+  return up ? L("{0} seviye atladı → {1}/{2}!", [t.ad, cur.sv, MAX_TECH]) : L("{0} ustalığı +{1} ({2}/{3})", [t.ad, n, cur.xp, xpNeed(cur.sv)]);
 }
 
 /** Dövüş motoruna giden seviyeler. */

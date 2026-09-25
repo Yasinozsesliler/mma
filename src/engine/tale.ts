@@ -1,4 +1,5 @@
 // "Tale of the tape": boy, uzanma, duruş ve rakip görünümü. İsimden türetilir, hep aynı kalır.
+import { L } from '../i18n';
 import type { Appearance, Opponent, WeightClass } from './types';
 
 function hash(t: string) {
@@ -35,7 +36,7 @@ export function physique(seed: string, siklet: WeightClass) {
   const h = hash(seed);
   const boy = BASE_BOY[siklet] + ((h % 11) - 5);
   const uzanma = boy + (((h >>> 5) % 13) - 4);
-  const durus = (h >>> 9) % 5 === 0 ? 'Southpaw (solak)' : (h >>> 9) % 7 === 0 ? 'Switch' : 'Orthodox';
+  const durus = (h >>> 9) % 5 === 0 ? L("Southpaw (solak)") : (h >>> 9) % 7 === 0 ? L("Switch") : L("Orthodox");
   return { boy, uzanma, durus };
 }
 
@@ -45,8 +46,8 @@ export function lookFor(o: Pick<Opponent, 'id' | 'uyruk'>): Appearance {
   const h = hash(o.id + o.uyruk);
   const h2 = hash(o.uyruk + o.id + '#yuz');
   const bits = (x: number, sh: number, n: number) => (x >>> sh) % n;
-  const darkSkin = ['Nijerya', 'Kamerun', 'Küba'].includes(o.uyruk);
-  const midSkin = ['Brezilya', 'Meksika', 'Şili', 'Azerbaycan', 'Türkiye', 'Kazakistan', 'Tayland'].includes(o.uyruk);
+  const darkSkin = [L("Nijerya"), L("Kamerun"), L("Küba")].includes(o.uyruk);
+  const midSkin = [L("Brezilya"), L("Meksika"), L("Şili"), L("Azerbaycan"), L("Türkiye"), L("Kazakistan"), L("Tayland")].includes(o.uyruk);
   const ten = darkSkin ? 5 + bits(h, 0, 3) : midSkin ? 2 + bits(h, 0, 3) : bits(h, 0, 4);
   const saclar: Appearance['sac'][] = ['kazik', 'kisa', 'mohawk', 'uzun', 'topuz', 'afro', 'orgu', 'kel'];
   const sakallar: Appearance['sakal'][] = ['yok', 'kirli', 'tam', 'keci', 'biyik'];

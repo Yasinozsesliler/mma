@@ -1,3 +1,4 @@
+import { L } from '../i18n';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { canSpend, spendPoint, statCost } from '../engine/progression';
 import type { GameState, StatKey } from '../engine/types';
@@ -17,21 +18,21 @@ const ICONS: Record<StatKey, IconName> = {
 };
 
 const HINTS: Record<StatKey, string> = {
-  vurus: 'Ayakta hasar ve isabet',
-  gures: 'Takedown ve takedown savunması',
-  yer: 'Submission ve yer kontrolü',
-  kondisyon: 'Geç rauntlarda tempo',
-  cene: 'Sarsılmaya direnç',
-  hiz: 'Kombinasyon ve kaçış',
-  iq: 'Her alanı biraz güçlendirir',
+  vurus: L("Ayakta hasar ve isabet"),
+  gures: L("Takedown ve takedown savunması"),
+  yer: L("Submission ve yer kontrolü"),
+  kondisyon: L("Geç rauntlarda tempo"),
+  cene: L("Sarsılmaya direnç"),
+  hiz: L("Kombinasyon ve kaçış"),
+  iq: L("Her alanı biraz güçlendirir"),
 };
 
-export function SkillPanel({ s, act, title = 'GELİŞİM' }: { s: GameState; act: Act; title?: string }) {
+export function SkillPanel({ s, act, title = L("GELİŞİM") }: { s: GameState; act: Act; title?: string }) {
   return (
     <Card accent={C.gold}>
       <View style={sp.head}>
         <Text style={sp.title}>⭐ {title}</Text>
-        <Text style={[sp.points, s.puan === 0 && { color: C.faint }]}>{s.puan} puan</Text>
+        <Text style={[sp.points, s.puan === 0 && { color: C.faint }]}>{L('{0} puan', [s.puan])}</Text>
       </View>
       {STAT_KEYS.map((k) => {
         const v = s.fighter.stats[k];
@@ -63,7 +64,8 @@ export function SkillPanel({ s, act, title = 'GELİŞİM' }: { s: GameState; act
         );
       })}
       <Text style={sp.foot}>
-        Puan kazanmak için kamp yap ve dövüş. Galibiyet ve bitiriş daha çok kazandırır. Maliyet: 50’ye kadar 1, 70’e kadar 2, 85’e kadar 3, sonrası 4 puan.
+        
+        {L("Puan kazanmak için kamp yap ve dövüş. Galibiyet ve bitiriş daha çok kazandırır. Maliyet: 50’ye kadar 1, 70’e kadar 2, 85’e kadar 3, sonrası 4 puan.")}
       </Text>
     </Card>
   );

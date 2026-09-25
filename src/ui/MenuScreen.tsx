@@ -1,3 +1,4 @@
+import { L, LANG, LANGS, LOC, setLang } from '../i18n';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useState, type ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -13,37 +14,37 @@ import { C, F, R } from './theme';
 
 const GUIDE: { baslik: string; icon: IconName; icerik: string[] }[] = [
   {
-    baslik: 'Karakterini Nasıl Kurarsın?',
+    baslik: L("Karakterini Nasıl Kurarsın?"),
     icon: 'account-star',
     icerik: [
-      '🌍 Uyruk: Antrenman imkânı başlangıç istatistiklerini, taraftar desteği başlangıç popülerliğini belirler. İlk salonun ve hocan da ülkene göre gelir.',
-      '🎂 Yaş (18-30): Genç başlarsan ham ama hızlı gelişirsin (×1.3). Yaşlı başlarsan güçlü başlarsın ama 32’den sonra hız ve çene düşmeye başlar. 41’de emeklilik kaçınılmazdır.',
-      '⚖️ Sıklet: Hafif sıkletler hızlı ve dayanıklıdır, ağır sıkletler sert vurur ama çabuk yorulur.',
-      '🥋 Branş: En önemli seçim. Güçlü ve zayıf yönlerini, dolayısıyla nasıl dövüşeceğini belirler.',
-      '📖 Hikâye: Kendin yazabilir ya da oyuna yazdırabilirsin.',
-      '🎲 Zar: Son adımda istatistiklerin zarla belirlenir. Beğenmezsen 2 kez yeniden atabilirsin.',
+      L("🌍 Uyruk: Antrenman imkânı başlangıç istatistiklerini, taraftar desteği başlangıç popülerliğini belirler. İlk salonun ve hocan da ülkene göre gelir."),
+      L("🎂 Yaş (18-30): Genç başlarsan ham ama hızlı gelişirsin (×1.3). Yaşlı başlarsan güçlü başlarsın ama 32’den sonra hız ve çene düşmeye başlar. 41’de emeklilik kaçınılmazdır."),
+      L("⚖️ Sıklet: Hafif sıkletler hızlı ve dayanıklıdır, ağır sıkletler sert vurur ama çabuk yorulur."),
+      L("🥋 Branş: En önemli seçim. Güçlü ve zayıf yönlerini, dolayısıyla nasıl dövüşeceğini belirler."),
+      L("📖 Hikâye: Kendin yazabilir ya da oyuna yazdırabilirsin."),
+      L("🎲 Zar: Son adımda istatistiklerin zarla belirlenir. Beğenmezsen 2 kez yeniden atabilirsin."),
     ],
   },
   {
-    baslik: 'Gelişim Puanı',
+    baslik: L("Gelişim Puanı"),
     icon: 'star-four-points',
     icerik: [
-      'Kariyere 3 puanla başlarsın. Her antrenman kampı 1-3 puan verir (yoğunluk, yaş, kamp yeri, hoca ve kadro kalitesine bağlı). Kampın odak alanı ayrıca +1-3 gelişir.',
-      'Dövüşler de puan verir: galibiyet 2, bitiriş +1, bonus +1, kemer +1. Mağlubiyet ve beraberlik 1 puan.',
-      '📅 Bir dövüş döngüsü (kamp + toparlanma) yaklaşık 90-100 gün sürer. Yılda 3-4 kez dövüşürsün; her karar önemli.',
-      'Puanı istediğin istatistiğe harcarsın. 50’ye kadar +1 için 1 puan, 70’e kadar 2, 85’e kadar 3, sonrası 4 puan gerekir.',
-      'Kamp sonunda tartıdan önce, dövüş sonrasında ya da Kariyer ekranındaki GELİŞİM sekmesinden harcayabilirsin.',
+      L("Kariyere 3 puanla başlarsın. Her antrenman kampı 1-3 puan verir (yoğunluk, yaş, kamp yeri, hoca ve kadro kalitesine bağlı). Kampın odak alanı ayrıca +1-3 gelişir."),
+      L("Dövüşler de puan verir: galibiyet 2, bitiriş +1, bonus +1, kemer +1. Mağlubiyet ve beraberlik 1 puan."),
+      L("📅 Bir dövüş döngüsü (kamp + toparlanma) yaklaşık 90-100 gün sürer. Yılda 3-4 kez dövüşürsün; her karar önemli."),
+      L("Puanı istediğin istatistiğe harcarsın. 50’ye kadar +1 için 1 puan, 70’e kadar 2, 85’e kadar 3, sonrası 4 puan gerekir."),
+      L("Kamp sonunda tartıdan önce, dövüş sonrasında ya da Kariyer ekranındaki GELİŞİM sekmesinden harcayabilirsin."),
     ],
   },
   {
-    baslik: 'Nasıl Oynanır?',
+    baslik: L("Nasıl Oynanır?"),
     icon: 'gamepad-variant',
     icerik: [
-      '1️⃣ Rakip seç. Bölgesel aşamada sen seçersin, büyük organizasyonlarda rakibi organizasyon dayatır.',
-      '2️⃣ Kamp: odak alanı, oyun planı, yoğunluk, kilo verme ve basın toplantısı. Oyun planı rakibin zaafına denk gelirse kafeste büyük avantaj sağlar.',
-      '3️⃣ Dövüş: her raunt taktik seçersin. Kritik anlarda (rakip sarsıldı, submission yakalandı) hızlı karar verirsin.',
-      '4️⃣ Sonrası: bonuslar, röportaj, sıralama, kontrat teklifleri ve dövüşler arası olaylar.',
-      '🏆 Yol: Amatör → Bölgesel (CFC, Oktagon) → Büyük (PFL, ONE, MVP) → DWCS veya kısa haber → UFC kemeri.',
+      L("1️⃣ Rakip seç. Bölgesel aşamada sen seçersin, büyük organizasyonlarda rakibi organizasyon dayatır."),
+      L("2️⃣ Kamp: odak alanı, oyun planı, yoğunluk, kilo verme ve basın toplantısı. Oyun planı rakibin zaafına denk gelirse kafeste büyük avantaj sağlar."),
+      L("3️⃣ Dövüş: her raunt taktik seçersin. Kritik anlarda (rakip sarsıldı, submission yakalandı) hızlı karar verirsin."),
+      L("4️⃣ Sonrası: bonuslar, röportaj, sıralama, kontrat teklifleri ve dövüşler arası olaylar."),
+      L("🏆 Yol: Amatör → Bölgesel (CFC, Oktagon) → Büyük (PFL, ONE, MVP) → DWCS veya kısa haber → UFC kemeri."),
     ],
   },
 ];
@@ -71,8 +72,8 @@ function SlotCard({ n, save, active, onNew, onContinue, onDelete }: { n: Slot; s
       <Pressable onPress={onNew} style={({ pressed }) => [ms.slotEmpty, pressed && { borderColor: C.red }]}>
         <Text style={ms.slotNo}>YUVA {n}</Text>
         <Icon name="plus-circle-outline" size={30} color={C.faint} />
-        <Text style={ms.emptyTitle}>BOŞ YUVA</Text>
-        <Text style={ms.emptySub}>Yeni bir kariyere başla</Text>
+        <Text style={ms.emptyTitle}>{L("BOŞ YUVA")}</Text>
+        <Text style={ms.emptySub}>{L("Yeni bir kariyere başla")}</Text>
       </Pressable>
     );
   const f = save.fighter;
@@ -83,21 +84,21 @@ function SlotCard({ n, save, active, onNew, onContinue, onDelete }: { n: Slot; s
   return (
     <LinearGradient colors={active ? ['#2a0a10', '#0e0f12'] : ['#121317', '#0b0c0e']} style={[ms.slot, active && { borderColor: C.red }]}>
       <View style={ms.slotHead}>
-        <Text style={ms.slotNo}>YUVA {n}{active ? ' · SON OYNANAN' : ''}</Text>
-        {retired ? <Pill text="EMEKLİ" icon="flag-checkered" color={C.faint} /> : null}
+        <Text style={ms.slotNo}>YUVA {n}{active ? L(" · SON OYNANAN") : ''}</Text>
+        {retired ? <Pill text={L("EMEKLİ")} icon="flag-checkered" color={C.faint} /> : null}
       </View>
       <View style={ms.slotBody}>
         <FighterAvatar look={f.gorunum} size={62} ring={belts ? C.gold : active ? C.red : '#3a3d45'} />
         <View style={{ flex: 1 }}>
-          {f.lakap ? <Text style={ms.slotNick}>“{f.lakap.toLocaleUpperCase('tr-TR')}”</Text> : null}
+          {f.lakap ? <Text style={ms.slotNick}>“{f.lakap.toLocaleUpperCase(LOC)}”</Text> : null}
           <Text style={[ms.slotName, SLANT]} numberOfLines={1}>
             {upName(`${f.ad} ${f.soyad}`, f.uyruk)}
           </Text>
           <Text style={ms.slotMeta} numberOfLines={1}>
-            {f.yas} yaş · {WEIGHT_CLASSES[f.siklet].ad} · {STAGE_LABELS[save.stage].replace(/^Aşama \d · /, '')}
+            {f.yas} {L("yaş ·")}{' '}{WEIGHT_CLASSES[f.siklet].ad} · {STAGE_LABELS[save.stage].replace(/^Aşama \d · /, '')}
           </Text>
           <Text style={ms.slotRec}>
-            {pro ? '' : 'Amatör '}
+            {pro ? '' : L("Amatör ")}
             {r.g}-{r.m}-{r.b}
             {belts ? `  ·  🏆 ${belts}` : ''}
           </Text>
@@ -105,13 +106,13 @@ function SlotCard({ n, save, active, onNew, onContinue, onDelete }: { n: Slot; s
       </View>
       {sure ? (
         <View style={ms.confirm}>
-          <Text style={ms.confirmText}>Bu kariyer kalıcı olarak silinecek. Emin misin?</Text>
+          <Text style={ms.confirmText}>{L("Bu kariyer kalıcı olarak silinecek. Emin misin?")}</Text>
           <View style={{ flexDirection: 'row', gap: 8 }}>
             <Pressable onPress={() => setSure(false)} style={[ms.smallBtn, { flex: 1 }]}>
-              <Text style={ms.smallText}>VAZGEÇ</Text>
+              <Text style={ms.smallText}>{L("VAZGEÇ")}</Text>
             </Pressable>
             <Pressable onPress={onDelete} style={[ms.smallBtn, { flex: 1, backgroundColor: '#5a0f16', borderColor: C.red }]}>
-              <Text style={ms.smallText}>EVET, SİL</Text>
+              <Text style={ms.smallText}>{L("EVET, SİL")}</Text>
             </Pressable>
           </View>
         </View>
@@ -120,12 +121,12 @@ function SlotCard({ n, save, active, onNew, onContinue, onDelete }: { n: Slot; s
           {retired ? (
             <Pressable onPress={onNew} style={[ms.mainBtn, { backgroundColor: C.red }]}>
               <Icon name="plus" size={16} color="#fff" />
-              <Text style={ms.mainText}>YENİ KARİYER</Text>
+              <Text style={ms.mainText}>{L("YENİ KARİYER")}</Text>
             </Pressable>
           ) : (
             <Pressable onPress={onContinue} style={[ms.mainBtn, { backgroundColor: active ? C.gold : C.red }]}>
               <Icon name="play" size={16} color={active ? '#000' : '#fff'} />
-              <Text style={[ms.mainText, active && { color: '#000' }]}>DEVAM ET</Text>
+              <Text style={[ms.mainText, active && { color: '#000' }]}>{L("DEVAM ET")}</Text>
             </Pressable>
           )}
           <Pressable onPress={() => setSure(true)} style={ms.delBtn} hitSlop={6}>
@@ -160,45 +161,62 @@ export function MenuScreen({
     <Screen
       footer={
         canContinue ? (
-          <Button label={`Devam et · ${cur!.fighter.ad} ${cur!.fighter.soyad}`} icon="play" tone="gold" onPress={() => onContinue(active)} />
+          <Button label={L("Devam et · {0} {1}", [cur!.fighter.ad, cur!.fighter.soyad])} icon="play" tone="gold" onPress={() => onContinue(active)} />
         ) : firstEmpty ? (
-          <Button label="Yeni kariyer" icon="plus" onPress={() => onNew(firstEmpty)} />
+          <Button label={L("Yeni kariyer")} icon="plus" onPress={() => onNew(firstEmpty)} />
         ) : undefined
       }
     >
       <LinearGradient colors={['#3b0d14', 'rgba(10,11,14,0)']} style={ms.hero}>
         <Logo size={96} />
-        <Text style={ms.brand}>Y O L</Text>
-        <Text style={ms.heroTitle}>KAFESTEN KEMERE</Text>
-        <Text style={ms.heroSub}>Sıfırdan UFC şampiyonluğuna. Her karar senin.</Text>
+        <Text style={ms.brand}>{L("Y O L")}</Text>
+        <Text style={ms.heroTitle}>{L("KAFESTEN KEMERE")}</Text>
+        <Text style={ms.heroSub}>{L("Sıfırdan UFC şampiyonluğuna. Her karar senin.")}</Text>
         {off ? (
           <View style={[ms.off, { borderColor: (off.durum === 'hazir' ? C.green : C.gold) + '66' }]}>
             <Icon name={off.durum === 'hazir' ? 'cloud-check' : 'cloud-download'} size={14} color={off.durum === 'hazir' ? C.green : C.gold} />
             <Text style={[ms.offText, { color: off.durum === 'hazir' ? C.green : C.gold }]}>
               {off.durum === 'hazir'
-                ? `Çevrimdışı oynamaya hazır · sürüm ${off.surum}`
+                ? L("Çevrimdışı oynamaya hazır · sürüm {0}", [off.surum])
                 : off.durum === 'guncelleniyor'
-                  ? 'Yeni sürüm indiriliyor… uygulamayı kapatma'
-                  : `Çevrimdışı için indiriliyor${off.toplam ? ` (${off.toplam - (off.eksik ?? 0)}/${off.toplam})` : '…'}`}
+                  ? L("Yeni sürüm indiriliyor… uygulamayı kapatma")
+                  : L("Çevrimdışı için indiriliyor{0}", [off.toplam ? ` (${off.toplam - (off.eksik ?? 0)}/${off.toplam})` : '…'])}
             </Text>
           </View>
         ) : null}
       </LinearGradient>
 
-      <Section>KARİYER YUVALARI</Section>
+      <View style={ms.langRow}>
+        {LANGS.map((l) => {
+          const on = l.id === LANG;
+          return (
+            <Pressable
+              key={l.id}
+              disabled={on || !l.hazir}
+              onPress={() => setLang(l.id)}
+              style={[ms.lang, on && ms.langOn, !l.hazir && { opacity: 0.4 }]}
+            >
+              <Text style={ms.langFlag}>{l.bayrak}</Text>
+              <Text style={[ms.langText, on && { color: C.gold }]}>{l.hazir ? l.ad : L("yakında")}</Text>
+            </Pressable>
+          );
+        })}
+      </View>
+
+      <Section>{L("KARİYER YUVALARI")}</Section>
       {SLOTS.map((x) => (
         <SlotCard key={x} n={x} save={saves[x - 1]} active={x === active && !!saves[x - 1]} onNew={() => onNew(x)} onContinue={() => onContinue(x)} onDelete={() => onDelete(x)} />
       ))}
       {!any ? (
         <Card>
-          <Text style={ms.intro}>Saat gece 02:14. Şehrin kenarında, tabelasının yarısı yanmayan bir spor salonu var.</Text>
-          <Text style={ms.intro}>İçeride tek bir ampul yanıyor. Duvarda solmuş bir poster var: sekizgen bir kafes ve havaya kaldırılmış altın bir kemer.</Text>
-          <Text style={[ms.intro, { color: C.gold, fontStyle: 'italic' }]}>“Herkes kemeri ister. Pek azı yolu yürür.”</Text>
-          <Text style={[ms.intro, { color: C.text, fontFamily: F.bold, marginBottom: 0 }]}>Bu senin hikâyen. Her yumruk, her karar, her hata senin.</Text>
+          <Text style={ms.intro}>{L("Saat gece 02:14. Şehrin kenarında, tabelasının yarısı yanmayan bir spor salonu var.")}</Text>
+          <Text style={ms.intro}>{L("İçeride tek bir ampul yanıyor. Duvarda solmuş bir poster var: sekizgen bir kafes ve havaya kaldırılmış altın bir kemer.")}</Text>
+          <Text style={[ms.intro, { color: C.gold, fontStyle: 'italic' }]}>{L("“Herkes kemeri ister. Pek azı yolu yürür.”")}</Text>
+          <Text style={[ms.intro, { color: C.text, fontFamily: F.bold, marginBottom: 0 }]}>{L("Bu senin hikâyen. Her yumruk, her karar, her hata senin.")}</Text>
         </Card>
       ) : null}
 
-      <Section>REHBER</Section>
+      <Section>{L("REHBER")}</Section>
       {GUIDE.map((g, i) => (
         <Collapsible key={g.baslik} baslik={g.baslik} icon={g.icon} open={open === i} onToggle={() => setOpen(open === i ? null : i)}>
           {g.icerik.map((l, j) => (
@@ -208,10 +226,10 @@ export function MenuScreen({
           ))}
         </Collapsible>
       ))}
-      <Collapsible baslik="Branşlar" icon="karate" open={open === 99} onToggle={() => setOpen(open === 99 ? null : 99)}>
+      <Collapsible baslik={L("Branşlar")} icon="karate" open={open === 99} onToggle={() => setOpen(open === 99 ? null : 99)}>
         {(Object.keys(BACKGROUNDS) as Background[]).map((b) => {
           const info = BACKGROUNDS[b];
-          const zc = info.zorluk === 'Kolay' ? C.green : info.zorluk === 'Orta' ? C.gold : C.red;
+          const zc = info.zorluk === L("Kolay") ? C.green : info.zorluk === L("Orta") ? C.gold : C.red;
           return (
             <View key={b} style={ms.branch}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -231,6 +249,11 @@ export function MenuScreen({
 }
 
 const ms = StyleSheet.create({
+  langRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 6, marginBottom: 6 },
+  lang: { flexDirection: 'row', alignItems: 'center', gap: 5, borderWidth: 1, borderColor: C.border, borderRadius: 20, paddingHorizontal: 10, paddingVertical: 6, backgroundColor: C.card },
+  langOn: { borderColor: C.gold },
+  langFlag: { fontSize: 14 },
+  langText: { color: C.dim, fontFamily: F.semi, fontSize: 12 },
   hero: { alignItems: 'center', paddingTop: 28, paddingBottom: 20, marginHorizontal: -16, marginTop: -16, marginBottom: 8 },
   brand: { color: C.red, fontFamily: F.display, fontSize: 14, letterSpacing: 6, marginTop: 14 },
   heroTitle: { color: C.text, fontFamily: F.display, fontSize: 42, letterSpacing: 1, lineHeight: 48, textAlign: 'center' },

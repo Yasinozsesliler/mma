@@ -1,3 +1,4 @@
+import { L, LOC } from '../i18n';
 import { addStat } from './character';
 import { randomInjury } from './camp';
 import { AGENTS, JOURNALISTS } from './data';
@@ -17,10 +18,10 @@ interface EventDef {
   uygula: (s: GameState, secim: number, p: Params) => string;
 }
 
-const $ = (n: number) => `$${Math.round(n).toLocaleString('tr-TR')}`;
+const $ = (n: number) => `$${Math.round(n).toLocaleString(LOC)}`;
 const pop = (s: GameState, d: number) => (s.populerlik = clamp(s.populerlik + d, 0, 100));
 
-const BRANDS = ['Kuvvet Protein', 'Arslan Enerji İçeceği', 'Kafes Giyim', 'Nokta Bahis (!)', 'Demir Spor Ekipmanları', 'Yıldız Döner'];
+const BRANDS = [L("Kuvvet Protein"), L("Arslan Enerji İçeceği"), L("Kafes Giyim"), L("Nokta Bahis (!)"), L("Demir Spor Ekipmanları"), L("Yıldız Döner")];
 
 const EVENTS: Record<string, EventDef> = {
   doping: {
@@ -29,26 +30,26 @@ const EVENTS: Record<string, EventDef> = {
     kur: (s) => {
       const tutar = dopingCost(s);
       const kim = pick([
-        'Salonun karanlık köşesinde tanımadığın bir adam yanına yaklaştı',
-        'Yeni tanıştığın bir “performans koçu” seni kenara çekti',
-        'Takım arkadaşının kuzeni olduğunu söyleyen biri mesaj attı',
-        'Kampta bir sağlık danışmanı fısıldayarak konuştu',
+        L("Salonun karanlık köşesinde tanımadığın bir adam yanına yaklaştı"),
+        L("Yeni tanıştığın bir “performans koçu” seni kenara çekti"),
+        L("Takım arkadaşının kuzeni olduğunu söyleyen biri mesaj attı"),
+        L("Kampta bir sağlık danışmanı fısıldayarak konuştu"),
       ]);
       return {
-        baslik: '💉 Karanlık Bir Teklif',
-        metin: `${kim}: “Bu kür seni ${DOPING_FIGHTS} dövüş boyunca canavara çevirir. Testlerde çıkmaz… genelde.” Fiyatı ${$(tutar)}.\n\nKabul edersen vuruş, kondisyon, hız ve çene ciddi artar. Yakalanırsan 6 ay ile 2 yıl arası men, popülerlik kaybı ve sponsor iptali.`,
-        secenekler: ['Kabul et', 'Reddet', 'Federasyona ihbar et'],
+        baslik: L("💉 Karanlık Bir Teklif"),
+        metin: L("{0}: “Bu kür seni {1} dövüş boyunca canavara çevirir. Testlerde çıkmaz… genelde.” Fiyatı {2}.\n\nKabul edersen vuruş, kondisyon, hız ve çene ciddi artar. Yakalanırsan 6 ay ile 2 yıl arası men, popülerlik kaybı ve sponsor iptali.", [kim, DOPING_FIGHTS, $(tutar)]),
+        secenekler: [L("Kabul et"), L("Reddet"), L("Federasyona ihbar et")],
         params: { tutar },
       };
     },
     uygula: (s, i) => {
       if (i === 0) {
         takeDoping(s);
-        return `Kürü aldın. Aynada başka biri var. Sonraki ${DOPING_FIGHTS} dövüşte çok güçlüsün… ama her dövüşten sonra test riski var.`;
+        return L("Kürü aldın. Aynada başka biri var. Sonraki {0} dövüşte çok güçlüsün… ama her dövüşten sonra test riski var.", [DOPING_FIGHTS]);
       }
-      if (i === 1) return 'Kibarca reddettin. Temiz bir kariyer, huzurlu bir uyku.';
+      if (i === 1) return L("Kibarca reddettin. Temiz bir kariyer, huzurlu bir uyku.");
       pop(s, 2);
-      return 'Federasyona ihbar ettin. Basın seni “temiz sporun sesi” ilan etti. Popülerlik +2.';
+      return L("Federasyona ihbar ettin. Basın seni “temiz sporun sesi” ilan etti. Popülerlik +2.");
     },
   },
   sponsor: {
@@ -58,55 +59,53 @@ const EVENTS: Record<string, EventDef> = {
       const tutar = Math.round((500 + s.populerlik * 120 * { amator: 0.3, bolgesel: 1, buyuk: 3, ufc: 6 }[s.stage]) / 100) * 100;
       const marka = pick(BRANDS);
       return {
-        baslik: '💼 Sponsorluk Teklifi',
-        metin: `${marka} seninle çalışmak istiyor. Şortunda logoları olacak, karşılığında ${$(tutar)} ödeyecekler.${
-          marka.includes('Bahis') ? '\n\nAma bir bahis şirketi… Bazı taraftarların hoşuna gitmeyebilir.' : ''
-        }`,
-        secenekler: ['Kabul et', 'Pazarlık yap (+%50 dene)', 'Reddet'],
+        baslik: L("💼 Sponsorluk Teklifi"),
+        metin: L("{0} seninle çalışmak istiyor. Şortunda logoları olacak, karşılığında {1} ödeyecekler.{2}", [marka, $(tutar), marka.includes(L("Bahis")) ? L("\n\nAma bir bahis şirketi… Bazı taraftarların hoşuna gitmeyebilir.") : '']),
+        secenekler: [L("Kabul et"), L("Pazarlık yap (+%50 dene)"), L("Reddet")],
         params: { tutar, marka },
       };
     },
     uygula: (s, i, p) => {
       const t = Number(p.tutar);
-      const bahis = String(p.marka).includes('Bahis');
+      const bahis = String(p.marka).includes(L("Bahis"));
       if (i === 0) {
         s.para += t;
         if (bahis) pop(s, -2);
-        return `${p.marka} ile anlaştın. +${$(t)}${bahis ? ' (Bazı taraftarlar tepkili: popülerlik -2)' : ''}`;
+        return L("{0} ile anlaştın. +{1}{2}", [p.marka, $(t), bahis ? L(" (Bazı taraftarlar tepkili: popülerlik -2)") : '']);
       }
       if (i === 1) {
         if (chance(0.35 + s.takim.menajerKalite * 0.05)) {
           s.para += t * 1.5;
-          return `Sıkı pazarlık işe yaradı! +${$(t * 1.5)}`;
+          return L("Sıkı pazarlık işe yaradı! +{0}", [$(t * 1.5)]);
         }
-        return `${p.marka} masadan kalktı. "Başka dövüşçüler de var."`;
+        return L("{0} masadan kalktı. \"Başka dövüşçüler de var.\"", [p.marka]);
       }
-      return 'Teklifi reddettin. İmajın temiz kaldı.';
+      return L("Teklifi reddettin. İmajın temiz kaldı.");
     },
   },
   viral: {
     kosul: () => true,
     agirlik: 2,
     kur: () => ({
-      baslik: '📱 Viral Video',
-      metin: 'Antrenmanda sparring partnerini uyuttuğun bir video 2 milyon izlendi. Yorumlar ikiye bölünmüş durumda. Ne paylaşırsın?',
-      secenekler: ['Sıklettekilere laf at', 'Mütevazı bir teşekkür yaz', 'Görmezden gel'],
+      baslik: L("📱 Viral Video"),
+      metin: L("Antrenmanda sparring partnerini uyuttuğun bir video 2 milyon izlendi. Yorumlar ikiye bölünmüş durumda. Ne paylaşırsın?"),
+      secenekler: [L("Sıklettekilere laf at"), L("Mütevazı bir teşekkür yaz"), L("Görmezden gel")],
       params: {},
     }),
     uygula: (s, i) => {
       if (i === 0) {
         if (chance(0.6)) {
           pop(s, 5);
-          return 'Paylaşımın ortalığı yıktı. Rakipler cevap yazıyor, gazeteciler seni arıyor. Popülerlik +5.';
+          return L("Paylaşımın ortalığı yıktı. Rakipler cevap yazıyor, gazeteciler seni arıyor. Popülerlik +5.");
         }
         pop(s, -3);
-        return 'Kibirli buldular. "Önce bir kemer kazan" yorumları ağır bastı. Popülerlik -3.';
+        return L("Kibirli buldular. \"Önce bir kemer kazan\" yorumları ağır bastı. Popülerlik -3.");
       }
       if (i === 1) {
         pop(s, 2);
-        return 'Samimi mesajın sevildi. Popülerlik +2.';
+        return L("Samimi mesajın sevildi. Popülerlik +2.");
       }
-      return 'Hiçbir şey yazmadın. Video kendi kendine yayılmaya devam etti. Popülerlik +1.';
+      return L("Hiçbir şey yazmadın. Video kendi kendine yayılmaya devam etti. Popülerlik +1.");
     },
   },
   salon: {
@@ -115,23 +114,23 @@ const EVENTS: Record<string, EventDef> = {
     kur: (s) => {
       const gym = pick(gymsFor('elit').filter((g) => g.kalite > s.takim.antrenorKalite));
       return {
-        baslik: '🏟️ Salon Değiştirme Fırsatı',
-        metin: `${gym.salon} baş antrenörü ${gym.antrenor} seni takımında görmek istiyor (kalite ${gym.kalite}/10). Davetli olduğun için geçiş ücreti yarı fiyat: ${$(Math.round(gym.imza / 2))}.\n\nŞu anki hocan ${s.takim.antrenor} (kalite ${s.takim.antrenorKalite}/10) seni sıfırdan yetiştirdi.`,
-        secenekler: ['Taşın', 'Kal, sadakat önemli'],
+        baslik: L("🏟️ Salon Değiştirme Fırsatı"),
+        metin: L("{0} baş antrenörü {1} seni takımında görmek istiyor (kalite {2}/10). Davetli olduğun için geçiş ücreti yarı fiyat: {3}.\n\nŞu anki hocan {4} (kalite {5}/10) seni sıfırdan yetiştirdi.", [gym.salon, gym.antrenor, gym.kalite, $(Math.round(gym.imza / 2)), s.takim.antrenor, s.takim.antrenorKalite]),
+        secenekler: [L("Taşın"), L("Kal, sadakat önemli")],
         params: { id: gym.id, salon: gym.salon, maliyet: Math.round(gym.imza / 2) },
       };
     },
     uygula: (s, i, p) => {
       if (i === 0) {
-        if (s.para < Number(p.maliyet)) return `Paran yetmiyor (${$(Number(p.maliyet))} gerekli). Fırsat kaçtı.`;
+        if (s.para < Number(p.maliyet)) return L("Paran yetmiyor ({0} gerekli). Fırsat kaçtı.", [$(Number(p.maliyet))]);
         const eski = s.takim.antrenor;
         s.para -= Number(p.maliyet);
         const gym = gymsFor('elit').find((x) => x.id === p.id);
         if (gym) applyGym(s, gym);
-        return `Yeni evin: ${p.salon}. ${eski} telefonda sessizce "Başarılar evlat" dedi ve kapattı.`;
+        return L("Yeni evin: {0}. {1} telefonda sessizce \"Başarılar evlat\" dedi ve kapattı.", [p.salon, eski]);
       }
       s.motivasyon = 2;
-      return 'Kaldın. Hocan gözleri dolarak sarıldı. Sonraki kampta ekstra motivasyonla çalışacaksın.';
+      return L("Kaldın. Hocan gözleri dolarak sarıldı. Sonraki kampta ekstra motivasyonla çalışacaksın.");
     },
   },
   menajer: {
@@ -141,9 +140,9 @@ const EVENTS: Record<string, EventDef> = {
       const uygun = AGENTS.filter((a) => a.kalite <= 4 + Math.floor(s.populerlik / 12));
       const a = pick(uygun.length ? uygun : AGENTS.slice(0, 1));
       return {
-        baslik: '🤝 Menajer Teklifi',
-        metin: `Menajer ${a.ad} (kalite ${a.kalite}/10) seni temsil etmek istiyor. Tüm kazançlarından %${Math.round(a.pay * 100)} alacak. Karşılığında kontrat pazarlıkları ve sponsorluklar çok daha kolay olacak.`,
-        secenekler: ['Anlaş', 'Kendi işimi kendim yaparım'],
+        baslik: L("🤝 Menajer Teklifi"),
+        metin: L("Menajer {0} (kalite {1}/10) seni temsil etmek istiyor. Tüm kazançlarından %{2} alacak. Karşılığında kontrat pazarlıkları ve sponsorluklar çok daha kolay olacak.", [a.ad, a.kalite, Math.round(a.pay * 100)]),
+        secenekler: [L("Anlaş"), L("Kendi işimi kendim yaparım")],
         params: { ad: a.ad, kalite: a.kalite, pay: a.pay },
       };
     },
@@ -152,9 +151,9 @@ const EVENTS: Record<string, EventDef> = {
         s.takim.menajer = String(p.ad);
         s.takim.menajerKalite = Number(p.kalite);
         s.takim.menajerPay = Number(p.pay);
-        return `${p.ad} artık menajerin. İlk sözü: "Bir daha asla ucuza dövüşmeyeceksin."`;
+        return L("{0} artık menajerin. İlk sözü: \"Bir daha asla ucuza dövüşmeyeceksin.\"", [p.ad]);
       }
-      return 'Tek başına devam ediyorsun. Kazancın tamamen senin, ama masada yalnızsın.';
+      return L("Tek başına devam ediyorsun. Kazancın tamamen senin, ama masada yalnızsın.");
     },
   },
   aile: {
@@ -163,9 +162,9 @@ const EVENTS: Record<string, EventDef> = {
     kur: (s) => {
       const tutar = Math.round((s.para * (0.2 + rand() * 0.15)) / 100) * 100;
       return {
-        baslik: '🏠 Aileden Bir Telefon',
-        metin: `Kardeşin arıyor. Babanın ameliyatı var ve ${$(tutar)} lazım. Sesi titriyor.`,
-        secenekler: ['Hepsini gönder', 'Yarısını gönder', 'Şu an yapamam'],
+        baslik: L("🏠 Aileden Bir Telefon"),
+        metin: L("Kardeşin arıyor. Babanın ameliyatı var ve {0} lazım. Sesi titriyor.", [$(tutar)]),
+        secenekler: [L("Hepsini gönder"), L("Yarısını gönder"), L("Şu an yapamam")],
         params: { tutar },
       };
     },
@@ -174,35 +173,35 @@ const EVENTS: Record<string, EventDef> = {
       if (i === 0) {
         s.para -= t;
         s.motivasyon = 2;
-        return 'Parayı gönderdin. Ameliyat başarılı geçti. Babanın mesajı: "Oğlumla gurur duyuyorum." Motivasyonun tavan.';
+        return L("Parayı gönderdin. Ameliyat başarılı geçti. Babanın mesajı: \"Oğlumla gurur duyuyorum.\" Motivasyonun tavan.");
       }
       if (i === 1) {
         s.para -= t / 2;
         s.motivasyon = 1;
-        return 'Yarısını gönderdin, gerisini akrabalar tamamladı. İçin rahat.';
+        return L("Yarısını gönderdin, gerisini akrabalar tamamladı. İçin rahat.");
       }
       s.motivasyon = -1;
-      return 'Yapamadığını söyledin. Telefonu kapattıktan sonra uzun süre tavana baktın. Motivasyon düştü.';
+      return L("Yapamadığını söyledin. Telefonu kapattıktan sonra uzun süre tavana baktın. Motivasyon düştü.");
     },
   },
   parti: {
     kosul: (s) => s.populerlik >= 20,
     agirlik: 1,
     kur: () => ({
-      baslik: '🍾 Ünlüler Partisi',
-      metin: 'Bir rapçinin partisine davetlisin. Kameralar, ünlüler, sabaha kadar eğlence. Kampa iki hafta var.',
-      secenekler: ['Git, görün', 'Kibarca reddet'],
+      baslik: L("🍾 Ünlüler Partisi"),
+      metin: L("Bir rapçinin partisine davetlisin. Kameralar, ünlüler, sabaha kadar eğlence. Kampa iki hafta var."),
+      secenekler: [L("Git, görün"), L("Kibarca reddet")],
       params: {},
     }),
     uygula: (s, i) => {
-      if (i === 1) return 'Evde kaldın, erkenden yattın. Sıkıcı ama profesyonel.';
+      if (i === 1) return L("Evde kaldın, erkenden yattın. Sıkıcı ama profesyonel.");
       if (chance(0.35)) {
         pop(s, -4);
         s.saglik = clamp(s.saglik - 8, 0, 100);
-        return 'Gece kontrolden çıktı: bir kavga videosu sızdı. Magazin manşetlerindesin. Popülerlik -4, sağlık -8.';
+        return L("Gece kontrolden çıktı: bir kavga videosu sızdı. Magazin manşetlerindesin. Popülerlik -4, sağlık -8.");
       }
       pop(s, 3);
-      return 'Ünlülerle fotoğrafların her yerde. Yeni bir kitleye ulaştın. Popülerlik +3.';
+      return L("Ünlülerle fotoğrafların her yerde. Yeni bir kitleye ulaştın. Popülerlik +3.");
     },
   },
   araba: {
@@ -211,9 +210,9 @@ const EVENTS: Record<string, EventDef> = {
     kur: (s) => {
       const fiyat = Math.round((s.para * 0.4) / 1000) * 1000;
       return {
-        baslik: '🏎️ Hayalindeki Araba',
-        metin: `Galeride o spor araba seni bekliyor: ${$(fiyat)}. Çocukken posterini duvarına asmıştın.`,
-        secenekler: ['Al, bunu hak ettin', 'Parayı biriktir'],
+        baslik: L("🏎️ Hayalindeki Araba"),
+        metin: L("Galeride o spor araba seni bekliyor: {0}. Çocukken posterini duvarına asmıştın.", [$(fiyat)]),
+        secenekler: [L("Al, bunu hak ettin"), L("Parayı biriktir")],
         params: { fiyat },
       };
     },
@@ -221,18 +220,18 @@ const EVENTS: Record<string, EventDef> = {
       if (i === 0) {
         s.para -= Number(p.fiyat);
         pop(s, 2);
-        return 'Anahtarları aldın. Instagram paylaşımın patladı. Popülerlik +2. Banka hesabın ise ağlıyor.';
+        return L("Anahtarları aldın. Instagram paylaşımın patladı. Popülerlik +2. Banka hesabın ise ağlıyor.");
       }
-      return 'Parayı biriktirdin. Kariyer uzun, sakatlık bir anda gelir.';
+      return L("Parayı biriktirdin. Kariyer uzun, sakatlık bir anda gelir.");
     },
   },
   sparring: {
     kosul: () => true,
     agirlik: 2,
     kur: () => ({
-      baslik: '🥊 Sert Sparring',
-      metin: 'Salona gelen deneyimli bir veteran seninle sert sparring yapmak istiyor. Çok şey öğrenebilirsin, ama adam hiç yavaşlamıyor.',
-      secenekler: ['Kabul et, sonuna kadar git', 'Teknik sparring olsun de', 'Reddet'],
+      baslik: L("🥊 Sert Sparring"),
+      metin: L("Salona gelen deneyimli bir veteran seninle sert sparring yapmak istiyor. Çok şey öğrenebilirsin, ama adam hiç yavaşlamıyor."),
+      secenekler: [L("Kabul et, sonuna kadar git"), L("Teknik sparring olsun de"), L("Reddet")],
       params: {},
     }),
     uygula: (s, i) => {
@@ -241,24 +240,24 @@ const EVENTS: Record<string, EventDef> = {
         if (chance(0.25)) {
           const inj = randomInjury(2, 5);
           s.sakatliklar.push(inj);
-          return `Çok şey öğrendin (IQ +${g}), ama bedeli ağır: ${inj.ad} (${inj.hafta} hafta).`;
+          return L("Çok şey öğrendin (IQ +{0}), ama bedeli ağır: {1} ({2} hafta).", [g, inj.ad, inj.hafta]);
         }
-        return `Yıpratıcıydı ama paha biçilmez. IQ +${g}.`;
+        return L("Yıpratıcıydı ama paha biçilmez. IQ +{0}.", [g]);
       }
       if (i === 1) {
         const g = addStat(s.fighter.stats, 'iq', 1);
-        return `Kontrollü bir çalışma. Tecrübesinden faydalandın. IQ +${g}.`;
+        return L("Kontrollü bir çalışma. Tecrübesinden faydalandın. IQ +{0}.", [g]);
       }
-      return 'Reddettin. Veteran omuz silkip gitti.';
+      return L("Reddettin. Veteran omuz silkip gitti.");
     },
   },
   hayir: {
     kosul: (s) => s.para > 1000,
     agirlik: 1,
     kur: (s) => ({
-      baslik: '❤️ Memleketten Davet',
-      metin: `${s.fighter.memleket}’teki çocuklar için bir spor okulu açılıyor. Kurdele kesmen ve $500 bağış yapman isteniyor.`,
-      secenekler: ['Git ve bağış yap', 'Maalesef vaktim yok'],
+      baslik: L("❤️ Memleketten Davet"),
+      metin: L("{0}’teki çocuklar için bir spor okulu açılıyor. Kurdele kesmen ve $500 bağış yapman isteniyor.", [s.fighter.memleket]),
+      secenekler: [L("Git ve bağış yap"), L("Maalesef vaktim yok")],
       params: {},
     }),
     uygula: (s, i) => {
@@ -266,10 +265,10 @@ const EVENTS: Record<string, EventDef> = {
         s.para -= 500;
         pop(s, 4);
         s.motivasyon = 1;
-        return 'Çocukların gözlerindeki ışık her şeye değdi. Yerel basın seni manşet yaptı. Popülerlik +4.';
+        return L("Çocukların gözlerindeki ışık her şeye değdi. Yerel basın seni manşet yaptı. Popülerlik +4.");
       }
       pop(s, -1);
-      return 'Gidemedin. Bir yerel gazete bunu "unuttu köklerini" diye yazdı. Popülerlik -1.';
+      return L("Gidemedin. Bir yerel gazete bunu \"unuttu köklerini\" diye yazdı. Popülerlik -1.");
     },
   },
   gazeteci: {
@@ -279,11 +278,11 @@ const EVENTS: Record<string, EventDef> = {
       const g = pick(JOURNALISTS);
       const rival = s.rakipler[0];
       return {
-        baslik: '🎙️ Röportaj',
+        baslik: L("🎙️ Röportaj"),
         metin: rival
-          ? `${g} soruyor: "${rival.ad} ${rival.soyad} seninle ilgili ‘abartılmış’ dedi. Cevabın?"`
-          : `${g} soruyor: "Sıklette kimse seni tanımıyor. Neden seni izlemeliyiz?"`,
-        secenekler: ['Sert cevap ver', 'Esprili geç', 'Yorum yok'],
+          ? L("{0} soruyor: \"{1} {2} seninle ilgili ‘abartılmış’ dedi. Cevabın?\"", [g, rival.ad, rival.soyad])
+          : L("{0} soruyor: \"Sıklette kimse seni tanımıyor. Neden seni izlemeliyiz?\"", [g]),
+        secenekler: [L("Sert cevap ver"), L("Esprili geç"), L("Yorum yok")],
         params: { rival: rival?.id ?? '' },
       };
     },
@@ -292,13 +291,13 @@ const EVENTS: Record<string, EventDef> = {
       if (i === 0) {
         pop(s, 3);
         if (rival) rival.rivalry++;
-        return `Sözlerin manşet oldu. ${rival ? `${rival.soyad} ile gerilim tırmanıyor. ` : ''}Popülerlik +3.`;
+        return L("Sözlerin manşet oldu. {0}Popülerlik +3.", [rival ? L("{0} ile gerilim tırmanıyor. ", [rival.soyad]) : '']);
       }
       if (i === 1) {
         pop(s, 2);
-        return 'Esprin kısa sürede meme oldu. Popülerlik +2.';
+        return L("Esprin kısa sürede meme oldu. Popülerlik +2.");
       }
-      return 'Kısa kestin. Gazeteci hayal kırıklığına uğradı.';
+      return L("Kısa kestin. Gazeteci hayal kırıklığına uğradı.");
     },
   },
   cagri: {
@@ -308,13 +307,13 @@ const EVENTS: Record<string, EventDef> = {
     kur: (s) => {
       const r = pick(s.rakipler.filter((x) => x.rivalry >= 2));
       return {
-        baslik: '⚔️ Rakipten Çağrı',
-        metin: fill('{ad} "{lakap}" {soyad} sosyal medyada seni etiketledi: "Kaçıyor. Bir daha karşıma çıkmaya korkuyor."', {
+        baslik: L("⚔️ Rakipten Çağrı"),
+        metin: fill(L("{ad} \"{lakap}\" {soyad} sosyal medyada seni etiketledi: \"Kaçıyor. Bir daha karşıma çıkmaya korkuyor.\""), {
           ad: r.ad,
           lakap: r.lakap,
           soyad: r.soyad,
         }),
-        secenekler: ['Karşılık ver: "Tarih ver, oradayım."', 'Görmezden gel'],
+        secenekler: [L("Karşılık ver: \"Tarih ver, oradayım.\""), L("Görmezden gel")],
         params: { id: r.id },
       };
     },
@@ -323,10 +322,10 @@ const EVENTS: Record<string, EventDef> = {
       if (i === 0) {
         pop(s, 4);
         if (r) r.rivalry++;
-        return 'Taraftarlar bu maçı istiyor. Organizasyon dikkat kesildi. Popülerlik +4.';
+        return L("Taraftarlar bu maçı istiyor. Organizasyon dikkat kesildi. Popülerlik +4.");
       }
       if (r) r.rivalry = Math.max(1, r.rivalry - 1);
-      return 'Cevap vermedin. Sessizlik de bir cevaptır.';
+      return L("Cevap vermedin. Sessizlik de bir cevaptır.");
     },
   },
   dolandirici: {
@@ -335,21 +334,21 @@ const EVENTS: Record<string, EventDef> = {
     kur: (s) => {
       const tutar = Math.round((s.para * 0.3) / 100) * 100;
       return {
-        baslik: '💰 “Kaçırılmayacak Yatırım”',
-        metin: `Eski bir tanıdık, bir kripto projesine ${$(tutar)} yatırırsan bir yılda üçe katlanacağına yemin ediyor.`,
-        secenekler: ['Yatır', 'Yatırma'],
+        baslik: L("💰 “Kaçırılmayacak Yatırım”"),
+        metin: L("Eski bir tanıdık, bir kripto projesine {0} yatırırsan bir yılda üçe katlanacağına yemin ediyor.", [$(tutar)]),
+        secenekler: [L("Yatır"), L("Yatırma")],
         params: { tutar },
       };
     },
     uygula: (s, i, p) => {
-      if (i === 1) return 'Kibarca reddettin. Üç ay sonra proje çöktü. İyi ki.';
+      if (i === 1) return L("Kibarca reddettin. Üç ay sonra proje çöktü. İyi ki.");
       const t = Number(p.tutar);
       if (chance(0.2)) {
         s.para += t;
-        return `İnanılmaz ama işe yaradı! Paranı ikiye katladın. +${$(t)}`;
+        return L("İnanılmaz ama işe yaradı! Paranı ikiye katladın. +{0}", [$(t)]);
       }
       s.para -= t;
-      return `Proje bir gecede çöktü. Tanıdığına ulaşılamıyor. -${$(t)}`;
+      return L("Proje bir gecede çöktü. Tanıdığına ulaşılamıyor. -{0}", [$(t)]);
     },
   },
 };

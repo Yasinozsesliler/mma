@@ -1,3 +1,4 @@
+import { L, LOC } from '../i18n';
 import { addStat, currentOrg, growthMultiplier, fullName } from './character';
 import { ORGS, WEIGHT_CLASSES } from './data';
 import { PLANS, startFight } from './fight';
@@ -28,30 +29,30 @@ import type {
 import { STAT_KEYS, STAT_LABELS } from './types';
 
 export const INTENSITY: Record<Intensity, { ad: string; aciklama: string; carpan: number; risk: number; saglik: number }> = {
-  dusuk: { ad: 'Düşük', aciklama: 'Vücudunu dinle. Az gelişim, neredeyse sıfır risk, iyi toparlanma.', carpan: 0.6, risk: 0.03, saglik: 20 },
-  orta: { ad: 'Orta', aciklama: 'Dengeli kamp. Makul gelişim, düşük risk.', carpan: 1, risk: 0.08, saglik: 12 },
-  yuksek: { ad: 'Yüksek', aciklama: 'Günde iki idman, sert sparring. Hızlı gelişim ama sakatlık riski ciddi.', carpan: 1.55, risk: 0.2, saglik: 3 },
+  dusuk: { ad: L("Düşük"), aciklama: L("Vücudunu dinle. Az gelişim, neredeyse sıfır risk, iyi toparlanma."), carpan: 0.6, risk: 0.03, saglik: 20 },
+  orta: { ad: L("Orta"), aciklama: L("Dengeli kamp. Makul gelişim, düşük risk."), carpan: 1, risk: 0.08, saglik: 12 },
+  yuksek: { ad: L("Yüksek"), aciklama: L("Günde iki idman, sert sparring. Hızlı gelişim ama sakatlık riski ciddi."), carpan: 1.55, risk: 0.2, saglik: 3 },
 };
 
 export const WEIGHT_CUTS: Record<WeightCut, { ad: string; aciklama: string }> = {
-  kademeli: { ad: 'Kademeli ve disiplinli', aciklama: 'Diyetisyenle haftalara yayılmış kilo verme. Neredeyse garanti ama masraflı.' },
-  normal: { ad: 'Normal', aciklama: 'Standart diyet ve son gün hafif su kesimi. Küçük bir risk var.' },
-  sert: { ad: 'Son hafta sert su kesimi', aciklama: 'Kafeste rakipten iri olursun, ama tartıyı kaçırma ve kurumuş çıkma riski yüksek.' },
+  kademeli: { ad: L("Kademeli ve disiplinli"), aciklama: L("Diyetisyenle haftalara yayılmış kilo verme. Neredeyse garanti ama masraflı.") },
+  normal: { ad: L("Normal"), aciklama: L("Standart diyet ve son gün hafif su kesimi. Küçük bir risk var.") },
+  sert: { ad: L("Son hafta sert su kesimi"), aciklama: L("Kafeste rakipten iri olursun, ama tartıyı kaçırma ve kurumuş çıkma riski yüksek.") },
 };
 
 export const PRESS: Record<PressChoice, { ad: string; aciklama: string }> = {
-  saygili: { ad: 'Saygılı ol', aciklama: 'Profesyonel görün. Az ama güvenli popülerlik.' },
-  trash: { ad: 'Trash talk yap', aciklama: 'Ortalığı ateşle. Popülerlik patlayabilir… ya da ters teper. Rakibi de gaza getirir.' },
-  sessiz: { ad: 'Kısa kes', aciklama: 'Konuşmayı kafese bırak. Etkisi yok.' },
+  saygili: { ad: L("Saygılı ol"), aciklama: L("Profesyonel görün. Az ama güvenli popülerlik.") },
+  trash: { ad: L("Trash talk yap"), aciklama: L("Ortalığı ateşle. Popülerlik patlayabilir… ya da ters teper. Rakibi de gaza getirir.") },
+  sessiz: { ad: L("Kısa kes"), aciklama: L("Konuşmayı kafese bırak. Etkisi yok.") },
 };
 
 const INJURIES: Omit<Injury, 'hafta'>[] = [
-  { ad: 'Kaburga çatlağı', stat: 'kondisyon', ceza: 8 },
-  { ad: 'Burkulmuş ayak bileği', stat: 'hiz', ceza: 8 },
-  { ad: 'Elde kemik çatlağı', stat: 'vurus', ceza: 10 },
-  { ad: 'Diz bağı zorlanması', stat: 'gures', ceza: 10 },
-  { ad: 'Omuz zorlanması', stat: 'yer', ceza: 8 },
-  { ad: 'Sparringde beyin sarsıntısı', stat: 'cene', ceza: 10 },
+  { ad: L("Kaburga çatlağı"), stat: 'kondisyon', ceza: 8 },
+  { ad: L("Burkulmuş ayak bileği"), stat: 'hiz', ceza: 8 },
+  { ad: L("Elde kemik çatlağı"), stat: 'vurus', ceza: 10 },
+  { ad: L("Diz bağı zorlanması"), stat: 'gures', ceza: 10 },
+  { ad: L("Omuz zorlanması"), stat: 'yer', ceza: 8 },
+  { ad: L("Sparringde beyin sarsıntısı"), stat: 'cene', ceza: 10 },
 ];
 
 export function randomInjury(minW: number, maxW: number): Injury {
@@ -150,7 +151,7 @@ export function campChoose(s: GameState, value: string | number) {
       return;
     case 'sakatlik':
       if (value === 0) {
-        k.ozet.push(`Sakatlığa rağmen dövüşmeye karar verdin. ${STAT_LABELS[k.sakatlik!.stat]} kafeste zayıf olacak.`);
+        k.ozet.push(L("Sakatlığa rağmen dövüşmeye karar verdin. {0} kafeste zayıf olacak.", [STAT_LABELS[k.sakatlik!.stat]]));
         k.step = 'ozet';
       } else {
         withdraw(s);
@@ -194,7 +195,7 @@ function runCamp(s: GameState) {
   const notes: string[] = [];
   const saglikOnce = s.saglik;
   const len = CAMP_LENGTH_INFO[k.hafta] ?? { carpan: k.hafta / 8, risk: 1 };
-  k.ozet.push(`📍 Kamp yeri: ${site.ad}${site.salonUcreti ? ` (${s.takim.antrenor})` : ''}`);
+  k.ozet.push(L("📍 Kamp yeri: {0}{1}", [site.ad, site.salonUcreti ? ` (${s.takim.antrenor})` : '']));
 
   // Gelişim
   let artis = 0;
@@ -215,13 +216,13 @@ function runCamp(s: GameState) {
     const d = addStat(f.stats, k.focus, clamp(Math.round(g), 2, 5), 2);
     artis = d;
     k.ozet.push(`📈 ${STAT_LABELS[k.focus]} +${d} (${f.stats[k.focus]})`);
-    if (k.focus === site.bonusStat) k.ozet.push(`🔥 ${site.ad} tam bu alanda uzman: gelişim arttı.`);
-    else if (site.salonUcreti && k.focus === s.takim.uzmanlik) k.ozet.push(`🔥 ${s.takim.antrenor} bu alanın ustası: gelişim arttı.`);
+    if (k.focus === site.bonusStat) k.ozet.push(L("🔥 {0} tam bu alanda uzman: gelişim arttı.", [site.ad]));
+    else if (site.salonUcreti && k.focus === s.takim.uzmanlik) k.ozet.push(L("🔥 {0} bu alanın ustası: gelişim arttı.", [s.takim.antrenor]));
   }
   s.motivasyon += campMotivation(s);
   const puan = clamp(campPoints(s, k.intensity ?? 'orta', !!k.kisaHaber) + site.puan + staffCampPoints(s), k.kisaHaber ? 1 : 2, 3);
   s.puan += puan;
-  k.ozet.push(`⭐ +${puan} gelişim puanı (toplam ${s.puan}). Tartıdan önce harcayabilirsin.`);
+  k.ozet.push(L("⭐ +{0} gelişim puanı (toplam {1}). Tartıdan önce harcayabilirsin.", [puan, s.puan]));
   s.motivasyon = 0;
   s.saglik = clamp(s.saglik + (k.kisaHaber ? 0 : Math.round(intensity.saglik * restMultiplier(s)) + staffCampHealth(s)), 0, 100);
 
@@ -230,7 +231,7 @@ function runCamp(s: GameState) {
   if (k.kilo === 'kademeli') cost += cutCost(s);
   if (cost > 0) {
     s.para -= cost;
-    k.ozet.push(`💸 Kamp masrafı: $${cost.toLocaleString('tr-TR')}`);
+    k.ozet.push(L("💸 Kamp masrafı: ${0}", [cost.toLocaleString(LOC)]));
   }
 
   // Plan uyumu
@@ -239,8 +240,8 @@ function runCamp(s: GameState) {
   if (k.plan)
     k.ozet.push(
       planUyum
-        ? `🎯 Oyun planın rakibin zaafına (${STAT_LABELS[weak]}) tam oturuyor. Kafeste bunun karşılığını alacaksın.`
-        : `🎯 Oyun planı: ${PLANS[k.plan].ad}.`,
+        ? L("🎯 Oyun planın rakibin zaafına ({0}) tam oturuyor. Kafeste bunun karşılığını alacaksın.", [STAT_LABELS[weak]])
+        : L("🎯 Oyun planı: {0}.", [PLANS[k.plan].ad]),
     );
   k.planUyum = planUyum;
   k.sonuc = {
@@ -253,7 +254,7 @@ function runCamp(s: GameState) {
     saglikDelta: s.saglik - saglikOnce,
     planUyum,
     yer: site.ad,
-    teknik: (k.haftaLog ?? []).filter((l) => /seviye atladı|ustalığı/.test(l)).map((l) => l.replace(/^\d+\. hafta · /, '')),
+    teknik: (k.haftaLog ?? []).filter((l) => /seviye atladı|ustalığı|leveled up|mastery \+/.test(l)).map((l) => l.replace(/^(\d+\. hafta|Week \d+) · /, '')),
   };
 
   // Basın toplantısı
@@ -264,19 +265,19 @@ function runCamp(s: GameState) {
     if (chance(0.45 + f.stats.iq / 250 + s.populerlik / 300)) {
       s.populerlik = clamp(s.populerlik + 6, 0, 100);
       const t = trashTalkFollowers(s, true);
-      k.ozet.push(`🎤 Trash talk tuttu! Video milyonlarca izlendi. ${t.metin}. ${opp.soyad} ise seni öldürmeye geliyor.`);
+      k.ozet.push(L("🎤 Trash talk tuttu! Video milyonlarca izlendi. {0}. {1} ise seni öldürmeye geliyor.", [t.metin, opp.soyad]));
     } else {
       s.populerlik = clamp(s.populerlik - 2, 0, 100);
       const t = trashTalkFollowers(s, false);
-      k.ozet.push(`🎤 Dengeyi kaçırdın: sözlerin ters tepti, sosyal medyada alay konusu oldun. ${t.metin}. ${opp.soyad} gaza geldi.`);
+      k.ozet.push(L("🎤 Dengeyi kaçırdın: sözlerin ters tepti, sosyal medyada alay konusu oldun. {0}. {1} gaza geldi.", [t.metin, opp.soyad]));
     }
   } else if (k.basin === 'saygili') {
     s.trashTalk = false;
     s.populerlik = clamp(s.populerlik + 1, 0, 100);
-    k.ozet.push('🎤 Basın toplantısında saygılı ve kendinden emindin. Popülerlik +1.');
+    k.ozet.push(L("🎤 Basın toplantısında saygılı ve kendinden emindin. Popülerlik +1."));
   } else if (k.basin === 'sessiz') {
     s.trashTalk = false;
-    k.ozet.push('🎤 Az konuştun. "Kafeste görüşürüz."');
+    k.ozet.push(L("🎤 Az konuştun. \"Kafeste görüşürüz.\""));
   }
 
   k.ozet.push(...notes);
@@ -296,7 +297,7 @@ function runCamp(s: GameState) {
 function withdraw(s: GameState) {
   const opp = s.pending.rakip!;
   s.populerlik = clamp(s.populerlik - 3, 0, 100);
-  s.haberler.unshift(`🚑 ${fullName(s.fighter)} sakatlık nedeniyle ${opp.soyad} maçından çekildi.`);
+  s.haberler.unshift(L("🚑 {0} sakatlık nedeniyle {1} maçından çekildi.", [fullName(s.fighter), opp.soyad]));
   s.pending = {};
   s.phase = 'hub';
 }
@@ -304,35 +305,35 @@ function withdraw(s: GameState) {
 function weighIn(s: GameState) {
   const k = s.pending.kamp!;
   const org = ORGS[currentOrg(s)];
-  const lines: string[] = ['⚖️ TARTI GÜNÜ'];
+  const lines: string[] = [L("⚖️ TARTI GÜNÜ")];
   const cut = k.kilo ?? 'normal';
   if (cut === 'kademeli') {
-    if (chance(0.97)) lines.push('Kilon tam. Taze ve güçlü hissediyorsun.');
+    if (chance(0.97)) lines.push(L("Kilon tam. Taze ve güçlü hissediyorsun."));
     else {
-      lines.push('Her şeyi doğru yapmana rağmen 200 gram fazlasın! Saunada son bir terleme ile zar zor geçtin.');
+      lines.push(L("Her şeyi doğru yapmana rağmen 200 gram fazlasın! Saunada son bir terleme ile zar zor geçtin."));
       k.mods.kondisyon = (k.mods.kondisyon ?? 0) - 3;
     }
   } else if (cut === 'normal') {
-    if (chance(0.88 + cutBonus(s))) lines.push('Limitin tam altındasın. Sorun yok.');
+    if (chance(0.88 + cutBonus(s))) lines.push(L("Limitin tam altındasın. Sorun yok."));
     else {
-      lines.push('❌ Tartıyı 1 kilo kaçırdın! Ücretinin %20’si rakibe gidiyor ve kafese yorgun çıkacaksın.');
+      lines.push(L("❌ Tartıyı 1 kilo kaçırdın! Ücretinin %20’si rakibe gidiyor ve kafese yorgun çıkacaksın."));
       k.ucretCeza = 0.2;
       k.mods.kondisyon = (k.mods.kondisyon ?? 0) - 6;
       s.populerlik = clamp(s.populerlik - 2, 0, 100);
     }
   } else {
     if (org.hidrasyon && chance(0.45)) {
-      lines.push('❌ HİDRASYON TESTİNDEN KALDIN! ONE maçı iptal etti. Ücret yok, itibar zedelendi.');
+      lines.push(L("❌ HİDRASYON TESTİNDEN KALDIN! ONE maçı iptal etti. Ücret yok, itibar zedelendi."));
       k.iptal = true;
       s.populerlik = clamp(s.populerlik - 5, 0, 100);
-      s.haberler.unshift('❌ Hidrasyon testi başarısız: maç iptal edildi.');
+      s.haberler.unshift(L("❌ Hidrasyon testi başarısız: maç iptal edildi."));
     } else if (chance(0.68 + cutBonus(s) * 2)) {
-      lines.push('Su kesimi işe yaradı: tartıda sınırdasın, rehidrasyon sonrası kafese rakibinden iri çıkacaksın. 💪');
+      lines.push(L("Su kesimi işe yaradı: tartıda sınırdasın, rehidrasyon sonrası kafese rakibinden iri çıkacaksın. 💪"));
       k.mods.vurus = (k.mods.vurus ?? 0) + 3;
       k.mods.gures = (k.mods.gures ?? 0) + 3;
       k.mods.kondisyon = (k.mods.kondisyon ?? 0) - 2;
     } else {
-      lines.push('❌ Vücudun pes etti. 1,5 kilo fazlasın, dudakların çatlamış. Ücretinin %20’si gidiyor ve kondisyonun çöktü.');
+      lines.push(L("❌ Vücudun pes etti. 1,5 kilo fazlasın, dudakların çatlamış. Ücretinin %20’si gidiyor ve kondisyonun çöktü."));
       k.ucretCeza = 0.2;
       k.mods.kondisyon = (k.mods.kondisyon ?? 0) - 12;
       k.mods.cene = (k.mods.cene ?? 0) - 4;
@@ -342,12 +343,12 @@ function weighIn(s: GameState) {
   if (!k.iptal && untreated(s) && s.stage !== 'amator' && chance(0.6)) {
     const v = prAdjust(s, -4);
     s.populerlik = clamp(s.populerlik + v, 0, 100);
-    lines.push(`🩺 Maç öncesi sağlık kontrolünde ${s.hastalik!.ad} tespit edildi! Komisyon maçı iptal etti. (Popülerlik ${v})`, ...scandal(s));
-    s.haberler.unshift(`🩺 ${s.fighter.soyad}, sağlık kontrolünden geçemedi; maç iptal.`);
+    lines.push(L("🩺 Maç öncesi sağlık kontrolünde {0} tespit edildi! Komisyon maçı iptal etti. (Popülerlik {1})", [s.hastalik!.ad, v]), ...scandal(s));
+    s.haberler.unshift(L("🩺 {0}, sağlık kontrolünden geçemedi; maç iptal.", [s.fighter.soyad]));
     k.iptal = true;
   }
   if (!k.iptal && chance(0.05)) {
-    lines.push(`😏 ${s.pending.rakip!.soyad} tartıyı kaçırdı! Ücretinin %20’si sana geliyor ve o yorgun çıkacak.`);
+    lines.push(L("😏 {0} tartıyı kaçırdı! Ücretinin %20’si sana geliyor ve o yorgun çıkacak.", [s.pending.rakip!.soyad]));
     k.rakipCeza = true;
     k.oppMods.kondisyon = (k.oppMods.kondisyon ?? 0) - 8;
   }
@@ -391,21 +392,21 @@ function beginFight(s: GameState) {
 // ---------- Face to face ----------
 
 export const FACEOFF = [
-  { key: 'sakin', ad: 'Soğukkanlı bak', aciklama: 'Hiç kıpırdama. Gözünü ilk o kaçırsın.', ikon: 'eye' },
-  { key: 'alin', ad: 'Alın alına ver', aciklama: 'Gerilimi tırmandır. Kim geri adım atacak?', ikon: 'head-alert' },
-  { key: 'bagir', ad: 'Gözdağı ver', aciklama: 'Yüzüne bağır. Ya korkar ya da gülünç duruma düşersin.', ikon: 'bullhorn' },
-  { key: 'laf', ad: 'Kulağına fısılda', aciklama: 'Kafasına gir… ya da senin kafan karışsın.', ikon: 'message-text' },
-  { key: 'el', ad: 'Elini uzat', aciklama: 'Sportmenlik göster. Kabul eder mi?', ikon: 'handshake' },
+  { key: 'sakin', ad: L("Soğukkanlı bak"), aciklama: L("Hiç kıpırdama. Gözünü ilk o kaçırsın."), ikon: 'eye' },
+  { key: 'alin', ad: L("Alın alına ver"), aciklama: L("Gerilimi tırmandır. Kim geri adım atacak?"), ikon: 'head-alert' },
+  { key: 'bagir', ad: L("Gözdağı ver"), aciklama: L("Yüzüne bağır. Ya korkar ya da gülünç duruma düşersin."), ikon: 'bullhorn' },
+  { key: 'laf', ad: L("Kulağına fısılda"), aciklama: L("Kafasına gir… ya da senin kafan karışsın."), ikon: 'message-text' },
+  { key: 'el', ad: L("Elini uzat"), aciklama: L("Sportmenlik göster. Kabul eder mi?"), ikon: 'handshake' },
 ] as const;
 
-const TRASHY = ['Trash talk ustası', 'Kibirli', 'Öfkeli', 'Şovmen'];
+const TRASHY = [L("Trash talk ustası"), L("Kibirli"), L("Öfkeli"), L("Şovmen")];
 
 /** Rakip bazen ilk hamleyi yapar: seçimin bir tepkiye dönüşür. */
 export const RIVAL_MOVES: Record<string, { metin: (o: string) => string; anim: string }> = {
-  it: { metin: (o) => `${o} yaklaşır yaklaşmaz göğsüne iki eliyle itti!`, anim: 'oppush' },
-  alin: { metin: (o) => `${o} alnını senin alnına dayadı, geri çekilmiyor.`, anim: 'forehead' },
-  sirit: { metin: (o) => `${o} sana bakıp alaycı bir şekilde sırıtıyor.`, anim: 'smirk' },
-  laf: { metin: (o) => `${o} eğilip kulağına bir şeyler fısıldadı.`, anim: 'oppwhisper' },
+  it: { metin: (o) => L("{0} yaklaşır yaklaşmaz göğsüne iki eliyle itti!", [o]), anim: 'oppush' },
+  alin: { metin: (o) => L("{0} alnını senin alnına dayadı, geri çekilmiyor.", [o]), anim: 'forehead' },
+  sirit: { metin: (o) => L("{0} sana bakıp alaycı bir şekilde sırıtıyor.", [o]), anim: 'smirk' },
+  laf: { metin: (o) => L("{0} eğilip kulağına bir şeyler fısıldadı.", [o]), anim: 'oppwhisper' },
 };
 
 function planRivalMove(s: GameState): string | undefined {
@@ -434,11 +435,11 @@ function faceOff(s: GameState, key: string) {
   if (key === 'sakin') {
     if (win(0.55)) {
       add(k.mods, 'iq', 1);
-      r = { anim: 'stare', kazanan: 'p', baslik: 'GÖZÜNÜ O KAÇIRDI', metin: `Gözünü kırpmadan baktın. ${o.soyad} bakışlarını ilk kaçıran oldu.`, etkiler: ['Senin IQ +1'] };
+      r = { anim: 'stare', kazanan: 'p', baslik: L("GÖZÜNÜ O KAÇIRDI"), metin: L("Gözünü kırpmadan baktın. {0} bakışlarını ilk kaçıran oldu.", [o.soyad]), etkiler: [L("Senin IQ +1")] };
     } else {
       add(k.mods, 'iq', -1);
       add(k.oppMods, 'iq', 1);
-      r = { anim: 'stareLose', kazanan: 'o', baslik: 'SEN KIRPTIN', metin: `${o.soyad} sabit baktı, sen istemsizce gözlerini kırptın. Kameralar yakaladı.`, etkiler: ['Senin IQ -1', 'Rakip IQ +1'] };
+      r = { anim: 'stareLose', kazanan: 'o', baslik: L("SEN KIRPTIN"), metin: L("{0} sabit baktı, sen istemsizce gözlerini kırptın. Kameralar yakaladı.", [o.soyad]), etkiler: [L("Senin IQ -1"), L("Rakip IQ +1")] };
     }
   } else if (key === 'alin') {
     pop(2);
@@ -447,45 +448,45 @@ function faceOff(s: GameState, key: string) {
       o.rivalry = Math.max(o.rivalry, 1) + 1;
       add(k.oppMods, 'vurus', 1);
       add(k.mods, 'vurus', 1);
-      r = { anim: 'brawl', kazanan: null, baslik: 'ORTALIK KARIŞTI', metin: `Alınlar çarpıştı, ${o.soyad} itti, sen de ittin! Güvenlik araya girdi, görüntüler viral.`, etkiler: ['Popülerlik +4', 'İki tarafın da vuruşu +1', 'Rekabet kızıştı'] };
+      r = { anim: 'brawl', kazanan: null, baslik: L("ORTALIK KARIŞTI"), metin: L("Alınlar çarpıştı, {0} itti, sen de ittin! Güvenlik araya girdi, görüntüler viral.", [o.soyad]), etkiler: [L("Popülerlik +4"), L("İki tarafın da vuruşu +1"), L("Rekabet kızıştı")] };
     } else if (win(0.5)) {
       add(k.oppMods, 'iq', -1);
-      r = { anim: 'forehead', kazanan: 'p', baslik: 'GERİ ADIM ATTI', metin: `Alnını dayadın, bastırdın. ${o.soyad} bir adım geri çekildi.`, etkiler: ['Popülerlik +2', 'Rakip IQ -1'] };
+      r = { anim: 'forehead', kazanan: 'p', baslik: L("GERİ ADIM ATTI"), metin: L("Alnını dayadın, bastırdın. {0} bir adım geri çekildi.", [o.soyad]), etkiler: [L("Popülerlik +2"), L("Rakip IQ -1")] };
     } else {
       add(k.mods, 'kondisyon', -2);
       add(k.oppMods, 'iq', 1);
-      r = { anim: 'pushed', kazanan: 'o', baslik: 'SENİ GERİ İTTİ', metin: `${o.soyad} daha sert bastırdı, dengeni kaybedip geri sendeledin. Salon uğulduyor.`, etkiler: ['Popülerlik +2', 'Senin kondisyon -2', 'Rakip IQ +1'] };
+      r = { anim: 'pushed', kazanan: 'o', baslik: L("SENİ GERİ İTTİ"), metin: L("{0} daha sert bastırdı, dengeni kaybedip geri sendeledin. Salon uğulduyor.", [o.soyad]), etkiler: [L("Popülerlik +2"), L("Senin kondisyon -2"), L("Rakip IQ +1")] };
     }
   } else if (key === 'bagir') {
     if (win(trashy ? 0.4 : 0.52)) {
       pop(2);
       add(k.oppMods, 'cene', -1);
-      r = { anim: 'yell', kazanan: 'p', baslik: 'İRKİLDİ', metin: `Yüzüne öyle bir bağırdın ki ${o.soyad} irkildi. Tribünler çıldırdı.`, etkiler: ['Popülerlik +2', 'Rakip çene -1'] };
+      r = { anim: 'yell', kazanan: 'p', baslik: L("İRKİLDİ"), metin: L("Yüzüne öyle bir bağırdın ki {0} irkildi. Tribünler çıldırdı.", [o.soyad]), etkiler: [L("Popülerlik +2"), L("Rakip çene -1")] };
     } else {
       pop(-1);
       add(k.mods, 'iq', -1);
-      r = { anim: 'laughed', kazanan: 'o', baslik: 'GÜLÜP GEÇTİ', metin: `Bağırdın ama ${o.soyad} kahkaha attı. Sosyal medyada caps oldun.`, etkiler: ['Popülerlik -1', 'Senin IQ -1'] };
+      r = { anim: 'laughed', kazanan: 'o', baslik: L("GÜLÜP GEÇTİ"), metin: L("Bağırdın ama {0} kahkaha attı. Sosyal medyada caps oldun.", [o.soyad]), etkiler: [L("Popülerlik -1"), L("Senin IQ -1")] };
     }
   } else if (key === 'laf') {
     if (win(0.5)) {
       add(k.oppMods, 'iq', -2);
-      r = { anim: 'whisper', kazanan: 'p', baslik: 'KAFASINA GİRDİN', metin: `Kulağına bir şey fısıldadın. ${o.soyad} kıpkırmızı oldu.`, etkiler: ['Rakip IQ -2'] };
+      r = { anim: 'whisper', kazanan: 'p', baslik: L("KAFASINA GİRDİN"), metin: L("Kulağına bir şey fısıldadın. {0} kıpkırmızı oldu.", [o.soyad]), etkiler: [L("Rakip IQ -2")] };
     } else {
       add(k.mods, 'iq', -1);
-      r = { anim: 'whisperBack', kazanan: 'o', baslik: 'CEVABI YAPIŞTIRDI', metin: `Fısıldadın ama ${o.soyad} gülüp daha ağır bir cevap verdi. Bu kez kafası karışan sensin.`, etkiler: ['Senin IQ -1'] };
+      r = { anim: 'whisperBack', kazanan: 'o', baslik: L("CEVABI YAPIŞTIRDI"), metin: L("Fısıldadın ama {0} gülüp daha ağır bir cevap verdi. Bu kez kafası karışan sensin.", [o.soyad]), etkiler: [L("Senin IQ -1")] };
     }
   } else if (trashy && chance(0.6)) {
     if (chance(0.5)) {
       pop(2);
-      r = { anim: 'refuse', kazanan: 'p', baslik: 'SALON SENİN TARAFINDA', metin: `Elini uzattın, ${o.soyad} elini itip güldü. Salon onu yuhaladı.`, etkiler: ['Popülerlik +2'] };
+      r = { anim: 'refuse', kazanan: 'p', baslik: L("SALON SENİN TARAFINDA"), metin: L("Elini uzattın, {0} elini itip güldü. Salon onu yuhaladı.", [o.soyad]), etkiler: [L("Popülerlik +2")] };
     } else {
       add(k.mods, 'iq', -1);
-      r = { anim: 'pulled', kazanan: 'o', baslik: 'TUZAĞA DÜŞTÜN', metin: 'Elini sıktı, seni kendine çekip kulağına hakaret etti. Sinirlendin.', etkiler: ['Senin IQ -1'] };
+      r = { anim: 'pulled', kazanan: 'o', baslik: L("TUZAĞA DÜŞTÜN"), metin: L("Elini sıktı, seni kendine çekip kulağına hakaret etti. Sinirlendin."), etkiler: [L("Senin IQ -1")] };
     }
   } else {
     pop(1);
     o.rivalry = Math.max(0, o.rivalry - 1);
-    r = { anim: 'handshake', kazanan: null, baslik: 'SAYGI', metin: 'Tokalaştınız. Saygılı bir an. Kameralar bu kareyi sevdi.', etkiler: ['Popülerlik +1'] };
+    r = { anim: 'handshake', kazanan: null, baslik: L("SAYGI"), metin: L("Tokalaştınız. Saygılı bir an. Kameralar bu kareyi sevdi."), etkiler: [L("Popülerlik +1")] };
   }
   const pre = hamle ? `${RIVAL_MOVES[hamle].metin(o.soyad)} ` : '';
   k.yuzyuze = `${pre}${r.metin}`;

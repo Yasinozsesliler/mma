@@ -1,4 +1,5 @@
 // Kemer vitrini: kadife arka planlı, spot ışıklı cam vitrin; dokununca tam ekran, kaydırmalı kemer galerisi.
+import { L, LOC } from '../i18n';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Animated, Easing, Modal, Pressable, ScrollView, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
@@ -32,7 +33,7 @@ function Pedestal({ b, children, big }: { b: BeltT; children: ReactNode; big?: b
       <LinearGradient colors={['#3a3833', '#1c1b18']} style={[bs.marbleBase, big && { width: '88%', height: 10 }]} />
       <LinearGradient colors={GOLD} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[bs.nameplate, big && { paddingHorizontal: 18, paddingVertical: 6 }]}>
         <Text style={[bs.nameplateText, big && { fontSize: 13 }]} numberOfLines={1}>
-          {ORGS[b.org].kisa} · {WEIGHT_CLASSES[b.siklet].ad.toLocaleUpperCase('tr-TR')}
+          {ORGS[b.org].kisa} · {WEIGHT_CLASSES[b.siklet].ad.toLocaleUpperCase(LOC)}
         </Text>
       </LinearGradient>
     </View>
@@ -94,7 +95,7 @@ export function BeltShowcase({ s }: { s: GameState }) {
               <View key={i} style={[bs.corner, st]} />
             ))}
             <View style={bs.head}>
-              <Text style={[bs.title, SLANT]}>ŞAMPİYONLUK VİTRİNİ</Text>
+              <Text style={[bs.title, SLANT]}>{L("ŞAMPİYONLUK VİTRİNİ")}</Text>
               {held >= 2 ? (
                 <LinearGradient colors={GOLD} style={bs.champTag}>
                   <Text style={bs.champTagText}>{champLabel(held).en}</Text>
@@ -113,15 +114,15 @@ export function BeltShowcase({ s }: { s: GameState }) {
               <View style={bs.empty}>
                 <View style={bs.emptyStand} />
                 <Icon name="trophy-outline" size={40} color="#4a3a2a" />
-                <Text style={bs.emptyText}>Kaide boş. İlk kemerin burada, spot ışıkları altında duracak.</Text>
+                <Text style={bs.emptyText}>{L("Kaide boş. İlk kemerin burada, spot ışıkları altında duracak.")}</Text>
               </View>
             )}
             <View style={bs.foot}>
               <View style={bs.stats}>
                 {[
-                  [String(belts.length), 'KEMER'],
-                  [String(aktif.length), 'AKTİF'],
-                  [String(savunma), 'SAVUNMA'],
+                  [String(belts.length), L("KEMER")],
+                  [String(aktif.length), L("AKTİF")],
+                  [String(savunma), L("SAVUNMA")],
                 ].map(([v, l]) => (
                   <View key={l} style={bs.stat}>
                     <Text style={bs.statVal}>{v}</Text>
@@ -131,7 +132,7 @@ export function BeltShowcase({ s }: { s: GameState }) {
               </View>
               {belts.length ? (
                 <View style={bs.openBtn}>
-                  <Text style={bs.openText}>VİTRİNİ AÇ</Text>
+                  <Text style={bs.openText}>{L("VİTRİNİ AÇ")}</Text>
                   <Icon name="arrow-expand" size={14} color={C.gold} />
                 </View>
               ) : null}
@@ -147,7 +148,7 @@ export function BeltShowcase({ s }: { s: GameState }) {
               <Text style={bs.modalKicker}>
                 {s.fighter.ad} {s.fighter.soyad}
               </Text>
-              <Text style={[bs.modalTitle, SLANT]}>ŞAMPİYONLUK VİTRİNİ</Text>
+              <Text style={[bs.modalTitle, SLANT]}>{L("ŞAMPİYONLUK VİTRİNİ")}</Text>
             </View>
             <Pressable onPress={() => setOpen(false)} style={bs.close} hitSlop={10}>
               <Icon name="close" size={22} color={C.text} />
@@ -157,7 +158,7 @@ export function BeltShowcase({ s }: { s: GameState }) {
             <LinearGradient colors={['#4a3508', '#1a1508']} style={bs.banner}>
               <Icon name="trophy-variant" size={20} color={C.gold} />
               <Text style={[bs.bannerText, SLANT]}>
-                {champLabel(held).en} · AYNI ANDA {held} KEMER
+                {champLabel(held).en} {L("· AYNI ANDA")}{' '}{held} {L("KEMER")}
               </Text>
             </LinearGradient>
           ) : null}
@@ -180,20 +181,20 @@ export function BeltShowcase({ s }: { s: GameState }) {
                     </View>
                   </View>
                   <LinearGradient colors={['#1a1509', '#0c0b08']} style={bs.plaque}>
-                    <Text style={bs.plaqueOrg}>{ORGS[b.org].ad.toLocaleUpperCase('tr-TR')}</Text>
-                    <Text style={[bs.plaqueTitle, SLANT]}>{WEIGHT_CLASSES[b.siklet].ad.toLocaleUpperCase('tr-TR')} SIKLET DÜNYA ŞAMPİYONU</Text>
+                    <Text style={bs.plaqueOrg}>{ORGS[b.org].ad.toLocaleUpperCase(LOC)}</Text>
+                    <Text style={[bs.plaqueTitle, SLANT]}>{WEIGHT_CLASSES[b.siklet].ad.toLocaleUpperCase(LOC)} {L("SIKLET DÜNYA ŞAMPİYONU")}</Text>
                     <View style={bs.plaqueRow}>
                       <View style={bs.pStat}>
                         <Text style={bs.pVal}>{b.yas}</Text>
-                        <Text style={bs.pLabel}>KAZANDIĞI YAŞ</Text>
+                        <Text style={bs.pLabel}>{L("KAZANDIĞI YAŞ")}</Text>
                       </View>
                       <View style={bs.pStat}>
                         <Text style={bs.pVal}>{b.savunma}</Text>
-                        <Text style={bs.pLabel}>SAVUNMA</Text>
+                        <Text style={bs.pLabel}>{L("SAVUNMA")}</Text>
                       </View>
                       <View style={bs.pStat}>
-                        <Text style={[bs.pVal, { color: b.aktif ? C.gold : C.faint }]}>{b.aktif ? 'AKTİF' : 'GEÇMİŞ'}</Text>
-                        <Text style={bs.pLabel}>DURUM</Text>
+                        <Text style={[bs.pVal, { color: b.aktif ? C.gold : C.faint }]}>{b.aktif ? L("AKTİF") : L("GEÇMİŞ")}</Text>
+                        <Text style={bs.pLabel}>{L("DURUM")}</Text>
                       </View>
                     </View>
                     {b.savunma ? (

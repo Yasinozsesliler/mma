@@ -1,3 +1,4 @@
+import { L as tL, LOC } from '../i18n';
 import { addStat, advanceWeeks, currentOrg, fullName, statAverage } from './character';
 import { campCost, randomInjury, startCamp } from './camp';
 import { ORGS, WEIGHT_CLASSES, WEIGHT_MODS } from './data';
@@ -23,20 +24,20 @@ import { chance, clamp, pick, rand, randInt, uid } from './rng';
 import type { GameState, Offer, Opponent, OrgId, StatKey, WeightClass } from './types';
 
 export const STAGE_LABELS = {
-  amator: 'Aşama 1 · Amatör',
-  bolgesel: 'Aşama 2 · Bölgesel',
-  buyuk: 'Aşama 3 · Büyük Organizasyon',
-  ufc: 'Aşama 5 · UFC',
+  amator: tL("Aşama 1 · Amatör"),
+  bolgesel: tL("Aşama 2 · Bölgesel"),
+  buyuk: tL("Aşama 3 · Büyük Organizasyon"),
+  ufc: tL("Aşama 5 · UFC"),
 };
 
-const money = (n: number) => `$${Math.round(n).toLocaleString('tr-TR')}`;
+const money = (n: number) => `$${Math.round(n).toLocaleString(LOC)}`;
 export { money };
 
 export function rankLabel(s: GameState) {
   const org = currentOrg(s);
-  if (s.sampiyon) return `🏆 ${ORGS[org].kisa} ŞAMPİYONU`;
-  if (org === 'amator') return `Amatör (${s.amator.g}-${s.amator.m}-${s.amator.b})`;
-  if (s.rank == null) return 'Sıralamasız';
+  if (s.sampiyon) return tL("🏆 {0} ŞAMPİYONU", [ORGS[org].kisa]);
+  if (org === 'amator') return tL("Amatör ({0}-{1}-{2})", [s.amator.g, s.amator.m, s.amator.b]);
+  if (s.rank == null) return tL("Sıralamasız");
   return `#${s.rank} ${WEIGHT_CLASSES[s.fighter.siklet].ad}`;
 }
 
@@ -44,7 +45,7 @@ export function rankLabel(s: GameState) {
 
 export function findNextFight(s: GameState) {
   if (banned(s)) {
-    s.haberler.unshift(`🚫 Men cezan sürüyor: ${banWeeksLeft(s)} hafta kaldı.`);
+    s.haberler.unshift(tL("🚫 Men cezan sürüyor: {0} hafta kaldı.", [banWeeksLeft(s)]));
     return;
   }
   const org = ORGS[currentOrg(s)];
@@ -54,8 +55,8 @@ export function findNextFight(s: GameState) {
   } else {
     const o = imposedOpponent(s);
     if (s.kisaHaber) {
-      o.etiket = '⏱️ KISA HABER';
-      o.riskMetni = 'Kamp süresi yok denecek kadar kısa, rakip hazır. Kazanırsan adını herkes öğrenir.';
+      o.etiket = tL("⏱️ KISA HABER");
+      o.riskMetni = tL("Kamp süresi yok denecek kadar kısa, rakip hazır. Kazanırsan adını herkes öğrenir.");
     }
     s.pending.secenekler = [o];
     s.pending.dayatma = true;
@@ -76,14 +77,14 @@ export function rejectImposed(s: GameState) {
   s.populerlik = clamp(s.populerlik - 3, 0, 100);
   advanceWeeks(s, 3);
   if (s.reddedilen >= 3) {
-    s.haberler.unshift(`📉 ${ORGS[currentOrg(s)].kisa}, üç teklifi reddeden ${fullName(s.fighter)} ile yollarını ayırdı.`);
+    s.haberler.unshift(tL("📉 {0}, üç teklifi reddeden {1} ile yollarını ayırdı.", [ORGS[currentOrg(s)].kisa, fullName(s.fighter)]));
     s.reddedilen = 0;
     s.contract = null;
     s.pending = {};
-    openOffers(s, 'serbest', 'Organizasyon, teklifleri reddettiğin için kontratını feshetti. Artık serbest oyuncusun.');
+    openOffers(s, 'serbest', tL("Organizasyon, teklifleri reddettiğin için kontratını feshetti. Artık serbest oyuncusun."));
     return;
   }
-  s.haberler.unshift('Organizasyonun teklifini reddettin. Matchmaker memnun değil. (Popülerlik -3)');
+  s.haberler.unshift(tL("Organizasyonun teklifini reddettin. Matchmaker memnun değil. (Popülerlik -3)"));
   findNextFight(s);
 }
 
@@ -101,7 +102,7 @@ export function restPreview(s: GameState, weeks: number) {
     yeniSaglik: clamp(s.saglik + gain, 0, 100),
     maliyet,
     iyilesen: s.sakatliklar.filter((i) => i.hafta <= weeks).map((i) => i.ad),
-    kalan: s.sakatliklar.filter((i) => i.hafta > weeks).map((i) => `${i.ad} (${i.hafta - weeks} hf daha)`),
+    kalan: s.sakatliklar.filter((i) => i.hafta > weeks).map((i) => tL("{0} ({1} hf daha)", [i.ad, i.hafta - weeks])),
   };
 }
 
@@ -112,7 +113,7 @@ export function rest(s: GameState, weeks = 4) {
   s.para -= p.maliyet;
   s.saglik = p.yeniSaglik;
   s.haberler.unshift(
-    `🛌 ${weeks} hafta dinlendin. Sağlık ${s.saglik}/100.${p.maliyet ? ` Yaşam masrafı ${money(p.maliyet)}.` : ''} ${notes.join(' ')}`.trim(),
+    tL("🛌 {0} hafta dinlendin. Sağlık {1}/100.{2} {3}", [weeks, s.saglik, p.maliyet ? tL(" Yaşam masrafı {0}.", [money(p.maliyet)]) : '', notes.join(' ')]).trim(),
   );
 }
 
@@ -133,17 +134,17 @@ export function finishFight(s: GameState) {
 
   lines.push(
     draw
-      ? `⚖️ BERABERE: ${fs.pAd} vs ${opp.soyad}`
+      ? tL("⚖️ BERABERE: {0} vs {1}", [fs.pAd, opp.soyad])
       : won
-        ? `🏆 GALİBİYET: ${methodLabel(r.yontem)} · ${r.raunt}. raunt ${r.sure}`
-        : `❌ MAĞLUBİYET: ${methodLabel(r.yontem)} · ${r.raunt}. raunt ${r.sure}`,
+        ? tL("🏆 GALİBİYET: {0} · {1}. raunt {2}", [methodLabel(r.yontem), r.raunt, r.sure])
+        : tL("❌ MAĞLUBİYET: {0} · {1}. raunt {2}", [methodLabel(r.yontem), r.raunt, r.sure]),
   );
 
   // Rekor ve geçmiş
   // Doping testi: yakalanırsan galibiyet geçersiz (No Contest), ücret kesilir, men cezası.
   const banWeeks = dopingTest(s);
   const caught = banWeeks != null;
-  if (caught && won) lines.push('🚫 Galibiyet geçersiz sayıldı: NO CONTEST.');
+  if (caught && won) lines.push(tL("🚫 Galibiyet geçersiz sayıldı: NO CONTEST."));
   // Amatör ve profesyonel karneler ayrı tutulur; profesyonel kariyer 0-0 başlar.
   const karne = pro ? s.rekor : s.amator;
   if (caught && won) {
@@ -168,7 +169,7 @@ export function finishFight(s: GameState) {
   let teknikNot: string | undefined;
   if (won && !caught && finishMethod && r.teknik) {
     teknikNot = addTechXp(s, r.teknik, 2);
-    lines.push(`🎯 Bitiren hareket: ${techById(r.teknik)?.ad} · ${teknikNot}`);
+    lines.push(tL("🎯 Bitiren hareket: {0} · {1}", [techById(r.teknik)?.ad, teknikNot]));
   }
   const oldSeri = s.seri;
   s.seri = won ? Math.max(1, s.seri + 1) : draw ? 0 : Math.min(-1, s.seri - 1);
@@ -179,30 +180,30 @@ export function finishFight(s: GameState) {
     let purse = s.contract.ucret + (won && !caught ? s.contract.bonus : 0);
     if (caught) {
       purse *= 0.7;
-      lines.push('🚫 Doping cezası: ücretin %30’u kesildi.');
+      lines.push(tL("🚫 Doping cezası: ücretin %30’u kesildi."));
     }
     if (kamp.ucretCeza) {
       purse *= 1 - kamp.ucretCeza;
-      lines.push(`⚖️ Kilo cezası: ücretinin %${kamp.ucretCeza * 100}’si rakibe gitti.`);
+      lines.push(tL("⚖️ Kilo cezası: ücretinin %{0}’si rakibe gitti.", [kamp.ucretCeza * 100]));
     }
     if (kamp.rakipCeza) purse += s.contract.ucret * 0.2;
     kazanc += purse;
-    lines.push(`💵 Ücret: ${money(purse)}${won && s.contract.bonus ? ' (galibiyet bonusu dahil)' : ''}`);
+    lines.push(tL("💵 Ücret: {0}{1}", [money(purse), won && s.contract.bonus ? tL(" (galibiyet bonusu dahil)") : '']));
   } else if (won) {
     kazanc += 200;
-    lines.push('💵 Yerel bir kasap dükkânı sana $200 ödül verdi. Başlangıç böyle olur.');
+    lines.push(tL("💵 Yerel bir kasap dükkânı sana $200 ödül verdi. Başlangıç böyle olur."));
   }
   const bonus = orgInfo.performansBonusu;
   let bonusSay = 0;
   if (bonus && won && finishMethod && chance(r.raunt === 1 ? 0.5 : 0.35)) {
     kazanc += bonus;
     bonusSay++;
-    lines.push(`⭐ GECENİN PERFORMANSI! +${money(bonus)}`);
+    lines.push(tL("⭐ GECENİN PERFORMANSI! +{0}", [money(bonus)]));
   }
   if (bonus && fs.pHasar > 30 && fs.oHasar > 30 && (r.raunt >= 3 || !finishMethod) && chance(0.5)) {
     kazanc += bonus;
     bonusSay++;
-    lines.push(`🔥 GECENİN DÖVÜŞÜ! Seyirci ayakta alkışladı. +${money(bonus)}`);
+    lines.push(tL("🔥 GECENİN DÖVÜŞÜ! Seyirci ayakta alkışladı. +{0}", [money(bonus)]));
   }
   const sp = paySponsors(s, won && !caught, finishMethod);
   kazanc += sp.toplam;
@@ -210,17 +211,17 @@ export function finishFight(s: GameState) {
   if (kazanc > 0 && s.takim.menajer) {
     const pay = kazanc * s.takim.menajerPay;
     kazanc -= pay;
-    lines.push(`🤝 Menajer payı (${s.takim.menajer}): -${money(pay)}`);
+    lines.push(tL("🤝 Menajer payı ({0}): -{1}", [s.takim.menajer, money(pay)]));
   }
   const sponsor = Math.round(s.populerlik * s.populerlik * { amator: 0, bolgesel: 0.6, buyuk: 2.5, ufc: 12 }[s.stage]);
   if (sponsor > 0) {
     kazanc += sponsor;
-    lines.push(`🤝 Sponsor gelirleri${s.stage === 'ufc' ? ' (UFC vitrini)' : ''}: +${money(sponsor)}`);
+    lines.push(tL("🤝 Sponsor gelirleri{0}: +{1}", [s.stage === 'ufc' ? tL(" (UFC vitrini)") : '', money(sponsor)]));
   }
   const merch = pro ? Math.round(merchIncome(s)) : 0;
   if (merch > 0) {
     kazanc += merch;
-    lines.push(`👕 Merch ve işletme gelirleri: +${money(merch)}`);
+    lines.push(tL("👕 Merch ve işletme gelirleri: +{0}", [money(merch)]));
   }
   s.para += kazanc;
 
@@ -233,39 +234,39 @@ export function finishFight(s: GameState) {
   pop += (fs.sov ?? 0) * (won ? 2 : -1);
   pop = prAdjust(s, Math.round(pop * exposure));
   s.populerlik = clamp(s.populerlik + pop, 0, 100);
-  lines.push(`🔥 Popülerlik ${pop >= 0 ? '+' : ''}${pop} → ${s.populerlik}/100`);
+  lines.push(tL("🔥 Popülerlik {0}{1} → {2}/100", [pop >= 0 ? '+' : '', pop, s.populerlik]));
   const tDelta = caught
     ? addFollowers(s, -followers(s) * 0.08)
     : fightFollowers(s, { won, draw, finish: finishMethod, bonus: bonusSay, title: won && opp.champion, koLoss: !won && !draw && (r.yontem === 'KO' || r.yontem === 'TKO'), trash: s.trashTalk });
-  lines.push(`📲 Takipçi ${fmtDelta(tDelta)} → ${fmtFollowers(followers(s))}`);
-  if (!won && s.trashTalk) lines.push('Trash talk yaptıktan sonra kaybetmek… sosyal medya acımasız.');
+  lines.push(tL("📲 Takipçi {0} → {1}", [fmtDelta(tDelta), fmtFollowers(followers(s))]));
+  if (!won && s.trashTalk) lines.push(tL("Trash talk yaptıktan sonra kaybetmek… sosyal medya acımasız."));
   const trashOnce = s.trashTalk;
   s.trashTalk = false;
 
   // Sağlık ve sakatlık
   const hasar = Math.round(fs.pHasar * 0.35 + (!won && (r.yontem === 'KO' || r.yontem === 'TKO') ? 15 : 0));
   s.saglik = clamp(s.saglik - hasar, 5, 100);
-  lines.push(hasar ? `🩹 Sağlık -${hasar} → ${s.saglik}/100` : `🩹 Temiz çıktın, sağlık ${s.saglik}/100`);
+  lines.push(hasar ? tL("🩹 Sağlık -{0} → {1}/100", [hasar, s.saglik]) : tL("🩹 Temiz çıktın, sağlık {0}/100", [s.saglik]));
   if (r.sakatlik) {
-    const inj = { ad: 'Kol bağları koptu', stat: 'yer' as const, ceza: 12, hafta: 12 };
+    const inj = { ad: tL("Kol bağları koptu"), stat: 'yer' as const, ceza: 12, hafta: 12 };
     s.sakatliklar.push(inj);
-    lines.push(`🦴 ${inj.ad}: ${inj.hafta} hafta sürecek. Tap atmamanın bedeli.`);
+    lines.push(tL("🦴 {0}: {1} hafta sürecek. Tap atmamanın bedeli.", [inj.ad, inj.hafta]));
   } else if (chance(fs.pHasar / 260)) {
     const inj = randomInjury(3, 7);
     s.sakatliklar.push(inj);
-    lines.push(`🩹 Dövüşten ${inj.ad} ile çıktın (${inj.hafta} hafta).`);
+    lines.push(tL("🩹 Dövüşten {0} ile çıktın ({1} hafta).", [inj.ad, inj.hafta]));
   }
   if (!won && r.yontem === 'KO') {
     addStat(s.fighter.stats, 'cene', -1);
-    lines.push('Nakavt olmak çenende iz bıraktı. Çene -1.');
+    lines.push(tL("Nakavt olmak çenende iz bıraktı. Çene -1."));
   }
 
   // Tecrübe
   const iq = addStat(s.fighter.stats, 'iq', 1);
-  if (iq) lines.push(`🧠 Kafes tecrübesi: IQ +${iq}`);
+  if (iq) lines.push(tL("🧠 Kafes tecrübesi: IQ +{0}", [iq]));
   const puan = fightPoints({ won, draw, finish: finishMethod, bonus: bonusSay, title: won && opp.champion });
   s.puan += puan;
-  lines.push(`⭐ +${puan} gelişim puanı (toplam ${s.puan})`);
+  lines.push(tL("⭐ +{0} gelişim puanı (toplam {1})", [puan, s.puan]));
 
   // Sıralama
   const wasChampion = s.sampiyon;
@@ -281,13 +282,13 @@ export function finishFight(s: GameState) {
   }
   divNotes.forEach((n) => s.haberler.unshift(n));
   socialAfterFight(s, opp, won, draw, methodLabel(r.yontem), divNotes);
-  if (s.seri >= 3) lines.push(`🔥 ${s.seri} maçlık galibiyet serisi!`);
-  if (s.seri <= -2 && oldSeri <= -1) lines.push(`📉 ${-s.seri} maçlık mağlubiyet serisi. Baskı artıyor.`);
+  if (s.seri >= 3) lines.push(tL("🔥 {0} maçlık galibiyet serisi!", [s.seri]));
+  if (s.seri <= -2 && oldSeri <= -1) lines.push(tL("📉 {0} maçlık mağlubiyet serisi. Baskı artıyor.", [-s.seri]));
 
   // Kontrat
   if (s.contract) {
     s.contract.kalan--;
-    lines.push(`📜 Kontratta ${s.contract.kalan} dövüş kaldı.`);
+    lines.push(tL("📜 Kontratta {0} dövüş kaldı.", [s.contract.kalan]));
   }
 
   updateRival(s, opp, won, draw, r.yontem === 'SD' || finishMethod);
@@ -313,7 +314,7 @@ export function finishFight(s: GameState) {
     } else if (pro) st.bitirisSeri = 0;
     if (r.sakatlik) st.inat++;
   }
-  checkAchievements(s).forEach((a) => lines.push(`⭐ Yeni başarım: ${a}`));
+  checkAchievements(s).forEach((a) => lines.push(tL("⭐ Yeni başarım: {0}", [a])));
   if (caught) lines.push(...dopingFallout(s, banWeeks!));
   const teklif = refreshSponsorOffers(s, won && !caught);
   if (teklif) lines.push(teklif);
@@ -321,15 +322,13 @@ export function finishFight(s: GameState) {
   let ara = 2;
   if (!won && (r.yontem === 'KO' || r.yontem === 'TKO')) {
     ara += 4;
-    lines.push('🩺 Nakavt sonrası zorunlu sağlık ertelemesi: +4 hafta kafese çıkamazsın.');
+    lines.push(tL("🩺 Nakavt sonrası zorunlu sağlık ertelemesi: +4 hafta kafese çıkamazsın."));
   }
-  lines.push(`📅 Toparlanma: ${ara} hafta. Sıradaki maçın tarihi teklifle birlikte belirlenecek.`);
+  lines.push(tL("📅 Toparlanma: {0} hafta. Sıradaki maçın tarihi teklifle birlikte belirlenecek.", [ara]));
   advanceWeeks(s, ara);
 
   s.haberler.unshift(
-    `${won ? '✅' : draw ? '➖' : '❌'} ${orgInfo.kisa}: ${fullName(s.fighter)} ${
-      won ? 'yendi' : draw ? 'berabere kaldı' : 'kaybetti'
-    }: ${opp.ad} ${opp.soyad} · ${methodLabel(r.yontem)} (R${r.raunt})`,
+    tL("{0} {1}: {2} {3}: {4} {5} · {6} (R{7})", [won ? '✅' : draw ? '➖' : '❌', orgInfo.kisa, fullName(s.fighter), won ? tL('yendi') : draw ? tL("berabere kaldı") : tL('kaybetti'), opp.ad, opp.soyad, methodLabel(r.yontem), r.raunt]),
   );
 
   const ctx: InterviewCtx = {
@@ -410,29 +409,29 @@ function updateRank(s: GameState, opp: Opponent, won: boolean, draw: boolean): s
     s.sampiyon = true;
     s.rank = null;
     s.savunma = 0;
-    const title = `${ORGS[org].ad} ${WEIGHT_CLASSES[s.fighter.siklet].ad} Sıklet Şampiyonu`;
+    const title = tL("{0} {1} Sıklet Şampiyonu", [ORGS[org].ad, WEIGHT_CLASSES[s.fighter.siklet].ad]);
     const sayi = winBelt(s, org, s.fighter.siklet);
     s.unvanlar.push(title);
     if (sayi >= 2) {
       const lbl = champLabel(sayi);
       const bonus = sayi >= 3 ? 15 : 10;
       s.populerlik = clamp(s.populerlik + bonus, 0, 100);
-      s.haberler.unshift(`🏆🏆 TARİH YAZILDI! ${fullName(s.fighter)} artık ${ORGS[org].kisa} ${lbl.tr} (${lbl.en})!`);
-      return `🏆🏆 ${lbl.en}! ${title}! (Popülerlik +${bonus})`;
+      s.haberler.unshift(tL("🏆🏆 TARİH YAZILDI! {0} artık {1} {2} ({3})!", [fullName(s.fighter), ORGS[org].kisa, lbl.tr, lbl.en]));
+      return tL("🏆🏆 {0}! {1}! (Popülerlik +{2})", [lbl.en, title, bonus]);
     }
-    s.haberler.unshift(`🏆🏆 YENİ ŞAMPİYON! ${fullName(s.fighter)} artık ${title}!`);
-    return `🏆 KEMER SENİN! ${title}!`;
+    s.haberler.unshift(tL("🏆🏆 YENİ ŞAMPİYON! {0} artık {1}!", [fullName(s.fighter), title]));
+    return tL("🏆 KEMER SENİN! {0}!", [title]);
   }
   if (s.sampiyon) {
     if (won) {
       s.savunma++;
       defendBelt(s, org, s.fighter.siklet);
-      return `🏆 Kemer savunması başarılı! (${s.savunma}. savunma)`;
+      return tL("🏆 Kemer savunması başarılı! ({0}. savunma)", [s.savunma]);
     }
     loseBelt(s, org, s.fighter.siklet);
     s.sampiyon = false;
     s.rank = randInt(1, 2);
-    return `💔 Kemeri kaybettin. Yeni sıralaman #${s.rank}.`;
+    return tL("💔 Kemeri kaybettin. Yeni sıralaman #{0}.", [s.rank]);
   }
   if (won) {
     if (opp.rank != null) {
@@ -448,9 +447,9 @@ function updateRank(s: GameState, opp: Opponent, won: boolean, draw: boolean): s
     if (s.rank > L) s.rank = null;
   }
   if (before === s.rank) return null;
-  if (s.rank == null) return '📉 Sıralamadan düştün.';
-  if (before == null) return `📈 Sıralamaya girdin: #${s.rank}!`;
-  return s.rank < before ? `📈 Sıralama: #${before} → #${s.rank}` : `📉 Sıralama: #${before} → #${s.rank}`;
+  if (s.rank == null) return tL("📉 Sıralamadan düştün.");
+  if (before == null) return tL("📈 Sıralamaya girdin: #{0}!", [s.rank]);
+  return s.rank < before ? tL("📈 Sıralama: #{0} → #{1}", [before, s.rank]) : tL("📉 Sıralama: #{0} → #{1}", [before, s.rank]);
 }
 
 function updateRival(s: GameState, opp: Opponent, won: boolean, draw: boolean, dramatic: boolean) {
@@ -496,18 +495,18 @@ export function afterPostFight(s: GameState) {
   }
   if (org === 'amator') {
     if (s.amator.g >= 3 && s.amator.g > s.amator.m) {
-      openOffers(s, 'profesyonel', 'Amatörde adın duyuldu. İki bölgesel organizasyon seni profesyonel kadrosuna istiyor!');
+      openOffers(s, 'profesyonel', tL("Amatörde adın duyuldu. İki bölgesel organizasyon seni profesyonel kadrosuna istiyor!"));
       return;
     }
   } else if (org === 'dwcs') {
     s.contract = null;
     if (won && chance(finishMethod ? 0.85 : dwcsIkna ? 0.6 : 0.4)) {
-      openOffers(s, 'ufcGiris', `🎟️ Dana White ayağa kalktı: "${s.fighter.soyad}, UFC’ye hoş geldin!"`);
+      openOffers(s, 'ufcGiris', tL("🎟️ Dana White ayağa kalktı: \"{0}, UFC’ye hoş geldin!\"", [s.fighter.soyad]));
     } else {
       openOffers(
         s,
         'serbest',
-        won ? 'Kazandın ama Dana etkilenmedi: "Biraz daha gelişsin." Diğer kapılar açık.' : 'DWCS kötü geçti. UFC kapısı şimdilik kapandı.',
+        won ? tL("Kazandın ama Dana etkilenmedi: \"Biraz daha gelişsin.\" Diğer kapılar açık.") : tL("DWCS kötü geçti. UFC kapısı şimdilik kapandı."),
       );
     }
     return;
@@ -515,25 +514,25 @@ export function afterPostFight(s: GameState) {
     const cut =
       ((org === 'ufc' && s.seri <= -2 && s.rank == null && !s.sampiyon) || (s.seri <= -3 && !s.sampiyon)) && ownerRel(s) < 25;
     if (cut) {
-      s.haberler.unshift(`✂️ ${ORGS[org].kisa}, ${fullName(s.fighter)} ile kontratını feshetti.`);
+      s.haberler.unshift(tL("✂️ {0}, {1} ile kontratını feshetti.", [ORGS[org].kisa, fullName(s.fighter)]));
       s.contract = null;
-      openOffers(s, 'kovuldu', `📉 ${ORGS[org].ad} seni kadrodan çıkardı. Kariyer bitmedi, ama yeniden inşa etmen lazım.`);
+      openOffers(s, 'kovuldu', tL("📉 {0} seni kadrodan çıkardı. Kariyer bitmedi, ama yeniden inşa etmen lazım.", [ORGS[org].ad]));
       return;
     }
     // UFC'de sıralama basamağı yükselince maaş yeniden düzenlenir.
     if (org === 'ufc' && s.contract && s.contract.kalan > 0 && ufcTier(s) > (s.ufcKademe ?? 0)) {
       s.ufcKademe = ufcTier(s);
-      openOffers(s, 'ufcZam', `📈 Artık bir “${UFC_TIERS[s.ufcKademe].ad}” dövüşçüsüsün. UFC maaşını yeniden düzenlemek istiyor.`);
+      openOffers(s, 'ufcZam', tL("📈 Artık bir “{0}” dövüşçüsüsün. UFC maaşını yeniden düzenlemek istiyor.", [UFC_TIERS[s.ufcKademe].ad]));
       return;
     }
     if (s.contract && s.contract.kalan <= 0) {
-      openOffers(s, 'yenileme', `📜 ${ORGS[org].ad} kontratın bitti. Menajerinin telefonu susmuyor.`);
+      openOffers(s, 'yenileme', tL("📜 {0} kontratın bitti. Menajerinin telefonu susmuyor.", [ORGS[org].ad]));
       return;
     }
     // Dana White iyi bir galibiyetten sonra arayabilir (kontrat ortasında da).
     const dwcsHazir = s.sampiyon || (s.rank != null && ((s.rank <= 3 && s.populerlik >= 25) || (s.rank <= 5 && s.seri >= 3)));
     if (s.stage === 'buyuk' && won && dwcsHazir && s.contract && chance(0.35)) {
-      openOffers(s, 'dwcsDavet', `📞 Telefon çaldı. Arayan: Dana White. “Seni izliyorum evlat. Contender Series’e gel, kendini göster.”`);
+      openOffers(s, 'dwcsDavet', tL("📞 Telefon çaldı. Arayan: Dana White. “Seni izliyorum evlat. Contender Series’e gel, kendini göster.”"));
       return;
     }
   }
@@ -553,11 +552,11 @@ type OfferKind = 'profesyonel' | 'yenileme' | 'serbest' | 'kovuldu' | 'ufcGiris'
 
 /** UFC maaş basamakları: sıralamada yükseldikçe maaş katlanır. */
 export const UFC_TIERS = [
-  { ad: 'Sıralamasız', carpan: 1 },
-  { ad: 'İlk 15', carpan: 1.6 },
-  { ad: 'İlk 10', carpan: 2.4 },
-  { ad: 'İlk 5', carpan: 3.8 },
-  { ad: 'Şampiyon', carpan: 6.5 },
+  { ad: tL("Sıralamasız"), carpan: 1 },
+  { ad: tL("İlk 15"), carpan: 1.6 },
+  { ad: tL("İlk 10"), carpan: 2.4 },
+  { ad: tL("İlk 5"), carpan: 3.8 },
+  { ad: tL("Şampiyon"), carpan: 6.5 },
 ];
 
 export function ufcTier(s: GameState) {
@@ -567,12 +566,12 @@ export function ufcTier(s: GameState) {
 }
 
 const CLAUSES: Partial<Record<OrgId, string[]>> = {
-  cfc: ['Bölgesel TV yayını garantisi', 'Kazanırsan unvan eleminatörü önceliği'],
-  oktagon: ['Stadyum kartında yer alma garantisi', 'Avrupa turnuvasına katılım hakkı'],
-  pfl: ['Sezon playoff’una katılım hakkı, finalde büyük ödül', 'Sezon içi sponsorluk hakkı PFL’de'],
-  one: ['Asya’da yayın ve reklam kampanyası', 'Kick boks/Muay Thai süper maçlarına çıkma hakkı'],
-  mvp: ['PPV gelir payı %2', 'Sosyal medya içerik zorunluluğu'],
-  ufc: ['Kısa haber maddesi: teklif edilen maçı reddedersen ücret %20 düşer', 'Venum/UFC giyim kuralları'],
+  cfc: [tL("Bölgesel TV yayını garantisi"), tL("Kazanırsan unvan eleminatörü önceliği")],
+  oktagon: [tL("Stadyum kartında yer alma garantisi"), tL("Avrupa turnuvasına katılım hakkı")],
+  pfl: [tL("Sezon playoff’una katılım hakkı, finalde büyük ödül"), tL("Sezon içi sponsorluk hakkı PFL’de")],
+  one: [tL("Asya’da yayın ve reklam kampanyası"), tL("Kick boks/Muay Thai süper maçlarına çıkma hakkı")],
+  mvp: [tL("PPV gelir payı %2"), tL("Sosyal medya içerik zorunluluğu")],
+  ufc: [tL("Kısa haber maddesi: teklif edilen maçı reddedersen ücret %20 düşer"), tL("Venum/UFC giyim kuralları")],
 };
 
 function makeOffer(s: GameState, org: OrgId, dovus: number, raise = 1, not = '', ozel?: string): Offer {
@@ -602,26 +601,26 @@ export function openOffers(s: GameState, kind: OfferKind, metin: string) {
   if (kind === 'dwcsDavet' && s.contract) {
     const c = s.contract;
     const fesih = Math.round((c.kalan * c.ucret * 0.5) / 1000) * 1000;
-    const dw = makeOffer(s, 'dwcs', 1, 1, `Tek dövüş. Etkilersen UFC kontratı. Mevcut ${ORGS[c.org].kisa} kontratını feshetmen gerekiyor.`, `Kontrat fesih cezası: $${fesih.toLocaleString('tr-TR')}`);
+    const dw = makeOffer(s, 'dwcs', 1, 1, tL("Tek dövüş. Etkilersen UFC kontratı. Mevcut {0} kontratını feshetmen gerekiyor.", [ORGS[c.org].kisa]), tL("Kontrat fesih cezası: ${0}", [fesih.toLocaleString(LOC)]));
     dw.fesih = fesih;
     dw.pazarlikYapildi = true;
     offers.push(dw, {
       ...c,
       id: uid(),
       dovus: c.kalan,
-      not: `${ORGS[c.org].ad} ile kalan ${c.kalan} dövüşüne aynı şartlarla devam et.`,
+      not: tL("{0} ile kalan {1} dövüşüne aynı şartlarla devam et.", [ORGS[c.org].ad, c.kalan]),
       pazarlikYapildi: true,
       devam: true,
     });
   } else if (kind === 'ufcZam' && s.contract) {
     const t = ufcTier(s);
     offers.push(
-      makeOffer(s, 'ufc', Math.max(3, s.contract.kalan), UFC_TIERS[t].carpan, `${UFC_TIERS[t].ad} basamağı için yeni kontrat.`, t === 4 ? 'Şampiyon maddesi: PPV gelir payı ve ana maç garantisi' : undefined),
+      makeOffer(s, 'ufc', Math.max(3, s.contract.kalan), UFC_TIERS[t].carpan, tL("{0} basamağı için yeni kontrat.", [UFC_TIERS[t].ad]), t === 4 ? tL("Şampiyon maddesi: PPV gelir payı ve ana maç garantisi") : undefined),
     );
   } else if (kind === 'profesyonel') {
     offers.push(makeOffer(s, 'cfc', 3), makeOffer(s, 'oktagon', 3));
   } else if (kind === 'ufcGiris') {
-    offers.push(makeOffer(s, 'ufc', 4, 1, 'Rüya gerçek oldu. Dünyanın en büyük sahnesi.'));
+    offers.push(makeOffer(s, 'ufc', 4, 1, tL("Rüya gerçek oldu. Dünyanın en büyük sahnesi.")));
   } else if (kind === 'kovuldu' || kind === 'serbest') {
     if (s.stage === 'ufc' || s.stage === 'buyuk') {
       pickN(bigOrgs, 2).forEach((o) => offers.push(makeOffer(s, o, 3, 0.9)));
@@ -632,20 +631,20 @@ export function openOffers(s: GameState, kind: OfferKind, metin: string) {
     if (s.stage === 'bolgesel') {
       if (s.sampiyon || (s.rank != null && s.rank <= 3) || (winsInOrg >= 3 && s.populerlik >= 18)) {
         pickN(bigOrgs, 2).forEach((o) => offers.push(makeOffer(s, o, 4)));
-        metin += ' Büyük organizasyonlar kapıda!';
+        metin += tL(" Büyük organizasyonlar kapıda!");
       }
-      offers.push(makeOffer(s, org, 3, 1.25, 'Mevcut organizasyonun seni tutmak istiyor.'));
+      offers.push(makeOffer(s, org, 3, 1.25, tL("Mevcut organizasyonun seni tutmak istiyor.")));
     } else if (s.stage === 'buyuk') {
       // UFC'ye tek kapı Dana White's Contender Series. Davet için şampiyonluk ya da zirvede popüler bir isim olmak gerekir.
       if (s.sampiyon) {
-        offers.push(makeOffer(s, 'dwcs', 1, 1, 'Şampiyonluğun Dana White’ın dikkatini çekti. DWCS’ye davetlisin. Kazanırsan ve etkilersen UFC kapısı açılır.'));
+        offers.push(makeOffer(s, 'dwcs', 1, 1, tL("Şampiyonluğun Dana White’ın dikkatini çekti. DWCS’ye davetlisin. Kazanırsan ve etkilersen UFC kapısı açılır.")));
       } else if (s.rank != null && ((s.rank <= 3 && s.populerlik >= 25) || (s.rank <= 5 && s.seri >= 3))) {
-        offers.push(makeOffer(s, 'dwcs', 1, 1, 'Zirvedeki performansın izleniyor. Tek dövüş, tek şans: etkilersen UFC kontratı.'));
+        offers.push(makeOffer(s, 'dwcs', 1, 1, tL("Zirvedeki performansın izleniyor. Tek dövüş, tek şans: etkilersen UFC kontratı.")));
       }
-      offers.push(makeOffer(s, org, 4, 1.3, 'Mevcut organizasyonun yeni bir kontrat sunuyor.'));
+      offers.push(makeOffer(s, org, 4, 1.3, tL("Mevcut organizasyonun yeni bir kontrat sunuyor.")));
     } else {
-      offers.push(makeOffer(s, 'ufc', 4, UFC_TIERS[ufcTier(s)].carpan * 1.1, `UFC yeni kontrat masaya koydu (${UFC_TIERS[ufcTier(s)].ad} maaş basamağı).`));
-      if (!s.sampiyon && s.populerlik >= 50) offers.push(makeOffer(s, 'mvp', 3, 1.5, 'MVP MMA, UFC’den ayrılırsan büyük para vaat ediyor.'));
+      offers.push(makeOffer(s, 'ufc', 4, UFC_TIERS[ufcTier(s)].carpan * 1.1, tL("UFC yeni kontrat masaya koydu ({0} maaş basamağı).", [UFC_TIERS[ufcTier(s)].ad])));
+      if (!s.sampiyon && s.populerlik >= 50) offers.push(makeOffer(s, 'mvp', 3, 1.5, tL("MVP MMA, UFC’den ayrılırsan büyük para vaat ediyor.")));
     }
   }
   s.pending.teklifler = offers;
@@ -665,12 +664,12 @@ export function acceptOffer(s: GameState, id: string) {
   if (o.devam) {
     s.pending = {};
     s.phase = 'hub';
-    s.haberler.unshift(`Dana White’ın davetini geri çevirdin. ${ORGS[o.org].kisa} kontratına sadık kaldın.`);
+    s.haberler.unshift(tL("Dana White’ın davetini geri çevirdin. {0} kontratına sadık kaldın.", [ORGS[o.org].kisa]));
     return;
   }
   if (o.fesih) {
     s.para -= o.fesih;
-    s.haberler.unshift(`💸 ${ORGS[currentOrg(s)].kisa} kontratı feshedildi. Ceza: ${money(o.fesih)}.`);
+    s.haberler.unshift(tL("💸 {0} kontratı feshedildi. Ceza: {1}.", [ORGS[currentOrg(s)].kisa, money(o.fesih)]));
   }
   const prevOrg = currentOrg(s);
   const sameOrg = prevOrg === o.org;
@@ -687,10 +686,10 @@ export function acceptOffer(s: GameState, id: string) {
     s.bolum = null;
   }
   ensureDivision(s);
-  s.kisaHaber = !!o.ozel?.startsWith('KISA HABER');
+  s.kisaHaber = !!o.ozel?.startsWith(tL("KISA HABER"));
   if (s.kisaHaber) s.rank = 15;
   s.haberler.unshift(
-    `✍️ ${fullName(s.fighter)}, ${ORGS[o.org].ad} ile ${o.dovus} dövüşlük kontrat imzaladı (${money(o.ucret)}/${money(o.bonus)}).`,
+    tL("✍️ {0}, {1} ile {2} dövüşlük kontrat imzaladı ({3}/{4}).", [fullName(s.fighter), ORGS[o.org].ad, o.dovus, money(o.ucret), money(o.bonus)]),
   );
   s.pending = {};
   s.phase = 'hub';
@@ -706,19 +705,19 @@ export function negotiateOffer(s: GameState, id: string): string {
     const inc = 1.15 + rand() * 0.2;
     o.ucret = Math.round((o.ucret * inc) / 100) * 100;
     o.bonus = Math.round((o.bonus * inc) / 100) * 100;
-    return `✅ Pazarlık başarılı! Yeni ücret: ${money(o.ucret)} + ${money(o.bonus)} galibiyet bonusu.`;
+    return tL("✅ Pazarlık başarılı! Yeni ücret: {0} + {1} galibiyet bonusu.", [money(o.ucret), money(o.bonus)]);
   }
   if (chance(0.25)) {
     s.pending.teklifler = offers.filter((x) => x.id !== id);
     if (!s.pending.teklifler.length) {
-      const fb = makeOffer(s, o.org, o.dovus, 0.8, 'Masadan kalktılar ama geri döndüler. Daha düşük bir teklifle.');
+      const fb = makeOffer(s, o.org, o.dovus, 0.8, tL("Masadan kalktılar ama geri döndüler. Daha düşük bir teklifle."));
       fb.pazarlikYapildi = true;
       s.pending.teklifler.push(fb);
-      return `❌ ${ORGS[o.org].kisa} masadan kalktı! Bir hafta sonra daha düşük bir teklifle geri döndüler.`;
+      return tL("❌ {0} masadan kalktı! Bir hafta sonra daha düşük bir teklifle geri döndüler.", [ORGS[o.org].kisa]);
     }
-    return `❌ ${ORGS[o.org].kisa} fazla istediğini düşündü ve teklifi geri çekti!`;
+    return tL("❌ {0} fazla istediğini düşündü ve teklifi geri çekti!", [ORGS[o.org].kisa]);
   }
-  return `🤝 "Son teklifimiz bu." ${ORGS[o.org].kisa} geri adım atmadı.`;
+  return tL("🤝 \"Son teklifimiz bu.\" {0} geri adım atmadı.", [ORGS[o.org].kisa]);
 }
 
 export function rejectOffer(s: GameState, id: string) {
@@ -728,7 +727,7 @@ export function rejectOffer(s: GameState, id: string) {
 export function stayAmateur(s: GameState) {
   s.pending = {};
   s.phase = 'hub';
-  s.haberler.unshift('Profesyonel teklifleri geri çevirdin. Amatörde biraz daha pişmek istiyorsun.');
+  s.haberler.unshift(tL("Profesyonel teklifleri geri çevirdin. Amatörde biraz daha pişmek istiyorsun."));
 }
 
 export function campCostPreview(s: GameState) {
@@ -776,10 +775,10 @@ export function changeWeight(s: GameState, to: WeightClass): string {
   s.rakipler.forEach((r) => (r.champion = false));
   ensureDivision(s);
   const notes = advanceWeeks(s, 4);
-  const yon = WEIGHT_ORDER.indexOf(to) > WEIGHT_ORDER.indexOf(from) ? 'yükseldi' : 'düştü';
+  const yon = WEIGHT_ORDER.indexOf(to) > WEIGHT_ORDER.indexOf(from) ? tL("yükseldi") : tL("düştü");
   const msg = wasChamp
-    ? `${fullName(s.fighter)} kemerini bırakıp ${WEIGHT_CLASSES[to].ad} sıklete ${yon}! İlk dövüşü doğrudan ünvan maçı olacak.`
-    : `${fullName(s.fighter)}, ${WEIGHT_CLASSES[to].ad} sıklete ${yon}. Yeni sıklette sıfırdan başlıyor.`;
+    ? tL("{0} kemerini bırakıp {1} sıklete {2}! İlk dövüşü doğrudan ünvan maçı olacak.", [fullName(s.fighter), WEIGHT_CLASSES[to].ad, yon])
+    : tL("{0}, {1} sıklete {2}. Yeni sıklette sıfırdan başlıyor.", [fullName(s.fighter), WEIGHT_CLASSES[to].ad, yon]);
   s.haberler.unshift(`📋 ${msg}`);
   return `${msg} ${notes.join(' ')}`.trim();
 }

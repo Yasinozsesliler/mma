@@ -1,9 +1,10 @@
 // Kumarhane: slot, blackjack, rulet. Uzun vadede kasa kazanır.
+import { L, LOC } from '../i18n';
 import { chance, clamp, pick, rand, weighted } from './rng';
 import { lifestylePost } from './social';
 import type { GameState } from './types';
 
-const $ = (n: number) => `$${Math.round(n).toLocaleString('tr-TR')}`;
+const $ = (n: number) => `$${Math.round(n).toLocaleString(LOC)}`;
 
 /** Bahsi düşer. Yetersiz bakiye varsa false. */
 export function placeBet(s: GameState, bet: number): boolean {
@@ -21,12 +22,12 @@ export function payout(s: GameState, bet: number, win: number): string | null {
   s.kumar!.net += win;
   if (bet >= 20000 && chance(0.12)) {
     s.populerlik = clamp(s.populerlik - 2, 0, 100);
-    s.haberler.unshift(`📉 ${s.fighter.soyad} kumarhanede ${$(bet)}’lık bahis oynarken görüntülendi. Taraftarlar tepkili.`);
-    return '📸 Paparazziler yüksek bahsini görüntüledi! Popülerlik -2.';
+    s.haberler.unshift(L("📉 {0} kumarhanede {1}’lık bahis oynarken görüntülendi. Taraftarlar tepkili.", [s.fighter.soyad, $(bet)]));
+    return L("📸 Paparazziler yüksek bahsini görüntüledi! Popülerlik -2.");
   }
   if (s.kumar!.net < -100000 && chance(0.15)) {
     s.motivasyon = Math.max(-2, s.motivasyon - 1);
-    return '😞 Kayıplar birikiyor. Kafan kampta değil, kumarda. (Motivasyon -1)';
+    return L("😞 Kayıplar birikiyor. Kafan kampta değil, kumarda. (Motivasyon -1)");
   }
   return null;
 }
@@ -39,8 +40,8 @@ export function enterCasino(s: GameState) {
   s.motivasyon = Math.max(-2, s.motivasyon - 1);
   const kondisyon = chance(0.35);
   if (kondisyon) s.fighter.stats.kondisyon = Math.max(1, s.fighter.stats.kondisyon - 1);
-  if (chance(0.4)) lifestylePost(s, 'gece yarısı kumarhanede');
-  s.kumar.uyari = `Gece hayatı disiplinini bozuyor: motivasyon -1${kondisyon ? ', uykusuz gecelerden kondisyon -1' : ''}.`;
+  if (chance(0.4)) lifestylePost(s, L("gece yarısı kumarhanede"));
+  s.kumar.uyari = L("Gece hayatı disiplinini bozuyor: motivasyon -1{0}.", [kondisyon ? L(", uykusuz gecelerden kondisyon -1") : '']);
 }
 
 // ---------- Slot ----------

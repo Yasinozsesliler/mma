@@ -1,3 +1,4 @@
+import { L, LOC } from '../i18n';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { continueAfterPost, interview, money } from '../engine/career';
@@ -14,14 +15,14 @@ import { C, F, R } from './theme';
 type Tone = { ana: string; hero: readonly [string, string, string]; kicker: string; baslik: string; ikon: IconName };
 
 const TONES: Record<'win' | 'loss' | 'draw' | 'nc', Tone> = {
-  win: { ana: C.gold, hero: ['#3a2a07', '#120d03', '#040405'], kicker: 'ZAFER', baslik: 'KAZANDIN', ikon: 'trophy' },
-  loss: { ana: '#ff4d5e', hero: ['#3a0710', '#120305', '#040405'], kicker: 'MAĞLUBİYET', baslik: 'KAYBETTİN', ikon: 'heart-broken' },
-  draw: { ana: '#b9c3cf', hero: ['#20252c', '#0b0d10', '#040405'], kicker: 'BERABERE', baslik: 'KAZANAN YOK', ikon: 'scale-balance' },
-  nc: { ana: C.orange, hero: ['#3a1f07', '#120903', '#040405'], kicker: 'NO CONTEST', baslik: 'GEÇERSİZ', ikon: 'cancel' },
+  win: { ana: C.gold, hero: ['#3a2a07', '#120d03', '#040405'], kicker: L("ZAFER"), baslik: L("KAZANDIN"), ikon: 'trophy' },
+  loss: { ana: '#ff4d5e', hero: ['#3a0710', '#120305', '#040405'], kicker: L("MAĞLUBİYET"), baslik: L("KAYBETTİN"), ikon: 'heart-broken' },
+  draw: { ana: '#b9c3cf', hero: ['#20252c', '#0b0d10', '#040405'], kicker: L("BERABERE"), baslik: L("KAZANAN YOK"), ikon: 'scale-balance' },
+  nc: { ana: C.orange, hero: ['#3a1f07', '#120903', '#040405'], kicker: L("NO CONTEST"), baslik: L("GEÇERSİZ"), ikon: 'cancel' },
 };
 
 // Üstteki kutucuklarda zaten gösterilen satırlar rapora tekrar yazılmaz.
-const IN_TILES = [/^🔥 Popülerlik/, /^📲 Takipçi/, /^⭐ \+\d+ gelişim/, /^🩹 (Sağlık|Temiz)/];
+const IN_TILES = [/^🔥 (Popülerlik|Popularity)/, /^📲 (Takipçi|Followers)/, /^⭐ \+\d+ (gelişim|skill)/, /^🩹 (Sağlık|Temiz|Health|You came out clean)/];
 
 function splitEmoji(line: string): [string, string] {
   const i = line.indexOf(' ');
@@ -50,7 +51,7 @@ function Corner({ name, sub, record, look, win, accent }: { name: string; sub: s
       <View style={{ height: 20, justifyContent: 'flex-end' }}>
         {win ? (
           <View style={[pf.winTag, { backgroundColor: accent }]}>
-            <Text style={pf.winTagText}>KAZANAN</Text>
+            <Text style={pf.winTagText}>{L("KAZANAN")}</Text>
           </View>
         ) : null}
       </View>
@@ -82,13 +83,13 @@ export function PostFightScreen({ s, act }: { s: GameState; act: Act }) {
     <Screen
       footer={
         ps.roportajSonucu ? (
-          <Button label={s.kutlama ? 'Kutlamaya geç' : 'Devam'} icon={s.kutlama ? 'trophy' : 'arrow-right'} tone={s.kutlama || key === 'win' ? 'gold' : 'red'} onPress={() => act(continueAfterPost)} />
+          <Button label={s.kutlama ? L("Kutlamaya geç") : L("Devam")} icon={s.kutlama ? 'trophy' : 'arrow-right'} tone={s.kutlama || key === 'win' ? 'gold' : 'red'} onPress={() => act(continueAfterPost)} />
         ) : undefined
       }
     >
       <LinearGradient colors={t.hero} style={pf.hero}>
         <View style={[pf.glowLine, { backgroundColor: t.ana }]} />
-        <Text style={pf.org}>{o ? `${ORGS[o.org].ad}${o.unvan ? ' · ÜNVAN MAÇI' : ''}`.toLocaleUpperCase('tr-TR') : ''}</Text>
+        <Text style={pf.org}>{o ? `${ORGS[o.org].ad}${o.unvan ? L(" · ÜNVAN MAÇI") : ''}`.toLocaleUpperCase(LOC) : ''}</Text>
         <View style={[pf.kicker, { borderColor: t.ana }]}>
           <Icon name={t.ikon} size={14} color={t.ana} />
           <Text style={[pf.kickerText, { color: t.ana }]}>{t.kicker}</Text>
@@ -96,18 +97,18 @@ export function PostFightScreen({ s, act }: { s: GameState; act: Act }) {
         <Text style={[pf.title, SLANT, key === 'win' && pf.titleGlow]}>{t.baslik}</Text>
         {o ? (
           <>
-            <Text style={[pf.method, { color: t.ana }]}>{o.yontem.toLocaleUpperCase('tr-TR')}</Text>
+            <Text style={[pf.method, { color: t.ana }]}>{o.yontem.toLocaleUpperCase(LOC)}</Text>
             {o.teknik ? (
               <View style={[pf.techTag, { borderColor: t.ana + '88' }]}>
                 <Icon name="target" size={13} color={t.ana} />
-                <Text style={[pf.techText, { color: t.ana }]}>{o.teknik.toLocaleUpperCase('tr-TR')}</Text>
+                <Text style={[pf.techText, { color: t.ana }]}>{o.teknik.toLocaleUpperCase(LOC)}</Text>
                 {o.teknikNot ? <Text style={pf.techNote}> · {o.teknikNot}</Text> : null}
               </View>
             ) : null}
             <Text style={pf.when}>
-              {o.raunt}. RAUNT · {o.sure}
+              {L("{0}. RAUNT · {1}", [o.raunt, o.sure])}
             </Text>
-            {o.kartlar ? <Text style={pf.cards}>Hakem kartları: {o.kartlar}</Text> : null}
+            {o.kartlar ? <Text style={pf.cards}>{L("Hakem kartları:")}{' '}{o.kartlar}</Text> : null}
           </>
         ) : (
           <Text style={pf.when}>{ps.satirlar[0]}</Text>
@@ -115,7 +116,7 @@ export function PostFightScreen({ s, act }: { s: GameState; act: Act }) {
 
         {o ? (
           <View style={pf.corners}>
-            <Corner name={upName(`${s.fighter.ad} ${s.fighter.soyad}`, s.fighter.uyruk)} sub={s.fighter.lakap ? `“${s.fighter.lakap}”` : 'KIRMIZI KÖŞE'} record={o.rekor} look={s.fighter.gorunum} win={pWin} accent={t.ana} />
+            <Corner name={upName(`${s.fighter.ad} ${s.fighter.soyad}`, s.fighter.uyruk)} sub={s.fighter.lakap ? `“${s.fighter.lakap}”` : L("KIRMIZI KÖŞE")} record={o.rekor} look={s.fighter.gorunum} win={pWin} accent={t.ana} />
             <View style={pf.vs}>
               <Text style={pf.vsText}>VS</Text>
             </View>
@@ -126,16 +127,16 @@ export function PostFightScreen({ s, act }: { s: GameState; act: Act }) {
 
       {o ? (
         <View style={pf.tiles}>
-          <Tile label="KAZANÇ" icon="cash" value={o.kazanc > 0 ? `+${money(o.kazanc)}` : '$0'} sub={o.bonus ? `${o.bonus} bonus dahil` : o.amator ? 'Amatör' : 'Net'} color={o.kazanc > 0 ? C.green : C.dim} />
-          <Tile label="TAKİPÇİ" icon="account-group" value={o.takipciDelta != null ? fmtDelta(o.takipciDelta) : `${o.popDelta >= 0 ? '+' : ''}${o.popDelta}`} sub={o.takipci != null ? `Toplam ${fmtFollowers(o.takipci)}` : undefined} color={(o.takipciDelta ?? o.popDelta) >= 0 ? C.gold : '#ff4d5e'} />
-          <Tile label="GELİŞİM" icon="star-four-points" value={`+${o.puan}`} sub="puan" color={C.blue} />
-          <Tile label="SAĞLIK" icon="heart-pulse" value={`${o.saglik}`} sub={o.hasar ? `-${o.hasar} bu gece` : 'Temiz çıktın'} color={o.saglik < 50 ? '#ff4d5e' : o.saglik < 75 ? C.orange : C.green} />
+          <Tile label={L("KAZANÇ")} icon="cash" value={o.kazanc > 0 ? `+${money(o.kazanc)}` : '$0'} sub={o.bonus ? L("{0} bonus dahil", [o.bonus]) : o.amator ? L("Amatör") : L("Net")} color={o.kazanc > 0 ? C.green : C.dim} />
+          <Tile label={L("TAKİPÇİ")} icon="account-group" value={o.takipciDelta != null ? fmtDelta(o.takipciDelta) : `${o.popDelta >= 0 ? '+' : ''}${o.popDelta}`} sub={o.takipci != null ? L("Toplam {0}", [fmtFollowers(o.takipci)]) : undefined} color={(o.takipciDelta ?? o.popDelta) >= 0 ? C.gold : '#ff4d5e'} />
+          <Tile label={L("GELİŞİM")} icon="star-four-points" value={`+${o.puan}`} sub="puan" color={C.blue} />
+          <Tile label={L("SAĞLIK")} icon="heart-pulse" value={`${o.saglik}`} sub={o.hasar ? L("-{0} bu gece", [o.hasar]) : L("Temiz çıktın")} color={o.saglik < 50 ? '#ff4d5e' : o.saglik < 75 ? C.orange : C.green} />
         </View>
       ) : null}
 
       {para.length ? (
         <>
-          <Section>KAZANÇ DÖKÜMÜ</Section>
+          <Section>{L("KAZANÇ DÖKÜMÜ")}</Section>
           <View style={pf.panel}>
             {para.map((l, i) => {
               const [e, txt] = splitEmoji(l);
@@ -157,7 +158,7 @@ export function PostFightScreen({ s, act }: { s: GameState; act: Act }) {
 
       {rapor.length ? (
         <>
-          <Section>GECE RAPORU</Section>
+          <Section>{L("GECE RAPORU")}</Section>
           <View style={pf.panel}>
             {rapor.map((l, i) => {
               const [e, txt] = splitEmoji(l);
@@ -174,7 +175,7 @@ export function PostFightScreen({ s, act }: { s: GameState; act: Act }) {
         </>
       ) : null}
 
-      <Section>KAFES İÇİ RÖPORTAJ</Section>
+      <Section>{L("KAFES İÇİ RÖPORTAJ")}</Section>
       {ps.roportajSonucu ? (
         <LinearGradient colors={['#15120a', '#0c0d10']} style={[pf.panel, { borderColor: C.goldDeep }]}>
           <View style={{ flexDirection: 'row', gap: 10 }}>
@@ -184,7 +185,7 @@ export function PostFightScreen({ s, act }: { s: GameState; act: Act }) {
         </LinearGradient>
       ) : (
         <>
-          <Text style={pf.micHint}>Mikrofon sana uzatıldı. Ne diyeceksin?</Text>
+          <Text style={pf.micHint}>{L("Mikrofon sana uzatıldı. Ne diyeceksin?")}</Text>
           {ps.roportajSecenekleri.map((q, i) => (
             <Pressable key={i} onPress={() => act((x) => interview(x, i))} style={({ pressed }) => [pf.quote, pressed && { borderColor: t.ana, backgroundColor: '#15161b' }]}>
               <Text style={[pf.quoteMark, { color: t.ana }]}>“</Text>

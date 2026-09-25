@@ -1,4 +1,5 @@
 // Doping: kısa vadeli güç, uzun vadeli risk. Yakalanırsan men, popülerlik kaybı ve sponsor iptali.
+import { L } from '../i18n';
 import { advanceWeeks } from './character';
 import { chance, clamp, randInt, weighted } from './rng';
 import { lifestylePost } from './social';
@@ -54,27 +55,27 @@ export function dopingTest(s: GameState): number | null {
   const weeks = banLength(s);
   s.dopingSayisi = (s.dopingSayisi ?? 0) + 1;
   s.doping = undefined;
-  s.ceza = { bitis: s.hafta + weeks, sebep: 'Doping testi pozitif' };
+  s.ceza = { bitis: s.hafta + weeks, sebep: L("Doping testi pozitif") };
   return weeks;
 }
 
-export const banLabel = (w: number) => (w >= 104 ? '2 yıl' : w >= 52 ? '1 yıl' : '6 ay');
+export const banLabel = (w: number) => (w >= 104 ? L("2 yıl") : w >= 52 ? L("1 yıl") : L("6 ay"));
 
 /** Yakalanma sonrası itibar ve sponsor bedeli. */
 export function dopingFallout(s: GameState, weeks: number): string[] {
   const pop = -prAdjust(s, -randInt(8, 14));
   s.populerlik = clamp(s.populerlik - pop, 0, 100);
   s.motivasyon = -2;
-  const lines = [`🚫 DOPİNG TESTİ POZİTİF! ${banLabel(weeks)} men cezası.`, `📉 Popülerlik -${pop}`, ...scandal(s)];
-  s.haberler.unshift(`🚫 SKANDAL: ${s.fighter.ad} ${s.fighter.soyad} doping testinde yakalandı! ${banLabel(weeks)} men cezası aldı.`);
-  lifestylePost(s, 'doping skandalıyla manşetlerde');
+  const lines = [L("🚫 DOPİNG TESTİ POZİTİF! {0} men cezası.", [banLabel(weeks)]), L("📉 Popülerlik -{0}", [pop]), ...scandal(s)];
+  s.haberler.unshift(L("🚫 SKANDAL: {0} {1} doping testinde yakalandı! {2} men cezası aldı.", [s.fighter.ad, s.fighter.soyad, banLabel(weeks)]));
+  lifestylePost(s, L("doping skandalıyla manşetlerde"));
   return lines;
 }
 
 /** Cezanın kalanını tek seferde çek: zaman geçer, sağlık dolar, ama kafesten uzak kalmak paslandırır. */
 export function serveBan(s: GameState): string {
   const w = banWeeksLeft(s);
-  if (!w) return 'Cezan yok.';
+  if (!w) return L("Cezan yok.");
   const notes = advanceWeeks(s, w);
   s.saglik = 100;
   s.sakatliklar = [];
@@ -82,6 +83,6 @@ export function serveBan(s: GameState): string {
   s.fighter.stats.kondisyon = Math.max(1, s.fighter.stats.kondisyon - pas);
   s.fighter.stats.iq = Math.max(1, s.fighter.stats.iq - Math.floor(pas / 2));
   s.ceza = undefined;
-  s.haberler.unshift(`⏳ ${s.fighter.soyad} cezasını tamamladı ve kafese dönmeye hazır.`);
-  return `${w} hafta sonra ceza bitti. Kafesten uzak kalmak seni paslandırdı (Kondisyon -${pas}). ${notes.join(' ')}`.trim();
+  s.haberler.unshift(L("⏳ {0} cezasını tamamladı ve kafese dönmeye hazır.", [s.fighter.soyad]));
+  return L("{0} hafta sonra ceza bitti. Kafesten uzak kalmak seni paslandırdı (Kondisyon -{1}). {2}", [w, pas, notes.join(' ')]).trim();
 }

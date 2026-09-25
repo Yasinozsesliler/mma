@@ -1,20 +1,21 @@
 // Miras: kemerler, başarımlar ve efsane puanı. Uzun vadeli hedefler buradan gelir.
+import { L } from '../i18n';
 import { ORGS, WEIGHT_CLASSES } from './data';
 import { ACHIEVEMENTS, HOF_ACHIEVEMENTS, HOF_PILLARS, HOF_SCORE } from './achievements';
 import { istat } from './istat';
 import type { Belt, GameState, OrgId, WeightClass } from './types';
 
-export const beltTitle = (b: Pick<Belt, 'org' | 'siklet'>) => `${ORGS[b.org].ad} ${WEIGHT_CLASSES[b.siklet].ad} Sıklet Şampiyonu`;
+export const beltTitle = (b: Pick<Belt, 'org' | 'siklet'>) => L("{0} {1} Sıklet Şampiyonu", [ORGS[b.org].ad, WEIGHT_CLASSES[b.siklet].ad]);
 
 export const activeBelts = (s: GameState) => (s.kemerler ?? []).filter((b) => b.aktif);
 
 /** Aynı organizasyonda aynı anda tutulan kemer sayısına göre unvan. */
 export function champLabel(n: number) {
-  if (n >= 5) return { en: 'LEGENDARY CHAMP', tr: 'EFSANE ŞAMPİYON' };
-  if (n === 4) return { en: 'QUADRUPLE CHAMP', tr: 'DÖRT SIKLET ŞAMPİYONU' };
-  if (n === 3) return { en: 'TRIPLE CHAMP', tr: 'ÜÇ SIKLET ŞAMPİYONU' };
-  if (n === 2) return { en: 'DOUBLE CHAMP', tr: 'ÇİFT SIKLET ŞAMPİYONU' };
-  return { en: 'CHAMPION', tr: 'ŞAMPİYON' };
+  if (n >= 5) return { en: L("LEGENDARY CHAMP"), tr: L("EFSANE ŞAMPİYON") };
+  if (n === 4) return { en: L("QUADRUPLE CHAMP"), tr: L("DÖRT SIKLET ŞAMPİYONU") };
+  if (n === 3) return { en: L("TRIPLE CHAMP"), tr: L("ÜÇ SIKLET ŞAMPİYONU") };
+  if (n === 2) return { en: L("DOUBLE CHAMP"), tr: L("ÇİFT SIKLET ŞAMPİYONU") };
+  return { en: L("CHAMPION"), tr: L("ŞAMPİYON") };
 }
 
 /** Bir organizasyonda aynı anda tutulan en fazla kemer sayısı. */
@@ -68,14 +69,14 @@ export function checkAchievements(s: GameState, sessiz = false): string[] {
     if (!s.basarimlar!.includes(a.id) && a.check(s)) {
       s.basarimlar!.push(a.id);
       yeni.push(a.ad);
-      if (!sessiz) s.haberler.unshift(`⭐ BAŞARIM: ${a.ad} — ${a.aciklama}`);
+      if (!sessiz) s.haberler.unshift(L("⭐ BAŞARIM: {0} — {1}", [a.ad, a.aciklama]));
     }
   });
   if (!s.hof && hofStatus(s).hazir) {
     s.hof = { hafta: s.hafta, yas: s.fighter.yas, skor: legacyScore(s) };
-    s.haberler.unshift(`🏛️ ONUR LİSTESİ! ${s.fighter.ad} ${s.fighter.soyad} MMA Hall of Fame’e seçildi. Adı artık ölümsüz.`);
+    s.haberler.unshift(L("🏛️ ONUR LİSTESİ! {0} {1} MMA Hall of Fame’e seçildi. Adı artık ölümsüz.", [s.fighter.ad, s.fighter.soyad]));
     s.populerlik = Math.min(100, s.populerlik + 10);
-    yeni.push('HALL OF FAME');
+    yeni.push(L("HALL OF FAME"));
   }
   return yeni;
 }
@@ -97,9 +98,9 @@ export function legacyScore(s: GameState) {
 }
 
 export function legacyTier(score: number) {
-  if (score >= 900) return { ad: 'TÜM ZAMANLARIN EN İYİSİ (GOAT)', renk: '#f2c14e' };
-  if (score >= 600) return { ad: 'ONUR LİSTESİ EFSANESİ', renk: '#f2c14e' };
-  if (score >= 350) return { ad: 'DÖNEMİNİN YILDIZI', renk: '#3ecf7a' };
-  if (score >= 150) return { ad: 'SAYGIN BİR SAVAŞÇI', renk: '#3a86ff' };
-  return { ad: 'YOLUN BAŞINDA', renk: '#a3a9b5' };
+  if (score >= 900) return { ad: L("TÜM ZAMANLARIN EN İYİSİ (GOAT)"), renk: '#f2c14e' };
+  if (score >= 600) return { ad: L("ONUR LİSTESİ EFSANESİ"), renk: '#f2c14e' };
+  if (score >= 350) return { ad: L("DÖNEMİNİN YILDIZI"), renk: '#3ecf7a' };
+  if (score >= 150) return { ad: L("SAYGIN BİR SAVAŞÇI"), renk: '#3a86ff' };
+  return { ad: L("YOLUN BAŞINDA"), renk: '#a3a9b5' };
 }

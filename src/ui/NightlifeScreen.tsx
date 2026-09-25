@@ -1,3 +1,4 @@
+import { L, LOC } from '../i18n';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
@@ -17,13 +18,13 @@ function HealthBanner({ s, act, onMsg }: { s: GameState; act: Act; onMsg: (m: st
   const tedavi = !!s.hastalik.tedaviBitis;
   return (
     <Card accent={tedavi ? C.gold : C.red}>
-      <Text style={[nl.alertTitle, { color: tedavi ? C.gold : C.red }]}>{tedavi ? '💊 TEDAVİ SÜRÜYOR' : '⚠️ CİNSEL YOLLA BULAŞAN ENFEKSİYON'}</Text>
+      <Text style={[nl.alertTitle, { color: tedavi ? C.gold : C.red }]}>{tedavi ? L("💊 TEDAVİ SÜRÜYOR") : L("⚠️ CİNSEL YOLLA BULAŞAN ENFEKSİYON")}</Text>
       <P style={{ marginBottom: 8 }}>
         {tedavi
-          ? `${s.hastalik.ad} tedavisi ${Math.max(0, s.hastalik.tedaviBitis! - s.hafta)} hafta içinde bitecek.`
-          : `${s.hastalik.ad}. Tedavi olmazsan sağlığın her hafta düşer, dövüşte kondisyonun ve odağın zayıflar. Maç öncesi sağlık kontrolünde yakalanırsan maçın iptal edilir.`}
+          ? L("{0} tedavisi {1} hafta içinde bitecek.", [s.hastalik.ad, Math.max(0, s.hastalik.tedaviBitis! - s.hafta)])
+          : L("{0}. Tedavi olmazsan sağlığın her hafta düşer, dövüşte kondisyonun ve odağın zayıflar. Maç öncesi sağlık kontrolünde yakalanırsan maçın iptal edilir.", [s.hastalik.ad])}
       </P>
-      {!tedavi ? <Button label={`Tedavi ol (${money(treatmentCost(s))})`} icon="pill" onPress={() => act((x) => onMsg(treatDisease(x)))} /> : null}
+      {!tedavi ? <Button label={L("Tedavi ol ({0})", [money(treatmentCost(s))])} icon="pill" onPress={() => act((x) => onMsg(treatDisease(x)))} /> : null}
     </Card>
   );
 }
@@ -32,15 +33,15 @@ function Strip({ s, act, onMsg }: { s: GameState; act: Act; onMsg: (m: string) =
   return (
     <>
       <LinearGradient colors={['#3a0630', '#0b0209']} style={nl.hero}>
-        <Text style={[nl.heroTitle, SLANT]}>NEON CLUB</Text>
-        <Text style={nl.heroSub}>Kırmızı ışıklar, yüksek müzik, pahalı içkiler. Kafanı dağıtır… ama bedeli var.</Text>
+        <Text style={[nl.heroTitle, SLANT]}>{L("NEON CLUB")}</Text>
+        <Text style={nl.heroSub}>{L("Kırmızı ışıklar, yüksek müzik, pahalı içkiler. Kafanı dağıtır… ama bedeli var.")}</Text>
       </LinearGradient>
       {STRIP_OPTIONS.map((o, i) => (
         <Choice
           key={o.ad}
           icon={o.ikon as IconName}
           label={`${o.ad} · ${money(stripPrice(s, i))}`}
-          desc={`${o.aciklama}\nMotivasyon +1 · Disiplin riski (kondisyon)`}
+          desc={L("{0}\nMotivasyon +1 · Disiplin riski (kondisyon)", [o.aciklama])}
           tone={i === 1 ? 'red' : 'gold'}
           disabled={s.para < stripPrice(s, i)}
           onPress={() => act((x) => onMsg(visitStripClub(x, i)))}
@@ -56,8 +57,8 @@ function MatchModal({ s, c, onClose, onDate }: { s: GameState; c: Candidate | nu
       <View style={nl.modalBg}>
         {c ? (
           <View style={nl.modalBox}>
-            <Text style={[nl.matchTitle, SLANT]}>EŞLEŞME!</Text>
-            <Text style={nl.matchSub}>Sen ve {c.ad} birbirinizi beğendiniz.</Text>
+            <Text style={[nl.matchTitle, SLANT]}>{L("EŞLEŞME!")}</Text>
+            <Text style={nl.matchSub}>{L("Sen ve")}{' '}{c.ad} {L("birbirinizi beğendiniz.")}</Text>
             <View style={nl.matchPics}>
               <View style={[nl.matchPic, { transform: [{ rotate: '-8deg' }] }]}>
                 <FighterAvatar look={s.fighter.gorunum} size={104} ring="#fff" />
@@ -69,11 +70,11 @@ function MatchModal({ s, c, onClose, onDate }: { s: GameState; c: Candidate | nu
             <Pressable onPress={onDate}>
               <LinearGradient colors={TINDER} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={nl.matchBtn}>
                 <Icon name="calendar-heart" size={18} color="#fff" />
-                <Text style={nl.matchBtnText}>RANDEVU PLANLA</Text>
+                <Text style={nl.matchBtnText}>{L("RANDEVU PLANLA")}</Text>
               </LinearGradient>
             </Pressable>
             <Pressable onPress={onClose} style={[nl.matchBtn, nl.matchGhost]}>
-              <Text style={nl.matchBtnText}>KAYDIRMAYA DEVAM ET</Text>
+              <Text style={nl.matchBtnText}>{L("KAYDIRMAYA DEVAM ET")}</Text>
             </Pressable>
           </View>
         ) : null}
@@ -87,18 +88,18 @@ function BreakUpButton({ act, onMsg, ad, flex }: { act: Act; onMsg: (m: string) 
   if (!sure)
     return (
       <Pressable onPress={() => setSure(true)} style={[nl.small, nl.breakBtn, flex && { flex: 1 }]}>
-        <Text style={nl.smallText}>💔 AYRIL</Text>
+        <Text style={nl.smallText}>{L("💔 AYRIL")}</Text>
       </Pressable>
     );
   return (
     <View style={[nl.confirm, flex && { flex: 1 }]}>
-      <Text style={nl.confirmText}>{ad} ile ayrılmak istediğine emin misin? (Motivasyon -1)</Text>
+      <Text style={nl.confirmText}>{ad} {L("ile ayrılmak istediğine emin misin? (Motivasyon -1)")}</Text>
       <View style={{ flexDirection: 'row', gap: 8 }}>
         <Pressable onPress={() => setSure(false)} style={[nl.small, { flex: 1 }]}>
-          <Text style={nl.smallText}>VAZGEÇ</Text>
+          <Text style={nl.smallText}>{L("VAZGEÇ")}</Text>
         </Pressable>
         <Pressable onPress={() => act((x) => onMsg(breakUp(x)))} style={[nl.small, nl.breakBtn, { flex: 1 }]}>
-          <Text style={nl.smallText}>EVET, AYRIL</Text>
+          <Text style={nl.smallText}>{L("EVET, AYRIL")}</Text>
         </Pressable>
       </View>
     </View>
@@ -119,11 +120,11 @@ function MatchCard({ s, act, onMsg, c }: { s: GameState; act: Act; onMsg: (m: st
           </Text>
           <Text style={nl.meta}>
             {c.meslek}
-            {c.unlu ? ' · ⭐ Ünlü' : ''} · Uyum %{c.uyum}
+            {c.unlu ? L(" · ⭐ Ünlü") : ''} {L("· Uyum %")}{c.uyum}
           </Text>
         </View>
         {partner ? (
-          <Pill text="SEVGİLİN" icon="heart" color="#e0457b" />
+          <Pill text={L("SEVGİLİN")} icon="heart" color="#e0457b" />
         ) : (
           <Pressable onPress={() => act((x) => onMsg(unmatch(x, c.id)))} hitSlop={8}>
             <Icon name="close-circle-outline" size={22} color={C.faint} />
@@ -131,7 +132,7 @@ function MatchCard({ s, act, onMsg, c }: { s: GameState; act: Act; onMsg: (m: st
         )}
       </View>
       {c.bio ? <Text style={[nl.meta, { marginTop: 6, fontStyle: 'italic' }]}>“{c.bio}”</Text> : null}
-      <Bar value={c.seviye} color="#e0457b" label="İlişki" right={`${c.seviye}/100`} />
+      <Bar value={c.seviye} color="#e0457b" label={L("İlişki")} right={`${c.seviye}/100`} />
       <View style={nl.tiers}>
         {DATE_TIERS.map((t, i) => {
           const cost = i === 3 && yatVar(s) ? 1500 : t.fiyat;
@@ -147,13 +148,13 @@ function MatchCard({ s, act, onMsg, c }: { s: GameState; act: Act; onMsg: (m: st
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
         {c.seviye >= 30 ? (
           <Pressable onPress={() => act((x) => onMsg(spendNight(x, c.id)))} style={[nl.small, { flex: 1 }]}>
-            <Text style={nl.smallText}>GECEYİ BİRLİKTE GEÇİR</Text>
+            <Text style={nl.smallText}>{L("GECEYİ BİRLİKTE GEÇİR")}</Text>
           </Pressable>
         ) : null}
         {partner ? <BreakUpButton act={act} onMsg={onMsg} ad={c.ad} flex /> : null}
         {c.seviye >= 70 && !partner ? (
           <Pressable onPress={() => act((x) => onMsg(makePartner(x, c.id)))} style={[nl.small, { flex: 1, backgroundColor: '#e0457b' }]}>
-            <Text style={nl.smallText}>💞 SEVGİLİ OL</Text>
+            <Text style={nl.smallText}>{L("💞 SEVGİLİ OL")}</Text>
           </Pressable>
         ) : null}
       </View>
@@ -172,9 +173,9 @@ function Dates({ s, act, onMsg }: { s: GameState; act: Act; onMsg: (m: string) =
         <LinearGradient colors={['#3a0a1c', '#12060a']} style={nl.partner}>
           <Text style={{ fontSize: 38 }}>{s.iliski.emoji}</Text>
           <View style={{ flex: 1 }}>
-            <Text style={nl.label}>SEVGİLİN</Text>
-            <Text style={[nl.name, SLANT]}>💞 {s.iliski.ad.toLocaleUpperCase('tr-TR')}</Text>
-            <Text style={nl.meta}>{s.iliski.meslek} · Kamp motivasyonu +1. Başkalarıyla görüşürsen yakalanabilirsin.</Text>
+            <Text style={nl.label}>{L("SEVGİLİN")}</Text>
+            <Text style={[nl.name, SLANT]}>💞 {s.iliski.ad.toLocaleUpperCase(LOC)}</Text>
+            <Text style={nl.meta}>{s.iliski.meslek} {L("· Kamp motivasyonu +1. Başkalarıyla görüşürsen yakalanabilirsin.")}</Text>
           </View>
         </LinearGradient>
       ) : null}
@@ -187,12 +188,12 @@ function Dates({ s, act, onMsg }: { s: GameState; act: Act; onMsg: (m: string) =
         <LinearGradient colors={TINDER} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={nl.appLogo}>
           <Icon name="fire" size={20} color="#fff" />
         </LinearGradient>
-        <Text style={nl.appName}>kıvılcım</Text>
+        <Text style={nl.appName}>{L("kıvılcım")}</Text>
         <View style={nl.segment}>
           {(
             [
-              ['kesfet', 'KEŞFET'],
-              ['eslesme', `EŞLEŞMELER${list.length ? ` (${list.length})` : ''}`],
+              ['kesfet', L("KEŞFET")],
+              ['eslesme', L("EŞLEŞMELER{0}", [list.length ? ` (${list.length})` : ''])],
             ] as const
           ).map(([k, l]) => (
             <Pressable key={k} onPress={() => setSub(k)} style={[nl.segBtn, sub === k && nl.segOn]}>
@@ -208,7 +209,8 @@ function Dates({ s, act, onMsg }: { s: GameState; act: Act; onMsg: (m: string) =
       ) : (
         <Card>
           <P dim style={{ marginBottom: 0 }}>
-            Henüz eşleşmen yok. KEŞFET’te sağa kaydır; karşı taraf da seni beğenirse eşleşirsiniz.
+            
+            {L("Henüz eşleşmen yok. KEŞFET’te sağa kaydır; karşı taraf da seni beğenirse eşleşirsiniz.")}
           </P>
         </Card>
       )}
@@ -233,15 +235,16 @@ export function NightlifeScreen({ s, act }: { s: GameState; act: Act }) {
     if (s.adaylar?.hafta !== s.hafta) act((x) => void deck(x));
   }, [s.hafta, s.adaylar?.hafta, act]);
   return (
-    <Screen footer={<Button label="Kariyere dön" icon="arrow-left" tone="ghost" onPress={() => act((x) => (x.phase = 'hub'))} />}>
-      <Title kicker="GECE HAYATI" sub="Kafes dışındaki hayatın. Eğlenceli, pahalı ve riskli.">
-        Şehrin Işıkları
+    <Screen footer={<Button label={L("Kariyere dön")} icon="arrow-left" tone="ghost" onPress={() => act((x) => (x.phase = 'hub'))} />}>
+      <Title kicker={L("GECE HAYATI")} sub={L("Kafes dışındaki hayatın. Eğlenceli, pahalı ve riskli.")}>
+        
+        {L("Şehrin Işıkları")}
       </Title>
       <HealthBanner s={s} act={act} onMsg={setMsg} />
       <View style={nl.riskBox}>
-        <Text style={nl.label}>SAĞLIK RİSKİ</Text>
-        <Bar value={(risk / 12) * 100} color={risk > 6 ? C.red : risk > 3 ? C.orange : C.green} label="Seviye" right={risk > 6 ? 'YÜKSEK' : risk > 3 ? 'ORTA' : 'DÜŞÜK'} />
-        <Text style={nl.meta}>Riskli davranışlar birikir, haftalar geçtikçe azalır. Çok sık gidersen enfeksiyon kapma ihtimalin artar.</Text>
+        <Text style={nl.label}>{L("SAĞLIK RİSKİ")}</Text>
+        <Bar value={(risk / 12) * 100} color={risk > 6 ? C.red : risk > 3 ? C.orange : C.green} label={L("Seviye")} right={risk > 6 ? L("YÜKSEK") : risk > 3 ? L('ORTA') : L("DÜŞÜK")} />
+        <Text style={nl.meta}>{L("Riskli davranışlar birikir, haftalar geçtikçe azalır. Çok sık gidersen enfeksiyon kapma ihtimalin artar.")}</Text>
       </View>
       {msg ? (
         <Card accent={C.gold}>
@@ -251,8 +254,8 @@ export function NightlifeScreen({ s, act }: { s: GameState; act: Act }) {
       <View style={nl.tabs}>
         {(
           [
-            ['date', 'RANDEVU', 'heart-multiple'],
-            ['strip', 'STRİPTİZ KULÜBÜ', 'glass-cocktail'],
+            ['date', L("RANDEVU"), 'heart-multiple'],
+            ['strip', L("STRİPTİZ KULÜBÜ"), 'glass-cocktail'],
           ] as const
         ).map(([k, l, ic]) => (
           <Pressable key={k} onPress={() => setTab(k)} style={[nl.tab, tab === k && nl.tabOn]}>
@@ -262,7 +265,7 @@ export function NightlifeScreen({ s, act }: { s: GameState; act: Act }) {
         ))}
         <Pressable onPress={() => act((x) => { x.phase = 'kumarhane'; enterCasino(x); })} style={nl.tab}>
           <Icon name="cards-playing" size={14} color={C.dim} />
-          <Text style={nl.tabText}>KUMARHANE</Text>
+          <Text style={nl.tabText}>{L("KUMARHANE")}</Text>
         </Pressable>
       </View>
       {tab === 'strip' ? <Strip s={s} act={act} onMsg={setMsg} /> : <Dates s={s} act={act} onMsg={setMsg} />}

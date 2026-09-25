@@ -1,12 +1,13 @@
 // Ekonomi: yükseltilebilir işletmeler (haftalık gelir) ve dalgalanan yatırımlar.
 // Bilinçli olarak character.ts'i içe aktarmaz; advanceWeeks buradan beslenir.
+import { L, LOC } from '../i18n';
 import { clamp, noise } from './rng';
 import { nightTick } from './nightlifeCore';
 import { petTick, weeklyPetCost } from './pets';
 import { weeklyStaffCost } from './staff';
 import type { GameState } from './types';
 
-const $ = (n: number) => `$${Math.round(n).toLocaleString('tr-TR')}`;
+const $ = (n: number) => `$${Math.round(n).toLocaleString(LOC)}`;
 
 export interface BusinessDef {
   id: string;
@@ -20,14 +21,14 @@ export interface BusinessDef {
 }
 
 export const BUSINESSES: BusinessDef[] = [
-  { id: 'doner', ad: 'Döner Dükkânı', aciklama: 'Memleketinde küçük bir dükkân. Adın tabelada.', ikon: 'food-drumstick', fiyat: 8000, haftalik: 180, populerlikEtkisi: false, seviyeAdlari: ['Tezgâh', 'Dükkân', 'Salonlu dükkân', 'Şube', 'Zincir'] },
-  { id: 'kafe', ad: 'Dövüşçü Kafesi', aciklama: 'Duvarlarda eldivenlerin, ekranda maçlar.', ikon: 'coffee', fiyat: 35000, haftalik: 650, populerlikEtkisi: true, seviyeAdlari: ['Köşe kafe', 'Kafe', 'Kafe & bar', 'Konsept mekân', 'Franchise'] },
-  { id: 'supplement', ad: 'Supplement Markası', aciklama: 'Protein tozu ve enerji içeceği. Yüzün kutularda.', ikon: 'bottle-tonic-plus', fiyat: 90000, haftalik: 1500, populerlikEtkisi: true, seviyeAdlari: ['Online satış', 'Market rafları', 'Ulusal dağıtım', 'İhracat', 'Global marka'] },
-  { id: 'akademi', ad: 'Dövüş Akademisi', aciklama: 'Senin adını taşıyan salon. Öğrenciler ve prestij.', ikon: 'domain', fiyat: 150000, haftalik: 2200, populerlikEtkisi: true, seviyeAdlari: ['Tek salon', 'İki şube', 'Şehir zinciri', 'Ulusal ağ', 'Dünya akademisi'] },
-  { id: 'giyim', ad: 'Giyim Markası', aciklama: 'Tişört, şort, eşofman. Taraftarlar senin logonu giyer.', ikon: 'tshirt-crew', fiyat: 60000, haftalik: 900, populerlikEtkisi: true, seviyeAdlari: ['Online mağaza', 'Butik', 'AVM mağazası', 'Ülke çapı', 'Uluslararası'] },
-  { id: 'galeri', ad: 'Oto Galeri', aciklama: 'Lüks ikinci el araçlar. Ünlüler senden alır.', ikon: 'car-estate', fiyat: 250000, haftalik: 3000, populerlikEtkisi: false, seviyeAdlari: ['Küçük galeri', 'Galeri', 'Plaza', 'Bayilik', 'Otomotiv grubu'] },
-  { id: 'restoran', ad: 'Steakhouse Restoran', aciklama: 'Dövüş gecelerinde dolup taşan bir et restoranı.', ikon: 'silverware-fork-knife', fiyat: 400000, haftalik: 4800, populerlikEtkisi: true, seviyeAdlari: ['Tek restoran', 'İkinci şube', 'Şehir zinciri', 'Ülke zinciri', 'Uluslararası zincir'] },
-  { id: 'otel', ad: 'Butik Otel', aciklama: 'Sahilde bir otel. Yaz sezonunda para basar.', ikon: 'bed-king', fiyat: 1500000, haftalik: 16000, populerlikEtkisi: false, seviyeAdlari: ['Butik otel', 'Resort', 'Otel zinciri', 'Tatil köyü', 'Otel imparatorluğu'] },
+  { id: 'doner', ad: L("Döner Dükkânı"), aciklama: L("Memleketinde küçük bir dükkân. Adın tabelada."), ikon: 'food-drumstick', fiyat: 8000, haftalik: 180, populerlikEtkisi: false, seviyeAdlari: ['Tezgâh', L("Dükkân"), L("Salonlu dükkân"), L("Şube"), L("Zincir")] },
+  { id: 'kafe', ad: L("Dövüşçü Kafesi"), aciklama: L("Duvarlarda eldivenlerin, ekranda maçlar."), ikon: 'coffee', fiyat: 35000, haftalik: 650, populerlikEtkisi: true, seviyeAdlari: [L("Köşe kafe"), L("Kafe"), L("Kafe & bar"), L("Konsept mekân"), L("Franchise")] },
+  { id: 'supplement', ad: L("Supplement Markası"), aciklama: L("Protein tozu ve enerji içeceği. Yüzün kutularda."), ikon: 'bottle-tonic-plus', fiyat: 90000, haftalik: 1500, populerlikEtkisi: true, seviyeAdlari: [L("Online satış"), L("Market rafları"), L("Ulusal dağıtım"), L("İhracat"), L("Global marka")] },
+  { id: 'akademi', ad: L("Dövüş Akademisi"), aciklama: L("Senin adını taşıyan salon. Öğrenciler ve prestij."), ikon: 'domain', fiyat: 150000, haftalik: 2200, populerlikEtkisi: true, seviyeAdlari: [L("Tek salon"), L("İki şube"), L("Şehir zinciri"), L("Ulusal ağ"), L("Dünya akademisi")] },
+  { id: 'giyim', ad: L("Giyim Markası"), aciklama: L("Tişört, şort, eşofman. Taraftarlar senin logonu giyer."), ikon: 'tshirt-crew', fiyat: 60000, haftalik: 900, populerlikEtkisi: true, seviyeAdlari: [L("Online mağaza"), L("Butik"), L("AVM mağazası"), L("Ülke çapı"), L("Uluslararası")] },
+  { id: 'galeri', ad: L("Oto Galeri"), aciklama: L("Lüks ikinci el araçlar. Ünlüler senden alır."), ikon: 'car-estate', fiyat: 250000, haftalik: 3000, populerlikEtkisi: false, seviyeAdlari: [L("Küçük galeri"), L("Galeri"), L("Plaza"), L("Bayilik"), L("Otomotiv grubu")] },
+  { id: 'restoran', ad: L("Steakhouse Restoran"), aciklama: L("Dövüş gecelerinde dolup taşan bir et restoranı."), ikon: 'silverware-fork-knife', fiyat: 400000, haftalik: 4800, populerlikEtkisi: true, seviyeAdlari: [L("Tek restoran"), L("İkinci şube"), L("Şehir zinciri"), L("Ülke zinciri"), L("Uluslararası zincir")] },
+  { id: 'otel', ad: L("Butik Otel"), aciklama: L("Sahilde bir otel. Yaz sezonunda para basar."), ikon: 'bed-king', fiyat: 1500000, haftalik: 16000, populerlikEtkisi: false, seviyeAdlari: [L("Butik otel"), L("Resort"), L("Otel zinciri"), L("Tatil köyü"), L("Otel imparatorluğu")] },
 ];
 
 export const MAX_LEVEL = 5;
@@ -50,26 +51,26 @@ export function weeklyBusinessIncome(s: GameState) {
 
 export function buyBusiness(s: GameState, id: string): string {
   const b = businessDef(id);
-  if (!b) return 'İşletme bulunamadı.';
-  if ((s.isletmeler ?? []).some((x) => x.id === id)) return 'Bu işletmeye zaten sahipsin.';
-  if (s.para < b.fiyat) return 'Paran yetmiyor.';
+  if (!b) return L("İşletme bulunamadı.");
+  if ((s.isletmeler ?? []).some((x) => x.id === id)) return L("Bu işletmeye zaten sahipsin.");
+  if (s.para < b.fiyat) return L("Paran yetmiyor.");
   s.para -= b.fiyat;
   s.isletmeler = [...(s.isletmeler ?? []), { id, seviye: 1 }];
-  s.haberler.unshift(`🛍️ Yatırım: ${s.fighter.soyad}, ${b.ad} açtı.`);
-  return `${b.ad} artık senin! Haftalık yaklaşık ${$(businessIncome(s, b, 1))} gelir.`;
+  s.haberler.unshift(L("🛍️ Yatırım: {0}, {1} açtı.", [s.fighter.soyad, b.ad]));
+  return L("{0} artık senin! Haftalık yaklaşık {1} gelir.", [b.ad, $(businessIncome(s, b, 1))]);
 }
 
 export function upgradeBusiness(s: GameState, id: string): string {
   const b = businessDef(id);
   const own = (s.isletmeler ?? []).find((x) => x.id === id);
-  if (!b || !own) return 'Önce işletmeyi satın almalısın.';
-  if (own.seviye >= MAX_LEVEL) return 'Zaten en üst seviyede.';
+  if (!b || !own) return L("Önce işletmeyi satın almalısın.");
+  if (own.seviye >= MAX_LEVEL) return L("Zaten en üst seviyede.");
   const cost = upgradeCost(b, own.seviye);
-  if (s.para < cost) return `Yükseltme ${$(cost)}. Paran yetmiyor.`;
+  if (s.para < cost) return L("Yükseltme {0}. Paran yetmiyor.", [$(cost)]);
   s.para -= cost;
   own.seviye++;
-  s.haberler.unshift(`🛍️ ${b.ad} büyüdü: ${b.seviyeAdlari[own.seviye - 1]}.`);
-  return `${b.ad} → ${b.seviyeAdlari[own.seviye - 1]}! Haftalık gelir ${$(businessIncome(s, b, own.seviye))}.`;
+  s.haberler.unshift(L("🛍️ {0} büyüdü: {1}.", [b.ad, b.seviyeAdlari[own.seviye - 1]]));
+  return L("{0} → {1}! Haftalık gelir {2}.", [b.ad, b.seviyeAdlari[own.seviye - 1], $(businessIncome(s, b, own.seviye))]);
 }
 
 // ---------- Yatırımlar ----------
@@ -81,15 +82,15 @@ export interface InvestDef {
   ikon: string;
   ortalama: number; // haftalık ortalama getiri
   oynaklik: number; // haftalık standart sapma
-  risk: 'Düşük' | 'Orta' | 'Yüksek' | 'Çok yüksek';
+  risk: string;
 }
 
 export const INVESTMENTS: InvestDef[] = [
-  { id: 'tahvil', ad: 'Devlet Tahvili', aciklama: 'Sıkıcı ama güvenli. Kaybetmezsin, çok da kazanmazsın.', ikon: 'bank', ortalama: 0.0012, oynaklik: 0, risk: 'Düşük' },
-  { id: 'gayrimenkul', ad: 'Gayrimenkul Fonu', aciklama: 'Kira gelirleri ve yavaş değer artışı.', ikon: 'home-city', ortalama: 0.0022, oynaklik: 0.006, risk: 'Düşük' },
-  { id: 'borsa', ad: 'Borsa Endeksi', aciklama: 'Uzun vadede büyür, kısa vadede sallanır.', ikon: 'chart-line', ortalama: 0.0028, oynaklik: 0.025, risk: 'Orta' },
-  { id: 'teknoloji', ad: 'Teknoloji Hisseleri', aciklama: 'Büyük kazanç potansiyeli, sert düşüşler.', ikon: 'chip', ortalama: 0.004, oynaklik: 0.05, risk: 'Yüksek' },
-  { id: 'kripto', ad: 'Kripto Para', aciklama: 'Bir gecede ikiye katlanır… ya da yarıya iner.', ikon: 'bitcoin', ortalama: 0.004, oynaklik: 0.12, risk: 'Çok yüksek' },
+  { id: 'tahvil', ad: L("Devlet Tahvili"), aciklama: L("Sıkıcı ama güvenli. Kaybetmezsin, çok da kazanmazsın."), ikon: 'bank', ortalama: 0.0012, oynaklik: 0, risk: L("Düşük") },
+  { id: 'gayrimenkul', ad: L("Gayrimenkul Fonu"), aciklama: L("Kira gelirleri ve yavaş değer artışı."), ikon: 'home-city', ortalama: 0.0022, oynaklik: 0.006, risk: L("Düşük") },
+  { id: 'borsa', ad: L("Borsa Endeksi"), aciklama: L("Uzun vadede büyür, kısa vadede sallanır."), ikon: 'chart-line', ortalama: 0.0028, oynaklik: 0.025, risk: L("Orta") },
+  { id: 'teknoloji', ad: L("Teknoloji Hisseleri"), aciklama: L("Büyük kazanç potansiyeli, sert düşüşler."), ikon: 'chip', ortalama: 0.004, oynaklik: 0.05, risk: L("Yüksek") },
+  { id: 'kripto', ad: L("Kripto Para"), aciklama: L("Bir gecede ikiye katlanır… ya da yarıya iner."), ikon: 'bitcoin', ortalama: 0.004, oynaklik: 0.12, risk: L("Çok yüksek") },
 ];
 
 export const investDef = (id: string) => INVESTMENTS.find((i) => i.id === id);
@@ -98,8 +99,8 @@ export const portfolioValue = (s: GameState) => (s.yatirimlar ?? []).reduce((a, 
 
 export function invest(s: GameState, id: string, tutar: number): string {
   const d = investDef(id);
-  if (!d) return 'Yatırım bulunamadı.';
-  if (tutar <= 0 || s.para < tutar) return 'Bakiye yetersiz.';
+  if (!d) return L("Yatırım bulunamadı.");
+  if (tutar <= 0 || s.para < tutar) return L("Bakiye yetersiz.");
   s.para -= tutar;
   s.yatirimlar = s.yatirimlar ?? [];
   const cur = s.yatirimlar.find((x) => x.id === id);
@@ -107,16 +108,16 @@ export function invest(s: GameState, id: string, tutar: number): string {
     cur.deger += tutar;
     cur.anapara += tutar;
   } else s.yatirimlar.push({ id, deger: tutar, anapara: tutar });
-  return `${d.ad} için ${$(tutar)} yatırdın.`;
+  return L("{0} için {1} yatırdın.", [d.ad, $(tutar)]);
 }
 
 export function withdraw(s: GameState, id: string): string {
   const cur = (s.yatirimlar ?? []).find((x) => x.id === id);
-  if (!cur) return 'Bu yatırımda paran yok.';
+  if (!cur) return L("Bu yatırımda paran yok.");
   const kar = cur.deger - cur.anapara;
   s.para += Math.round(cur.deger);
   s.yatirimlar = s.yatirimlar!.filter((x) => x.id !== id);
-  return `${$(cur.deger)} çektin. ${kar >= 0 ? `Kâr: +${$(kar)}` : `Zarar: -${$(-kar)}`}.`;
+  return L("{0} çektin. {1}.", [$(cur.deger), kar >= 0 ? L("Kâr: +{0}", [$(kar)]) : L("Zarar: -{0}", [$(-kar)])]);
 }
 
 /** Haftalar geçerken işletme geliri toplanır, yatırımlar dalgalanır. */
@@ -125,17 +126,17 @@ export function economyTick(s: GameState, weeks: number): string[] {
   const gelir = weeklyBusinessIncome(s) * weeks;
   if (gelir > 0) {
     s.para += gelir;
-    notes.push(`🏪 İşletme gelirleri: +${$(gelir)}`);
+    notes.push(L("🏪 İşletme gelirleri: +{0}", [$(gelir)]));
   }
   const kadro = weeklyStaffCost(s) * weeks;
   if (kadro > 0) {
     s.para -= kadro;
-    notes.push(`🧑‍⚕️ Kadro maaşları: -${$(kadro)}`);
+    notes.push(L("🧑‍⚕️ Kadro maaşları: -{0}", [$(kadro)]));
   }
   const bakim = weeklyPetCost(s) * weeks;
   if (bakim > 0) {
     s.para -= bakim;
-    notes.push(`🐾 Hayvan bakımı: -${$(bakim)}`);
+    notes.push(L("🐾 Hayvan bakımı: -{0}", [$(bakim)]));
   }
   notes.push(...petTick(s, weeks, s.para < 0), ...nightTick(s, weeks));
   (s.yatirimlar ?? []).forEach((y) => {
@@ -147,7 +148,7 @@ export function economyTick(s: GameState, weeks: number): string[] {
   if (weeks >= 4 && (s.yatirimlar ?? []).length) {
     const t = portfolioValue(s);
     const a = (s.yatirimlar ?? []).reduce((x, y) => x + y.anapara, 0);
-    notes.push(`📈 Portföy: ${$(t)} (${t >= a ? '+' : ''}${(((t - a) / Math.max(1, a)) * 100).toFixed(1)}%)`);
+    notes.push(L("📈 Portföy: {0} ({1}{2}%)", [$(t), t >= a ? '+' : '', (((t - a) / Math.max(1, a)) * 100).toFixed(1)]));
   }
   return notes;
 }

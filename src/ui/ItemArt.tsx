@@ -1,3 +1,4 @@
+import { L } from '../i18n';
 import { useId, type ReactNode } from 'react';
 import Svg, { Circle, Defs, Ellipse, G, Line, LinearGradient, Path, Polygon, RadialGradient, Rect, Stop, Text as SvgText } from 'react-native-svg';
 import { CarArt, HouseArt } from './VisualArt';
@@ -62,7 +63,8 @@ function Watch({ strap, face, band = 'metal', diamonds = false, smart = false, d
             142
           </SvgText>
           <SvgText x={100} y={67} fill="#e63946" fontSize={7} textAnchor="middle">
-            ♥ BPM
+            
+            {L("♥ BPM")}
           </SvgText>
         </>
       ) : (
@@ -116,8 +118,8 @@ function Diamond({ x, y, s = 1 }: { x: number; y: number; s?: number }) {
   return (
     <G>
       <Polygon points={`${x - 8 * s},${y} ${x - 4 * s},${y - 6 * s} ${x + 4 * s},${y - 6 * s} ${x + 8 * s},${y} ${x},${y + 10 * s}`} fill="#dff4ff" stroke="#9ad0f5" strokeWidth={1} />
-      <Path d={`M${x - 8 * s} ${y} L${x + 8 * s} ${y} M${x - 4 * s} ${y - 6 * s} L${x} ${y + 10 * s} L${x + 4 * s} ${y - 6 * s}`} stroke="#9ad0f5" strokeWidth={0.8} />
-      <Path d={`M${x + 10 * s} ${y - 10 * s} l2 -4 l2 4 l4 2 l-4 2 l-2 4 l-2 -4 l-4 -2 Z`} fill="#fff" opacity={0.9} />
+      <Path d={L("M{0} {1} L{2} {3} M{4} {5} L{6} {7} L{8} {9}", [x - 8 * s, y, x + 8 * s, y, x - 4 * s, y - 6 * s, x, y + 10 * s, x + 4 * s, y - 6 * s])} stroke="#9ad0f5" strokeWidth={0.8} />
+      <Path d={L("M{0} {1} l2 -4 l2 4 l4 2 l-4 2 l-2 4 l-2 -4 l-4 -2 Z", [x + 10 * s, y - 10 * s])} fill="#fff" opacity={0.9} />
     </G>
   );
 }
@@ -188,7 +190,7 @@ const OBJ: Record<string, (c: string) => ReactNode> = {
         [110, 48],
         [94, 64],
       ].map(([x, y]) => (
-        <Path key={x} d={`M${x} ${y - 6} L${x} ${y + 6} M${x - 6} ${y} L${x + 6} ${y} M${x - 4} ${y - 4} L${x + 4} ${y + 4} M${x + 4} ${y - 4} L${x - 4} ${y + 4}`} stroke="#fff" strokeWidth={1.5} />
+        <Path key={x} d={L("M{0} {1} L{2} {3} M{4} {5} L{6} {7} M{8} {9} L{10} {11} M{12} {13} L{14} {15}", [x, y - 6, x, y + 6, x - 6, y, x + 6, y, x - 4, y - 4, x + 4, y + 4, x + 4, y - 4, x - 4, y + 4])} stroke="#fff" strokeWidth={1.5} />
       ))}
     </G>
   ),

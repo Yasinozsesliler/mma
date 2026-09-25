@@ -1,4 +1,5 @@
 // Face to face sahnesi: rakibin hamlesi ve senin seçimin animasyonla oynar, sonra kim üstün geldiği gösterilir.
+import { L } from '../i18n';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, StyleSheet, Text, View } from 'react-native';
@@ -132,8 +133,8 @@ export function FaceOffStage({ s }: { s: GameState }) {
         <View style={fo.rival}>
           <Icon name="alert" size={16} color="#ff4d5e" />
           <Text style={fo.rivalText}>
-            <Text style={{ color: '#ff4d5e', fontFamily: F.display }}>RAKİBİN HAMLESİ · </Text>
-            {hamle.metin(o.soyad)} Nasıl karşılık vereceksin?
+            <Text style={{ color: '#ff4d5e', fontFamily: F.display }}>{L("RAKİBİN HAMLESİ ·")}{' '}</Text>
+            {hamle.metin(o.soyad)} {L("Nasıl karşılık vereceksin?")}
           </Text>
         </View>
       ) : null}
@@ -141,12 +142,12 @@ export function FaceOffStage({ s }: { s: GameState }) {
       {sonuc ? (
         <Animated.View style={{ opacity: v.banner, transform: [{ scale: v.banner.interpolate({ inputRange: [0, 1], outputRange: [0.85, 1] }) }] }}>
           <LinearGradient colors={[winCol + '26', '#0c0d10']} style={[fo.result, { borderColor: winCol }]}>
-            <Text style={[fo.resultKicker, { color: winCol }]}>{sonuc.kazanan === 'p' ? 'ÜSTÜNLÜK SENDE' : sonuc.kazanan === 'o' ? 'ÜSTÜNLÜK RAKİPTE' : 'KİMSE GERİ ADIM ATMADI'}</Text>
+            <Text style={[fo.resultKicker, { color: winCol }]}>{sonuc.kazanan === 'p' ? L("ÜSTÜNLÜK SENDE") : sonuc.kazanan === 'o' ? L("ÜSTÜNLÜK RAKİPTE") : L("KİMSE GERİ ADIM ATMADI")}</Text>
             <Text style={[fo.resultTitle, SLANT]}>{sonuc.baslik}</Text>
             <Text style={fo.resultText}>{k.yuzyuze}</Text>
             <View style={fo.chips}>
               {sonuc.etkiler.map((e) => {
-                const bad = (/^Senin .*-\d/.test(e) || /^Rakip .*\+\d/.test(e) || /^Popülerlik -/.test(e));
+                const bad = (/^(Senin|Your) .*-\d/.test(e) || /^(Rakip|Opponent)\S* .*\+\d/.test(e) || /^(Popülerlik|Popularity) -/.test(e));
                 const good = !bad && /[+-]\d/.test(e);
                 const col = bad ? '#ff4d5e' : good ? C.green : C.gold;
                 return (

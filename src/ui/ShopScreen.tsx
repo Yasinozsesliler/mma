@@ -1,3 +1,4 @@
+import { L } from '../i18n';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -17,19 +18,19 @@ type Tab = ShopCategory | 'yatirim' | 'tatil' | 'hayvan';
 
 const SUBS: [NonNullable<ShopItem['alt']>, string, IconName][] = [
   ['ev', 'EV', 'home-city'],
-  ['araba', 'ARABA', 'car-sports'],
-  ['saat', 'SAAT & TAKI', 'watch'],
-  ['teknoloji', 'TEKNOLOJİ', 'controller-classic'],
-  ['moda', 'MODA', 'hanger'],
-  ['tasit', 'TAŞIT', 'airplane'],
-  ['diger', 'DİĞER', 'palette'],
+  ['araba', L("ARABA"), 'car-sports'],
+  ['saat', L("SAAT & TAKI"), 'watch'],
+  ['teknoloji', L("TEKNOLOJİ"), 'controller-classic'],
+  ['moda', L('MODA'), 'hanger'],
+  ['tasit', L("TAŞIT"), 'airplane'],
+  ['diger', L("DİĞER"), 'palette'],
 ];
 const TABS: { key: Tab; label: string; icon: IconName }[] = [
-  { key: 'ekipman', label: 'EKİPMAN', icon: 'boxing-glove' },
-  { key: 'yasam', label: 'YAŞAM', icon: 'home-heart' },
-  { key: 'yatirim', label: 'YATIRIM', icon: 'chart-line' },
-  { key: 'hayvan', label: 'HAYVAN', icon: 'paw' },
-  { key: 'tatil', label: 'TATİL', icon: 'beach' },
+  { key: 'ekipman', label: L("EKİPMAN"), icon: 'boxing-glove' },
+  { key: 'yasam', label: L("YAŞAM"), icon: 'home-heart' },
+  { key: 'yatirim', label: L("YATIRIM"), icon: 'chart-line' },
+  { key: 'hayvan', label: L("HAYVAN"), icon: 'paw' },
+  { key: 'tatil', label: L("TATİL"), icon: 'beach' },
 ];
 
 function ItemCard({ s, it, act, onMsg }: { s: GameState; it: ShopItem; act: Act; onMsg: (m: string) => void }) {
@@ -59,16 +60,16 @@ function ItemCard({ s, it, act, onMsg }: { s: GameState; it: ShopItem; act: Act;
       <View style={sh.footer}>
         <Text style={[sh.price, SLANT, !afford && !have && { color: C.faint }]}>{money(it.fiyat)}</Text>
         {have ? (
-          <Pill text="SAHİPSİN" icon="check-decagram" color={C.green} />
+          <Pill text={L("SAHİPSİN")} icon="check-decagram" color={C.green} />
         ) : better ? (
-          <Pill text="DAHA İYİSİ SENDE" color={C.faint} />
+          <Pill text={L("DAHA İYİSİ SENDE")} color={C.faint} />
         ) : (
           <Pressable
             disabled={!afford}
             onPress={() => act((x) => onMsg(buy(x, it.id)))}
             style={({ pressed }) => [sh.buy, { opacity: !afford ? 0.35 : pressed ? 0.7 : 1 }]}
           >
-            <Text style={sh.buyText}>{afford ? 'SATIN AL' : 'PARA YETMİYOR'}</Text>
+            <Text style={sh.buyText}>{afford ? L("SATIN AL") : L("PARA YETMİYOR")}</Text>
           </Pressable>
         )}
       </View>
@@ -82,12 +83,13 @@ export function ShopScreen({ s, act }: { s: GameState; act: Act }) {
   const [msg, setMsg] = useState<string | null>(null);
   const items = SHOP.filter((i) => i.kategori === tab && (tab !== 'yasam' || (i.alt ?? 'diger') === alt)).sort((a, b) => a.fiyat - b.fiyat);
   return (
-    <Screen footer={<Button label="Kariyere dön" icon="arrow-left" tone="ghost" onPress={() => act((x) => (x.phase = 'hub'))} />}>
-      <Title kicker="DÖVÜŞÇÜ MAĞAZASI" sub="Ekipmanlar kafeste kalıcı bonus verir. Yaşam eşyaları popülerlik, motivasyon ve daha hızlı iyileşme sağlar.">
-        Mağaza
+    <Screen footer={<Button label={L("Kariyere dön")} icon="arrow-left" tone="ghost" onPress={() => act((x) => (x.phase = 'hub'))} />}>
+      <Title kicker={L("DÖVÜŞÇÜ MAĞAZASI")} sub={L("Ekipmanlar kafeste kalıcı bonus verir. Yaşam eşyaları popülerlik, motivasyon ve daha hızlı iyileşme sağlar.")}>
+        
+        {L("Mağaza")}
       </Title>
       <LinearGradient colors={['#1d3a24', '#101a13']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={sh.wallet}>
-        <Text style={sh.walletLabel}>BAKİYE</Text>
+        <Text style={sh.walletLabel}>{L("BAKİYE")}</Text>
         <Text style={[sh.walletVal, SLANT]}>{money(s.para)}</Text>
       </LinearGradient>
       {msg ? (
@@ -104,13 +106,13 @@ export function ShopScreen({ s, act }: { s: GameState; act: Act }) {
       </View>
       {tab === 'ekipman' ? (
         <View style={sh.capBox}>
-          <Text style={sh.capLabel}>EKİPMAN BONUSU · {itemBonusTotal(s)}/{ITEM_TOTAL_CAP}</Text>
+          <Text style={sh.capLabel}>{L("EKİPMAN BONUSU ·")}{' '}{itemBonusTotal(s)}/{ITEM_TOTAL_CAP}</Text>
           <View style={sh.capBar}>
             <View style={{ width: `${(itemBonusTotal(s) / ITEM_TOTAL_CAP) * 100}%`, height: '100%', backgroundColor: C.gold }} />
           </View>
           <Text style={sh.capNote}>
-            {Object.entries(fightItemMods(s)).map(([k, v]) => `+${v} ${STAT_LABELS[k as keyof typeof STAT_LABELS]}`).join(' · ') || 'Henüz ekipman bonusun yok.'}
-            {`\nBir istatistiğe en fazla +${ITEM_STAT_CAP}, toplamda en fazla +${ITEM_TOTAL_CAP} ekipman bonusu gelir.`}
+            {Object.entries(fightItemMods(s)).map(([k, v]) => `+${v} ${STAT_LABELS[k as keyof typeof STAT_LABELS]}`).join(' · ') || L("Henüz ekipman bonusun yok.")}
+            {L("\nBir istatistiğe en fazla +{0}, toplamda en fazla +{1} ekipman bonusu gelir.", [ITEM_STAT_CAP, ITEM_TOTAL_CAP])}
           </Text>
         </View>
       ) : null}
@@ -140,11 +142,11 @@ export function ShopScreen({ s, act }: { s: GameState; act: Act }) {
                 </View>
                 <View style={sh.effects}>
                   <Pill text={`${v.hafta} hafta`} icon="calendar-clock" color={C.dim} />
-                  <Pill text={`+${v.saglik} sağlık`} icon="heart-pulse" color={C.green} />
+                  <Pill text={L("+{0} sağlık", [v.saglik])} icon="heart-pulse" color={C.green} />
                   {v.motivasyon ? <Pill text={`${v.motivasyon > 0 ? '+' : ''}${v.motivasyon} motivasyon`} icon="fire" color={v.motivasyon > 0 ? C.gold : C.red} /> : null}
-                  {v.populerlik ? <Pill text={`+${v.populerlik} popülerlik`} icon="star-four-points" color={C.gold} /> : null}
+                  {v.populerlik ? <Pill text={L("+{0} popülerlik", [v.populerlik])} icon="star-four-points" color={C.gold} /> : null}
                   {Object.entries(v.disiplin).map(([k, d]) => (
-                    <Pill key={k} text={`${d} ${({ kondisyon: 'Kondisyon', hiz: 'Hız', iq: 'IQ' } as Record<string, string>)[k] ?? k} (disiplin)`} icon="alert-octagon" color={C.red} />
+                    <Pill key={k} text={`${d} ${({ kondisyon: L("Kondisyon"), hiz: L("Hız"), iq: 'IQ' } as Record<string, string>)[k] ?? k} (disiplin)`} icon="alert-octagon" color={C.red} />
                   ))}
                 </View>
                 <View style={sh.footer}>
@@ -154,7 +156,7 @@ export function ShopScreen({ s, act }: { s: GameState; act: Act }) {
                     onPress={() => act((x) => setMsg(takeVacation(x, v.id)))}
                     style={({ pressed }) => [sh.buy, { backgroundColor: '#1a8a80', opacity: !afford ? 0.35 : pressed ? 0.7 : 1 }]}
                   >
-                    <Text style={sh.buyText}>{afford ? 'TATİLE ÇIK' : 'PARA YETMİYOR'}</Text>
+                    <Text style={sh.buyText}>{afford ? L("TATİLE ÇIK") : L("PARA YETMİYOR")}</Text>
                   </Pressable>
                 </View>
               </View>

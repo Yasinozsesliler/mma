@@ -1,5 +1,6 @@
 // Sıklet sıralaması: her organizasyonda kalıcı bir şampiyon ve sıralı dövüşçüler.
 // Liste oyuncuyu içermez; oyuncunun görünen yeri s.rank ile belirlenir ve araya eklenir.
+import { L as tL } from '../i18n';
 import { currentOrg } from './character';
 import { ORGS } from './data';
 import { statAverage } from './character';
@@ -122,7 +123,7 @@ export function syncDivision(s: GameState, opp: Opponent, won: boolean, draw: bo
     const yeni = generateOpponent(s, { zorluk: 0, rank: L, org: b.org }, b.sampiyon ? [...b.liste, b.sampiyon] : b.liste);
     yeni.zorluk = undefined;
     b.liste.push(yeni);
-    notes.push(`📋 ${yeni.ad} ${yeni.soyad}, ${giden.soyad} dövüşçüsünü yenerek sıralamaya girdi.`);
+    notes.push(tL("📋 {0} {1}, {2} dövüşçüsünü yenerek sıralamaya girdi.", [yeni.ad, yeni.soyad, giden.soyad]));
   }
   // Şampiyonluk maçı: 1 numara şampiyona meydan okur.
   if (b.sampiyon && !titleLost && chance(0.12)) {
@@ -130,12 +131,12 @@ export function syncDivision(s: GameState, opp: Opponent, won: boolean, draw: bo
     if (chance(0.4)) {
       b.liste[0] = { ...b.sampiyon, champion: false };
       b.sampiyon = { ...aday, champion: true, rank: null };
-      notes.push(`🏆 ${ORGS[b.org].kisa}’da yeni şampiyon: ${aday.ad} “${aday.lakap}” ${aday.soyad}!`);
+      notes.push(tL("🏆 {0}’da yeni şampiyon: {1} “{2}” {3}!", [ORGS[b.org].kisa, aday.ad, aday.lakap, aday.soyad]));
     } else {
       aday.rekor.m++;
       b.sampiyon.rekor.g++;
       b.liste.splice(2, 0, b.liste.shift()!);
-      notes.push(`🏆 ${ORGS[b.org].kisa} şampiyonu ${b.sampiyon.soyad}, kemerini ${aday.soyad} karşısında korudu.`);
+      notes.push(tL("🏆 {0} şampiyonu {1}, kemerini {2} karşısında korudu.", [ORGS[b.org].kisa, b.sampiyon.soyad, aday.soyad]));
     }
   }
   // Sıklettekiler de antrenman yapar: her dövüş döneminde gelişirler.
@@ -159,7 +160,7 @@ export function syncDivision(s: GameState, opp: Opponent, won: boolean, draw: bo
     if (shift > 0) STAT_KEYS.forEach((k) => (yildiz.stats[k] = Math.min(96, Math.round(yildiz.stats[k] + shift))));
     yildiz.rekor = { g: randInt(8, 14), m: 0, b: 0 };
     b.liste.splice(pos, 0, yildiz);
-    notes.push(`🌟 Yükselen yıldız: yenilmez ${yildiz.ad} “${yildiz.lakap}” ${yildiz.soyad} (${yildiz.rekor.g}-0) sıralamaya #${pos + 1}’den girdi!`);
+    notes.push(tL("🌟 Yükselen yıldız: yenilmez {0} “{1}” {2} ({3}-0) sıralamaya #{4}’den girdi!", [yildiz.ad, yildiz.lakap, yildiz.soyad, yildiz.rekor.g, pos + 1]));
   }
   // Veteran emekliliği: sıklette isimler değişir.
   if (chance(0.1) && b.liste.length > 4) {
@@ -168,7 +169,7 @@ export function syncDivision(s: GameState, opp: Opponent, won: boolean, draw: bo
     const yeni = generateOpponent(s, { zorluk: 0, rank: L, org: b.org }, b.liste);
     yeni.zorluk = undefined;
     b.liste.push(yeni);
-    notes.push(`👋 ${giden.ad} ${giden.soyad} (${giden.rekor.g}-${giden.rekor.m}) eldivenlerini astı.`);
+    notes.push(tL("👋 {0} {1} ({2}-{3}) eldivenlerini astı.", [giden.ad, giden.soyad, giden.rekor.g, giden.rekor.m]));
   }
   b.liste = b.liste.slice(0, L);
   return notes;

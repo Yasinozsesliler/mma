@@ -1,3 +1,4 @@
+import { L, LOC } from '../i18n';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StyleSheet, Text, View } from 'react-native';
 import { statAverage } from '../engine/character';
@@ -18,26 +19,26 @@ export function TaleOfTape({ s }: { s: GameState }) {
   const op = physique(o.id, f.siklet);
   const oYas = 22 + (o.id.charCodeAt(0) % 14);
   const rows: [string, string, string][] = [
-    ['YAŞ', `${f.yas}`, `${oYas}`],
-    ['BOY', `${pp.boy} cm`, `${op.boy} cm`],
-    ['UZANMA', `${pp.uzanma} cm`, `${op.uzanma} cm`],
-    ['DURUŞ', pp.durus.split(' ')[0], op.durus.split(' ')[0]],
-    ['REKOR', `${s.rekor.g}-${s.rekor.m}-${s.rekor.b}`, `${o.rekor.g}-${o.rekor.m}-${o.rekor.b}`],
-    ['STİL', BACKGROUNDS[f.gecmis].ad, BACKGROUNDS[o.stil].ad],
-    ['GÜÇ', `${Math.round(statAverage(f.stats))}`, `${Math.round(statAverage(o.stats))}`],
+    [L("YAŞ"), `${f.yas}`, `${oYas}`],
+    [L('BOY'), `${pp.boy} cm`, `${op.boy} cm`],
+    [L("UZANMA"), `${pp.uzanma} cm`, `${op.uzanma} cm`],
+    [L("DURUŞ"), pp.durus.split(' ')[0], op.durus.split(' ')[0]],
+    [L("REKOR"), `${s.rekor.g}-${s.rekor.m}-${s.rekor.b}`, `${o.rekor.g}-${o.rekor.m}-${o.rekor.b}`],
+    [L("STİL"), BACKGROUNDS[f.gecmis].ad, BACKGROUNDS[o.stil].ad],
+    [L("GÜÇ"), `${Math.round(statAverage(f.stats))}`, `${Math.round(statAverage(o.stats))}`],
   ];
   const Scale = ({ kg }: { kg?: number }) => {
     const miss = (kg ?? 0) > limit;
     return (
       <View style={[tt.scale, { borderColor: miss ? C.red : C.green }]}>
         <Text style={[tt.scaleVal, { color: miss ? C.red : C.green }]}>{kg?.toFixed(1) ?? '--.-'}</Text>
-        <Text style={tt.scaleUnit}>KG {miss ? '· KAÇIRDI' : '· TAMAM'}</Text>
+        <Text style={tt.scaleUnit}>KG {miss ? L("· KAÇIRDI") : L("· TAMAM")}</Text>
       </View>
     );
   };
   return (
     <LinearGradient colors={['#13060a', '#060607']} style={tt.card}>
-      <Text style={[tt.title, SLANT]}>RESMİ TARTI · {WEIGHT_CLASSES[f.siklet].ad.toLocaleUpperCase('tr-TR')} ({limit} KG LİMİT)</Text>
+      <Text style={[tt.title, SLANT]}>{L("RESMİ TARTI ·")}{' '}{WEIGHT_CLASSES[f.siklet].ad.toLocaleUpperCase(LOC)} ({limit} {L("KG LİMİT)")}</Text>
       <View style={tt.heads}>
         <View style={tt.side}>
           <FighterAvatar look={f.gorunum} size={96} ring={C.red} />
@@ -62,7 +63,7 @@ export function TaleOfTape({ s }: { s: GameState }) {
           <Text style={[tt.val, { textAlign: 'right' }]}>{b}</Text>
         </View>
       ))}
-      {k.kafesKilo ? <Text style={tt.note}>Rehidrasyon sonrası tahmini kafes kilon: ~{k.kafesKilo} kg</Text> : null}
+      {k.kafesKilo ? <Text style={tt.note}>{L("Rehidrasyon sonrası tahmini kafes kilon: ~")}{k.kafesKilo} kg</Text> : null}
     </LinearGradient>
   );
 }

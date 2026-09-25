@@ -1,3 +1,4 @@
+import { L, LOC } from '../i18n';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -33,12 +34,12 @@ function AchRow({ a, s, ok }: { a: Achievement; s: GameState; ok: boolean }) {
       <View style={{ flex: 1 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
           <Text style={[ac.name, !ok && { color: C.dim }]} numberOfLines={1}>
-            {hidden ? 'Gizli başarım' : a.ad}
+            {hidden ? L("Gizli başarım") : a.ad}
           </Text>
           {a.hof ? <Text style={ac.hofMark}>🏛</Text> : null}
         </View>
-        <Text style={ac.desc}>{hidden ? '???  Açıldığında görünecek.' : a.aciklama}</Text>
-        {prog ? <Bar value={(prog[0] / prog[1]) * 100} color={t.renk} right={`${prog[0].toLocaleString('tr-TR')} / ${prog[1].toLocaleString('tr-TR')}`} /> : null}
+        <Text style={ac.desc}>{hidden ? L("???  Açıldığında görünecek.") : a.aciklama}</Text>
+        {prog ? <Bar value={(prog[0] / prog[1]) * 100} color={t.renk} right={`${prog[0].toLocaleString(LOC)} / ${prog[1].toLocaleString(LOC)}`} /> : null}
       </View>
       <View style={[ac.tier, { borderColor: t.renk + '88' }]}>
         <Text style={[ac.tierText, { color: t.renk }]}>{t.ad}</Text>
@@ -68,7 +69,7 @@ function AchievementList({ s }: { s: GameState }) {
     <>
       <LinearGradient colors={['#1b1405', '#0c0d10']} style={ac.summary}>
         <View>
-          <Text style={ac.sumLabel}>AÇILAN BAŞARIM</Text>
+          <Text style={ac.sumLabel}>{L("AÇILAN BAŞARIM")}</Text>
           <Text style={[ac.sumBig, SLANT]}>
             {got}
             <Text style={ac.sumOf}> / {total}</Text>
@@ -92,7 +93,7 @@ function AchievementList({ s }: { s: GameState }) {
       <Bar value={(got / total) * 100} color={C.gold} />
 
       <View style={ac.chips}>
-        {[{ id: 'hepsi' as const, ad: 'TÜMÜ', ikon: 'view-grid' }, ...CATEGORIES].map((c) => {
+        {[{ id: 'hepsi' as const, ad: L("TÜMÜ"), ikon: 'view-grid' }, ...CATEGORIES].map((c) => {
           const on = kat === c.id;
           const n = c.id === 'hepsi' ? got : ACHIEVEMENTS.filter((a) => a.kat === c.id && earned.has(a.id)).length;
           const all = c.id === 'hepsi' ? total : ACHIEVEMENTS.filter((a) => a.kat === c.id).length;
@@ -109,9 +110,9 @@ function AchievementList({ s }: { s: GameState }) {
       <View style={[ac.chips, { marginTop: -4 }]}>
         {(
           [
-            ['hepsi', 'HEPSİ'],
-            ['acik', 'AÇILANLAR'],
-            ['kilitli', 'KİLİTLİ'],
+            ['hepsi', L("HEPSİ")],
+            ['acik', L("AÇILANLAR")],
+            ['kilitli', L("KİLİTLİ")],
           ] as const
         ).map(([k, l]) => (
           <Pressable key={k} onPress={() => setDurum(k)} style={[ac.chip, ac.chipSmall, durum === k && { borderColor: C.gold }]}>
@@ -119,7 +120,7 @@ function AchievementList({ s }: { s: GameState }) {
           </Pressable>
         ))}
       </View>
-      <Text style={ac.note}>🏛 işaretli başarımlar Onur Listesi (Hall of Fame) eşikleridir.</Text>
+      <Text style={ac.note}>{L("🏛 işaretli başarımlar Onur Listesi (Hall of Fame) eşikleridir.")}</Text>
       {sorted.map((a) => (
         <AchRow key={a.id} a={a} s={s} ok={earned.has(a.id)} />
       ))}
@@ -154,8 +155,8 @@ function Pantheon({ lit, total, inducted }: { lit: number; total: number; induct
         </SvgGrad>
       </Defs>
       {/* Alınlık */}
-      <Path d={`M10 52 L${w / 2} 8 L${w - 10} 52 Z`} fill="url(#roof)" />
-      <Path d={`M34 46 L${w / 2} 20 L${w - 34} 46 Z`} fill="#0b0b0d" opacity={0.55} />
+      <Path d={L("M10 52 L{0} 8 L{1} 52 Z", [w / 2, w - 10])} fill="url(#roof)" />
+      <Path d={L("M34 46 L{0} 20 L{1} 46 Z", [w / 2, w - 34])} fill="#0b0b0d" opacity={0.55} />
       <Rect x={6} y={52} width={w - 12} height={10} fill="url(#roof)" />
       <Rect x={14} y={62} width={w - 28} height={5} fill={inducted ? '#8a5a14' : '#2a2d33'} />
       {/* Sütunlar */}
@@ -165,7 +166,7 @@ function Pantheon({ lit, total, inducted }: { lit: number; total: number; induct
         return (
           <Path
             key={i}
-            d={`M${x - 3} 67 h24 v6 h-3 v86 h3 v6 h-24 v-6 h3 v-86 h-3 Z`}
+            d={L("M{0} 67 h24 v6 h-3 v86 h3 v6 h-24 v-6 h3 v-86 h-3 Z", [x - 3])}
             fill={on ? 'url(#gold)' : 'url(#stone)'}
             opacity={on ? 1 : 0.8}
           />
@@ -189,8 +190,8 @@ function HallOfFame({ s }: { s: GameState }) {
     <>
       <LinearGradient colors={inducted ? ['#3a2a07', '#140f04', '#040405'] : ['#17181c', '#0b0b0d', '#040405']} style={hf.hero}>
         <Text style={[hf.kicker, { color: inducted ? C.gold : C.faint }]}>MMA</Text>
-        <Text style={[hf.title, SLANT, { color: inducted ? '#fff' : C.dim }, inducted && hf.glow]}>HALL OF FAME</Text>
-        <Text style={hf.sub}>ONUR LİSTESİ</Text>
+        <Text style={[hf.title, SLANT, { color: inducted ? '#fff' : C.dim }, inducted && hf.glow]}>{L("HALL OF FAME")}</Text>
+        <Text style={hf.sub}>{L("ONUR LİSTESİ")}</Text>
         <Pantheon lit={st.acik.length} total={HOF_PILLARS} inducted={inducted} />
       </LinearGradient>
 
@@ -202,17 +203,17 @@ function HallOfFame({ s }: { s: GameState }) {
             <FighterAvatar look={s.fighter.gorunum} size={110} ring={inducted ? C.gold : '#4a4e57'} />
             <Text style={[hf.laurel, { transform: [{ scaleX: -1 }] }, !inducted && { opacity: 0.25 }]}>🌿</Text>
           </View>
-          {s.fighter.lakap ? <Text style={[hf.nick, { color: inducted ? C.gold : C.faint }]}>“{s.fighter.lakap.toLocaleUpperCase('tr-TR')}”</Text> : null}
-          <Text style={[hf.name, SLANT]}>{`${s.fighter.ad} ${s.fighter.soyad}`.toLocaleUpperCase('tr-TR')}</Text>
+          {s.fighter.lakap ? <Text style={[hf.nick, { color: inducted ? C.gold : C.faint }]}>“{s.fighter.lakap.toLocaleUpperCase(LOC)}”</Text> : null}
+          <Text style={[hf.name, SLANT]}>{`${s.fighter.ad} ${s.fighter.soyad}`.toLocaleUpperCase(LOC)}</Text>
           <Text style={hf.meta}>
-            {s.fighter.memleket} · {WEIGHT_CLASSES[s.fighter.siklet].ad} Sıklet
+            {s.fighter.memleket} · {WEIGHT_CLASSES[s.fighter.siklet].ad} {L("Sıklet")}
           </Text>
           <View style={hf.statRow}>
             {[
-              [`${r.g}-${r.m}-${r.b}`, 'KARNE'],
+              [`${r.g}-${r.m}-${r.b}`, L("KARNE")],
               [`${r.ko}`, 'KO/TKO'],
               [`${r.sub}`, 'SUB'],
-              [`${belts.length}`, 'KEMER'],
+              [`${belts.length}`, L("KEMER")],
             ].map(([v, l]) => (
               <View key={l} style={hf.stat}>
                 <Text style={[hf.statVal, { color: inducted ? C.gold : C.text }]}>{v}</Text>
@@ -222,24 +223,25 @@ function HallOfFame({ s }: { s: GameState }) {
           </View>
           {belts.length ? (
             <Text style={hf.belts}>
-              {belts.map((b) => `🏆 ${ORGS[b.org].kisa} ${WEIGHT_CLASSES[b.siklet].ad}${b.savunma ? ` (${b.savunma} savunma)` : ''}`).join('   ')}
+              {belts.map((b) => `🏆 ${ORGS[b.org].kisa} ${WEIGHT_CLASSES[b.siklet].ad}${b.savunma ? L(" ({0} savunma)", [b.savunma]) : ''}`).join('   ')}
             </Text>
           ) : null}
           <View style={[hf.stamp, { borderColor: inducted ? C.gold : C.faint }]}>
             <Text style={[hf.stampText, { color: inducted ? C.gold : C.faint }]}>
-              {inducted ? `ONUR LİSTESİ ÜYESİ · ${s.hof!.yas} YAŞINDA SEÇİLDİ` : 'HENÜZ SEÇİLMEDİ'}
+              {inducted ? L("ONUR LİSTESİ ÜYESİ · {0} YAŞINDA SEÇİLDİ", [s.hof!.yas]) : L("HENÜZ SEÇİLMEDİ")}
             </Text>
           </View>
           <Text style={[hf.tier, { color: tier.renk }]}>{tier.ad}</Text>
         </View>
       </LinearGradient>
 
-      <Section>ONUR LİSTESİ EŞİKLERİ</Section>
+      <Section>{L("ONUR LİSTESİ EŞİKLERİ")}</Section>
       <View style={hf.reqCard}>
-        <Req ok={st.skor >= HOF_SCORE} label="Efsane puanı" value={`${st.skor} / ${HOF_SCORE}`} pct={(st.skor / HOF_SCORE) * 100} />
-        <Req ok={st.acik.length >= HOF_PILLARS} label="🏛 Onur başarımları" value={`${st.acik.length} / ${HOF_PILLARS}`} pct={(st.acik.length / HOF_PILLARS) * 100} />
+        <Req ok={st.skor >= HOF_SCORE} label={L("Efsane puanı")} value={`${st.skor} / ${HOF_SCORE}`} pct={(st.skor / HOF_SCORE) * 100} />
+        <Req ok={st.acik.length >= HOF_PILLARS} label={L("🏛 Onur başarımları")} value={`${st.acik.length} / ${HOF_PILLARS}`} pct={(st.acik.length / HOF_PILLARS) * 100} />
         <Text style={hf.reqNote}>
-          Onur Listesi’ne girmek için efsane puanın {HOF_SCORE}’e ulaşmalı ve aşağıdaki {HOF_ACHIEVEMENTS.length} zorlu başarımdan en az {HOF_PILLARS} tanesini açmalısın. Tüm kariyerin boyunca açık kalır.
+          
+          {L("Onur Listesi’ne girmek için efsane puanın")}{' '}{HOF_SCORE}{L("’e ulaşmalı ve aşağıdaki")}{' '}{HOF_ACHIEVEMENTS.length} {L("zorlu başarımdan en az")}{' '}{HOF_PILLARS} {L("tanesini açmalısın. Tüm kariyerin boyunca açık kalır.")}
         </Text>
       </View>
       <View style={hf.pillars}>
@@ -283,7 +285,7 @@ export function AchievementsScreen({ s, act }: { s: GameState; act: Act }) {
     <Screen
       footer={
         <Button
-          label="Kariyere dön"
+          label={L("Kariyere dön")}
           icon="arrow-left"
           tone="ghost"
           onPress={() =>
@@ -295,14 +297,15 @@ export function AchievementsScreen({ s, act }: { s: GameState; act: Act }) {
         />
       }
     >
-      <Title kicker="MİRAS" sub="Kafeste ve kafes dışında bıraktığın iz.">
-        Başarımlar
+      <Title kicker={L("MİRAS")} sub={L("Kafeste ve kafes dışında bıraktığın iz.")}>
+        
+        {L("Başarımlar")}
       </Title>
       <View style={ac.tabs}>
         {(
           [
-            ['basarim', 'BAŞARIMLAR', 'medal'],
-            ['hof', 'HALL OF FAME', 'pillar'],
+            ['basarim', L("BAŞARIMLAR"), 'medal'],
+            ['hof', L("HALL OF FAME"), 'pillar'],
           ] as const
         ).map(([k, l, ic]) => (
           <Pressable key={k} onPress={() => setTab(k)} style={[ac.tab, tab === k && (k === 'hof' ? ac.tabHof : ac.tabOn)]}>

@@ -1,4 +1,5 @@
 // Oyun planı seçimi: rakip keşif raporu, hocanın önerisi ve gruplanmış plan kartları.
+import { L, LOC } from '../i18n';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { PLANS, type PlanGroup } from '../engine/fight';
@@ -12,9 +13,9 @@ import { FighterAvatar } from './FighterAvatar';
 import { C, F, R } from './theme';
 
 const GROUPS: { id: PlanGroup; ad: string; renk: string; ikon: IconName }[] = [
-  { id: 'ayakta', ad: 'AYAKTA', renk: C.red, ikon: 'boxing-glove' },
-  { id: 'yer', ad: 'GÜREŞ VE YER', renk: '#3aa8ff', ikon: 'arm-flex' },
-  { id: 'strateji', ad: 'STRATEJİ', renk: C.gold, ikon: 'chess-knight' },
+  { id: 'ayakta', ad: L("AYAKTA"), renk: C.red, ikon: 'boxing-glove' },
+  { id: 'yer', ad: L("GÜREŞ VE YER"), renk: '#3aa8ff', ikon: 'arm-flex' },
+  { id: 'strateji', ad: L("STRATEJİ"), renk: C.gold, ikon: 'chess-knight' },
 ];
 
 export function PlanPicker({ s, onPick }: { s: GameState; onPick: (p: PlanKey) => void }) {
@@ -31,7 +32,7 @@ export function PlanPicker({ s, onPick }: { s: GameState; onPick: (p: PlanKey) =
         <View style={pp.scoutHead}>
           <FighterAvatar look={lookFor(o)} size={64} ring={C.blue} />
           <View style={{ flex: 1 }}>
-            <Text style={pp.kicker}>KEŞİF RAPORU</Text>
+            <Text style={pp.kicker}>{L("KEŞİF RAPORU")}</Text>
             <Text style={[pp.oppName, SLANT]} numberOfLines={1}>
               {upName(`${o.ad} ${o.soyad}`, o.uyruk)}
             </Text>
@@ -40,12 +41,12 @@ export function PlanPicker({ s, onPick }: { s: GameState; onPick: (p: PlanKey) =
         </View>
         <View style={pp.traits}>
           <View style={[pp.trait, { borderColor: '#ff4d5e55' }]}>
-            <Text style={pp.traitLabel}>ZAYIF YÖNÜ</Text>
+            <Text style={pp.traitLabel}>{L("ZAYIF YÖNÜ")}</Text>
             <Text style={[pp.traitVal, { color: '#ff4d5e' }]}>{STAT_LABELS[weak]}</Text>
             <Text style={pp.traitNum}>{o.stats[weak]}</Text>
           </View>
           <View style={[pp.trait, { borderColor: C.green + '55' }]}>
-            <Text style={pp.traitLabel}>GÜÇLÜ YÖNÜ</Text>
+            <Text style={pp.traitLabel}>{L("GÜÇLÜ YÖNÜ")}</Text>
             <Text style={[pp.traitVal, { color: C.green }]}>{STAT_LABELS[strong]}</Text>
             <Text style={pp.traitNum}>{o.stats[strong]}</Text>
           </View>
@@ -53,7 +54,7 @@ export function PlanPicker({ s, onPick }: { s: GameState; onPick: (p: PlanKey) =
         <View style={pp.coach}>
           <Icon name="whistle" size={16} color={C.gold} />
           <Text style={pp.coachText}>
-            <Text style={{ color: C.gold, fontStyle: 'normal', fontFamily: F.display }}>{s.takim.antrenor.toLocaleUpperCase('tr-TR')}: </Text>“
+            <Text style={{ color: C.gold, fontStyle: 'normal', fontFamily: F.display }}>{s.takim.antrenor.toLocaleUpperCase(LOC)}: </Text>“
             {rec
               ? coachPlanAdvice(s, o, weak, strong, PLANS[rec].ad, fits[1] ? PLANS[fits[1]].ad : undefined)
               : coachNoFit(s, o, STAT_KEYS.reduce((a, b) => (s.fighter.stats[b] > s.fighter.stats[a] ? b : a)))}
@@ -62,7 +63,7 @@ export function PlanPicker({ s, onPick }: { s: GameState; onPick: (p: PlanKey) =
         </View>
       </LinearGradient>
 
-      <Text style={pp.hint}>Zaafa uygun plan dövüşte etkisini ikiye katlar. Her planın bir bedeli var.</Text>
+      <Text style={pp.hint}>{L("Zaafa uygun plan dövüşte etkisini ikiye katlar. Her planın bir bedeli var.")}</Text>
 
       {GROUPS.map((g) => (
         <View key={g.id}>
@@ -83,7 +84,7 @@ export function PlanPicker({ s, onPick }: { s: GameState; onPick: (p: PlanKey) =
                         {fit ? (
                           <View style={pp.fit}>
                             <Icon name="target" size={11} color="#000" />
-                            <Text style={pp.fitText}>ZAAFA UYGUN ×2</Text>
+                            <Text style={pp.fitText}>{L("ZAAFA UYGUN ×2")}</Text>
                           </View>
                         ) : null}
                       </View>

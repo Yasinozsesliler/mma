@@ -1,3 +1,4 @@
+import { L } from '../i18n';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRef } from 'react';
 import { Animated, PanResponder, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
@@ -37,12 +38,12 @@ function ProfileCard({ c }: { c: Candidate }) {
           <Icon name="briefcase-outline" size={14} color="#ddd" />
           <Text style={sw.meta}>
             {c.meslek}
-            {c.unlu ? ' · Ünlü' : ''}
+            {c.unlu ? L(" · Ünlü") : ''}
           </Text>
         </View>
         <View style={sw.metaRow}>
           <Icon name="map-marker-outline" size={14} color="#ddd" />
-          <Text style={sw.meta}>{c.mesafe ?? 5} km uzakta</Text>
+          <Text style={sw.meta}>{c.mesafe ?? 5} {L("km uzakta")}</Text>
         </View>
         {c.bio ? <Text style={sw.bio}>{c.bio}</Text> : null}
         <View style={sw.chips}>
@@ -114,8 +115,8 @@ export function SwipeDeck({ s, act, onMatch }: { s: GameState; act: Act; onMatch
         <LinearGradient colors={TINDER} style={sw.emptyIcon}>
           <Icon name="fire" size={40} color="#fff" />
         </LinearGradient>
-        <Text style={sw.emptyTitle}>Bu haftalık profiller bitti</Text>
-        <Text style={sw.emptyText}>Çevrende yeni kimse kalmadı. Gelecek hafta yeni profiller gelecek. Bu arada eşleşmelerinle randevuya çıkabilirsin.</Text>
+        <Text style={sw.emptyTitle}>{L("Bu haftalık profiller bitti")}</Text>
+        <Text style={sw.emptyText}>{L("Çevrende yeni kimse kalmadı. Gelecek hafta yeni profiller gelecek. Bu arada eşleşmelerinle randevuya çıkabilirsin.")}</Text>
       </View>
     );
   }
@@ -137,13 +138,13 @@ export function SwipeDeck({ s, act, onMatch }: { s: GameState; act: Act; onMatch
         >
           <ProfileCard c={top} />
           <Animated.View style={[sw.stamp, sw.stampLike, { opacity: likeO }]}>
-            <Text style={[sw.stampText, { color: '#3ee07a' }]}>BEĞEN</Text>
+            <Text style={[sw.stampText, { color: '#3ee07a' }]}>{L("BEĞEN")}</Text>
           </Animated.View>
           <Animated.View style={[sw.stamp, sw.stampNope, { opacity: nopeO }]}>
-            <Text style={[sw.stampText, { color: '#ff4458' }]}>GEÇ</Text>
+            <Text style={[sw.stampText, { color: '#ff4458' }]}>{L("GEÇ")}</Text>
           </Animated.View>
           <Animated.View style={[sw.stamp, sw.stampSuper, { opacity: superO }]}>
-            <Text style={[sw.stampText, { color: '#3aa8ff' }]}>SÜPER</Text>
+            <Text style={[sw.stampText, { color: '#3aa8ff' }]}>{L("SÜPER")}</Text>
           </Animated.View>
         </Animated.View>
       </View>
@@ -160,7 +161,8 @@ export function SwipeDeck({ s, act, onMatch }: { s: GameState; act: Act; onMatch
         </Pressable>
       </View>
       <Text style={sw.hint}>
-        Sağa kaydır: beğen · Sola kaydır: geç · ⭐ Süper beğeni haftada 1 ({superUsed ? 'kullanıldı' : 'hazır'}) · Bu hafta {list.length} profil kaldı
+        
+        {L("Sağa kaydır: beğen · Sola kaydır: geç · ⭐ Süper beğeni haftada 1 (")}{superUsed ? L("kullanıldı") : L("hazır")}{L(") · Bu hafta")}{' '}{list.length} {L("profil kaldı")}
       </Text>
     </>
   );

@@ -1,4 +1,5 @@
 // Takvim ekranları: kamp süresi, serbest haftalar, hafta hafta kamp ve premium kamp sonu.
+import { L, LOC } from '../i18n';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useState, type ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -16,7 +17,7 @@ import { C, F, R } from './theme';
 
 type Choose = (v: string | number) => void;
 
-const days = (w: number) => `${w * 7} gün`;
+const days = (w: number) => L("{0} gün", [w * 7]);
 
 /** Maça kadar olan haftalar: geçen, şimdiki, serbest, kamp ve maç haftası. */
 export function Timeline({ s }: { s: GameState }) {
@@ -50,10 +51,10 @@ export function Timeline({ s }: { s: GameState }) {
         ))}
       </View>
       <View style={cc.legend}>
-        <Text style={cc.legendText}>⬜ Serbest</Text>
-        <Text style={[cc.legendText, { color: '#d99a3a' }]}>🟧 Kamp</Text>
-        <Text style={[cc.legendText, { color: C.gold }]}>🥊 Maç</Text>
-        <Text style={[cc.legendText, { color: '#3aa8ff' }]}>● Etkinlik</Text>
+        <Text style={cc.legendText}>{L("⬜ Serbest")}</Text>
+        <Text style={[cc.legendText, { color: '#d99a3a' }]}>{L("🟧 Kamp")}</Text>
+        <Text style={[cc.legendText, { color: C.gold }]}>{L("🥊 Maç")}</Text>
+        <Text style={[cc.legendText, { color: '#3aa8ff' }]}>{L("● Etkinlik")}</Text>
       </View>
     </View>
   );
@@ -65,10 +66,10 @@ function FightDateHero({ s, children }: { s: GameState; children?: ReactNode }) 
   const left = (k.macHafta ?? k.hafta) - (k.takvimIdx ?? 0) - (k.kampIdx ?? 0);
   return (
     <LinearGradient colors={['#1d0a0e', '#0c0d10']} style={cc.hero}>
-      <Text style={cc.kicker}>MAÇ TAKVİMİ</Text>
-      <Text style={[cc.big, SLANT]}>{left} HAFTA</Text>
+      <Text style={cc.kicker}>{L("MAÇ TAKVİMİ")}</Text>
+      <Text style={[cc.big, SLANT]}>{left} {L("HAFTA")}</Text>
       <Text style={cc.sub}>
-        {o.ad} {o.soyad} ile maça {days(left)} kaldı
+        {o.ad} {o.soyad} {L("ile maça")}{' '}{days(left)} {L("kaldı")}
       </Text>
       <Timeline s={s} />
       {children}
@@ -85,8 +86,8 @@ export function CampLengthStep({ s, header, choose }: { s: GameState; header: Re
     <Screen>
       {header}
       <FightDateHero s={s} />
-      <Text style={cc.title}>Kamp süresini seç</Text>
-      <Text style={cc.hint}>Kamptan önceki haftalar serbest: teknik çalışır, spar yapar, etkinliklere katılırsın. Uzun kamp daha çok geliştirir ama pahalıdır ve yıpratır.</Text>
+      <Text style={cc.title}>{L("Kamp süresini seç")}</Text>
+      <Text style={cc.hint}>{L("Kamptan önceki haftalar serbest: teknik çalışır, spar yapar, etkinliklere katılırsın. Uzun kamp daha çok geliştirir ama pahalıdır ve yıpratır.")}</Text>
       {campLengthsFor(mac).map((w) => {
         const info = CAMP_LENGTH_INFO[w] ?? { carpan: 1, risk: 1, not: '' };
         const q = campQuote(s, 'salon', w).toplam;
@@ -95,17 +96,18 @@ export function CampLengthStep({ s, header, choose }: { s: GameState; header: Re
           <Pressable key={w} onPress={() => choose(w)} style={({ pressed }) => [cc.len, rec && { borderColor: C.gold }, pressed && { backgroundColor: '#15161b' }]}>
             <View style={cc.lenWeeks}>
               <Text style={[cc.lenNum, rec && { color: C.gold }]}>{w}</Text>
-              <Text style={cc.lenUnit}>HAFTA</Text>
+              <Text style={cc.lenUnit}>{L("HAFTA")}</Text>
             </View>
             <View style={{ flex: 1 }}>
               <Text style={cc.lenTitle}>
-                {info.not} {rec ? <Text style={{ color: C.gold }}>· Önerilen</Text> : null}
+                {info.not} {rec ? <Text style={{ color: C.gold }}>{L("· Önerilen")}</Text> : null}
               </Text>
               <Text style={cc.lenMeta}>
-                Gelişim ×{info.carpan} · Sakatlık riski ×{info.risk}
-                {q ? ` · Salon ~${money(q)}` : ''}
+                
+                {L("Gelişim ×")}{info.carpan} {L("· Sakatlık riski ×")}{info.risk}
+                {q ? L(" · Salon ~{0}", [money(q)]) : ''}
               </Text>
-              <Text style={cc.lenMeta}>{mac - w > 0 ? `Kamptan önce ${mac - w} serbest hafta` : 'Hemen kampa gir'}</Text>
+              <Text style={cc.lenMeta}>{mac - w > 0 ? L("Kamptan önce {0} serbest hafta", [mac - w]) : L("Hemen kampa gir")}</Text>
             </View>
             <Icon name="chevron-right" size={22} color={C.faint} />
           </Pressable>
@@ -124,12 +126,12 @@ export function FreeWeeksStep({ s, header, choose }: { s: GameState; header: Rea
   const week = (k.takvimIdx ?? 0) + 1;
   const known = TECHNIQUES.filter((t) => techLevel(s, t.id) > 0 && techLevel(s, t.id) < MAX_TECH);
   return (
-    <Screen footer={<Button label="Kampa kadar otomatik geç" icon="fast-forward" tone="ghost" onPress={() => choose('hizli')} />}>
+    <Screen footer={<Button label={L("Kampa kadar otomatik geç")} icon="fast-forward" tone="ghost" onPress={() => choose('hizli')} />}>
       {header}
       <FightDateHero s={s} />
       <View style={cc.weekHead}>
-        <Text style={[cc.weekTitle, SLANT]}>{week}. HAFTA</Text>
-        <Text style={cc.weekSub}>Kampa {k.serbest} hafta · Sağlık {s.saglik}/100</Text>
+        <Text style={[cc.weekTitle, SLANT]}>{week}{L(". HAFTA")}</Text>
+        <Text style={cc.weekSub}>{L("Kampa")}{' '}{k.serbest} {L("hafta · Sağlık")}{' '}{s.saglik}/100</Text>
       </View>
 
       {ev ? (
@@ -148,22 +150,23 @@ export function FreeWeeksStep({ s, header, choose }: { s: GameState; header: Rea
         </LinearGradient>
       ) : pickTech ? (
         <View style={cc.panel}>
-          <Text style={cc.panelTitle}>Hangi tekniğe yükleneceksin?</Text>
+          <Text style={cc.panelTitle}>{L("Hangi tekniğe yükleneceksin?")}</Text>
           {known.length ? (
             known.map((t) => (
               <Pressable key={t.id} onPress={() => { setPickTech(false); choose(`teknik:${t.id}`); }} style={({ pressed }) => [cc.techRow, pressed && { backgroundColor: '#15161b' }]}>
                 <Icon name={t.ikon as IconName} size={18} color={C.gold} />
                 <Text style={cc.techName}>{t.ad}</Text>
                 <Text style={cc.techLv}>
-                  Sv {techLevel(s, t.id)} · {s.teknik?.[t.id]?.xp ?? 0}/{xpNeed(techLevel(s, t.id))}
+                  
+                  {L("Sv")}{' '}{techLevel(s, t.id)} · {s.teknik?.[t.id]?.xp ?? 0}/{xpNeed(techLevel(s, t.id))}
                 </Text>
               </Pressable>
             ))
           ) : (
-            <Text style={cc.hint}>Henüz bildiğin bir teknik yok. Gelişim sekmesinden puanla öğrenebilirsin.</Text>
+            <Text style={cc.hint}>{L("Henüz bildiğin bir teknik yok. Gelişim sekmesinden puanla öğrenebilirsin.")}</Text>
           )}
           <Pressable onPress={() => setPickTech(false)} style={{ alignItems: 'center', paddingTop: 8 }}>
-            <Text style={cc.back}>GERİ</Text>
+            <Text style={cc.back}>{L("GERİ")}</Text>
           </Pressable>
         </View>
       ) : (
@@ -180,7 +183,7 @@ export function FreeWeeksStep({ s, header, choose }: { s: GameState; header: Rea
 
       {(k.takvimLog ?? []).length ? (
         <>
-          <Section>TAKVİM GÜNLÜĞÜ</Section>
+          <Section>{L("TAKVİM GÜNLÜĞÜ")}</Section>
           <View style={cc.panel}>
             {(k.takvimLog ?? []).map((l, i) => (
               <Text key={i} style={[cc.log, i > 0 && cc.divider]}>
@@ -203,14 +206,14 @@ export function CampWeeksStep({ s, header, choose }: { s: GameState; header: Rea
     <Screen
       footer={
         <>
-          <Button label={done + 1 >= k.hafta ? 'Fight week’i oyna' : `${done + 1}. kamp haftasını oyna`} icon="play" onPress={() => choose('hafta')} />
-          <Button label="Tüm kampı simüle et" icon="fast-forward" tone="ghost" onPress={() => choose('hepsi')} />
+          <Button label={done + 1 >= k.hafta ? L("Fight week’i oyna") : L("{0}. kamp haftasını oyna", [done + 1])} icon="play" onPress={() => choose('hafta')} />
+          <Button label={L("Tüm kampı simüle et")} icon="fast-forward" tone="ghost" onPress={() => choose('hepsi')} />
         </>
       }
     >
       {header}
       <FightDateHero s={s} />
-      <Text style={cc.title}>Antrenman kampı · {done}/{k.hafta} hafta</Text>
+      <Text style={cc.title}>{L('Antrenman kampı · {0}/{1} hafta', [done, k.hafta])}</Text>
       <View style={cc.panel}>
         {(k.haftaLog ?? []).length ? (
           (k.haftaLog ?? []).map((l, i) => (
@@ -220,7 +223,7 @@ export function CampWeeksStep({ s, header, choose }: { s: GameState; header: Rea
             </View>
           ))
         ) : (
-          <Text style={cc.hint}>Kamp hazır. Haftaları tek tek oynayabilir ya da tamamını simüle edebilirsin.</Text>
+          <Text style={cc.hint}>{L("Kamp hazır. Haftaları tek tek oynayabilir ya da tamamını simüle edebilirsin.")}</Text>
         )}
       </View>
     </Screen>
@@ -252,38 +255,39 @@ export function CampSummary({ s, act, choose }: { s: GameState; act: Act; choose
   const r = k.sonuc;
   const rest = k.ozet.filter((l) => !SUMMARY_SKIP.some((re) => re.test(l)));
   return (
-    <Screen footer={<Button label="Tartıya çık" icon="scale-bathroom" tone="gold" onPress={() => choose(0)} />}>
+    <Screen footer={<Button label={L("Tartıya çık")} icon="scale-bathroom" tone="gold" onPress={() => choose(0)} />}>
       <LinearGradient colors={['#10301f', '#08140e', '#040405']} style={cc.sumHero}>
         <View style={[cc.glowLine, { backgroundColor: C.green }]} />
-        <Text style={cc.sumOrg}>{(r?.yer ?? 'KAMP').toLocaleUpperCase('tr-TR')} · {k.hafta} HAFTA</Text>
+        <Text style={cc.sumOrg}>{(r?.yer ?? L('KAMP')).toLocaleUpperCase(LOC)} · {k.hafta} {L("HAFTA")}</Text>
         <View style={[cc.sumKicker, { borderColor: C.green }]}>
           <Icon name="check-decagram" size={14} color={C.green} />
-          <Text style={[cc.sumKickerText, { color: C.green }]}>KAMP TAMAMLANDI</Text>
+          <Text style={[cc.sumKickerText, { color: C.green }]}>{L("KAMP TAMAMLANDI")}</Text>
         </View>
-        <Text style={[cc.sumTitle, SLANT]}>HAZIRSIN</Text>
+        <Text style={[cc.sumTitle, SLANT]}>{L("HAZIRSIN")}</Text>
         <Text style={cc.sumVs}>
-          SIRADAKİ: <Text style={{ color: C.text }}>{`${o.ad} ${o.soyad}`.toLocaleUpperCase('tr-TR')}</Text>
+          
+          {L("SIRADAKİ:")}{' '}<Text style={{ color: C.text }}>{`${o.ad} ${o.soyad}`.toLocaleUpperCase(LOC)}</Text>
         </Text>
         {r?.planUyum ? (
           <View style={cc.planTag}>
             <Icon name="target" size={13} color={C.gold} />
-            <Text style={cc.planText}>OYUN PLANI RAKİBİN ZAAFINA OTURDU</Text>
+            <Text style={cc.planText}>{L("OYUN PLANI RAKİBİN ZAAFINA OTURDU")}</Text>
           </View>
         ) : null}
       </LinearGradient>
 
       {r ? (
         <View style={cc.tiles}>
-          <Tile label={r.focus ? STAT_LABELS[r.focus].toLocaleUpperCase('tr-TR') : 'ODAK'} icon="trending-up" value={`+${r.artis}`} sub={r.focus ? `Şimdi ${r.yeni}` : undefined} color={C.green} />
-          <Tile label="GELİŞİM" icon="star-four-points" value={`+${r.puan}`} sub={`Toplam ${s.puan} puan`} color={C.blue} />
-          <Tile label="SAĞLIK" icon="heart-pulse" value={`${r.saglik}`} sub={`${r.saglikDelta >= 0 ? '+' : ''}${r.saglikDelta} kampta`} color={r.saglik < 60 ? C.orange : C.green} />
-          <Tile label="MASRAF" icon="cash-minus" value={r.maliyet ? `-${money(r.maliyet)}` : '$0'} sub={`Bakiye ${money(s.para)}`} color={r.maliyet ? '#ff4d5e' : C.dim} />
+          <Tile label={r.focus ? STAT_LABELS[r.focus].toLocaleUpperCase(LOC) : L('ODAK')} icon="trending-up" value={`+${r.artis}`} sub={r.focus ? L("Şimdi {0}", [r.yeni]) : undefined} color={C.green} />
+          <Tile label={L("GELİŞİM")} icon="star-four-points" value={`+${r.puan}`} sub={L("Toplam {0} puan", [s.puan])} color={C.blue} />
+          <Tile label={L("SAĞLIK")} icon="heart-pulse" value={`${r.saglik}`} sub={`${r.saglikDelta >= 0 ? '+' : ''}${r.saglikDelta} kampta`} color={r.saglik < 60 ? C.orange : C.green} />
+          <Tile label={L("MASRAF")} icon="cash-minus" value={r.maliyet ? `-${money(r.maliyet)}` : '$0'} sub={L("Bakiye {0}", [money(s.para)])} color={r.maliyet ? '#ff4d5e' : C.dim} />
         </View>
       ) : null}
 
       {r?.teknik.length ? (
         <>
-          <Section>TEKNİK GELİŞİMİ</Section>
+          <Section>{L("TEKNİK GELİŞİMİ")}</Section>
           <View style={cc.panel}>
             {r.teknik.map((l, i) => (
               <Text key={i} style={[cc.log, i > 0 && cc.divider]}>
@@ -296,7 +300,7 @@ export function CampSummary({ s, act, choose }: { s: GameState; act: Act; choose
 
       {rest.length ? (
         <>
-          <Section>KAMP RAPORU</Section>
+          <Section>{L("KAMP RAPORU")}</Section>
           <View style={cc.panel}>
             {rest.map((l, i) => (
               <Text key={i} style={[cc.log, i > 0 && cc.divider]}>
@@ -309,7 +313,7 @@ export function CampSummary({ s, act, choose }: { s: GameState; act: Act; choose
 
       {(k.haftaLog ?? []).length ? (
         <>
-          <Section>KAMP GÜNLÜĞÜ</Section>
+          <Section>{L("KAMP GÜNLÜĞÜ")}</Section>
           <View style={cc.panel}>
             {(k.haftaLog ?? []).map((l, i) => (
               <View key={i} style={[cc.campRow, i > 0 && cc.divider]}>
@@ -321,7 +325,7 @@ export function CampSummary({ s, act, choose }: { s: GameState; act: Act; choose
         </>
       ) : null}
 
-      <SkillPanel s={s} act={act} title="DÖVÜŞTEN ÖNCE GÜÇLEN" />
+      <SkillPanel s={s} act={act} title={L("DÖVÜŞTEN ÖNCE GÜÇLEN")} />
       <TechniquePanel s={s} act={act} />
     </Screen>
   );

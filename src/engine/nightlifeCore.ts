@@ -1,4 +1,5 @@
 // Gece hayatının saf çekirdeği: risk sayacı ve hastalık ilerlemesi (ekonomi haftalık tikinden çağrılır).
+import { L } from '../i18n';
 import { chance, clamp, pick } from './rng';
 import type { GameState, Stats } from './types';
 
@@ -9,11 +10,11 @@ export interface Disease {
 }
 
 export const DISEASES: Disease[] = [
-  { ad: 'Klamidya', tedaviHafta: 2, maliyet: 400 },
-  { ad: 'Bel soğukluğu (gonore)', tedaviHafta: 2, maliyet: 500 },
-  { ad: 'Frengi (sifiliz)', tedaviHafta: 4, maliyet: 900 },
-  { ad: 'Genital uçuk (HSV)', tedaviHafta: 3, maliyet: 700 },
-  { ad: 'Trikomonas', tedaviHafta: 2, maliyet: 350 },
+  { ad: L("Klamidya"), tedaviHafta: 2, maliyet: 400 },
+  { ad: L("Bel soğukluğu (gonore)"), tedaviHafta: 2, maliyet: 500 },
+  { ad: L("Frengi (sifiliz)"), tedaviHafta: 4, maliyet: 900 },
+  { ad: L("Genital uçuk (HSV)"), tedaviHafta: 3, maliyet: 700 },
+  { ad: L("Trikomonas"), tedaviHafta: 2, maliyet: 350 },
 ];
 
 export const infected = (s: GameState) => !!s.hastalik;
@@ -44,7 +45,7 @@ export function nightTick(s: GameState, weeks: number): string[] {
   if (s.gece) s.gece.risk = s.gece.risk * Math.pow(0.8, weeks);
   if (s.hastalik) {
     if (s.hastalik.tedaviBitis && s.hafta >= s.hastalik.tedaviBitis) {
-      notes.push(`💊 ${s.hastalik.ad} tedavisi tamamlandı. Temizsin.`);
+      notes.push(L("💊 {0} tedavisi tamamlandı. Temizsin.", [s.hastalik.ad]));
       s.hastalik = undefined;
     } else if (!s.hastalik.tedaviBitis) {
       s.saglik = clamp(s.saglik - 3 * weeks, 5, 100);

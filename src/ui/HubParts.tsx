@@ -1,3 +1,4 @@
+import { L, LOC } from '../i18n';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -22,18 +23,18 @@ interface NewsStyle {
 }
 
 function newsStyle(h: string): NewsStyle {
-  if (h.startsWith('✅')) return { tag: 'GALİBİYET', color: C.green, icon: 'check-bold' };
-  if (h.startsWith('❌')) return { tag: 'MAĞLUBİYET', color: C.red, icon: 'close-thick' };
-  if (h.startsWith('➖')) return { tag: 'BERABERLİK', color: C.gold, icon: 'scale-balance' };
-  if (h.includes('🏆')) return { tag: 'ÜNVAN', color: C.gold, icon: 'crown' };
-  if (h.startsWith('✍️')) return { tag: 'KONTRAT', color: C.blue, icon: 'file-sign' };
-  if (h.startsWith('🛍️')) return { tag: 'YAŞAM', color: '#b57bff', icon: 'shopping' };
-  if (/^(🚑|🩹|🛌)/u.test(h)) return { tag: 'SAĞLIK', color: C.orange, icon: 'medical-bag' };
-  if (h.startsWith('📋')) return { tag: 'SIRALAMA', color: C.blue, icon: 'podium' };
-  if (/^(📉|✂️)/u.test(h)) return { tag: 'KRİZ', color: C.red, icon: 'trending-down' };
-  if (h.startsWith('⭐')) return { tag: 'GELİŞİM', color: C.gold, icon: 'star-four-points' };
-  if (/^\p{Extended_Pictographic}/u.test(h) && h.includes(':')) return { tag: 'OLAY', color: '#5ec8d8', icon: 'newspaper-variant-outline' };
-  return { tag: 'HABER', color: C.dim, icon: 'newspaper-variant-outline' };
+  if (h.startsWith('✅')) return { tag: L("GALİBİYET"), color: C.green, icon: 'check-bold' };
+  if (h.startsWith('❌')) return { tag: L("MAĞLUBİYET"), color: C.red, icon: 'close-thick' };
+  if (h.startsWith('➖')) return { tag: L("BERABERLİK"), color: C.gold, icon: 'scale-balance' };
+  if (h.includes('🏆')) return { tag: L("ÜNVAN"), color: C.gold, icon: 'crown' };
+  if (h.startsWith('✍️')) return { tag: L("KONTRAT"), color: C.blue, icon: 'file-sign' };
+  if (h.startsWith('🛍️')) return { tag: L("YAŞAM"), color: '#b57bff', icon: 'shopping' };
+  if (/^(🚑|🩹|🛌)/u.test(h)) return { tag: L("SAĞLIK"), color: C.orange, icon: 'medical-bag' };
+  if (h.startsWith('📋')) return { tag: L("SIRALAMA"), color: C.blue, icon: 'podium' };
+  if (/^(📉|✂️)/u.test(h)) return { tag: L("KRİZ"), color: C.red, icon: 'trending-down' };
+  if (h.startsWith('⭐')) return { tag: L("GELİŞİM"), color: C.gold, icon: 'star-four-points' };
+  if (/^\p{Extended_Pictographic}/u.test(h) && h.includes(':')) return { tag: L('OLAY'), color: '#5ec8d8', icon: 'newspaper-variant-outline' };
+  return { tag: L("HABER"), color: C.dim, icon: 'newspaper-variant-outline' };
 }
 
 /** Baştaki emojiyi atıp başlık ve gövdeyi ayırır. */
@@ -54,14 +55,14 @@ export function NewsFeed({ items }: { items: string[] }) {
       <LinearGradient colors={['#5a0f18', '#1a0b0e']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={nf.breaking}>
         <View style={nf.breakingHead}>
           <View style={[nf.breakingTag, SLANT]}>
-            <Text style={nf.breakingTagText}>SON DAKİKA</Text>
+            <Text style={nf.breakingTagText}>{L("SON DAKİKA")}</Text>
           </View>
           <View style={[nf.tag, { borderColor: fs.color }]}>
             <Icon name={fs.icon} size={11} color={fs.color} />
             <Text style={[nf.tagText, { color: fs.color }]}>{fs.tag}</Text>
           </View>
         </View>
-        {f.baslik ? <Text style={[nf.bigHead, SLANT]}>{f.baslik.toLocaleUpperCase('tr-TR')}</Text> : null}
+        {f.baslik ? <Text style={[nf.bigHead, SLANT]}>{f.baslik.toLocaleUpperCase(LOC)}</Text> : null}
         <Text style={nf.bigBody}>{f.govde}</Text>
       </LinearGradient>
       {rest.map((h, i) => {
@@ -95,8 +96,8 @@ export function RankingList({ s }: { s: GameState }) {
       <Card>
         <P dim style={{ marginBottom: 0 }}>
           {s.stage === 'amator'
-            ? 'Amatör ligde resmi sıralama yok. Profesyonel olduğunda organizasyonunun sıklet sıralaması burada açılacak.'
-            : 'Bu organizasyonda sıralama yok. Tek gecelik bir fırsat: kazanırsan kapılar açılır.'}
+            ? L("Amatör ligde resmi sıralama yok. Profesyonel olduğunda organizasyonunun sıklet sıralaması burada açılacak.")
+            : L("Bu organizasyonda sıralama yok. Tek gecelik bir fırsat: kazanırsan kapılar açılır.")}
         </P>
       </Card>
     );
@@ -105,8 +106,8 @@ export function RankingList({ s }: { s: GameState }) {
   return (
     <>
       <View style={rk.header}>
-        <Text style={[rk.headerTitle, SLANT]}>{org.kisa} · {WEIGHT_CLASSES[s.fighter.siklet].ad.toLocaleUpperCase('tr-TR')} SIKLET</Text>
-        <Text style={rk.headerSub}>Resmi sıralama · Bir dövüşçüye dokun, istatistiklerini gör</Text>
+        <Text style={[rk.headerTitle, SLANT]}>{org.kisa} · {WEIGHT_CLASSES[s.fighter.siklet].ad.toLocaleUpperCase(LOC)} {L("SIKLET")}</Text>
+        <Text style={rk.headerSub}>{L("Resmi sıralama · Bir dövüşçüye dokun, istatistiklerini gör")}</Text>
       </View>
       {rows.map((row) => {
         const champ = row.rank === 'C';
@@ -133,15 +134,15 @@ export function RankingList({ s }: { s: GameState }) {
               {nick ? <Text style={[rk.nick, champ && { color: C.gold }]}>“{nick}”</Text> : null}
               <Text style={[rk.name, me && { color: C.red }]} numberOfLines={1}>
                 {upName(name, me ? s.fighter.uyruk : o?.uyruk)}
-                {me ? '  (SEN)' : ''}
+                {me ? L('  (SEN)') : ''}
               </Text>
               <Text style={rk.meta}>
-                {me ? 'Sen' : o?.uyruk} · {rec}
+                {me ? L("Sen") : o?.uyruk} · {rec}
               </Text>
             </View>
             <View style={{ alignItems: 'center' }}>
               <Text style={[rk.ovr, { color: statColor(ovr) }]}>{ovr}</Text>
-              <Text style={rk.ovrLabel}>GÜÇ</Text>
+              <Text style={rk.ovrLabel}>{L("GÜÇ")}</Text>
             </View>
             {o ? <Icon name={isOpen ? 'chevron-up' : 'chevron-down'} size={18} color={C.faint} /> : null}
           </Pressable>
@@ -150,8 +151,8 @@ export function RankingList({ s }: { s: GameState }) {
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
                 <Pill text={BACKGROUNDS[o.stil].ad} icon="karate" color={C.dim} />
                 <Pill text={o.kisilik} icon="account-voice" color={C.dim} />
-                <Pill text={`Güçlü: ${d.guclu}`} icon="arrow-up-bold-circle" color={C.green} />
-                <Pill text={`Zayıf: ${d.zayif}`} icon="alert-octagon" color={C.red} />
+                <Pill text={L("Güçlü: {0}", [d.guclu])} icon="arrow-up-bold-circle" color={C.green} />
+                <Pill text={L("Zayıf: {0}", [d.zayif])} icon="alert-octagon" color={C.red} />
               </View>
               <Compare me={s.fighter.stats} opp={o.stats} oppLabel={upName(o.soyad, o.uyruk)} />
             </View>
@@ -159,7 +160,7 @@ export function RankingList({ s }: { s: GameState }) {
           </View>
         );
       })}
-      {s.rank == null && !s.sampiyon ? <P dim>Henüz sıralamada değilsin. Galibiyetlerle listeye gir.</P> : null}
+      {s.rank == null && !s.sampiyon ? <P dim>{L("Henüz sıralamada değilsin. Galibiyetlerle listeye gir.")}</P> : null}
     </>
   );
 }
@@ -169,7 +170,7 @@ export function RankingList({ s }: { s: GameState }) {
 export function RestPicker({ s, act, onDone }: { s: GameState; act: Act; onDone: () => void }) {
   return (
     <Card accent={C.green}>
-      <Text style={[rk.headerTitle, SLANT, { marginBottom: 8 }]}>NE KADAR DİNLENECEKSİN?</Text>
+      <Text style={[rk.headerTitle, SLANT, { marginBottom: 8 }]}>{L("NE KADAR DİNLENECEKSİN?")}</Text>
       {REST_WEEKS.map((w) => {
         const p = restPreview(s, w);
         return (
@@ -183,7 +184,7 @@ export function RestPicker({ s, act, onDone }: { s: GameState; act: Act; onDone:
           >
             <View style={[rp.weeks, SLANT]}>
               <Text style={rp.weeksNum}>{w}</Text>
-              <Text style={rp.weeksLabel}>HAFTA</Text>
+              <Text style={rp.weeksLabel}>{L("HAFTA")}</Text>
             </View>
             <View style={{ flex: 1 }}>
               <View style={rp.barBg}>
@@ -191,11 +192,12 @@ export function RestPicker({ s, act, onDone }: { s: GameState; act: Act; onDone:
                 <View style={[rp.barGain, { left: `${s.saglik}%`, width: `${p.yeniSaglik - s.saglik}%` }]} />
               </View>
               <Text style={rp.line}>
-                Sağlık {s.saglik} → <Text style={{ color: C.green, fontFamily: F.bold }}>{p.yeniSaglik}</Text> (+{p.yeniSaglik - s.saglik})
-                {p.maliyet ? `  ·  ${money(p.maliyet)}` : '  ·  Ücretsiz'}
+                
+                {L("Sağlık")}{' '}{s.saglik} → <Text style={{ color: C.green, fontFamily: F.bold }}>{p.yeniSaglik}</Text> (+{p.yeniSaglik - s.saglik})
+                {p.maliyet ? `  ·  ${money(p.maliyet)}` : L("  ·  Ücretsiz")}
               </Text>
-              {p.iyilesen.length ? <Text style={[rp.line, { color: C.green }]}>İyileşir: {p.iyilesen.join(', ')}</Text> : null}
-              {p.kalan.length ? <Text style={[rp.line, { color: C.orange }]}>Sürer: {p.kalan.join(', ')}</Text> : null}
+              {p.iyilesen.length ? <Text style={[rp.line, { color: C.green }]}>{L("İyileşir:")}{' '}{p.iyilesen.join(', ')}</Text> : null}
+              {p.kalan.length ? <Text style={[rp.line, { color: C.orange }]}>{L("Sürer:")}{' '}{p.kalan.join(', ')}</Text> : null}
             </View>
           </Pressable>
         );

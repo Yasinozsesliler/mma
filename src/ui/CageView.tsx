@@ -1,4 +1,5 @@
 // Kafes sahnesi: eklemli dövüşçüler ve hakem, maç akışındaki her olayı koreografiyle canlandırır.
+import { L as tL, LOC } from '../i18n';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
@@ -25,28 +26,28 @@ const ease = (t: number) => (t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2);
 type Ev = { tur: string; alt: string; kim: Side; miss: boolean; escape: boolean; tap: boolean };
 
 function classify(line: string, fs: FightState): Ev {
-  const t = line.toLocaleLowerCase('tr-TR');
-  const pi = t.indexOf(fs.pAd.toLocaleLowerCase('tr-TR'));
-  const oi = t.indexOf(fs.oAd.toLocaleLowerCase('tr-TR'));
+  const t = line.toLocaleLowerCase(LOC);
+  const pi = t.indexOf(fs.pAd.toLocaleLowerCase(LOC));
+  const oi = t.indexOf(fs.oAd.toLocaleLowerCase(LOC));
   let kim: Side = pi >= 0 && (oi < 0 || pi < oi) ? 'p' : oi >= 0 ? 'o' : 'p';
-  if (oi >= 0 && /seni |sana |gözlerini açtığında|tap attın|yığıldın|yakaladı seni/.test(t)) kim = 'o';
-  const miss = /boşa|ıskal|savuştur|bloke|kaçtı|sıyrıl|okudu|savundu|kaçındı/.test(t);
-  const escape = /sıyrıl|kurtul|kilidinden çık|ayağa kalk|açıldı|kaçtı/.test(t);
-  const tap = /tap att/.test(t);
-  const sub = /rnc|arkadan|sırtını al/.test(t) ? 'rnc' : /üçgen|triangle/.test(t) ? 'triangle' : /giyotin|d'arce|anakonda|arm-triangle/.test(t) ? 'guillotine' : 'armbar';
-  const kick = /kafa(ya)? .*tekme|yüksek tekme|head kick/.test(t) ? 'headKick' : /bacağ|low kick|alçak/.test(t) ? 'lowKick' : 'bodyKick';
-  const strike = /dönerek|spinning/.test(t) ? 'spin' : /aparkat|uppercut/.test(t) ? 'upper' : /kroşe|hook/.test(t) ? 'hook' : /dirsek/.test(t) ? 'elbow' : /jab/.test(t) ? 'jab' : /diz/.test(t) ? 'knee' : 'cross';
+  if (oi >= 0 && /seni |sana |gözlerini açtığında|tap attın|yığıldın|yakaladı seni|you |your |caught you|you tapped|you collapse|you open your eyes/.test(t)) kim = 'o';
+  const miss = /boşa|ıskal|savuştur|bloke|kaçtı|sıyrıl|okudu|savundu|kaçındı|miss|block|slip|dodge|parr|read it|defend|avoid|escape|sprawl/.test(t);
+  const escape = /sıyrıl|kurtul|kilidinden çık|ayağa kalk|açıldı|kaçtı|escape|broke free|breaks free|got out|gets out|back up|to (his|her|their|your) feet/.test(t);
+  const tap = /tap att|tapped|taps out/.test(t);
+  const sub = /rnc|arkadan|sırtını al|rear-naked|the back/.test(t) ? 'rnc' : /üçgen|triangle/.test(t) && !/arm-triangle/.test(t) ? 'triangle' : /giyotin|guillotine|d'arce|anakonda|anaconda|arm-triangle/.test(t) ? 'guillotine' : 'armbar';
+  const kick = /kafa(ya)? .*tekme|yüksek tekme|head kick|high kick/.test(t) ? 'headKick' : /bacağ|low kick|alçak|leg kick|calf/.test(t) ? 'lowKick' : 'bodyKick';
+  const strike = /dönerek|spinning/.test(t) ? 'spin' : /aparkat|uppercut/.test(t) ? 'upper' : /kroşe|hook/.test(t) && !/heel hook/.test(t) ? 'hook' : /dirsek|elbow/.test(t) ? 'elbow' : /jab/.test(t) ? 'jab' : /diz|knee/.test(t) ? 'knee' : 'cross';
   const E = (tur: string, alt = ''): Ev => ({ tur, alt, kim, miss, escape, tap });
-  if (/^— \d+\. raunt/.test(t)) return E('round');
-  if (/nakavt|uyuttu|bilinçsiz|yere yığıl|ışıklar söndü|hakem (araya|durdurdu|hemen)|havlu|tko/.test(t)) return E('ko', /tekme/.test(t) ? 'headKick' : strike);
-  if (/tap att|kilidi|kilid|boğma|armbar|kimura|giyotin|heel hook|kneebar|üçgen|arm-triangle|anakonda|d'arce|submission|🔒/.test(t)) return E('sub', sub);
-  if (/sarsıl|sendeled|bacakları titr|yere düştü|knockdown|yere gönderdi|dizleri/.test(t)) return E('rock', /tekme/.test(t) ? 'headKick' : strike);
-  if (/ground and pound|ground & pound|üstten|yerde (sert|vur|ağır)|mount|yağdır/.test(t)) return E('gnp');
-  if (/yere indir|takedown|bacaklarına dal|seviye değiştir|suplex|yere çal|dalış/.test(t)) return E('td');
-  if (/yerde|guard|sırtüstü|yan kontrol/.test(t)) return E('gnp');
-  if (/clinch|kafese daya|kafese yasl|ense|thai/.test(t)) return E('clinch', /diz/.test(t) ? 'knee' : /dirsek/.test(t) ? 'elbow' : '');
+  if (/^— \d+\. raunt|^— round \d+/.test(t)) return E('round');
+  if (/nakavt|uyuttu|bilinçsiz|yere yığıl|ışıklar söndü|hakem (araya|durdurdu|hemen)|havlu|tko|knockout|knocked out|to sleep|unconscious|lights (went|go) out|referee (jumps|steps|stops|waves)|towel|stoppage/.test(t)) return E('ko', /tekme|kick/.test(t) ? 'headKick' : strike);
+  if (/tap att|kilidi|kilid|boğma|armbar|kimura|giyotin|heel hook|kneebar|üçgen|arm-triangle|anakonda|d'arce|submission|🔒|tapped|choke|guillotine|triangle|anaconda|lock/.test(t)) return E('sub', sub);
+  if (/sarsıl|sendeled|bacakları titr|yere düştü|knockdown|yere gönderdi|dizleri|rocked|stagger|wobbl|legs shaking|dropped|goes down|went down|hurt/.test(t)) return E('rock', /tekme|kick/.test(t) ? 'headKick' : strike);
+  if (/ground and pound|ground & pound|üstten|yerde (sert|vur|ağır)|mount|yağdır|from the top|on top|rains down/.test(t)) return E('gnp');
+  if (/yere indir|takedown|bacaklarına dal|seviye değiştir|suplex|yere çal|dalış|double-leg|single-leg|shoots|slam|to the mat|hip-toss/.test(t)) return E('td');
+  if (/yerde|guard|sırtüstü|yan kontrol|on the ground|side control|on their back|on the mat/.test(t)) return E('gnp');
+  if (/clinch|kafese daya|kafese yasl|ense|thai|against the cage|pins .* to the cage/.test(t)) return E('clinch', /diz|knee/.test(t) ? 'knee' : /dirsek|elbow/.test(t) ? 'elbow' : '');
   if (/tekme|kick/.test(t)) return E('kick', kick);
-  if (/yumruk|jab|kroşe|aparkat|overhand|kombinasyon|isabet|vurdu|vuruş|sağ el|sol el|kontra|dirsek|💥|🎯/.test(t)) return E('strike', strike);
+  if (/yumruk|jab|kroşe|aparkat|overhand|kombinasyon|isabet|vurdu|vuruş|sağ el|sol el|kontra|dirsek|💥|🎯|punch|hook|uppercut|cross|combo|combination|lands|right hand|left hand|counter|elbow|strike|landed/.test(t)) return E('strike', strike);
   return E('move');
 }
 
@@ -285,7 +286,7 @@ export function CageView({ fs, shown, pLook, oLook, speed = 1 }: { fs: FightStat
       if (fs.durum === 'bitti' && fs.sonuc) {
         const kz = fs.sonuc.kazanan;
         const bitirme = ['KO', 'TKO', 'SUB'].includes(fs.sonuc.yontem);
-        setCaption(kz === 'berabere' ? 'BERABERE' : `KAZANAN: ${kz === 'p' ? fs.pAd : fs.oAd}`.toLocaleUpperCase('tr-TR'));
+        setCaption(kz === 'berabere' ? tL("BERABERE") : `KAZANAN: ${kz === 'p' ? fs.pAd : fs.oAd}`.toLocaleUpperCase(LOC));
         if (kz === 'berabere') {
           queue('r', [['refBoth', 600, { x: 0 }]]);
           queue('p', [['dejected', 500, { x: GAP / 2 - 30 }]]);
@@ -305,7 +306,7 @@ export function CageView({ fs, shown, pLook, oLook, speed = 1 }: { fs: FightStat
       } else if (fs.durum === 'rauntSonu') {
         face.current.p = 1;
         face.current.o = -1;
-        setCaption(`${fs.raunt}. RAUNT BİTTİ`);
+        setCaption(tL("{0}. RAUNT BİTTİ", [fs.raunt]));
         queue('p', [['stanceLow', 700, { x: -20, aL1: 10, aL2: 30, aR1: 5, aR2: 30 }]]);
         queue('o', [['stanceLow', 700, { x: -20, aL1: 10, aL2: 30, aR1: 5, aR2: 30 }]]);
         queue('r', [['refSeparate', 400, { x: 0 }], ['refIdle', 400]]);
@@ -317,8 +318,8 @@ export function CageView({ fs, shown, pLook, oLook, speed = 1 }: { fs: FightStat
           queue(hurt, [['reel', 250, { x: -8 }], ['hurt', 300, { x: -6 }], ['reel', 300, { x: -10 }]]);
           queue(other(hurt), [['stance', 300, { x: GAP - 44 }]]);
         } else {
-          const t = (fs.subAdi ?? '').toLocaleLowerCase('tr-TR');
-          const alt = /rnc|arkadan/.test(t) ? 'rnc' : /üçgen/.test(t) ? 'triangle' : /giyotin|d'arce|anakonda|arm-triangle/.test(t) ? 'guillotine' : 'armbar';
+          const t = (fs.subAdi ?? '').toLocaleLowerCase(LOC);
+          const alt = /rnc|arkadan|rear-naked|the back/.test(t) ? 'rnc' : /üçgen|triangle/.test(t) && !/arm-triangle/.test(t) ? 'triangle' : /giyotin|guillotine|d'arce|anakonda|anaconda|arm-triangle/.test(t) ? 'guillotine' : 'armbar';
           subScene(kr === 'subFirsat' ? 'p' : 'o', alt, false, false);
         }
       } else setCaption('');
@@ -339,7 +340,7 @@ export function CageView({ fs, shown, pLook, oLook, speed = 1 }: { fs: FightStat
     return (
       <G key={a}>
         <Ellipse cx={X} cy={floorY + 4} rx={20 * k} ry={4 * k} fill="#000" opacity={0.25} />
-        <G transform={`translate(${X} ${Y}) scale(${f * k} ${k}) rotate(${ps.rot})`}>
+        <G transform={tL("translate({0} {1}) scale({2} {3}) rotate({4})", [X, Y, f * k, k, ps.rot])}>
           <Figure p={{ ...ps, rot: 0 }} look={look} kit={kit} />
         </G>
       </G>

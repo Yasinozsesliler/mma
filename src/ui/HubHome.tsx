@@ -1,4 +1,5 @@
 // Ana ekranın sade, premium parçaları: kompakt kariyer kartı, ana eylem ve eylem kutucukları.
+import { L, LOC } from '../i18n';
 import { LinearGradient } from 'expo-linear-gradient';
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -40,20 +41,20 @@ export function HubHero({ s }: { s: GameState }) {
       <View style={hh.heroTop}>
         <FighterAvatar look={f.gorunum} size={64} ring={s.sampiyon ? C.gold : C.red} />
         <View style={{ flex: 1 }}>
-          {f.lakap ? <Text style={hh.nick}>“{f.lakap.toLocaleUpperCase('tr-TR')}”</Text> : null}
+          {f.lakap ? <Text style={hh.nick}>“{f.lakap.toLocaleUpperCase(LOC)}”</Text> : null}
           <Text style={[hh.name, SLANT]} numberOfLines={1} adjustsFontSizeToFit>
             {upName(`${f.ad} ${f.soyad}`, f.uyruk)}
           </Text>
           <View style={hh.chips}>
-            <Text style={hh.chip}>{f.yas} YAŞ</Text>
+            <Text style={hh.chip}>{f.yas} {L("YAŞ")}</Text>
             <Text style={hh.dot}>•</Text>
-            <Text style={hh.chip}>{WEIGHT_CLASSES[f.siklet].ad.toLocaleUpperCase('tr-TR')}</Text>
+            <Text style={hh.chip}>{WEIGHT_CLASSES[f.siklet].ad.toLocaleUpperCase(LOC)}</Text>
             <Text style={hh.dot}>•</Text>
             <Text style={[hh.chip, { color: C.blue }]}>{org.kisa}</Text>
             {s.sampiyon || !amator ? (
               <>
                 <Text style={hh.dot}>•</Text>
-                <Text style={[hh.chip, { color: s.sampiyon ? C.gold : C.text }]}>{s.sampiyon ? '👑 ŞAMPİYON' : s.rank ? `#${s.rank} SIRALAMA` : 'SIRALAMASIZ'}</Text>
+                <Text style={[hh.chip, { color: s.sampiyon ? C.gold : C.text }]}>{s.sampiyon ? L("👑 ŞAMPİYON") : s.rank ? L("#{0} SIRALAMA", [s.rank]) : L("SIRALAMASIZ")}</Text>
               </>
             ) : null}
           </View>
@@ -61,10 +62,10 @@ export function HubHero({ s }: { s: GameState }) {
         <OvrBadge value={Math.round(statAverage(f.stats))} size={50} />
       </View>
       <View style={hh.meters}>
-        <Meter label={amator ? 'AMATÖR' : 'KARNE'} value={`${r.g}-${r.m}-${r.b}`} />
+        <Meter label={amator ? L("AMATÖR") : L("KARNE")} value={`${r.g}-${r.m}-${r.b}`} />
         <Meter label="PARA" value={money(s.para)} color={s.para < 0 ? '#ff4d5e' : C.green} />
-        <Meter label="SAĞLIK" value={`${s.saglik}`} color={health} sub={s.saglik} />
-        <Meter label="TAKİPÇİ" value={fmtFollowers(followers(s))} color={C.gold} />
+        <Meter label={L("SAĞLIK")} value={`${s.saglik}`} color={health} sub={s.saglik} />
+        <Meter label={L("TAKİPÇİ")} value={fmtFollowers(followers(s))} color={C.gold} />
       </View>
     </LinearGradient>
   );
@@ -79,7 +80,7 @@ export function FightCTA({ title, sub, onPress, disabled }: { title: string; sub
           <Icon name="sword-cross" size={26} color="#fff" />
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={hh.ctaKicker}>SIRADAKİ ADIM</Text>
+          <Text style={hh.ctaKicker}>{L("SIRADAKİ ADIM")}</Text>
           <Text style={[hh.ctaTitle, SLANT]}>{title}</Text>
           <Text style={hh.ctaSub} numberOfLines={2}>
             {sub}

@@ -1,4 +1,5 @@
 // Fontlar tek tek içe aktarılır: paket girişinden almak kullanılmayan tüm varyantları da pakete sokar (çevrimdışı indirme boyutu şişer).
+import { L } from './src/i18n';
 import { Inter_400Regular } from '@expo-google-fonts/inter/400Regular';
 import { Inter_500Medium } from '@expo-google-fonts/inter/500Medium';
 import { Inter_600SemiBold } from '@expo-google-fonts/inter/600SemiBold';
@@ -42,21 +43,21 @@ import { C } from './src/ui/theme';
 import type { Phase } from './src/engine/types';
 
 const PHASE_LABELS: Record<Phase, string> = {
-  hub: 'Kariyer',
-  event: 'Olay',
-  rakipSecimi: 'Rakip Seçimi',
-  kamp: 'Antrenman Kampı',
-  dovus: 'Dövüş Gecesi',
-  dovusSonrasi: 'Dövüş Sonrası',
-  teklifler: 'Kontrat Teklifleri',
-  magaza: 'Mağaza',
-  takim: 'Takım ve Sponsorlar',
-  kumarhane: 'Kumarhane',
-  sosyal: 'Sosyal Medya',
-  kutlama: 'Şampiyonluk',
-  gece: 'Gece Hayatı',
-  basarimlar: 'Başarımlar',
-  emeklilik: 'Emeklilik',
+  hub: L("Kariyer"),
+  event: L("Olay"),
+  rakipSecimi: L("Rakip Seçimi"),
+  kamp: L("Antrenman Kampı"),
+  dovus: L("Dövüş Gecesi"),
+  dovusSonrasi: L("Dövüş Sonrası"),
+  teklifler: L("Kontrat Teklifleri"),
+  magaza: L("Mağaza"),
+  takim: L("Takım ve Sponsorlar"),
+  kumarhane: L("Kumarhane"),
+  sosyal: L("Sosyal Medya"),
+  kutlama: L("Şampiyonluk"),
+  gece: L("Gece Hayatı"),
+  basarimlar: L("Başarımlar"),
+  emeklilik: L("Emeklilik"),
 };
 
 type View_ = 'loading' | 'menu' | 'create' | 'game';
@@ -211,7 +212,7 @@ export default function App() {
     }
   }
 
-  const topLabel = view === 'create' ? 'Karakter Oluşturma' : view === 'game' && game ? PHASE_LABELS[game.phase] : null;
+  const topLabel = view === 'create' ? L("Karakter Oluşturma") : view === 'game' && game ? PHASE_LABELS[game.phase] : null;
 
   return (
     <SafeAreaProvider>

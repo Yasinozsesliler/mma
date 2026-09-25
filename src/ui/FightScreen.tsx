@@ -1,3 +1,4 @@
+import { L } from '../i18n';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
@@ -49,13 +50,13 @@ function Scoreboard({ fs, org, pUyruk }: { fs: FightState; org: string; pUyruk: 
   return (
     <View style={{ marginBottom: 12 }}>
       <View style={sb.row}>
-        <Corner side="red" name={upName(fs.pAd, pUyruk)} sub="KIRMIZI KÖŞE" />
+        <Corner side="red" name={upName(fs.pAd, pUyruk)} sub={L("KIRMIZI KÖŞE")} />
         <View style={sb.center}>
           <Text style={sb.org}>{org}</Text>
-          <Text style={sb.round}>{fs.durum === 'bitti' ? 'SON' : `R${fs.raunt}`}</Text>
+          <Text style={sb.round}>{fs.durum === 'bitti' ? L('SON') : `R${fs.raunt}`}</Text>
           <Text style={sb.org}>/ {fs.maxRaunt}</Text>
         </View>
-        <Corner side="blue" name={upName(fs.oAd, fs.opp.uyruk)} sub="MAVİ KÖŞE" />
+        <Corner side="blue" name={upName(fs.oAd, fs.opp.uyruk)} sub={L("MAVİ KÖŞE")} />
       </View>
       <View style={sb.dots}>
         {Array.from({ length: fs.maxRaunt }, (_, i) => {
@@ -66,14 +67,14 @@ function Scoreboard({ fs, org, pUyruk }: { fs: FightState; org: string; pUyruk: 
       </View>
       <View style={sb.bars}>
         <View style={{ flex: 1 }}>
-          <Bar value={100 - fs.pHasar} color={fs.pHasar > 60 ? C.orange : C.green} label="Sağlık" right={`${Math.round(100 - fs.pHasar)}`} />
-          <Bar value={fs.pKondisyon} color={C.gold} label="Kondisyon" right={`${Math.round(fs.pKondisyon)}`} />
-          {fs.kesik ? <Text style={sb.cut}>🩸 Kesik var</Text> : null}
+          <Bar value={100 - fs.pHasar} color={fs.pHasar > 60 ? C.orange : C.green} label={L("Sağlık")} right={`${Math.round(100 - fs.pHasar)}`} />
+          <Bar value={fs.pKondisyon} color={C.gold} label={L("Kondisyon")} right={`${Math.round(fs.pKondisyon)}`} />
+          {fs.kesik ? <Text style={sb.cut}>{L("🩸 Kesik var")}</Text> : null}
         </View>
         <View style={{ width: 14 }} />
         <View style={{ flex: 1 }}>
-          <Bar value={100 - fs.oHasar} color={fs.oHasar > 60 ? C.orange : C.green} label="Sağlık" right={`${Math.round(100 - fs.oHasar)}`} />
-          <Bar value={fs.oKondisyon} color={C.gold} label="Kondisyon" right={`${Math.round(fs.oKondisyon)}`} />
+          <Bar value={100 - fs.oHasar} color={fs.oHasar > 60 ? C.orange : C.green} label={L("Sağlık")} right={`${Math.round(100 - fs.oHasar)}`} />
+          <Bar value={fs.oKondisyon} color={C.gold} label={L("Kondisyon")} right={`${Math.round(fs.oKondisyon)}`} />
         </View>
       </View>
     </View>
@@ -134,11 +135,11 @@ function Momentum({ fs, shown, logLen }: { fs: FightState; shown: number; logLen
   return (
     <View style={{ marginBottom: 10 }}>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-        <Text style={[sb.momLabel, { color: C.red }]}>KONTROL</Text>
+        <Text style={[sb.momLabel, { color: C.red }]}>{L("KONTROL")}</Text>
         <Text style={sb.momLabel}>
-          {fs.durum === 'bitti' && shown >= logLen ? 'MAÇ BİTTİ' : `${fs.raunt}. RAUNT · ${dk}:00`}
+          {fs.durum === 'bitti' && shown >= logLen ? L("MAÇ BİTTİ") : L("{0}. RAUNT · {1}:00", [fs.raunt, dk])}
         </Text>
-        <Text style={[sb.momLabel, { color: C.blue }]}>KONTROL</Text>
+        <Text style={[sb.momLabel, { color: C.blue }]}>{L("KONTROL")}</Text>
       </View>
       <View style={sb.momBar}>
         <View style={{ flex: Math.max(0.02, p), backgroundColor: C.red }} />
@@ -160,7 +161,7 @@ function Flowing({ speed, setSpeed, onSkip }: { speed: number; setSpeed: (n: num
     <View style={sb.flow}>
       <Animated.View style={{ opacity: a, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
         <View style={sb.liveDot} />
-        <Text style={sb.flowText}>MAÇ AKIYOR</Text>
+        <Text style={sb.flowText}>{L("MAÇ AKIYOR")}</Text>
       </Animated.View>
       <View style={{ flexDirection: 'row', gap: 6 }}>
         {[1, 2].map((x) => (
@@ -169,7 +170,7 @@ function Flowing({ speed, setSpeed, onSkip }: { speed: number; setSpeed: (n: num
           </Pressable>
         ))}
         <Pressable onPress={onSkip} style={sb.speed}>
-          <Text style={sb.speedText}>ATLA ⏭</Text>
+          <Text style={sb.speedText}>{L("ATLA ⏭")}</Text>
         </Pressable>
       </View>
     </View>
@@ -186,7 +187,7 @@ function TacticList({ fs, onPick, title }: { fs: FightState; onPick: (t: Tactic)
           key={t}
           icon={TACTIC_ICONS[t]}
           label={TACTICS[t].ad}
-          desc={TACTICS[t].aciklama + (last === t ? '\n⚠️ Geçen raunt bunu yaptın. Rakip bekliyor olabilir.' : '')}
+          desc={TACTICS[t].aciklama + (last === t ? L("\n⚠️ Geçen raunt bunu yaptın. Rakip bekliyor olabilir.") : '')}
           tone={last === t ? 'plain' : 'red'}
           onPress={() => onPick(t)}
         />
@@ -207,7 +208,7 @@ export function FightScreen({ s, act }: { s: GameState; act: Act }) {
   const fs = s.pending.dovus!;
   const setFs = (fn: (f: typeof fs) => typeof fs) => act((x) => (x.pending.dovus = fn(x.pending.dovus!)));
   const fresh = fs.raunt === 1 && fs.log.length === 0;
-  const org = ORGS[currentOrg(s)].kisa + (fs.unvanMaci ? ' · ÜNVAN' : fs.anaMac ? ' · ANA MAÇ' : '');
+  const org = ORGS[currentOrg(s)].kisa + (fs.unvanMaci ? L(" · ÜNVAN") : fs.anaMac ? L(" · ANA MAÇ") : '');
 
   // Olaylar tek tek akar; kullanıcı hız seçebilir ya da atlayabilir.
   const [shown, setShown] = useState(fs.log.length);
@@ -229,8 +230,8 @@ export function FightScreen({ s, act }: { s: GameState; act: Act }) {
 
   let footer = null;
   if (!flowing && fs.durum === 'rauntSonu')
-    footer = <Button label={`Aynı planla ${fs.raunt + 1}. raunda çık`} icon="bell-ring" onPress={() => setFs((f) => nextRound(f, f.taktik ?? 'mesafe'))} />;
-  if (!flowing && fs.durum === 'bitti') footer = <Button label="Dövüş sonrası" tone="gold" icon="microphone-variant" onPress={() => act(finishFight)} />;
+    footer = <Button label={L("Aynı planla {0}. raunda çık", [fs.raunt + 1])} icon="bell-ring" onPress={() => setFs((f) => nextRound(f, f.taktik ?? 'mesafe'))} />;
+  if (!flowing && fs.durum === 'bitti') footer = <Button label={L("Dövüş sonrası")} tone="gold" icon="microphone-variant" onPress={() => act(finishFight)} />;
 
   return (
     <Screen footer={footer}>
@@ -255,19 +256,19 @@ export function FightScreen({ s, act }: { s: GameState; act: Act }) {
               <Text style={[sb.foRec, { textAlign: 'right' }]}>{oppRecord(fs.opp)}</Text>
             </View>
           </View>
-          <P dim>Işıklar kararıyor. Spiker mikrofonu kaldırıyor, salon uğulduyor. Kafes kapısı kapanıyor ve hakem ikinizin arasına giriyor.</P>
-          <P style={{ fontFamily: F.semi }}>“Kurallar belli. Kendinizi koruyun. Dövüşün!”</P>
+          <P dim>{L("Işıklar kararıyor. Spiker mikrofonu kaldırıyor, salon uğulduyor. Kafes kapısı kapanıyor ve hakem ikinizin arasına giriyor.")}</P>
+          <P style={{ fontFamily: F.semi }}>{L("“Kurallar belli. Kendinizi koruyun. Dövüşün!”")}</P>
         </Card>
       ) : null}
 
       {flowing ? <Flowing speed={speed} setSpeed={setSpeed} onSkip={() => setShown(fs.log.length)} /> : null}
 
-      {!flowing && fs.durum === 'taktik' && <TacticList fs={fs} title="OYUN PLANIN: MAÇA NASIL BAŞLAYACAKSIN?" onPick={(t) => setFs((f) => chooseTactic(f, t))} />}
+      {!flowing && fs.durum === 'taktik' && <TacticList fs={fs} title={L("OYUN PLANIN: MAÇA NASIL BAŞLAYACAKSIN?")} onPick={(t) => setFs((f) => chooseTactic(f, t))} />}
 
       {!flowing && fs.durum === 'karar' && fs.karar && (
         <>
           <Pulse>
-            <Text style={sb.critKicker}>⏸ KARAR ANI</Text>
+            <Text style={sb.critKicker}>{L("⏸ KARAR ANI")}</Text>
             <Text style={sb.critText}>{fs.karar.metin}</Text>
           </Pulse>
           {fs.karar.secenekler.map((o, i) => (
@@ -279,10 +280,10 @@ export function FightScreen({ s, act }: { s: GameState; act: Act }) {
       {!flowing && fs.durum === 'kritik' && fs.kritik && (
         <>
           <Pulse>
-            <Text style={sb.critKicker}>⚡ KRİTİK AN</Text>
+            <Text style={sb.critKicker}>{L("⚡ KRİTİK AN")}</Text>
             <Text style={sb.critText}>{fs.kritikMetni}</Text>
           </Pulse>
-          <Section>HIZLI KARAR!</Section>
+          <Section>{L("HIZLI KARAR!")}</Section>
           {CRITICAL_OPTIONS[fs.kritik].map((o, i) => (
             <Choice key={i} icon={CRIT_ICONS[fs.kritik!][i]} label={o.ad} desc={o.aciklama} tone="gold" onPress={() => setFs((f) => resolveCritical(f, i))} />
           ))}
@@ -291,7 +292,7 @@ export function FightScreen({ s, act }: { s: GameState; act: Act }) {
 
       {!flowing && fs.durum === 'rauntSonu' && fs.kose && (
         <>
-          <Section>KÖŞE · 60 SANİYE</Section>
+          <Section>{L("KÖŞE · 60 SANİYE")}</Section>
           <Card accent={C.gold}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 }}>
               <Icon name="whistle" size={18} color={C.gold} />
@@ -301,7 +302,7 @@ export function FightScreen({ s, act }: { s: GameState; act: Act }) {
               <P key={i}>{l}</P>
             ))}
           </Card>
-          <TacticList fs={fs} title={`${fs.raunt + 1}. RAUNT İÇİN PLANI DEĞİŞTİR`} onPick={(t) => setFs((f) => nextRound(f, t))} />
+          <TacticList fs={fs} title={L("{0}. RAUNT İÇİN PLANI DEĞİŞTİR", [fs.raunt + 1])} onPick={(t) => setFs((f) => nextRound(f, t))} />
         </>
       )}
 
@@ -310,11 +311,11 @@ export function FightScreen({ s, act }: { s: GameState; act: Act }) {
           colors={fs.sonuc.kazanan === 'p' ? ['#1f6b3f', '#0f2a1b'] : fs.sonuc.kazanan === 'o' ? ['#7a1420', '#2a0b10'] : ['#7a5a14', '#2a200b']}
           style={sb.result}
         >
-          <Text style={sb.resultKicker}>{methodLabel(fs.sonuc.yontem).toUpperCase()} · R{fs.sonuc.raunt} {fs.sonuc.sure}</Text>
+          <Text style={sb.resultKicker}>{methodLabel(fs.sonuc.yontem).toUpperCase()} {L("· R")}{fs.sonuc.raunt} {fs.sonuc.sure}</Text>
           <Text style={sb.resultTitle}>
-            {fs.sonuc.kazanan === 'p' ? 'KAZANDIN' : fs.sonuc.kazanan === 'o' ? 'KAYBETTİN' : 'BERABERE'}
+            {fs.sonuc.kazanan === 'p' ? L("KAZANDIN") : fs.sonuc.kazanan === 'o' ? L("KAYBETTİN") : L("BERABERE")}
           </Text>
-          {fs.sonuc.kartlar ? <Text style={sb.resultCards}>Hakem kartları: {fs.sonuc.kartlar}</Text> : null}
+          {fs.sonuc.kartlar ? <Text style={sb.resultCards}>{L("Hakem kartları:")}{' '}{fs.sonuc.kartlar}</Text> : null}
         </LinearGradient>
       )}
 

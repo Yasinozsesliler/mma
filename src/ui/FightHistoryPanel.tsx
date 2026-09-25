@@ -1,4 +1,5 @@
 // Dövüş geçmişi: karne özeti, galibiyet yöntemleri dağılımı, filtreler ve organizasyona göre gruplanmış maç kartları.
+import { L, LOC } from '../i18n';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -11,9 +12,9 @@ import { C, F, R } from './theme';
 type Filter = 'hepsi' | 'pro' | 'amator' | 'G' | 'M';
 
 const RES = {
-  G: { renk: C.green, ad: 'GALİBİYET', kisa: 'G' },
-  M: { renk: '#ff4d5e', ad: 'MAĞLUBİYET', kisa: 'M' },
-  B: { renk: C.gold, ad: 'BERABERE', kisa: 'B' },
+  G: { renk: C.green, ad: L("GALİBİYET"), kisa: 'G' },
+  M: { renk: '#ff4d5e', ad: L("MAĞLUBİYET"), kisa: 'M' },
+  B: { renk: C.gold, ad: L("BERABERE"), kisa: 'B' },
 } as const;
 
 const methodIcon = (y: string): IconName => (/KO|TKO/.test(y) ? 'flash' : /Submission/.test(y) ? 'lock' : /Beraberlik/.test(y) ? 'scale-balance' : 'gavel');
@@ -39,7 +40,7 @@ function FightCard({ h, no }: { h: FightHistory; no: number }) {
           <Text style={fh.dot}>•</Text>
           <Text style={fh.meta}>R{h.raunt}</Text>
           <Text style={fh.dot}>•</Text>
-          <Text style={fh.meta}>{h.yas} yaş</Text>
+          <Text style={fh.meta}>{h.yas} {L("yaş")}</Text>
         </View>
       </View>
       <Text style={[fh.resWord, { color: r.renk }]}>{r.ad}</Text>
@@ -75,11 +76,11 @@ export function FightHistoryPanel({ s }: { s: GameState }) {
 
   return (
     <>
-      <Section>DÖVÜŞ GEÇMİŞİ</Section>
+      <Section>{L("DÖVÜŞ GEÇMİŞİ")}</Section>
       <LinearGradient colors={['#1c0a0e', '#0c0d10']} style={fh.summary}>
         <View style={fh.recRow}>
           <View>
-            <Text style={fh.kicker}>PROFESYONEL KARNE</Text>
+            <Text style={fh.kicker}>{L("PROFESYONEL KARNE")}</Text>
             <Text style={[fh.record, SLANT]}>
               <Text style={{ color: C.green }}>{r.g}</Text>
               <Text style={fh.sep}>-</Text>
@@ -88,21 +89,22 @@ export function FightHistoryPanel({ s }: { s: GameState }) {
               <Text style={{ color: C.gold }}>{r.b}</Text>
             </Text>
             <Text style={fh.amator}>
-              Amatör {s.amator.g}-{s.amator.m}-{s.amator.b}
+              
+              {L("Amatör")}{' '}{s.amator.g}-{s.amator.m}-{s.amator.b}
             </Text>
           </View>
           <View style={fh.kpis}>
             <View style={fh.kpi}>
               <Text style={fh.kpiVal}>%{finishRate}</Text>
-              <Text style={fh.kpiLabel}>BİTİRİŞ</Text>
+              <Text style={fh.kpiLabel}>{L("BİTİRİŞ")}</Text>
             </View>
             <View style={fh.kpi}>
               <Text style={fh.kpiVal}>{best}</Text>
-              <Text style={fh.kpiLabel}>EN İYİ SERİ</Text>
+              <Text style={fh.kpiLabel}>{L("EN İYİ SERİ")}</Text>
             </View>
             <View style={fh.kpi}>
               <Text style={[fh.kpiVal, { color: s.seri > 0 ? C.green : s.seri < 0 ? '#ff4d5e' : C.text }]}>{s.seri > 0 ? `${s.seri}G` : s.seri < 0 ? `${-s.seri}M` : '—'}</Text>
-              <Text style={fh.kpiLabel}>ŞU AN</Text>
+              <Text style={fh.kpiLabel}>{L("ŞU AN")}</Text>
             </View>
           </View>
         </View>
@@ -116,9 +118,9 @@ export function FightHistoryPanel({ s }: { s: GameState }) {
               ].map(([n, col], i) => (Number(n) ? <View key={i} style={{ flex: Number(n), backgroundColor: String(col) }} /> : null))}
             </View>
             <View style={fh.legend}>
-              <Text style={[fh.legendText, { color: C.red }]}>● KO/TKO {ko}</Text>
-              <Text style={[fh.legendText, { color: '#3aa8ff' }]}>● SUB {sub}</Text>
-              <Text style={[fh.legendText, { color: C.gold }]}>● KARAR {dec}</Text>
+              <Text style={[fh.legendText, { color: C.red }]}>{L("● KO/TKO")}{' '}{ko}</Text>
+              <Text style={[fh.legendText, { color: '#3aa8ff' }]}>{L("● SUB")}{' '}{sub}</Text>
+              <Text style={[fh.legendText, { color: C.gold }]}>{L("● KARAR")}{' '}{dec}</Text>
             </View>
           </>
         ) : null}
@@ -127,11 +129,11 @@ export function FightHistoryPanel({ s }: { s: GameState }) {
       <View style={fh.filters}>
         {(
           [
-            ['hepsi', 'TÜMÜ'],
+            ['hepsi', L("TÜMÜ")],
             ['pro', 'PRO'],
-            ['amator', 'AMATÖR'],
-            ['G', 'GALİBİYET'],
-            ['M', 'MAĞLUBİYET'],
+            ['amator', L("AMATÖR")],
+            ['G', L("GALİBİYET")],
+            ['M', L("MAĞLUBİYET")],
           ] as const
         ).map(([k, l]) => (
           <Pressable key={k} onPress={() => setFilter(k)} style={[fh.filter, filter === k && fh.filterOn]}>
@@ -140,12 +142,12 @@ export function FightHistoryPanel({ s }: { s: GameState }) {
         ))}
       </View>
 
-      {total === 0 ? <Text style={fh.emptyText}>Henüz dövüş yok. İlk maçın burada tarihe geçecek.</Text> : null}
+      {total === 0 ? <Text style={fh.emptyText}>{L("Henüz dövüş yok. İlk maçın burada tarihe geçecek.")}</Text> : null}
       {blocks.map((b, i) => (
         <View key={i}>
           <View style={fh.orgHead}>
             <View style={fh.orgLine} />
-            <Text style={fh.orgText}>{ORGS[b.org as keyof typeof ORGS].ad.toLocaleUpperCase('tr-TR')}</Text>
+            <Text style={fh.orgText}>{ORGS[b.org as keyof typeof ORGS].ad.toLocaleUpperCase(LOC)}</Text>
             <View style={fh.orgLine} />
           </View>
           {b.items.map(({ h, no }) => (
@@ -155,7 +157,7 @@ export function FightHistoryPanel({ s }: { s: GameState }) {
       ))}
       {list.length > 10 ? (
         <Pressable onPress={() => setAll(!all)} style={fh.more}>
-          <Text style={fh.moreText}>{all ? 'DAHA AZ GÖSTER' : `TÜM ${list.length} MAÇI GÖSTER`}</Text>
+          <Text style={fh.moreText}>{all ? L("DAHA AZ GÖSTER") : L("TÜM {0} MAÇI GÖSTER", [list.length])}</Text>
           <Icon name={all ? 'chevron-up' : 'chevron-down'} size={16} color={C.dim} />
         </Pressable>
       ) : null}

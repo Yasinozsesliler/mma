@@ -1,3 +1,4 @@
+import { L, LOC } from '../i18n';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -27,19 +28,19 @@ export function ProfilePanel({ s, act }: { s: GameState; act: Act }) {
       <LinearGradient colors={['#22060b', '#0c0d10']} style={pf.head}>
         <FighterAvatar look={s.fighter.gorunum} size={120} ring={aktif.length ? C.gold : C.red} />
         <View style={{ flex: 1 }}>
-          <Text style={[pf.name, SLANT]}>{fullName(s.fighter).toLocaleUpperCase('tr-TR')}</Text>
+          <Text style={[pf.name, SLANT]}>{fullName(s.fighter).toLocaleUpperCase(LOC)}</Text>
           <Text style={pf.meta}>
-            {s.rekor.g}-{s.rekor.m}-{s.rekor.b} · {s.fighter.yas} yaş · {s.fighter.memleket}
+            {s.rekor.g}-{s.rekor.m}-{s.rekor.b} · {s.fighter.yas} {L("yaş ·")}{' '}{s.fighter.memleket}
           </Text>
           <View style={pf.legacy}>
-            <Text style={pf.legacyLabel}>EFSANE PUANI</Text>
+            <Text style={pf.legacyLabel}>{L("EFSANE PUANI")}</Text>
             <Text style={[pf.legacyVal, SLANT, { color: tier.renk }]}>{score}</Text>
           </View>
           <Text style={[pf.tier, { color: tier.renk }]}>{tier.ad}</Text>
         </View>
       </LinearGradient>
 
-      <Section>HAKKINDA</Section>
+      <Section>{L("HAKKINDA")}</Section>
       <Card>
         <TextInput
           style={pf.input}
@@ -50,7 +51,7 @@ export function ProfilePanel({ s, act }: { s: GameState; act: Act }) {
           }}
           multiline
           maxLength={500}
-          placeholder="Kendini anlat: felsefen, hedeflerin, taraftarlarına mesajın…"
+          placeholder={L("Kendini anlat: felsefen, hedeflerin, taraftarlarına mesajın…")}
           placeholderTextColor={C.faint}
         />
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
@@ -63,7 +64,7 @@ export function ProfilePanel({ s, act }: { s: GameState; act: Act }) {
             style={({ pressed }) => [pf.save, pressed && { opacity: 0.7 }]}
           >
             <Icon name={saved ? 'check' : 'content-save'} size={14} color="#fff" />
-            <Text style={pf.saveText}>{saved ? 'KAYDEDİLDİ' : 'KAYDET'}</Text>
+            <Text style={pf.saveText}>{saved ? L("KAYDEDİLDİ") : L("KAYDET")}</Text>
           </Pressable>
         </View>
       </Card>
@@ -74,13 +75,13 @@ export function ProfilePanel({ s, act }: { s: GameState; act: Act }) {
         const houses = owned.filter((x) => x!.art!.kind === 'house');
         return owned.length ? (
           <>
-            <Section>KOLEKSİYON</Section>
+            <Section>{L("KOLEKSİYON")}</Section>
             <Pressable onPress={() => setShowCol(!showCol)} style={pf.colHead}>
               <Icon name="garage-variant" size={20} color={C.gold} />
               <Text style={pf.colText}>
-                {cars.length} araba · {houses.length} mülk · {owned.length - cars.length - houses.length} eşya
+                {cars.length} {L("araba ·")}{' '}{houses.length} {L("mülk ·")}{' '}{owned.length - cars.length - houses.length} {L("eşya")}
               </Text>
-              <Text style={pf.colBtn}>{showCol ? 'GİZLE' : 'GÖSTER'}</Text>
+              <Text style={pf.colBtn}>{showCol ? L("GİZLE") : L("GÖSTER")}</Text>
               <Icon name={showCol ? 'chevron-up' : 'chevron-down'} size={18} color={C.dim} />
             </Pressable>
             {showCol ? <View style={pf.gallery}>
@@ -98,7 +99,7 @@ export function ProfilePanel({ s, act }: { s: GameState; act: Act }) {
       })()}
       {(s.hayvanlar ?? []).length || s.iliski ? (
         <>
-          <Section>AİLE</Section>
+          <Section>{L("AİLE")}</Section>
           <View style={pf.gallery}>
             {s.iliski ? (
               <View style={pf.petItem}>
@@ -118,17 +119,17 @@ export function ProfilePanel({ s, act }: { s: GameState; act: Act }) {
         </>
       ) : null}
 
-      <Section>ÖDÜL VİTRİNİ</Section>
+      <Section>{L("ÖDÜL VİTRİNİ")}</Section>
       <BeltShowcase s={s} />
 
-      <Section>{`BAŞARIMLAR · ${earned.size}/${ACHIEVEMENTS.length}`}</Section>
+      <Section>{L("BAŞARIMLAR · {0}/{1}", [earned.size, ACHIEVEMENTS.length])}</Section>
       <Pressable onPress={() => act((x) => (x.phase = 'basarimlar'))}>
         <LinearGradient colors={s.hof ? ['#3a2a07', '#140f04'] : ['#16110a', '#0c0d10']} style={pf.achLink}>
           <OctIcon name={s.hof ? 'pillar' : 'medal'} color={C.gold} size={46} />
           <View style={{ flex: 1 }}>
-            <Text style={[pf.achName, { textAlign: 'left', fontSize: 16 }]}>{s.hof ? '🏛 HALL OF FAME ÜYESİ' : 'BAŞARIMLAR VE HALL OF FAME'}</Text>
+            <Text style={[pf.achName, { textAlign: 'left', fontSize: 16 }]}>{s.hof ? L("🏛 HALL OF FAME ÜYESİ") : L("BAŞARIMLAR VE HALL OF FAME")}</Text>
             <Text style={pf.meta}>
-              {earned.size}/{ACHIEVEMENTS.length} başarım açıldı. Tümünü ve Onur Listesi eşiklerini gör.
+              {earned.size}/{ACHIEVEMENTS.length} {L("başarım açıldı. Tümünü ve Onur Listesi eşiklerini gör.")}
             </Text>
           </View>
           <Icon name="chevron-right" size={22} color={C.gold} />

@@ -1,3 +1,4 @@
+import { L } from '../i18n';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -95,61 +96,64 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
         value={tab}
         onChange={setTab}
         items={[
-          { key: 'ana', label: 'KARİYER' },
-          { key: 'gelisim', label: 'GELİŞİM', badge: s.puan },
-          { key: 'siralama', label: 'SIRALAMA' },
-          { key: 'gecmis', label: 'PROFİL' },
+          { key: 'ana', label: L("KARİYER") },
+          { key: 'gelisim', label: L("GELİŞİM"), badge: s.puan },
+          { key: 'siralama', label: L("SIRALAMA") },
+          { key: 'gecmis', label: L("PROFİL") },
         ]}
       />
 
       {tab === 'ana' ? (
         <>
           {banned(s) ? (
-            <Notice color={C.red} icon="cancel" action={<Button label="Cezanı çek (zamanı ilerlet)" icon="timer-sand" tone="ghost" onPress={() => act((x) => { x.haberler.unshift(serveBan(x)); })} />}>
-              {s.ceza?.sebep}. Men cezan sürüyor: {banWeeksLeft(s)} hafta kaldı.
+            <Notice color={C.red} icon="cancel" action={<Button label={L("Cezanı çek (zamanı ilerlet)")} icon="timer-sand" tone="ghost" onPress={() => act((x) => { x.haberler.unshift(serveBan(x)); })} />}>
+              {s.ceza?.sebep}{L(". Men cezan sürüyor:")}{' '}{banWeeksLeft(s)} {L("hafta kaldı.")}
             </Notice>
           ) : null}
           {untreated(s) ? (
             <Notice color={C.red} icon="alert">
-              Tedavi edilmemiş enfeksiyon ({s.hastalik!.ad}). Sağlığın her hafta düşüyor. Gece hayatı ekranından tedavi ol.
+              
+              {L("Tedavi edilmemiş enfeksiyon (")}{s.hastalik!.ad}{L("). Sağlığın her hafta düşüyor. Gece hayatı ekranından tedavi ol.")}
             </Notice>
           ) : null}
           {(s.hayvanlar ?? []).some((p) => p.hasta || p.mutluluk < 30) ? (
             <Notice color={C.orange} icon="paw">
-              {(s.hayvanlar ?? []).filter((p) => p.hasta || p.mutluluk < 30).map((p) => p.ad).join(', ')} ilgi bekliyor (Mağaza → Hayvan).
+              {(s.hayvanlar ?? []).filter((p) => p.hasta || p.mutluluk < 30).map((p) => p.ad).join(', ')} {L("ilgi bekliyor (Mağaza → Hayvan).")}
             </Notice>
           ) : null}
           {dopingActive(s) ? (
             <Notice color={C.orange} icon="needle">
-              Doping kürü etkide: {s.doping!.kalan} dövüş kaldı. Her dövüşten sonra test riski var.
+              
+              {L("Doping kürü etkide:")}{' '}{s.doping!.kalan} {L("dövüş kaldı. Her dövüşten sonra test riski var.")}
             </Notice>
           ) : null}
           {s.hof && !s.hof.goruldu ? (
-            <Notice color={C.gold} icon="pillar" action={<Button label="Töreni gör" icon="pillar" tone="gold" onPress={() => act((x) => (x.phase = 'basarimlar'))} />}>
-              Hall of Fame’e seçildin! Adın artık ölümsüz.
+            <Notice color={C.gold} icon="pillar" action={<Button label={L("Töreni gör")} icon="pillar" tone="gold" onPress={() => act((x) => (x.phase = 'basarimlar'))} />}>
+              
+              {L("Hall of Fame’e seçildin! Adın artık ölümsüz.")}
             </Notice>
           ) : null}
 
           <FightCTA
-            title={banned(s) ? 'MEN CEZASI' : 'DÖVÜŞ AYARLA'}
+            title={banned(s) ? L("MEN CEZASI") : L("DÖVÜŞ AYARLA")}
             sub={
-              (org.rakipSecimi ? 'Rakibini kendin seç' : `${org.kisa} rakip önerecek`) +
-              (s.stage !== 'amator' ? ` · Kamp ~${money(campCostPreview(s))}` : '') +
-              (injured ? ' · ⚠️ Sakatsın' : '')
+              (org.rakipSecimi ? L("Rakibini kendin seç") : L("{0} rakip önerecek", [org.kisa])) +
+              (s.stage !== 'amator' ? L(" · Kamp ~{0}", [money(campCostPreview(s))]) : '') +
+              (injured ? L(" · ⚠️ Sakatsın") : '')
             }
             disabled={banned(s)}
             onPress={() => act(findNextFight)}
           />
 
           <ActionGrid>
-            <ActionTile icon="bed" label="Dinlen" sub={`Sağlık ${s.saglik}/100`} accent={C.green} selected={resting} onPress={() => { setResting(!resting); setWeightOpen(false); }} badge={s.sakatliklar.length || null} />
-            <ActionTile icon="shopping" label="Mağaza" sub={weeklyBusinessIncome(s) ? `+${money(weeklyBusinessIncome(s))}/hafta` : 'Ekipman · yaşam · tatil'} accent={C.gold} onPress={() => act((x) => (x.phase = 'magaza'))} />
-            <ActionTile icon="whistle" label="Takım" sub={`${(s.sponsorlar ?? []).length} sponsor`} accent={C.blue} badge={(s.sponsorTeklif ?? []).length || null} onPress={() => act((x) => (x.phase = 'takim'))} />
-            <ActionTile icon="medal" label="Başarımlar" sub={s.hof ? '🏛 Hall of Fame' : `${(s.basarimlar ?? []).length}/100`} accent={C.gold} onPress={() => act((x) => (x.phase = 'basarimlar'))} />
-            <ActionTile icon="cellphone-message" label="Sosyal medya" sub={`${(s.sosyal ?? []).length} paylaşım`} accent="#3aa8ff" onPress={() => act((x) => (x.phase = 'sosyal'))} />
-            <ActionTile icon="glass-cocktail" label="Gece hayatı" sub={s.iliski ? `💞 ${s.iliski.ad}` : 'Randevu · kulüp · kumar'} accent="#fd267a" onPress={() => act((x) => (x.phase = 'gece'))} />
+            <ActionTile icon="bed" label={L("Dinlen")} sub={L("Sağlık {0}/100", [s.saglik])} accent={C.green} selected={resting} onPress={() => { setResting(!resting); setWeightOpen(false); }} badge={s.sakatliklar.length || null} />
+            <ActionTile icon="shopping" label={L("Mağaza")} sub={weeklyBusinessIncome(s) ? `+${money(weeklyBusinessIncome(s))}/hafta` : L("Ekipman · yaşam · tatil")} accent={C.gold} onPress={() => act((x) => (x.phase = 'magaza'))} />
+            <ActionTile icon="whistle" label={L("Takım")} sub={`${(s.sponsorlar ?? []).length} sponsor`} accent={C.blue} badge={(s.sponsorTeklif ?? []).length || null} onPress={() => act((x) => (x.phase = 'takim'))} />
+            <ActionTile icon="medal" label={L("Başarımlar")} sub={s.hof ? L("🏛 Hall of Fame") : `${(s.basarimlar ?? []).length}/100`} accent={C.gold} onPress={() => act((x) => (x.phase = 'basarimlar'))} />
+            <ActionTile icon="cellphone-message" label={L("Sosyal medya")} sub={L("{0} paylaşım", [(s.sosyal ?? []).length])} accent="#3aa8ff" onPress={() => act((x) => (x.phase = 'sosyal'))} />
+            <ActionTile icon="glass-cocktail" label={L("Gece hayatı")} sub={s.iliski ? `💞 ${s.iliski.ad}` : L("Randevu · kulüp · kumar")} accent="#fd267a" onPress={() => act((x) => (x.phase = 'gece'))} />
             {s.stage !== 'amator' ? (
-              <ActionTile icon="scale-balance" label="Sıklet" sub={s.sampiyon ? 'Çift kemere git' : WEIGHT_CLASSES[s.fighter.siklet].ad} accent={C.orange} selected={weightOpen} onPress={() => { setWeightOpen(!weightOpen); setResting(false); }} />
+              <ActionTile icon="scale-balance" label={L("Sıklet")} sub={s.sampiyon ? L("Çift kemere git") : WEIGHT_CLASSES[s.fighter.siklet].ad} accent={C.orange} selected={weightOpen} onPress={() => { setWeightOpen(!weightOpen); setResting(false); }} />
             ) : null}
           </ActionGrid>
           {resting ? <RestPicker s={s} act={act} onDone={() => setResting(false)} /> : null}
@@ -164,8 +168,8 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
                   <Choice
                     key={w.siklet}
                     icon={w.yon === 'yukari' ? 'arrow-up-bold' : 'arrow-down-bold'}
-                    label={`${WEIGHT_CLASSES[w.siklet].ad} sıklete ${w.yon === 'yukari' ? 'çık' : 'in'} (${WEIGHT_CLASSES[w.siklet].kg} kg)`}
-                    desc={`${txt || 'İstatistik değişmez'} · 4 hafta adaptasyon`}
+                    label={L("{0} sıklete {1} ({2} kg)", [WEIGHT_CLASSES[w.siklet].ad, w.yon === 'yukari' ? L("çık") : 'in', WEIGHT_CLASSES[w.siklet].kg])}
+                    desc={L("{0} · 4 hafta adaptasyon", [txt || L("İstatistik değişmez")])}
                     tone="gold"
                     onPress={() => {
                       act((x) => {
@@ -181,27 +185,27 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
           {!confirmRetire ? (
             <Pressable onPress={() => setConfirmRetire(true)} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 8 }}>
               <Icon name="flag-checkered" size={14} color={C.faint} />
-              <Text style={{ color: C.faint, fontFamily: F.display, fontSize: 12, letterSpacing: 1 }}>EMEKLİ OL</Text>
+              <Text style={{ color: C.faint, fontFamily: F.display, fontSize: 12, letterSpacing: 1 }}>{L("EMEKLİ OL")}</Text>
             </Pressable>
           ) : (
             <Card accent={C.red}>
-              <P>Emin misin? Kariyerin burada sona erecek.</P>
+              <P>{L("Emin misin? Kariyerin burada sona erecek.")}</P>
               <View style={{ flexDirection: 'row', gap: 8 }}>
                 <View style={{ flex: 1 }}>
-                  <Button label="Vazgeç" tone="ghost" onPress={() => setConfirmRetire(false)} />
+                  <Button label={L("Vazgeç")} tone="ghost" onPress={() => setConfirmRetire(false)} />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Button label="Emekli ol" onPress={() => act((x) => (x.phase = 'emeklilik'))} />
+                  <Button label={L("Emekli ol")} onPress={() => act((x) => (x.phase = 'emeklilik'))} />
                 </View>
               </View>
             </Card>
           )}
 
-          <Section>DÖVÜŞ HABERLERİ</Section>
+          <Section>{L("DÖVÜŞ HABERLERİ")}</Section>
           <NewsFeed items={s.haberler.slice(0, newsAll ? 12 : 4)} />
           {s.haberler.length > 4 ? (
             <Pressable onPress={() => setNewsAll(!newsAll)} style={{ alignItems: 'center', paddingVertical: 8 }}>
-              <Text style={{ color: C.dim, fontFamily: F.display, fontSize: 12, letterSpacing: 1 }}>{newsAll ? 'DAHA AZ GÖSTER' : 'TÜM HABERLER'}</Text>
+              <Text style={{ color: C.dim, fontFamily: F.display, fontSize: 12, letterSpacing: 1 }}>{newsAll ? L("DAHA AZ GÖSTER") : L("TÜM HABERLER")}</Text>
             </Pressable>
           ) : null}
         </>
@@ -227,7 +231,7 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
 function History({ s }: { s: GameState }) {
   return (
     <>
-      <Section>HİKÂYE</Section>
+      <Section>{L("HİKÂYE")}</Section>
       <Card>
         <P dim style={{ fontStyle: 'italic', marginBottom: 0 }}>
           {s.fighter.hikaye || '—'}
@@ -258,7 +262,7 @@ const EVENT_ICONS: Record<string, IconName> = {
 export function EventScreen({ s, act }: { s: GameState; act: Act }) {
   const ev = s.pending.olay!;
   return (
-    <Screen footer={ev.sonuc ? <Button label="Devam" icon="arrow-right" onPress={() => act(closeEvent)} /> : undefined}>
+    <Screen footer={ev.sonuc ? <Button label={L("Devam")} icon="arrow-right" onPress={() => act(closeEvent)} /> : undefined}>
       {ev.id.startsWith('patron_') && OWNERS[s.contract?.org ?? 'ufc'] ? (
         <View style={{ marginBottom: 10 }}>
           <FighterAvatar look={lookFor({ id: `owner-${OWNERS[s.contract?.org ?? 'ufc']!.ad}`, uyruk: OWNERS[s.contract?.org ?? 'ufc']!.uyruk })} size={80} ring={C.gold} />
@@ -268,7 +272,7 @@ export function EventScreen({ s, act }: { s: GameState; act: Act }) {
           <Icon name={EVENT_ICONS[ev.id] ?? 'star-four-points'} size={34} color={C.gold} />
         </View>
       )}
-      <Title kicker="DÖVÜŞ DIŞI">{ev.baslik.replace(/^\S+\s/, '')}</Title>
+      <Title kicker={L("DÖVÜŞ DIŞI")}>{ev.baslik.replace(/^\S+\s/, '')}</Title>
       <Card>
         <P style={{ marginBottom: 0 }}>{ev.metin}</P>
       </Card>
@@ -292,7 +296,7 @@ function OpponentCard({ o, me }: { o: Opponent; me: Stats }) {
     <>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
         {o.etiket ? <Pill text={o.etiket.replace(/^\S+\s/, '')} color={tone} /> : <View />}
-        <Pill text={o.champion ? 'ŞAMPİYON' : o.rank ? `#${o.rank}` : 'Sıralamasız'} icon={o.champion ? 'crown' : 'podium'} color={o.champion ? C.gold : C.dim} />
+        <Pill text={o.champion ? L("ŞAMPİYON") : o.rank ? `#${o.rank}` : L("Sıralamasız")} icon={o.champion ? 'crown' : 'podium'} color={o.champion ? C.gold : C.dim} />
       </View>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
         <OvrBadge value={d.guc} size={60} />
@@ -305,8 +309,8 @@ function OpponentCard({ o, me }: { o: Opponent; me: Stats }) {
         </View>
       </View>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
-        <Pill text={`Güçlü: ${d.guclu}`} icon="arrow-up-bold-circle" color={C.green} />
-        <Pill text={`Zayıf: ${d.zayif}`} icon="alert-octagon" color={C.red} />
+        <Pill text={L("Güçlü: {0}", [d.guclu])} icon="arrow-up-bold-circle" color={C.green} />
+        <Pill text={L("Zayıf: {0}", [d.zayif])} icon="alert-octagon" color={C.red} />
       </View>
       <Compare me={me} opp={o.stats} />
       {o.riskMetni ? <Text style={gs.risk}>{o.riskMetni}</Text> : null}
@@ -320,7 +324,8 @@ function FightDate({ o }: { o: Opponent }) {
     <View style={gs.date}>
       <Icon name="calendar-clock" size={16} color={C.gold} />
       <Text style={gs.dateText}>
-        Maç tarihi: <Text style={{ color: C.text }}>{o.macHafta} hafta sonra</Text> · {o.macHafta * 7} gün
+        
+        {L("Maç tarihi:")}{' '}<Text style={{ color: C.text }}>{o.macHafta} {L("hafta sonra")}</Text> · {o.macHafta * 7} {L("gün")}
       </Text>
     </View>
   );
@@ -336,33 +341,35 @@ export function OpponentScreen({ s, act }: { s: GameState; act: Act }) {
       <Screen
         footer={
           <>
-            <Button label="Kabul et" icon="handshake" onPress={() => act((x) => pickOpponent(x, 0))} />
-            <Button label="Reddet (popülerlik -3)" tone="ghost" onPress={() => act(rejectImposed)} />
+            <Button label={L("Kabul et")} icon="handshake" onPress={() => act((x) => pickOpponent(x, 0))} />
+            <Button label={L("Reddet (popülerlik -3)")} tone="ghost" onPress={() => act(rejectImposed)} />
           </>
         }
       >
-        <Title kicker={ORGS[currentOrg(s)].ad.toUpperCase()} sub={`Matchmaker telefonda. Senin gücün: ${myOvr}.`}>
-          Dövüş Teklifi
+        <Title kicker={ORGS[currentOrg(s)].ad.toUpperCase()} sub={L("Matchmaker telefonda. Senin gücün: {0}.", [myOvr])}>
+          
+          {L("Dövüş Teklifi")}
         </Title>
         <Card accent={C.red}>
           <OpponentCard o={o} me={me} />
           <FightDate o={o} />
         </Card>
-        {s.reddedilen > 0 ? <P style={{ color: C.orange }}>⚠️ Bu {s.reddedilen + 1}. reddedişin olur. Üçüncüde kontratın feshedilir.</P> : null}
+        {s.reddedilen > 0 ? <P style={{ color: C.orange }}>{L("⚠️ Bu")}{' '}{s.reddedilen + 1}{L(". reddedişin olur. Üçüncüde kontratın feshedilir.")}</P> : null}
       </Screen>
     );
   }
   return (
-    <Screen footer={<Button label="Geri" tone="ghost" onPress={() => act((x) => { x.pending = {}; x.phase = 'hub'; })} />}>
-      <Title kicker="SIRADAKİ DÖVÜŞ" sub={`Senin gücün: ${myOvr}. Kiminle dövüşeceksin?`}>
-        Rakip Seçimi
+    <Screen footer={<Button label={L("Geri")} tone="ghost" onPress={() => act((x) => { x.pending = {}; x.phase = 'hub'; })} />}>
+      <Title kicker={L("SIRADAKİ DÖVÜŞ")} sub={L("Senin gücün: {0}. Kiminle dövüşeceksin?", [myOvr])}>
+        
+        {L("Rakip Seçimi")}
       </Title>
       {list.map((o, i) => (
         <Card key={o.id} accent={o.zorluk === 1 ? C.red : o.zorluk === -1 ? C.green : C.gold}>
           <OpponentCard o={o} me={me} />
           <FightDate o={o} />
           <View style={{ marginTop: 12 }}>
-            <Button label="Bu rakibi seç" icon="sword-cross" tone={i === 1 ? 'red' : 'ghost'} onPress={() => act((x) => pickOpponent(x, i))} />
+            <Button label={L("Bu rakibi seç")} icon="sword-cross" tone={i === 1 ? 'red' : 'ghost'} onPress={() => act((x) => pickOpponent(x, i))} />
           </View>
         </Card>
       ))}
@@ -373,15 +380,15 @@ export function OpponentScreen({ s, act }: { s: GameState; act: Act }) {
 // ---------- Kamp ----------
 
 const CAMP_STEPS: { key: CampState['step'][]; label: string }[] = [
-  { key: ['sure', 'takvim'], label: 'Takvim' },
-  { key: ['yer'], label: 'Yer' },
-  { key: ['focus'], label: 'Odak' },
-  { key: ['plan'], label: 'Plan' },
-  { key: ['intensity'], label: 'Yoğunluk' },
-  { key: ['kilo'], label: 'Kilo' },
-  { key: ['basin'], label: 'Basın' },
-  { key: ['haftalik', 'sakatlik', 'ozet'], label: 'Kamp' },
-  { key: ['tarti', 'yuzyuze'], label: 'Tartı' },
+  { key: ['sure', 'takvim'], label: L("Takvim") },
+  { key: ['yer'], label: L("Yer") },
+  { key: ['focus'], label: L("Odak") },
+  { key: ['plan'], label: L("Plan") },
+  { key: ['intensity'], label: L("Yoğunluk") },
+  { key: ['kilo'], label: L("Kilo") },
+  { key: ['basin'], label: L("Basın") },
+  { key: ['haftalik', 'sakatlik', 'ozet'], label: L("Kamp") },
+  { key: ['tarti', 'yuzyuze'], label: L("Tartı") },
 ];
 
 const INT_ICONS: Record<Intensity, IconName> = { dusuk: 'meditation', orta: 'dumbbell', yuksek: 'weight-lifter' };
@@ -407,11 +414,12 @@ function CampHeader({ s, k }: { s: GameState; k: CampState }) {
           <OvrBadge value={d.guc} size={48} />
           <View style={{ flex: 1 }}>
             <Text style={gs.kicker}>
-              KAMP · {k.hafta} HAFTA{k.kisaHaber ? ' · KISA HABER' : ''}
+              
+              {L("KAMP ·")}{' '}{k.hafta} {L("HAFTA")}{k.kisaHaber ? L(" · KISA HABER") : ''}
             </Text>
             <Text style={[gs.oppName, { fontSize: 18 }]}>VS {upName(`${o.ad} ${o.soyad}`, o.uyruk)}</Text>
             <Text style={gs.meta}>
-              {d.stil} · Zayıf: <Text style={{ color: C.red }}>{d.zayif}</Text>
+              {d.stil} {L("· Zayıf:")}{' '}<Text style={{ color: C.red }}>{d.zayif}</Text>
             </Text>
           </View>
         </View>
@@ -435,26 +443,26 @@ export function CampScreen({ s, act }: { s: GameState; act: Act }) {
     return (
       <Screen>
         {header}
-        <Title sub={`${k.hafta} haftalık kamp. Masraflar kamp bitince ödenir. Bakiye: ${money(s.para)}`}>Kamp Yeri</Title>
+        <Title sub={L("{0} haftalık kamp. Masraflar kamp bitince ödenir. Bakiye: {1}", [k.hafta, money(s.para)])}>{L("Kamp Yeri")}</Title>
         {CAMP_SITES.map((site) => {
           const q = campQuote(s, site.id, k.hafta);
           const locked = !open.includes(site);
           const afford = q.toplam === 0 || s.para >= q.toplam;
           const pills = [
-            site.bonusStat ? `🔥 ${STAT_LABELS[site.bonusStat]} odağına +%30` : site.salonUcreti && s.takim.uzmanlik ? `🔥 ${STAT_LABELS[s.takim.uzmanlik]} odağına +%35` : null,
-            `Gelişim ×${site.carpan}`,
-            site.risk !== 1 ? `Sakatlık riski ×${site.risk}` : null,
-            site.puan ? `+${site.puan} gelişim puanı` : null,
+            site.bonusStat ? L("🔥 {0} odağına +%30", [STAT_LABELS[site.bonusStat]]) : site.salonUcreti && s.takim.uzmanlik ? L("🔥 {0} odağına +%35", [STAT_LABELS[s.takim.uzmanlik]]) : null,
+            L("Gelişim ×{0}", [site.carpan]),
+            site.risk !== 1 ? L("Sakatlık riski ×{0}", [site.risk]) : null,
+            site.puan ? L("+{0} gelişim puanı", [site.puan]) : null,
           ].filter(Boolean);
           return (
             <Choice
               key={site.id}
               icon={site.ikon as IconName}
-              label={`${site.ad} · ${q.toplam ? money(q.toplam) : 'Ücretsiz'}`}
+              label={`${site.ad} · ${q.toplam ? money(q.toplam) : L("Ücretsiz")}`}
               desc={
                 locked
-                  ? `🔒 ${site.minStage === 'buyuk' ? 'Büyük organizasyona' : 'Profesyonel kariyere'} geçince açılır.`
-                  : `${site.aciklama}\n${pills.join(' · ')}${q.salon ? `\nSalon: ${money(q.salon)}` : ''}${q.yer ? `${q.salon ? ' + ' : '\n'}Kamp yeri: ${money(q.yer)}` : ''}${!afford ? '\n❌ Bakiye yetersiz' : ''}`
+                  ? L("🔒 {0} geçince açılır.", [site.minStage === 'buyuk' ? L("Büyük organizasyona") : L("Profesyonel kariyere")])
+                  : `${site.aciklama}\n${pills.join(' · ')}${q.salon ? `\nSalon: ${money(q.salon)}` : ''}${q.yer ? L("{0}Kamp yeri: {1}", [q.salon ? ' + ' : '\n', money(q.yer)]) : ''}${!afford ? L("\n❌ Bakiye yetersiz") : ''}`
               }
               disabled={locked || !afford}
               tone={site.id === 'salon' ? 'red' : 'gold'}
@@ -469,9 +477,9 @@ export function CampScreen({ s, act }: { s: GameState; act: Act }) {
     return (
       <Screen>
         {header}
-        <Title sub="Bu kampta hangi alana yükleneceksin?">Odak Alanı</Title>
+        <Title sub={L("Bu kampta hangi alana yükleneceksin?")}>{L("Odak Alanı")}</Title>
         {STAT_KEYS.map((st: StatKey) => (
-          <Choice key={st} icon={STAT_ICONS[st]} label={STAT_LABELS[st]} desc={`Şu an: ${s.fighter.stats[st]}`} onPress={() => choose(st)} />
+          <Choice key={st} icon={STAT_ICONS[st]} label={STAT_LABELS[st]} desc={L("Şu an: {0}", [s.fighter.stats[st]])} onPress={() => choose(st)} />
         ))}
       </Screen>
     );
@@ -479,8 +487,9 @@ export function CampScreen({ s, act }: { s: GameState; act: Act }) {
     return (
       <Screen>
         {header}
-        <Title kicker="OYUN PLANI" sub={coachIntro(s, o)}>
-          Strateji Odası
+        <Title kicker={L("OYUN PLANI")} sub={coachIntro(s, o)}>
+          
+          {L("Strateji Odası")}
         </Title>
         <PlanPicker s={s} onPick={(p) => choose(p)} />
       </Screen>
@@ -489,7 +498,7 @@ export function CampScreen({ s, act }: { s: GameState; act: Act }) {
     return (
       <Screen>
         {header}
-        <Title sub={`Sağlık: ${s.saglik}/100`}>Antrenman Yoğunluğu</Title>
+        <Title sub={L("Sağlık: {0}/100", [s.saglik])}>{L("Antrenman Yoğunluğu")}</Title>
         {(Object.keys(INTENSITY) as Intensity[]).map((p) => (
           <Choice key={p} icon={INT_ICONS[p]} label={INTENSITY[p].ad} desc={INTENSITY[p].aciklama} onPress={() => choose(p)} />
         ))}
@@ -499,14 +508,15 @@ export function CampScreen({ s, act }: { s: GameState; act: Act }) {
     return (
       <Screen>
         {header}
-        <Title sub={ORGS[currentOrg(s)].hidrasyon ? '⚠️ ONE’da hidrasyon testi var: sert kilo verme maçı iptal ettirebilir.' : 'Tartı dövüşten bir gün önce.'}>
-          Kilo Verme
+        <Title sub={ORGS[currentOrg(s)].hidrasyon ? L("⚠️ ONE’da hidrasyon testi var: sert kilo verme maçı iptal ettirebilir.") : L("Tartı dövüşten bir gün önce.")}>
+          
+          {L("Kilo Verme")}
         </Title>
         {(Object.keys(WEIGHT_CUTS) as WeightCut[]).map((p) => (
           <Choice
             key={p}
             icon={CUT_ICONS[p]}
-            label={WEIGHT_CUTS[p].ad + (p === 'kademeli' ? ` · ${cutCost(s) ? money(cutCost(s)) : 'Diyetisyenin var'}` : '')}
+            label={WEIGHT_CUTS[p].ad + (p === 'kademeli' ? ` · ${cutCost(s) ? money(cutCost(s)) : L("Diyetisyenin var")}` : '')}
             desc={WEIGHT_CUTS[p].aciklama}
             disabled={p === 'kademeli' && !!k.kisaHaber}
             onPress={() => choose(p)}
@@ -518,7 +528,7 @@ export function CampScreen({ s, act }: { s: GameState; act: Act }) {
     return (
       <Screen>
         {header}
-        <Title sub={`${o.soyad} (${o.kisilik}) mikrofonu aldı ve sana döndü. Salon sessiz.`}>Basın Toplantısı</Title>
+        <Title sub={L("{0} ({1}) mikrofonu aldı ve sana döndü. Salon sessiz.", [o.soyad, o.kisilik])}>{L("Basın Toplantısı")}</Title>
         {(Object.keys(PRESS) as PressChoice[]).map((p) => (
           <Choice key={p} icon={PRESS_ICONS[p]} label={PRESS[p].ad} desc={PRESS[p].aciklama} onPress={() => choose(p)} />
         ))}
@@ -528,26 +538,27 @@ export function CampScreen({ s, act }: { s: GameState; act: Act }) {
     return (
       <Screen>
         {header}
-        <Title kicker="KAMPTA KÖTÜ HABER">Sakatlık!</Title>
+        <Title kicker={L("KAMPTA KÖTÜ HABER")}>{L("Sakatlık!")}</Title>
         <Card accent={C.orange}>
           <P style={{ marginBottom: 0 }}>
-            {k.sakatlik!.ad}. Doktor {k.sakatlik!.hafta} haftalık iyileşme öngörüyor. Dövüşürsen {STAT_LABELS[k.sakatlik!.stat]} -{k.sakatlik!.ceza} ile çıkarsın.
+            {k.sakatlik!.ad}{L(". Doktor")}{' '}{k.sakatlik!.hafta} {L("haftalık iyileşme öngörüyor. Dövüşürsen")}{' '}{STAT_LABELS[k.sakatlik!.stat]} -{k.sakatlik!.ceza} {L("ile çıkarsın.")}
           </P>
         </Card>
-        <Choice icon="boxing-glove" label="Yine de dövüş" desc="Ücret ve sıralama fırsatı kaçmasın." onPress={() => choose(0)} />
-        <Choice icon="medical-bag" label="Maçtan çekil" desc="Ücret yok, popülerlik -3. Ama sağlığın önemli." tone="plain" onPress={() => choose(1)} />
+        <Choice icon="boxing-glove" label={L("Yine de dövüş")} desc={L("Ücret ve sıralama fırsatı kaçmasın.")} onPress={() => choose(0)} />
+        <Choice icon="medical-bag" label={L("Maçtan çekil")} desc={L("Ücret yok, popülerlik -3. Ama sağlığın önemli.")} tone="plain" onPress={() => choose(1)} />
       </Screen>
     );
   if (k.step === 'yuzyuze')
     return (
-      <Screen footer={k.yuzyuze ? <Button label="Dövüş gecesi" icon="bell-ring" tone="gold" onPress={() => choose(0)} /> : undefined}>
-        <Title kicker="TARTI SAHNESİ" sub="Kameralar flaş patlatıyor. Güvenlik görevlileri hazırda bekliyor.">
-          Face to Face
+      <Screen footer={k.yuzyuze ? <Button label={L("Dövüş gecesi")} icon="bell-ring" tone="gold" onPress={() => choose(0)} /> : undefined}>
+        <Title kicker={L("TARTI SAHNESİ")} sub={L("Kameralar flaş patlatıyor. Güvenlik görevlileri hazırda bekliyor.")}>
+          
+          {L("Face to Face")}
         </Title>
         <FaceOffStage s={s} />
         {!k.yuzyuze ? (
           <>
-            <Text style={gs.faceAsk}>{k.rakipHamle ? 'Tepkini seç' : 'İlk hamle senin'}</Text>
+            <Text style={gs.faceAsk}>{k.rakipHamle ? L("Tepkini seç") : L("İlk hamle senin")}</Text>
             {FACEOFF.map((f, i) => (
               <Choice key={f.key} n={i + 1} icon={f.ikon as IconName} label={f.ad} desc={f.aciklama} tone="gold" onPress={() => choose(f.key)} />
             ))}
@@ -557,7 +568,7 @@ export function CampScreen({ s, act }: { s: GameState; act: Act }) {
     );
   // tarti
   return (
-    <Screen footer={<Button label={k.iptal ? 'Geri dön' : 'Yüz yüze gel'} icon={k.iptal ? 'arrow-left' : 'account-multiple'} tone={k.iptal ? 'ghost' : 'gold'} onPress={() => choose(0)} />}>
+    <Screen footer={<Button label={k.iptal ? L("Geri dön") : L("Yüz yüze gel")} icon={k.iptal ? 'arrow-left' : 'account-multiple'} tone={k.iptal ? 'ghost' : 'gold'} onPress={() => choose(0)} />}>
       {header}
       <TaleOfTape s={s} />
       <Card accent={k.iptal || k.ucretCeza ? C.red : C.gold}>
@@ -592,9 +603,10 @@ export function OffersScreen({ s, act }: { s: GameState; act: Act }) {
   const offers = s.pending.teklifler!;
   const amateur = currentOrg(s) === 'amator';
   return (
-    <Screen footer={amateur ? <Button label="Şimdilik amatörde kal" tone="ghost" onPress={() => act(stayAmateur)} /> : undefined}>
-      <Title kicker="MENAJERİN TELEFONU SUSMUYOR" sub={s.pending.teklifMetni}>
-        Kontrat Teklifleri
+    <Screen footer={amateur ? <Button label={L("Şimdilik amatörde kal")} tone="ghost" onPress={() => act(stayAmateur)} /> : undefined}>
+      <Title kicker={L("MENAJERİN TELEFONU SUSMUYOR")} sub={s.pending.teklifMetni}>
+        
+        {L("Kontrat Teklifleri")}
       </Title>
       {msg ? (
         <Card accent={C.gold}>
@@ -608,25 +620,25 @@ export function OffersScreen({ s, act }: { s: GameState; act: Act }) {
             <Text style={gs.offerOrg}>{ORGS[o.org].ad}</Text>
             <Text style={gs.meta}>{o.not}</Text>
             <View style={gs.offerStats}>
-              <Stat label="Dövüş" value={`${o.dovus}`} />
-              <Stat label="Ücret" value={money(o.ucret)} gold />
-              <Stat label="Galibiyet" value={`+${money(o.bonus)}`} />
+              <Stat label={L("Dövüş")} value={`${o.dovus}`} />
+              <Stat label={L("Ücret")} value={money(o.ucret)} gold />
+              <Stat label={L("Galibiyet")} value={`+${money(o.bonus)}`} />
             </View>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
-              <Pill text={o.munhasir ? 'Münhasır' : 'Münhasır değil'} icon="lock" color={o.munhasir ? C.orange : C.green} />
+              <Pill text={o.munhasir ? L("Münhasır") : L("Münhasır değil")} icon="lock" color={o.munhasir ? C.orange : C.green} />
               {o.ozel ? <Pill text={o.ozel} icon="file-sign" color={o.fesih ? C.red : C.gold} /> : null}
             </View>
             <View style={{ gap: 8, marginTop: 14 }}>
-              <Button label={o.devam ? 'Kontrata devam et' : o.fesih ? `Kabul et (-${money(o.fesih)})` : 'Kabul et'} icon="file-sign" tone={ufc || o.org === 'dwcs' ? 'gold' : 'red'} disabled={!!o.fesih && s.para < o.fesih} onPress={() => act((x) => acceptOffer(x, o.id))} />
+              <Button label={o.devam ? L("Kontrata devam et") : o.fesih ? L("Kabul et (-{0})", [money(o.fesih)]) : L("Kabul et")} icon="file-sign" tone={ufc || o.org === 'dwcs' ? 'gold' : 'red'} disabled={!!o.fesih && s.para < o.fesih} onPress={() => act((x) => acceptOffer(x, o.id))} />
               <View style={{ flexDirection: 'row', gap: 8 }}>
                 {!o.pazarlikYapildi ? (
                   <View style={{ flex: 1 }}>
-                    <Button label="Pazarlık" icon="handshake" tone="ghost" onPress={() => act((x) => setMsg(negotiateOffer(x, o.id)))} />
+                    <Button label={L("Pazarlık")} icon="handshake" tone="ghost" onPress={() => act((x) => setMsg(negotiateOffer(x, o.id)))} />
                   </View>
                 ) : null}
                 {offers.length > 1 && !o.devam && !o.fesih ? (
                   <View style={{ flex: 1 }}>
-                    <Button label="Reddet" tone="ghost" onPress={() => act((x) => rejectOffer(x, o.id))} />
+                    <Button label={L("Reddet")} tone="ghost" onPress={() => act((x) => rejectOffer(x, o.id))} />
                   </View>
                 ) : null}
               </View>
@@ -644,23 +656,24 @@ export function RetireScreen({ s, onNew }: { s: GameState; onNew: () => void }) 
   const r = s.rekor;
   const ufcChamp = s.unvanlar.some((u) => u.startsWith('UFC'));
   return (
-    <Screen footer={<Button label="Kariyer yuvalarına dön" icon="folder-account" onPress={onNew} />}>
+    <Screen footer={<Button label={L("Kariyer yuvalarına dön")} icon="folder-account" onPress={onNew} />}>
       <LinearGradient colors={['#3a2a0a', '#0a0b0e']} style={gs.banner}>
         <Icon name={ufcChamp ? 'crown' : 'flag-checkered'} size={40} color={C.gold} />
-        <Text style={gs.bannerTitle}>{ufcChamp ? 'BİR EFSANE VEDA EDİYOR' : 'SON ZİL'}</Text>
+        <Text style={gs.bannerTitle}>{ufcChamp ? L("BİR EFSANE VEDA EDİYOR") : L("SON ZİL")}</Text>
         <Text style={gs.bannerSub}>
-          {fullName(s.fighter)} · {s.fighter.yas} yaşında eldivenlerini astı
+          {fullName(s.fighter)} · {s.fighter.yas} {L("yaşında eldivenlerini astı")}
         </Text>
       </LinearGradient>
       <StatusPanel s={s} />
       <Card>
         <P>
-          Profesyonel rekor: {r.g}-{r.m}-{r.b} (KO/TKO {r.ko}, SUB {r.sub}, Karar {r.karar})
+          
+          {L("Profesyonel rekor:")}{' '}{r.g}-{r.m}-{r.b} (KO/TKO {r.ko}{L(", SUB")}{' '}{r.sub}{L(", Karar")}{' '}{r.karar})
         </P>
-        <P style={{ marginBottom: 0 }}>Amatör rekor: {s.amator.g}-{s.amator.m}-{s.amator.b}</P>
+        <P style={{ marginBottom: 0 }}>{L("Amatör rekor:")}{' '}{s.amator.g}-{s.amator.m}-{s.amator.b}</P>
       </Card>
-      <Section>ÜNVANLAR</Section>
-      {s.unvanlar.length ? s.unvanlar.map((u, i) => <P key={i}>🏆 {u}</P>) : <P dim>Kemer yok. Ama yol yürünmüştü.</P>}
+      <Section>{L("ÜNVANLAR")}</Section>
+      {s.unvanlar.length ? s.unvanlar.map((u, i) => <P key={i}>🏆 {u}</P>) : <P dim>{L("Kemer yok. Ama yol yürünmüştü.")}</P>}
     </Screen>
   );
 }

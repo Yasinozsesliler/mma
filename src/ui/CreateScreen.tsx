@@ -1,3 +1,4 @@
+import { L, LOC } from '../i18n';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { generateBackstory, growthMultiplier, rollStartingStats, type NewFighterInput } from '../engine/character';
@@ -44,13 +45,13 @@ export function CreateScreen({ onDone, onBack }: { onDone: (input: NewFighterInp
   const footer = (
     <View style={{ flexDirection: 'row', gap: 8 }}>
       <View style={{ flex: 1 }}>
-        <Button label="GERİ" tone="ghost" onPress={back} />
+        <Button label={L("GERİ")} tone="ghost" onPress={back} />
       </View>
       <View style={{ flex: 2 }}>
         {step < STEPS ? (
-          <Button label="DEVAM" onPress={next} disabled={!canNext} />
+          <Button label={L("DEVAM")} onPress={next} disabled={!canNext} />
         ) : (
-          <Button label="KARİYERE BAŞLA" tone="gold" onPress={() => stats && onDone(inp, stats)} />
+          <Button label={L("KARİYERE BAŞLA")} tone="gold" onPress={() => stats && onDone(inp, stats)} />
         )}
       </View>
     </View>
@@ -58,31 +59,32 @@ export function CreateScreen({ onDone, onBack }: { onDone: (input: NewFighterInp
 
   return (
     <Screen footer={footer}>
-      <Text style={cs.step}>KARAKTER OLUŞTURMA · {Math.min(step, 8)}/8</Text>
+      <Text style={cs.step}>{L("KARAKTER OLUŞTURMA ·")}{' '}{Math.min(step, 8)}/8</Text>
 
       {step === 1 && (
         <>
-          <Title sub="Salonun yaşlı sahibi gözlüğünün üstünden bakıyor: “Buralarda seni daha önce görmedim. Kimsin sen, evlat?”">
-            Adın ne?
+          <Title sub={L("Salonun yaşlı sahibi gözlüğünün üstünden bakıyor: “Buralarda seni daha önce görmedim. Kimsin sen, evlat?”")}>
+            
+            {L("Adın ne?")}
           </Title>
-          <Field label="Ad" value={inp.ad} onChange={(ad) => set({ ad })} />
-          <Field label="Soyad" value={inp.soyad} onChange={(soyad) => set({ soyad })} />
-          <Field label="Lakap (isteğe bağlı)" value={inp.lakap} onChange={(lakap) => set({ lakap })} placeholder="örn. Demir Yumruk" />
+          <Field label={L("Ad")} value={inp.ad} onChange={(ad) => set({ ad })} />
+          <Field label={L("Soyad")} value={inp.soyad} onChange={(soyad) => set({ soyad })} />
+          <Field label={L("Lakap (isteğe bağlı)")} value={inp.lakap} onChange={(lakap) => set({ lakap })} placeholder={L("örn. Demir Yumruk")} />
         </>
       )}
 
       {step === 2 && (
         <>
-          <Title sub="Uyruğun, antrenman imkânlarını ve taraftar desteğini belirler.">Nerelisin?</Title>
-          <Field label="Memleket (şehir)" value={inp.memleket} onChange={(memleket) => set({ memleket })} placeholder="örn. Erzurum" />
+          <Title sub={L("Uyruğun, antrenman imkânlarını ve taraftar desteğini belirler.")}>{L("Nerelisin?")}</Title>
+          <Field label={L("Memleket (şehir)")} value={inp.memleket} onChange={(memleket) => set({ memleket })} placeholder={L("örn. Erzurum")} />
           {Object.entries(COUNTRIES).map(([k, c]) => (
             <Choice
               key={k}
               label={c.ad}
               desc={
-                `Antrenman ${dots(c.egitim)} · Taraftar ${dots(c.taraftar)}` +
+                L("Antrenman {0} · Taraftar {1}", [dots(c.egitim), dots(c.taraftar)]) +
                 (inp.uyruk === k
-                  ? `\n📊 İstatistik bonusu: +${Math.round(c.egitim * 0.6)} · 🔥 Başlangıç popülerliği: ${Math.round(c.taraftar * 1.2)}\n🥋 ${gymsFor(k).length} salon seçeneği: ${gymsFor(k).map((g) => g.salon).join(', ')}`
+                  ? L("\n📊 İstatistik bonusu: +{0} · 🔥 Başlangıç popülerliği: {1}\n🥋 {2} salon seçeneği: {3}", [Math.round(c.egitim * 0.6), Math.round(c.taraftar * 1.2), gymsFor(k).length, gymsFor(k).map((g) => g.salon).join(', ')])
                   : '')
               }
               selected={inp.uyruk === k}
@@ -95,8 +97,9 @@ export function CreateScreen({ onDone, onBack }: { onDone: (input: NewFighterInp
 
       {step === 3 && (
         <>
-          <Title sub={`${COUNTRIES[inp.uyruk].ad}’deki salonlar. Kaliteli salon daha hızlı geliştirir ama kamp ücretleri de yüksektir. Antrenörün uzmanlık alanına odaklanan kamplar %35 daha verimlidir.`}>
-            Salonunu seç
+          <Title sub={L("{0}’deki salonlar. Kaliteli salon daha hızlı geliştirir ama kamp ücretleri de yüksektir. Antrenörün uzmanlık alanına odaklanan kamplar %35 daha verimlidir.", [COUNTRIES[inp.uyruk].ad])}>
+            
+            {L("Salonunu seç")}
           </Title>
           {gymsFor(inp.uyruk).map((g) => {
             const sel = inp.salonId === g.id;
@@ -106,15 +109,15 @@ export function CreateScreen({ onDone, onBack }: { onDone: (input: NewFighterInp
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                   <OctIcon name="whistle" color={sel ? C.red : C.dim} size={48} />
                   <View style={{ flex: 1 }}>
-                    <Text style={[cs.branchTitle, SLANT, { fontSize: 18, color: sel ? C.red : C.text }]}>{g.salon.toLocaleUpperCase('tr-TR')}</Text>
+                    <Text style={[cs.branchTitle, SLANT, { fontSize: 18, color: sel ? C.red : C.text }]}>{g.salon.toLocaleUpperCase(LOC)}</Text>
                     <Text style={cs.branchDesc}>{g.antrenor}</Text>
                   </View>
                 </View>
                 <Text style={[cs.branchDesc, { marginTop: 8 }]}>{g.aciklama}</Text>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
-                  <Pill text={`Uzmanlık: ${STAT_LABELS[g.uzmanlik]}`} icon="target" color={C.gold} />
-                  <Pill text={`Kalite ${g.kalite}/10`} icon="star-four-points" color={g.kalite >= 5 ? C.green : C.dim} />
-                  <Pill text={`Profesyonel kamp: $${(g.kalite * 40).toLocaleString('tr-TR')}/hafta`} icon="cash" color={C.dim} />
+                  <Pill text={L("Uzmanlık: {0}", [STAT_LABELS[g.uzmanlik]])} icon="target" color={C.gold} />
+                  <Pill text={L("Kalite {0}/10", [g.kalite])} icon="star-four-points" color={g.kalite >= 5 ? C.green : C.dim} />
+                  <Pill text={L("Profesyonel kamp: ${0}/hafta", [(g.kalite * 40).toLocaleString(LOC)])} icon="cash" color={C.dim} />
                 </View>
               </Pressable>
             );
@@ -124,7 +127,7 @@ export function CreateScreen({ onDone, onBack }: { onDone: (input: NewFighterInp
 
       {step === 4 && (
         <>
-          <Title sub="Genç dövüşçü hızlı gelişir ama ham başlar. Yaşlı dövüşçü tecrübeli başlar ama zamanı azdır.">Kaç yaşındasın?</Title>
+          <Title sub={L("Genç dövüşçü hızlı gelişir ama ham başlar. Yaşlı dövüşçü tecrübeli başlar ama zamanı azdır.")}>{L("Kaç yaşındasın?")}</Title>
           <View style={cs.ageGrid}>
             {Array.from({ length: 13 }, (_, i) => 18 + i).map((y) => (
               <Pressable key={y} onPress={() => set({ yas: y })} style={[cs.age, inp.yas === y && { borderColor: C.red, backgroundColor: C.redDim }]}>
@@ -133,15 +136,15 @@ export function CreateScreen({ onDone, onBack }: { onDone: (input: NewFighterInp
             ))}
           </View>
           <Card>
-            <P>📈 Gelişim hızı: ×{growthMultiplier(inp.yas).toFixed(2)} (kamp puanlarını ve gelişimi çarpar)</P>
-            <P>💪 Tecrübe bonusu: tüm istatistiklere +{Math.round((inp.yas - 18) * 0.45)}</P>
-            <P>⏳ Kariyer süresi: yaklaşık {41 - inp.yas} yıl. 32 yaştan sonra hız ve çene düşer.</P>
+            <P>{L("📈 Gelişim hızı: ×")}{growthMultiplier(inp.yas).toFixed(2)} {L("(kamp puanlarını ve gelişimi çarpar)")}</P>
+            <P>{L("💪 Tecrübe bonusu: tüm istatistiklere +")}{Math.round((inp.yas - 18) * 0.45)}</P>
+            <P>{L("⏳ Kariyer süresi: yaklaşık")}{' '}{41 - inp.yas} {L("yıl. 32 yaştan sonra hız ve çene düşer.")}</P>
             <P dim>
               {inp.yas <= 22
-                ? 'Sünger gibisin. Her kamp seni ileri taşır, ama ilk maçlarda tecrübesizlik ödetir.'
+                ? L("Sünger gibisin. Her kamp seni ileri taşır, ama ilk maçlarda tecrübesizlik ödetir.")
                 : inp.yas <= 26
-                  ? 'Altın yaş. Hem gelişecek zamanın hem de temel bir olgunluğun var.'
-                  : 'Olgun bir başlangıç. Daha güçlü başlarsın, ama saat tıkırdıyor.'}
+                  ? L("Altın yaş. Hem gelişecek zamanın hem de temel bir olgunluğun var.")
+                  : L("Olgun bir başlangıç. Daha güçlü başlarsın, ama saat tıkırdıyor.")}
             </P>
           </Card>
         </>
@@ -149,20 +152,19 @@ export function CreateScreen({ onDone, onBack }: { onDone: (input: NewFighterInp
 
       {step === 5 && (
         <>
-          <Title sub="Hafif sıkletler hızlı ve dayanıklıdır, ağır sıkletler tek yumrukla bitirir.">Hangi sıklette dövüşeceksin?</Title>
+          <Title sub={L("Hafif sıkletler hızlı ve dayanıklıdır, ağır sıkletler tek yumrukla bitirir.")}>{L("Hangi sıklette dövüşeceksin?")}</Title>
           {(Object.keys(WEIGHT_CLASSES) as WeightClass[]).map((w) => (
             <Choice
               key={w}
-              label={`${WEIGHT_CLASSES[w].ad} Sıklet`}
-              desc={`${WEIGHT_CLASSES[w].kg} kg · ${WEIGHT_CLASSES[w].lb} lb
-${modText(WEIGHT_MODS[w]) || 'Dengeli: etki yok'}`}
+              label={L("{0} Sıklet", [WEIGHT_CLASSES[w].ad])}
+              desc={L("{0} kg · {1} lb\n{2}", [WEIGHT_CLASSES[w].kg, WEIGHT_CLASSES[w].lb, modText(WEIGHT_MODS[w]) || L("Dengeli: etki yok")])}
               selected={inp.siklet === w}
               tone="plain"
               onPress={() => set({ siklet: w, boy: BASE_BOY[w] })}
             />
           ))}
-          <Section>BOYUN</Section>
-          <Text style={cs.heightHint}>Bir kez seçilir, kariyer boyunca değişmez. Uzun boy uzanma (vuruş), kısa boy düşük ağırlık merkezi (güreş) getirir.</Text>
+          <Section>{L("BOYUN")}</Section>
+          <Text style={cs.heightHint}>{L("Bir kez seçilir, kariyer boyunca değişmez. Uzun boy uzanma (vuruş), kısa boy düşük ağırlık merkezi (güreş) getirir.")}</Text>
           <View style={cs.heights}>
             {heightOptions(inp.siklet).map((h) => {
               const on = (inp.boy ?? BASE_BOY[inp.siklet]) === h;
@@ -171,7 +173,7 @@ ${modText(WEIGHT_MODS[w]) || 'Dengeli: etki yok'}`}
                 <Pressable key={h} onPress={() => set({ boy: h })} style={[cs.height, on && cs.heightOn]}>
                   <Text style={[cs.heightVal, on && { color: '#fff' }]}>{h}</Text>
                   <Text style={[cs.heightUnit, on && { color: '#fff' }]}>cm</Text>
-                  <Text style={[cs.heightMod, on && { color: '#fff' }]}>{m.vurus ? `${m.vurus > 0 ? '+' : ''}${m.vurus} Vuruş\n${m.gures! > 0 ? '+' : ''}${m.gures} Güreş` : 'Dengeli'}</Text>
+                  <Text style={[cs.heightMod, on && { color: '#fff' }]}>{m.vurus ? L("{0}{1} Vuruş\n{2}{3} Güreş", [m.vurus > 0 ? '+' : '', m.vurus, m.gures! > 0 ? '+' : '', m.gures]) : L("Dengeli")}</Text>
                 </Pressable>
               );
             })}
@@ -181,7 +183,7 @@ ${modText(WEIGHT_MODS[w]) || 'Dengeli: etki yok'}`}
 
       {step === 6 && (
         <>
-          <Title sub="Güçlü ve zayıf yönlerini bu belirler.">Dövüş geçmişin ne?</Title>
+          <Title sub={L("Güçlü ve zayıf yönlerini bu belirler.")}>{L("Dövüş geçmişin ne?")}</Title>
           {(Object.keys(BACKGROUNDS) as Background[]).map((b) => (
             <BranchCard key={b} b={b} selected={inp.gecmis === b} inp={inp} onPress={() => set({ gecmis: b })} />
           ))}
@@ -190,11 +192,11 @@ ${modText(WEIGHT_MODS[w]) || 'Dengeli: etki yok'}`}
 
       {step === 7 && inp.gorunum && (
         <>
-          <Title sub="Kafese girdiğinde herkes bu yüzü görecek.">Görünümün</Title>
+          <Title sub={L("Kafese girdiğinde herkes bu yüzü görecek.")}>{L("Görünümün")}</Title>
           <View style={{ alignItems: 'center', marginBottom: 14 }}>
             <FighterAvatar look={inp.gorunum} size={170} />
             <Text style={[cs.branchTitle, SLANT, { marginTop: 8 }]}>
-              {inp.ad.toLocaleUpperCase('tr-TR')} {inp.soyad.toLocaleUpperCase('tr-TR')}
+              {inp.ad.toLocaleUpperCase(LOC)} {inp.soyad.toLocaleUpperCase(LOC)}
             </Text>
           </View>
           <LookPicker look={inp.gorunum} onChange={(g) => set({ gorunum: g })} />
@@ -203,22 +205,22 @@ ${modText(WEIGHT_MODS[w]) || 'Dengeli: etki yok'}`}
 
       {step === 8 && (
         <>
-          <Title sub="Kendin yazabilir ya da senin için yazmamı isteyebilirsin.">Hikâyen ne?</Title>
+          <Title sub={L("Kendin yazabilir ya da senin için yazmamı isteyebilirsin.")}>{L("Hikâyen ne?")}</Title>
           <TextInput
             style={[cs.input, { minHeight: 160, textAlignVertical: 'top' }]}
             multiline
             value={inp.hikaye}
             onChangeText={(hikaye) => set({ hikaye })}
-            placeholder="Nereden geliyorsun? Seni kafese ne getirdi?"
+            placeholder={L("Nereden geliyorsun? Seni kafese ne getirdi?")}
             placeholderTextColor={C.faint}
           />
-          <Button label="BENİM İÇİN YAZ" tone="ghost" onPress={() => set({ hikaye: generateBackstory(inp) })} />
+          <Button label={L("BENİM İÇİN YAZ")} tone="ghost" onPress={() => set({ hikaye: generateBackstory(inp) })} />
         </>
       )}
 
       {step === 9 && stats && (
         <>
-          <Title sub={`${BACKGROUNDS[inp.gecmis].ad} · ${WEIGHT_CLASSES[inp.siklet].ad} Sıklet · ${inp.yas} yaş · ${COUNTRIES[inp.uyruk].ad}`}>
+          <Title sub={L("{0} · {1} Sıklet · {2} yaş · {3}", [BACKGROUNDS[inp.gecmis].ad, WEIGHT_CLASSES[inp.siklet].ad, inp.yas, COUNTRIES[inp.uyruk].ad])}>
             {inp.ad} {inp.lakap ? `"${inp.lakap}" ` : ''}
             {inp.soyad}
           </Title>
@@ -234,9 +236,9 @@ ${modText(WEIGHT_MODS[w]) || 'Dengeli: etki yok'}`}
             ))}
           </Card>
           {inp.hikaye ? <P dim>{inp.hikaye}</P> : null}
-          <P dim>⭐ Kariyere {START_POINTS} gelişim puanıyla başlıyorsun. Kariyer ekranındaki GELİŞİM sekmesinden istediğin istatistiğe harcayabilirsin.</P>
+          <P dim>{L("⭐ Kariyere")}{' '}{START_POINTS} {L("gelişim puanıyla başlıyorsun. Kariyer ekranındaki GELİŞİM sekmesinden istediğin istatistiğe harcayabilirsin.")}</P>
           <Button
-            label={`ZARI YENİDEN AT (${rerolls} hak)`}
+            label={L("ZARI YENİDEN AT ({0} hak)", [rerolls])}
             tone="ghost"
             disabled={rerolls <= 0}
             onPress={() => {
@@ -293,7 +295,7 @@ function BranchCard({ b, selected, inp, onPress }: { b: Background; selected: bo
   const info = BACKGROUNDS[b];
   const th = BRANCH_THEME[b];
   const preview = selected ? rollStartingStats({ ...inp, gecmis: b }, false) : null;
-  const zc = info.zorluk === 'Kolay' ? C.green : info.zorluk === 'Orta' ? C.gold : C.red;
+  const zc = info.zorluk === L("Kolay") ? C.green : info.zorluk === L("Orta") ? C.gold : C.red;
   return (
     <Pressable onPress={onPress} style={({ pressed }) => [cs.branch, { borderColor: selected ? th.color : C.border, transform: [{ scale: pressed ? 0.985 : 1 }] }]}>
       <LinearGradient
@@ -306,7 +308,7 @@ function BranchCard({ b, selected, inp, onPress }: { b: Background; selected: bo
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
         <OctIcon name={th.icon} color={th.color} size={52} />
         <View style={{ flex: 1 }}>
-          <Text style={[cs.branchTitle, SLANT, { color: selected ? th.color : C.text }]}>{info.ad.toLocaleUpperCase('tr-TR')}</Text>
+          <Text style={[cs.branchTitle, SLANT, { color: selected ? th.color : C.text }]}>{info.ad.toLocaleUpperCase(LOC)}</Text>
           <Text style={cs.branchDesc}>{info.aciklama}</Text>
         </View>
         <Pill text={info.zorluk} color={zc} />
@@ -316,11 +318,11 @@ function BranchCard({ b, selected, inp, onPress }: { b: Background; selected: bo
         <View style={cs.branchMore}>
           <Text style={[cs.branchDesc, { color: C.text }]}>{info.detay}</Text>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
-            <Pill text={`Güçlü: ${info.guclu}`} icon="arrow-up-bold-circle" color={C.green} />
-            <Pill text={`Zayıf: ${info.zayif}`} icon="alert-octagon" color={C.red} />
+            <Pill text={L("Güçlü: {0}", [info.guclu])} icon="arrow-up-bold-circle" color={C.green} />
+            <Pill text={L("Zayıf: {0}", [info.zayif])} icon="alert-octagon" color={C.red} />
             <Pill text={`Plan: ${info.plan}`} icon="target" color={th.color} />
           </View>
-          <Text style={[cs.label, { marginTop: 12 }]}>SEÇİMLERİNLE BEKLENEN BAŞLANGIÇ (ZAR ±3)</Text>
+          <Text style={[cs.label, { marginTop: 12 }]}>{L("SEÇİMLERİNLE BEKLENEN BAŞLANGIÇ (ZAR ±3)")}</Text>
           {STAT_KEYS.map((k) => (
             <View key={k} style={cs.statRow}>
               <Text style={[cs.statLabel, { width: 70, fontSize: 13 }]}>{STAT_LABELS[k]}</Text>
@@ -363,39 +365,39 @@ function LookPicker({ look, onChange }: { look: Appearance; onChange: (g: Appear
   const rnd = <T,>(a: readonly T[]) => a[Math.floor(Math.random() * a.length)];
   return (
     <Card>
-      <Text style={cs.label}>TEN RENGİ</Text>
+      <Text style={cs.label}>{L("TEN RENGİ")}</Text>
       <Swatches colors={SKIN_TONES} value={look.ten} onPick={(ten) => set({ ten })} />
-      <Text style={cs.label}>SAÇ MODELİ</Text>
+      <Text style={cs.label}>{L("SAÇ MODELİ")}</Text>
       <Chips items={HAIR_STYLES} value={look.sac} onPick={(sac) => set({ sac })} />
-      <Text style={cs.label}>SAÇ RENGİ</Text>
+      <Text style={cs.label}>{L("SAÇ RENGİ")}</Text>
       <Swatches colors={HAIR_COLORS} value={look.sacRenk} onPick={(sacRenk) => set({ sacRenk })} />
-      <Text style={cs.label}>GÖZ RENGİ</Text>
+      <Text style={cs.label}>{L("GÖZ RENGİ")}</Text>
       <Swatches colors={EYE_COLORS} value={look.goz} onPick={(goz) => set({ goz })} />
-      <Text style={cs.label}>SAKAL</Text>
+      <Text style={cs.label}>{L("SAKAL")}</Text>
       <Chips items={BEARDS} value={look.sakal} onPick={(sakal) => set({ sakal })} />
-      <Text style={cs.label}>YÜZ ŞEKLİ</Text>
+      <Text style={cs.label}>{L("YÜZ ŞEKLİ")}</Text>
       <Chips items={FACE_SHAPES} value={String(look.yuz ?? 0)} onPick={(k) => set({ yuz: Number(k) })} />
-      <Text style={cs.label}>GÖZLER</Text>
+      <Text style={cs.label}>{L("GÖZLER")}</Text>
       <Chips items={EYE_SHAPES} value={String(look.gozSekil ?? 1)} onPick={(k) => set({ gozSekil: Number(k) })} />
-      <Text style={cs.label}>BURUN</Text>
+      <Text style={cs.label}>{L("BURUN")}</Text>
       <Chips items={NOSES} value={String(look.burun ?? 0)} onPick={(k) => set({ burun: Number(k) })} />
-      <Text style={cs.label}>DUDAKLAR</Text>
+      <Text style={cs.label}>{L("DUDAKLAR")}</Text>
       <Chips items={LIPS} value={String(look.dudak ?? 1)} onPick={(k) => set({ dudak: Number(k) })} />
-      <Text style={cs.label}>KAŞLAR</Text>
+      <Text style={cs.label}>{L("KAŞLAR")}</Text>
       <Chips items={BROWS} value={String(look.kas ?? 1)} onPick={(k) => set({ kas: Number(k) })} />
-      <Text style={cs.label}>DETAYLAR</Text>
+      <Text style={cs.label}>{L("DETAYLAR")}</Text>
       <Chips
         items={[
-          { key: 'yara', ad: look.yara ? '✓ Kaşta yara izi' : 'Kaşta yara izi' },
-          { key: 'dovme', ad: look.dovme ? '✓ Omuz dövmesi' : 'Omuz dövmesi' },
-          { key: 'kulak', ad: look.kulak ? '✓ Dövüşçü kulağı' : 'Dövüşçü kulağı' },
+          { key: 'yara', ad: look.yara ? L("✓ Kaşta yara izi") : L("Kaşta yara izi") },
+          { key: 'dovme', ad: look.dovme ? L("✓ Omuz dövmesi") : L("Omuz dövmesi") },
+          { key: 'kulak', ad: look.kulak ? L("✓ Dövüşçü kulağı") : L("Dövüşçü kulağı") },
         ]}
         value={(look.yara ? 'yara' : '') as 'yara'}
         onPick={(k) => set(k === 'yara' ? { yara: !look.yara } : k === 'dovme' ? { dovme: !look.dovme } : { kulak: look.kulak ? 0 : 1 })}
       />
       <View style={{ marginTop: 12 }}>
         <Button
-          label="Rastgele"
+          label={L("Rastgele")}
           icon="dice-multiple"
           tone="ghost"
           onPress={() =>

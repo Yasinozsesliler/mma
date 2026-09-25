@@ -1,3 +1,4 @@
+import { L, LOC } from '../i18n';
 import { fmtFollowers, followerBoard, followers } from '../engine/fame';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -12,15 +13,15 @@ import { C, F, R } from './theme';
 
 
 const TUR: Record<Post['tur'], { renk: string; ikon: IconName; etiket: string }> = {
-  oyuncu: { renk: C.red, ikon: 'account', etiket: 'SEN' },
-  dovuscu: { renk: C.blue, ikon: 'boxing-glove', etiket: 'DÖVÜŞÇÜ' },
-  medya: { renk: C.gold, ikon: 'newspaper-variant-outline', etiket: 'MEDYA' },
-  taraftar: { renk: C.dim, ikon: 'account-group', etiket: 'TARAFTAR' },
-  hikaye: { renk: C.gold, ikon: 'movie-open-star', etiket: 'MAÇIN HİKÂYESİ' },
-  organizasyon: { renk: '#b57bff', ikon: 'office-building', etiket: 'RESMİ' },
+  oyuncu: { renk: C.red, ikon: 'account', etiket: L('SEN') },
+  dovuscu: { renk: C.blue, ikon: 'boxing-glove', etiket: L("DÖVÜŞÇÜ") },
+  medya: { renk: C.gold, ikon: 'newspaper-variant-outline', etiket: L("MEDYA") },
+  taraftar: { renk: C.dim, ikon: 'account-group', etiket: L("TARAFTAR") },
+  hikaye: { renk: C.gold, ikon: 'movie-open-star', etiket: L("MAÇIN HİKÂYESİ") },
+  organizasyon: { renk: '#b57bff', ikon: 'office-building', etiket: L("RESMİ") },
 };
 
-const ago = (s: GameState, h: number) => (s.hafta - h <= 0 ? 'bu hafta' : `${s.hafta - h} hf önce`);
+const ago = (s: GameState, h: number) => (s.hafta - h <= 0 ? L("bu hafta") : L("{0} hf önce", [s.hafta - h]));
 
 function Avatar({ name, color }: { name: string; color: string }) {
   const ini = name
@@ -29,7 +30,7 @@ function Avatar({ name, color }: { name: string; color: string }) {
     .slice(0, 2)
     .map((w) => w[0])
     .join('')
-    .toLocaleUpperCase('tr-TR');
+    .toLocaleUpperCase(LOC);
   return (
     <View style={[so.avatar, { borderColor: color, backgroundColor: color + '22' }]}>
       <Text style={[so.avatarText, { color }]}>{ini}</Text>
@@ -96,9 +97,9 @@ function FollowerBoard({ s }: { s: GameState }) {
   const max = all[0]?.takipci || 1;
   return (
     <View style={so.board}>
-      <Text style={so.boardTitle}>EN ÇOK TAKİP EDİLENLER</Text>
+      <Text style={so.boardTitle}>{L("EN ÇOK TAKİP EDİLENLER")}</Text>
       <Text style={so.boardSub}>
-        {s.stage === 'ufc' ? 'Sıkletin ve UFC’nin P4P yıldızları' : 'Sıkletindeki dövüşçüler'} · Sıran: #{myIdx + 1} / {all.length}
+        {s.stage === 'ufc' ? L("Sıkletin ve UFC’nin P4P yıldızları") : L("Sıkletindeki dövüşçüler")} {L("· Sıran: #")}{myIdx + 1} / {all.length}
       </Text>
       {rows.map((r) => {
         const i = all.indexOf(r);
@@ -109,7 +110,7 @@ function FollowerBoard({ s }: { s: GameState }) {
               <Text style={so.boardName} numberOfLines={1}>
                 {r.ad}
                 {r.sampiyon ? ' 👑' : ''}
-                {r.oyuncu ? <Text style={{ color: C.red }}>  SEN</Text> : null}
+                {r.oyuncu ? <Text style={{ color: C.red }}>{L('  SEN')}</Text> : null}
               </Text>
               <View style={so.boardBar}>
                 <View style={{ width: `${Math.max(3, (r.takipci / max) * 100)}%`, height: '100%', borderRadius: 2, backgroundColor: r.oyuncu ? C.red : i < 3 ? C.gold : '#3aa8ff' }} />
@@ -139,9 +140,10 @@ export function SocialScreen({ s, act }: { s: GameState; act: Act }) {
     setText('');
   };
   return (
-    <Screen footer={<Button label="Kariyere dön" icon="arrow-left" tone="ghost" onPress={() => act((x) => (x.phase = 'hub'))} />}>
-      <Title kicker="KAFES · SOSYAL" sub="Rakiplerin burada konuşur. Sen de konuş ama sözlerinin bedeli var.">
-        Sosyal Medya
+    <Screen footer={<Button label={L("Kariyere dön")} icon="arrow-left" tone="ghost" onPress={() => act((x) => (x.phase = 'hub'))} />}>
+      <Title kicker={L("KAFES · SOSYAL")} sub={L("Rakiplerin burada konuşur. Sen de konuş ama sözlerinin bedeli var.")}>
+        
+        {L("Sosyal Medya")}
       </Title>
       <View style={so.profile}>
         <FighterAvatar look={s.fighter.gorunum} size={52} />
@@ -152,7 +154,7 @@ export function SocialScreen({ s, act }: { s: GameState; act: Act }) {
         </View>
         <View style={{ alignItems: 'flex-end' }}>
           <Text style={[so.follow, SLANT]}>{fmtFollowers(takipci)}</Text>
-          <Text style={so.handle}>takipçi</Text>
+          <Text style={so.handle}>{L("takipçi")}</Text>
         </View>
       </View>
 
@@ -161,7 +163,7 @@ export function SocialScreen({ s, act }: { s: GameState; act: Act }) {
           style={so.input}
           value={text}
           onChangeText={setText}
-          placeholder="Ne düşünüyorsun? Bir rakibi etiketle (@isim ya da soyadı)…"
+          placeholder={L("Ne düşünüyorsun? Bir rakibi etiketle (@isim ya da soyadı)…")}
           placeholderTextColor={C.faint}
           multiline
           maxLength={280}
@@ -184,14 +186,14 @@ export function SocialScreen({ s, act }: { s: GameState; act: Act }) {
           ))}
           <Pressable onPress={() => setTur(tur + 1)} style={so.shuffle}>
             <Icon name="shuffle-variant" size={14} color={C.gold} />
-            <Text style={so.shuffleText}>BAŞKA ÖNERİLER</Text>
+            <Text style={so.shuffleText}>{L("BAŞKA ÖNERİLER")}</Text>
           </Pressable>
         </View>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
           <Text style={so.handle}>{text.length}/280</Text>
           <Pressable onPress={send} disabled={!text.trim()} style={({ pressed }) => [so.send, { opacity: !text.trim() ? 0.35 : pressed ? 0.7 : 1 }]}>
             <Icon name="send" size={14} color="#fff" />
-            <Text style={so.sendText}>PAYLAŞ</Text>
+            <Text style={so.sendText}>{L("PAYLAŞ")}</Text>
           </Pressable>
         </View>
       </View>
@@ -204,10 +206,10 @@ export function SocialScreen({ s, act }: { s: GameState; act: Act }) {
       <View style={so.filters}>
         {(
           [
-            ['hepsi', 'AKIŞ'],
-            ['dovuscu', 'DÖVÜŞÇÜLER'],
-            ['hikaye', 'HİKÂYELER'],
-            ['takipci', 'TAKİPÇİ'],
+            ['hepsi', L("AKIŞ")],
+            ['dovuscu', L("DÖVÜŞÇÜLER")],
+            ['hikaye', L("HİKÂYELER")],
+            ['takipci', L("TAKİPÇİ")],
           ] as const
         ).map(([k, l]) => (
           <Pressable key={k} onPress={() => setFilter(k)} style={[so.filter, filter === k && so.filterOn]}>
@@ -219,7 +221,7 @@ export function SocialScreen({ s, act }: { s: GameState; act: Act }) {
         <FollowerBoard s={s} />
       ) : (
         <>
-          {posts.length === 0 ? <P dim>Henüz paylaşım yok. İlk dövüşünden sonra ortalık hareketlenecek.</P> : null}
+          {posts.length === 0 ? <P dim>{L("Henüz paylaşım yok. İlk dövüşünden sonra ortalık hareketlenecek.")}</P> : null}
           {posts.map((p) => (
             <PostCard key={p.id} s={s} p={p} act={act} onMsg={setMsg} />
           ))}

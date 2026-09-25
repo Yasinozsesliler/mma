@@ -1,3 +1,4 @@
+import { L, LOC } from '../i18n';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useMemo, useRef } from 'react';
 import { Animated, Dimensions, StyleSheet, Text, View } from 'react-native';
@@ -72,31 +73,32 @@ export function CelebrationScreen({ s, act }: { s: GameState; act: Act }) {
   const belts = k.tur === 'cift' ? activeBelts(s).filter((b) => b.org === k.org) : activeBelts(s).filter((b) => b.org === k.org && b.siklet === k.siklet);
   const belt = belts.find((b) => b.siklet === k.siklet);
   const sayi = k.sayi ?? belts.length;
-  const baslik = k.tur === 'cift' ? `${champLabel(sayi).en}!` : k.tur === 'savunma' ? 'KEMER KORUNDU!' : 'YENİ ŞAMPİYON!';
+  const baslik = k.tur === 'cift' ? `${champLabel(sayi).en}!` : k.tur === 'savunma' ? L("KEMER KORUNDU!") : L("YENİ ŞAMPİYON!");
   const alt =
     k.tur === 'cift'
-      ? `${ORGS[k.org].ad} tarihine geçtin: aynı anda ${sayi} sıklette şampiyon!`
+      ? L("{0} tarihine geçtin: aynı anda {1} sıklette şampiyon!", [ORGS[k.org].ad, sayi])
       : k.tur === 'savunma'
-        ? `${belt?.savunma ?? 1}. kemer savunması. Hükümdarlığın sürüyor.`
-        : `${ORGS[k.org].ad} ${WEIGHT_CLASSES[k.siklet].ad} Sıklet Şampiyonu`;
+        ? L("{0}. kemer savunması. Hükümdarlığın sürüyor.", [belt?.savunma ?? 1])
+        : L("{0} {1} Sıklet Şampiyonu", [ORGS[k.org].ad, WEIGHT_CLASSES[k.siklet].ad]);
   return (
-    <Screen footer={<Button label="Kutlamayı bitir" icon="arrow-right" tone="gold" onPress={() => act(endCelebration)} />}>
+    <Screen footer={<Button label={L("Kutlamayı bitir")} icon="arrow-right" tone="gold" onPress={() => act(endCelebration)} />}>
       <Confetti />
       <LinearGradient colors={['#4a3508', '#140f04', 'rgba(4,4,5,0)']} style={cl.hero}>
-        <Text style={cl.kicker}>{ORGS[k.org].kisa} · {WEIGHT_CLASSES[k.siklet].ad.toLocaleUpperCase('tr-TR')} SIKLET</Text>
+        <Text style={cl.kicker}>{ORGS[k.org].kisa} · {WEIGHT_CLASSES[k.siklet].ad.toLocaleUpperCase(LOC)} {L("SIKLET")}</Text>
         <Text style={[cl.title, SLANT]}>{baslik}</Text>
         <Text style={cl.sub}>{alt}</Text>
         <View style={{ marginVertical: 16 }}>
           <FighterAvatar look={s.fighter.gorunum} size={150} ring={C.gold} />
         </View>
-        <Text style={[cl.name, SLANT]}>{fullName(s.fighter).toLocaleUpperCase('tr-TR')}</Text>
+        <Text style={[cl.name, SLANT]}>{fullName(s.fighter).toLocaleUpperCase(LOC)}</Text>
         <Animated.View style={{ transform: [{ scale }], marginTop: 18, alignItems: 'center', gap: 10 }}>
           {belts.map((b) => (
             <Belt key={`${b.org}-${b.siklet}`} org={b.org} siklet={b.siklet} width={320} />
           ))}
         </Animated.View>
         <Text style={cl.record}>
-          Profesyonel karne: {s.rekor.g}-{s.rekor.m}-{s.rekor.b} · {s.fighter.yas} yaş
+          
+          {L("Profesyonel karne:")}{' '}{s.rekor.g}-{s.rekor.m}-{s.rekor.b} · {s.fighter.yas} {L("yaş")}
         </Text>
       </LinearGradient>
     </Screen>

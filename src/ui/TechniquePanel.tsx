@@ -1,3 +1,4 @@
+import { L } from '../i18n';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { canUpgradeTech, MAX_TECH, TECH_KINDS, TECHNIQUES, techCost, techLevel, upgradeTech, xpNeed } from '../engine/techniques';
@@ -13,9 +14,10 @@ export function TechniquePanel({ s, act }: { s: GameState; act: Act }) {
   const [all, setAll] = useState(false);
   return (
     <>
-      <Section>BİTİRİŞ TEKNİKLERİ</Section>
+      <Section>{L("BİTİRİŞ TEKNİKLERİ")}</Section>
       <Text style={tp.hint}>
-        Bir maçı hangi hareketle bitirirsen o hareket ustalık kazanır. Teknik çalışması ve spar da ustalık verir. Özel hareketler dövüş sırasında riskli ama görkemli fırsatlar açar. Gelişim puanın: <Text style={{ color: C.gold }}>{s.puan}</Text>
+        
+        {L("Bir maçı hangi hareketle bitirirsen o hareket ustalık kazanır. Teknik çalışması ve spar da ustalık verir. Özel hareketler dövüş sırasında riskli ama görkemli fırsatlar açar. Gelişim puanın:")}{' '}<Text style={{ color: C.gold }}>{s.puan}</Text>
       </Text>
       {TECH_KINDS.map((kind) => {
         const list = TECHNIQUES.filter((t) => t.tur === kind.id && (all || techLevel(s, t.id) > 0));
@@ -43,18 +45,18 @@ export function TechniquePanel({ s, act }: { s: GameState; act: Act }) {
                       {Array.from({ length: MAX_TECH }, (_, i) => (
                         <View key={i} style={[tp.pip, i < sv && { backgroundColor: col, borderColor: col }]} />
                       ))}
-                      {!max && sv > 0 ? <Text style={tp.xp}>ustalık {xp}/{xpNeed(sv)}</Text> : null}
+                      {!max && sv > 0 ? <Text style={tp.xp}>{L("ustalık")}{' '}{xp}/{xpNeed(sv)}</Text> : null}
                     </View>
                     <Text style={tp.desc} numberOfLines={2}>
                       {t.aciklama}
                     </Text>
                   </View>
                   {max ? (
-                    <Text style={[tp.master, { color: col }]}>USTA</Text>
+                    <Text style={[tp.master, { color: col }]}>{L('USTA')}</Text>
                   ) : (
                     <Pressable disabled={!can} onPress={() => act((x) => upgradeTech(x, t.id))} style={[tp.btn, { borderColor: col }, !can && { opacity: 0.35 }]}>
-                      <Text style={[tp.btnText, { color: col }]}>{sv ? 'GELİŞTİR' : 'ÖĞREN'}</Text>
-                      <Text style={tp.btnCost}>{techCost(sv)} puan</Text>
+                      <Text style={[tp.btnText, { color: col }]}>{sv ? L("GELİŞTİR") : L("ÖĞREN")}</Text>
+                      <Text style={tp.btnCost}>{L('{0} puan', [techCost(sv)])}</Text>
                     </Pressable>
                   )}
                 </View>
@@ -64,7 +66,7 @@ export function TechniquePanel({ s, act }: { s: GameState; act: Act }) {
         );
       })}
       <Pressable onPress={() => setAll(!all)} style={tp.toggle}>
-        <Text style={tp.toggleText}>{all ? 'SADECE BİLDİKLERİM' : 'TÜM TEKNİKLERİ GÖSTER'}</Text>
+        <Text style={tp.toggleText}>{all ? L("SADECE BİLDİKLERİM") : L("TÜM TEKNİKLERİ GÖSTER")}</Text>
       </Pressable>
     </>
   );

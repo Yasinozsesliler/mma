@@ -1,3 +1,4 @@
+import { L } from '../i18n';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StyleSheet, Text, View } from 'react-native';
 import Svg, { Polygon } from 'react-native-svg';
@@ -28,7 +29,7 @@ export function OvrBadge({ value, size = 76 }: { value: number; size?: number })
         <Polygon points={oct(44)} fill="#101217" />
       </Svg>
       <Text style={[fc.ovr, { color: col, fontSize: size * 0.4 }]}>{value}</Text>
-      <Text style={fc.ovrLabel}>GÜÇ</Text>
+      <Text style={fc.ovrLabel}>{L("GÜÇ")}</Text>
     </View>
   );
 }
@@ -66,7 +67,7 @@ export function StatusPanel({ s, compact }: { s: GameState; compact?: boolean })
             {f.ad} {f.soyad}
           </Text>
           <Text style={fc.meta}>
-            {FLAGS[f.uyruk] ?? ''} {COUNTRIES[f.uyruk]?.ad} · {f.memleket} · {f.yas} yaş
+            {FLAGS[f.uyruk] ?? ''} {COUNTRIES[f.uyruk]?.ad} · {f.memleket} · {f.yas} {L("yaş")}
           </Text>
         </View>
         <OvrBadge value={ovr} size={58} />
@@ -93,26 +94,26 @@ export function StatusPanel({ s, compact }: { s: GameState; compact?: boolean })
           );
         })}
         <View style={[fc.stat, { borderColor: C.gold + '55' }]}>
-          <Text style={fc.statLabel}>Puan</Text>
+          <Text style={fc.statLabel}>{L("Puan")}</Text>
           <Text style={[fc.statVal, { color: s.puan ? C.gold : C.faint }]}>{s.puan}</Text>
-          <Text style={[fc.statLabel, { fontSize: 9 }]}>gelişim</Text>
+          <Text style={[fc.statLabel, { fontSize: 9 }]}>{L("gelişim")}</Text>
         </View>
       </View>
 
       <View style={fc.infoGrid}>
-        <Info wide icon="trophy-outline" label={amator ? 'Amatör karne' : 'Profesyonel karne'} value={`${r.g}-${r.m}-${r.b}  ·  KO ${r.ko} · SUB ${r.sub} · KRR ${r.karar}`} />
-        {!amator && a.g + a.m + a.b > 0 ? <Info wide icon="school-outline" label="Amatör karne" value={`${a.g}-${a.m}-${a.b}  ·  KO ${a.ko} · SUB ${a.sub} · KRR ${a.karar}`} /> : null}
-        <Info icon="cash" label="Para" value={money(s.para)} color={s.para < 0 ? C.red : undefined} />
-        <Info icon="account-group" label="Takipçi" value={`${fmtFollowers(followers(s))} · ${followerTier(followers(s))}`} />
-        <Info icon="heart-pulse" label="Sağlık" value={`${s.saglik}/100`} color={s.saglik < 60 ? C.orange : undefined} />
-        <Info icon="file-sign" label="Kontrat" value={s.contract ? `${s.contract.kalan} dövüş kaldı` : 'Yok'} />
-        <Info icon="stairs-up" label="Aşama" value={STAGE_LABELS[s.stage].replace(/^Aşama \d · /, '')} />
+        <Info wide icon="trophy-outline" label={amator ? L("Amatör karne") : L("Profesyonel karne")} value={L("{0}-{1}-{2}  ·  KO {3} · SUB {4} · KRR {5}", [r.g, r.m, r.b, r.ko, r.sub, r.karar])} />
+        {!amator && a.g + a.m + a.b > 0 ? <Info wide icon="school-outline" label={L("Amatör karne")} value={L("{0}-{1}-{2}  ·  KO {3} · SUB {4} · KRR {5}", [a.g, a.m, a.b, a.ko, a.sub, a.karar])} /> : null}
+        <Info icon="cash" label={L("Para")} value={money(s.para)} color={s.para < 0 ? C.red : undefined} />
+        <Info icon="account-group" label={L("Takipçi")} value={`${fmtFollowers(followers(s))} · ${followerTier(followers(s))}`} />
+        <Info icon="heart-pulse" label={L("Sağlık")} value={`${s.saglik}/100`} color={s.saglik < 60 ? C.orange : undefined} />
+        <Info icon="file-sign" label={L("Kontrat")} value={s.contract ? L("{0} dövüş kaldı", [s.contract.kalan]) : L("Yok")} />
+        <Info icon="stairs-up" label={L("Aşama")} value={STAGE_LABELS[s.stage].replace(/^Aşama \d · /, '')} />
       </View>
 
       {s.sakatliklar.length ? (
         <View style={[fc.pills, { marginTop: 8 }]}>
           {s.sakatliklar.map((i, n) => (
-            <Pill key={n} text={`${i.ad} · ${i.hafta} hf`} icon="bandage" color={C.orange} />
+            <Pill key={n} text={L("{0} · {1} hf", [i.ad, i.hafta])} icon="bandage" color={C.orange} />
           ))}
         </View>
       ) : null}
@@ -121,7 +122,7 @@ export function StatusPanel({ s, compact }: { s: GameState; compact?: boolean })
           <Icon name="whistle" size={15} color={C.faint} />
           <Text style={fc.teamText} numberOfLines={2}>
             {s.takim.salon} · {s.takim.antrenor} ({s.takim.antrenorKalite}/10)
-            {s.takim.menajer ? ` · Menajer: ${s.takim.menajer}` : ''}
+            {s.takim.menajer ? L(" · Menajer: {0}", [s.takim.menajer]) : ''}
           </Text>
         </View>
       ) : null}

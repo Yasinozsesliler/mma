@@ -21,6 +21,8 @@
   },
   "devDependencies": {
     "@types/react": "~19.2.2",
+    "eslint": "^9.0.0",
+    "eslint-config-expo": "~57.0.2",
     "typescript": "~6.0.3"
   },
   "scripts": {
@@ -30,7 +32,8 @@
     "web": "expo start --web",
     "sim": "npx --yes tsx scripts/sim.ts",
     "build:web": "expo export --platform web && node scripts/build-sw.mjs",
-    "tactics": "npx --yes tsx scripts/tactics.ts"
+    "tactics": "npx --yes tsx scripts/tactics.ts",
+    "lint": "expo lint"
   },
   "private": true,
   "engines": {

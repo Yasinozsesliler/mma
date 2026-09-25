@@ -1,3 +1,4 @@
+import { L } from '../i18n';
 import { useId } from 'react';
 import Svg, { Circle, Defs, Ellipse, G, LinearGradient, Path, Polygon, Rect, Stop } from 'react-native-svg';
 
@@ -14,7 +15,7 @@ function Wheel({ x, y, r = 11 }: { x: number; y: number; r?: number }) {
       <Circle cx={x} cy={y} r={r * 0.62} fill="#9aa1ad" />
       <Circle cx={x} cy={y} r={r * 0.25} fill="#2a2e37" />
       {[0, 72, 144, 216, 288].map((a) => (
-        <Path key={a} d={`M${x} ${y} L${x + Math.cos((a * Math.PI) / 180) * r * 0.58} ${y + Math.sin((a * Math.PI) / 180) * r * 0.58}`} stroke="#2a2e37" strokeWidth={1.4} />
+        <Path key={a} d={L("M{0} {1} L{2} {3}", [x, y, x + Math.cos((a * Math.PI) / 180) * r * 0.58, y + Math.sin((a * Math.PI) / 180) * r * 0.58])} stroke="#2a2e37" strokeWidth={1.4} />
       ))}
     </G>
   );
@@ -22,13 +23,13 @@ function Wheel({ x, y, r = 11 }: { x: number; y: number; r?: number }) {
 
 /** Araba gövde şekilleri (200×100 alanda, yan görünüm). */
 const BODIES: Record<string, { body: string; glass: string; wheels: [number, number]; low?: boolean }> = {
-  hatch: { body: 'M18 72 L22 56 Q28 50 40 48 L64 36 Q72 32 92 32 L128 32 Q140 32 146 42 L150 50 L176 54 Q186 56 186 64 L186 74 Z', glass: 'M70 38 Q76 35 92 35 L124 35 Q134 35 140 44 L142 48 L66 48 Z', wheels: [50, 152] },
-  sedan: { body: 'M10 72 L14 58 Q18 52 34 50 L62 36 Q70 32 88 32 L120 32 Q136 32 148 44 L154 50 L180 53 Q192 55 192 64 L192 74 Z', glass: 'M68 38 Q74 35 90 35 L118 35 Q130 35 142 46 L64 48 Z', wheels: [46, 160] },
-  suv: { body: 'M12 76 L14 50 Q16 42 28 40 L50 26 Q56 22 70 22 L140 22 Q152 22 156 32 L164 44 L184 48 Q194 50 194 60 L194 78 Z', glass: 'M56 28 Q60 25 70 25 L138 25 Q148 25 152 34 L156 42 L52 42 Z', wheels: [48, 160] },
-  muscle: { body: 'M8 72 L10 60 Q12 54 30 52 L70 42 Q78 38 94 38 L118 38 Q130 38 140 46 L148 52 L186 56 Q196 58 196 66 L196 74 Z', glass: 'M78 43 Q84 40 96 40 L116 40 Q126 40 134 48 L76 50 Z', wheels: [44, 162], low: true },
-  electric: { body: 'M10 72 L14 60 Q18 52 34 50 L66 36 Q76 30 96 30 L122 30 Q140 30 156 46 L186 52 Q194 54 194 64 L194 74 Z', glass: 'M72 37 Q80 33 96 33 L122 33 Q136 33 148 46 L68 49 Z', wheels: [46, 160] },
-  super: { body: 'M6 72 L10 64 Q16 56 40 54 L84 40 Q96 34 112 34 L126 34 Q140 36 156 48 L190 56 Q198 58 198 66 L198 72 Z', glass: 'M90 41 Q100 37 112 37 L126 37 Q136 39 146 48 L86 50 Z', wheels: [46, 164], low: true },
-  hyper: { body: 'M4 72 L8 66 Q16 58 42 56 L90 38 Q104 32 118 32 L130 32 Q146 36 164 50 L194 58 Q200 60 200 68 L200 72 Z', glass: 'M96 39 Q106 35 118 35 L130 35 Q142 38 152 48 L92 50 Z', wheels: [46, 166], low: true },
+  hatch: { body: L("M18 72 L22 56 Q28 50 40 48 L64 36 Q72 32 92 32 L128 32 Q140 32 146 42 L150 50 L176 54 Q186 56 186 64 L186 74 Z"), glass: L("M70 38 Q76 35 92 35 L124 35 Q134 35 140 44 L142 48 L66 48 Z"), wheels: [50, 152] },
+  sedan: { body: L("M10 72 L14 58 Q18 52 34 50 L62 36 Q70 32 88 32 L120 32 Q136 32 148 44 L154 50 L180 53 Q192 55 192 64 L192 74 Z"), glass: L("M68 38 Q74 35 90 35 L118 35 Q130 35 142 46 L64 48 Z"), wheels: [46, 160] },
+  suv: { body: L("M12 76 L14 50 Q16 42 28 40 L50 26 Q56 22 70 22 L140 22 Q152 22 156 32 L164 44 L184 48 Q194 50 194 60 L194 78 Z"), glass: L("M56 28 Q60 25 70 25 L138 25 Q148 25 152 34 L156 42 L52 42 Z"), wheels: [48, 160] },
+  muscle: { body: L("M8 72 L10 60 Q12 54 30 52 L70 42 Q78 38 94 38 L118 38 Q130 38 140 46 L148 52 L186 56 Q196 58 196 66 L196 74 Z"), glass: L("M78 43 Q84 40 96 40 L116 40 Q126 40 134 48 L76 50 Z"), wheels: [44, 162], low: true },
+  electric: { body: L("M10 72 L14 60 Q18 52 34 50 L66 36 Q76 30 96 30 L122 30 Q140 30 156 46 L186 52 Q194 54 194 64 L194 74 Z"), glass: L("M72 37 Q80 33 96 33 L122 33 Q136 33 148 46 L68 49 Z"), wheels: [46, 160] },
+  super: { body: L("M6 72 L10 64 Q16 56 40 54 L84 40 Q96 34 112 34 L126 34 Q140 36 156 48 L190 56 Q198 58 198 66 L198 72 Z"), glass: L("M90 41 Q100 37 112 37 L126 37 Q136 39 146 48 L86 50 Z"), wheels: [46, 164], low: true },
+  hyper: { body: L("M4 72 L8 66 Q16 58 42 56 L90 38 Q104 32 118 32 L130 32 Q146 36 164 50 L194 58 Q200 60 200 68 L200 72 Z"), glass: L("M96 39 Q106 35 118 35 L130 35 Q142 38 152 48 L92 50 Z"), wheels: [46, 166], low: true },
 };
 
 export function CarArt({ model, color = '#e63946', width = 200 }: { model: string; color?: string; width?: number }) {

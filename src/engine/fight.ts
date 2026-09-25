@@ -1,3 +1,4 @@
+import { L, LOC } from '../i18n';
 import { SUBMISSIONS } from './data';
 import { bestLevel, bestSpecial, pickTech, TECHNIQUES, techById, type TechDef } from './techniques';
 import { CRITICAL_INTRO, evenLine, groundLine, strikeLine, TACTICS, tdLine } from './narration';
@@ -62,17 +63,17 @@ export interface PlanDef {
 }
 
 export const PLANS: Record<PlanKey, PlanDef> = {
-  ayakta: { ad: 'Ayakta kal, vuruşla boz', kisa: 'Striking', aciklama: 'Ayakta kal, kombinasyonlarla puan ve hasar topla.', avantaj: 'Baskı ve mesafe güçlenir', risk: 'Güreşçi rakip seni indirirse plan çöker', ikon: 'boxing-glove', grup: 'ayakta', hedef: ['vurus', 'cene', 'hiz'] },
-  kontra: { ad: 'Sabırlı ol, kontra dövüş', kisa: 'Kontra', aciklama: 'Onun gelmesini bekle, açığını yakala.', avantaj: 'Kontra taktiği çok güçlenir', risk: 'Rakip beklerse puan kaybedersin', ikon: 'shield-sword', grup: 'ayakta', hedef: ['iq', 'hiz'] },
-  bacak: { ad: 'Bacak tekmeleriyle kes', kisa: 'Low kick', aciklama: 'Ön bacağını sök, hareketini raunt raunt öldür.', avantaj: 'Rakibin hızı her raunt düşer', risk: 'Etkisi geç gelir, ilk raunt zayıf', ikon: 'shoe-sneaker', grup: 'ayakta', hedef: ['hiz'] },
-  govde: { ad: 'Gövdeye çalış, sonra kafa', kisa: 'Gövde', aciklama: 'Karaciğere ve kaburgaya yüklen; eller düşünce kafaya çık.', avantaj: 'Rakip daha çok yorulur, geç rauntlarda sarsma şansı artar', risk: 'Erken bitiriş beklenmez', ikon: 'target', grup: 'ayakta', hedef: ['kondisyon', 'cene'] },
-  blitz: { ad: 'İlk raunt blitz', kisa: 'Blitz', aciklama: 'Zil çalar çalmaz üstüne yürü, ilk rauntta bitir.', avantaj: '1. rauntta baskı çok güçlü', risk: 'Bitiremezsen nefesin erken tükenir', ikon: 'flash', grup: 'ayakta', hedef: ['cene'] },
-  gures: { ad: 'Güreşle indir, kontrol et', kisa: 'Güreş', aciklama: 'Takedown, kafes kenarı, üstte kontrol.', avantaj: 'Takedown ve clinch güçlenir', risk: 'İyi sprawl yapan rakipte yorulursun', ikon: 'arm-flex', grup: 'yer', hedef: ['gures'] },
-  gnp: { ad: 'İndir ve ez (ground & pound)', kisa: 'GnP', aciklama: 'Yere indir, üstten yumruk ve dirsek yağdır.', avantaj: 'Takedown güçlenir, yerde vuruş hasarı artar', risk: 'Alttan submission riski', ikon: 'hammer', grup: 'yer', hedef: ['yer', 'cene'] },
-  yer: { ad: 'Yere götür, submission ara', kisa: 'Submission', aciklama: 'Pozisyon al, boyna ve kollara git.', avantaj: 'Yerde submission şansı artar', risk: 'Ayakta kalırsa elin boş', ikon: 'lock', grup: 'yer', hedef: ['yer'] },
-  kafes: { ad: 'Kafese sıkıştır', kisa: 'Kafes', aciklama: 'Onu kafese daya, clinch’te yıprat, nefes aldırma.', avantaj: 'Clinch güçlenir, hareketli rakip kapana kısılır', risk: 'Güçlü clinch’çiye karşı riskli', ikon: 'fence', grup: 'strateji', hedef: ['hiz', 'kondisyon'] },
-  tempo: { ad: 'Tempoyu yükselt', kisa: 'Tempo', aciklama: 'Durmadan bas, kondisyonuyla boğ.', avantaj: 'Rakip çok daha hızlı yorulur', risk: 'Senin de kondisyonun iyi olmalı', ikon: 'lungs', grup: 'strateji', hedef: ['kondisyon'] },
-  puan: { ad: 'Puanla kazan, riske girme', kisa: 'Puan', aciklama: 'Temiz vuruş, iyi savunma, hakemlere oyna.', avantaj: 'Daha az hasar alırsın, mesafe ve kontra güçlenir', risk: 'Bitiriş şansı düşer', ikon: 'clipboard-check', grup: 'strateji', hedef: ['iq', 'vurus'] },
+  ayakta: { ad: L("Ayakta kal, vuruşla boz"), kisa: L("Striking"), aciklama: L("Ayakta kal, kombinasyonlarla puan ve hasar topla."), avantaj: L("Baskı ve mesafe güçlenir"), risk: L("Güreşçi rakip seni indirirse plan çöker"), ikon: 'boxing-glove', grup: 'ayakta', hedef: ['vurus', 'cene', 'hiz'] },
+  kontra: { ad: L("Sabırlı ol, kontra dövüş"), kisa: L("Kontra"), aciklama: L("Onun gelmesini bekle, açığını yakala."), avantaj: L("Kontra taktiği çok güçlenir"), risk: L("Rakip beklerse puan kaybedersin"), ikon: 'shield-sword', grup: 'ayakta', hedef: ['iq', 'hiz'] },
+  bacak: { ad: L("Bacak tekmeleriyle kes"), kisa: L("Low kick"), aciklama: L("Ön bacağını sök, hareketini raunt raunt öldür."), avantaj: L("Rakibin hızı her raunt düşer"), risk: L("Etkisi geç gelir, ilk raunt zayıf"), ikon: 'shoe-sneaker', grup: 'ayakta', hedef: ['hiz'] },
+  govde: { ad: L("Gövdeye çalış, sonra kafa"), kisa: L("Gövde"), aciklama: L("Karaciğere ve kaburgaya yüklen; eller düşünce kafaya çık."), avantaj: L("Rakip daha çok yorulur, geç rauntlarda sarsma şansı artar"), risk: L("Erken bitiriş beklenmez"), ikon: 'target', grup: 'ayakta', hedef: ['kondisyon', 'cene'] },
+  blitz: { ad: L("İlk raunt blitz"), kisa: L("Blitz"), aciklama: L("Zil çalar çalmaz üstüne yürü, ilk rauntta bitir."), avantaj: L("1. rauntta baskı çok güçlü"), risk: L("Bitiremezsen nefesin erken tükenir"), ikon: 'flash', grup: 'ayakta', hedef: ['cene'] },
+  gures: { ad: L("Güreşle indir, kontrol et"), kisa: L("Güreş"), aciklama: L("Takedown, kafes kenarı, üstte kontrol."), avantaj: L("Takedown ve clinch güçlenir"), risk: L("İyi sprawl yapan rakipte yorulursun"), ikon: 'arm-flex', grup: 'yer', hedef: ['gures'] },
+  gnp: { ad: L("İndir ve ez (ground & pound)"), kisa: 'GnP', aciklama: L("Yere indir, üstten yumruk ve dirsek yağdır."), avantaj: L("Takedown güçlenir, yerde vuruş hasarı artar"), risk: L("Alttan submission riski"), ikon: 'hammer', grup: 'yer', hedef: ['yer', 'cene'] },
+  yer: { ad: L("Yere götür, submission ara"), kisa: L("Submission"), aciklama: L("Pozisyon al, boyna ve kollara git."), avantaj: L("Yerde submission şansı artar"), risk: L("Ayakta kalırsa elin boş"), ikon: 'lock', grup: 'yer', hedef: ['yer'] },
+  kafes: { ad: L("Kafese sıkıştır"), kisa: L("Kafes"), aciklama: L("Onu kafese daya, clinch’te yıprat, nefes aldırma."), avantaj: L("Clinch güçlenir, hareketli rakip kapana kısılır"), risk: L("Güçlü clinch’çiye karşı riskli"), ikon: 'fence', grup: 'strateji', hedef: ['hiz', 'kondisyon'] },
+  tempo: { ad: L("Tempoyu yükselt"), kisa: L("Tempo"), aciklama: L("Durmadan bas, kondisyonuyla boğ."), avantaj: L("Rakip çok daha hızlı yorulur"), risk: L("Senin de kondisyonun iyi olmalı"), ikon: 'lungs', grup: 'strateji', hedef: ['kondisyon'] },
+  puan: { ad: L("Puanla kazan, riske girme"), kisa: L("Puan"), aciklama: L("Temiz vuruş, iyi savunma, hakemlere oyna."), avantaj: L("Daha az hasar alırsın, mesafe ve kontra güçlenir"), risk: L("Bitiriş şansı düşer"), ikon: 'clipboard-check', grup: 'strateji', hedef: ['iq', 'vurus'] },
 };
 
 function planBonus(mods: FightMods, t: Tactic, raunt = 1): number {
@@ -194,7 +195,7 @@ function addDmg(fs: FightState, victim: Side, d0: number) {
   else fs.oKondisyon = clamp(fs.oKondisyon - d * 0.4, 5, 100);
   if (victim === 'p' && !fs.kesik && fs.pHasar > 35 && chance(0.06 * (1 - (fs.mods.cutman ?? 0) * 0.2))) {
     fs.kesik = true;
-    fs.log.push('🩸 Kaşının üstünde kesik açıldı! Kan gözüne akıyor.');
+    fs.log.push(L("🩸 Kaşının üstünde kesik açıldı! Kan gözüne akıyor."));
   }
 }
 
@@ -223,7 +224,7 @@ function sure(beat: number) {
 }
 
 /** Metinde adı geçen submission tekniğini bulur. */
-const subFromText = (t: string) => TECHNIQUES.find((x) => x.tur === 'sub' && t.toLocaleLowerCase('tr-TR').includes(x.ad.toLocaleLowerCase('tr-TR')));
+const subFromText = (t: string) => TECHNIQUES.find((x) => x.tur === 'sub' && t.toLocaleLowerCase(LOC).includes(x.ad.toLocaleLowerCase(LOC)));
 const techLv = (fs: FightState, id?: string) => (id ? fs.mods.teknik?.[id] ?? 0 : 0);
 
 function finish(fs: FightState, kazanan: Side, yontem: Method, aciklama: string, beat: number, sakatlik = false) {
@@ -239,7 +240,7 @@ function finish(fs: FightState, kazanan: Side, yontem: Method, aciklama: string,
       (yontem === 'SUB' ? subFromText(aciklama) ?? pickTech(fs.mods.teknik, 'sub') : pickTech(fs.mods.teknik, 'vurus'));
     if (t) {
       fs.sonuc.teknik = t.id;
-      fs.log.push(`🎯 Bitiren hareket: ${t.ad}`);
+      fs.log.push(L("🎯 Bitiren hareket: {0}", [t.ad]));
     }
   }
 }
@@ -278,8 +279,8 @@ function rockCheck(fs: FightState, victim: Side, dmg: number, beat: number): boo
       att,
       'KO',
       att === 'p'
-        ? `💥💥 ${fs.pAd} temiz bir yumrukla ${fs.oAd} dövüşçüsünü uyuttu! Hakem hemen araya giriyor. NAKAVT!`
-        : `💥💥 Işıklar söndü… ${fs.oAd} seni temiz yakaladı. Gözlerini açtığında doktor başındaydı.`,
+        ? L("💥💥 {0} temiz bir yumrukla {1} dövüşçüsünü uyuttu! Hakem hemen araya giriyor. NAKAVT!", [fs.pAd, fs.oAd])
+        : L("💥💥 Işıklar söndü… {0} seni temiz yakaladı. Gözlerini açtığında doktor başındaydı.", [fs.oAd]),
       beat,
     );
     return true;
@@ -311,7 +312,7 @@ function groundPhase(fs: FightState, top: Side, beat: number): boolean {
   }
   // Alttaki usta bir BJJ'ci guard'dan submission arar.
   if (B.grappling > T.grappling + 8 && chance(0.15 * SC)) {
-    fs.log.push(`${names(fs)[other(top)]} alttan bacaklarını kilitledi, tehlikeli bir guard!`);
+    fs.log.push(L("{0} alttan bacaklarını kilitledi, tehlikeli bir guard!", [names(fs)[other(top)]]));
     setCritical(fs, top === 'p' ? 'subTehlike' : 'subFirsat');
     return true;
   }
@@ -352,7 +353,7 @@ function clinchBeat(fs: FightState, beat: number): boolean {
   if (fs.taktik === 'clinch') successRate(fs, 'clinch', w === 'p' ? 1 : -1);
   const W = w === 'p' ? P : O;
   if (chance(0.2) && W.wrestling > 35) {
-    fs.log.push(`${names(fs)[w]} clinch’ten ayak çelmesiyle rakibini yere indirdi!`);
+    fs.log.push(L("{0} clinch’ten ayak çelmesiyle rakibini yere indirdi!", [names(fs)[w]]));
     addPts(fs, w, 1.5);
     return groundPhase(fs, w, beat);
   }
@@ -478,7 +479,7 @@ function runBeats(fs: FightState) {
       const yeni = chance(0.25 + o.iq / 200) ? counterOf(fs.taktik!) : oppTactic(fs);
       if (yeni !== fs.rakipTaktik) {
         fs.rakipTaktik = yeni;
-        fs.log.push(`🔄 ${fs.oAd} oyununu değiştirdi: ${TACTICS[yeni].ad.toLocaleLowerCase('tr-TR')}.`);
+        fs.log.push(L("🔄 {0} oyununu değiştirdi: {1}.", [fs.oAd, TACTICS[yeni].ad.toLocaleLowerCase(LOC)]));
       }
     }
     if (i < BEATS - 1 && maybeDecision(fs)) return;
@@ -506,7 +507,7 @@ const setTac = (fs: FightState, t: Tactic) => {
 const boost = (fs: FightState, v: number, kalan: number) => {
   fs.anlik = { v, kalan };
 };
-const TRASHY = ['Trash talk ustası', 'Kibirli', 'Öfkeli', 'Şovmen'];
+const TRASHY = [L("Trash talk ustası"), L("Kibirli"), L("Öfkeli"), L("Şovmen")];
 
 const pressing = (fs: FightState) => fs.rakipTaktik === 'baski' || fs.rakipTaktik === 'takedown';
 const outWrestle = (fs: FightState) => sideDom(fs, 'p').wrestling + noise(6) > sideDom(fs, 'o').wrestling;
@@ -530,17 +531,17 @@ function strikeMove(fs: FightState, t: TechDef): string {
   if (!chance(p)) {
     addDmg(fs, 'p', 4);
     addPts(fs, 'o', 1.5);
-    return pick([`${t.ad} savuşturuldu, kontrayı sen yedin.`, `${fs.oAd} ${t.ad.toLocaleLowerCase('tr-TR')} hareketini gördü, geri çekildi ve cevap verdi.`]);
+    return pick([L("{0} savuşturuldu, kontrayı sen yedin.", [t.ad]), L("{0} {1} hareketini gördü, geri çekildi ve cevap verdi.", [fs.oAd, t.ad.toLocaleLowerCase(LOC)])]);
   }
   addDmg(fs, 'o', 8 + lv * 2.5);
   addPts(fs, 'p', 2);
   if (chance(0.07 + lv * 0.03 + fs.oHasar / 350)) {
     fs.pTeknik = t.id;
-    finish(fs, 'p', t.id === 'karaciger' ? 'TKO' : 'KO', `💥 ${t.ad.toUpperCase()}! ${fs.oAd} yıkıldı, hakem hemen araya girdi!`, fs.vurusSira);
-    return `${t.ad} tam yerine oturdu!`;
+    finish(fs, 'p', t.id === 'karaciger' ? 'TKO' : 'KO', L("💥 {0}! {1} yıkıldı, hakem hemen araya girdi!", [t.ad.toUpperCase(), fs.oAd]), fs.vurusSira);
+    return L("{0} tam yerine oturdu!", [t.ad]);
   }
   if (fs.oHasar > 45 && chance(0.4)) setCritical(fs, 'rakipSersem');
-  return pick([`🎯 ${t.ad} temiz isabet! ${fs.oAd} sarsıldı.`, `🎯 ${t.ad}! Salon ayağa kalktı, ${fs.oAd} geri adım attı.`]);
+  return pick([L("🎯 {0} temiz isabet! {1} sarsıldı.", [t.ad, fs.oAd]), L("🎯 {0}! Salon ayağa kalktı, {1} geri adım attı.", [t.ad, fs.oAd])]);
 }
 
 /** Yerde üstte: seçilen submission denenir. */
@@ -552,16 +553,16 @@ function subMove(fs: FightState, t: TechDef): string {
   drain(fs, 'p', 'clinch', 2);
   if (chance(p)) {
     fs.pTeknik = t.id;
-    finish(fs, 'p', 'SUB', `🔒 ${fs.pAd} ${t.ad} kilidini kurdu ve sıktı… ${fs.oAd} TAP ATTI!`, fs.vurusSira);
-    return `${t.ad} tam oturdu!`;
+    finish(fs, 'p', 'SUB', L("🔒 {0} {1} kilidini kurdu ve sıktı… {2} TAP ATTI!", [fs.pAd, t.ad, fs.oAd]), fs.vurusSira);
+    return L("{0} tam oturdu!", [t.ad]);
   }
   addPts(fs, 'p', 1);
   if (chance(0.35)) {
     fs.yerde = false;
     addPts(fs, 'o', 1);
-    return `${fs.oAd} ${t.ad.toLocaleLowerCase('tr-TR')} kilidinden sıyrılıp ayağa kalktı.`;
+    return L("{0} {1} kilidinden sıyrılıp ayağa kalktı.", [fs.oAd, t.ad.toLocaleLowerCase(LOC)]);
   }
-  return `${t.ad} denemesi savunuldu ama üstteki pozisyonu korudun.`;
+  return L("{0} denemesi savunuldu ama üstteki pozisyonu korudun.", [t.ad]);
 }
 
 /** Özel hareket denemesi: seviye ve hız farkı isabeti belirler. Iskalarsan ağır bedel. */
@@ -575,29 +576,29 @@ function specialMove(fs: FightState, t: TechDef): string {
     addPts(fs, 'o', 2);
     tired(fs, -6);
     boost(fs, -0.04, 2);
-    return pick([`${t.ad} boşa gitti! Dengeni kaybettin, ${fs.oAd} üstüne çullandı.`, `${fs.oAd} ${t.ad.toLocaleLowerCase('tr-TR')} hareketini okudu, kontra yedin!`]);
+    return pick([L("{0} boşa gitti! Dengeni kaybettin, {1} üstüne çullandı.", [t.ad, fs.oAd]), L("{0} {1} hareketini okudu, kontra yedin!", [fs.oAd, t.ad.toLocaleLowerCase(LOC)])]);
   }
   addPts(fs, 'p', 3);
   if (t.id === 'imanari') {
     setCritical(fs, 'subFirsat');
-    fs.subAdi = 'Heel hook';
-    return `🌀 ${t.ad}! Yuvarlanıp bacağı yakaladın, heel hook kuruluyor!`;
+    fs.subAdi = L("Heel hook");
+    return L("🌀 {0}! Yuvarlanıp bacağı yakaladın, heel hook kuruluyor!", [t.ad]);
   }
   if (t.id === 'suplex') {
     addDmg(fs, 'o', 14 + lv * 2);
     fs.yerde = true;
     boost(fs, 0.08, 2);
-    return `💥 ${t.ad}! ${fs.oAd} kafesin zeminine çakıldı, salon ayağa kalktı!`;
+    return L("💥 {0}! {1} kafesin zeminine çakıldı, salon ayağa kalktı!", [t.ad, fs.oAd]);
   }
   addDmg(fs, 'o', 12 + lv * 3);
   if (chance(0.15 + lv * 0.04 + fs.oHasar / 300)) {
     fs.pTeknik = t.id;
-    finish(fs, 'p', 'KO', `⚡⚡ ${t.ad.toUpperCase()}! ${fs.oAd} bilinçsiz yere yığıldı! Bu gece haftanın, belki yılın nakavtı!`, fs.vurusSira);
-    return `${t.ad} tam isabet!`;
+    finish(fs, 'p', 'KO', L("⚡⚡ {0}! {1} bilinçsiz yere yığıldı! Bu gece haftanın, belki yılın nakavtı!", [t.ad.toUpperCase(), fs.oAd]), fs.vurusSira);
+    return L("{0} tam isabet!", [t.ad]);
   }
   boost(fs, 0.08, 2);
   if (fs.oHasar > 40) setCritical(fs, 'rakipSersem');
-  return `⚡ ${t.ad} tam isabet! ${fs.oAd} sarsıldı, bacakları titriyor!`;
+  return L("⚡ {0} tam isabet! {1} sarsıldı, bacakları titriyor!", [t.ad, fs.oAd]);
 }
 
 const DECISIONS: DecDef[] = [
@@ -606,13 +607,13 @@ const DECISIONS: DecDef[] = [
     agirlik: (fs) => (knownOf(fs, 'ozel').length && !fs.ozelKullanildi ? 1.4 + techLv(fs, bestSpecial(fs.mods.teknik)!.id) * 0.3 : 0),
     metin: (fs) =>
       pick([
-        `⚡ ${fs.oAd} başını düşürerek dalıyor… Özel bir hareket için tam zamanı!`,
-        `⚡ Mesafe tam, ${fs.oAd} dikkatini kaybetti. Gösteri zamanı!`,
-        `⚡ ${fs.oAd} ağırlığını öne verdi. Kusursuz bir an!`,
+        L("⚡ {0} başını düşürerek dalıyor… Özel bir hareket için tam zamanı!", [fs.oAd]),
+        L("⚡ Mesafe tam, {0} dikkatini kaybetti. Gösteri zamanı!", [fs.oAd]),
+        L("⚡ {0} ağırlığını öne verdi. Kusursuz bir an!", [fs.oAd]),
       ]),
     secenekler: (fs) => [
-      ...knownOf(fs, 'ozel').map((t) => ({ ad: `${t.ad}!`, aciklama: `Özel hareket · seviye ${techLv(fs, t.id)}. Yüksek risk, yüksek ödül.`, apply: (x: FightState) => specialMove(x, t) })),
-      { ad: 'Riske girme', aciklama: 'Temel tekniklere sadık kal.', apply: () => 'Sabırlı davranıyorsun, fırsatı geçtin.' },
+      ...knownOf(fs, 'ozel').map((t) => ({ ad: `${t.ad}!`, aciklama: L("Özel hareket · seviye {0}. Yüksek risk, yüksek ödül.", [techLv(fs, t.id)]), apply: (x: FightState) => specialMove(x, t) })),
+      { ad: L("Riske girme"), aciklama: L("Temel tekniklere sadık kal."), apply: () => L("Sabırlı davranıyorsun, fırsatı geçtin.") },
     ],
   },
   {
@@ -620,13 +621,13 @@ const DECISIONS: DecDef[] = [
     agirlik: (fs) => (!fs.yerde && knownOf(fs, 'vurus').length ? 0.8 : 0),
     metin: (fs) =>
       pick([
-        `🎯 ${fs.oAd} gardını düşürdü, çenesi açıkta!`,
-        `🎯 ${fs.oAd} yorgun bir jab attı ve geri çekilmeyi unuttu.`,
-        `🎯 ${fs.oAd} kafesin kenarında sıkıştı, açık bir hedef var.`,
+        L("🎯 {0} gardını düşürdü, çenesi açıkta!", [fs.oAd]),
+        L("🎯 {0} yorgun bir jab attı ve geri çekilmeyi unuttu.", [fs.oAd]),
+        L("🎯 {0} kafesin kenarında sıkıştı, açık bir hedef var.", [fs.oAd]),
       ]),
     secenekler: (fs) => [
-      ...knownOf(fs, 'vurus').map((t) => ({ ad: t.ad, aciklama: `Seviye ${techLv(fs, t.id)} · ${t.aciklama}`, apply: (x: FightState) => strikeMove(x, t) })),
-      { ad: 'Jab ile puan topla', aciklama: 'Güvenli, küçük üstünlük.', apply: (x: FightState) => (addPts(x, 'p', 1), 'Jab’lerle puan topluyorsun.') },
+      ...knownOf(fs, 'vurus').map((t) => ({ ad: t.ad, aciklama: L("Seviye {0} · {1}", [techLv(fs, t.id), t.aciklama]), apply: (x: FightState) => strikeMove(x, t) })),
+      { ad: L("Jab ile puan topla"), aciklama: L("Güvenli, küçük üstünlük."), apply: (x: FightState) => (addPts(x, 'p', 1), L("Jab’lerle puan topluyorsun.")) },
     ],
   },
   {
@@ -634,99 +635,99 @@ const DECISIONS: DecDef[] = [
     agirlik: (fs) => (fs.yerde && knownOf(fs, 'sub').length ? 1.0 : 0),
     metin: (fs) =>
       pick([
-        `🔒 Üstteyken ${fs.oAd} kolunu açıkta bıraktı. Hangi kilide gideceksin?`,
-        `🔒 ${fs.oAd} sırtını dönmek üzere, bir kilit fırsatı var!`,
-        `🔒 Yerde kontrol sende. ${fs.oAd} panikte, bitirme şansı!`,
+        L("🔒 Üstteyken {0} kolunu açıkta bıraktı. Hangi kilide gideceksin?", [fs.oAd]),
+        L("🔒 {0} sırtını dönmek üzere, bir kilit fırsatı var!", [fs.oAd]),
+        L("🔒 Yerde kontrol sende. {0} panikte, bitirme şansı!", [fs.oAd]),
       ]),
     secenekler: (fs) => [
-      ...knownOf(fs, 'sub').map((t) => ({ ad: t.ad, aciklama: `Seviye ${techLv(fs, t.id)} · ${t.aciklama}`, apply: (x: FightState) => subMove(x, t) })),
-      { ad: 'Ground & pound', aciklama: 'Kilide gitme, üstten vur.', apply: (x: FightState) => (addDmg(x, 'o', 6), addPts(x, 'p', 1.5), 'Üstten sert vuruşlar indiriyorsun.') },
+      ...knownOf(fs, 'sub').map((t) => ({ ad: t.ad, aciklama: L("Seviye {0} · {1}", [techLv(fs, t.id), t.aciklama]), apply: (x: FightState) => subMove(x, t) })),
+      { ad: L("Ground & pound"), aciklama: L("Kilide gitme, üstten vur."), apply: (x: FightState) => (addDmg(x, 'o', 6), addPts(x, 'p', 1.5), L("Üstten sert vuruşlar indiriyorsun.")) },
     ],
   },
   {
     tip: 'kontra_firsat',
     agirlik: (fs) => (pressing(fs) ? 3 : 0.8),
-    metin: (fs) => pick([`👀 ${fs.oAd} her girişinde sağ elini düşürüyor gibi…`, `👀 ${fs.oAd} fazla hevesli görünüyor, açık bırakıyor olabilir.`]),
+    metin: (fs) => pick([L("👀 {0} her girişinde sağ elini düşürüyor gibi…", [fs.oAd]), L("👀 {0} fazla hevesli görünüyor, açık bırakıyor olabilir.", [fs.oAd])]),
     secenekler: () => [
-      { ad: 'Kontraya geç', aciklama: 'O gelirken yakala. Gelmiyorsa boşa beklersin.', apply: (fs) => (setTac(fs, 'kontra'), pressing(fs) ? (boost(fs, 0.08, 2), 'Doğru okudun! Her girişinde kontrayı hazırladın.') : (boost(fs, -0.05, 2), 'Beklediğin atak gelmiyor, puan kaybediyorsun.')) },
-      { ad: 'Baskıyı sürdür', aciklama: 'Planını bozma.', apply: () => 'Planına sadık kalıyorsun.' },
-      { ad: 'Takedown ile şaşırt', aciklama: 'Onun girişine bacaktan dal.', apply: (fs) => (setTac(fs, 'takedown'), fs.rakipTaktik === 'baski' ? (boost(fs, 0.05, 1), 'Tam girişinde seviye değiştirdin!') : (boost(fs, -0.03, 1), 'Dalışın okundu.')) },
+      { ad: L("Kontraya geç"), aciklama: L("O gelirken yakala. Gelmiyorsa boşa beklersin."), apply: (fs) => (setTac(fs, 'kontra'), pressing(fs) ? (boost(fs, 0.08, 2), L("Doğru okudun! Her girişinde kontrayı hazırladın.")) : (boost(fs, -0.05, 2), L("Beklediğin atak gelmiyor, puan kaybediyorsun."))) },
+      { ad: L("Baskıyı sürdür"), aciklama: L("Planını bozma."), apply: () => L("Planına sadık kalıyorsun.") },
+      { ad: L("Takedown ile şaşırt"), aciklama: L("Onun girişine bacaktan dal."), apply: (fs) => (setTac(fs, 'takedown'), fs.rakipTaktik === 'baski' ? (boost(fs, 0.05, 1), L("Tam girişinde seviye değiştirdin!")) : (boost(fs, -0.03, 1), L("Dalışın okundu."))) },
     ],
   },
   {
     tip: 'nefes',
     agirlik: (fs) => (fs.pKondisyon < 50 ? 4 : 0),
-    metin: () => pick(['🫁 Ciğerlerin yanıyor, kolların ağırlaştı.', '🫁 Nefesin kesiliyor. Tribünler bile fark etti.']),
+    metin: () => pick([L("🫁 Ciğerlerin yanıyor, kolların ağırlaştı."), L("🫁 Nefesin kesiliyor. Tribünler bile fark etti.")]),
     secenekler: () => [
-      { ad: 'Tempoyu düşür', aciklama: 'Nefeslenirsin ama kontrolü bırakırsın.', apply: (fs) => (setTac(fs, 'mesafe'), tired(fs, 10), boost(fs, -0.02, 2), 'Ayaklarını kullanıp nefesini topluyorsun.') },
-      { ad: 'Dişini sık!', aciklama: 'Kısa süreli güç, bedeli ağır.', apply: (fs) => (boost(fs, 0.05, 2), tired(fs, -8), 'İradenle devam ediyorsun!') },
-      { ad: 'Clinch’te dinlen', aciklama: 'Rakibe yaslan, saniye kazan.', apply: (fs) => (setTac(fs, 'clinch'), tired(fs, 5), 'Rakibe yaslanıp nefes alıyorsun.') },
+      { ad: L("Tempoyu düşür"), aciklama: L("Nefeslenirsin ama kontrolü bırakırsın."), apply: (fs) => (setTac(fs, 'mesafe'), tired(fs, 10), boost(fs, -0.02, 2), L("Ayaklarını kullanıp nefesini topluyorsun.")) },
+      { ad: L("Dişini sık!"), aciklama: L("Kısa süreli güç, bedeli ağır."), apply: (fs) => (boost(fs, 0.05, 2), tired(fs, -8), L("İradenle devam ediyorsun!")) },
+      { ad: L("Clinch’te dinlen"), aciklama: L("Rakibe yaslan, saniye kazan."), apply: (fs) => (setTac(fs, 'clinch'), tired(fs, 5), L("Rakibe yaslanıp nefes alıyorsun.")) },
     ],
   },
   {
     tip: 'rakip_yorgun',
     agirlik: (fs) => (fs.oKondisyon < 50 ? 4 : 0),
-    metin: (fs) => pick([`😮‍💨 ${fs.oAd} ağzı açık nefes alıyor, elleri düştü!`, `😮‍💨 ${fs.oAd} yavaşladı. Tank boşalıyor!`]),
+    metin: (fs) => pick([L("😮‍💨 {0} ağzı açık nefes alıyor, elleri düştü!", [fs.oAd]), L("😮‍💨 {0} yavaşladı. Tank boşalıyor!", [fs.oAd])]),
     secenekler: () => [
-      { ad: 'Bas! Şimdi!', aciklama: 'Yorgun rakibi boğ. Sen de yorulursun.', apply: (fs) => (setTac(fs, 'baski'), boost(fs, 0.07, 2), tired(fs, -5), 'Üstüne yürüyorsun!') },
-      { ad: 'Yere indir', aciklama: 'Güreşin iyiyse yorgun bacaklar dayanmaz.', apply: (fs) => (setTac(fs, 'takedown'), outWrestle(fs) ? (boost(fs, 0.07, 2), 'Bacaklarını kilitledin!') : (boost(fs, -0.03, 1), 'Yorgun ama hâlâ güçlü, sprawl ile savundu.')) },
-      { ad: 'Sabırla puan topla', aciklama: 'Risk yok, küçük kazanç.', apply: (fs) => (setTac(fs, 'mesafe'), boost(fs, 0.02, 2), 'Jablarla puan topluyorsun.') },
+      { ad: L("Bas! Şimdi!"), aciklama: L("Yorgun rakibi boğ. Sen de yorulursun."), apply: (fs) => (setTac(fs, 'baski'), boost(fs, 0.07, 2), tired(fs, -5), L("Üstüne yürüyorsun!")) },
+      { ad: L("Yere indir"), aciklama: L("Güreşin iyiyse yorgun bacaklar dayanmaz."), apply: (fs) => (setTac(fs, 'takedown'), outWrestle(fs) ? (boost(fs, 0.07, 2), L("Bacaklarını kilitledin!")) : (boost(fs, -0.03, 1), L("Yorgun ama hâlâ güçlü, sprawl ile savundu."))) },
+      { ad: L("Sabırla puan topla"), aciklama: L("Risk yok, küçük kazanç."), apply: (fs) => (setTac(fs, 'mesafe'), boost(fs, 0.02, 2), L("Jablarla puan topluyorsun.")) },
     ],
   },
   {
     tip: 'kose',
     agirlik: () => 1.5,
-    metin: (fs) => `📣 Köşenden ${fs.koseAdi} bağırıyor: “${TACTICS[counterOf(fs.rakipTaktik!)].ad.toLocaleUpperCase('tr-TR')}!”`,
+    metin: (fs) => L("📣 Köşenden {0} bağırıyor: “{1}!”", [fs.koseAdi, TACTICS[counterOf(fs.rakipTaktik!)].ad.toLocaleUpperCase(LOC)]),
     secenekler: (fs) => [
-      { ad: 'Hocanı dinle', aciklama: `${TACTICS[counterOf(fs.rakipTaktik!)].ad} taktiğine geç.`, apply: (fs2) => (setTac(fs2, counterOf(fs2.rakipTaktik!)), boost(fs2, 0.03, 2), 'Köşenin talimatını uyguluyorsun.') },
-      { ad: 'Kendi planına sadık kal', aciklama: 'Hissine güven.', apply: () => 'Kendi oyununu oynamaya devam ediyorsun.' },
+      { ad: L("Hocanı dinle"), aciklama: L("{0} taktiğine geç.", [TACTICS[counterOf(fs.rakipTaktik!)].ad]), apply: (fs2) => (setTac(fs2, counterOf(fs2.rakipTaktik!)), boost(fs2, 0.03, 2), L("Köşenin talimatını uyguluyorsun.")) },
+      { ad: L("Kendi planına sadık kal"), aciklama: L("Hissine güven."), apply: () => L("Kendi oyununu oynamaya devam ediyorsun.") },
     ],
   },
   {
     tip: 'kafes',
     agirlik: (fs) => (fs.pPuan > fs.oPuan ? 2 : 0.3),
-    metin: (fs) => pick([`🔒 ${fs.oAd} sırtını kafese verdi, kaçacak yeri yok!`, `🔒 ${fs.oAd} kafese sıkıştı!`]),
+    metin: (fs) => pick([L("🔒 {0} sırtını kafese verdi, kaçacak yeri yok!", [fs.oAd]), L("🔒 {0} kafese sıkıştı!", [fs.oAd])]),
     secenekler: () => [
-      { ad: 'Dirsek ve diz yağdır', aciklama: 'Kısa mesafede acımasız ol. Çok yorar.', apply: (fs) => (setTac(fs, 'clinch'), boost(fs, 0.07, 1), tired(fs, -6), 'Clinch’te kısa mesafeden vuruyorsun!') },
-      { ad: 'Takedown’a dal', aciklama: 'Güreşin iyiyse kafese yaslayıp indir.', apply: (fs) => (setTac(fs, 'takedown'), outWrestle(fs) ? (boost(fs, 0.07, 1), 'Kafese yaslayıp bacaklara indin!') : (boost(fs, -0.04, 1), 'Kafeste döndü, sen açıkta kaldın.')) },
-      { ad: 'Ortaya dön', aciklama: 'Kontrolü koru.', apply: (fs) => (setTac(fs, 'mesafe'), boost(fs, 0.01, 2), 'Oktagonun ortasını alıyorsun.') },
+      { ad: L("Dirsek ve diz yağdır"), aciklama: L("Kısa mesafede acımasız ol. Çok yorar."), apply: (fs) => (setTac(fs, 'clinch'), boost(fs, 0.07, 1), tired(fs, -6), L("Clinch’te kısa mesafeden vuruyorsun!")) },
+      { ad: L("Takedown’a dal"), aciklama: L("Güreşin iyiyse kafese yaslayıp indir."), apply: (fs) => (setTac(fs, 'takedown'), outWrestle(fs) ? (boost(fs, 0.07, 1), L("Kafese yaslayıp bacaklara indin!")) : (boost(fs, -0.04, 1), L("Kafeste döndü, sen açıkta kaldın."))) },
+      { ad: L("Ortaya dön"), aciklama: L("Kontrolü koru."), apply: (fs) => (setTac(fs, 'mesafe'), boost(fs, 0.01, 2), L("Oktagonun ortasını alıyorsun.")) },
     ],
   },
   {
     tip: 'kesik',
     agirlik: (fs) => (fs.kesik ? 2.5 : 0),
-    metin: () => '🩸 Kan gözüne akıyor, görüşün bulanıklaşıyor!',
+    metin: () => L("🩸 Kan gözüne akıyor, görüşün bulanıklaşıyor!"),
     secenekler: () => [
-      { ad: 'Savunmaya çekil', aciklama: 'Kesik büyümesin. Puan kaybedersin.', apply: (fs) => (setTac(fs, 'mesafe'), boost(fs, -0.02, 2), 'Gardını yükseltip mesafe açıyorsun.') },
-      { ad: 'Kan seni coşturdu: saldır!', aciklama: 'Doktor gelmeden bitir. Daha çok darbe alırsın.', apply: (fs) => (setTac(fs, 'baski'), boost(fs, 0.05, 1), (fs.pHasar = clamp(fs.pHasar + 4, 0, 100)), 'Kanlar içinde ileri yürüyorsun!') },
-      { ad: 'Clinch’e gir', aciklama: 'Zaman kazan.', apply: (fs) => (setTac(fs, 'clinch'), 'Rakibe sarılıp zamanı öldürüyorsun.') },
+      { ad: L("Savunmaya çekil"), aciklama: L("Kesik büyümesin. Puan kaybedersin."), apply: (fs) => (setTac(fs, 'mesafe'), boost(fs, -0.02, 2), L("Gardını yükseltip mesafe açıyorsun.")) },
+      { ad: L("Kan seni coşturdu: saldır!"), aciklama: L("Doktor gelmeden bitir. Daha çok darbe alırsın."), apply: (fs) => (setTac(fs, 'baski'), boost(fs, 0.05, 1), (fs.pHasar = clamp(fs.pHasar + 4, 0, 100)), L("Kanlar içinde ileri yürüyorsun!")) },
+      { ad: L("Clinch’e gir"), aciklama: L("Zaman kazan."), apply: (fs) => (setTac(fs, 'clinch'), L("Rakibe sarılıp zamanı öldürüyorsun.")) },
     ],
   },
   {
     tip: 'acik',
     agirlik: () => 1,
-    metin: (fs) => pick([`🎯 ${fs.oAd} vuruştan önce omzunu düşürüyor. Bir açık gördün… ya da bu bir yem.`, `🎯 ${fs.oAd} sol tekmeden sonra hep aynı yere dönüyor.`]),
+    metin: (fs) => pick([L("🎯 {0} vuruştan önce omzunu düşürüyor. Bir açık gördün… ya da bu bir yem.", [fs.oAd]), L("🎯 {0} sol tekmeden sonra hep aynı yere dönüyor.", [fs.oAd])]),
     secenekler: () => [
-      { ad: 'Zamanla ve vur', aciklama: 'Dövüş zekân yüksekse tuzağı çözersin.', apply: (fs) => (chance(0.45 + (fs.pStats.iq - oStats(fs).iq) / 150) ? (boost(fs, 0.1, 1), 'Tam zamanında! Açığı yakaladın.') : (boost(fs, -0.07, 1), 'Yemdi! Kontraya yakalandın.')) },
-      { ad: 'Riske girme', aciklama: 'Belki de bir yem.', apply: () => 'Temkinli kalıyorsun.' },
+      { ad: L("Zamanla ve vur"), aciklama: L("Dövüş zekân yüksekse tuzağı çözersin."), apply: (fs) => (chance(0.45 + (fs.pStats.iq - oStats(fs).iq) / 150) ? (boost(fs, 0.1, 1), L("Tam zamanında! Açığı yakaladın.")) : (boost(fs, -0.07, 1), L("Yemdi! Kontraya yakalandın."))) },
+      { ad: L("Riske girme"), aciklama: L("Belki de bir yem."), apply: () => L("Temkinli kalıyorsun.") },
     ],
   },
   {
     tip: 'seyirci',
     agirlik: (fs) => (fs.raunt >= 2 ? 0.8 : 0.2),
-    metin: () => '🏟️ Salon ayakta, adını bağırıyor!',
+    metin: () => L("🏟️ Salon ayakta, adını bağırıyor!"),
     secenekler: () => [
-      { ad: 'Şov yap', aciklama: 'Ellerini indir, rakibi davet et. Popülerlik getirir, risklidir.', apply: (fs) => ((fs.sov = (fs.sov ?? 0) + 1), boost(fs, -0.05, 1), 'Ellerini indirip rakibini çağırdın! Salon yıkılıyor!') },
-      { ad: 'Odağını koru', aciklama: 'Gürültüyü duyma.', apply: (fs) => (boost(fs, 0.01, 2), 'Sadece rakibine bakıyorsun.') },
+      { ad: L("Şov yap"), aciklama: L("Ellerini indir, rakibi davet et. Popülerlik getirir, risklidir."), apply: (fs) => ((fs.sov = (fs.sov ?? 0) + 1), boost(fs, -0.05, 1), L("Ellerini indirip rakibini çağırdın! Salon yıkılıyor!")) },
+      { ad: L("Odağını koru"), aciklama: L("Gürültüyü duyma."), apply: (fs) => (boost(fs, 0.01, 2), L("Sadece rakibine bakıyorsun.")) },
     ],
   },
   {
     tip: 'provokasyon',
     agirlik: (fs) => (TRASHY.includes(fs.opp.kisilik) ? 1.6 : 0),
-    metin: (fs) => pick([`😤 ${fs.oAd} kafeste sana laf atıyor, gülüyor!`, `😤 ${fs.oAd} ellerini indirip seni çağırıyor!`]),
+    metin: (fs) => pick([L("😤 {0} kafeste sana laf atıyor, gülüyor!", [fs.oAd]), L("😤 {0} ellerini indirip seni çağırıyor!", [fs.oAd])]),
     secenekler: () => [
-      { ad: 'Soğukkanlı kal', aciklama: 'Onun oyununa gelme.', apply: (fs) => (boost(fs, 0.03, 2), 'Duygularını kontrol ettin, zekânla dövüşüyorsun.') },
-      { ad: 'Kapışmaya gir!', aciklama: 'Göster ona. İki taraf da hasar alır.', apply: (fs) => (setTac(fs, 'baski'), (fs.pHasar = clamp(fs.pHasar + 3, 0, 100)), (fs.oHasar = clamp(fs.oHasar + 4, 0, 100)), 'Ortada kapışma başladı!') },
+      { ad: L("Soğukkanlı kal"), aciklama: L("Onun oyununa gelme."), apply: (fs) => (boost(fs, 0.03, 2), L("Duygularını kontrol ettin, zekânla dövüşüyorsun.")) },
+      { ad: L("Kapışmaya gir!"), aciklama: L("Göster ona. İki taraf da hasar alır."), apply: (fs) => (setTac(fs, 'baski'), (fs.pHasar = clamp(fs.pHasar + 3, 0, 100)), (fs.oHasar = clamp(fs.oHasar + 4, 0, 100)), L("Ortada kapışma başladı!")) },
     ],
   },
 ];
@@ -766,9 +767,9 @@ export function chooseTactic(prev: FightState, t: Tactic): FightState {
   fs.oyuncuTaktikGecmisi = hist;
   fs.taktik = t;
   fs.rakipTaktikGecmisi.push(fs.rakipTaktik);
-  fs.log = [`— ${fs.raunt}. RAUNT — Sen: ${TACTICS[t].ad}`];
+  fs.log = [L("— {0}. RAUNT — Sen: {1}", [fs.raunt, TACTICS[t].ad])];
   fs.anlar = [{ i: 1, pP: 0, oP: 0, pH: fs.pHasar, oH: fs.oHasar, pK: fs.pKondisyon, oK: fs.oKondisyon, dk: 0 }];
-  if (rep > 0) fs.log.push(`🧠 ${fs.oAd} bu hamleyi bekliyordu. Aynı oyunu ${rep + 1}. kez oynamak seni öngörülebilir yapıyor.`);
+  if (rep > 0) fs.log.push(L("🧠 {0} bu hamleyi bekliyordu. Aynı oyunu {1}. kez oynamak seni öngörülebilir yapıyor.", [fs.oAd, rep + 1]));
   runBeats(fs);
   return fs;
 }
@@ -791,44 +792,44 @@ export function resolveCritical(prev: FightState, choice: number): FightState {
         const ko = chance(0.4);
         finish(fs, 'p', ko ? 'KO' : 'TKO',
           ko
-            ? `🔥 ${fs.pAd} üstüne çullanıyor, son yumruk ${fs.oAd} dövüşçüsünü kafesin zeminine gömüyor! NAKAVT!`
-            : `🔥 ${fs.pAd} yağmur gibi yumruk indiriyor, ${fs.oAd} karşılık veremiyor, hakem araya giriyor! TKO!`,
+            ? L("🔥 {0} üstüne çullanıyor, son yumruk {1} dövüşçüsünü kafesin zeminine gömüyor! NAKAVT!", [fs.pAd, fs.oAd])
+            : L("🔥 {0} yağmur gibi yumruk indiriyor, {1} karşılık veremiyor, hakem araya giriyor! TKO!", [fs.pAd, fs.oAd]),
           b);
         return fs;
       }
       if (chance(0.25 + O.power / 400)) {
-        fs.log.push(`😱 ${fs.oAd} umutsuz bir kontra savurdu ve TAM İSABET! Durum tersine döndü!`);
+        fs.log.push(L("😱 {0} umutsuz bir kontra savurdu ve TAM İSABET! Durum tersine döndü!", [fs.oAd]));
         addDmg(fs, 'p', 12);
         if (rockCheck(fs, 'p', 14, b)) return fs;
       } else {
-        fs.log.push(`${fs.oAd} bir şekilde ayakta kaldı, zili bekliyor. Sen de çok yoruldun.`);
+        fs.log.push(L("{0} bir şekilde ayakta kaldı, zili bekliyor. Sen de çok yoruldun.", [fs.oAd]));
         addDmg(fs, 'o', 8);
         addPts(fs, 'p', 2);
       }
     } else if (choice === 1) {
       drain(fs, 'p', 'baski');
       if (chance(fp * 0.45)) {
-        finish(fs, 'p', 'TKO', `🎯 ${fs.pAd} hedef seçerek vuruyor, sağ-sol-sağ… hakem yeter diyor! TKO!`, b);
+        finish(fs, 'p', 'TKO', L("🎯 {0} hedef seçerek vuruyor, sağ-sol-sağ… hakem yeter diyor! TKO!", [fs.pAd]), b);
         return fs;
       }
-      fs.log.push(`${fs.pAd} kontrollü vuruşlarla puan topluyor, rakip toparlanmaya çalışıyor.`);
+      fs.log.push(L("{0} kontrollü vuruşlarla puan topluyor, rakip toparlanmaya çalışıyor.", [fs.pAd]));
       addDmg(fs, 'o', 10);
       addPts(fs, 'p', 2.5);
     } else {
       // Zaten yerdeyse takedown'a gerek yok, doğrudan ground & pound.
       const tdOk = fs.yerde || chance(clamp(0.55 + (P.wrestling - O.wrestling) / 80, 0.3, 0.92));
       if (!tdOk) {
-        fs.log.push(`${fs.pAd} yere indirmek için daldı ama rakip son gücüyle savundu. Fırsat kaçtı.`);
+        fs.log.push(L("{0} yere indirmek için daldı ama rakip son gücüyle savundu. Fırsat kaçtı.", [fs.pAd]));
         addPts(fs, 'p', 1);
       } else if (chance(fp * 0.85)) {
-        finish(fs, 'p', 'TKO', `🔨 ${fs.pAd} yerde mount aldı, ground and pound yağdırıyor, hakem durdurdu! TKO!`, b);
+        finish(fs, 'p', 'TKO', L("🔨 {0} yerde mount aldı, ground and pound yağdırıyor, hakem durdurdu! TKO!", [fs.pAd]), b);
         return fs;
       } else if (chance(clamp(0.25 + (P.grappling - O.grappling) / 90, 0.08, 0.6))) {
         const sub = pickTech(fs.mods.teknik, 'sub').ad;
-        finish(fs, 'p', 'SUB', `🔒 ${fs.pAd} sersem rakibin sırtını aldı ve ${sub} ile tap attırdı!`, b);
+        finish(fs, 'p', 'SUB', L("🔒 {0} sersem rakibin sırtını aldı ve {1} ile tap attırdı!", [fs.pAd, sub]), b);
         return fs;
       } else {
-        fs.log.push(`${fs.pAd} yerde ağır vuruyor ama ${fs.oAd} bir şekilde hayatta kalıyor.`);
+        fs.log.push(L("{0} yerde ağır vuruyor ama {1} bir şekilde hayatta kalıyor.", [fs.pAd, fs.oAd]));
         addDmg(fs, 'o', 9);
         addPts(fs, 'p', 2.5);
       }
@@ -840,16 +841,16 @@ export function resolveCritical(prev: FightState, choice: number): FightState {
     else if (choice === 1) survive = 0.55 + (fs.pStats.hiz - o.hiz) / 150 + fs.pKondisyon / 500;
     else survive = 0.4;
     if (choice === 2 && chance(0.3 + (P.power - O.power) / 250)) {
-      fs.log.push(`🔥 İnanılmaz! Sarsılmışken savurduğun sağ el ${fs.oAd} dövüşçüsünü de sarstı!`);
+      fs.log.push(L("🔥 İnanılmaz! Sarsılmışken savurduğun sağ el {0} dövüşçüsünü de sarstı!", [fs.oAd]));
       addDmg(fs, 'o', 13);
       if (rockCheck(fs, 'o', 16, b)) return fs;
     } else if (chance(clamp(survive, 0.15, 0.9))) {
       fs.log.push(
         choice === 0
-          ? 'Rakibine sarıldın, kafanı yasladın. Saniyeler geçiyor… toparlanıyorsun.'
+          ? L("Rakibine sarıldın, kafanı yasladın. Saniyeler geçiyor… toparlanıyorsun.")
           : choice === 1
-            ? 'Ayakların seni taşıdı. Kafes boyunca dönüp mesafe açtın, kafan netleşiyor.'
-            : 'Karşılık vermeye çalıştın, isabet etmedi ama o da bitiremedi. Hayattasın!',
+            ? L("Ayakların seni taşıdı. Kafes boyunca dönüp mesafe açtın, kafan netleşiyor.")
+            : L("Karşılık vermeye çalıştın, isabet etmedi ama o da bitiremedi. Hayattasın!"),
       );
       addPts(fs, 'o', 1.5);
       drain(fs, 'p', 'clinch');
@@ -857,12 +858,12 @@ export function resolveCritical(prev: FightState, choice: number): FightState {
       const ko = chance(0.45);
       finish(fs, 'o', ko ? 'KO' : 'TKO',
         ko
-          ? `💀 ${fs.oAd} son darbeyi indirdi. Bilinçsiz yere yığıldın. NAKAVT.`
-          : `💀 ${fs.oAd} yumruk yağdırıyor, kendini savunamıyorsun. Hakem durdurdu. TKO.`,
+          ? L("💀 {0} son darbeyi indirdi. Bilinçsiz yere yığıldın. NAKAVT.", [fs.oAd])
+          : L("💀 {0} yumruk yağdırıyor, kendini savunamıyorsun. Hakem durdurdu. TKO.", [fs.oAd]),
         b);
       return fs;
     } else {
-      fs.log.push('Ağır darbeler aldın ama ayaktasın. Zil seni kurtarmak zorunda.');
+      fs.log.push(L("Ağır darbeler aldın ama ayaktasın. Zil seni kurtarmak zorunda."));
       addDmg(fs, 'p', 10);
       addPts(fs, 'o', 2.5);
     }
@@ -871,19 +872,19 @@ export function resolveCritical(prev: FightState, choice: number): FightState {
       const sp = clamp(0.32 + (P.grappling - O.grappling) / 90 + (100 - fs.oKondisyon) / 400 + techLv(fs, subFromText(fs.subAdi)?.id) * 0.03, 0.1, 0.88);
       drain(fs, 'p', 'clinch', 3);
       if (chance(sp)) {
-        finish(fs, 'p', 'SUB', `🔒 ${fs.pAd} ${fs.subAdi} kilidini sonuna kadar sıktı… ${fs.oAd} TAP ATTI!`, b);
+        finish(fs, 'p', 'SUB', L("🔒 {0} {1} kilidini sonuna kadar sıktı… {2} TAP ATTI!", [fs.pAd, fs.subAdi, fs.oAd]), b);
         return fs;
       }
-      fs.log.push(`${fs.oAd} son anda ${fs.subAdi} kilidinden sıyrıldı ve ayağa kalktı!`);
+      fs.log.push(L("{0} son anda {1} kilidinden sıyrıldı ve ayağa kalktı!", [fs.oAd, fs.subAdi]));
       addPts(fs, 'p', 1);
     } else {
-      fs.log.push(`${fs.pAd} riske girmiyor, üstte kalıp dirsek ve yumrukla puan topluyor.`);
+      fs.log.push(L("{0} riske girmiyor, üstte kalıp dirsek ve yumrukla puan topluyor.", [fs.pAd]));
       addPts(fs, 'p', 2);
       addDmg(fs, 'o', 5);
     }
   } else if (kind === 'subTehlike') {
     if (choice === 2) {
-      finish(fs, 'o', 'SUB', `Tap attın. ${fs.oAd} ${fs.subAdi} ile kazandı. Acı ama sağlıklısın.`, b);
+      finish(fs, 'o', 'SUB', L("Tap attın. {0} {1} ile kazandı. Acı ama sağlıklısın.", [fs.oAd, fs.subAdi]), b);
       return fs;
     }
     const ep =
@@ -894,16 +895,16 @@ export function resolveCritical(prev: FightState, choice: number): FightState {
     if (chance(clamp(ep, 0.12, 0.9))) {
       fs.log.push(
         choice === 0
-          ? `Elleri kontrol ettin, açıyı kırdın ve ${fs.subAdi} kilidinden çıktın!`
-          : 'Patlayıcı bir köprüyle sıyrıldın ve üste geçtin! Seyirci çıldırıyor!',
+          ? L("Elleri kontrol ettin, açıyı kırdın ve {0} kilidinden çıktın!", [fs.subAdi])
+          : L("Patlayıcı bir köprüyle sıyrıldın ve üste geçtin! Seyirci çıldırıyor!"),
       );
       if (choice === 1) addPts(fs, 'p', 1.5);
     } else {
       const kirik = chance(0.4);
       finish(fs, 'o', 'SUB',
         kirik
-          ? `🦴 Tap atmayı reddettin… bir çıtırtı. Hakem durdurdu. ${fs.oAd} ${fs.subAdi} ile kazandı.`
-          : `Kilidi açamadın. ${fs.oAd} ${fs.subAdi} ile seni tap attırdı.`,
+          ? L("🦴 Tap atmayı reddettin… bir çıtırtı. Hakem durdurdu. {0} {1} ile kazandı.", [fs.oAd, fs.subAdi])
+          : L("Kilidi açamadın. {0} {1} ile seni tap attırdı.", [fs.oAd, fs.subAdi]),
         b, kirik);
       return fs;
     }
@@ -917,18 +918,18 @@ function endRound(fs: FightState) {
   fs.rauntFarklari.push(Math.round(diff * 10) / 10);
   fs.pPuan = 0;
   fs.oPuan = 0;
-  fs.log.push(`🔔 ${fs.raunt}. raunt bitti.`);
+  fs.log.push(L("🔔 {0}. raunt bitti.", [fs.raunt]));
   if (fs.raunt >= fs.maxRaunt) {
     decision(fs);
     return;
   }
   // Köşe durdurmaları
   if (fs.kesik && fs.pHasar > 70 && chance(0.2 * (1 - (fs.mods.cutman ?? 0) * 0.3))) {
-    finish(fs, 'o', 'TKO', '🩺 Ringside doktoru kesiğe bakıp başını salladı. Maç durduruldu. Doktor kararıyla TKO.', 2);
+    finish(fs, 'o', 'TKO', L("🩺 Ringside doktoru kesiğe bakıp başını salladı. Maç durduruldu. Doktor kararıyla TKO."), 2);
     return;
   }
   if (fs.oHasar > 78 && chance(0.15)) {
-    finish(fs, 'p', 'TKO', `🏳️ ${fs.oAd} köşesi havlu attı! Rakip raunda çıkamıyor. TKO!`, 2);
+    finish(fs, 'p', 'TKO', L("🏳️ {0} köşesi havlu attı! Rakip raunda çıkamıyor. TKO!", [fs.oAd]), 2);
     return;
   }
   // Raunt arası dinlenme: kısmi toparlanma. Yorgunluk birikir, her rauntta tavan düşer.
@@ -985,13 +986,13 @@ function decision(fs: FightState) {
     kazanan = 'berabere';
     yontem = 'DRAW';
   }
-  const yontemAd = { UD: 'oybirliğiyle', SD: 'ayrık kararla', MD: 'çoğunluk kararıyla' } as Record<string, string>;
+  const yontemAd = { UD: L("oybirliğiyle"), SD: L("ayrık kararla"), MD: L("çoğunluk kararıyla") } as Record<string, string>;
   const aciklama =
     kazanan === 'berabere'
-      ? `⚖️ Hakem kartları: ${kartlar}. BERABERE!`
+      ? L("⚖️ Hakem kartları: {0}. BERABERE!", [kartlar])
       : kazanan === 'p'
-        ? `🏁 Hakem kartları: ${kartlar}. ${fs.pAd} ${yontemAd[yontem]} kazandı!`
-        : `🏁 Hakem kartları: ${kartlar}. ${fs.oAd} ${yontemAd[yontem]} kazandı.`;
+        ? L("🏁 Hakem kartları: {0}. {1} {2} kazandı!", [kartlar, fs.pAd, yontemAd[yontem]])
+        : L("🏁 Hakem kartları: {0}. {1} {2} kazandı.", [kartlar, fs.oAd, yontemAd[yontem]]);
   fs.sonuc = { kazanan, yontem, raunt: fs.maxRaunt, sure: '5:00', aciklama, kartlar };
   fs.durum = 'bitti';
   fs.log.push(aciklama);
@@ -1004,12 +1005,12 @@ function cornerAdvice(fs: FightState, diff: number): string {
   const c = fs.koseAdi;
   const open =
     diff > 2
-      ? ['Bu raunt bizim, net! Aynen devam.', 'Harika gidiyorsun, bozma sakın!', 'Onu kırdın, gözlerinden okunuyor!', 'Temiz raunt. Nefesini topla, aynısı.']
+      ? [L("Bu raunt bizim, net! Aynen devam."), L("Harika gidiyorsun, bozma sakın!"), L("Onu kırdın, gözlerinden okunuyor!"), L("Temiz raunt. Nefesini topla, aynısı.")]
       : diff > 0
-        ? ['Raundu aldık gibi ama yakındı. Hakemlere bırakma.', 'Önündeyiz ama fark az, uyuma!', 'İyi ama yeterli değil. Biraz daha bastır.', 'Kartlarda öndeyiz sanırım. Riske girme ama geri de durma.']
+        ? [L("Raundu aldık gibi ama yakındı. Hakemlere bırakma."), L("Önündeyiz ama fark az, uyuma!"), L("İyi ama yeterli değil. Biraz daha bastır."), L("Kartlarda öndeyiz sanırım. Riske girme ama geri de durma.")]
         : diff > -2
-          ? ['Başa baş gidiyor. Bir şeyi değiştirmemiz lazım.', 'Çok yakın bir raunttu, kimin aldığı belli değil.', 'Ortada kaldık. Bu raunt farkı açmalısın.', 'Denk gidiyor, fark yaratacak olan sensin.']
-          : ['Bu raundu kaybettik, dinle beni! Planı değiştiriyoruz.', 'Uyan! Bu gidişle kartlar onun!', 'Kötü raunt. Unut onu, sıfırdan başla.', 'Onun oyununu oynuyoruz. Hemen değiştir!'];
+          ? [L("Başa baş gidiyor. Bir şeyi değiştirmemiz lazım."), L("Çok yakın bir raunttu, kimin aldığı belli değil."), L("Ortada kaldık. Bu raunt farkı açmalısın."), L("Denk gidiyor, fark yaratacak olan sensin.")]
+          : [L("Bu raundu kaybettik, dinle beni! Planı değiştiriyoruz."), L("Uyan! Bu gidişle kartlar onun!"), L("Kötü raunt. Unut onu, sıfırdan başla."), L("Onun oyununu oynuyoruz. Hemen değiştir!")];
   lines.push(`${c}: "${pick(open)}"`);
 
   const counts = new Map<Tactic, number>();
@@ -1018,28 +1019,28 @@ function cornerAdvice(fs: FightState, diff: number): string {
   if (fav) {
     const counter = (Object.keys(ADV) as Tactic[]).reduce((a, b) => (ADV[b][fav] > ADV[a][fav] ? b : a));
     const favText: Record<Tactic, string> = {
-      baski: 'sürekli üstüne yürüyor',
-      kontra: 'geri durup kontra bekliyor',
-      takedown: 'bacaklarına dalıyor',
-      clinch: 'clinch’e girmeye çalışıyor',
-      mesafe: 'dışarıda dans ediyor',
+      baski: L("sürekli üstüne yürüyor"),
+      kontra: L("geri durup kontra bekliyor"),
+      takedown: L("bacaklarına dalıyor"),
+      clinch: L("clinch’e girmeye çalışıyor"),
+      mesafe: L("dışarıda dans ediyor"),
     };
-    lines.push(pick([`"Adam ${favText[fav]}. ${TACTICS[counter].ad} ile cezalandır."`, `"Gördün mü? ${favText[fav]}. Cevabı ${TACTICS[counter].ad.toLocaleLowerCase('tr-TR')}."`, `"Hep aynısını yapıyor, ${favText[fav]}. ${TACTICS[counter].ad}!"`]));
+    lines.push(pick([L("\"Adam {0}. {1} ile cezalandır.\"", [favText[fav], TACTICS[counter].ad]), L("\"Gördün mü? {0}. Cevabı {1}.\"", [favText[fav], TACTICS[counter].ad.toLocaleLowerCase(LOC)]), L("\"Hep aynısını yapıyor, {0}. {1}!\"", [favText[fav], TACTICS[counter].ad])]));
   }
   const o = oStats(fs);
   const weak = STAT_KEYS.reduce((a, b) => (o[b] < o[a] ? b : a));
-  if (chance(0.5)) lines.push(pick([`"Unutma, ${STAT_LABELS[weak].toLocaleLowerCase('tr-TR')} konusunda zayıf. Oraya yüklen."`, `"Zayıf noktası ${STAT_LABELS[weak].toLocaleLowerCase('tr-TR')}. Oraya git!"`, `"${STAT_LABELS[weak]} tarafını zorla, orada çöküyor."`]));
+  if (chance(0.5)) lines.push(pick([L("\"Unutma, {0} konusunda zayıf. Oraya yüklen.\"", [STAT_LABELS[weak].toLocaleLowerCase(LOC)]), L("\"Zayıf noktası {0}. Oraya git!\"", [STAT_LABELS[weak].toLocaleLowerCase(LOC)]), L("\"{0} tarafını zorla, orada çöküyor.\"", [STAT_LABELS[weak]])]));
   const ph = fs.oyuncuTaktikGecmisi ?? [];
   const cur = ph[ph.length - 1];
-  if (cur && streak(ph, cur) >= 2) lines.push(pick([`"Hep ${TACTICS[cur].ad.toLocaleLowerCase('tr-TR')} yapıyorsun, adam seni okudu! Bu raunt başka bir şey dene."`, '"Seni çözdü! Ritmi değiştir, başka bir şey göster."', '"Aynı kaseti çalıyorsun. Onu şaşırt!"']));
-  else if (cur && streak(ph, cur) === 1 && chance(0.5)) lines.push(pick(['"Aynı şeyi tekrar yaparsan seni okur. Onu şaşırt."', '"Tahmin edilebilir olma. Karıştır."']));
-  if (fs.pKondisyon < 45) lines.push(pick(['"Nefesin gitmiş! Tempoyu düşür, akıllı dövüş."', '"Ağzın açık nefes alıyorsun, sakin! Ayaklarını kullan."', '"Gazın bitiyor, enerjini doğru yerde harca."']));
-  if (fs.oKondisyon < 45) lines.push(pick(['"O yoruldu! Şimdi bas, şimdi!"', '"Elleri düştü, gördün mü? Şimdi zamanı!"', '"Adam bitmek üzere. Tempoyu artır!"']));
-  if (fs.pHasar > 55) lines.push('"Çok darbe alıyorsun, ellerini kaldır. Çenen sonsuz değil."');
-  if (fs.kesik) lines.push('Cutman kaşına vazelin sürüyor, kanamayı durdurmaya çalışıyor.');
+  if (cur && streak(ph, cur) >= 2) lines.push(pick([L("\"Hep {0} yapıyorsun, adam seni okudu! Bu raunt başka bir şey dene.\"", [TACTICS[cur].ad.toLocaleLowerCase(LOC)]), L("\"Seni çözdü! Ritmi değiştir, başka bir şey göster.\""), L("\"Aynı kaseti çalıyorsun. Onu şaşırt!\"")]));
+  else if (cur && streak(ph, cur) === 1 && chance(0.5)) lines.push(pick([L("\"Aynı şeyi tekrar yaparsan seni okur. Onu şaşırt.\""), L("\"Tahmin edilebilir olma. Karıştır.\"")]));
+  if (fs.pKondisyon < 45) lines.push(pick([L("\"Nefesin gitmiş! Tempoyu düşür, akıllı dövüş.\""), L("\"Ağzın açık nefes alıyorsun, sakin! Ayaklarını kullan.\""), L("\"Gazın bitiyor, enerjini doğru yerde harca.\"")]));
+  if (fs.oKondisyon < 45) lines.push(pick([L("\"O yoruldu! Şimdi bas, şimdi!\""), L("\"Elleri düştü, gördün mü? Şimdi zamanı!\""), L("\"Adam bitmek üzere. Tempoyu artır!\"")]));
+  if (fs.pHasar > 55) lines.push(L("\"Çok darbe alıyorsun, ellerini kaldır. Çenen sonsuz değil.\""));
+  if (fs.kesik) lines.push(L("Cutman kaşına vazelin sürüyor, kanamayı durdurmaya çalışıyor."));
   return lines.join('\n');
 }
 
 export function methodLabel(m: Method) {
-  return { KO: 'KO', TKO: 'TKO', SUB: 'Submission', UD: 'Oybirliği', SD: 'Ayrık karar', MD: 'Çoğunluk kararı', DRAW: 'Beraberlik' }[m];
+  return { KO: 'KO', TKO: 'TKO', SUB: L("Submission"), UD: L("Oybirliği"), SD: L("Ayrık karar"), MD: L("Çoğunluk kararı"), DRAW: L("Beraberlik") }[m];
 }

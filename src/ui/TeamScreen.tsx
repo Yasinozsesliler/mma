@@ -1,3 +1,4 @@
+import { L, LOC } from '../i18n';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { money } from '../engine/career';
@@ -26,25 +27,27 @@ export function TeamScreen({ s, act }: { s: GameState; act: Act }) {
   const [msg, setMsg] = useState<string | null>(null);
   const gyms = availableGyms(s);
   return (
-    <Screen footer={<Button label="Kariyere dön" icon="arrow-left" tone="ghost" onPress={() => act((x) => (x.phase = 'hub'))} />}>
-      <Title kicker="KÖŞENDEKİLER" sub="Antrenörün kampta ne kadar gelişeceğini, menajerin ne kadar kazanacağını belirler.">
-        Takım
+    <Screen footer={<Button label={L("Kariyere dön")} icon="arrow-left" tone="ghost" onPress={() => act((x) => (x.phase = 'hub'))} />}>
+      <Title kicker={L("KÖŞENDEKİLER")} sub={L("Antrenörün kampta ne kadar gelişeceğini, menajerin ne kadar kazanacağını belirler.")}>
+        
+        {L("Takım")}
       </Title>
       <Card accent={C.red}>
-        <Text style={tm.label}>SALON VE ANTRENÖR</Text>
-        <Text style={[tm.big, SLANT]}>{s.takim.salon.toLocaleUpperCase('tr-TR')}</Text>
+        <Text style={tm.label}>{L("SALON VE ANTRENÖR")}</Text>
+        <Text style={[tm.big, SLANT]}>{s.takim.salon.toLocaleUpperCase(LOC)}</Text>
         <Text style={tm.meta}>
-          {s.takim.antrenor} · Uzmanlık: {s.takim.uzmanlik ? STAT_LABELS[s.takim.uzmanlik] : '—'}
+          {s.takim.antrenor} {L("· Uzmanlık:")}{' '}{s.takim.uzmanlik ? STAT_LABELS[s.takim.uzmanlik] : '—'}
         </Text>
         <Stars n={s.takim.antrenorKalite} />
-        <Text style={[tm.label, { marginTop: 12 }]}>MENAJER</Text>
-        <Text style={[tm.big, SLANT, { fontSize: 18 }]}>{s.takim.menajer ?? 'YOK'}</Text>
+        <Text style={[tm.label, { marginTop: 12 }]}>{L("MENAJER")}</Text>
+        <Text style={[tm.big, SLANT, { fontSize: 18 }]}>{s.takim.menajer ?? L('YOK')}</Text>
         {s.takim.menajer ? (
           <Text style={tm.meta}>
-            Kalite {s.takim.menajerKalite}/10 · Komisyon %{Math.round(s.takim.menajerPay * 100)}
+            
+            {L("Kalite")}{' '}{s.takim.menajerKalite}{L("/10 · Komisyon %")}{Math.round(s.takim.menajerPay * 100)}
           </Text>
         ) : (
-          <Text style={tm.meta}>Pazarlıkları tek başına yapıyorsun.</Text>
+          <Text style={tm.meta}>{L("Pazarlıkları tek başına yapıyorsun.")}</Text>
         )}
       </Card>
       {msg ? (
@@ -56,7 +59,7 @@ export function TeamScreen({ s, act }: { s: GameState; act: Act }) {
         {(['kadro', 'salon', 'menajer', 'sponsor'] as const).map((t) => (
           <Pressable key={t} onPress={() => setTab(t)} style={[tm.tab, tab === t && tm.tabOn]}>
             <Text style={[tm.tabText, tab === t && { color: '#fff' }]}>
-              {t === 'kadro' ? 'KADRO' : t === 'salon' ? 'SALON' : t === 'menajer' ? 'MENAJER' : `SPONSOR${(s.sponsorTeklif ?? []).length ? ` (${(s.sponsorTeklif ?? []).length})` : ''}`}
+              {t === 'kadro' ? L("KADRO") : t === 'salon' ? L("SALON") : t === 'menajer' ? L("MENAJER") : L("SPONSOR{0}", [(s.sponsorTeklif ?? []).length ? ` (${(s.sponsorTeklif ?? []).length})` : ''])}
             </Text>
           </Pressable>
         ))}
@@ -66,8 +69,8 @@ export function TeamScreen({ s, act }: { s: GameState; act: Act }) {
         <StaffPanel s={s} act={act} onMsg={setMsg} />
       ) : tab === 'sponsor' ? (
         <>
-          <Section>{`AKTİF SPONSORLAR · ${(s.sponsorlar ?? []).length}/${sponsorSlots(s)} SLOT`}</Section>
-          {(s.sponsorlar ?? []).length === 0 ? <P dim>Henüz sponsorun yok. Dövüş kazandıkça ve popülerleştikçe markalar kapını çalar.</P> : null}
+          <Section>{L("AKTİF SPONSORLAR · {0}/{1} SLOT", [(s.sponsorlar ?? []).length, sponsorSlots(s)])}</Section>
+          {(s.sponsorlar ?? []).length === 0 ? <P dim>{L("Henüz sponsorun yok. Dövüş kazandıkça ve popülerleştikçe markalar kapını çalar.")}</P> : null}
           {(s.sponsorlar ?? []).map((d) => {
             const b = brandById(d.marka)!;
             return (
@@ -76,20 +79,20 @@ export function TeamScreen({ s, act }: { s: GameState; act: Act }) {
                   <OctIcon name={b.ikon as never} color={C.green} size={44} />
                   <View style={{ flex: 1 }}>
                     <Text style={tm.name}>{b.ad}</Text>
-                    <Text style={tm.meta}>{b.kategori} · {d.dovus} dövüş kaldı</Text>
+                    <Text style={tm.meta}>{b.kategori} · {d.dovus} {L("dövüş kaldı")}</Text>
                   </View>
                 </View>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
-                  <Pill text={`Dövüş başı ${money(d.dovusBasi)}`} icon="cash" color={C.green} />
-                  <Pill text={`Galibiyet +${money(d.galibiyet)}`} icon="trophy-outline" color={C.gold} />
-                  <Pill text={`Bitiriş +${money(d.bitiris)}`} icon="fire" color={C.orange} />
-                  {b.imaj ? <Pill text="İmaj maddesi" icon="alert-octagon" color={C.red} /> : null}
+                  <Pill text={L("Dövüş başı {0}", [money(d.dovusBasi)])} icon="cash" color={C.green} />
+                  <Pill text={L("Galibiyet +{0}", [money(d.galibiyet)])} icon="trophy-outline" color={C.gold} />
+                  <Pill text={L("Bitiriş +{0}", [money(d.bitiris)])} icon="fire" color={C.orange} />
+                  {b.imaj ? <Pill text={L("İmaj maddesi")} icon="alert-octagon" color={C.red} /> : null}
                 </View>
               </View>
             );
           })}
-          <Section>TEKLİFLER</Section>
-          {(s.sponsorTeklif ?? []).length === 0 ? <P dim>Bekleyen teklif yok. Her dövüşten sonra yeni markalar gelebilir.</P> : null}
+          <Section>{L("TEKLİFLER")}</Section>
+          {(s.sponsorTeklif ?? []).length === 0 ? <P dim>{L("Bekleyen teklif yok. Her dövüşten sonra yeni markalar gelebilir.")}</P> : null}
           {(s.sponsorTeklif ?? []).map((d) => {
             const b = brandById(d.marka)!;
             return (
@@ -102,24 +105,24 @@ export function TeamScreen({ s, act }: { s: GameState; act: Act }) {
                   </View>
                 </View>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
-                  <Pill text={`${d.dovus} dövüş`} icon="calendar-clock" color={C.dim} />
-                  <Pill text={`Dövüş başı ${money(d.dovusBasi)}`} icon="cash" color={C.green} />
-                  <Pill text={`Galibiyet +${money(d.galibiyet)}`} icon="trophy-outline" color={C.gold} />
-                  <Pill text={`Bitiriş +${money(d.bitiris)}`} icon="fire" color={C.orange} />
-                  {b.imaj ? <Pill text="İmaj maddesi: skandalda iptal" icon="alert-octagon" color={C.red} /> : null}
-                  {b.bahis ? <Pill text="Tartışmalı marka: popülerlik -3" icon="alert" color={C.red} /> : null}
+                  <Pill text={L("{0} dövüş", [d.dovus])} icon="calendar-clock" color={C.dim} />
+                  <Pill text={L("Dövüş başı {0}", [money(d.dovusBasi)])} icon="cash" color={C.green} />
+                  <Pill text={L("Galibiyet +{0}", [money(d.galibiyet)])} icon="trophy-outline" color={C.gold} />
+                  <Pill text={L("Bitiriş +{0}", [money(d.bitiris)])} icon="fire" color={C.orange} />
+                  {b.imaj ? <Pill text={L("İmaj maddesi: skandalda iptal")} icon="alert-octagon" color={C.red} /> : null}
+                  {b.bahis ? <Pill text={L("Tartışmalı marka: popülerlik -3")} icon="alert" color={C.red} /> : null}
                 </View>
                 <View style={[tm.footer, { gap: 8 }]}>
                   <Pressable onPress={() => act((x) => setMsg(acceptSponsor(x, d.id)))} style={({ pressed }) => [tm.btn, { opacity: pressed ? 0.7 : 1 }]}>
-                    <Text style={tm.btnText}>İMZALA</Text>
+                    <Text style={tm.btnText}>{L("İMZALA")}</Text>
                   </Pressable>
                   {!d.pazarlik ? (
                     <Pressable onPress={() => act((x) => setMsg(negotiateSponsor(x, d.id)))} style={({ pressed }) => [tm.btn, { backgroundColor: C.cardAlt, opacity: pressed ? 0.7 : 1 }]}>
-                      <Text style={tm.btnText}>PAZARLIK</Text>
+                      <Text style={tm.btnText}>{L("PAZARLIK")}</Text>
                     </Pressable>
                   ) : null}
                   <Pressable onPress={() => act((x) => rejectSponsor(x, d.id))} style={({ pressed }) => [tm.btn, { backgroundColor: C.cardAlt, opacity: pressed ? 0.7 : 1 }]}>
-                    <Text style={[tm.btnText, { color: C.dim }]}>REDDET</Text>
+                    <Text style={[tm.btnText, { color: C.dim }]}>{L("REDDET")}</Text>
                   </Pressable>
                 </View>
               </View>
@@ -128,7 +131,7 @@ export function TeamScreen({ s, act }: { s: GameState; act: Act }) {
         </>
       ) : tab === 'salon' ? (
         <>
-          <Section>{`${COUNTRIES[s.fighter.uyruk]?.ad.toLocaleUpperCase('tr-TR')}${s.stage !== 'amator' ? ' + DÜNYA ELİTİ' : ''}`}</Section>
+          <Section>{`${COUNTRIES[s.fighter.uyruk]?.ad.toLocaleUpperCase(LOC)}${s.stage !== 'amator' ? L(" + DÜNYA ELİTİ") : ''}`}</Section>
           {gyms.map((g) => {
             const cur = s.takim.salonId === g.id;
             return (
@@ -142,22 +145,22 @@ export function TeamScreen({ s, act }: { s: GameState; act: Act }) {
                 </View>
                 <Text style={[tm.meta, { marginTop: 6 }]}>{g.aciklama}</Text>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginVertical: 8 }}>
-                  <Pill text={`Uzmanlık: ${STAT_LABELS[g.uzmanlik]}`} icon="target" color={C.gold} />
-                  <Pill text={`Kamp: ${money(g.kalite * 40)}/hafta`} icon="cash" color={C.dim} />
+                  <Pill text={L("Uzmanlık: {0}", [STAT_LABELS[g.uzmanlik]])} icon="target" color={C.gold} />
+                  <Pill text={L("Kamp: {0}/hafta", [money(g.kalite * 40)])} icon="cash" color={C.dim} />
                 </View>
                 <Stars n={g.kalite} />
                 <View style={tm.footer}>
-                  <Text style={[tm.price, SLANT]}>{cur ? 'MEVCUT SALONUN' : `Geçiş: ${money(g.imza)}`}</Text>
+                  <Text style={[tm.price, SLANT]}>{cur ? L("MEVCUT SALONUN") : L("Geçiş: {0}", [money(g.imza)])}</Text>
                   {!cur ? (
                     <Pressable
                       disabled={s.para < g.imza}
                       onPress={() => act((x) => setMsg(switchGym(x, g.id)))}
                       style={({ pressed }) => [tm.btn, { opacity: s.para < g.imza ? 0.35 : pressed ? 0.7 : 1 }]}
                     >
-                      <Text style={tm.btnText}>{s.para < g.imza ? 'PARA YETMİYOR' : 'GEÇ'}</Text>
+                      <Text style={tm.btnText}>{s.para < g.imza ? L("PARA YETMİYOR") : L("GEÇ")}</Text>
                     </Pressable>
                   ) : (
-                    <Pill text="AKTİF" icon="check-decagram" color={C.green} />
+                    <Pill text={L("AKTİF")} icon="check-decagram" color={C.green} />
                   )}
                 </View>
               </View>
@@ -168,11 +171,11 @@ export function TeamScreen({ s, act }: { s: GameState; act: Act }) {
         <>
           {s.takim.menajer ? (
             <Card accent={C.orange}>
-              <P>Yeni bir menajerle çalışmak için önce {s.takim.menajer} ile yollarını ayırmalısın.</P>
-              <Button label={`Menajeri kov (tazminat ${money(agentSeverance(s))})`} tone="ghost" icon="account-remove" onPress={() => act((x) => setMsg(fireAgent(x)))} />
+              <P>{L("Yeni bir menajerle çalışmak için önce")}{' '}{s.takim.menajer} {L("ile yollarını ayırmalısın.")}</P>
+              <Button label={L("Menajeri kov (tazminat {0})", [money(agentSeverance(s))])} tone="ghost" icon="account-remove" onPress={() => act((x) => setMsg(fireAgent(x)))} />
             </Card>
           ) : null}
-          <Section>MENAJERLER</Section>
+          <Section>{L("MENAJERLER")}</Section>
           {AGENTS.map((a) => {
             const open = agentUnlocked(s, a.kalite);
             const cur = s.takim.menajer === a.ad;
@@ -187,18 +190,18 @@ export function TeamScreen({ s, act }: { s: GameState; act: Act }) {
                   </View>
                 </View>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginVertical: 8 }}>
-                  <Pill text={`Komisyon %${Math.round(a.pay * 100)}`} icon="percent" color={C.dim} />
-                  <Pill text={`Pazarlık gücü ${a.kalite}/10`} icon="handshake" color={C.gold} />
+                  <Pill text={L("Komisyon %{0}", [Math.round(a.pay * 100)])} icon="percent" color={C.dim} />
+                  <Pill text={L("Pazarlık gücü {0}/10", [a.kalite])} icon="handshake" color={C.gold} />
                 </View>
                 <View style={tm.footer}>
-                  <Text style={[tm.price, SLANT]}>{cur ? 'MENAJERİN' : open ? `İmza: ${money(fee)}` : `Popülerlik ${Math.max(0, (a.kalite - 3) * 12)}+ gerekli`}</Text>
+                  <Text style={[tm.price, SLANT]}>{cur ? L("MENAJERİN") : open ? L("İmza: {0}", [money(fee)]) : L("Popülerlik {0}+ gerekli", [Math.max(0, (a.kalite - 3) * 12)])}</Text>
                   {!cur && open && !s.takim.menajer ? (
                     <Pressable
                       disabled={s.para < fee}
                       onPress={() => act((x) => setMsg(hireAgent(x, a.ad)))}
                       style={({ pressed }) => [tm.btn, { opacity: s.para < fee ? 0.35 : pressed ? 0.7 : 1 }]}
                     >
-                      <Text style={tm.btnText}>{s.para < fee ? 'PARA YETMİYOR' : 'ANLAŞ'}</Text>
+                      <Text style={tm.btnText}>{s.para < fee ? L("PARA YETMİYOR") : L("ANLAŞ")}</Text>
                     </Pressable>
                   ) : null}
                 </View>

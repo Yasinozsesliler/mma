@@ -1,4 +1,5 @@
 // Eşleştirme: sıradaki dövüşün rakibini belirler. Sıralamadaki rakipler gerçek sıralama listesinden gelir.
+import { L as tL } from '../i18n';
 import { currentOrg } from './character';
 import { ORGS } from './data';
 import { divisionChampion, ensureDivision, rankedOpponent } from './division';
@@ -18,8 +19,8 @@ function ranked(s: GameState, r: number | null, z: -1 | 0 | 1, exclude: Opponent
 function titleFight(s: GameState): Opponent {
   const o = divisionChampion(s) ?? generateOpponent(s, { zorluk: 1, champion: true });
   o.zorluk = 1;
-  o.etiket = '🏆 ŞAMPİYONLUK MAÇI';
-  o.riskMetni = 'Kemer bu gece el değiştirebilir. 5 raunt.';
+  o.etiket = tL("🏆 ŞAMPİYONLUK MAÇI");
+  o.riskMetni = tL("Kemer bu gece el değiştirebilir. 5 raunt.");
   return o;
 }
 
@@ -33,7 +34,7 @@ function calledOut(s: GameState): Opponent | null {
   if (idx < 0) return null;
   const o = rankedOpponent(s, idx + 1 + (s.rank != null && s.rank <= idx + 1 ? 1 : 0));
   if (!o || o.id !== id) return null;
-  return { ...o, zorluk: 1, etiket: '🎤 MEYDAN OKUDUĞUN İSİM', riskMetni: 'Mikrofonu aldın ve adını söyledin. Organizasyon bu maçı yaptı. Şimdi sözlerinin arkasında dur.' };
+  return { ...o, zorluk: 1, etiket: tL("🎤 MEYDAN OKUDUĞUN İSİM"), riskMetni: tL("Mikrofonu aldın ve adını söyledin. Organizasyon bu maçı yaptı. Şimdi sözlerinin arkasında dur.") };
 }
 
 /** Aynı şampiyonla 3 kez karşılaşıldıysa önce eleme maçı gerekir (sonsuz rövanş olmasın). */
@@ -65,7 +66,7 @@ export function opponentChoices(s: GameState): Opponent[] {
   const opts: Opponent[] = [];
   ([-1, 0, 1] as const).forEach((z) => {
     const o = ranked(s, rankFor(z), z, opts);
-    o.etiket = z < 0 ? '🟢 KOLAY' : z === 0 ? '🟡 DENGELİ' : '🔴 RİSKLİ';
+    o.etiket = z < 0 ? tL("🟢 KOLAY") : z === 0 ? tL("🟡 DENGELİ") : tL("🔴 RİSKLİ");
     o.riskMetni = riskText(z, s.stage);
     opts.push(o);
   });
@@ -75,8 +76,8 @@ export function opponentChoices(s: GameState): Opponent[] {
     if (special) opts[2] = special;
   }
   if (s.sampiyon) {
-    opts[2].etiket = '🏆 UNVAN SAVUNMASI';
-    opts[2].riskMetni = 'Kemerin masada. Kaybedersen tahtın gider.';
+    opts[2].etiket = tL("🏆 UNVAN SAVUNMASI");
+    opts[2].riskMetni = tL("Kemerin masada. Kaybedersen tahtın gider.");
   }
   return opts;
 }
@@ -88,14 +89,14 @@ export function imposedOpponent(s: GameState): Opponent {
   const L = ORGS[org].merdiven;
   if (org === 'dwcs') {
     const o = generateOpponent(s, { zorluk: 0, org });
-    o.etiket = '🎟️ DWCS';
-    o.riskMetni = 'Dana White tribünde. Sadece kazanmak yetmez, bitirmen gerekebilir.';
+    o.etiket = tL("🎟️ DWCS");
+    o.riskMetni = tL("Dana White tribünde. Sadece kazanmak yetmez, bitirmen gerekebilir.");
     return o;
   }
   if (s.sampiyon) {
     const o = ranked(s, randInt(1, 3), 1);
-    o.etiket = '🏆 UNVAN SAVUNMASI';
-    o.riskMetni = 'Kemerin masada. Kaybedersen tahtın gider.';
+    o.etiket = tL("🏆 UNVAN SAVUNMASI");
+    o.riskMetni = tL("Kemerin masada. Kaybedersen tahtın gider.");
     return o;
   }
   if (s.rank != null && (s.rank === 1 || (s.rank <= 2 && s.seri >= 3)) && !titleBlocked(s)) return titleFight(s);
@@ -106,7 +107,7 @@ export function imposedOpponent(s: GameState): Opponent {
   else rank = avoid(s, Math.max(1, s.rank - randInt(0, 3)));
   const z: -1 | 0 | 1 = rank != null && s.rank != null && rank < s.rank - 1 ? 1 : 0;
   const o = ranked(s, rank, z);
-  o.etiket = '📜 ORGANİZASYON TEKLİFİ';
+  o.etiket = tL("📜 ORGANİZASYON TEKLİFİ");
   o.riskMetni = riskText(z, s.stage);
   return o;
 }

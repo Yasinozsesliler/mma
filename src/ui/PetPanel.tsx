@@ -1,3 +1,4 @@
+import { L, LOC } from '../i18n';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { money } from '../engine/career';
@@ -24,24 +25,24 @@ function OwnedPet({ s, p, act, onMsg }: { s: GameState; p: Pet; act: Act; onMsg:
       <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
         <PetBadge turId={p.tur} size={62} />
         <View style={{ flex: 1 }}>
-          <Text style={[pp.name, SLANT]}>{p.ad.toLocaleUpperCase('tr-TR')}</Text>
+          <Text style={[pp.name, SLANT]}>{p.ad.toLocaleUpperCase(LOC)}</Text>
           <Text style={pp.meta}>
-            {t.ad} · Bakım {money(t.haftalik * (p.premium ? 2 : 1))}/hafta{p.premium ? ' · Premium mama' : ''}
+            {t.ad} {L("· Bakım")}{' '}{money(t.haftalik * (p.premium ? 2 : 1))}/hafta{p.premium ? L(" · Premium mama") : ''}
           </Text>
-          {p.hasta ? <Text style={[pp.meta, { color: C.red }]}>🤒 Hasta, veterinere götür!</Text> : null}
+          {p.hasta ? <Text style={[pp.meta, { color: C.red }]}>{L("🤒 Hasta, veterinere götür!")}</Text> : null}
         </View>
       </View>
-      <Bar value={p.mutluluk} color={p.mutluluk < 30 ? C.red : C.gold} label="Mutluluk" right={`${Math.round(p.mutluluk)}`} />
-      <Bar value={p.saglik} color={p.saglik < 50 ? C.orange : C.green} label="Sağlık" right={`${Math.round(p.saglik)}`} />
+      <Bar value={p.mutluluk} color={p.mutluluk < 30 ? C.red : C.gold} label={L("Mutluluk")} right={`${Math.round(p.mutluluk)}`} />
+      <Bar value={p.saglik} color={p.saglik < 50 ? C.orange : C.green} label={L("Sağlık")} right={`${Math.round(p.saglik)}`} />
       <View style={pp.actions}>
         <Pressable disabled={played} onPress={() => act((x) => onMsg(playWithPet(x, p.id)))} style={[pp.btn, played && { opacity: 0.35 }]}>
-          <Text style={pp.btnText}>{played ? 'BU HAFTA OYNADI' : 'OYNA'}</Text>
+          <Text style={pp.btnText}>{played ? L("BU HAFTA OYNADI") : L('OYNA')}</Text>
         </Pressable>
         <Pressable onPress={() => act((x) => onMsg(vetVisit(x, p.id)))} style={[pp.btn, { backgroundColor: p.hasta ? C.red : C.cardAlt }]}>
-          <Text style={pp.btnText}>VETERİNER {money(vetCost(p))}</Text>
+          <Text style={pp.btnText}>{L("VETERİNER")}{' '}{money(vetCost(p))}</Text>
         </Pressable>
         <Pressable onPress={() => act((x) => togglePremium(x, p.id))} style={[pp.btn, { backgroundColor: p.premium ? C.goldDeep : C.cardAlt }]}>
-          <Text style={pp.btnText}>{p.premium ? 'PREMIUM ✓' : 'PREMIUM MAMA'}</Text>
+          <Text style={pp.btnText}>{p.premium ? L("PREMIUM ✓") : L("PREMIUM MAMA")}</Text>
         </Pressable>
       </View>
     </View>
@@ -55,14 +56,14 @@ export function PetPanel({ s, act, onMsg }: { s: GameState; act: Act; onMsg: (m:
     <>
       {owned.length ? (
         <>
-          <Section>{`EVCİL HAYVANLARIN · ${money(weeklyPetCost(s))}/HAFTA`}</Section>
+          <Section>{L("EVCİL HAYVANLARIN · {0}/HAFTA", [money(weeklyPetCost(s))])}</Section>
           {owned.map((p) => (
             <OwnedPet key={p.id} s={s} p={p} act={act} onMsg={onMsg} />
           ))}
         </>
       ) : null}
-      <Section>SAHİPLEN</Section>
-      <Text style={pp.note}>Mutlu bir hayvan kamp motivasyonu verir. Köpekler sabah koşusunda kondisyonu artırır. İhmal edilen hayvan mutsuz olur, hastalanır ve motivasyonunu düşürür.</Text>
+      <Section>{L("SAHİPLEN")}</Section>
+      <Text style={pp.note}>{L("Mutlu bir hayvan kamp motivasyonu verir. Köpekler sabah koşusunda kondisyonu artırır. İhmal edilen hayvan mutsuz olur, hastalanır ve motivasyonunu düşürür.")}</Text>
       {PET_TYPES.map((t) => {
         const afford = s.para >= t.fiyat;
         const ad = names[t.id] ?? '';
@@ -77,15 +78,15 @@ export function PetPanel({ s, act, onMsg }: { s: GameState; act: Act; onMsg: (m:
             </View>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
               <Pill text={t.tur} color={C.dim} />
-              <Pill text={`Bakım ${money(t.haftalik)}/hafta`} icon="cash" color={C.orange} />
-              {t.kondisyon ? <Pill text="Koşu ortağı: kondisyon kampı +%10" icon="run-fast" color={C.green} /> : null}
+              <Pill text={L("Bakım {0}/hafta", [money(t.haftalik)])} icon="cash" color={C.orange} />
+              {t.kondisyon ? <Pill text={L("Koşu ortağı: kondisyon kampı +%10")} icon="run-fast" color={C.green} /> : null}
             </View>
             <View style={pp.adoptRow}>
               <TextInput
                 style={pp.input}
                 value={ad}
                 onChangeText={(v) => setNames({ ...names, [t.id]: v })}
-                placeholder="İsim ver…"
+                placeholder={L("İsim ver…")}
                 placeholderTextColor={C.faint}
                 maxLength={20}
               />
@@ -97,7 +98,7 @@ export function PetPanel({ s, act, onMsg }: { s: GameState; act: Act; onMsg: (m:
                 }}
                 style={[pp.adopt, (!afford || !ad.trim()) && { opacity: 0.35 }]}
               >
-                <Text style={pp.btnText}>{afford ? `SAHİPLEN ${money(t.fiyat)}` : 'PARA YETMİYOR'}</Text>
+                <Text style={pp.btnText}>{afford ? L("SAHİPLEN {0}", [money(t.fiyat)]) : L("PARA YETMİYOR")}</Text>
               </Pressable>
             </View>
           </View>

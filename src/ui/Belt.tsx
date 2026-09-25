@@ -1,3 +1,4 @@
+import { L, LOC } from '../i18n';
 import { useId } from 'react';
 import Svg, { Circle, Defs, Ellipse, G, LinearGradient, Path, RadialGradient, Rect, Stop, Text as SvgText } from 'react-native-svg';
 import { ORGS } from '../engine/data';
@@ -35,8 +36,8 @@ export function Belt({ org, siklet, width = 300, dim = false }: { org: OrgId; si
     <G key={x}>
       <Rect x={x} y={38} width={w} height={52} rx={6} fill={`url(#${gold})`} stroke={lo} strokeWidth={1.4} />
       <Rect x={x + 4} y={42} width={w - 8} height={44} rx={4} fill="none" stroke={lo} strokeWidth={0.9} />
-      <Path d={`M${x + 8} ${50} Q${x + w / 2} ${44} ${x + w - 8} ${50}`} stroke={lo} strokeWidth={0.8} fill="none" />
-      <Path d={`M${x + 8} ${78} Q${x + w / 2} ${84} ${x + w - 8} ${78}`} stroke={lo} strokeWidth={0.8} fill="none" />
+      <Path d={L("M{0} {1} Q{2} {3} {4} {5}", [x + 8, 50, x + w / 2, 44, x + w - 8, 50])} stroke={lo} strokeWidth={0.8} fill="none" />
+      <Path d={L("M{0} {1} Q{2} {3} {4} {5}", [x + 8, 78, x + w / 2, 84, x + w - 8, 78])} stroke={lo} strokeWidth={0.8} fill="none" />
       <Circle cx={x + w / 2} cy={64} r={6.5} fill={strap} stroke={lo} strokeWidth={1} />
       <Circle cx={x + w / 2} cy={64} r={4.2} fill={gem} />
       <Ellipse cx={x + w / 2 - 1.3} cy={62.5} rx={1.3} ry={1.6} fill="#fff" opacity={0.7} />
@@ -121,9 +122,9 @@ export function Belt({ org, siklet, width = 300, dim = false }: { org: OrgId; si
       {[10, 20].map((rx) => (
         <Ellipse key={rx} cx={cx} cy={cy + 4} rx={rx} ry={30} fill="none" stroke={lo} strokeWidth={0.7} opacity={0.75} />
       ))}
-      <Path d={`M${cx} ${cy - 26} L${cx} ${cy + 34}`} stroke={lo} strokeWidth={0.7} opacity={0.75} />
-      <Path d={`M${cx - 16} ${cy - 10} q10 -6 18 2 q6 8 -4 14 q-10 2 -14 -6 z`} fill={lo} opacity={0.5} />
-      <Path d={`M${cx + 4} ${cy + 12} q10 -4 14 4 q-4 10 -14 8 z`} fill={lo} opacity={0.5} />
+      <Path d={L("M{0} {1} L{2} {3}", [cx, cy - 26, cx, cy + 34])} stroke={lo} strokeWidth={0.7} opacity={0.75} />
+      <Path d={L("M{0} {1} q10 -6 18 2 q6 8 -4 14 q-10 2 -14 -6 z", [cx - 16, cy - 10])} fill={lo} opacity={0.5} />
+      <Path d={L("M{0} {1} q10 -4 14 4 q-4 10 -14 8 z", [cx + 4, cy + 12])} fill={lo} opacity={0.5} />
 
       {/* Üstte logo plakası */}
       <Rect x={cx - 34} y={cy - 54} width={68} height={24} rx={6} fill="#0b0b0c" stroke={hi} strokeWidth={1.6} />
@@ -132,13 +133,13 @@ export function Belt({ org, siklet, width = 300, dim = false }: { org: OrgId; si
       </SvgText>
 
       {/* Altta kurdele */}
-      <Path d={`M${cx - 52} ${cy + 36} L${cx + 52} ${cy + 36} L${cx + 46} ${cy + 50} L${cx - 46} ${cy + 50} Z`} fill="#0b0b0c" stroke={hi} strokeWidth={1.2} />
+      <Path d={L("M{0} {1} L{2} {3} L{4} {5} L{6} {7} Z", [cx - 52, cy + 36, cx + 52, cy + 36, cx + 46, cy + 50, cx - 46, cy + 50])} fill="#0b0b0c" stroke={hi} strokeWidth={1.2} />
       <SvgText x={cx} y={cy + 45} fill={hi} fontSize={6.5} fontWeight="bold" textAnchor="middle" letterSpacing={1.2}>
-        {`WORLD CHAMPION${siklet ? ' · ' + WEIGHT_CLASSES[siklet].ad.toLocaleUpperCase('tr-TR') : ''}`}
+        {L("WORLD CHAMPION{0}", [siklet ? ' · ' + WEIGHT_CLASSES[siklet].ad.toLocaleUpperCase(LOC) : ''])}
       </SvgText>
 
       {/* Parlama */}
-      <Path d={`M${cx - 44} ${cy - 38} Q${cx} ${cy - 58} ${cx + 44} ${cy - 38}`} stroke="#ffffff" strokeWidth={2.4} opacity={0.3} fill="none" />
+      <Path d={L("M{0} {1} Q{2} {3} {4} {5}", [cx - 44, cy - 38, cx, cy - 58, cx + 44, cy - 38])} stroke="#ffffff" strokeWidth={2.4} opacity={0.3} fill="none" />
     </Svg>
   );
 }

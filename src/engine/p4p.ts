@@ -1,5 +1,6 @@
 // Pound for Pound: UFC'nin tüm sıkletlerindeki en iyi 15 dövüşçü. Liste her UFC maçından sonra kıpırdar;
 // oyuncu UFC başarılarıyla (galibiyet, bitiriş, kemer, savunma, seri) listeye girer ve yükselir.
+import { L } from '../i18n';
 import { WEIGHT_CLASSES } from './data';
 import { generateOpponent } from './opponents';
 import { chance, clamp, noise, pick, randInt } from './rng';
@@ -82,10 +83,10 @@ export function updateP4P(s: GameState): string | null {
   const once = p.sira;
   const simdi = p4pRank(s);
   p.sira = simdi;
-  if (simdi == null) return once != null ? '📉 Pound for Pound listesinden düştün.' : null;
-  if (once == null) return `🌍 POUND FOR POUND! Dünyanın en iyi ${P4P_SIZE} dövüşçüsü arasına girdin: #${simdi}`;
-  if (simdi === 1 && once !== 1) return '👑 POUND FOR POUND KRALI! Artık sıklet fark etmeksizin dünyanın en iyisisin.';
-  if (simdi < once) return `📈 P4P listesinde #${once}’${ablative(once)} #${simdi}’${dative(simdi)} yükseldin.`;
-  if (simdi > once) return `📉 P4P listesinde #${once}’${ablative(once)} #${simdi}’${dative(simdi)} geriledin.`;
+  if (simdi == null) return once != null ? L("📉 Pound for Pound listesinden düştün.") : null;
+  if (once == null) return L("🌍 POUND FOR POUND! Dünyanın en iyi {0} dövüşçüsü arasına girdin: #{1}", [P4P_SIZE, simdi]);
+  if (simdi === 1 && once !== 1) return L("👑 POUND FOR POUND KRALI! Artık sıklet fark etmeksizin dünyanın en iyisisin.");
+  if (simdi < once) return L("📈 P4P listesinde #{0}’{1} #{2}’{3} yükseldin.", [once, ablative(once), simdi, dative(simdi)]);
+  if (simdi > once) return L("📉 P4P listesinde #{0}’{1} #{2}’{3} geriledin.", [once, ablative(once), simdi, dative(simdi)]);
   return null;
 }
