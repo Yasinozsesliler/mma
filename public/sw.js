@@ -5,12 +5,40 @@ const VERSION = '__VERSION__';
 const PRECACHE = __PRECACHE__;
 const CACHE = `yol-${VERSION}`;
 
+async function addWithRetry(cache, url, tries = 3) {
+  for (let i = 0; ; i++) {
+    try {
+      const res = await fetch(new Request(url, { cache: 'reload' }));
+      if (!res.ok) throw new Error(`${url}: ${res.status}`);
+      return await cache.put(url, res);
+    } catch (err) {
+      if (i >= tries - 1) throw err;
+      await new Promise((r) => setTimeout(r, 800 * (i + 1)));
+    }
+  }
+}
+
+// Sayfa "çevrimdışı hazır mı?" diye sorar: sürüm ve önbellekte eksik dosya sayısı döner.
+self.addEventListener('message', (e) => {
+  if (e.data !== 'durum' || !e.source) return;
+  caches
+    .open(CACHE)
+    .then((c) => c.keys())
+    .then((keys) => {
+      const have = new Set(keys.map((k) => new URL(k.url).pathname));
+      const eksik = PRECACHE.filter((u) => !have.has(decodeURI(u)) && !have.has(u)).length;
+      e.source.postMessage({ tip: 'durum', surum: VERSION, eksik, toplam: PRECACHE.length });
+    });
+});
+
 self.addEventListener('install', (e) => {
   e.waitUntil(
     caches
       .open(CACHE)
-      // Tek bir dosya inmezse bile kurulum bozulmasın: dosyaları tek tek ekle.
-      .then((c) => Promise.all(PRECACHE.map((url) => c.add(new Request(url, { cache: 'reload' })).catch(() => null))))
+      // Yeni sürüm ancak TÜM dosyaları indiğinde devreye girer. Bir dosya inmezse kurulum başarısız olur,
+      // eski (tam önbellekli) sürüm çalışmaya devam eder ve tarayıcı bir sonraki açılışta yeniden dener.
+      // Böylece yarım bir güncelleme çevrimdışı oyunu asla bozmaz.
+      .then((c) => Promise.all(PRECACHE.map((url) => addWithRetry(c, url))))
       .then(() => self.skipWaiting()),
   );
 });

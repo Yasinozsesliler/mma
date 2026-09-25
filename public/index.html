@@ -48,7 +48,15 @@
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js').catch((e) => console.warn('Service worker kaydedilemedi:', e));
+          navigator.serviceWorker
+            .register('/sw.js', { updateViaCache: 'none' })
+            .then((reg) => {
+              // iPhone'da ana ekran uygulaması güncellemeyi nadiren kontrol eder: her öne gelişte kontrol et.
+              document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible' && navigator.onLine) reg.update().catch(() => {});
+              });
+            })
+            .catch((e) => console.warn('Service worker kaydedilemedi:', e));
         });
       }
     </script>

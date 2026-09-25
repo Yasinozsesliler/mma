@@ -6,6 +6,7 @@ import { BACKGROUNDS } from '../engine/data';
 import type { Background, GameState } from '../engine/types';
 import { Button, Card, Icon, Logo, Pill, Screen, Section, type IconName } from './components';
 import { StatusPanel } from './StatusPanel';
+import { useOfflineStatus } from './offline';
 import { C, F } from './theme';
 
 const GUIDE: { baslik: string; icon: IconName; icerik: string[] }[] = [
@@ -73,6 +74,7 @@ export function MenuScreen({ save, onNew, onContinue }: { save: GameState | null
   const [open, setOpen] = useState<number | null>(save ? null : 0);
   const retired = save?.phase === 'emeklilik';
   const active = save && !retired;
+  const off = useOfflineStatus();
   return (
     <Screen
       footer={
@@ -88,6 +90,18 @@ export function MenuScreen({ save, onNew, onContinue }: { save: GameState | null
         <Text style={ms.brand}>Y O L</Text>
         <Text style={ms.heroTitle}>KAFESTEN KEMERE</Text>
         <Text style={ms.heroSub}>Sıfırdan UFC şampiyonluğuna. Her karar senin.</Text>
+        {off ? (
+          <View style={[ms.off, { borderColor: (off.durum === 'hazir' ? C.green : C.gold) + '66' }]}>
+            <Icon name={off.durum === 'hazir' ? 'cloud-check' : 'cloud-download'} size={14} color={off.durum === 'hazir' ? C.green : C.gold} />
+            <Text style={[ms.offText, { color: off.durum === 'hazir' ? C.green : C.gold }]}>
+              {off.durum === 'hazir'
+                ? `Çevrimdışı oynamaya hazır · sürüm ${off.surum}`
+                : off.durum === 'guncelleniyor'
+                  ? 'Yeni sürüm indiriliyor… uygulamayı kapatma'
+                  : `Çevrimdışı için indiriliyor${off.toplam ? ` (${off.toplam - (off.eksik ?? 0)}/${off.toplam})` : '…'}`}
+            </Text>
+          </View>
+        ) : null}
       </LinearGradient>
 
       {save ? (
@@ -151,6 +165,8 @@ const ms = StyleSheet.create({
   brand: { color: C.red, fontFamily: F.display, fontSize: 14, letterSpacing: 6, marginTop: 14 },
   heroTitle: { color: C.text, fontFamily: F.display, fontSize: 42, letterSpacing: 1, lineHeight: 48, textAlign: 'center' },
   heroSub: { color: C.dim, fontFamily: F.body, fontSize: 14, marginTop: 4, textAlign: 'center' },
+  off: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 10, borderWidth: 1, borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4 },
+  offText: { fontFamily: F.semi, fontSize: 11 },
   intro: { color: C.dim, fontFamily: F.body, fontSize: 15, lineHeight: 23, marginBottom: 10 },
   row: { flexDirection: 'row', gap: 8, alignItems: 'center', marginBottom: 6 },
   line: { flex: 1, color: C.dim, fontFamily: F.body, fontSize: 13, lineHeight: 19 },
