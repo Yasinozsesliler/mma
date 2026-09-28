@@ -1,4 +1,5 @@
 import { L, LOC } from '../i18n';
+import { CoachTip } from './CoachTip';
 import { winCard } from '../share/build';
 import { ShareButton } from '../share/ShareButton';
 import { sfx } from '../audio';
@@ -98,6 +99,7 @@ export function PostFightScreen({ s, act }: { s: GameState; act: Act }) {
         ) : undefined
       }
     >
+      <CoachTip s={s} act={act} id="macSonrasi" />
       <LinearGradient colors={t.hero} style={pf.hero}>
         <View style={[pf.glowLine, { backgroundColor: t.ana }]} />
         <Text style={pf.org}>{o ? `${ORGS[o.org].ad}${o.unvan ? L(" · ÜNVAN MAÇI") : ''}`.toLocaleUpperCase(LOC) : ''}</Text>

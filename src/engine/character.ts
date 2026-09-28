@@ -78,6 +78,7 @@ export function createGame(input: NewFighterInput, stats: Stats): GameState {
     sampiyon: false,
     savunma: 0,
     unvanlar: [],
+    ipuclari: [],
     saglik: 100,
     sakatliklar: [],
     takim: {

@@ -494,6 +494,8 @@ export interface GameState {
   sampiyon: boolean;
   savunma: number;
   unvanlar: string[];
+  /** Görülen öğretici ipuçları. Tanımsızsa (eski kayıt) ipucu gösterilmez. */
+  ipuclari?: string[];
   saglik: number;
   sakatliklar: Injury[];
   takim: Team;

@@ -1,4 +1,5 @@
 import { L } from '../i18n';
+import { CoachTip } from './CoachTip';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
@@ -237,6 +238,7 @@ export function FightScreen({ s, act }: { s: GameState; act: Act }) {
     <Screen footer={footer}>
       <Scoreboard fs={view} org={org} pUyruk={s.fighter.uyruk} />
       <CageView fs={fs} shown={shown} speed={speed} pLook={s.fighter.gorunum} oLook={lookFor(fs.opp)} />
+      {fresh ? <CoachTip s={s} act={act} id="dovus" /> : null}
       {!fresh ? <Momentum fs={view} shown={shown} logLen={fs.log.length} /> : null}
 
       {fresh ? (

@@ -1,4 +1,5 @@
 import { L } from '../i18n';
+import { CoachTip, type TipId } from './CoachTip';
 import { careerCard } from '../share/build';
 import { ShareButton } from '../share/ShareButton';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -107,6 +108,7 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
 
       {tab === 'ana' ? (
         <>
+          <CoachTip s={s} act={act} id="hub" />
           {banned(s) ? (
             <Notice color={C.red} icon="cancel" action={<Button label={L("Cezanı çek (zamanı ilerlet)")} icon="timer-sand" tone="ghost" onPress={() => act((x) => { x.haberler.unshift(serveBan(x)); })} />}>
               {s.ceza?.sebep}{L(". Men cezan sürüyor:")}{' '}{banWeeksLeft(s)} {L("hafta kaldı.")}
@@ -213,6 +215,7 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
         </>
       ) : tab === 'gelisim' ? (
         <>
+          <CoachTip s={s} act={act} id="gelisim" />
           <SkillPanel s={s} act={act} />
           <TechniquePanel s={s} act={act} />
         </>
@@ -366,6 +369,7 @@ export function OpponentScreen({ s, act }: { s: GameState; act: Act }) {
         
         {L("Rakip Seçimi")}
       </Title>
+      <CoachTip s={s} act={act} id="rakip" />
       {list.map((o, i) => (
         <Card key={o.id} accent={o.zorluk === 1 ? C.red : o.zorluk === -1 ? C.green : C.gold}>
           <OpponentCard o={o} me={me} />
@@ -397,7 +401,9 @@ const INT_ICONS: Record<Intensity, IconName> = { dusuk: 'meditation', orta: 'dum
 const CUT_ICONS: Record<WeightCut, IconName> = { kademeli: 'food-apple', normal: 'scale-bathroom', sert: 'alert-octagon' };
 const PRESS_ICONS: Record<PressChoice, IconName> = { saygili: 'handshake', trash: 'microphone-variant', sessiz: 'account-voice' };
 
-function CampHeader({ s, k }: { s: GameState; k: CampState }) {
+const STEP_TIPS: Partial<Record<CampState['step'], TipId>> = { sure: 'kamp', plan: 'plan' };
+
+function CampHeader({ s, k, act }: { s: GameState; k: CampState; act: Act }) {
   const o = s.pending.rakip!;
   const d = describeOpponent(o);
   const cur = CAMP_STEPS.findIndex((x) => x.key.includes(k.step));
@@ -411,6 +417,7 @@ function CampHeader({ s, k }: { s: GameState; k: CampState }) {
           </View>
         ))}
       </View>
+      <CoachTip s={s} act={act} id={STEP_TIPS[k.step] ?? null} />
       <Card>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
           <OvrBadge value={d.guc} size={48} />
@@ -434,7 +441,7 @@ export function CampScreen({ s, act }: { s: GameState; act: Act }) {
   const k = s.pending.kamp!;
   const o = s.pending.rakip!;
   const choose = (v: string | number) => act((x) => campChoose(x, v));
-  const header = <CampHeader s={s} k={k} />;
+  const header = <CampHeader s={s} k={k} act={act} />;
   if (k.step === 'sure') return <CampLengthStep s={s} header={header} choose={choose} />;
   if (k.step === 'takvim') return <FreeWeeksStep s={s} header={header} choose={choose} />;
   if (k.step === 'haftalik') return <CampWeeksStep s={s} header={header} choose={choose} />;
@@ -557,6 +564,7 @@ export function CampScreen({ s, act }: { s: GameState; act: Act }) {
           
           {L("Face to Face")}
         </Title>
+        <CoachTip s={s} act={act} id="yuzyuze" />
         <FaceOffStage s={s} />
         {!k.yuzyuze ? (
           <>
