@@ -475,7 +475,7 @@ export interface GameState {
   istat?: Istat;
   /** Sınırsız şöhret göstergesi (sosyal medya takipçisi) */
   takipci?: number;
-  /** UFC Pound for Pound listesi (oyuncu hariç) ve oyuncunun son sırası */
+  /** UCC Pound for Pound listesi (oyuncu hariç) ve oyuncunun son sırası */
   p4p?: { liste: P4PEntry[]; sira: number | null };
   /** Bitiriş teknikleri: seviye (0-5) ve ustalık */
   teknik?: Record<string, { sv: number; xp: number }>;

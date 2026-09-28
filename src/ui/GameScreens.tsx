@@ -1,4 +1,6 @@
 import { L } from '../i18n';
+import { careerCard } from '../share/build';
+import { ShareButton } from '../share/ShareButton';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -508,7 +510,7 @@ export function CampScreen({ s, act }: { s: GameState; act: Act }) {
     return (
       <Screen>
         {header}
-        <Title sub={ORGS[currentOrg(s)].hidrasyon ? L("⚠️ ONE’da hidrasyon testi var: sert kilo verme maçı iptal ettirebilir.") : L("Tartı dövüşten bir gün önce.")}>
+        <Title sub={ORGS[currentOrg(s)].hidrasyon ? L("⚠️ ZEN’de hidrasyon testi var: sert kilo verme maçı iptal ettirebilir.") : L("Tartı dövüşten bir gün önce.")}>
           
           {L("Kilo Verme")}
         </Title>
@@ -654,9 +656,16 @@ export function OffersScreen({ s, act }: { s: GameState; act: Act }) {
 
 export function RetireScreen({ s, onNew }: { s: GameState; onNew: () => void }) {
   const r = s.rekor;
-  const ufcChamp = s.unvanlar.some((u) => u.startsWith('UFC'));
+  const ufcChamp = s.unvanlar.some((u) => u.startsWith('UCC'));
   return (
-    <Screen footer={<Button label={L("Kariyer yuvalarına dön")} icon="folder-account" onPress={onNew} />}>
+    <Screen
+      footer={
+        <View style={{ gap: 8 }}>
+          <ShareButton data={careerCard(s)} label={L("Kariyer kartını paylaş")} tone="gold" />
+          <Button label={L("Kariyer yuvalarına dön")} icon="folder-account" onPress={onNew} />
+        </View>
+      }
+    >
       <LinearGradient colors={['#3a2a0a', '#0a0b0e']} style={gs.banner}>
         <Icon name={ufcChamp ? 'crown' : 'flag-checkered'} size={40} color={C.gold} />
         <Text style={gs.bannerTitle}>{ufcChamp ? L("BİR EFSANE VEDA EDİYOR") : L("SON ZİL")}</Text>

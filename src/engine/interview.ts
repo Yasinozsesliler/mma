@@ -238,21 +238,21 @@ const LINES: Line[] = [
   },
   {
     id: 'ufc_hazir', ozel: true, when: (c, s) => c.won && s.stage === 'buyuk' && c.org !== 'dwcs' && s.populerlik >= 25,
-    text: [L("UFC, beni izliyorsanız: hazırım!"), L("Dana White, telefon numaram değişmedi!")],
+    text: [L("UCC, beni izliyorsanız: hazırım!"), L("Dean Wyatt, telefon numaram değişmedi!")],
     apply: (c, s) => {
       if (s.contract && chance(0.3)) {
         s.contract.ucret = Math.round((s.contract.ucret * 0.9) / 100) * 100;
         return L("{0} bu sözlerden hiç hoşlanmadı. Sonraki dövüş ücretin %10 kesildi.", [ORGS[c.org].kisa]) + pop(s, 2);
       }
-      return L("UFC’nin resmi hesabı videonu paylaştı! Radardasın.") + mot(s, 1) + pop(s, 4);
+      return L("UCC’nin resmi hesabı videonu paylaştı! Radardasın.") + mot(s, 1) + pop(s, 4);
     },
   },
   {
     id: 'dana', ozel: true, when: (c) => c.won && c.org === 'dwcs',
-    text: [L("Dana, bana o kontratı ver! Hazırım!"), L("Bu gece kendimi gösterdim. Artık UFC’deyim, değil mi Dana?")],
+    text: [L("Dean, bana o kontratı ver! Hazırım!"), L("Bu gece kendimi gösterdim. Artık UCC’deyim, değil mi Dean?")],
     apply: (c, s) => {
       if (s.pending.sonrasi) s.pending.sonrasi.dwcsIkna = true;
-      return L("Dana White kameralara gülümsedi. Kontrat şansın arttı.") + pop(s, 2);
+      return L("Dean Wyatt kameralara gülümsedi. Kontrat şansın arttı.") + pop(s, 2);
     },
   },
   {
@@ -263,7 +263,7 @@ const LINES: Line[] = [
   {
     id: 'pfl', ozel: true, when: (c) => c.won && c.org === 'pfl',
     text: [L("Sezon benim sezonum. Playoff’larda görüşürüz!")],
-    apply: (c, s) => L("PFL yayını seni sezon favorileri arasına aldı.") + mot(s, 1) + pop(s, 2),
+    apply: (c, s) => L("PFC yayını seni sezon favorileri arasına aldı.") + mot(s, 1) + pop(s, 2),
   },
   {
     id: 'oktagon', ozel: true, when: (c) => c.won && c.org === 'oktagon',

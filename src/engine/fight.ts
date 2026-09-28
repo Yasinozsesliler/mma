@@ -690,7 +690,7 @@ const DECISIONS: DecDef[] = [
     secenekler: () => [
       { ad: L("Dirsek ve diz yağdır"), aciklama: L("Kısa mesafede acımasız ol. Çok yorar."), apply: (fs) => (setTac(fs, 'clinch'), boost(fs, 0.07, 1), tired(fs, -6), L("Clinch’te kısa mesafeden vuruyorsun!")) },
       { ad: L("Takedown’a dal"), aciklama: L("Güreşin iyiyse kafese yaslayıp indir."), apply: (fs) => (setTac(fs, 'takedown'), outWrestle(fs) ? (boost(fs, 0.07, 1), L("Kafese yaslayıp bacaklara indin!")) : (boost(fs, -0.04, 1), L("Kafeste döndü, sen açıkta kaldın."))) },
-      { ad: L("Ortaya dön"), aciklama: L("Kontrolü koru."), apply: (fs) => (setTac(fs, 'mesafe'), boost(fs, 0.01, 2), L("Oktagonun ortasını alıyorsun.")) },
+      { ad: L("Ortaya dön"), aciklama: L("Kontrolü koru."), apply: (fs) => (setTac(fs, 'mesafe'), boost(fs, 0.01, 2), L("Hexagonun ortasını alıyorsun.")) },
     ],
   },
   {

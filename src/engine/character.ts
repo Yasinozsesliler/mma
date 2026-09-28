@@ -172,7 +172,7 @@ const STORY_TEMPLATES = [
   L("{memleket}’in arka sokaklarında büyüdün. Babanın tamirhanesinde çalışırken bir gün mahalledeki {gecmis} salonunun camından içeri baktın ve bir daha o camın önünden ayrılamadın. Paran yoktu, salonu temizleyerek antrenman parası ödedin. Şimdi {yas} yaşındasın ve herkesin sana \"hayal\" dediği şeyi gerçeğe çevirmek istiyorsun."),
   L("Ailende herkes sana üniversite okumanı söyledi. Sen ise gece gizlice {gecmis} antrenmanlarına gittin. {memleket}’te yerel turnuvalarda adını duyurdun, ama bu kafes başka bir dünya. {yas} yaşında, cebinde birkaç yüz dolar ve kafanda tek bir hedefle geldin: kemer."),
   L("Kardeşin bir zamanlar umut vadeden bir dövüşçüydü, ama sakatlık onun kariyerini bitirdi. Onun eldivenleri artık sende. {memleket}’ten çıktın, {gecmis} altyapınla bu sporda iz bırakmak ve onun yarım kalan hikâyesini tamamlamak istiyorsun."),
-  L("{memleket}’te bir fabrikada vardiyalı çalışıyordun. Bir gece internette izlediğin bir UFC maçı her şeyi değiştirdi. Zaten yıllardır {gecmis} yapıyordun; şimdi {yas} yaşında, işinden istifa edip her şeyi bu yola koydun. Geri dönüş yok."),
+  L("{memleket}’te bir fabrikada vardiyalı çalışıyordun. Bir gece internette izlediğin bir UCC maçı her şeyi değiştirdi. Zaten yıllardır {gecmis} yapıyordun; şimdi {yas} yaşında, işinden istifa edip her şeyi bu yola koydun. Geri dönüş yok."),
 ];
 
 export function generateBackstory(input: Pick<NewFighterInput, 'memleket' | 'gecmis' | 'yas' | 'uyruk'>) {

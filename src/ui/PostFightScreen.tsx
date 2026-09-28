@@ -1,4 +1,6 @@
 import { L, LOC } from '../i18n';
+import { winCard } from '../share/build';
+import { ShareButton } from '../share/ShareButton';
 import { sfx } from '../audio';
 import { useEffect } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -89,7 +91,10 @@ export function PostFightScreen({ s, act }: { s: GameState; act: Act }) {
     <Screen
       footer={
         ps.roportajSonucu ? (
-          <Button label={s.kutlama ? L("Kutlamaya geç") : L("Devam")} icon={s.kutlama ? 'trophy' : 'arrow-right'} tone={s.kutlama || key === 'win' ? 'gold' : 'red'} onPress={() => act(continueAfterPost)} />
+          <View style={{ gap: 8 }}>
+            {key === 'win' && !s.kutlama ? <ShareButton data={winCard(s)} label={L("Zaferini paylaş")} /> : null}
+            <Button label={s.kutlama ? L("Kutlamaya geç") : L("Devam")} icon={s.kutlama ? 'trophy' : 'arrow-right'} tone={s.kutlama || key === 'win' ? 'gold' : 'red'} onPress={() => act(continueAfterPost)} />
+          </View>
         ) : undefined
       }
     >

@@ -99,7 +99,7 @@ function FollowerBoard({ s }: { s: GameState }) {
     <View style={so.board}>
       <Text style={so.boardTitle}>{L("EN ÇOK TAKİP EDİLENLER")}</Text>
       <Text style={so.boardSub}>
-        {s.stage === 'ufc' ? L("Sıkletin ve UFC’nin P4P yıldızları") : L("Sıkletindeki dövüşçüler")} {L("· Sıran: #")}{myIdx + 1} / {all.length}
+        {s.stage === 'ufc' ? L("Sıkletin ve UCC’nin P4P yıldızları") : L("Sıkletindeki dövüşçüler")} {L("· Sıran: #")}{myIdx + 1} / {all.length}
       </Text>
       {rows.map((r) => {
         const i = all.indexOf(r);

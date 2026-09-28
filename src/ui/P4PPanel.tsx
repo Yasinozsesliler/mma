@@ -1,4 +1,4 @@
-// Sıralama sekmesi: kendi sıkletin ve UFC Pound for Pound listesi.
+// Sıralama sekmesi: kendi sıkletin ve UCC Pound for Pound listesi.
 import { L, LOC } from '../i18n';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useState } from 'react';
@@ -22,19 +22,19 @@ function P4PList({ s, act }: { s: GameState; act: Act }) {
   return (
     <>
       <LinearGradient colors={['#3a2a07', '#120d04', '#08090b']} style={pw.hero}>
-        <Text style={pw.kicker}>{L("UFC · TÜM SIKLETLER")}</Text>
+        <Text style={pw.kicker}>{L("UCC · TÜM SIKLETLER")}</Text>
         <Text style={[pw.title, SLANT]}>{L("POUND FOR POUND")}</Text>
         <Text style={pw.sub}>{L("Sıklet fark etmeksizin dünyanın en iyi")}{' '}{rows.length || 15} {L("dövüşçüsü")}</Text>
         <View style={pw.status}>
           <Icon name={ufc ? 'earth' : 'lock'} size={14} color={ufc ? C.gold : C.faint} />
           <Text style={[pw.statusText, !ufc && { color: C.faint }]}>
             {!ufc
-              ? L("UFC’ye özel. UFC’de kazanmaya başlayınca listeye girebilirsin.")
+              ? L("UCC’ye özel. UCC’de kazanmaya başlayınca listeye girebilirsin.")
               : myScore
                 ? s.p4p?.sira
                   ? L("Sıran: #{0} · P4P puanın {1}", [s.p4p.sira, myScore])
                   : L("P4P puanın {0}. Listeye girmek için {1} puan daha.", [myScore, Math.max(1, (rows[rows.length - 1]?.puan ?? 70) - myScore + 1)])
-                : L("İlk UFC galibiyetinle P4P puanın oluşur.")}
+                : L("İlk UCC galibiyetinle P4P puanın oluşur.")}
           </Text>
         </View>
       </LinearGradient>

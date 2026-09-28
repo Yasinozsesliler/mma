@@ -16,13 +16,13 @@ export interface Owner {
 }
 
 export const OWNERS: Partial<Record<OrgId, Owner>> = {
-  cfc: { ad: L("Ron Castillo"), unvan: L("Cage Fury FC sahibi"), uyruk: 'ABD', tarz: L("Sert ama adil. Savaşçıları sever.") },
-  oktagon: { ad: L("Pavel Horák"), unvan: L("Oktagon MMA kurucusu"), uyruk: L("Çekya"), tarz: L("Şovmen. Stadyumları doldurmak ister.") },
-  pfl: { ad: L("Richard Kessler"), unvan: L("PFL CEO’su"), uyruk: 'ABD', tarz: L("Kurumsal ve hesapçı.") },
-  one: { ad: L("Kenji Takamura"), unvan: L("ONE Championship başkanı"), uyruk: L("Japonya"), tarz: L("Saygı ve disiplin ister. Trash talk’tan hoşlanmaz.") },
-  mvp: { ad: L("Logan Pierce"), unvan: L("MVP MMA kurucusu"), uyruk: 'ABD', tarz: L("Show her şeydir. Para konuşur.") },
-  ufc: { ad: L("Dana White"), unvan: L("UFC Başkanı"), uyruk: 'ABD', tarz: L("Bitirişleri sever, bahaneleri sevmez.") },
-  dwcs: { ad: L("Dana White"), unvan: L("UFC Başkanı"), uyruk: 'ABD', tarz: L("Bitirişleri sever, bahaneleri sevmez.") },
+  cfc: { ad: L("Ron Castillo"), unvan: L("Cage Force FC sahibi"), uyruk: 'ABD', tarz: L("Sert ama adil. Savaşçıları sever.") },
+  oktagon: { ad: L("Pavel Horák"), unvan: L("Hexagon MMA kurucusu"), uyruk: L("Çekya"), tarz: L("Şovmen. Stadyumları doldurmak ister.") },
+  pfl: { ad: L("Richard Kessler"), unvan: L("PFC CEO’su"), uyruk: 'ABD', tarz: L("Kurumsal ve hesapçı.") },
+  one: { ad: L("Kenji Takamura"), unvan: L("ZEN Championship başkanı"), uyruk: L("Japonya"), tarz: L("Saygı ve disiplin ister. Trash talk’tan hoşlanmaz.") },
+  mvp: { ad: L("Logan Pierce"), unvan: L("VIP MMA kurucusu"), uyruk: 'ABD', tarz: L("Show her şeydir. Para konuşur.") },
+  ufc: { ad: L("Dean Wyatt"), unvan: L("UCC Başkanı"), uyruk: 'ABD', tarz: L("Bitirişleri sever, bahaneleri sevmez.") },
+  dwcs: { ad: L("Dean Wyatt"), unvan: L("UCC Başkanı"), uyruk: 'ABD', tarz: L("Bitirişleri sever, bahaneleri sevmez.") },
 };
 
 export const ownerOf = (s: GameState) => OWNERS[currentOrg(s)];

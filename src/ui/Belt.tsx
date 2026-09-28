@@ -20,7 +20,7 @@ const PALETTE: Record<OrgId, [string, string, string, string, string]> = {
 const VB_W = 300;
 const VB_H = 130;
 
-/** UFC kemerini andıran şampiyonluk kemeri: deri kayış, oymalı yan plakalar, küreli büyük orta plaka. */
+/** UCC kemerini andıran şampiyonluk kemeri: deri kayış, oymalı yan plakalar, küreli büyük orta plaka. */
 export function Belt({ org, siklet, width = 300, dim = false }: { org: OrgId; siklet?: WeightClass; width?: number; dim?: boolean }) {
   const [hi, lo, strap, gem, logo] = PALETTE[org];
   const id = useId().replace(/[^a-zA-Z0-9]/g, '');

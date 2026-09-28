@@ -15,7 +15,7 @@ export type IconName = ComponentProps<typeof MaterialCommunityIcons>['name'];
 const TR_NAMES = new Set(['tr', 'az', L("Türkiye"), L("Azerbaycan")]);
 export const upName = (n: string, uyruk?: string) => (LANG === 'tr' && uyruk && TR_NAMES.has(uyruk) ? n.toLocaleUpperCase('tr-TR') : n.toUpperCase());
 
-/** UFC yayın grafiklerindeki eğik (italik) duruş. */
+/** UCC yayın grafiklerindeki eğik (italik) duruş. */
 export const SLANT = { transform: [{ skewX: '-8deg' }] } as const;
 
 export function Icon({ name, size = 18, color = C.dim }: { name: IconName; size?: number; color?: string }) {

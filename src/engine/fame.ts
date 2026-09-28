@@ -98,7 +98,7 @@ export interface FollowerRow {
   sampiyon?: boolean;
 }
 
-/** Takipçi sıralaması: sıkletindeki dövüşçüler, UFC'de P4P yıldızları ve sen. */
+/** Takipçi sıralaması: sıkletindeki dövüşçüler, UCC'de P4P yıldızları ve sen. */
 export function followerBoard(s: GameState): FollowerRow[] {
   const rows: FollowerRow[] = [];
   const seen = new Set<string>();

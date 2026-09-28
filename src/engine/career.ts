@@ -27,7 +27,7 @@ export const STAGE_LABELS = {
   amator: tL("Aşama 1 · Amatör"),
   bolgesel: tL("Aşama 2 · Bölgesel"),
   buyuk: tL("Aşama 3 · Büyük Organizasyon"),
-  ufc: tL("Aşama 5 · UFC"),
+  ufc: tL("Aşama 5 · UCC"),
 };
 
 const money = (n: number) => `$${Math.round(n).toLocaleString(LOC)}`;
@@ -216,7 +216,7 @@ export function finishFight(s: GameState) {
   const sponsor = Math.round(s.populerlik * s.populerlik * { amator: 0, bolgesel: 0.6, buyuk: 2.5, ufc: 12 }[s.stage]);
   if (sponsor > 0) {
     kazanc += sponsor;
-    lines.push(tL("🤝 Sponsor gelirleri{0}: +{1}", [s.stage === 'ufc' ? tL(" (UFC vitrini)") : '', money(sponsor)]));
+    lines.push(tL("🤝 Sponsor gelirleri{0}: +{1}", [s.stage === 'ufc' ? tL(" (UCC vitrini)") : '', money(sponsor)]));
   }
   const merch = pro ? Math.round(merchIncome(s)) : 0;
   if (merch > 0) {
@@ -501,12 +501,12 @@ export function afterPostFight(s: GameState) {
   } else if (org === 'dwcs') {
     s.contract = null;
     if (won && chance(finishMethod ? 0.85 : dwcsIkna ? 0.6 : 0.4)) {
-      openOffers(s, 'ufcGiris', tL("🎟️ Dana White ayağa kalktı: \"{0}, UFC’ye hoş geldin!\"", [s.fighter.soyad]));
+      openOffers(s, 'ufcGiris', tL("🎟️ Dean Wyatt ayağa kalktı: \"{0}, UCC’ye hoş geldin!\"", [s.fighter.soyad]));
     } else {
       openOffers(
         s,
         'serbest',
-        won ? tL("Kazandın ama Dana etkilenmedi: \"Biraz daha gelişsin.\" Diğer kapılar açık.") : tL("DWCS kötü geçti. UFC kapısı şimdilik kapandı."),
+        won ? tL("Kazandın ama Dean etkilenmedi: \"Biraz daha gelişsin.\" Diğer kapılar açık.") : tL("DWCS kötü geçti. UCC kapısı şimdilik kapandı."),
       );
     }
     return;
@@ -519,20 +519,20 @@ export function afterPostFight(s: GameState) {
       openOffers(s, 'kovuldu', tL("📉 {0} seni kadrodan çıkardı. Kariyer bitmedi, ama yeniden inşa etmen lazım.", [ORGS[org].ad]));
       return;
     }
-    // UFC'de sıralama basamağı yükselince maaş yeniden düzenlenir.
+    // UCC'de sıralama basamağı yükselince maaş yeniden düzenlenir.
     if (org === 'ufc' && s.contract && s.contract.kalan > 0 && ufcTier(s) > (s.ufcKademe ?? 0)) {
       s.ufcKademe = ufcTier(s);
-      openOffers(s, 'ufcZam', tL("📈 Artık bir “{0}” dövüşçüsüsün. UFC maaşını yeniden düzenlemek istiyor.", [UFC_TIERS[s.ufcKademe].ad]));
+      openOffers(s, 'ufcZam', tL("📈 Artık bir “{0}” dövüşçüsüsün. UCC maaşını yeniden düzenlemek istiyor.", [UFC_TIERS[s.ufcKademe].ad]));
       return;
     }
     if (s.contract && s.contract.kalan <= 0) {
       openOffers(s, 'yenileme', tL("📜 {0} kontratın bitti. Menajerinin telefonu susmuyor.", [ORGS[org].ad]));
       return;
     }
-    // Dana White iyi bir galibiyetten sonra arayabilir (kontrat ortasında da).
+    // Dean Wyatt iyi bir galibiyetten sonra arayabilir (kontrat ortasında da).
     const dwcsHazir = s.sampiyon || (s.rank != null && ((s.rank <= 3 && s.populerlik >= 25) || (s.rank <= 5 && s.seri >= 3)));
     if (s.stage === 'buyuk' && won && dwcsHazir && s.contract && chance(0.35)) {
-      openOffers(s, 'dwcsDavet', tL("📞 Telefon çaldı. Arayan: Dana White. “Seni izliyorum evlat. Contender Series’e gel, kendini göster.”"));
+      openOffers(s, 'dwcsDavet', tL("📞 Telefon çaldı. Arayan: Dean Wyatt. “Seni izliyorum evlat. Challenger Series’e gel, kendini göster.”"));
       return;
     }
   }
@@ -550,7 +550,7 @@ export function afterPostFight(s: GameState) {
 
 type OfferKind = 'profesyonel' | 'yenileme' | 'serbest' | 'kovuldu' | 'ufcGiris' | 'dwcsDavet' | 'ufcZam';
 
-/** UFC maaş basamakları: sıralamada yükseldikçe maaş katlanır. */
+/** UCC maaş basamakları: sıralamada yükseldikçe maaş katlanır. */
 export const UFC_TIERS = [
   { ad: tL("Sıralamasız"), carpan: 1 },
   { ad: tL("İlk 15"), carpan: 1.6 },
@@ -568,10 +568,10 @@ export function ufcTier(s: GameState) {
 const CLAUSES: Partial<Record<OrgId, string[]>> = {
   cfc: [tL("Bölgesel TV yayını garantisi"), tL("Kazanırsan unvan eleminatörü önceliği")],
   oktagon: [tL("Stadyum kartında yer alma garantisi"), tL("Avrupa turnuvasına katılım hakkı")],
-  pfl: [tL("Sezon playoff’una katılım hakkı, finalde büyük ödül"), tL("Sezon içi sponsorluk hakkı PFL’de")],
+  pfl: [tL("Sezon playoff’una katılım hakkı, finalde büyük ödül"), tL("Sezon içi sponsorluk hakkı PFC’de")],
   one: [tL("Asya’da yayın ve reklam kampanyası"), tL("Kick boks/Muay Thai süper maçlarına çıkma hakkı")],
   mvp: [tL("PPV gelir payı %2"), tL("Sosyal medya içerik zorunluluğu")],
-  ufc: [tL("Kısa haber maddesi: teklif edilen maçı reddedersen ücret %20 düşer"), tL("Venum/UFC giyim kuralları")],
+  ufc: [tL("Kısa haber maddesi: teklif edilen maçı reddedersen ücret %20 düşer"), tL("Vanta/UCC giyim kuralları")],
 };
 
 function makeOffer(s: GameState, org: OrgId, dovus: number, raise = 1, not = '', ozel?: string): Offer {
@@ -601,7 +601,7 @@ export function openOffers(s: GameState, kind: OfferKind, metin: string) {
   if (kind === 'dwcsDavet' && s.contract) {
     const c = s.contract;
     const fesih = Math.round((c.kalan * c.ucret * 0.5) / 1000) * 1000;
-    const dw = makeOffer(s, 'dwcs', 1, 1, tL("Tek dövüş. Etkilersen UFC kontratı. Mevcut {0} kontratını feshetmen gerekiyor.", [ORGS[c.org].kisa]), tL("Kontrat fesih cezası: ${0}", [fesih.toLocaleString(LOC)]));
+    const dw = makeOffer(s, 'dwcs', 1, 1, tL("Tek dövüş. Etkilersen UCC kontratı. Mevcut {0} kontratını feshetmen gerekiyor.", [ORGS[c.org].kisa]), tL("Kontrat fesih cezası: ${0}", [fesih.toLocaleString(LOC)]));
     dw.fesih = fesih;
     dw.pazarlikYapildi = true;
     offers.push(dw, {
@@ -635,16 +635,16 @@ export function openOffers(s: GameState, kind: OfferKind, metin: string) {
       }
       offers.push(makeOffer(s, org, 3, 1.25, tL("Mevcut organizasyonun seni tutmak istiyor.")));
     } else if (s.stage === 'buyuk') {
-      // UFC'ye tek kapı Dana White's Contender Series. Davet için şampiyonluk ya da zirvede popüler bir isim olmak gerekir.
+      // UCC'ye tek kapı Dean Wyatt's Challenger Series. Davet için şampiyonluk ya da zirvede popüler bir isim olmak gerekir.
       if (s.sampiyon) {
-        offers.push(makeOffer(s, 'dwcs', 1, 1, tL("Şampiyonluğun Dana White’ın dikkatini çekti. DWCS’ye davetlisin. Kazanırsan ve etkilersen UFC kapısı açılır.")));
+        offers.push(makeOffer(s, 'dwcs', 1, 1, tL("Şampiyonluğun Dean Wyatt’ın dikkatini çekti. DWCS’ye davetlisin. Kazanırsan ve etkilersen UCC kapısı açılır.")));
       } else if (s.rank != null && ((s.rank <= 3 && s.populerlik >= 25) || (s.rank <= 5 && s.seri >= 3))) {
-        offers.push(makeOffer(s, 'dwcs', 1, 1, tL("Zirvedeki performansın izleniyor. Tek dövüş, tek şans: etkilersen UFC kontratı.")));
+        offers.push(makeOffer(s, 'dwcs', 1, 1, tL("Zirvedeki performansın izleniyor. Tek dövüş, tek şans: etkilersen UCC kontratı.")));
       }
       offers.push(makeOffer(s, org, 4, 1.3, tL("Mevcut organizasyonun yeni bir kontrat sunuyor.")));
     } else {
-      offers.push(makeOffer(s, 'ufc', 4, UFC_TIERS[ufcTier(s)].carpan * 1.1, tL("UFC yeni kontrat masaya koydu ({0} maaş basamağı).", [UFC_TIERS[ufcTier(s)].ad])));
-      if (!s.sampiyon && s.populerlik >= 50) offers.push(makeOffer(s, 'mvp', 3, 1.5, tL("MVP MMA, UFC’den ayrılırsan büyük para vaat ediyor.")));
+      offers.push(makeOffer(s, 'ufc', 4, UFC_TIERS[ufcTier(s)].carpan * 1.1, tL("UCC yeni kontrat masaya koydu ({0} maaş basamağı).", [UFC_TIERS[ufcTier(s)].ad])));
+      if (!s.sampiyon && s.populerlik >= 50) offers.push(makeOffer(s, 'mvp', 3, 1.5, tL("VIP MMA, UCC’den ayrılırsan büyük para vaat ediyor.")));
     }
   }
   s.pending.teklifler = offers;
@@ -664,7 +664,7 @@ export function acceptOffer(s: GameState, id: string) {
   if (o.devam) {
     s.pending = {};
     s.phase = 'hub';
-    s.haberler.unshift(tL("Dana White’ın davetini geri çevirdin. {0} kontratına sadık kaldın.", [ORGS[o.org].kisa]));
+    s.haberler.unshift(tL("Dean Wyatt’ın davetini geri çevirdin. {0} kontratına sadık kaldın.", [ORGS[o.org].kisa]));
     return;
   }
   if (o.fesih) {

@@ -45,7 +45,7 @@ const GUIDE: { baslik: string; icon: IconName; icerik: string[] }[] = [
       L("2️⃣ Kamp: odak alanı, oyun planı, yoğunluk, kilo verme ve basın toplantısı. Oyun planı rakibin zaafına denk gelirse kafeste büyük avantaj sağlar."),
       L("3️⃣ Dövüş: her raunt taktik seçersin. Kritik anlarda (rakip sarsıldı, submission yakalandı) hızlı karar verirsin."),
       L("4️⃣ Sonrası: bonuslar, röportaj, sıralama, kontrat teklifleri ve dövüşler arası olaylar."),
-      L("🏆 Yol: Amatör → Bölgesel (CFC, Oktagon) → Büyük (PFL, ONE, MVP) → DWCS veya kısa haber → UFC kemeri."),
+      L("🏆 Yol: Amatör → Bölgesel (CFC, Hexagon) → Büyük (PFC, ZEN, VIP) → DWCS veya kısa haber → UCC kemeri."),
     ],
   },
 ];
@@ -173,7 +173,7 @@ export function MenuScreen({
         <Logo size={96} />
         <Text style={ms.brand}>{L("Y O L")}</Text>
         <Text style={ms.heroTitle}>{L("KAFESTEN KEMERE")}</Text>
-        <Text style={ms.heroSub}>{L("Sıfırdan UFC şampiyonluğuna. Her karar senin.")}</Text>
+        <Text style={ms.heroSub}>{L("Sıfırdan UCC şampiyonluğuna. Her karar senin.")}</Text>
         {off ? (
           <View style={[ms.off, { borderColor: (off.durum === 'hazir' ? C.green : C.gold) + '66' }]}>
             <Icon name={off.durum === 'hazir' ? 'cloud-check' : 'cloud-download'} size={14} color={off.durum === 'hazir' ? C.green : C.gold} />

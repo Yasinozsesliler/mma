@@ -323,7 +323,7 @@ function weighIn(s: GameState) {
     }
   } else {
     if (org.hidrasyon && chance(0.45)) {
-      lines.push(L("❌ HİDRASYON TESTİNDEN KALDIN! ONE maçı iptal etti. Ücret yok, itibar zedelendi."));
+      lines.push(L("❌ HİDRASYON TESTİNDEN KALDIN! ZEN maçı iptal etti. Ücret yok, itibar zedelendi."));
       k.iptal = true;
       s.populerlik = clamp(s.populerlik - 5, 0, 100);
       s.haberler.unshift(L("❌ Hidrasyon testi başarısız: maç iptal edildi."));

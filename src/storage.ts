@@ -35,11 +35,26 @@ export async function loadAllSlots(): Promise<(GameState | null)[]> {
   return Promise.all(SLOTS.map((x) => loadGame(x)));
 }
 
+// Eski kayıtlardaki gerçek organizasyon/kişi adlarını kurgusal karşılıklarına çevirir (unvanlar, haberler, geçmiş).
+const LEGACY: [RegExp, string][] = [
+  [/Dana White's Contender Series/g, "Dean Wyatt's Challenger Series"],
+  [/Dana White/g, 'Dean Wyatt'],
+  [/(?<![\p{L}\p{N}])UFC(?![\p{L}\p{N}])/gu, 'UCC'],
+  [/(?<![\p{L}\p{N}])PFL(?![\p{L}\p{N}])/gu, 'PFC'],
+  [/ONE Championship/g, 'ZEN Championship'],
+  [/(?<![\p{L}\p{N}])MVP MMA/gu, 'VIP MMA'],
+  [/Oktagon MMA/g, 'Hexagon MMA'],
+  [/Cage Fury/g, 'Cage Force'],
+];
+function renameLegacy(raw: string) {
+  return LEGACY.reduce((t, [re, to]) => t.replace(re, to), raw);
+}
+
 export async function loadGame(slot: Slot = 1): Promise<GameState | null> {
   try {
     const raw = await AsyncStorage.getItem(keyOf(slot));
     if (!raw) return null;
-    const s = JSON.parse(raw) as GameState;
+    const s = JSON.parse(renameLegacy(raw)) as GameState;
     if (s.v !== 1) return null;
     // Eski sürümlerden gelen kayıtları tamamla
     s.puan ??= 0;

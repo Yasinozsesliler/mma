@@ -90,7 +90,7 @@ export function imposedOpponent(s: GameState): Opponent {
   if (org === 'dwcs') {
     const o = generateOpponent(s, { zorluk: 0, org });
     o.etiket = tL("🎟️ DWCS");
-    o.riskMetni = tL("Dana White tribünde. Sadece kazanmak yetmez, bitirmen gerekebilir.");
+    o.riskMetni = tL("Dean Wyatt tribünde. Sadece kazanmak yetmez, bitirmen gerekebilir.");
     return o;
   }
   if (s.sampiyon) {

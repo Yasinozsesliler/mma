@@ -1,5 +1,5 @@
-// Pound for Pound: UFC'nin tüm sıkletlerindeki en iyi 15 dövüşçü. Liste her UFC maçından sonra kıpırdar;
-// oyuncu UFC başarılarıyla (galibiyet, bitiriş, kemer, savunma, seri) listeye girer ve yükselir.
+// Pound for Pound: UCC'nin tüm sıkletlerindeki en iyi 15 dövüşçü. Liste her UCC maçından sonra kıpırdar;
+// oyuncu UCC başarılarıyla (galibiyet, bitiriş, kemer, savunma, seri) listeye girer ve yükselir.
 import { L } from '../i18n';
 import { WEIGHT_CLASSES } from './data';
 import { generateOpponent } from './opponents';
@@ -33,7 +33,7 @@ export function ensureP4P(s: GameState) {
   s.p4p = { liste, sira: null };
 }
 
-/** Oyuncunun P4P puanı: yalnızca UFC başarıları sayılır. */
+/** Oyuncunun P4P puanı: yalnızca UCC başarıları sayılır. */
 export function playerP4PScore(s: GameState) {
   const ufc = s.gecmis.filter((g) => g.org === 'ufc');
   const w = ufc.filter((g) => g.sonuc === 'G').length;
@@ -61,7 +61,7 @@ export function p4pRank(s: GameState): number | null {
   return i >= 0 ? i + 1 : null;
 }
 
-/** UFC maçından sonra: liste kıpırdar, oyuncunun yeri değişirse haber olur. */
+/** UCC maçından sonra: liste kıpırdar, oyuncunun yeri değişirse haber olur. */
 export function updateP4P(s: GameState): string | null {
   ensureP4P(s);
   const p = s.p4p!;

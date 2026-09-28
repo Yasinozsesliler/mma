@@ -1,4 +1,6 @@
 import { L, LOC } from '../i18n';
+import { careerCard } from '../share/build';
+import { ShareButton } from '../share/ShareButton';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -39,6 +41,9 @@ export function ProfilePanel({ s, act }: { s: GameState; act: Act }) {
           <Text style={[pf.tier, { color: tier.renk }]}>{tier.ad}</Text>
         </View>
       </LinearGradient>
+      <View style={{ marginBottom: 12 }}>
+        <ShareButton data={careerCard(s)} label={L("Kariyer kartını paylaş")} />
+      </View>
 
       <Section>{L("HAKKINDA")}</Section>
       <Card>

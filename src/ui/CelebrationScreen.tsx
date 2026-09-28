@@ -1,4 +1,6 @@
 import { L, LOC } from '../i18n';
+import { beltCard } from '../share/build';
+import { ShareButton } from '../share/ShareButton';
 import { sfx } from '../audio';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useMemo, useRef } from 'react';
@@ -83,7 +85,14 @@ export function CelebrationScreen({ s, act }: { s: GameState; act: Act }) {
         ? L("{0}. kemer savunması. Hükümdarlığın sürüyor.", [belt?.savunma ?? 1])
         : L("{0} {1} Sıklet Şampiyonu", [ORGS[k.org].ad, WEIGHT_CLASSES[k.siklet].ad]);
   return (
-    <Screen footer={<Button label={L("Kutlamayı bitir")} icon="arrow-right" tone="gold" onPress={() => act(endCelebration)} />}>
+    <Screen
+      footer={
+        <View style={{ gap: 8 }}>
+          <ShareButton data={beltCard(s)} label={L("Kemerini paylaş")} tone="gold" />
+          <Button label={L("Kutlamayı bitir")} icon="arrow-right" tone="ghost" onPress={() => act(endCelebration)} />
+        </View>
+      }
+    >
       <Confetti />
       <LinearGradient colors={['#4a3508', '#140f04', 'rgba(4,4,5,0)']} style={cl.hero}>
         <Text style={cl.kicker}>{ORGS[k.org].kisa} · {WEIGHT_CLASSES[k.siklet].ad.toLocaleUpperCase(LOC)} {L("SIKLET")}</Text>

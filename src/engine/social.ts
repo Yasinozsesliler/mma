@@ -438,7 +438,7 @@ const FIGHTER_THANKS = [
   L("Mesajlarınızın hepsini okuyorum. Söz, sizi utandırmayacağım."),
   L("Takımıma, hocama, aileme: her şey sizin için."),
 ];
-const BRANDS = [L("Kuvvet Protein"), L("Arslan Enerji"), L("Kafes Giyim"), L("Titan Eldiven"), L("Demir Spor"), L("Oktagon Su"), L("Pençe Ayakkabı"), L("Bozkurt Kulaklık")];
+const BRANDS = [L("Kuvvet Protein"), L("Arslan Enerji"), L("Kafes Giyim"), L("Titan Eldiven"), L("Demir Spor"), L("Hexagon Su"), L("Pençe Ayakkabı"), L("Bozkurt Kulaklık")];
 const STATS_TR: Record<string, string> = { vurus: L("vuruş"), gures: L("güreş"), yer: L("yer dövüşü"), kondisyon: 'kondisyon', cene: L("çene"), hiz: L("hız"), iq: L("dövüş zekâsı") };
 
 /** Son paylaşımlarda geçmeyen bir metin seçer (akış tekrar etmesin). */
