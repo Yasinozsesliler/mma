@@ -27,6 +27,7 @@ import {
   RetireScreen,
 } from './src/ui/GameScreens';
 import { MenuScreen } from './src/ui/MenuScreen';
+import { DailyScreen } from './src/ui/DailyScreen';
 import { ShopScreen } from './src/ui/ShopScreen';
 import { CasinoScreen } from './src/ui/CasinoScreen';
 import { SocialScreen } from './src/ui/SocialScreen';
@@ -62,7 +63,7 @@ const PHASE_LABELS: Record<Phase, string> = {
   emeklilik: L("Emeklilik"),
 };
 
-type View_ = 'loading' | 'menu' | 'create' | 'game';
+type View_ = 'loading' | 'menu' | 'create' | 'game' | 'daily';
 
 export default function App() {
   const [view, setView] = useState<View_>('loading');
@@ -146,7 +147,7 @@ export default function App() {
   // Android geri tuşu: oyundan ve karakter oluşturmadan menüye döner; menüdeyse uygulamadan çıkar.
   useEffect(() => {
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
-      if (view === 'game' || view === 'create') {
+      if (view === 'game' || view === 'create' || view === 'daily') {
         setView('menu');
         return true;
       }
@@ -167,7 +168,9 @@ export default function App() {
       </View>
     );
   } else if (view === 'menu') {
-    content = <MenuScreen saves={saves} active={slot} onNew={newCareer} onContinue={continueSlot} onDelete={removeSlot} />;
+    content = <MenuScreen saves={saves} active={slot} onNew={newCareer} onContinue={continueSlot} onDelete={removeSlot} onDaily={() => setView('daily')} />;
+  } else if (view === 'daily') {
+    content = <DailyScreen onExit={() => setView('menu')} />;
   } else if (view === 'create') {
     content = (
       <CreateScreen
@@ -234,7 +237,7 @@ export default function App() {
     }
   }
 
-  const topLabel = view === 'create' ? L("Karakter Oluşturma") : view === 'game' && game ? PHASE_LABELS[game.phase] : null;
+  const topLabel = view === 'daily' ? L("Günün Dövüşü") : view === 'create' ? L("Karakter Oluşturma") : view === 'game' && game ? PHASE_LABELS[game.phase] : null;
 
   return (
     <SafeAreaProvider>

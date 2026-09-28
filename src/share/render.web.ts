@@ -159,9 +159,9 @@ export async function renderCard(d: ShareCardData, avatarId: string, beltId: str
   ctx.save();
   ctx.translate(WD / 2, y + 110);
   ctx.transform(1, 0, -0.14, 1, 0, 0);
-  fit(ctx, up(d.ad), (p) => `700 ${p}px ${F.display}`, 132, 980);
+  fit(ctx, d.adBuyuk ?? up(d.ad), (p) => `700 ${p}px ${F.display}`, 132, 980);
   ctx.fillStyle = '#ffffff';
-  ctx.fillText(up(d.ad), 0, 0);
+  ctx.fillText(d.adBuyuk ?? up(d.ad), 0, 0);
   ctx.restore();
   y += 170;
   ctx.fillStyle = '#d9dbe0';

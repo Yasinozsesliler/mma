@@ -8,6 +8,7 @@ import { STAGE_LABELS } from '../engine/career';
 import { WEIGHT_CLASSES } from '../engine/data';
 import { slotsFor, type Slot } from '../storage';
 import { PremiumCard } from './PremiumCard';
+import { DailyCard } from './DailyCard';
 import { adPrivacyRequired, showAdPrivacyOptions, usePremium } from '../monetization';
 import { privacyUrl } from '../appConfig';
 import { FighterAvatar } from './FighterAvatar';
@@ -149,12 +150,14 @@ export function MenuScreen({
   onNew,
   onContinue,
   onDelete,
+  onDaily,
 }: {
   saves: (GameState | null)[];
   active: Slot;
   onNew: (slot: Slot) => void;
   onContinue: (slot: Slot) => void;
   onDelete: (slot: Slot) => void;
+  onDaily: () => void;
 }) {
   const any = saves.some(Boolean);
   const [open, setOpen] = useState<number | null>(any ? null : 0);
@@ -229,6 +232,8 @@ export function MenuScreen({
           );
         })}
       </View>
+
+      <DailyCard onPress={onDaily} />
 
       <Section>{L("KARİYER YUVALARI")}</Section>
       {SLOTS.map((x) => (

@@ -7,6 +7,8 @@ export type ShareCardData = {
   /** En üstteki büyük başlık: "🏆 YENİ ŞAMPİYON" */
   baslik: string;
   ad: string;
+  /** İsmin büyük harfli hali (uyruğa göre: Türkçe adlar İ ile, diğerleri standart) */
+  adBuyuk?: string;
   lakap: string;
   /** İsmin altındaki satır: "UCC · HAFİF SIKLET ŞAMPİYONU" */
   ust: string;

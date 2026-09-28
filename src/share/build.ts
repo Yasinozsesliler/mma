@@ -4,6 +4,7 @@ import { ORGS, WEIGHT_CLASSES } from '../engine/data';
 import { activeBelts, champLabel, legacyScore } from '../engine/legacy';
 import type { GameState } from '../engine/types';
 import { L, LOC } from '../i18n';
+import { upName } from '../ui/components';
 import type { ShareCardData } from './types';
 
 const up = (s: string) => s.toLocaleUpperCase(LOC);
@@ -12,7 +13,7 @@ const MESAJ = () => L("Kafesten Kemere · Kendi dövüş efsaneni yaz");
 
 function base(s: GameState) {
   const f = s.fighter;
-  return { ad: `${f.ad} ${f.soyad}`, lakap: f.lakap, look: f.gorunum, mesaj: MESAJ() };
+  return { ad: `${f.ad} ${f.soyad}`, adBuyuk: upName(`${f.ad} ${f.soyad}`, f.uyruk), lakap: f.lakap, look: f.gorunum, mesaj: MESAJ() };
 }
 
 /** Kemer kazanma / savunma / çift kemer anı. */

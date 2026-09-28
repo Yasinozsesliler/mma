@@ -71,7 +71,7 @@ export function CardPreview({ data, onReady }: { data: ShareCardData; onReady: (
 
         {data.lakap ? <Text style={st.lakap}>“{up(data.lakap)}”</Text> : null}
         <Text style={st.name} numberOfLines={1} adjustsFontSizeToFit>
-          {up(data.ad)}
+          {data.adBuyuk ?? up(data.ad)}
         </Text>
         <Text style={st.ust} numberOfLines={1} adjustsFontSizeToFit>
           {data.ust}
