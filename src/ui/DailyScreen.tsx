@@ -25,6 +25,7 @@ import type { GameState, PlanKey } from '../engine/types';
 import { L, LOC } from '../i18n';
 import { getPref, setPref } from '../prefs';
 import { ShareButton } from '../share/ShareButton';
+import { enableNotifications, NOTIFY, rescheduleNotifications, useNotifyState } from '../notify';
 import type { ShareCardData } from '../share/types';
 import { Compare } from './Compare';
 import { Button, Card, Icon, Screen, SLANT, Title, upName, type IconName } from './components';
@@ -81,6 +82,7 @@ export function DailyScreen({ onExit }: { onExit: () => void }) {
     setPref(MATCH_KEY, '');
     endDailyFight();
     setStore(next);
+    void rescheduleNotifications(next);
     gRef.current = null;
     setGame(null);
   };
@@ -236,11 +238,33 @@ function DailyResultView({ gun, spec, r, store, onExit }: { gun: number; spec: D
       </View>
       <Countdown />
       <Text style={st.hint}>{L("Yarın yeni bir dövüşçü, yeni bir rakip. Seriyi bozma!")}</Text>
+      <RemindMe store={store} />
     </Screen>
   );
 }
 
+/** İlk günlük dövüşten sonra: bildirim izni için doğal an. */
+function RemindMe({ store }: { store: DailyStore }) {
+  const ns = useNotifyState();
+  if (!NOTIFY || ns !== 'sorulmadi') return null;
+  return (
+    <View style={st.remind}>
+      <Icon name="bell-ring" size={20} color={C.gold} />
+      <Text style={st.remindText}>{L("Yarınki dövüşü ve serini hatırlatalım mı?")}</Text>
+      <Button
+        label={L("Hatırlat")}
+        tone="gold"
+        onPress={async () => {
+          if (await enableNotifications()) void rescheduleNotifications(store);
+        }}
+      />
+    </View>
+  );
+}
+
 const st = StyleSheet.create({
+  remind: { backgroundColor: '#15120a', borderWidth: 1, borderColor: C.goldDeep, borderRadius: 12, padding: 12, gap: 8, marginTop: 16, alignItems: 'center' },
+  remindText: { color: C.text, fontFamily: F.semi, fontSize: 13, textAlign: 'center' },
   head: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
   kicker: { color: C.red, fontFamily: F.display, fontSize: 13, letterSpacing: 2 },
   streak: { color: C.orange, fontFamily: F.bold, fontSize: 13 },

@@ -500,6 +500,9 @@ export interface GameState {
   unvanlar: string[];
   /** Görülen öğretici ipuçları. Tanımsızsa (eski kayıt) ipucu gösterilmez. */
   ipuclari?: string[];
+  /** Nesil modu: kaçıncı nesil (1 = ilk dövüşçü) ve önceki nesillerin özeti. */
+  nesil?: number;
+  hanedan?: import('./dynasty').Ancestor[];
   /** Ödüllü reklam teklifleri: alındıkları dövüş sayısı (her dövüş arasında birer kez). */
   odul?: { sakatlikMac?: number; profilHafta?: number };
   saglik: number;

@@ -10,6 +10,7 @@ import { slotsFor, type Slot } from '../storage';
 import { PremiumCard } from './PremiumCard';
 import { DailyCard } from './DailyCard';
 import { adPrivacyRequired, showAdPrivacyOptions, usePremium } from '../monetization';
+import { disableNotifications, enableNotifications, NOTIFY, useNotifyState } from '../notify';
 import { privacyUrl } from '../appConfig';
 import { FighterAvatar } from './FighterAvatar';
 import { BACKGROUNDS } from '../engine/data';
@@ -71,7 +72,7 @@ function Collapsible({ baslik, icon, children, open, onToggle }: { baslik: strin
 }
 
 
-function SlotCard({ n, save, active, onNew, onContinue, onDelete }: { n: Slot; save: GameState | null; active: boolean; onNew: () => void; onContinue: () => void; onDelete: () => void }) {
+function SlotCard({ n, save, active, onNew, onContinue, onDelete, onDynasty }: { n: Slot; save: GameState | null; active: boolean; onNew: () => void; onContinue: () => void; onDelete: () => void; onDynasty: () => void }) {
   const [sure, setSure] = useState(false);
   if (!save)
     return (
@@ -125,10 +126,16 @@ function SlotCard({ n, save, active, onNew, onContinue, onDelete }: { n: Slot; s
       ) : (
         <View style={ms.slotActions}>
           {retired ? (
-            <Pressable onPress={onNew} style={[ms.mainBtn, { backgroundColor: C.red }]}>
-              <Icon name="plus" size={16} color="#fff" />
-              <Text style={ms.mainText}>{L("YENİ KARİYER")}</Text>
-            </Pressable>
+            <>
+              <Pressable onPress={onDynasty} style={[ms.mainBtn, { backgroundColor: C.gold }]}>
+                <Icon name="account-child" size={16} color="#000" />
+                <Text style={[ms.mainText, { color: '#000' }]}>{L("YENİ NESİL")}</Text>
+              </Pressable>
+              <Pressable onPress={onNew} style={[ms.mainBtn, { backgroundColor: C.red }]}>
+                <Icon name="plus" size={16} color="#fff" />
+                <Text style={ms.mainText}>{L("YENİ KARİYER")}</Text>
+              </Pressable>
+            </>
           ) : (
             <Pressable onPress={onContinue} style={[ms.mainBtn, { backgroundColor: active ? C.gold : C.red }]}>
               <Icon name="play" size={16} color={active ? '#000' : '#fff'} />
@@ -151,12 +158,14 @@ export function MenuScreen({
   onContinue,
   onDelete,
   onDaily,
+  onDynasty,
 }: {
   saves: (GameState | null)[];
   active: Slot;
   onNew: (slot: Slot) => void;
   onContinue: (slot: Slot) => void;
   onDelete: (slot: Slot) => void;
+  onDynasty: (slot: Slot) => void;
   onDaily: () => void;
 }) {
   const any = saves.some(Boolean);
@@ -168,6 +177,7 @@ export function MenuScreen({
   const SLOTS = slotsFor(premium);
   const firstEmpty = SLOTS.find((x) => !saves[x - 1]);
   const ses = useSoundSettings();
+  const bildirim = useNotifyState();
   return (
     <Screen
       footer={
@@ -231,13 +241,21 @@ export function MenuScreen({
             </Pressable>
           );
         })}
+        {NOTIFY ? (
+          <Pressable onPress={() => void (bildirim === 'acik' ? disableNotifications() : enableNotifications())} style={[ms.lang, bildirim === 'acik' && ms.langOn]}>
+            <Icon name={bildirim === 'acik' ? 'bell-ring' : 'bell-off'} size={14} color={bildirim === 'acik' ? C.gold : C.faint} />
+            <Text style={[ms.langText, bildirim === 'acik' && { color: C.gold }]}>
+              {L("Bildirimler")} · {bildirim === 'acik' ? L("AÇIK") : L("KAPALI")}
+            </Text>
+          </Pressable>
+        ) : null}
       </View>
 
       <DailyCard onPress={onDaily} />
 
       <Section>{L("KARİYER YUVALARI")}</Section>
       {SLOTS.map((x) => (
-        <SlotCard key={x} n={x} save={saves[x - 1]} active={x === active && !!saves[x - 1]} onNew={() => onNew(x)} onContinue={() => onContinue(x)} onDelete={() => onDelete(x)} />
+        <SlotCard key={x} n={x} save={saves[x - 1]} active={x === active && !!saves[x - 1]} onNew={() => onNew(x)} onContinue={() => onContinue(x)} onDelete={() => onDelete(x)} onDynasty={() => onDynasty(x)} />
       ))}
       {!any ? (
         <Card>

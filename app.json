@@ -62,7 +62,14 @@
         }
       ],
       "expo-iap",
-      "expo-asset"
+      "expo-asset",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#e63946"
+        }
+      ]
     ]
   }
 }

@@ -40,6 +40,9 @@ import { checkAchievements } from './src/engine/legacy';
 import { popToFollowers } from './src/engine/fame';
 import { useSoundScene, type Scene } from './src/audio';
 import { initMonetization, PremiumManager } from './src/monetization';
+import { applyHeritage, heritageOf, type Heritage } from './src/engine/dynasty';
+import { onNotificationOpen, rescheduleNotifications } from './src/notify';
+import { loadDaily } from './src/ui/DailyScreen';
 import { socialWelcome } from './src/engine/social';
 import { HasTopBar, TopBar } from './src/ui/components';
 import { C } from './src/ui/theme';
@@ -125,7 +128,9 @@ export default function App() {
 
   // Yuvadaki eski kayıt ancak yeni karakter tamamlanınca üzerine yazılır; oluşturmadan geri dönülürse kaybolmaz.
   const [createSlot, setCreateSlot] = useState<Slot>(1);
+  const [heritage, setHeritage] = useState<Heritage | null>(null);
   const newCareer = (x: Slot = slotRef.current) => {
+    setHeritage(null);
     setCreateSlot(x);
     setView('create');
   };
@@ -140,6 +145,20 @@ export default function App() {
     if (x === slotRef.current) setGame(null);
   };
 
+  // Bildirimler: menüye her dönüşte (günlük dövüş ya da kariyer değişmiş olabilir) yeniden planlanır.
+  useEffect(() => {
+    if (view !== 'menu') return;
+    const g = saves[slotRef.current - 1];
+    void rescheduleNotifications(loadDaily(), g && g.phase !== 'emeklilik' ? g.fighter.lakap || g.fighter.ad : undefined);
+  }, [view, saves]);
+  useEffect(
+    () =>
+      onNotificationOpen((hedef) => {
+        if (hedef === 'gunluk') setView('daily');
+        else if (gameRef.current && gameRef.current.phase !== 'emeklilik') setView('game');
+      }),
+    [],
+  );
   // Mağaza sürümü: reklam izni ve reklam SDK'sı açılışta bir kez.
   useEffect(() => {
     void initMonetization();
@@ -168,15 +187,37 @@ export default function App() {
       </View>
     );
   } else if (view === 'menu') {
-    content = <MenuScreen saves={saves} active={slot} onNew={newCareer} onContinue={continueSlot} onDelete={removeSlot} onDaily={() => setView('daily')} />;
+    content = (
+      <MenuScreen
+        saves={saves}
+        active={slot}
+        onNew={newCareer}
+        onContinue={continueSlot}
+        onDelete={removeSlot}
+        onDaily={() => setView('daily')}
+        onDynasty={(x) => {
+          const g = saves[x - 1];
+          if (!g) return;
+          setHeritage(heritageOf(g));
+          setCreateSlot(x);
+          setView('create');
+        }}
+      />
+    );
   } else if (view === 'daily') {
     content = <DailyScreen onExit={() => setView('menu')} />;
   } else if (view === 'create') {
     content = (
       <CreateScreen
-        onBack={() => setView('menu')}
+        heritage={heritage}
+        onBack={() => {
+          setHeritage(null);
+          setView('menu');
+        }}
         onDone={(input, stats) => {
           const s = createGame(input, stats);
+          if (heritage) applyHeritage(s, heritage);
+          setHeritage(null);
           socialWelcome(s);
           setSlot(createSlot);
           setGame(s);
@@ -232,7 +273,17 @@ export default function App() {
         content = game.kutlama ? <CelebrationScreen {...props} /> : <HubScreen {...props} />;
         break;
       case 'emeklilik':
-        content = <RetireScreen s={game} onNew={() => setView('menu')} />;
+        content = (
+          <RetireScreen
+            s={game}
+            onNew={() => setView('menu')}
+            onDynasty={() => {
+              setHeritage(heritageOf(game));
+              setCreateSlot(slotRef.current);
+              setView('create');
+            }}
+          />
+        );
         break;
     }
   }

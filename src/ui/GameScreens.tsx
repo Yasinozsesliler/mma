@@ -677,15 +677,16 @@ export function OffersScreen({ s, act }: { s: GameState; act: Act }) {
 
 // ---------- Emeklilik ----------
 
-export function RetireScreen({ s, onNew }: { s: GameState; onNew: () => void }) {
+export function RetireScreen({ s, onNew, onDynasty }: { s: GameState; onNew: () => void; onDynasty?: () => void }) {
   const r = s.rekor;
   const ufcChamp = s.unvanlar.some((u) => u.startsWith('UCC'));
   return (
     <Screen
       footer={
         <View style={{ gap: 8 }}>
-          <ShareButton data={careerCard(s)} label={L("Kariyer kartını paylaş")} tone="gold" />
-          <Button label={L("Kariyer yuvalarına dön")} icon="folder-account" onPress={onNew} />
+          {onDynasty ? <Button label={L("Yeni nesil: çocuğunla devam et")} icon="account-child" tone="gold" onPress={onDynasty} /> : null}
+          <ShareButton data={careerCard(s)} label={L("Kariyer kartını paylaş")} />
+          <Button label={L("Kariyer yuvalarına dön")} icon="folder-account" tone="ghost" onPress={onNew} />
         </View>
       }
     >

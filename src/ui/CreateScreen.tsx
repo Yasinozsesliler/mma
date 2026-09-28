@@ -1,4 +1,6 @@
 import { L, LOC } from '../i18n';
+import { HeritageBanner } from './DynastyPanel';
+import type { Heritage } from '../engine/dynasty';
 import { MONETIZATION, showRewarded, usePremium } from '../monetization';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -17,19 +19,19 @@ import { C, F, R } from './theme';
 
 const STEPS = 9;
 
-export function CreateScreen({ onDone, onBack }: { onDone: (input: NewFighterInput, stats: Stats) => void; onBack: () => void }) {
+export function CreateScreen({ onDone, onBack, heritage }: { onDone: (input: NewFighterInput, stats: Stats) => void; onBack: () => void; heritage?: Heritage | null }) {
   const [step, setStep] = useState(1);
   const [inp, setInp] = useState<NewFighterInput>({
     ad: '',
-    soyad: '',
+    soyad: heritage?.soyad ?? '',
     lakap: '',
-    uyruk: 'tr',
-    memleket: '',
+    uyruk: heritage?.uyruk ?? 'tr',
+    memleket: heritage?.memleket ?? '',
     yas: 22,
     siklet: 'hafif',
-    gecmis: 'boks',
+    gecmis: heritage?.gecmis ?? 'boks',
     hikaye: '',
-    salonId: gymsFor('tr')[0].id,
+    salonId: gymsFor(heritage?.uyruk ?? 'tr')[0].id,
     gorunum: { ...DEFAULT_LOOK },
   });
   const [stats, setStats] = useState<Stats | null>(null);
@@ -70,8 +72,15 @@ export function CreateScreen({ onDone, onBack }: { onDone: (input: NewFighterInp
             
             {L("Adın ne?")}
           </Title>
+          {heritage ? <HeritageBanner h={heritage} /> : null}
           <Field label={L("Ad")} value={inp.ad} onChange={(ad) => set({ ad })} />
-          <Field label={L("Soyad")} value={inp.soyad} onChange={(soyad) => set({ soyad })} />
+          {heritage ? (
+            <Text style={[cs.label, { marginBottom: 12 }]}>
+              {L("Soyad")}: <Text style={{ color: C.gold }}>{inp.soyad}</Text>
+            </Text>
+          ) : (
+            <Field label={L("Soyad")} value={inp.soyad} onChange={(soyad) => set({ soyad })} />
+          )}
           <Field label={L("Lakap (isteğe bağlı)")} value={inp.lakap} onChange={(lakap) => set({ lakap })} placeholder={L("örn. Demir Yumruk")} />
         </>
       )}

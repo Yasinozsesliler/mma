@@ -110,4 +110,5 @@ writeFileSync(new URL('android-icon-foreground.png', assets), icon(1024, 0.6, 'f
 writeFileSync(new URL('android-icon-monochrome.png', assets), icon(1024, 0.6, 'mono'));
 writeFileSync(new URL('splash-icon.png', assets), icon(1024, 0.9, 'fg'));
 writeFileSync(new URL('favicon.png', assets), icon(48, 0.92));
+writeFileSync(new URL('notification-icon.png', assets), icon(96, 0.92, 'mono'));
 console.log('İkonlar public/ ve assets/ klasörlerine yazıldı.');

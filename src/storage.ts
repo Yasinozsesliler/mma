@@ -21,7 +21,7 @@ const ACTIVE_KEY = 'yol_aktif_yuva';
 export async function getActiveSlot(): Promise<Slot> {
   try {
     const v = Number(await AsyncStorage.getItem(ACTIVE_KEY));
-    return v === 2 || v === 3 ? v : 1;
+    return v >= 2 && v <= 5 ? (v as Slot) : 1;
   } catch {
     return 1;
   }
