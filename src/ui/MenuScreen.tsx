@@ -1,4 +1,5 @@
 import { L, LANG, LANGS, LOC, setLang } from '../i18n';
+import { setSoundSettings, useSoundSettings } from '../audio';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useState, type ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -157,6 +158,7 @@ export function MenuScreen({
   const cur = saves[active - 1];
   const canContinue = !!cur && cur.phase !== 'emeklilik';
   const firstEmpty = SLOTS.find((x) => !saves[x - 1]);
+  const ses = useSoundSettings();
   return (
     <Screen
       footer={
@@ -198,6 +200,25 @@ export function MenuScreen({
             >
               <Text style={ms.langFlag}>{l.bayrak}</Text>
               <Text style={[ms.langText, on && { color: C.gold }]}>{l.hazir ? l.ad : L("yakında")}</Text>
+            </Pressable>
+          );
+        })}
+      </View>
+
+      <View style={ms.langRow}>
+        {(
+          [
+            ['muzik', 'music', L("Müzik")],
+            ['efekt', 'volume-high', L("Efektler")],
+          ] as const
+        ).map(([k, icon, ad]) => {
+          const on = ses[k];
+          return (
+            <Pressable key={k} onPress={() => setSoundSettings({ [k]: !on })} style={[ms.lang, on && ms.langOn]}>
+              <Icon name={on ? icon : k === 'muzik' ? 'music-off' : 'volume-off'} size={14} color={on ? C.gold : C.faint} />
+              <Text style={[ms.langText, on && { color: C.gold }]}>
+                {ad} · {on ? L("AÇIK") : L("KAPALI")}
+              </Text>
             </Pressable>
           );
         })}

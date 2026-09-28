@@ -1,4 +1,6 @@
 import { L, LOC } from '../i18n';
+import { sfx } from '../audio';
+import { useEffect } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { continueAfterPost, interview, money } from '../engine/career';
@@ -74,6 +76,10 @@ export function PostFightScreen({ s, act }: { s: GameState; act: Act }) {
   const t = TONES[key];
   const opp = s.pending.rakip;
   const pWin = key === 'draw' || key === 'nc' ? null : key === 'win';
+  useEffect(() => {
+    sfx(key === 'win' ? 'win' : key === 'loss' ? 'lose' : 'applause');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const rest = ps.satirlar.slice(1).filter((l) => !IN_TILES.some((re) => re.test(l)));
   const para = rest.filter((l) => l.includes('$'));

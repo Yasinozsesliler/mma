@@ -23,5 +23,9 @@
 "kaybetti": "lost to",
 "{0} {1}: {2} {3}: {4} {5} · {6} (R{7})": "{0} {1}: {2} {3} {4} {5} · {6} (R{7})",
 "🧠 {0} bu hamleyi bekliyordu. Aynı oyunu {1}. kez oynamak seni öngörülebilir yapıyor.": "🧠 {0} was expecting that move. Running the same play ({1} times now) makes you predictable.",
-"\"Hep {0} yapıyorsun, adam seni okudu! Bu raunt başka bir şey dene.\"": "\"You keep going for “{0}”, they've read you! Try something else this round.\""
+"\"Hep {0} yapıyorsun, adam seni okudu! Bu raunt başka bir şey dene.\"": "\"You keep going for “{0}”, they've read you! Try something else this round.\"",
+"Müzik": "Music",
+"Efektler": "Sound effects",
+"AÇIK": "ON",
+"KAPALI": "OFF"
 }

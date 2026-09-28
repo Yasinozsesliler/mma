@@ -1,5 +1,6 @@
 // Kafes sahnesi: eklemli dövüşçüler ve hakem, maç akışındaki her olayı koreografiyle canlandırır.
 import { L as tL, LOC } from '../i18n';
+import { sfx, type Sfx } from '../audio';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
@@ -123,8 +124,11 @@ export function CageView({ fs, shown, pLook, oLook, speed = 1 }: { fs: FightStat
       const lp = part === 'head' ? j.head : part === 'body' ? { x: (j.neck.x + j.pelvis.x) / 2, y: (j.neck.y + j.pelvis.y) / 2 } : j.knL;
       fx.current.push({ ...world(a, lp), kind, t0: now() });
       kick();
+      const snd: Record<Fx['kind'], Sfx> = { hit: part === 'head' ? 'punch' : 'body', big: 'heavy', lock: 'lock', tap: 'tap', dust: 'slam', stars: 'ooh' };
+      sfx(snd[kind]);
     }, delay * sp);
   };
+  const later = (name: Sfx, ms: number, amount = 1) => setTimeout(() => sfx(name, amount), ms * sp);
 
   const other = (s: Side): Side => (s === 'p' ? 'o' : 'p');
   const idleAfter = (a: Actor, ms: number) =>
@@ -141,6 +145,7 @@ export function CageView({ fs, shown, pLook, oLook, speed = 1 }: { fs: FightStat
     switch (ev.tur) {
       case 'round':
         setCaption('');
+        sfx('bell');
         queue('p', [['stance', 300], ['touch', 350, { x: GAP / 2 - 24 }], ['touch', 150, { x: GAP / 2 - 24 }], ['stance', 350]]);
         queue('o', [['stance', 300], ['touch', 350, { x: GAP / 2 - 24 }], ['touch', 150, { x: GAP / 2 - 24 }], ['stance', 350]]);
         queue('r', [['refSeparate', 350], ['refSeparate', 300], ['refIdle', 400, { y: -6 }]]);
@@ -152,7 +157,10 @@ export function CageView({ fs, shown, pLook, oLook, speed = 1 }: { fs: FightStat
       case 'strike': {
         const alt = ev.alt as PoseName;
         queue(A, [['stance', 170, { x: reach }], [alt, 130, { x: reach + 4 }], ['stance', 170, { x: reach }], ['stance', 320]]);
-        if (ev.miss) queue(Dd, [['stance', 250], ['stance', 150, { torso: -16, head: -10, x: -8 }], ['stance', 300]]);
+        if (ev.miss) {
+          queue(Dd, [['stance', 250], ['stance', 150, { torso: -16, head: -10, x: -8 }], ['stance', 300]]);
+          later('whoosh', 260);
+        }
         else {
           queue(Dd, [['stance', 290], ['stance', 110, { torso: -10, head: alt === 'upper' ? -30 : -18, x: -6 }], ['stance', 300]]);
           hitAt(Dd, 'head', 'hit', 300);
@@ -163,7 +171,10 @@ export function CageView({ fs, shown, pLook, oLook, speed = 1 }: { fs: FightStat
       case 'kick': {
         const alt = ev.alt as PoseName;
         queue(A, [['stance', 170, { x: reach - 4 }], [alt, 170, { x: reach - 2 }], ['stance', 200, { x: reach - 4 }], ['stance', 300]]);
-        if (ev.miss) queue(Dd, [['stance', 250], ['stance', 150, { x: -12, torso: -10 }], ['stance', 300]]);
+        if (ev.miss) {
+          queue(Dd, [['stance', 250], ['stance', 150, { x: -12, torso: -10 }], ['stance', 300]]);
+          later('whoosh', 300);
+        }
         else {
           queue(Dd, [['stance', 330], alt === 'lowKick' ? ['stance', 130, { lL2: 45, y: 4 }] : ['hurt', 130, { x: -6 }], ['stance', 320]]);
           hitAt(Dd, alt === 'headKick' ? 'head' : alt === 'lowKick' ? 'leg' : 'body', alt === 'headKick' ? 'big' : 'hit', 340);
@@ -188,6 +199,7 @@ export function CageView({ fs, shown, pLook, oLook, speed = 1 }: { fs: FightStat
         if (ev.miss) {
           queue(A, [['stance', 150, { x: 8 }], ['shot', 260, { x: GAP - 44 }], ['sprawl', 250, { x: GAP - 46 }], ['stance', 400]]);
           queue(Dd, [['stance', 260], ['sprawl', 220, { x: 6 }], ['stance', 400]]);
+          later('whoosh', 250);
           return;
         }
         queue(A, [['stance', 150, { x: 10 }], ['shot', 260, { x: GAP - 36 }], ['kneelTop', 320, { x: GAP - 30 }]]);
@@ -218,6 +230,7 @@ export function CageView({ fs, shown, pLook, oLook, speed = 1 }: { fs: FightStat
         setTimeout(() => {
           fx.current.push({ ...world(Dd, joints(cur.current[Dd]).head), kind: 'stars', t0: now() });
           kick();
+          sfx('swell', 0.8);
         }, 600 * sp);
         return;
       }
@@ -228,6 +241,7 @@ export function CageView({ fs, shown, pLook, oLook, speed = 1 }: { fs: FightStat
         queue('r', [['refIdle', 300], ['refStop', 350, { x: 0 }], ['refStop', 400, { x: 0 }]]);
         face.current.r = Dd === 'o' ? 1 : -1;
         hitAt(Dd, 'head', 'big', 290);
+        later('roar', 520);
         return;
       }
     }
@@ -287,6 +301,8 @@ export function CageView({ fs, shown, pLook, oLook, speed = 1 }: { fs: FightStat
         const kz = fs.sonuc.kazanan;
         const bitirme = ['KO', 'TKO', 'SUB'].includes(fs.sonuc.yontem);
         setCaption(kz === 'berabere' ? tL("BERABERE") : `KAZANAN: ${kz === 'p' ? fs.pAd : fs.oAd}`.toLocaleUpperCase(LOC));
+        sfx('bell2');
+        setTimeout(() => sfx(kz === 'berabere' ? 'ooh' : 'applause', kz === 'p' ? 1.3 : 0.7), 900);
         if (kz === 'berabere') {
           queue('r', [['refBoth', 600, { x: 0 }]]);
           queue('p', [['dejected', 500, { x: GAP / 2 - 30 }]]);
@@ -307,12 +323,14 @@ export function CageView({ fs, shown, pLook, oLook, speed = 1 }: { fs: FightStat
         face.current.p = 1;
         face.current.o = -1;
         setCaption(tL("{0}. RAUNT BİTTİ", [fs.raunt]));
+        sfx('bell2');
         queue('p', [['stanceLow', 700, { x: -20, aL1: 10, aL2: 30, aR1: 5, aR2: 30 }]]);
         queue('o', [['stanceLow', 700, { x: -20, aL1: 10, aL2: 30, aR1: 5, aR2: 30 }]]);
         queue('r', [['refSeparate', 400, { x: 0 }], ['refIdle', 400]]);
       } else if (fs.durum === 'kritik' && fs.kritik) {
         setCaption('');
         const kr = fs.kritik;
+        sfx('swell', 0.9);
         if (kr === 'rakipSersem' || kr === 'sarsildin') {
           const hurt: Side = kr === 'rakipSersem' ? 'o' : 'p';
           queue(hurt, [['reel', 250, { x: -8 }], ['hurt', 300, { x: -6 }], ['reel', 300, { x: -10 }]]);

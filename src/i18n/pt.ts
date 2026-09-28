@@ -3262,4 +3262,8 @@ export const PT: Record<string, string> = {
   "USTA": "MESTRE",
   "yendi": "venceu",
   "kaybetti": "perdeu para",
+  "Müzik": "Música",
+  "Efektler": "Efeitos",
+  "AÇIK": "LIGADO",
+  "KAPALI": "DESLIGADO",
 };

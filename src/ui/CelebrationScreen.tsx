@@ -1,4 +1,5 @@
 import { L, LOC } from '../i18n';
+import { sfx } from '../audio';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useMemo, useRef } from 'react';
 import { Animated, Dimensions, StyleSheet, Text, View } from 'react-native';
@@ -69,6 +70,7 @@ export function CelebrationScreen({ s, act }: { s: GameState; act: Act }) {
   const scale = useRef(new Animated.Value(0.3)).current;
   useEffect(() => {
     Animated.spring(scale, { toValue: 1, friction: 5, tension: 60, useNativeDriver: true }).start();
+    sfx('fanfare');
   }, [scale]);
   const belts = k.tur === 'cift' ? activeBelts(s).filter((b) => b.org === k.org) : activeBelts(s).filter((b) => b.org === k.org && b.siklet === k.siklet);
   const belt = belts.find((b) => b.siklet === k.siklet);

@@ -37,6 +37,7 @@ import { AchievementsScreen } from './src/ui/AchievementsScreen';
 import { AchievementToast } from './src/ui/AchievementToast';
 import { checkAchievements } from './src/engine/legacy';
 import { popToFollowers } from './src/engine/fame';
+import { useSoundScene, type Scene } from './src/audio';
 import { socialWelcome } from './src/engine/social';
 import { HasTopBar, TopBar } from './src/ui/components';
 import { C } from './src/ui/theme';
@@ -136,6 +137,10 @@ export default function App() {
     putSave(x, null);
     if (x === slotRef.current) setGame(null);
   };
+
+  const phase = view === 'game' && game ? game.phase : null;
+  const scene: Scene = !phase || phase === 'emeklilik' ? 'menu' : phase === 'dovus' ? 'fight' : phase === 'kutlama' ? 'celebrate' : 'hub';
+  useSoundScene(scene);
 
   let content;
   if (view === 'loading' || !ready) {

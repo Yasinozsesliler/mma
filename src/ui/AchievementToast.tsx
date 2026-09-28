@@ -1,4 +1,5 @@
 import { L } from '../i18n';
+import { sfx } from '../audio';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
@@ -11,6 +12,7 @@ export function AchievementToast({ items, onDone }: { items: string[]; onDone: (
   const key = items.join('|');
   useEffect(() => {
     if (!items.length) return;
+    sfx('chime');
     y.setValue(-120);
     const anim = Animated.sequence([
       Animated.spring(y, { toValue: 0, friction: 7, useNativeDriver: true }),

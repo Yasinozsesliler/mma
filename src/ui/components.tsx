@@ -1,5 +1,6 @@
 // Yalnızca kullanılan ikon seti içe aktarılır (diğer setler paketi ve çevrimdışı indirmeyi şişirir).
 import { L, LANG, LOC } from '../i18n';
+import { setSoundSettings, sfx, useSoundSettings } from '../audio';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { createContext, useContext, useEffect, useRef, type ComponentProps, type ReactNode } from 'react';
@@ -71,6 +72,20 @@ export function CageBg({ opacity = 0.04 }: { opacity?: number }) {
 /** Üstte TopBar varsa ekran üst güvenli alanı tekrar eklemez. */
 export const HasTopBar = createContext(false);
 
+function MuteButton() {
+  const ses = useSoundSettings();
+  const on = ses.muzik || ses.efekt;
+  return (
+    <Pressable
+      onPress={() => setSoundSettings({ muzik: !on, efekt: !on })}
+      hitSlop={8}
+      style={({ pressed }) => [st.topBtn, { paddingHorizontal: 9, opacity: pressed ? 0.6 : 1 }]}
+    >
+      <Icon name={on ? 'volume-high' : 'volume-off'} size={16} color={on ? C.text : C.faint} />
+    </Pressable>
+  );
+}
+
 export function TopBar({ label, onMenu }: { label: string; onMenu: () => void }) {
   return (
     <SafeAreaView edges={['top']} style={{ backgroundColor: '#020203' }}>
@@ -82,10 +97,13 @@ export function TopBar({ label, onMenu }: { label: string; onMenu: () => void })
             <Text style={[st.topLabel, SLANT]}>{label.toLocaleUpperCase(LOC)}</Text>
           </View>
         </View>
-        <Pressable onPress={onMenu} style={({ pressed }) => [st.topBtn, { opacity: pressed ? 0.6 : 1 }]}>
-          <Icon name="menu" size={16} color={C.text} />
-          <Text style={st.topBtnText}>{L("ANA MENÜ")}</Text>
-        </Pressable>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <MuteButton />
+          <Pressable onPress={onMenu} style={({ pressed }) => [st.topBtn, { opacity: pressed ? 0.6 : 1 }]}>
+            <Icon name="menu" size={16} color={C.text} />
+            <Text style={st.topBtnText}>{L("ANA MENÜ")}</Text>
+          </Pressable>
+        </View>
       </View>
       <LinearGradient colors={[C.red, C.redDeep, 'transparent']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ height: 2 }} />
     </SafeAreaView>
@@ -170,7 +188,10 @@ export function Choice({
   const accent = tone === 'gold' ? C.gold : tone === 'plain' ? C.dim : C.red;
   return (
     <Pressable
-      onPress={onPress}
+      onPress={() => {
+        sfx('click');
+        onPress();
+      }}
       disabled={disabled}
       style={({ pressed }) => [
         st.choice,
@@ -221,7 +242,10 @@ export function Button({
   );
   return (
     <Pressable
-      onPress={onPress}
+      onPress={() => {
+        sfx('click');
+        onPress();
+      }}
       disabled={disabled}
       style={({ pressed }) => [{ opacity: disabled ? 0.4 : pressed ? 0.85 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] }]}
     >

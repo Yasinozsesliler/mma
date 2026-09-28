@@ -3302,4 +3302,8 @@ export const RU: Record<string, string> = {
   "USTA": "МАСТЕР",
   "yendi": "победил",
   "kaybetti": "проиграл",
+  "Müzik": "Музыка",
+  "Efektler": "Эффекты",
+  "AÇIK": "ВКЛ",
+  "KAPALI": "ВЫКЛ",
 };

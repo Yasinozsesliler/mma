@@ -3262,4 +3262,8 @@ export const ES: Record<string, string> = {
   "USTA": "MAESTRO",
   "yendi": "venció a",
   "kaybetti": "perdió ante",
+  "Müzik": "Música",
+  "Efektler": "Efectos",
+  "AÇIK": "SÍ",
+  "KAPALI": "NO",
 };

@@ -1,4 +1,5 @@
 import { L } from '../i18n';
+import { sfx } from '../audio';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -66,7 +67,13 @@ function ItemCard({ s, it, act, onMsg }: { s: GameState; it: ShopItem; act: Act;
         ) : (
           <Pressable
             disabled={!afford}
-            onPress={() => act((x) => onMsg(buy(x, it.id)))}
+            onPress={() =>
+              act((x) => {
+                const before = x.para;
+                onMsg(buy(x, it.id));
+                if (x.para < before) sfx('cash');
+              })
+            }
             style={({ pressed }) => [sh.buy, { opacity: !afford ? 0.35 : pressed ? 0.7 : 1 }]}
           >
             <Text style={sh.buyText}>{afford ? L("SATIN AL") : L("PARA YETMİYOR")}</Text>

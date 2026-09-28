@@ -1,5 +1,6 @@
 // Face to face sahnesi: rakibin hamlesi ve senin seçimin animasyonla oynar, sonra kim üstün geldiği gösterilir.
 import { L } from '../i18n';
+import { sfx, useSoundScene } from '../audio';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, StyleSheet, Text, View } from 'react-native';
@@ -87,7 +88,9 @@ export function FaceOffStage({ s }: { s: GameState }) {
   const sonuc = k.yuzyuzeSonuc;
 
   // Rakibin ilk hamlesi sahneye girişte oynar.
+  useSoundScene('fight');
   useEffect(() => {
+    sfx('flash');
     if (hamle && !sonuc) play(hamle.anim).start();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -95,7 +98,10 @@ export function FaceOffStage({ s }: { s: GameState }) {
   useEffect(() => {
     if (!sonuc) return;
     v.banner.setValue(0);
+    sfx('flash');
+    const tm = setTimeout(() => sfx(sonuc.kazanan === 'p' ? 'applause' : 'ooh', 0.6), 700);
     seq([play(sonuc.anim), Animated.spring(v.banner, { toValue: 1, friction: 6, useNativeDriver: true })]).start();
+    return () => clearTimeout(tm);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sonuc?.anim, sonuc?.baslik]);
 

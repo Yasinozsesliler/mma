@@ -3247,4 +3247,8 @@ export const EN: Record<string, string> = {
   "yendi": "beat",
   "kaybetti": "lost to",
   "{0} {1}: {2} {3}: {4} {5} · {6} (R{7})": "{0} {1}: {2} {3} {4} {5} · {6} (R{7})",
+  "Müzik": "Music",
+  "Efektler": "Sound effects",
+  "AÇIK": "ON",
+  "KAPALI": "OFF",
 };
