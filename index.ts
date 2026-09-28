@@ -1,8 +1,13 @@
 import { registerRootComponent } from 'expo';
 
-import App from './App';
+import { loadLang } from './src/i18n/load';
 
+// Dil sözlüğü, oyun modülleri (sabit listeler dahil) yüklenmeden önce hazır olmalı; App bu yüzden sonra yüklenir.
 // registerRootComponent calls AppRegistry.registerComponent('main', () => App);
-// It also ensures that whether you load the app in Expo Go or in a native build,
-// the environment is set up appropriately
-registerRootComponent(App);
+function start() {
+  registerRootComponent(require('./App').default);
+}
+
+const loading = loadLang();
+if (loading) loading.then(start);
+else start();

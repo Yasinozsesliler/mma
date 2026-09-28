@@ -4,6 +4,9 @@
 const VERSION = '__VERSION__';
 const PRECACHE = __PRECACHE__;
 const CACHE = `yol-${VERSION}`;
+// Dil sözlüğü dosyaları (dil kodu → adres). Yalnızca oyuncunun kullandığı dilinki önbelleğe alınır.
+const LANG_FILES = __LANG_FILES__;
+const LANG_KEY = '/__yol_dil';
 
 async function addWithRetry(cache, url, tries = 3) {
   for (let i = 0; ; i++) {
@@ -20,6 +23,19 @@ async function addWithRetry(cache, url, tries = 3) {
 
 // Sayfa "çevrimdışı hazır mı?" diye sorar: sürüm ve önbellekte eksik dosya sayısı döner.
 self.addEventListener('message', (e) => {
+  // Sayfa hangi dili kullandığını bildirir; güncellemelerde o dilin dosyası da önceden indirilir.
+  if (e.data && e.data.tip === 'dil') {
+    const dil = String(e.data.dil);
+    e.waitUntil(
+      caches.open(CACHE).then((c) =>
+        Promise.all([
+          c.put(LANG_KEY, new Response(dil)),
+          LANG_FILES[dil] ? c.match(LANG_FILES[dil]).then((hit) => hit || addWithRetry(c, LANG_FILES[dil])) : null,
+        ]),
+      ),
+    );
+    return;
+  }
   if (e.data !== 'durum' || !e.source) return;
   caches
     .open(CACHE)
@@ -38,7 +54,17 @@ self.addEventListener('install', (e) => {
       // Yeni sürüm ancak TÜM dosyaları indiğinde devreye girer. Bir dosya inmezse kurulum başarısız olur,
       // eski (tam önbellekli) sürüm çalışmaya devam eder ve tarayıcı bir sonraki açılışta yeniden dener.
       // Böylece yarım bir güncelleme çevrimdışı oyunu asla bozmaz.
-      .then((c) => Promise.all(PRECACHE.map((url) => addWithRetry(c, url))))
+      .then((c) =>
+        // Önceki sürümde kaydedilen dil de bu kurulumda indirilir ki çevrimdışı açılışta sözlük hazır olsun.
+        caches
+          .match(LANG_KEY)
+          .then((r) => (r ? r.text() : null))
+          .catch(() => null)
+          .then((dil) => {
+            const list = dil && LANG_FILES[dil] ? [...PRECACHE, LANG_FILES[dil]] : PRECACHE;
+            return Promise.all(list.map((url) => addWithRetry(c, url))).then(() => (dil ? c.put(LANG_KEY, new Response(dil)) : null));
+          }),
+      )
       .then(() => self.skipWaiting()),
   );
 });

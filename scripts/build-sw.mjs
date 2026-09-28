@@ -16,21 +16,31 @@ function walk(dir) {
   });
 }
 
-const files = walk(dist)
+const all = walk(dist)
   .map((p) => relative(dist, p).split(sep).join('/'))
   .filter((p) => !SKIP.has(p) && !p.endsWith('.map'))
   .sort();
 
+// Dil sözlükleri (en-*.js, es-*.js …) herkese indirilmez: SW yalnızca oyuncunun seçtiği dilinkini önbelleğe alır.
+const LANG_RE = /^_expo\/static\/js\/web\/(en|es|pt|ru)-[0-9a-f]+\.js$/;
+const langFiles = {};
+for (const f of all) {
+  const m = f.match(LANG_RE);
+  if (m) langFiles[m[1]] = '/' + encodeURI(f);
+}
+const files = all.filter((f) => !LANG_RE.test(f));
+
 const hash = createHash('sha256');
-files.forEach((f) => hash.update(f).update(readFileSync(join(dist, f))));
+all.forEach((f) => hash.update(f).update(readFileSync(join(dist, f))));
 const version = hash.digest('hex').slice(0, 12);
 
 // index.html kök adres olarak da önbelleğe alınır ("/").
 const urls = ['/', ...files.map((f) => '/' + encodeURI(f))];
 const swPath = join(dist, 'sw.js');
-const sw = readFileSync(swPath, 'utf8').replace('__VERSION__', version).replace('__PRECACHE__', JSON.stringify(urls, null, 0));
-if (sw.includes('__PRECACHE__') || sw.includes('__VERSION__')) throw new Error('sw.js şablonu bulunamadı');
+const sw = readFileSync(swPath, 'utf8').replace('__VERSION__', version).replace('__PRECACHE__', JSON.stringify(urls, null, 0)).replace('__LANG_FILES__', JSON.stringify(langFiles));
+if (sw.includes('__PRECACHE__') || sw.includes('__VERSION__') || sw.includes('__LANG_FILES__')) throw new Error('sw.js şablonu bulunamadı');
 writeFileSync(swPath, sw);
 
 const size = files.reduce((a, f) => a + statSync(join(dist, f)).size, 0);
-console.log(`Service worker: ${urls.length} dosya ön-önbellekte (${(size / 1024 / 1024).toFixed(1)} MB), sürüm ${version}`);
+const langSize = Object.values(langFiles).map((u) => statSync(join(dist, decodeURI(u).slice(1))).size);
+console.log(`Service worker: ${urls.length} dosya ön-önbellekte (${(size / 1024 / 1024).toFixed(1)} MB) + dil başına ${(Math.max(0, ...langSize) / 1024).toFixed(0)} KB'a kadar, sürüm ${version}`);

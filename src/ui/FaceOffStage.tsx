@@ -147,7 +147,7 @@ export function FaceOffStage({ s }: { s: GameState }) {
             <Text style={fo.resultText}>{k.yuzyuze}</Text>
             <View style={fo.chips}>
               {sonuc.etkiler.map((e) => {
-                const bad = (/^(Senin|Your|Tu|Seu) .*-\d/.test(e) || /^(Rakip|Opponent)\S* .*\+\d/.test(e) || /(del rival|do adversário) .*\+\d/.test(e) || /^(Popülerlik|Popularity|Popularidad|Popularidade) -/.test(e));
+                const bad = (/^(Senin|Your|Tu|Seu|Ваш|Ваша) .*-\d/.test(e) || /^(Rakip|Opponent)\S* .*\+\d/.test(e) || /(del rival|do adversário|соперника) .*\+\d/.test(e) || /^(Popülerlik|Popularity|Popularidad|Popularidade|Популярность) -/.test(e));
                 const good = !bad && /[+-]\d/.test(e);
                 const col = bad ? '#ff4d5e' : good ? C.green : C.gold;
                 return (
