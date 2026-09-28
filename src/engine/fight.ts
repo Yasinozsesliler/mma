@@ -36,7 +36,7 @@ let SC = 1;
 
 const DRAIN: Record<Tactic, number> = { baski: 12, kontra: 6, takedown: 11, clinch: 10, mesafe: 7 };
 
-const STYLE_TACTICS: Record<Background, [Tactic, number][]> = {
+export const STYLE_TACTICS: Record<Background, [Tactic, number][]> = {
   boks: [['baski', 3], ['kontra', 3], ['mesafe', 2], ['clinch', 0.5], ['takedown', 0.2]],
   muaythai: [['baski', 3], ['kontra', 2], ['mesafe', 1.5], ['clinch', 2.5], ['takedown', 0.3]],
   kickboks: [['baski', 2], ['kontra', 2], ['mesafe', 3.5], ['clinch', 0.5], ['takedown', 0.2]],

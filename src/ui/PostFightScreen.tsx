@@ -1,6 +1,7 @@
 import { L, LOC } from '../i18n';
 import { maybeInterstitial } from '../monetization';
-import { careerFights } from './RewardCard';
+import { adShootAmount, careerFights, claimAdShoot } from '../engine/rewards';
+import { AdOffer } from './AdOffer';
 import { CoachTip } from './CoachTip';
 import { winCard } from '../share/build';
 import { ShareButton } from '../share/ShareButton';
@@ -152,6 +153,16 @@ export function PostFightScreen({ s, act }: { s: GameState; act: Act }) {
         </View>
       ) : null}
 
+      {ps.roportajSonucu && !ps.reklamCekimi ? (
+        <AdOffer
+          icon="movie-open"
+          title={L("Sponsor reklam çekimi")}
+          desc={L("Bir markanın reklamında oyna: +{0}", [money(adShootAmount(s))])}
+          onReward={() => act((x) => void claimAdShoot(x))}
+        />
+      ) : null}
+      {ps.reklamCekimi ? <Text style={pf.shootDone}>{L("🎬 Reklam çekimi: +{0}", [money(ps.reklamCekimi)])}</Text> : null}
+
       {para.length ? (
         <>
           <Section>{L("KAZANÇ DÖKÜMÜ")}</Section>
@@ -219,6 +230,7 @@ export function PostFightScreen({ s, act }: { s: GameState; act: Act }) {
 }
 
 const pf = StyleSheet.create({
+  shootDone: { color: C.green, fontFamily: F.bold, fontSize: 13, textAlign: 'center', marginVertical: 8 },
   hero: { marginHorizontal: -16, marginTop: -16, paddingTop: 22, paddingHorizontal: 16, paddingBottom: 18, alignItems: 'center', marginBottom: 12 },
   glowLine: { position: 'absolute', top: 0, left: 0, right: 0, height: 2, opacity: 0.9 },
   org: { color: C.faint, fontFamily: F.display, fontSize: 11, letterSpacing: 3, marginBottom: 10 },

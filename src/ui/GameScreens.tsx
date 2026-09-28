@@ -1,4 +1,7 @@
 import { L } from '../i18n';
+import { AdOffer } from './AdOffer';
+import { ScoutReportCard } from './ScoutReportCard';
+import { claimScout } from '../engine/rewards';
 import { RewardCard } from './RewardCard';
 import { CoachTip, type TipId } from './CoachTip';
 import { careerCard } from '../share/build';
@@ -502,6 +505,16 @@ export function CampScreen({ s, act }: { s: GameState; act: Act }) {
           
           {L("Strateji Odası")}
         </Title>
+        {k.kesif ? (
+          <ScoutReportCard o={o} />
+        ) : (
+          <AdOffer
+            icon="file-search"
+            title={L("Detaylı keşif raporu")}
+            desc={L("Rakibin dövüş alışkanlıklarını ve ona karşı en etkili taktiği öğren.")}
+            onReward={() => act(claimScout)}
+          />
+        )}
         <PlanPicker s={s} onPick={(p) => choose(p)} />
       </Screen>
     );

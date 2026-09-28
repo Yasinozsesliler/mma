@@ -189,6 +189,8 @@ export type WeightCut = 'kademeli' | 'normal' | 'sert';
 export type PressChoice = 'saygili' | 'trash' | 'sessiz';
 
 export interface CampState {
+  /** Ödüllü detaylı keşif raporu açıldı mı */
+  kesif?: boolean;
   step: 'sure' | 'takvim' | 'yer' | 'focus' | 'plan' | 'intensity' | 'kilo' | 'basin' | 'haftalik' | 'sakatlik' | 'ozet' | 'tarti' | 'yuzyuze';
   pKilo?: number;
   oKilo?: number;
@@ -349,6 +351,8 @@ export interface GameEventState {
 }
 
 export interface PostFight {
+  /** Ödüllü sponsor reklam çekiminden kazanılan (bir kez) */
+  reklamCekimi?: number;
   satirlar: string[];
   roportajSecenekleri: string[];
   roportaj?: { id: string; text: string }[];
@@ -497,7 +501,7 @@ export interface GameState {
   /** Görülen öğretici ipuçları. Tanımsızsa (eski kayıt) ipucu gösterilmez. */
   ipuclari?: string[];
   /** Ödüllü reklam teklifleri: alındıkları dövüş sayısı (her dövüş arasında birer kez). */
-  odul?: { puanMac?: number; sakatlikMac?: number };
+  odul?: { sakatlikMac?: number; profilHafta?: number };
   saglik: number;
   sakatliklar: Injury[];
   takim: Team;

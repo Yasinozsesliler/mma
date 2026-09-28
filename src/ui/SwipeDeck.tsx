@@ -1,4 +1,6 @@
 import { L } from '../i18n';
+import { AdOffer } from './AdOffer';
+import { canRefreshProfiles, claimProfiles } from '../engine/rewards';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRef } from 'react';
 import { Animated, PanResponder, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
@@ -117,6 +119,11 @@ export function SwipeDeck({ s, act, onMatch }: { s: GameState; act: Act; onMatch
         </LinearGradient>
         <Text style={sw.emptyTitle}>{L("Bu haftalık profiller bitti")}</Text>
         <Text style={sw.emptyText}>{L("Çevrende yeni kimse kalmadı. Gelecek hafta yeni profiller gelecek. Bu arada eşleşmelerinle randevuya çıkabilirsin.")}</Text>
+        {canRefreshProfiles(s) ? (
+          <View style={{ alignSelf: 'stretch', marginTop: 8 }}>
+            <AdOffer icon="account-multiple-plus" title={L("Yeni profiller")} desc={L("Bu hafta çevrene yeni kişiler gelsin.")} onReward={() => act(claimProfiles)} />
+          </View>
+        ) : null}
       </View>
     );
   }
