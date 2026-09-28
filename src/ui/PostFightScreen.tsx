@@ -1,4 +1,5 @@
 import { L, LOC } from '../i18n';
+import { askReview } from '../review';
 import { maybeInterstitial } from '../monetization';
 import { adShootAmount, careerFights, claimAdShoot } from '../engine/rewards';
 import { AdOffer } from './AdOffer';
@@ -98,8 +99,10 @@ export function PostFightScreen({ s, act }: { s: GameState; act: Act }) {
           <View style={{ gap: 8 }}>
             {key === 'win' && !s.kutlama ? <ShareButton data={winCard(s)} label={L("Zaferini paylaş")} /> : null}
             <Button label={s.kutlama ? L("Kutlamaya geç") : L("Devam")} icon={s.kutlama ? 'trophy' : 'arrow-right'} tone={s.kutlama || key === 'win' ? 'gold' : 'red'} onPress={async () => {
-                await maybeInterstitial(careerFights(s));
+                const reklam = await maybeInterstitial(careerFights(s));
                 act(continueAfterPost);
+                // Mutlu an: en az 3 maçlık galibiyet serisi (reklamın hemen ardından değil).
+                if (!reklam && key === 'win' && !s.kutlama && s.seri >= 3 && careerFights(s) >= 6) void askReview();
               }} />
           </View>
         ) : undefined

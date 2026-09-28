@@ -1,4 +1,6 @@
 import { L } from '../i18n';
+import { playWalkout } from '../audio';
+import { walkoutNow } from '../cosmetics';
 import { CoachTip } from './CoachTip';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
@@ -209,6 +211,11 @@ export function FightScreen({ s, act }: { s: GameState; act: Act }) {
   const fs = s.pending.dovus!;
   const setFs = (fn: (f: typeof fs) => typeof fs) => act((x) => (x.pending.dovus = fn(x.pending.dovus!)));
   const fresh = fs.raunt === 1 && fs.log.length === 0;
+  useEffect(() => {
+    const w = fresh ? walkoutNow() : null;
+    if (w) playWalkout(w);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const org = ORGS[currentOrg(s)].kisa + (fs.unvanMaci ? L(" · ÜNVAN") : fs.anaMac ? L(" · ANA MAÇ") : '');
 
   // Olaylar tek tek akar; kullanıcı hız seçebilir ya da atlayabilir.

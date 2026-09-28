@@ -1,4 +1,5 @@
 import { L, LANG, LANGS, LOC } from '../i18n';
+import { useCosmetics, useFrame } from '../cosmetics';
 import { setLang } from '../i18n/boot';
 import { setSoundSettings, useSoundSettings } from '../audio';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -73,6 +74,7 @@ function Collapsible({ baslik, icon, children, open, onToggle }: { baslik: strin
 
 
 function SlotCard({ n, save, active, onNew, onContinue, onDelete, onDynasty }: { n: Slot; save: GameState | null; active: boolean; onNew: () => void; onContinue: () => void; onDelete: () => void; onDynasty: () => void }) {
+  const frame = useFrame();
   const [sure, setSure] = useState(false);
   if (!save)
     return (
@@ -95,7 +97,7 @@ function SlotCard({ n, save, active, onNew, onContinue, onDelete, onDynasty }: {
         {retired ? <Pill text={L("EMEKLİ")} icon="flag-checkered" color={C.faint} /> : null}
       </View>
       <View style={ms.slotBody}>
-        <FighterAvatar look={f.gorunum} size={62} ring={belts ? C.gold : active ? C.red : '#3a3d45'} />
+        <FighterAvatar look={f.gorunum} size={62} ring={frame ?? (belts ? C.gold : active ? C.red : '#3a3d45')} />
         <View style={{ flex: 1 }}>
           {f.lakap ? <Text style={ms.slotNick}>“{f.lakap.toLocaleUpperCase(LOC)}”</Text> : null}
           <Text style={[ms.slotName, SLANT]} numberOfLines={1}>
@@ -159,6 +161,7 @@ export function MenuScreen({
   onDelete,
   onDaily,
   onDynasty,
+  onLocker,
 }: {
   saves: (GameState | null)[];
   active: Slot;
@@ -167,6 +170,7 @@ export function MenuScreen({
   onDelete: (slot: Slot) => void;
   onDynasty: (slot: Slot) => void;
   onDaily: () => void;
+  onLocker: () => void;
 }) {
   const any = saves.some(Boolean);
   const [open, setOpen] = useState<number | null>(any ? null : 0);
@@ -178,6 +182,7 @@ export function MenuScreen({
   const firstEmpty = SLOTS.find((x) => !saves[x - 1]);
   const ses = useSoundSettings();
   const bildirim = useNotifyState();
+  const yeniKoz = useCosmetics().yeni.length;
   return (
     <Screen
       footer={
@@ -252,6 +257,16 @@ export function MenuScreen({
       </View>
 
       <DailyCard onPress={onDaily} />
+
+      <Pressable onPress={onLocker} style={({ pressed }) => [ms.locker, pressed && { borderColor: C.gold }]}>
+        <Icon name="hanger" size={22} color={C.gold} />
+        <View style={{ flex: 1 }}>
+          <Text style={ms.lockerTitle}>{L("DOLAP")}</Text>
+          <Text style={ms.lockerSub}>{L("Şort, eldiven, çerçeve, kemer ve giriş müziği")}</Text>
+        </View>
+        {yeniKoz ? <Text style={ms.lockerNew}>{L("{0} YENİ", [yeniKoz])}</Text> : null}
+        <Icon name="chevron-right" size={20} color={C.faint} />
+      </Pressable>
 
       <Section>{L("KARİYER YUVALARI")}</Section>
       {SLOTS.map((x) => (
@@ -357,4 +372,8 @@ const ms = StyleSheet.create({
   guide: { color: C.dim, fontFamily: F.body, fontSize: 14, lineHeight: 21, marginBottom: 6 },
   branch: { paddingVertical: 10, borderTopWidth: 1, borderTopColor: C.border },
   branchTitle: { color: C.text, fontFamily: F.bold, fontSize: 15 },
+  locker: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: C.card, borderWidth: 1, borderColor: C.border, borderRadius: 14, padding: 14, marginTop: 12 },
+  lockerTitle: { color: C.gold, fontFamily: F.display, fontSize: 16, letterSpacing: 1 },
+  lockerSub: { color: C.dim, fontFamily: F.body, fontSize: 12 },
+  lockerNew: { backgroundColor: C.red, color: '#fff', fontFamily: F.display, fontSize: 10, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, overflow: 'hidden' },
 });

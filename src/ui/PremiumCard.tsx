@@ -4,13 +4,16 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { sfx } from '../audio';
 import { L } from '../i18n';
-import { buyPremium, MONETIZATION, restorePremium, usePremium, usePremiumPrice } from '../monetization';
+import { buy, buyPremium, MONETIZATION, restorePremium, useAdFree, usePremium, usePremiumPrice, usePrice } from '../monetization';
+import { ADFREE_SKU } from '../monetization/skus';
 import { Button, Icon } from './components';
 import { C, F } from './theme';
 
 export function PremiumCard() {
   const premium = usePremium();
   const price = usePremiumPrice();
+  const adFree = useAdFree();
+  const adPrice = usePrice(ADFREE_SKU);
   const [msg, setMsg] = useState('');
   const [busy, setBusy] = useState(false);
   if (!MONETIZATION) return null;
@@ -23,10 +26,10 @@ export function PremiumCard() {
       </View>
     );
 
-  const buy = async () => {
+  const purchase = async (fn: () => ReturnType<typeof buyPremium>) => {
     setBusy(true);
     setMsg('');
-    const r = await buyPremium();
+    const r = await fn();
     setBusy(false);
     if (r === 'ok') sfx('fanfare');
     else if (r === 'hata') setMsg(L("Satın alma şu an yapılamadı. İnternet bağlantını kontrol edip tekrar dene."));
@@ -38,13 +41,21 @@ export function PremiumCard() {
         <Icon name="crown" size={22} color={C.gold} />
         <Text style={st.title}>{L("ŞAMPİYON PAKETİ")}</Text>
       </View>
-      {[L("Reklamsız oyun"), L("Ödüller reklam izlemeden, anında"), L("5 kariyer yuvası (3 yerine)"), L("Oyunun gelişimine destek")].map((t) => (
+      {[L("Reklamsız oyun"), L("Ödüller reklam izlemeden, anında"), L("5 kariyer yuvası (3 yerine)"), L("Özel Şampiyon çerçevesi"), L("Oyunun gelişimine destek")].map((t) => (
         <View key={t} style={st.row}>
           <Icon name="check-bold" size={14} color={C.green} />
           <Text style={st.item}>{t}</Text>
         </View>
       ))}
-      <Button label={price ? L("Satın al · {0}", [price]) : L("Satın al")} icon="crown" tone="gold" disabled={busy || !price} onPress={buy} />
+      <Button label={price ? L("Satın al · {0}", [price]) : L("Satın al")} icon="crown" tone="gold" disabled={busy || !price} onPress={() => purchase(buyPremium)} />
+      {adFree ? (
+        <Text style={st.adFree}>{L("Reklamsız Paket aktif")}</Text>
+      ) : (
+        <Pressable disabled={busy || !adPrice} onPress={() => purchase(() => buy(ADFREE_SKU))} style={[st.adBtn, (busy || !adPrice) && { opacity: 0.5 }]}>
+          <Icon name="cancel" size={14} color={C.dim} />
+          <Text style={st.adText}>{adPrice ? L("Yalnızca reklamları kaldır · {0}", [adPrice]) : L("Yalnızca reklamları kaldır")}</Text>
+        </Pressable>
+      )}
       <Pressable
         onPress={async () => {
           setMsg((await restorePremium()) ? '' : L("Bu hesapta satın alma bulunamadı."));
@@ -65,6 +76,9 @@ const st = StyleSheet.create({
   title: { color: C.gold, fontFamily: F.display, fontSize: 18, letterSpacing: 1 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   item: { color: C.text, fontFamily: F.body, fontSize: 13 },
+  adBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderWidth: 1, borderColor: C.border, borderRadius: 8, paddingVertical: 10 },
+  adText: { color: C.dim, fontFamily: F.semi, fontSize: 13 },
+  adFree: { color: C.green, fontFamily: F.semi, fontSize: 12, textAlign: 'center' },
   restore: { color: C.faint, fontFamily: F.semi, fontSize: 12, textAlign: 'center', textDecorationLine: 'underline', marginTop: 2 },
   msg: { color: C.dim, fontFamily: F.semi, fontSize: 12, textAlign: 'center' },
 });

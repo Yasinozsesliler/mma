@@ -3,7 +3,7 @@
 import { createAudioPlayer, setAudioModeAsync, type AudioPlayer } from 'expo-audio';
 import { AppState } from 'react-native';
 import { getPref, setPref } from '../prefs';
-import type { Scene, Sfx, SoundSettings } from './types';
+import type { Scene, Sfx, SoundSettings, Walkout } from './types';
 
 // ---------- Ayarlar ----------
 
@@ -57,6 +57,10 @@ const FILES = {
   crowd: require('../../assets/sounds/crowd_loop.wav'),
   hub: require('../../assets/sounds/music_hub.wav'),
   menu: require('../../assets/sounds/music_menu.wav'),
+  giris_mehter: require('../../assets/sounds/giris_mehter.wav'),
+  giris_rock: require('../../assets/sounds/giris_rock.wav'),
+  giris_trap: require('../../assets/sounds/giris_trap.wav'),
+  giris_epik: require('../../assets/sounds/giris_epik.wav'),
 } as const;
 type FileKey = keyof typeof FILES;
 
@@ -180,6 +184,19 @@ export function pushScene(s: Scene) {
     if (i >= 0) scenes.splice(i, 1);
     applyLoops();
   };
+}
+
+// ---------- Kafese giriş müzikleri ----------
+
+const WALK_SECONDS: Record<Walkout, number> = { mehter: 6.3, rock: 5, trap: 5.1, epik: 6.9 };
+export const walkoutSeconds = (id: Walkout) => WALK_SECONDS[id];
+
+export function playWalkout(id: Walkout) {
+  if (!settings.muzik || !active) return;
+  const p = player(`giris_${id}` as FileKey);
+  if (!p) return;
+  p.volume = 0.9;
+  void p.seekTo(0).then(() => p.play());
 }
 
 // ---------- Efektler ----------

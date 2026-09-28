@@ -4,10 +4,11 @@ import { isUserCancelledError, useIAP } from 'expo-iap';
 import { useEffect, useSyncExternalStore } from 'react';
 import mobileAds, { AdEventType, AdsConsent, InterstitialAd, RewardedAd, RewardedAdEventType } from 'react-native-google-mobile-ads';
 import { pushScene } from '../audio/engine';
-import { AD_IDS, PREMIUM_SKU } from './ids';
-import { isPremium, setPremium } from './premium';
+import { AD_IDS } from './ids';
+import { grant, isAdFree, isPremium, owns } from './premium';
+import { ALL_SKUS, PREMIUM_SKU } from './skus';
 
-export { isPremium, usePremium } from './premium';
+export { isAdFree, isPremium, owns, useAdFree, useOwned, usePremium } from './premium';
 
 /** Bu platformda reklam ve satın alma var mı? */
 export const MONETIZATION = true;
@@ -42,7 +43,7 @@ export async function initMonetization() {
     .initialize()
     .catch(() => undefined);
   loadRewarded();
-  if (!isPremium()) loadInterstitial();
+  if (!isAdFree()) loadInterstitial();
 }
 
 function loadRewarded() {
@@ -117,12 +118,12 @@ let fightsSinceAd = 0;
 let lastAdAt = 0;
 
 /** Maç sonrası geçiş reklamı: en erken kariyerin 3. dövüşünden sonra, en az 3 dövüşte ve 3 dakikada bir. */
-export async function maybeInterstitial(careerFights: number) {
-  if (isPremium() || !canAds) return;
+export async function maybeInterstitial(careerFights: number): Promise<boolean> {
+  if (isAdFree() || !canAds) return false;
   fightsSinceAd++;
-  if (careerFights < 3 || fightsSinceAd < 3 || Date.now() - lastAdAt < 180_000) return;
+  if (careerFights < 3 || fightsSinceAd < 3 || Date.now() - lastAdAt < 180_000) return false;
   const ad = interstitial;
-  if (!ad || !interstitialReady) return;
+  if (!ad || !interstitialReady) return false;
   await new Promise<void>((resolve) => {
     const unmute = pushScene('off');
     const offs: (() => void)[] = [];
@@ -138,83 +139,95 @@ export async function maybeInterstitial(careerFights: number) {
   fightsSinceAd = 0;
   lastAdAt = Date.now();
   loadInterstitial();
+  return true;
 }
 
 // ---------- Satın alma (Google Play) ----------
 
 type BuyResult = 'ok' | 'iptal' | 'hata';
-let product: { price: string } | null = null;
-const productSubs = new Set<() => void>();
-let buyFn: (() => Promise<unknown>) | null = null;
+let prices: Record<string, string> = {};
+const priceSubs = new Set<() => void>();
+let buyFn: ((sku: string) => Promise<unknown>) | null = null;
 let restoreFn: (() => Promise<unknown>) | null = null;
-let pending: ((r: BuyResult) => void) | null = null;
+let pending: { sku: string; resolve: (r: BuyResult) => void } | null = null;
 
 const settle = (r: BuyResult) => {
-  pending?.(r);
+  pending?.resolve(r);
   pending = null;
 };
 
-export function usePremiumPrice(): string | null {
+/** Ürünün mağazadaki yerel fiyatı (yüklenmediyse null). */
+export function usePrice(sku: string): string | null {
   return useSyncExternalStore(
     (f) => {
-      productSubs.add(f);
-      return () => void productSubs.delete(f);
+      priceSubs.add(f);
+      return () => void priceSubs.delete(f);
     },
-    () => product?.price ?? null,
+    () => prices[sku] ?? null,
     () => null,
   );
 }
+export const usePremiumPrice = () => usePrice(PREMIUM_SKU);
 
-export function buyPremium(): Promise<BuyResult> {
+export function buy(sku: string): Promise<BuyResult> {
   if (!buyFn) return Promise.resolve('hata');
+  settle('iptal');
   return new Promise((resolve) => {
-    pending = resolve;
-    buyFn!().catch(() => settle('hata'));
+    pending = { sku, resolve };
+    buyFn!(sku).catch(() => settle('hata'));
   });
 }
+export const buyPremium = () => buy(PREMIUM_SKU);
 
-export async function restorePremium(): Promise<boolean> {
+/** Önceki satın alımları mağazadan geri yükler; en az bir ürün bulunduysa true. */
+export async function restorePurchases(): Promise<boolean> {
   if (!restoreFn) return false;
   await restoreFn().catch(() => undefined);
-  return isPremium();
+  // Liste durum güncellemesiyle gelir; bir sonraki çizimde işlenmesini bekle.
+  await new Promise((r) => setTimeout(r, 400));
+  return ALL_SKUS.some(owns);
 }
+export const restorePremium = restorePurchases;
 
-/** Uygulama kökünde bir kez bulunur: mağaza bağlantısını, ürünü ve önceki satın alımları yönetir. */
+/** Uygulama kökünde bir kez bulunur: mağaza bağlantısını, ürünleri ve önceki satın alımları yönetir. */
 export function PremiumManager() {
   const { connected, products, availablePurchases, fetchProducts, requestPurchase, finishTransaction, getAvailablePurchases } = useIAP({
     onPurchaseSuccess: async (purchase) => {
-      if (purchase.productId !== PREMIUM_SKU) return;
-      setPremium(true);
+      if (!ALL_SKUS.includes(purchase.productId)) return;
+      grant(purchase.productId);
       // Onaylanmayan satın alımlar 3 gün sonra iade edilir.
       await finishTransaction({ purchase, isConsumable: false }).catch(() => undefined);
-      settle('ok');
+      if (pending?.sku === purchase.productId) settle('ok');
     },
     onPurchaseError: (error) => settle(isUserCancelledError(error) ? 'iptal' : 'hata'),
   });
 
   useEffect(() => {
     if (!connected) return;
-    void fetchProducts({ skus: [PREMIUM_SKU], type: 'in-app' }).catch(() => undefined);
+    void fetchProducts({ skus: ALL_SKUS, type: 'in-app' }).catch(() => undefined);
     void getAvailablePurchases().catch(() => undefined);
   }, [connected, fetchProducts, getAvailablePurchases]);
 
-  // Daha önce (bu ya da başka bir cihazda) satın alındıysa paketi geri ver.
+  // Daha önce (bu ya da başka bir cihazda) satın alınanları geri ver.
   useEffect(() => {
-    const owned = availablePurchases.find((p) => p.productId === PREMIUM_SKU);
-    if (owned) {
-      setPremium(true);
-      void finishTransaction({ purchase: owned, isConsumable: false }).catch(() => undefined);
+    const found = new Set<string>();
+    for (const p of availablePurchases) {
+      if (!ALL_SKUS.includes(p.productId) || found.has(p.productId)) continue;
+      found.add(p.productId);
+      grant(p.productId);
+      void finishTransaction({ purchase: p, isConsumable: false }).catch(() => undefined);
     }
   }, [availablePurchases, finishTransaction]);
 
-  const price = products.find((p) => p.id === PREMIUM_SKU)?.displayPrice ?? null;
+  const key = products.map((p) => `${p.id}=${p.displayPrice}`).join('|');
   useEffect(() => {
-    product = price ? { price } : null;
-    productSubs.forEach((f) => f());
-  }, [price]);
+    prices = Object.fromEntries(products.map((p) => [p.id, p.displayPrice]));
+    priceSubs.forEach((f) => f());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
 
   useEffect(() => {
-    buyFn = connected ? () => requestPurchase({ request: { google: { skus: [PREMIUM_SKU] }, apple: { sku: PREMIUM_SKU } }, type: 'in-app' }) : null;
+    buyFn = connected ? (sku) => requestPurchase({ request: { google: { skus: [sku] }, apple: { sku } }, type: 'in-app' }) : null;
     restoreFn = connected ? () => getAvailablePurchases() : null;
   }, [connected, requestPurchase, getAvailablePurchases]);
 

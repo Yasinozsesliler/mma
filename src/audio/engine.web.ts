@@ -1,6 +1,6 @@
 // Web ses motoru: tüm efektler ve müzik Web Audio API ile anında sentezlenir.
 // Ses dosyası yok: indirme boyutu artmaz, çevrimdışı çalışır, gecikme olmaz ve aynı ses üst üste çalabilir.
-import type { Scene, Sfx, SoundSettings } from './types';
+import type { Scene, Sfx, SoundSettings, Walkout } from './types';
 
 type AC = AudioContext;
 const W = globalThis as unknown as {
@@ -522,10 +522,9 @@ function currentScene(): Scene {
   return scenes.length ? scenes[scenes.length - 1] : 'off';
 }
 
-function stepVoice(c: AC, th: Theme, s: number, t: number) {
+function stepVoice(c: AC, th: Theme, s: number, t: number, out: GainNode = musicBus) {
   const bar = Math.floor(s / 16) % th.chords.length;
   const i = s % 16;
-  const out = musicBus;
   const sp = 60 / th.bpm / 4;
   if (th.kick[i] === 'x') tone(c, out, t, 'sine', 150, 42, 0.9, 0.003, 0.32, 0.12);
   if (th.snare[i] === 'x') {
@@ -642,6 +641,137 @@ export function pushScene(s: Scene) {
   };
 }
 
+// ---------- Kafese giriş müzikleri ----------
+
+type WalkTheme = Theme & { lead: number[]; leadWave: OscillatorType | 'brass'; leadCut: number };
+
+// Her biri iki ölçülük kısa bir tema: davul + bas + akor + öne çıkan bir melodi (0 = es).
+const WALKOUTS: Record<Walkout, WalkTheme> = {
+  // Mehter: davul, zil ve zurnayı andıran kare dalga; Hicaz dizisi.
+  mehter: {
+    bpm: 104,
+    chords: [
+      [62, 66, 69],
+      [63, 67, 70],
+    ],
+    bass: [38, 39],
+    kick: '................',
+    snare: '................',
+    hat: '..x...x...x...x.',
+    taiko: 'x...x...x.x.x...',
+    brassHits: true,
+    padCut: 1200,
+    lead: [74, 0, 75, 0, 78, 0, 79, 0, 81, 0, 79, 0, 78, 0, 75, 0, 74, 0, 78, 0, 79, 0, 81, 0, 82, 0, 81, 0, 79, 78, 74, 0],
+    leadWave: 'square',
+    leadCut: 2600,
+  },
+  // Rock: güç akorları, düz davul, testere dişi riff.
+  rock: {
+    bpm: 140,
+    chords: [
+      [52, 59, 64],
+      [50, 57, 62],
+    ],
+    bass: [40, 38],
+    kick: 'x.....x.x.......',
+    snare: '....x.......x...',
+    hat: 'x.x.x.x.x.x.x.x.',
+    padCut: 2600,
+    lead: [64, 0, 67, 0, 69, 0, 67, 64, 71, 0, 69, 0, 67, 0, 64, 0, 62, 0, 64, 0, 67, 0, 69, 0, 71, 0, 74, 0, 76, 0, 0, 0],
+    leadWave: 'sawtooth',
+    leadCut: 3200,
+  },
+  // Trap: 808 bas, hızlı hi-hat, çan gibi melodi.
+  trap: {
+    bpm: 140,
+    chords: [
+      [57, 60, 64],
+      [53, 57, 60],
+    ],
+    bass: [33, 29],
+    kick: 'x.......x..x....',
+    snare: '........x.......',
+    hat: 'xxxxx.xxx.xxxxxx',
+    padCut: 800,
+    lead: [81, 0, 0, 84, 0, 0, 81, 0, 79, 0, 0, 0, 76, 0, 0, 0, 81, 0, 0, 84, 0, 0, 86, 0, 84, 0, 0, 0, 81, 0, 0, 0],
+    leadWave: 'triangle',
+    leadCut: 6000,
+  },
+  // Epik: taiko davulları ve bakır nefesliler.
+  epik: {
+    bpm: 84,
+    chords: [
+      [57, 60, 64],
+      [53, 57, 60],
+    ],
+    bass: [33, 29],
+    kick: '................',
+    snare: '................',
+    hat: '................',
+    taiko: 'x.....x.x..x..x.',
+    brassHits: true,
+    padCut: 1600,
+    lead: [69, 0, 0, 0, 72, 0, 0, 0, 76, 0, 0, 0, 74, 0, 72, 0, 71, 0, 0, 0, 72, 0, 74, 0, 76, 0, 0, 0, 0, 0, 0, 0],
+    leadWave: 'brass',
+    leadCut: 2400,
+  },
+};
+
+/** Giriş müziğinin süresi (saniye, sondaki zil dahil). */
+export function walkoutSeconds(id: Walkout) {
+  const th = WALKOUTS[id];
+  return (60 / th.bpm / 4) * 16 * th.chords.length + 1.6;
+}
+
+function renderWalkout(c: AC, id: Walkout, t0: number, out: GainNode) {
+  const th = WALKOUTS[id];
+  const sp = 60 / th.bpm / 4;
+  const n = 16 * th.chords.length;
+  for (let i = 0; i < n; i++) stepVoice(c, th, i, t0 + i * sp, out);
+  th.lead.forEach((m, i) => {
+    if (!m) return;
+    let len = 1;
+    while (i + len < th.lead.length && !th.lead[i + len] && len < 4) len++;
+    const t = t0 + i * sp;
+    const dur = sp * len * 0.95 + (i + len >= th.lead.length ? 0.8 : 0);
+    if (th.leadWave === 'brass') return brass(c, out, t, [m], dur, 0.5);
+    const o = c.createOscillator();
+    o.type = th.leadWave;
+    o.frequency.value = mtof(m);
+    const f = filt(c, 'lowpass', th.leadCut, 1.2);
+    const g = c.createGain();
+    const peak = th.leadWave === 'triangle' ? 0.22 : 0.09;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.linearRampToValueAtTime(peak, t + 0.01);
+    g.gain.setValueAtTime(peak, t + dur * 0.6);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(f).connect(g).connect(out);
+    const r = c.createGain();
+    r.gain.value = 0.3;
+    g.connect(r).connect(reverbSend);
+    o.start(t);
+    o.stop(t + dur + 0.05);
+  });
+  // Final: zil ve taiko vuruşu
+  const tEnd = t0 + n * sp;
+  taiko(c, out, tEnd, 1);
+  burst(c, out, tEnd, 'highpass', 5000, 0.25, 1.4);
+}
+
+let walkBus: GainNode | null = null;
+
+/** Kafese giriş müziğini çalar (müzik ayarı açıksa). */
+export function playWalkout(id: Walkout) {
+  const c = ready();
+  if (!c || !settings.muzik) return;
+  if (!walkBus) {
+    walkBus = c.createGain();
+    walkBus.gain.value = 0.34;
+    walkBus.connect(master);
+  }
+  renderWalkout(c, id, c.currentTime + 0.05, walkBus);
+}
+
 // ---------- Dışa açık ----------
 
 export function sfx(name: Sfx, amount = 1) {
@@ -704,7 +834,8 @@ export type OfflineJob =
   | { tur: 'sfx'; ad: Sfx; amount?: number }
   | { tur: 'cosku'; amt: number; hold: number; alkis?: number }
   | { tur: 'seyirci'; sure: number }
-  | { tur: 'muzik'; tema: 'hub' | 'menu' };
+  | { tur: 'muzik'; tema: 'hub' | 'menu' }
+  | { tur: 'giris'; id: Walkout };
 
 /** Müzik temalarının bir döngüsünün süresi (saniye). */
 export function loopSeconds(tema: 'hub' | 'menu') {
@@ -739,6 +870,11 @@ export function __offlineRender(oc: OfflineAudioContext, job: OfflineJob) {
       n.murmur.gain.setTargetAtTime(0.25 + Math.random() * 0.45, t, 0.12);
       n.f2.frequency.setTargetAtTime(900 + Math.random() * 700, t, 0.2);
     }
+  } else if (job.tur === 'giris') {
+    const g = c.createGain();
+    g.gain.value = 0.34;
+    g.connect(master);
+    renderWalkout(c, job.id, 0.02, g);
   } else {
     const th = job.tema === 'hub' ? HUB : MENU;
     const sp = 60 / th.bpm / 4;

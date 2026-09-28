@@ -1,11 +1,11 @@
-import { L, LOC } from '../i18n';
+import { L, LANG, LOC } from '../i18n';
 import { HeritageBanner } from './DynastyPanel';
 import type { Heritage } from '../engine/dynasty';
 import { MONETIZATION, showRewarded, usePremium } from '../monetization';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { generateBackstory, growthMultiplier, rollStartingStats, type NewFighterInput } from '../engine/character';
-import { BACKGROUNDS, COUNTRIES, WEIGHT_CLASSES, WEIGHT_MODS } from '../engine/data';
+import { BACKGROUNDS, COUNTRIES, NAME_POOLS, NICKNAMES, WEIGHT_CLASSES, WEIGHT_MODS } from '../engine/data';
 import { gymsFor } from '../engine/gyms';
 import type { Appearance } from '../engine/types';
 import { BEARDS, BROWS, DEFAULT_LOOK, EYE_COLORS, EYE_SHAPES, FACE_SHAPES, FighterAvatar, HAIR_COLORS, HAIR_STYLES, LIPS, NOSES, SKIN_TONES } from './FighterAvatar';
@@ -13,27 +13,58 @@ import { START_POINTS } from '../engine/progression';
 import type { Background, Stats, WeightClass } from '../engine/types';
 import { STAT_KEYS, STAT_LABELS } from '../engine/types';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Button, Card, Choice, OctIcon, P, Pill, Screen, Section, SLANT, Title, type IconName } from './components';
-import { BASE_BOY, heightMods, heightOptions } from '../engine/tale';
+import { Button, Card, Choice, Icon, OctIcon, P, Pill, Screen, Section, SLANT, Title, type IconName } from './components';
+import { BASE_BOY, heightMods, heightOptions, lookFor } from '../engine/tale';
 import { C, F, R } from './theme';
 
 const STEPS = 9;
 
+/** Dile göre varsayılan ülke: oyuncu kendi ülkesiyle başlasın. */
+const LANG_COUNTRY: Record<string, string> = { tr: 'tr', en: 'us', es: 'mx', pt: 'br', ru: 'ru' };
+const rnd = <T,>(a: readonly T[]) => a[Math.floor(Math.random() * a.length)];
+
+function randomName(uyruk: string) {
+  const ulke = COUNTRIES[uyruk]?.ad ?? '';
+  // ABD havuzunun etiketi çevrilmez ('ABD'); diğerleri ülke adıyla eşleşir.
+  const pool = NAME_POOLS.find((p) => (uyruk === 'us' ? p.ulke === 'ABD' : ulke.startsWith(p.ulke))) ?? rnd(NAME_POOLS);
+  // Lakap havuzu Türkçe; diğer dillerde lakabı oyuncu kendisi yazar.
+  return { ad: rnd(pool.ad), soyad: rnd(pool.soyad), lakap: LANG === 'tr' ? rnd(NICKNAMES) : '' };
+}
+
 export function CreateScreen({ onDone, onBack, heritage }: { onDone: (input: NewFighterInput, stats: Stats) => void; onBack: () => void; heritage?: Heritage | null }) {
   const [step, setStep] = useState(1);
+  const startCountry = heritage?.uyruk ?? (COUNTRIES[LANG_COUNTRY[LANG]] ? LANG_COUNTRY[LANG] : 'tr');
   const [inp, setInp] = useState<NewFighterInput>({
     ad: '',
     soyad: heritage?.soyad ?? '',
     lakap: '',
-    uyruk: heritage?.uyruk ?? 'tr',
+    uyruk: startCountry,
     memleket: heritage?.memleket ?? '',
     yas: 22,
     siklet: 'hafif',
     gecmis: heritage?.gecmis ?? 'boks',
     hikaye: '',
-    salonId: gymsFor(heritage?.uyruk ?? 'tr')[0].id,
+    salonId: gymsFor(startCountry)[0].id,
     gorunum: { ...DEFAULT_LOOK },
   });
+  /** Hızlı başla: kalan adımlar mantıklı/rastgele seçimlerle doldurulur ve kariyer hemen başlar. */
+  const quickStart = () => {
+    const name = randomName(inp.uyruk);
+    const siklet = rnd<WeightClass>(['tuy', 'hafif', 'welter', 'orta']);
+    const x: NewFighterInput = {
+      ...inp,
+      ad: inp.ad.trim() || name.ad,
+      soyad: inp.soyad.trim() || name.soyad,
+      lakap: inp.lakap.trim() || (inp.ad.trim() ? '' : name.lakap),
+      yas: 22,
+      siklet,
+      boy: BASE_BOY[siklet],
+      gecmis: heritage?.gecmis ?? rnd(Object.keys(BACKGROUNDS) as Background[]),
+      gorunum: lookFor({ id: `oyuncu-${Date.now()}`, uyruk: inp.uyruk }),
+    };
+    x.hikaye = generateBackstory(x);
+    onDone(x, rollStartingStats(x));
+  };
   const [stats, setStats] = useState<Stats | null>(null);
   const [rerolls, setRerolls] = useState(2);
   const [bonusRolls, setBonusRolls] = useState(0);
@@ -82,6 +113,21 @@ export function CreateScreen({ onDone, onBack, heritage }: { onDone: (input: New
             <Field label={L("Soyad")} value={inp.soyad} onChange={(soyad) => set({ soyad })} />
           )}
           <Field label={L("Lakap (isteğe bağlı)")} value={inp.lakap} onChange={(lakap) => set({ lakap })} placeholder={L("örn. Demir Yumruk")} />
+          {!heritage ? (
+            <Pressable onPress={() => set(randomName(inp.uyruk))} style={cs.dice} hitSlop={6}>
+              <Icon name="dice-5" size={16} color={C.dim} />
+              <Text style={cs.diceText}>{L("Rastgele isim")}</Text>
+            </Pressable>
+          ) : null}
+          <LinearGradient colors={['#2a1d05', '#0c0d10']} style={cs.quick}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Icon name="lightning-bolt" size={20} color={C.gold} />
+              <Text style={[cs.quickTitle, SLANT]}>{L("HIZLI BAŞLA")}</Text>
+            </View>
+            <Text style={cs.quickText}>{L("Kalan adımları biz seçelim: branş, sıklet, görünüm ve hikâye. Hemen salona gir, her şeyi sonradan oynarken öğrenirsin.")}</Text>
+            <Button label={L("Hemen başla")} icon="lightning-bolt" tone="gold" onPress={quickStart} />
+          </LinearGradient>
+          <Text style={cs.orFull}>{L("ya da DEVAM ile karakterini adım adım kendin kur")}</Text>
         </>
       )}
 
@@ -457,6 +503,12 @@ function Field({ label, value, onChange, placeholder }: { label: string; value: 
 }
 
 const cs = StyleSheet.create({
+  dice: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', paddingVertical: 4, marginTop: -4, marginBottom: 14 },
+  diceText: { color: C.dim, fontFamily: F.semi, fontSize: 13, textDecorationLine: 'underline' },
+  quick: { borderWidth: 1, borderColor: C.goldDeep, borderRadius: 14, padding: 14, gap: 8 },
+  quickTitle: { color: C.gold, fontFamily: F.display, fontSize: 18, letterSpacing: 1 },
+  quickText: { color: C.dim, fontFamily: F.body, fontSize: 13, lineHeight: 19 },
+  orFull: { color: C.faint, fontFamily: F.semi, fontSize: 12, textAlign: 'center', marginTop: 12 },
   heightHint: { color: C.faint, fontFamily: F.body, fontSize: 12, lineHeight: 17, marginBottom: 8 },
   heights: { flexDirection: 'row', gap: 6, marginBottom: 8 },
   height: { flex: 1, alignItems: 'center', backgroundColor: C.card, borderRadius: R, borderWidth: 1, borderColor: C.border, paddingVertical: 10 },

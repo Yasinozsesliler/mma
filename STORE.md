@@ -57,13 +57,21 @@ npx eas-cli@latest build -p android --profile production   # .aab üretir, sür�
 Play Console → Test → **Dahili test** → Yeni sürüm → .aab dosyasını yükle (ilk seferde elle yüklemek en kolayı).
 İmza anahtarını EAS yönetir; Play "Play Uygulama İmzalama"yı önerecek, kabul et.
 
-## 6. Şampiyon Paketi ürünü
+## 6. Uygulama içi ürünler
 
 Play, ürün oluşturmadan önce satın alma izni olan bir sürümün yüklenmiş olmasını ister (adım 5).
-Para kazanma › Ürünler › **Uygulama içi ürünler** → Ürün oluştur:
-- Ürün kimliği: **`sampiyon_paketi`** (kodla aynı olmalı)
-- Ad: Şampiyon Paketi · Açıklama: Reklamsız oyun, anında ödüller, 5 kariyer yuvası
-- Fiyat: öneri 2,99 $ (Play ülkelere göre yerel fiyat önerir) → **Etkinleştir**
+Para kazanma › Ürünler › **Uygulama içi ürünler** → her satır için "Ürün oluştur" (kimlikler kodla birebir aynı olmalı, `src/monetization/skus.ts`):
+
+| Ürün kimliği | Ad | Açıklama | Öneri fiyat |
+|---|---|---|---|
+| `sampiyon_paketi` | Şampiyon Paketi | Reklamsız oyun, anında ödüller, 5 kariyer yuvası, Şampiyon çerçevesi | 2,99 $ |
+| `reklamsiz` | Reklamsız Paket | Geçiş reklamlarını kaldırır | 1,49 $ |
+| `paket_altin` | Altın Seri | Altın şort, eldiven, çerçeve, Kraliyet kemeri, Epik giriş müziği | 0,99 $ |
+| `paket_sokak` | Sokak Dövüşçüsü | Kamuflaj şort, neon eldiven ve çerçeve, Karbon kemer, Trap giriş müziği | 0,99 $ |
+| `paket_sultan` | Sultan | Bordo-altın şort, bordo eldiven, Sultan çerçevesi ve kemeri, Mehter giriş müziği | 1,49 $ |
+
+Hepsi tek seferlik (tüketilmeyen) ürün. Play ülkelere göre yerel fiyat önerir → her birini **Etkinleştir**.
+Kozmetikler yalnızca görünümdür; oyun gücü vermez (Play'in "kazanmak için öde" algısından da uzak durur).
 
 Lisans testi: Ayarlar › Lisans testi → kendi Gmail adresini ekle; böylece satın almayı ücret ödemeden deneyebilirsin.
 

@@ -1,4 +1,5 @@
 import { L, LOC } from '../i18n';
+import { useFrame } from '../cosmetics';
 import { DynastySection } from './DynastyPanel';
 import { careerCard } from '../share/build';
 import { ShareButton } from '../share/ShareButton';
@@ -19,6 +20,7 @@ import type { Act } from './GameScreens';
 import { C, F, R } from './theme';
 
 export function ProfilePanel({ s, act }: { s: GameState; act: Act }) {
+  const frame = useFrame();
   const [bio, setBio] = useState(s.fighter.hakkinda ?? '');
   const [saved, setSaved] = useState(false);
   const [showCol, setShowCol] = useState(false);
@@ -29,7 +31,7 @@ export function ProfilePanel({ s, act }: { s: GameState; act: Act }) {
   return (
     <>
       <LinearGradient colors={['#22060b', '#0c0d10']} style={pf.head}>
-        <FighterAvatar look={s.fighter.gorunum} size={120} ring={aktif.length ? C.gold : C.red} />
+        <FighterAvatar look={s.fighter.gorunum} size={120} ring={frame ?? (aktif.length ? C.gold : C.red)} />
         <View style={{ flex: 1 }}>
           <Text style={[pf.name, SLANT]}>{fullName(s.fighter).toLocaleUpperCase(LOC)}</Text>
           <Text style={pf.meta}>

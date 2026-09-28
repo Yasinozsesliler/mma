@@ -1,5 +1,6 @@
 // Ana ekranın sade, premium parçaları: kompakt kariyer kartı, ana eylem ve eylem kutucukları.
 import { L, LOC } from '../i18n';
+import { useFrame } from '../cosmetics';
 import { LinearGradient } from 'expo-linear-gradient';
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -30,6 +31,7 @@ function Meter({ label, value, color, sub }: { label: string; value: string; col
 }
 
 export function HubHero({ s }: { s: GameState }) {
+  const frame = useFrame();
   const f = s.fighter;
   const amator = s.stage === 'amator';
   const r = amator ? s.amator : s.rekor;
@@ -39,7 +41,7 @@ export function HubHero({ s }: { s: GameState }) {
     <LinearGradient colors={s.sampiyon ? ['#2e2206', '#0e0c07', '#08090b'] : ['#240710', '#0e0f12', '#08090b']} locations={[0, 0.55, 1]} style={[hh.hero, s.sampiyon && { borderColor: '#4a3810' }]}>
       <CageBg opacity={0.05} />
       <View style={hh.heroTop}>
-        <FighterAvatar look={f.gorunum} size={64} ring={s.sampiyon ? C.gold : C.red} />
+        <FighterAvatar look={f.gorunum} size={64} ring={frame ?? (s.sampiyon ? C.gold : C.red)} />
         <View style={{ flex: 1 }}>
           {f.lakap ? <Text style={hh.nick}>“{f.lakap.toLocaleUpperCase(LOC)}”</Text> : null}
           <Text style={[hh.name, SLANT]} numberOfLines={1} adjustsFontSizeToFit>

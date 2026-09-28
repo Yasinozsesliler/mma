@@ -23,6 +23,7 @@ import { BACKGROUNDS, WEIGHT_CLASSES } from '../engine/data';
 import { lookFor } from '../engine/tale';
 import type { GameState, PlanKey } from '../engine/types';
 import { L, LOC } from '../i18n';
+import { askReview } from '../review';
 import { getPref, setPref } from '../prefs';
 import { ShareButton } from '../share/ShareButton';
 import { enableNotifications, NOTIFY, rescheduleNotifications, useNotifyState } from '../notify';
@@ -83,6 +84,7 @@ export function DailyScreen({ onExit }: { onExit: () => void }) {
     endDailyFight();
     setStore(next);
     void rescheduleNotifications(next);
+    if (r.skor >= 100 && next.toplam >= 3) void askReview();
     gRef.current = null;
     setGame(null);
   };

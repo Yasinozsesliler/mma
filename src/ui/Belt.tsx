@@ -1,4 +1,5 @@
 import { L, LOC } from '../i18n';
+import { useBeltSkin } from '../cosmetics';
 import { useId } from 'react';
 import Svg, { Circle, Defs, Ellipse, G, LinearGradient, Path, RadialGradient, Rect, Stop, Text as SvgText } from 'react-native-svg';
 import { ORGS } from '../engine/data';
@@ -21,8 +22,11 @@ const VB_W = 300;
 const VB_H = 130;
 
 /** UCC kemerini andıran şampiyonluk kemeri: deri kayış, oymalı yan plakalar, küreli büyük orta plaka. */
-export function Belt({ org, siklet, width = 300, dim = false }: { org: OrgId; siklet?: WeightClass; width?: number; dim?: boolean }) {
-  const [hi, lo, strap, gem, logo] = PALETTE[org];
+export function Belt({ org, siklet, width = 300, dim = false, skin }: { org: OrgId; siklet?: WeightClass; width?: number; dim?: boolean; skin?: string[] | null }) {
+  const equipped = useBeltSkin();
+  const sk = skin === undefined ? equipped : skin;
+  const [hi, lo, strap, gem] = sk ?? PALETTE[org];
+  const logo = PALETTE[org][4];
   const id = useId().replace(/[^a-zA-Z0-9]/g, '');
   const gold = `g${id}`;
   const goldH = `h${id}`;

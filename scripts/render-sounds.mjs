@@ -47,6 +47,10 @@ const JOBS = [
   ['crowd_loop', { tur: 'seyirci', sure: 13 }, 13, SFX, 12],
   ['music_hub', { tur: 'muzik', tema: 'hub' }, null, MUS, 'hub'],
   ['music_menu', { tur: 'muzik', tema: 'menu' }, null, MUS, 'menu'],
+  ['giris_mehter', { tur: 'giris', id: 'mehter' }, 7, MUS],
+  ['giris_rock', { tur: 'giris', id: 'rock' }, 6, MUS],
+  ['giris_trap', { tur: 'giris', id: 'trap' }, 6, MUS],
+  ['giris_epik', { tur: 'giris', id: 'epik' }, 8, MUS],
 ];
 
 const browser = await puppeteer.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true, args: ['--no-sandbox'] });

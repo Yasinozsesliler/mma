@@ -41,6 +41,9 @@ import { popToFollowers } from './src/engine/fame';
 import { useSoundScene, type Scene } from './src/audio';
 import { initMonetization, PremiumManager } from './src/monetization';
 import { applyHeritage, heritageOf, type Heritage } from './src/engine/dynasty';
+import { unlockCtx } from './src/engine/cosmetics';
+import { refreshUnlocks } from './src/cosmetics';
+import { LockerScreen } from './src/ui/LockerScreen';
 import { onNotificationOpen, rescheduleNotifications } from './src/notify';
 import { loadDaily } from './src/ui/DailyScreen';
 import { socialWelcome } from './src/engine/social';
@@ -66,7 +69,7 @@ const PHASE_LABELS: Record<Phase, string> = {
   emeklilik: L("Emeklilik"),
 };
 
-type View_ = 'loading' | 'menu' | 'create' | 'game' | 'daily';
+type View_ = 'loading' | 'menu' | 'create' | 'game' | 'daily' | 'locker';
 
 export default function App() {
   const [view, setView] = useState<View_>('loading');
@@ -145,6 +148,9 @@ export default function App() {
     if (x === slotRef.current) setGame(null);
   };
 
+  useEffect(() => {
+    refreshUnlocks(unlockCtx(saves, loadDaily()));
+  }, [saves, view]);
   // Bildirimler: menüye her dönüşte (günlük dövüş ya da kariyer değişmiş olabilir) yeniden planlanır.
   useEffect(() => {
     if (view !== 'menu') return;
@@ -166,7 +172,7 @@ export default function App() {
   // Android geri tuşu: oyundan ve karakter oluşturmadan menüye döner; menüdeyse uygulamadan çıkar.
   useEffect(() => {
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
-      if (view === 'game' || view === 'create' || view === 'daily') {
+      if (view === 'game' || view === 'create' || view === 'daily' || view === 'locker') {
         setView('menu');
         return true;
       }
@@ -195,6 +201,7 @@ export default function App() {
         onContinue={continueSlot}
         onDelete={removeSlot}
         onDaily={() => setView('daily')}
+        onLocker={() => setView('locker')}
         onDynasty={(x) => {
           const g = saves[x - 1];
           if (!g) return;
@@ -204,6 +211,9 @@ export default function App() {
         }}
       />
     );
+  } else if (view === 'locker') {
+    const g = saves[slot - 1] ?? saves.find(Boolean);
+    content = <LockerScreen look={g?.fighter.gorunum} onExit={() => setView('menu')} />;
   } else if (view === 'daily') {
     content = <DailyScreen onExit={() => setView('menu')} />;
   } else if (view === 'create') {
@@ -288,7 +298,7 @@ export default function App() {
     }
   }
 
-  const topLabel = view === 'daily' ? L("Günün Dövüşü") : view === 'create' ? L("Karakter Oluşturma") : view === 'game' && game ? PHASE_LABELS[game.phase] : null;
+  const topLabel = view === 'locker' ? L("Dolap") : view === 'daily' ? L("Günün Dövüşü") : view === 'create' ? L("Karakter Oluşturma") : view === 'game' && game ? PHASE_LABELS[game.phase] : null;
 
   return (
     <SafeAreaProvider>

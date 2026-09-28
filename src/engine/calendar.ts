@@ -22,7 +22,8 @@ const pop = (s: GameState, d: number) => {
 /** Maçın kaç hafta sonra olacağı. Normalde 60-90 gün; şampiyonken ve savunma sayısı arttıkça uzar. */
 export function leadWeeks(s: GameState, o: Opponent, kisa: boolean): number {
   if (kisa) return randInt(2, 4);
-  if (s.stage === 'amator') return randInt(5, 8);
+  // İlk amatör maç kısa tutulur: yeni oyuncu kafese çabuk girsin.
+  if (s.stage === 'amator') return s.amator.g + s.amator.m + s.amator.b === 0 ? 4 : randInt(5, 8);
   const champ = o.champion || s.sampiyon;
   if (!champ) return randInt(7, 11);
   const savunma = (s.kemerler ?? []).filter((b) => b.aktif).reduce((a, b) => a + b.savunma, 0);

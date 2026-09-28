@@ -23,4 +23,7 @@ export type Sfx =
   | 'flash'
   | 'swell';
 
+/** Kafese giriş müzikleri (kozmetik). */
+export type Walkout = 'mehter' | 'rock' | 'trap' | 'epik';
+
 export type SoundSettings = { muzik: boolean; efekt: boolean };

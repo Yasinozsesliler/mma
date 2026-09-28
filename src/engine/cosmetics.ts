@@ -1,0 +1,111 @@
+// Kozmetikler: yalnızca görünüm (şort, eldiven, avatar çerçevesi, kemer kaplaması, kafese giriş müziği). Oyun gücü vermez.
+// Bir kısmı oynayarak açılır, bir kısmı paketlerle satın alınır. Açılanlar tüm kariyerlerde geçerlidir.
+import { L } from '../i18n';
+import type { Walkout } from '../audio/types';
+import type { CosmeticSku } from '../monetization/skus';
+import { PREMIUM_SKU } from '../monetization/skus';
+import type { DailyStore } from './daily';
+import type { GameState } from './types';
+
+export type CosSlot = 'sort' | 'eldiven' | 'cerceve' | 'kemer' | 'giris';
+export const COS_SLOTS: CosSlot[] = ['sort', 'eldiven', 'cerceve', 'kemer', 'giris'];
+
+/** Açılma koşullarının okunduğu özet: bütün kariyerlerin ve günlük dövüşün en iyileri. */
+export type UnlockCtx = { galibiyet: number; ko: number; sub: number; kemer: number; savunma: number; hof: boolean; nesil: number; gunlukSeri: number };
+
+type Source = { tur: 'hazir' } | { tur: 'basari'; aciklama: string; kosul: (c: UnlockCtx) => boolean } | { tur: 'paket'; sku: CosmeticSku } | { tur: 'sampiyon' };
+
+export type Cosmetic = {
+  id: string;
+  slot: CosSlot;
+  ad: string;
+  /** sort: [şort, şerit] · eldiven: [eldiven] · cerceve: [halka] · kemer: [metal açık, metal koyu, kayış, taş] */
+  renk: string[];
+  giris?: Walkout;
+  kaynak: Source;
+};
+
+const hazir: Source = { tur: 'hazir' };
+const paket = (sku: CosmeticSku): Source => ({ tur: 'paket', sku });
+const basari = (aciklama: string, kosul: (c: UnlockCtx) => boolean): Source => ({ tur: 'basari', aciklama, kosul });
+
+export const COSMETICS: Cosmetic[] = [
+  // Şort
+  { id: 'sort_klasik', slot: 'sort', ad: L("Kırmızı Köşe"), renk: ['#c1121f', '#ffffff'], kaynak: hazir },
+  { id: 'sort_gece', slot: 'sort', ad: L("Gece"), renk: ['#15161a', '#e63946'], kaynak: basari(L("Profesyonel kariyerde 5 galibiyet"), (c) => c.galibiyet >= 5) },
+  { id: 'sort_seri', slot: 'sort', ad: L("Seri Ustası"), renk: ['#f77f00', '#15161a'], kaynak: basari(L("Günün Dövüşü'nde 7 günlük seri"), (c) => c.gunlukSeri >= 7) },
+  { id: 'sort_kaplan', slot: 'sort', ad: L("Beyaz Kaplan"), renk: ['#eeeeee', '#c1121f'], kaynak: basari(L("Onur Listesi'ne (Hall of Fame) gir"), (c) => c.hof) },
+  { id: 'sort_altin', slot: 'sort', ad: L("Altın"), renk: ['#d4a017', '#15161a'], kaynak: paket('paket_altin') },
+  { id: 'sort_sokak', slot: 'sort', ad: L("Kamuflaj"), renk: ['#4b5320', '#c2b280'], kaynak: paket('paket_sokak') },
+  { id: 'sort_sultan', slot: 'sort', ad: L("Sultan"), renk: ['#7b1e2b', '#f2c14e'], kaynak: paket('paket_sultan') },
+  // Eldiven
+  { id: 'eld_klasik', slot: 'eldiven', ad: L("Kırmızı"), renk: ['#b8121f'], kaynak: hazir },
+  { id: 'eld_siyah', slot: 'eldiven', ad: L("Siyah"), renk: ['#1b1e24'], kaynak: basari(L("İlk nakavt galibiyeti"), (c) => c.ko >= 1) },
+  { id: 'eld_beyaz', slot: 'eldiven', ad: L("Beyaz"), renk: ['#e8e8e8'], kaynak: basari(L("3 submission galibiyeti"), (c) => c.sub >= 3) },
+  { id: 'eld_altin', slot: 'eldiven', ad: L("Altın"), renk: ['#f2c14e'], kaynak: paket('paket_altin') },
+  { id: 'eld_neon', slot: 'eldiven', ad: L("Neon"), renk: ['#39ff14'], kaynak: paket('paket_sokak') },
+  { id: 'eld_sultan', slot: 'eldiven', ad: L("Bordo"), renk: ['#7b1e2b'], kaynak: paket('paket_sultan') },
+  // Avatar çerçevesi (klasik: kemer varsa altın, yoksa kırmızı)
+  { id: 'cer_klasik', slot: 'cerceve', ad: L("Klasik"), renk: [], kaynak: hazir },
+  { id: 'cer_gumus', slot: 'cerceve', ad: L("Gümüş"), renk: ['#c0c7d1'], kaynak: basari(L("Profesyonel kariyerde 10 galibiyet"), (c) => c.galibiyet >= 10) },
+  { id: 'cer_hanedan', slot: 'cerceve', ad: L("Hanedan"), renk: ['#b388ff'], kaynak: basari(L("Nesil modunda ikinci nesle geç"), (c) => c.nesil >= 2) },
+  { id: 'cer_sampiyon', slot: 'cerceve', ad: L("Şampiyon Paketi"), renk: ['#ffd166'], kaynak: { tur: 'sampiyon' } },
+  { id: 'cer_altin', slot: 'cerceve', ad: L("Altın"), renk: ['#d4a017'], kaynak: paket('paket_altin') },
+  { id: 'cer_neon', slot: 'cerceve', ad: L("Neon"), renk: ['#39ff14'], kaynak: paket('paket_sokak') },
+  { id: 'cer_sultan', slot: 'cerceve', ad: L("Sultan"), renk: ['#9b2335'], kaynak: paket('paket_sultan') },
+  // Kemer kaplaması (klasik: organizasyonun kendi renkleri)
+  { id: 'kem_klasik', slot: 'kemer', ad: L("Organizasyon rengi"), renk: [], kaynak: hazir },
+  { id: 'kem_beyaz', slot: 'kemer', ad: L("Beyaz Altın"), renk: ['#ffffff', '#9aa3ad', '#0b0b0c', '#7fdbff'], kaynak: basari(L("Bir kemeri 3 kez savun"), (c) => c.savunma >= 3) },
+  { id: 'kem_altin', slot: 'kemer', ad: L("Kraliyet"), renk: ['#fff3b0', '#c9a227', '#3b0a45', '#e0b0ff'], kaynak: paket('paket_altin') },
+  { id: 'kem_sokak', slot: 'kemer', ad: L("Karbon"), renk: ['#d0d4da', '#50565f', '#1a1d22', '#39ff14'], kaynak: paket('paket_sokak') },
+  { id: 'kem_sultan', slot: 'kemer', ad: L("Sultan"), renk: ['#ffe39a', '#c18f2a', '#5a0f16', '#2ec4b6'], kaynak: paket('paket_sultan') },
+  // Kafese giriş müziği
+  { id: 'gir_yok', slot: 'giris', ad: L("Seyirci uğultusu"), renk: [], kaynak: hazir },
+  { id: 'gir_rock', slot: 'giris', ad: L("Rock"), renk: [], giris: 'rock', kaynak: basari(L("İlk şampiyonluk kemeri"), (c) => c.kemer >= 1) },
+  { id: 'gir_epik', slot: 'giris', ad: L("Epik"), renk: [], giris: 'epik', kaynak: paket('paket_altin') },
+  { id: 'gir_trap', slot: 'giris', ad: L("Trap"), renk: [], giris: 'trap', kaynak: paket('paket_sokak') },
+  { id: 'gir_mehter', slot: 'giris', ad: L("Mehter"), renk: [], giris: 'mehter', kaynak: paket('paket_sultan') },
+];
+
+export const DEFAULT_EQUIP: Record<CosSlot, string> = { sort: 'sort_klasik', eldiven: 'eld_klasik', cerceve: 'cer_klasik', kemer: 'kem_klasik', giris: 'gir_yok' };
+
+export const PACKS: { sku: CosmeticSku; ad: string; aciklama: string; renk: string }[] = [
+  { sku: 'paket_altin', ad: L("Altın Seri"), aciklama: L("Altın şort ve eldiven, altın çerçeve, Kraliyet kemeri ve Epik giriş müziği"), renk: '#d4a017' },
+  { sku: 'paket_sokak', ad: L("Sokak Dövüşçüsü"), aciklama: L("Kamuflaj şort, neon eldiven ve çerçeve, Karbon kemer ve Trap giriş müziği"), renk: '#39ff14' },
+  { sku: 'paket_sultan', ad: L("Sultan"), aciklama: L("Bordo-altın şort, bordo eldiven, Sultan çerçevesi ve kemeri, Mehter giriş müziği"), renk: '#9b2335' },
+];
+
+export const cosmeticById = (id: string) => COSMETICS.find((x) => x.id === id);
+
+export function unlockCtx(saves: (GameState | null)[], daily: DailyStore): UnlockCtx {
+  const c: UnlockCtx = { galibiyet: 0, ko: 0, sub: 0, kemer: 0, savunma: 0, hof: false, nesil: 1, gunlukSeri: daily.enIyiSeri ?? 0 };
+  for (const s of saves) {
+    if (!s) continue;
+    const pro = s.stage !== 'amator';
+    if (pro) {
+      c.galibiyet = Math.max(c.galibiyet, s.rekor.g);
+      c.ko = Math.max(c.ko, s.rekor.ko ?? 0);
+      c.sub = Math.max(c.sub, s.rekor.sub ?? 0);
+    }
+    c.kemer = Math.max(c.kemer, (s.kemerler ?? []).length);
+    c.savunma = Math.max(c.savunma, ...(s.kemerler ?? []).map((b) => b.savunma), 0);
+    c.hof ||= !!s.hof || (s.hanedan ?? []).some((a) => a.hof);
+    c.nesil = Math.max(c.nesil, s.nesil ?? 1);
+    for (const a of s.hanedan ?? []) {
+      c.galibiyet = Math.max(c.galibiyet, a.rekor.g);
+      c.kemer = Math.max(c.kemer, a.kemer);
+    }
+  }
+  return c;
+}
+
+/** Oynayarak açılanlardan şu an koşulu sağlananlar. */
+export const earnedNow = (c: UnlockCtx) => COSMETICS.filter((x) => x.kaynak.tur === 'basari' && x.kaynak.kosul(c)).map((x) => x.id);
+
+export function isUnlocked(x: Cosmetic, earned: ReadonlySet<string>, owned: ReadonlySet<string>) {
+  const k = x.kaynak;
+  if (k.tur === 'hazir') return true;
+  if (k.tur === 'basari') return earned.has(x.id);
+  if (k.tur === 'sampiyon') return owned.has(PREMIUM_SKU);
+  return owned.has(k.sku);
+}

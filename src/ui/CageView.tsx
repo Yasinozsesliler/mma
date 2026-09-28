@@ -1,6 +1,7 @@
 // Kafes sahnesi: eklemli dövüşçüler ve hakem, maç akışındaki her olayı koreografiyle canlandırır.
 import { L as tL, LOC } from '../i18n';
 import { sfx, type Sfx } from '../audio';
+import { playerKit } from '../cosmetics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
@@ -55,6 +56,7 @@ function classify(line: string, fs: FightState): Ev {
 // ---------- Sahne ----------
 
 export function CageView({ fs, shown, pLook, oLook, speed = 1 }: { fs: FightState; shown: number; pLook?: Appearance; oLook: Appearance; speed?: number }) {
+  const [pKit] = useState(playerKit);
   const [w, setW] = useState(340);
   const k = Math.max(0.95, Math.min(1.3, w / 300));
   const cx = w / 2;
@@ -354,7 +356,7 @@ export function CageView({ fs, shown, pLook, oLook, speed = 1 }: { fs: FightStat
     const X = baseX(a) + f * k * ps.x;
     const Y = floorY - HIP_H * k + k * ps.y;
     const look = a === 'p' ? pLook ?? DEFAULT_LOOK : a === 'o' ? oLook : REF_LOOK;
-    const kit = a === 'p' ? { shorts: '#c1121f', trim: '#ffffff', glove: '#b8121f' } : a === 'o' ? { shorts: '#1f4fbf', trim: '#ffffff', glove: '#1740a8' } : { shorts: '#15161a', trim: '#fff', glove: '#000', ref: true };
+    const kit = a === 'p' ? pKit : a === 'o' ? { shorts: '#1f4fbf', trim: '#ffffff', glove: '#1740a8' } : { shorts: '#15161a', trim: '#fff', glove: '#000', ref: true };
     return (
       <G key={a}>
         <Ellipse cx={X} cy={floorY + 4} rx={20 * k} ry={4 * k} fill="#000" opacity={0.25} />

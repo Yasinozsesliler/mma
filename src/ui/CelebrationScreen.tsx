@@ -1,4 +1,5 @@
 import { L, LOC } from '../i18n';
+import { askReview } from '../review';
 import { beltCard } from '../share/build';
 import { ShareButton } from '../share/ShareButton';
 import { sfx } from '../audio';
@@ -89,7 +90,10 @@ export function CelebrationScreen({ s, act }: { s: GameState; act: Act }) {
       footer={
         <View style={{ gap: 8 }}>
           <ShareButton data={beltCard(s)} label={L("Kemerini paylaş")} tone="gold" />
-          <Button label={L("Kutlamayı bitir")} icon="arrow-right" tone="ghost" onPress={() => act(endCelebration)} />
+          <Button label={L("Kutlamayı bitir")} icon="arrow-right" tone="ghost" onPress={() => {
+            act(endCelebration);
+            void askReview();
+          }} />
         </View>
       }
     >

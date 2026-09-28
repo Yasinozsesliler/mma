@@ -1,4 +1,5 @@
 import { L } from '../i18n';
+import { useFrame } from '../cosmetics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StyleSheet, Text, View } from 'react-native';
 import Svg, { Polygon } from 'react-native-svg';
@@ -49,6 +50,7 @@ function Info({ icon, label, value, color, wide }: { icon: IconName; label: stri
 }
 
 export function StatusPanel({ s, compact }: { s: GameState; compact?: boolean }) {
+  const frame = useFrame();
   const f = s.fighter;
   const org = currentOrg(s);
   // Amatördeyken amatör karnesi, profesyonelde profesyonel karne ana karne olarak gösterilir.
@@ -60,7 +62,7 @@ export function StatusPanel({ s, compact }: { s: GameState; compact?: boolean })
     <LinearGradient colors={['#22060b', '#0e0f12', '#08090b']} locations={[0, 0.45, 1]} style={fc.card}>
       <CageBg opacity={0.06} />
       <View style={fc.head}>
-        <FighterAvatar look={f.gorunum} size={84} ring={s.sampiyon ? C.gold : C.red} />
+        <FighterAvatar look={f.gorunum} size={84} ring={frame ?? (s.sampiyon ? C.gold : C.red)} />
         <View style={{ flex: 1 }}>
           {f.lakap ? <Text style={fc.nick}>“{f.lakap}”</Text> : null}
           <Text style={[fc.name, SLANT]} numberOfLines={2}>
