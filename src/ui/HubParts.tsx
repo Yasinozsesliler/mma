@@ -106,7 +106,7 @@ export function RankingList({ s }: { s: GameState }) {
   return (
     <>
       <View style={rk.header}>
-        <Text style={[rk.headerTitle, SLANT]}>{org.kisa} · {WEIGHT_CLASSES[s.fighter.siklet].ad.toLocaleUpperCase(LOC)} {L("SIKLET")}</Text>
+        <Text style={[rk.headerTitle, SLANT]}>{org.kisa} · {L("{0} Sıklet", [WEIGHT_CLASSES[s.fighter.siklet].ad]).toLocaleUpperCase(LOC)}</Text>
         <Text style={rk.headerSub}>{L("Resmi sıralama · Bir dövüşçüye dokun, istatistiklerini gör")}</Text>
       </View>
       {rows.map((row) => {

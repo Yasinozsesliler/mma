@@ -1,4 +1,5 @@
 import { L, LOC } from '../i18n';
+import { MONETIZATION, showRewarded, usePremium } from '../monetization';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { generateBackstory, growthMultiplier, rollStartingStats, type NewFighterInput } from '../engine/character';
@@ -33,6 +34,8 @@ export function CreateScreen({ onDone, onBack }: { onDone: (input: NewFighterInp
   });
   const [stats, setStats] = useState<Stats | null>(null);
   const [rerolls, setRerolls] = useState(2);
+  const [bonusRolls, setBonusRolls] = useState(0);
+  const premium = usePremium();
   const set = (p: Partial<NewFighterInput>) => setInp((x) => ({ ...x, ...p }));
   const next = () => {
     if (step === 8) setStats(rollStartingStats(inp));
@@ -246,6 +249,18 @@ export function CreateScreen({ onDone, onBack }: { onDone: (input: NewFighterInp
               setRerolls(rerolls - 1);
             }}
           />
+          {rerolls <= 0 && MONETIZATION && bonusRolls < 3 ? (
+            <Button
+              label={premium ? L("👑 Bir zar hakkı daha") : L("📺 Reklam izle: bir zar hakkı daha")}
+              tone="gold"
+              onPress={async () => {
+                if ((await showRewarded()) === 'odul') {
+                  setBonusRolls(bonusRolls + 1);
+                  setRerolls(1);
+                }
+              }}
+            />
+          ) : null}
         </>
       )}
     </Screen>

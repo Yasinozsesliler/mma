@@ -1,4 +1,6 @@
 import { L, LOC } from '../i18n';
+import { maybeInterstitial } from '../monetization';
+import { careerFights } from './RewardCard';
 import { CoachTip } from './CoachTip';
 import { winCard } from '../share/build';
 import { ShareButton } from '../share/ShareButton';
@@ -94,7 +96,10 @@ export function PostFightScreen({ s, act }: { s: GameState; act: Act }) {
         ps.roportajSonucu ? (
           <View style={{ gap: 8 }}>
             {key === 'win' && !s.kutlama ? <ShareButton data={winCard(s)} label={L("Zaferini paylaş")} /> : null}
-            <Button label={s.kutlama ? L("Kutlamaya geç") : L("Devam")} icon={s.kutlama ? 'trophy' : 'arrow-right'} tone={s.kutlama || key === 'win' ? 'gold' : 'red'} onPress={() => act(continueAfterPost)} />
+            <Button label={s.kutlama ? L("Kutlamaya geç") : L("Devam")} icon={s.kutlama ? 'trophy' : 'arrow-right'} tone={s.kutlama || key === 'win' ? 'gold' : 'red'} onPress={async () => {
+                await maybeInterstitial(careerFights(s));
+                act(continueAfterPost);
+              }} />
           </View>
         ) : undefined
       }

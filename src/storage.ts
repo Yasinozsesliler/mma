@@ -11,8 +11,10 @@ import type { OrgId, WeightClass } from './engine/types';
 import type { GameState } from './engine/types';
 
 // 3 kayıt yuvası. 1. yuva eski tek kaydın anahtarını kullanır: güncellemeden önceki kariyer kaybolmaz.
-export type Slot = 1 | 2 | 3;
-export const SLOTS: Slot[] = [1, 2, 3];
+export type Slot = 1 | 2 | 3 | 4 | 5;
+/** Tüm yuvalar yüklenir; ücretsiz sürümde ilk 3'ü, Şampiyon Paketi ile 5'i kullanılır. */
+export const SLOTS: Slot[] = [1, 2, 3, 4, 5];
+export const slotsFor = (premium: boolean): Slot[] => SLOTS.slice(0, premium ? 5 : 3);
 const keyOf = (slot: Slot) => (slot === 1 ? 'yol_kariyer_v1' : `yol_kariyer_s${slot}`);
 const ACTIVE_KEY = 'yol_aktif_yuva';
 

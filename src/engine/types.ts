@@ -496,6 +496,8 @@ export interface GameState {
   unvanlar: string[];
   /** Görülen öğretici ipuçları. Tanımsızsa (eski kayıt) ipucu gösterilmez. */
   ipuclari?: string[];
+  /** Ödüllü reklam teklifleri: alındıkları dövüş sayısı (her dövüş arasında birer kez). */
+  odul?: { puanMac?: number; sakatlikMac?: number };
   saglik: number;
   sakatliklar: Injury[];
   takim: Team;

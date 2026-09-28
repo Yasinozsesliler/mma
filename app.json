@@ -6,17 +6,23 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
+    "backgroundColor": "#0d0e11",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.yolmma.game"
     },
     "android": {
+      "package": "com.yolmma.game",
+      "versionCode": 1,
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#0d0e11",
         "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "blockedPermissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "favicon": "./public/icon-192.png",
@@ -26,9 +32,37 @@
       "themeColor": "#0d0e11",
       "backgroundColor": "#0d0e11"
     },
-    "backgroundColor": "#0d0e11",
     "plugins": [
-      "expo-font"
+      "expo-font",
+      [
+        "expo-audio",
+        {
+          "recordAudioAndroid": false,
+          "microphonePermission": false
+        }
+      ],
+      "expo-sharing",
+      "expo-sqlite",
+      "expo-localization",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 180,
+          "resizeMode": "contain",
+          "backgroundColor": "#0d0e11"
+        }
+      ],
+      [
+        "react-native-google-mobile-ads",
+        {
+          "androidAppId": "ca-app-pub-3940256099942544~3347511713",
+          "iosAppId": "ca-app-pub-3940256099942544~1458002511",
+          "delayAppMeasurementInit": true
+        }
+      ],
+      "expo-iap",
+      "expo-asset"
     ]
   }
 }

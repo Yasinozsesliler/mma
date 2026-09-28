@@ -10,7 +10,7 @@ import { Oswald_700Bold } from '@expo-google-fonts/oswald/700Bold';
 import { useFonts } from 'expo-font';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, BackHandler, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { createGame } from './src/engine/character';
 import type { GameState } from './src/engine/types';
@@ -38,6 +38,7 @@ import { AchievementToast } from './src/ui/AchievementToast';
 import { checkAchievements } from './src/engine/legacy';
 import { popToFollowers } from './src/engine/fame';
 import { useSoundScene, type Scene } from './src/audio';
+import { initMonetization, PremiumManager } from './src/monetization';
 import { socialWelcome } from './src/engine/social';
 import { HasTopBar, TopBar } from './src/ui/components';
 import { C } from './src/ui/theme';
@@ -68,7 +69,7 @@ export default function App() {
   const [toast, setToast] = useState<string[]>([]);
   const [game, setGameState] = useState<GameState | null>(null);
   // 3 kayıt yuvası: menüde hepsi görünür, oyun aktif yuvaya kaydedilir.
-  const [saves, setSaves] = useState<(GameState | null)[]>([null, null, null]);
+  const [saves, setSaves] = useState<(GameState | null)[]>([null, null, null, null, null]);
   const [slot, setSlotState] = useState<Slot>(1);
   const slotRef = useRef<Slot>(1);
   const setSlot = (x: Slot) => {
@@ -137,6 +138,22 @@ export default function App() {
     putSave(x, null);
     if (x === slotRef.current) setGame(null);
   };
+
+  // Mağaza sürümü: reklam izni ve reklam SDK'sı açılışta bir kez.
+  useEffect(() => {
+    void initMonetization();
+  }, []);
+  // Android geri tuşu: oyundan ve karakter oluşturmadan menüye döner; menüdeyse uygulamadan çıkar.
+  useEffect(() => {
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (view === 'game' || view === 'create') {
+        setView('menu');
+        return true;
+      }
+      return false;
+    });
+    return () => sub.remove();
+  }, [view]);
 
   const phase = view === 'game' && game ? game.phase : null;
   const scene: Scene = !phase || phase === 'emeklilik' ? 'menu' : phase === 'dovus' ? 'fight' : phase === 'kutlama' ? 'celebrate' : 'hub';
@@ -221,6 +238,7 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
+      <PremiumManager />
       <View style={{ flex: 1, backgroundColor: C.bg }}>
         {/* Tarayıcıda telefon genişliğinde ortalanır */}
         <View style={{ flex: 1, width: '100%', maxWidth: 560, alignSelf: 'center' }}>

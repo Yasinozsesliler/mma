@@ -206,7 +206,7 @@ function HallOfFame({ s }: { s: GameState }) {
           {s.fighter.lakap ? <Text style={[hf.nick, { color: inducted ? C.gold : C.faint }]}>“{s.fighter.lakap.toLocaleUpperCase(LOC)}”</Text> : null}
           <Text style={[hf.name, SLANT]}>{`${s.fighter.ad} ${s.fighter.soyad}`.toLocaleUpperCase(LOC)}</Text>
           <Text style={hf.meta}>
-            {s.fighter.memleket} · {WEIGHT_CLASSES[s.fighter.siklet].ad} {L("Sıklet")}
+            {s.fighter.memleket} · {L("{0} Sıklet", [WEIGHT_CLASSES[s.fighter.siklet].ad])}
           </Text>
           <View style={hf.statRow}>
             {[

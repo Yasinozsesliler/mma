@@ -2,27 +2,13 @@
 // Dil tercihi eşzamanlı okunur ki modüller yüklenirken (sabit listeler dahil) doğru dil hazır olsun.
 // Dil değişince uygulama yeniden başlatılır.
 
-export type Lang = 'tr' | 'en' | 'es' | 'pt' | 'ru';
+import { isLang, type Lang } from './langs';
 
-export const LANGS: { id: Lang; ad: string; bayrak: string; hazir: boolean }[] = [
-  { id: 'tr', ad: 'Türkçe', bayrak: '🇹🇷', hazir: true },
-  { id: 'en', ad: 'English', bayrak: '🇬🇧', hazir: true },
-  { id: 'es', ad: 'Español', bayrak: '🇪🇸', hazir: true },
-  { id: 'pt', ad: 'Português', bayrak: '🇧🇷', hazir: true },
-  { id: 'ru', ad: 'Русский', bayrak: '🇷🇺', hazir: true },
-];
+export { LANGS, type Lang } from './langs';
 
-const KEY = 'yol_dil';
-
-function readLang(): Lang {
-  try {
-    const v = (globalThis as { localStorage?: Storage }).localStorage?.getItem(KEY);
-    if (v && LANGS.some((l) => l.id === v && l.hazir)) return v as Lang;
-  } catch {}
-  return 'tr';
-}
-
-export const LANG: Lang = readLang();
+/** Açılışta boot.ts'in seçtiği dil (Node betiklerinde Türkçe). */
+const booted = (globalThis as { __YOL_LANG__?: string }).__YOL_LANG__;
+export const LANG: Lang = isLang(booted) ? booted : 'tr';
 
 // CSS text-transform (büyük harf) belge diline göre çalışır: İngilizcede "i" → "I" olmalı, "İ" değil.
 try {
@@ -44,13 +30,4 @@ export function L(s: string, vars?: readonly unknown[] | Record<string, unknown>
   let t = DICT[s] ?? s;
   if (vars) t = t.replace(/\{(\w+)\}/g, (m, k) => (vars as Record<string, unknown>)[k] !== undefined ? String((vars as Record<string, unknown>)[k]) : m);
   return t;
-}
-
-export function setLang(l: Lang) {
-  try {
-    (globalThis as { localStorage?: Storage }).localStorage?.setItem(KEY, l);
-  } catch {}
-  try {
-    (globalThis as { location?: Location }).location?.reload();
-  } catch {}
 }

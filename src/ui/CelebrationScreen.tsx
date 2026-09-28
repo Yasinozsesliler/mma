@@ -95,7 +95,7 @@ export function CelebrationScreen({ s, act }: { s: GameState; act: Act }) {
     >
       <Confetti />
       <LinearGradient colors={['#4a3508', '#140f04', 'rgba(4,4,5,0)']} style={cl.hero}>
-        <Text style={cl.kicker}>{ORGS[k.org].kisa} · {WEIGHT_CLASSES[k.siklet].ad.toLocaleUpperCase(LOC)} {L("SIKLET")}</Text>
+        <Text style={cl.kicker}>{ORGS[k.org].kisa} · {L("{0} Sıklet", [WEIGHT_CLASSES[k.siklet].ad]).toLocaleUpperCase(LOC)}</Text>
         <Text style={[cl.title, SLANT]}>{baslik}</Text>
         <Text style={cl.sub}>{alt}</Text>
         <View style={{ marginVertical: 16 }}>

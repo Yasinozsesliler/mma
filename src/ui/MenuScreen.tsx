@@ -1,11 +1,15 @@
-import { L, LANG, LANGS, LOC, setLang } from '../i18n';
+import { L, LANG, LANGS, LOC } from '../i18n';
+import { setLang } from '../i18n/boot';
 import { setSoundSettings, useSoundSettings } from '../audio';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useState, type ReactNode } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Linking, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { STAGE_LABELS } from '../engine/career';
 import { WEIGHT_CLASSES } from '../engine/data';
-import { SLOTS, type Slot } from '../storage';
+import { slotsFor, type Slot } from '../storage';
+import { PremiumCard } from './PremiumCard';
+import { adPrivacyRequired, showAdPrivacyOptions, usePremium } from '../monetization';
+import { privacyUrl } from '../appConfig';
 import { FighterAvatar } from './FighterAvatar';
 import { BACKGROUNDS } from '../engine/data';
 import type { Background, GameState } from '../engine/types';
@@ -157,6 +161,8 @@ export function MenuScreen({
   const off = useOfflineStatus();
   const cur = saves[active - 1];
   const canContinue = !!cur && cur.phase !== 'emeklilik';
+  const premium = usePremium();
+  const SLOTS = slotsFor(premium);
   const firstEmpty = SLOTS.find((x) => !saves[x - 1]);
   const ses = useSoundSettings();
   return (
@@ -237,6 +243,8 @@ export function MenuScreen({
         </Card>
       ) : null}
 
+      <PremiumCard />
+
       <Section>{L("REHBER")}</Section>
       {GUIDE.map((g, i) => (
         <Collapsible key={g.baslik} baslik={g.baslik} icon={g.icon} open={open === i} onToggle={() => setOpen(open === i ? null : i)}>
@@ -265,11 +273,26 @@ export function MenuScreen({
           );
         })}
       </Collapsible>
+
+      <View style={ms.legal}>
+        {privacyUrl(Platform.OS === 'web') ? (
+          <Pressable onPress={() => void Linking.openURL(privacyUrl(Platform.OS === 'web')!)} hitSlop={8}>
+            <Text style={ms.legalText}>{L("Gizlilik politikası")}</Text>
+          </Pressable>
+        ) : null}
+        {adPrivacyRequired() ? (
+          <Pressable onPress={() => void showAdPrivacyOptions()} hitSlop={8}>
+            <Text style={ms.legalText}>{L("Reklam gizlilik ayarları")}</Text>
+          </Pressable>
+        ) : null}
+      </View>
     </Screen>
   );
 }
 
 const ms = StyleSheet.create({
+  legal: { flexDirection: 'row', justifyContent: 'center', gap: 18, marginTop: 18 },
+  legalText: { color: C.faint, fontFamily: F.semi, fontSize: 12, textDecorationLine: 'underline' },
   langRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 6, marginBottom: 6 },
   lang: { flexDirection: 'row', alignItems: 'center', gap: 5, borderWidth: 1, borderColor: C.border, borderRadius: 20, paddingHorizontal: 10, paddingVertical: 6, backgroundColor: C.card },
   langOn: { borderColor: C.gold },

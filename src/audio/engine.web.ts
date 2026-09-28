@@ -59,7 +59,13 @@ function build(): AC | null {
   } catch {
     return null;
   }
-  const c = ctx;
+  setup(ctx);
+  applyVolumes(true);
+  return ctx;
+}
+
+/** Kanalları (müzik, efekt, seyirci, yankı) verilen bağlamda kurar. */
+function setup(c: AC) {
   master = c.createGain();
   master.gain.value = 0.85;
   const comp = c.createDynamicsCompressor();
@@ -84,8 +90,6 @@ function build(): AC | null {
   noise = c.createBuffer(1, c.sampleRate * 2, c.sampleRate);
   const d = noise.getChannelData(0);
   for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
-  applyVolumes(true);
-  return c;
 }
 
 function impulse(c: AC, sec: number) {
@@ -263,7 +267,7 @@ function cash(c: AC, t: number) {
   tone(c, out, t, 'triangle', 2637, 2637, 0.35, 0.002, 0.35);
   tone(c, out, t + 0.08, 'triangle', 3136, 3136, 0.35, 0.002, 0.5);
   burst(c, out, t, 'highpass', 6000, 0.2, 0.2);
-  burst(c, out, t - 0.02, 'bandpass', 900, 0.3, 0.04, 2);
+  burst(c, out, t, 'bandpass', 900, 0.3, 0.04, 2);
 }
 
 function click(c: AC, t: number) {
@@ -355,8 +359,9 @@ function fanfare(c: AC, t: number) {
 
 // ---------- Seyirci ----------
 
-let crowdNodes: { level: GainNode; murmur: GainNode; bright: BiquadFilterNode; src: AudioBufferSourceNode[] } | null = null;
+let crowdNodes: { level: GainNode; murmur: GainNode; bright: BiquadFilterNode; f2: BiquadFilterNode; src: AudioBufferSourceNode[] } | null = null;
 let crowdBase = 0;
+let offline = false;
 let murmurTimer: ReturnType<typeof setInterval> | null = null;
 
 function ensureCrowd(c: AC) {
@@ -387,8 +392,8 @@ function ensureCrowd(c: AC) {
   s1.start();
   s2.start(c.currentTime, 0.7);
   src.push(s1, s2);
-  crowdNodes = { level, murmur, bright, src };
-  if (!murmurTimer)
+  crowdNodes = { level, murmur, bright, f2, src };
+  if (!murmurTimer && !offline)
     murmurTimer = setInterval(() => {
       if (!ctx || !crowdNodes) return;
       crowdNodes.murmur.gain.setTargetAtTime(0.25 + Math.random() * 0.45, ctx.currentTime, 0.12);
@@ -690,5 +695,54 @@ export function sfx(name: Sfx, amount = 1) {
       return flash(c, t);
     case 'swell':
       return swell(c, amount, 2);
+  }
+}
+
+// ---------- Çevrimdışı kayıt (yalnızca derleme betiği: Android ses dosyaları) ----------
+
+export type OfflineJob =
+  | { tur: 'sfx'; ad: Sfx; amount?: number }
+  | { tur: 'cosku'; amt: number; hold: number; alkis?: number }
+  | { tur: 'seyirci'; sure: number }
+  | { tur: 'muzik'; tema: 'hub' | 'menu' };
+
+/** Müzik temalarının bir döngüsünün süresi (saniye). */
+export function loopSeconds(tema: 'hub' | 'menu') {
+  const th = tema === 'hub' ? HUB : MENU;
+  return (60 / th.bpm / 4) * 16 * th.chords.length;
+}
+
+/** Bir sesi verilen OfflineAudioContext'e çizer. Oyun içinde kullanılmaz. */
+export function __offlineRender(oc: OfflineAudioContext, job: OfflineJob) {
+  offline = true;
+  ctx = oc as unknown as AC;
+  setup(ctx);
+  unlocked = true;
+  settings = { muzik: true, efekt: true };
+  applyVolumes(true);
+  crowdNodes = null;
+  const c = ctx;
+  if (job.tur === 'sfx') {
+    crowdBase = 0;
+    sfx(job.ad, job.amount ?? 1);
+  } else if (job.tur === 'cosku') {
+    // Sessizlikten yükselip sönen seyirci coşkusu (sürekli uğultunun üstüne çalınır)
+    crowdBase = 0.0001;
+    ensureCrowd(c).level.gain.value = 0.0001;
+    swell(c, job.amt, job.hold);
+    if (job.alkis) applause(c, 0.3, job.alkis, 0.8);
+  } else if (job.tur === 'seyirci') {
+    crowdBase = 0.32;
+    const n = ensureCrowd(c);
+    n.level.gain.value = crowdBase;
+    for (let t = 0; t < job.sure; t += 0.22) {
+      n.murmur.gain.setTargetAtTime(0.25 + Math.random() * 0.45, t, 0.12);
+      n.f2.frequency.setTargetAtTime(900 + Math.random() * 700, t, 0.2);
+    }
+  } else {
+    const th = job.tema === 'hub' ? HUB : MENU;
+    const sp = 60 / th.bpm / 4;
+    musicBus.gain.value = 0.32;
+    for (let i = 0; i < 16 * th.chords.length; i++) stepVoice(c, th, i, 0.02 + i * sp);
   }
 }

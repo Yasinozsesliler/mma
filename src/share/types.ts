@@ -19,3 +19,9 @@ export type ShareCardData = {
   /** Paylaşım menüsünde gönderiye eklenecek metin */
   mesaj: string;
 };
+
+/** Önizleme hazır olunca paylaşım işlemleri (kaydetme yalnızca web'de). */
+export type CardHandle = {
+  share: (text: string) => Promise<'paylasildi' | 'indirildi' | 'iptal'>;
+  save?: () => void;
+};

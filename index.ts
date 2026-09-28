@@ -1,3 +1,5 @@
+// Dil seçimi her şeyden önce yapılır (çeviri çekirdeği yüklenirken hazır olmalı).
+import './src/i18n/boot';
 import { registerRootComponent } from 'expo';
 
 import { loadLang } from './src/i18n/load';
