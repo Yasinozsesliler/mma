@@ -57,6 +57,10 @@ const stats = {
   repeatFights: 0,
   maxSame: 0,
   sameName: 0,
+  nem: 0,
+  nemYenilgi: 0,
+  nemMac: [] as number[],
+  nemBitti: 0,
 };
 
 const PLAN_FOR: Record<string, PlanKey> = { vurus: 'ayakta', cene: 'ayakta', hiz: 'ayakta', gures: 'gures', yer: 'yer', kondisyon: 'tempo', iq: 'kontra' };
@@ -197,7 +201,13 @@ function playCareer() {
     stats.totalFights.push(fights);
     stats.retireAge.push(s.fighter.yas);
     stats.followers.push(s.takipci ?? 0);
-    if (s.unvanlar.some((u) => u.startsWith('UFC'))) stats.ufcChamp++;
+    if (s.unvanlar.some((u) => /^U[FC]C/.test(u))) stats.ufcChamp++;
+    if (s.ezeli) {
+      stats.nem++;
+      if (s.ezeli.kaynak === 'yenilgi') stats.nemYenilgi++;
+      stats.nemMac.push(s.ezeli.g + s.ezeli.m + s.ezeli.b);
+      if (s.ezeli.bitti) stats.nemBitti++;
+    }
   }
 }
 
@@ -227,3 +237,4 @@ console.log(`UFC'ye kadar ortalama dövüş: ${avg.toFixed(1)}`);
 console.log('Geçmişe göre galibiyet:', Object.entries(stats.byBg).map(([k, v]) => `${k} ${pct(v.w, v.w + v.l)}`).join(', '));
 console.log('Aşama başına ortalama dövüş:', Object.entries(stats.stageFights).map(([k, v]) => `${k} ${(v / (stats.stageCareers[k] ?? N)).toFixed(1)}`).join(', '));
 console.log(`Tekrar rakip: ${pct(stats.repeatFights, stats.fights)} dövüş, aynı rakiple en fazla: ${stats.maxSame}, farklı kişi ama aynı isim: ${pct(stats.sameName, stats.fights)}`);
+console.log(`Ezeli rakip: ${pct(stats.nem, N)} kariyerde (${pct(stats.nemYenilgi, stats.nem)} ilk yenilgiden), karşılaşma ort. ${mean(stats.nemMac)} (maks ${Math.max(0, ...stats.nemMac)}), rekabeti bitiren ${pct(stats.nemBitti, stats.nem)}`);

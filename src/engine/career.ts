@@ -1,5 +1,6 @@
 import { L as tL, LOC } from '../i18n';
 import { addStat, advanceWeeks, currentOrg, fullName, statAverage } from './character';
+import { nemesisAfterFight } from './nemesis';
 import { campCost, randomInjury, startCamp } from './camp';
 import { ORGS, WEIGHT_CLASSES, WEIGHT_MODS } from './data';
 import { methodLabel } from './fight';
@@ -291,6 +292,7 @@ export function finishFight(s: GameState) {
     lines.push(tL("📜 Kontratta {0} dövüş kaldı.", [s.contract.kalan]));
   }
 
+  if (!caught) lines.push(...nemesisAfterFight(s, opp, won, draw, fs.unvanMaci));
   updateRival(s, opp, won, draw, r.yontem === 'SD' || finishMethod);
   if (!caught) {
     const st = istat(s);

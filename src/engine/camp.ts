@@ -82,6 +82,40 @@ export function availableSites(s: GameState): CampSite[] {
   return CAMP_SITES.filter((x) => !x.minStage || STAGE_ORDER.indexOf(s.stage) >= STAGE_ORDER.indexOf(x.minStage));
 }
 
+/** Kariyerin ilk kampı mı? (Hiç amatör maç yapılmadı.) */
+export const isFirstCamp = (s: GameState) => s.stage === 'amator' && s.amator.g + s.amator.m + s.amator.b === 0;
+
+// Hocanın plan seçimi: senin üstün olduğun ve rakibin zayıf kaldığı alan.
+const COACH_PLANS: [StatKey, PlanKey][] = [
+  ['vurus', 'ayakta'],
+  ['gures', 'gures'],
+  ['yer', 'yer'],
+  ['kondisyon', 'tempo'],
+];
+
+/** İlk kamp için hocanın hazırladığı plan: 4 hafta, kendi salonun, hocanın uzmanlığı, orta tempo, normal kilo. */
+export function coachCampPlan(s: GameState) {
+  const o = s.pending.rakip!;
+  const f = s.fighter.stats;
+  const [stat, plan] = COACH_PLANS.reduce((a, x) => (f[x[0]] - o.stats[x[0]] > f[a[0]] - o.stats[a[0]] ? x : a));
+  const focus: StatKey = s.takim.uzmanlik ?? stat;
+  return { hafta: Math.min(4, s.pending.kamp?.macHafta ?? 4), focus, plan, stat };
+}
+
+function applyCoachPlan(s: GameState) {
+  const k = s.pending.kamp!;
+  const c = coachCampPlan(s);
+  setCampLength(s, c.hafta);
+  if (k.step === 'takvim') autoFreeWeeks(s);
+  k.yer = 'salon';
+  k.focus = c.focus;
+  k.plan = c.plan;
+  k.intensity = 'orta';
+  k.kilo = 'normal';
+  if (hasPress(s)) k.basin = 'saygili';
+  startCampWeeks(s);
+}
+
 export function startCamp(s: GameState) {
   const kisa = s.kisaHaber;
   s.kisaHaber = false;
@@ -89,7 +123,7 @@ export function startCamp(s: GameState) {
   const mac = s.pending.rakip?.macHafta ?? (kisa ? 3 : s.stage === 'amator' ? 6 : 9);
   const hafta = kisa ? mac : Math.min(8, mac);
   s.pending.kamp = {
-    step: kisa ? 'plan' : 'sure',
+    step: kisa ? 'plan' : isFirstCamp(s) ? 'hoca' : 'sure',
     yer: kisa ? 'salon' : undefined,
     hafta,
     macHafta: mac,
@@ -112,6 +146,10 @@ const hasPress = (s: GameState) => s.stage !== 'amator';
 export function campChoose(s: GameState, value: string | number) {
   const k = s.pending.kamp!;
   switch (k.step) {
+    case 'hoca':
+      if (value === 'kabul') applyCoachPlan(s);
+      else k.step = 'sure';
+      return;
     case 'sure':
       setCampLength(s, Number(value));
       return;

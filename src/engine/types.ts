@@ -191,7 +191,7 @@ export type PressChoice = 'saygili' | 'trash' | 'sessiz';
 export interface CampState {
   /** Ödüllü detaylı keşif raporu açıldı mı */
   kesif?: boolean;
-  step: 'sure' | 'takvim' | 'yer' | 'focus' | 'plan' | 'intensity' | 'kilo' | 'basin' | 'haftalik' | 'sakatlik' | 'ozet' | 'tarti' | 'yuzyuze';
+  step: 'hoca' | 'sure' | 'takvim' | 'yer' | 'focus' | 'plan' | 'intensity' | 'kilo' | 'basin' | 'haftalik' | 'sakatlik' | 'ozet' | 'tarti' | 'yuzyuze';
   pKilo?: number;
   oKilo?: number;
   kafesKilo?: number;
@@ -502,6 +502,8 @@ export interface GameState {
   ipuclari?: string[];
   /** Nesil modu: kaçıncı nesil (1 = ilk dövüşçü) ve önceki nesillerin özeti. */
   nesil?: number;
+  /** Ezeli rakip (kariyer boyunca peşini bırakmayan dövüşçü). */
+  ezeli?: import('./nemesis').Nemesis;
   hanedan?: import('./dynasty').Ancestor[];
   /** Ödüllü reklam teklifleri: alındıkları dövüş sayısı (her dövüş arasında birer kez). */
   odul?: { sakatlikMac?: number; profilHafta?: number };

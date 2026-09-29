@@ -4,6 +4,7 @@ import { currentOrg } from './character';
 import { ORGS } from './data';
 import { divisionChampion, ensureDivision, rankedOpponent } from './division';
 import { generateOpponent, riskText } from './opponents';
+import { maybeNemesisOffer } from './nemesis';
 import { chance, clamp, randInt } from './rng';
 import type { GameState, Opponent } from './types';
 
@@ -79,6 +80,11 @@ export function opponentChoices(s: GameState): Opponent[] {
     opts[2].etiket = tL("🏆 UNVAN SAVUNMASI");
     opts[2].riskMetni = tL("Kemerin masada. Kaybedersen tahtın gider.");
   }
+  // Ezeli rakip, zamanı geldiyse riskli seçeneğin yerine (şampiyonluk maçının değil).
+  if (!opts[2].champion) {
+    const nem = maybeNemesisOffer(s, !!s.sampiyon);
+    if (nem) opts[2] = nem;
+  }
   return opts;
 }
 
@@ -93,6 +99,8 @@ export function imposedOpponent(s: GameState): Opponent {
     o.riskMetni = tL("Dean Wyatt tribünde. Sadece kazanmak yetmez, bitirmen gerekebilir.");
     return o;
   }
+  const nem = maybeNemesisOffer(s, !!s.sampiyon);
+  if (nem) return nem;
   if (s.sampiyon) {
     const o = ranked(s, randInt(1, 3), 1);
     o.etiket = tL("🏆 UNVAN SAVUNMASI");

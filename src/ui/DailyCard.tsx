@@ -3,6 +3,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { dayNumber, grade, liveStreak } from '../engine/daily';
 import { L } from '../i18n';
+import { challengeFor } from '../challenge';
 import { loadDaily, resultText } from './DailyScreen';
 import { Icon, SLANT } from './components';
 import { C, F } from './theme';
@@ -12,6 +13,7 @@ export function DailyCard({ onPress }: { onPress: () => void }) {
   const st = loadDaily();
   const r = st.kayit[gun];
   const seri = liveStreak(st, gun);
+  const ch = challengeFor(gun);
   return (
     <Pressable onPress={onPress} style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1, marginTop: 10 }]}>
       <LinearGradient colors={['#4a0d14', '#1a0a0c']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.box}>
@@ -21,7 +23,9 @@ export function DailyCard({ onPress }: { onPress: () => void }) {
         <View style={{ flex: 1 }}>
           <Text style={s.kicker}>{L("GÜNÜN DÖVÜŞÜ #{0}", [gun])}</Text>
           <Text style={[s.title, SLANT]}>{r ? `${grade(r.skor)} ${resultText(r)}` : L("Bugünün dövüşü seni bekliyor")}</Text>
-          <Text style={s.sub}>{r ? L("Yarın yeni dövüş") : L("Herkes aynı dövüşü oynuyor. Tek hakkın var.")}</Text>
+          <Text style={[s.sub, !r && ch && { color: C.gold }]}>
+            {r ? L("Yarın yeni dövüş") : ch ? L("⚔️ Bir arkadaşın {0} puanla meydan okudu!", [ch.skor]) : L("Herkes aynı dövüşü oynuyor. Tek hakkın var.")}
+          </Text>
         </View>
         <View style={{ alignItems: 'center' }}>
           <Text style={s.streak}>🔥 {seri}</Text>

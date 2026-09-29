@@ -1,4 +1,4 @@
-import { L } from '../i18n';
+import { L, LOC } from '../i18n';
 import { AdOffer } from './AdOffer';
 import { ScoutReportCard } from './ScoutReportCard';
 import { claimScout } from '../engine/rewards';
@@ -9,7 +9,8 @@ import { ShareButton } from '../share/ShareButton';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { availableSites, campChoose, campQuote, cutCost, FACEOFF, INTENSITY, PRESS, WEIGHT_CUTS } from '../engine/camp';
+import { availableSites, campChoose, campQuote, coachCampPlan, cutCost, FACEOFF, INTENSITY, PRESS, WEIGHT_CUTS } from '../engine/camp';
+import { PLANS } from '../engine/fight';
 import { lookFor } from '../engine/tale';
 import { FighterAvatar } from './FighterAvatar';
 import { TaleOfTape } from './TaleOfTape';
@@ -391,7 +392,7 @@ export function OpponentScreen({ s, act }: { s: GameState; act: Act }) {
 // ---------- Kamp ----------
 
 const CAMP_STEPS: { key: CampState['step'][]; label: string }[] = [
-  { key: ['sure', 'takvim'], label: L("Takvim") },
+  { key: ['hoca', 'sure', 'takvim'], label: L("Takvim") },
   { key: ['yer'], label: L("Yer") },
   { key: ['focus'], label: L("Odak") },
   { key: ['plan'], label: L("Plan") },
@@ -447,6 +448,38 @@ export function CampScreen({ s, act }: { s: GameState; act: Act }) {
   const o = s.pending.rakip!;
   const choose = (v: string | number) => act((x) => campChoose(x, v));
   const header = <CampHeader s={s} k={k} act={act} />;
+  if (k.step === 'hoca') {
+    const c = coachCampPlan(s);
+    const rows: [IconName, string][] = [
+      ['calendar-check', L("{0} haftalık kamp, kendi salonunda", [c.hafta])],
+      ['target', L("Odak: {0} (hocanın uzmanlığı, %35 daha verimli)", [STAT_LABELS[c.focus]])],
+      ['strategy', L("Plan: {0}. {1} konusunda rakibinden üstünsün.", [PLANS[c.plan].ad, STAT_LABELS[c.stat]])],
+      ['scale-bathroom', L("Orta tempo, normal kilo indirme: sakatlık riski düşük")],
+    ];
+    return (
+      <Screen
+        footer={
+          <View style={{ gap: 8 }}>
+            <Button label={L("Hocanın planıyla başla")} icon="check-bold" tone="gold" onPress={() => choose('kabul')} />
+            <Button label={L("Kendim planlayayım")} icon="tune-variant" tone="ghost" onPress={() => choose('kendim')} />
+          </View>
+        }
+      >
+        {header}
+        <Title kicker={L("HOCAN · {0}", [s.takim.antrenor.toLocaleUpperCase(LOC)])} sub={L("“İlk maçın bu. Kampı ben planladım, sen sadece antrenmana odaklan. İleride bunları kendin seçeceksin.”")}>
+          {L("İlk Kampın Hazır")}
+        </Title>
+        <Card accent={C.gold}>
+          {rows.map(([icon, t]) => (
+            <View key={t} style={{ flexDirection: 'row', gap: 10, alignItems: 'flex-start', marginBottom: 10 }}>
+              <Icon name={icon} size={18} color={C.gold} />
+              <Text style={{ flex: 1, color: C.text, fontFamily: F.body, fontSize: 14, lineHeight: 20 }}>{t}</Text>
+            </View>
+          ))}
+        </Card>
+      </Screen>
+    );
+  }
   if (k.step === 'sure') return <CampLengthStep s={s} header={header} choose={choose} />;
   if (k.step === 'takvim') return <FreeWeeksStep s={s} header={header} choose={choose} />;
   if (k.step === 'haftalik') return <CampWeeksStep s={s} header={header} choose={choose} />;

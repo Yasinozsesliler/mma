@@ -1,6 +1,7 @@
 import { L, LOC } from '../i18n';
 import { useFrame } from '../cosmetics';
 import { DynastySection } from './DynastyPanel';
+import { NemesisCard } from './NemesisCard';
 import { careerCard } from '../share/build';
 import { ShareButton } from '../share/ShareButton';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -47,6 +48,7 @@ export function ProfilePanel({ s, act }: { s: GameState; act: Act }) {
       <View style={{ marginBottom: 12 }}>
         <ShareButton data={careerCard(s)} label={L("Kariyer kartını paylaş")} />
       </View>
+      <NemesisCard s={s} />
       <DynastySection s={s} />
 
       <Section>{L("HAKKINDA")}</Section>

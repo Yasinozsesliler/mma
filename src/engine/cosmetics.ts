@@ -5,13 +5,14 @@ import type { Walkout } from '../audio/types';
 import type { CosmeticSku } from '../monetization/skus';
 import { PREMIUM_SKU } from '../monetization/skus';
 import type { DailyStore } from './daily';
+import { nemesisBeaten } from './nemesis';
 import type { GameState } from './types';
 
 export type CosSlot = 'sort' | 'eldiven' | 'cerceve' | 'kemer' | 'giris';
 export const COS_SLOTS: CosSlot[] = ['sort', 'eldiven', 'cerceve', 'kemer', 'giris'];
 
 /** Açılma koşullarının okunduğu özet: bütün kariyerlerin ve günlük dövüşün en iyileri. */
-export type UnlockCtx = { galibiyet: number; ko: number; sub: number; kemer: number; savunma: number; hof: boolean; nesil: number; gunlukSeri: number };
+export type UnlockCtx = { galibiyet: number; ko: number; sub: number; kemer: number; savunma: number; hof: boolean; nesil: number; gunlukSeri: number; intikam: boolean };
 
 type Source = { tur: 'hazir' } | { tur: 'basari'; aciklama: string; kosul: (c: UnlockCtx) => boolean } | { tur: 'paket'; sku: CosmeticSku } | { tur: 'sampiyon' };
 
@@ -48,7 +49,8 @@ export const COSMETICS: Cosmetic[] = [
   // Avatar çerçevesi (klasik: kemer varsa altın, yoksa kırmızı)
   { id: 'cer_klasik', slot: 'cerceve', ad: L("Klasik"), renk: [], kaynak: hazir },
   { id: 'cer_gumus', slot: 'cerceve', ad: L("Gümüş"), renk: ['#c0c7d1'], kaynak: basari(L("Profesyonel kariyerde 10 galibiyet"), (c) => c.galibiyet >= 10) },
-  { id: 'cer_hanedan', slot: 'cerceve', ad: L("Hanedan"), renk: ['#b388ff'], kaynak: basari(L("Nesil modunda ikinci nesle geç"), (c) => c.nesil >= 2) },
+  { id: 'cer_hanedan', slot: 'cerceve', ad: L("Hanedan"), renk: ['#2ec4b6'], kaynak: basari(L("Nesil modunda ikinci nesle geç"), (c) => c.nesil >= 2) },
+  { id: 'cer_intikam', slot: 'cerceve', ad: L("İntikam"), renk: ['#b388ff'], kaynak: basari(L("Ezeli rakibinle seriyi kazan"), (c) => c.intikam) },
   { id: 'cer_sampiyon', slot: 'cerceve', ad: L("Şampiyon Paketi"), renk: ['#ffd166'], kaynak: { tur: 'sampiyon' } },
   { id: 'cer_altin', slot: 'cerceve', ad: L("Altın"), renk: ['#d4a017'], kaynak: paket('paket_altin') },
   { id: 'cer_neon', slot: 'cerceve', ad: L("Neon"), renk: ['#39ff14'], kaynak: paket('paket_sokak') },
@@ -78,7 +80,7 @@ export const PACKS: { sku: CosmeticSku; ad: string; aciklama: string; renk: stri
 export const cosmeticById = (id: string) => COSMETICS.find((x) => x.id === id);
 
 export function unlockCtx(saves: (GameState | null)[], daily: DailyStore): UnlockCtx {
-  const c: UnlockCtx = { galibiyet: 0, ko: 0, sub: 0, kemer: 0, savunma: 0, hof: false, nesil: 1, gunlukSeri: daily.enIyiSeri ?? 0 };
+  const c: UnlockCtx = { galibiyet: 0, ko: 0, sub: 0, kemer: 0, savunma: 0, hof: false, nesil: 1, gunlukSeri: daily.enIyiSeri ?? 0, intikam: false };
   for (const s of saves) {
     if (!s) continue;
     const pro = s.stage !== 'amator';
@@ -91,6 +93,7 @@ export function unlockCtx(saves: (GameState | null)[], daily: DailyStore): Unloc
     c.savunma = Math.max(c.savunma, ...(s.kemerler ?? []).map((b) => b.savunma), 0);
     c.hof ||= !!s.hof || (s.hanedan ?? []).some((a) => a.hof);
     c.nesil = Math.max(c.nesil, s.nesil ?? 1);
+    c.intikam ||= nemesisBeaten(s.ezeli);
     for (const a of s.hanedan ?? []) {
       c.galibiyet = Math.max(c.galibiyet, a.rekor.g);
       c.kemer = Math.max(c.kemer, a.kemer);

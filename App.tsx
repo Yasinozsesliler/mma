@@ -44,6 +44,10 @@ import { applyHeritage, heritageOf, type Heritage } from './src/engine/dynasty';
 import { unlockCtx } from './src/engine/cosmetics';
 import { refreshUnlocks } from './src/cosmetics';
 import { LockerScreen } from './src/ui/LockerScreen';
+import { challengeFor, readChallengeFromUrl } from './src/challenge';
+import { dayNumber } from './src/engine/daily';
+
+readChallengeFromUrl();
 import { onNotificationOpen, rescheduleNotifications } from './src/notify';
 import { loadDaily } from './src/ui/DailyScreen';
 import { socialWelcome } from './src/engine/social';
@@ -109,7 +113,9 @@ export default function App() {
       slotRef.current = active;
       setSlotState(active);
       setGame(all[active - 1]);
-      setView('menu');
+      // Meydan okuma bağlantısıyla gelindiyse ve bugünkü dövüş oynanmadıysa doğrudan Günün Dövüşü.
+      const gun = dayNumber();
+      setView(challengeFor(gun) && !loadDaily().kayit[gun] ? 'daily' : 'menu');
     });
   }, []);
 

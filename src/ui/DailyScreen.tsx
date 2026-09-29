@@ -24,6 +24,7 @@ import { lookFor } from '../engine/tale';
 import type { GameState, PlanKey } from '../engine/types';
 import { L, LOC } from '../i18n';
 import { askReview } from '../review';
+import { challengeFor, challengeLink, shareText } from '../challenge';
 import { getPref, setPref } from '../prefs';
 import { ShareButton } from '../share/ShareButton';
 import { enableNotifications, NOTIFY, rescheduleNotifications, useNotifyState } from '../notify';
@@ -138,6 +139,12 @@ function DailyIntro({ gun, spec, store, onStart }: { gun: number; spec: DailySpe
   return (
     <Screen>
       <Head gun={gun} store={store} />
+      {challengeFor(gun) ? (
+        <View style={st.chalBanner}>
+          <Icon name="sword-cross" size={18} color={C.gold} />
+          <Text style={st.chalBannerText}>{L("Bir arkadaşın bu dövüşten {0} puan aldı. Geçebilir misin?", [challengeFor(gun)!.skor])}</Text>
+        </View>
+      ) : null}
       <Title kicker={L("HERKES BUGÜN AYNI DÖVÜŞÜ OYNUYOR · TEK HAKKIN VAR")} sub={L("{0} sıklet · {1}", [WEIGHT_CLASSES[spec.siklet].ad, spec.twist === 'unvan' ? L("5 raunt") : L("3 raunt")])}>
         {L("Bugün kafeste sen varsın")}
       </Title>
@@ -238,10 +245,57 @@ function DailyResultView({ gun, spec, r, store, onExit }: { gun: number; spec: D
           </View>
         ))}
       </View>
+      <ChallengeBox gun={gun} r={r} />
       <Countdown />
       <Text style={st.hint}>{L("Yarın yeni bir dövüşçü, yeni bir rakip. Seriyi bozma!")}</Text>
       <RemindMe store={store} />
     </Screen>
+  );
+}
+
+/** Meydan okuma: arkadaşının skoruyla kıyas ve bağlantıyla meydan okuma. */
+function ChallengeBox({ gun, r }: { gun: number; r: DailyResult }) {
+  const c = challengeFor(gun);
+  const link = challengeLink(gun, r.skor);
+  const [msg, setMsg] = useState('');
+  if (!c && !link) return null;
+  const diff = c ? r.skor - c.skor : 0;
+  return (
+    <View style={st.chal}>
+      {c ? (
+        <>
+          <Text style={st.chalKicker}>{L("⚔️ MEYDAN OKUMA")}</Text>
+          <View style={st.chalRow}>
+            <View style={st.chalSide}>
+              <Text style={st.chalLabel}>{L("SEN")}</Text>
+              <Text style={[st.chalScore, diff >= 0 && { color: C.gold }]}>{r.skor}</Text>
+            </View>
+            <Text style={st.chalVs}>VS</Text>
+            <View style={st.chalSide}>
+              <Text style={st.chalLabel}>{L("ARKADAŞIN")}</Text>
+              <Text style={[st.chalScore, diff < 0 && { color: C.gold }]}>{c.skor}</Text>
+            </View>
+          </View>
+          <Text style={[st.chalRes, { color: diff > 0 ? C.green : diff < 0 ? C.red : C.dim }]}>
+            {diff > 0 ? L("Meydan okumayı kazandın! 🏆") : diff < 0 ? L("{0} puan farkla kaybettin. Yarın rövanş!", [-diff]) : L("Berabere! Tam isabet.")}
+          </Text>
+        </>
+      ) : (
+        <Text style={st.chalText}>{L("Arkadaşların da aynı dövüşü oynasın: skorunu geçebilecekler mi?")}</Text>
+      )}
+      {link ? (
+        <Button
+          label={c ? L("Cevap ver: sen meydan oku") : L("Arkadaşına meydan oku")}
+          icon="sword-cross"
+          tone={c ? 'gold' : 'red'}
+          onPress={async () => {
+            const res = await shareText(L("🔥 YOL · Günün Dövüşü #{0}: {1} puan aldım {2}. Aynı dövüş, tek hak. Beni geçebilir misin? {3}", [gun, r.skor, grade(r.skor), link]));
+            setMsg(res === 'kopyalandi' ? L("Bağlantı kopyalandı. Arkadaşına gönder!") : res === 'hata' ? L("Paylaşılamadı, tekrar dene.") : '');
+          }}
+        />
+      ) : null}
+      {msg ? <Text style={st.chalText}>{msg}</Text> : null}
+    </View>
   );
 }
 
@@ -265,6 +319,17 @@ function RemindMe({ store }: { store: DailyStore }) {
 }
 
 const st = StyleSheet.create({
+  chal: { backgroundColor: '#15120a', borderWidth: 1, borderColor: C.goldDeep, borderRadius: 12, padding: 12, gap: 10, marginTop: 14 },
+  chalKicker: { color: C.gold, fontFamily: F.display, fontSize: 12, letterSpacing: 1.5, textAlign: 'center' },
+  chalRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 18 },
+  chalSide: { alignItems: 'center', minWidth: 90 },
+  chalLabel: { color: C.faint, fontFamily: F.semi, fontSize: 10, letterSpacing: 1 },
+  chalScore: { color: C.text, fontFamily: F.display, fontSize: 34 },
+  chalVs: { color: C.faint, fontFamily: F.display, fontSize: 16 },
+  chalRes: { fontFamily: F.semi, fontSize: 14, textAlign: 'center' },
+  chalText: { color: C.dim, fontFamily: F.semi, fontSize: 13, textAlign: 'center' },
+  chalBanner: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#15120a', borderWidth: 1, borderColor: C.goldDeep, borderRadius: 12, padding: 12, marginBottom: 12 },
+  chalBannerText: { flex: 1, color: C.gold, fontFamily: F.semi, fontSize: 14 },
   remind: { backgroundColor: '#15120a', borderWidth: 1, borderColor: C.goldDeep, borderRadius: 12, padding: 12, gap: 8, marginTop: 16, alignItems: 'center' },
   remindText: { color: C.text, fontFamily: F.semi, fontSize: 13, textAlign: 'center' },
   head: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
