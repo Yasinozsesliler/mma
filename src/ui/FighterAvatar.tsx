@@ -1,5 +1,5 @@
 import { L as tL } from '../i18n';
-import { useId } from 'react';
+import { memo, useId } from 'react';
 import Svg, { Circle, ClipPath, Defs, Ellipse, G, LinearGradient, Path, Polygon, RadialGradient, Stop } from 'react-native-svg';
 import type { Appearance } from '../engine/types';
 import { octPoints } from './components';
@@ -91,7 +91,15 @@ const STUBBLE = Array.from({ length: 70 }, (_, i) => {
 }).filter((p) => p.y > 54 && Math.abs(p.x - 50) > 3.5 - (p.y - 54) * 0.3);
 
 /** Gerçekçi SVG dövüşçü portresi (100×100 koordinat, sekizgen çerçeve). */
-export function FighterAvatar({ look = DEFAULT_LOOK, size = 72, ring = '#e63946', bg = '#0c0d10' }: { look?: Appearance; size?: number; ring?: string; bg?: string }) {
+type AvatarProps = { look?: Appearance; size?: number; ring?: string; bg?: string };
+
+/** Oyun durumu her dokunuşta kopyalandığı için görünüm nesnesi yeni gelir; içerik aynıysa yeniden çizilmez. */
+export const FighterAvatar = memo(
+  AvatarBase,
+  (a: AvatarProps, b: AvatarProps) => a.size === b.size && a.ring === b.ring && a.bg === b.bg && (a.look === b.look || JSON.stringify(a.look) === JSON.stringify(b.look)),
+);
+
+function AvatarBase({ look = DEFAULT_LOOK, size = 72, ring = '#e63946', bg = '#0c0d10' }: AvatarProps) {
   const skin = SKIN_TONES[look.ten] ?? SKIN_TONES[2];
   const skinL = shade(skin, 22);
   const skinD = shade(skin, -30);

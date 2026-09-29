@@ -4,7 +4,7 @@ import { sfx, type Sfx } from '../audio';
 import { playerKit } from '../cosmetics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useRef, useState } from 'react';
-import { Modal, Pressable, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
+import { Modal, Platform, Pressable, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
 import Svg, { Circle, Defs, Ellipse, G, Line, Polygon, RadialGradient, Rect, Stop, Text as SvgText } from 'react-native-svg';
 import type { Appearance, FightState } from '../engine/types';
 import { DEFAULT_LOOK } from './FighterAvatar';
@@ -95,6 +95,8 @@ export function CageView({
   useEffect(() => () => timers.current.forEach(clearTimeout), []);
 
   const now = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
+  // Telefonlarda sahne 30 fps çizilir (SVG'nin tamamı her karede yeniden çiziliyor); web'de 60 fps.
+  const lastPaint = useRef(0);
   const loop = () => {
     const t = now();
     let active = false;
@@ -119,7 +121,10 @@ export function CageView({
     });
     fx.current = fx.current.filter((f) => t - f.t0 < 700);
     if (fx.current.length) active = true;
-    setTick((n) => (n + 1) % 1e6);
+    if (Platform.OS === 'web' || t - lastPaint.current >= 32 || !active) {
+      lastPaint.current = t;
+      setTick((n) => (n + 1) % 1e6);
+    }
     raf.current = active ? requestAnimationFrame(loop) : null;
   };
   const kick = () => {
