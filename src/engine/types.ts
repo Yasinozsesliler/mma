@@ -512,6 +512,10 @@ export interface GameState {
   ezeli?: import('./nemesis').Nemesis;
   /** UCC yolunda geçilen basamaklar (büyük organizasyon). */
   uccYolu?: string[];
+  /** Süren kariyer hikâyesi ve bitenler (stories.ts). */
+  hikaye?: { id: string; adim: number; zaman: number; veri: Record<string, string | number> } | null;
+  hikayeler?: string[];
+  hikayeSon?: number;
   hanedan?: import('./dynasty').Ancestor[];
   /** Ödüllü reklam teklifleri: alındıkları dövüş sayısı (her dövüş arasında birer kez). */
   odul?: { sakatlikMac?: number; profilHafta?: number };
