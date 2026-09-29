@@ -1,5 +1,6 @@
 import { L, LANG, LANGS, LOC } from '../i18n';
 import { useCosmetics, useFrame } from '../cosmetics';
+import { ExportButton, ImportCard } from './CareerTransfer';
 import { setLang } from '../i18n/boot';
 import { setSoundSettings, useSoundSettings } from '../audio';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -144,6 +145,7 @@ function SlotCard({ n, save, active, onNew, onContinue, onDelete, onDynasty }: {
               <Text style={[ms.mainText, active && { color: '#000' }]}>{L("DEVAM ET")}</Text>
             </Pressable>
           )}
+          <ExportButton save={save} />
           <Pressable onPress={() => setSure(true)} style={ms.delBtn} hitSlop={6}>
             <Icon name="trash-can-outline" size={18} color={C.faint} />
           </Pressable>
@@ -162,6 +164,7 @@ export function MenuScreen({
   onDaily,
   onDynasty,
   onLocker,
+  onImport,
 }: {
   saves: (GameState | null)[];
   active: Slot;
@@ -171,6 +174,7 @@ export function MenuScreen({
   onDynasty: (slot: Slot) => void;
   onDaily: () => void;
   onLocker: () => void;
+  onImport: (slot: Slot, g: GameState) => void;
 }) {
   const any = saves.some(Boolean);
   const [open, setOpen] = useState<number | null>(any ? null : 0);
@@ -272,6 +276,7 @@ export function MenuScreen({
       {SLOTS.map((x) => (
         <SlotCard key={x} n={x} save={saves[x - 1]} active={x === active && !!saves[x - 1]} onNew={() => onNew(x)} onContinue={() => onContinue(x)} onDelete={() => onDelete(x)} onDynasty={() => onDynasty(x)} />
       ))}
+      <ImportCard canImport={!!firstEmpty} onImport={(g) => firstEmpty && onImport(firstEmpty, g)} />
       {!any ? (
         <Card>
           <Text style={ms.intro}>{L("Saat gece 02:14. Şehrin kenarında, tabelasının yarısı yanmayan bir spor salonu var.")}</Text>

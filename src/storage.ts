@@ -1,3 +1,4 @@
+import { L } from './i18n';
 import { istat } from './engine/istat';
 import { startingTechniques } from './engine/techniques';
 import { playerPhysique } from './engine/tale';
@@ -52,12 +53,33 @@ function renameLegacy(raw: string) {
   return LEGACY.reduce((t, [re, to]) => t.replace(re, to), raw);
 }
 
+const backupKey = (slot: Slot) => `${keyOf(slot)}_yedek`;
+
+/** Kayıt okunamazsa (bozuk veri ya da taşıma hatası) son sağlam yedekten açılır; yuva asla "boş" görünmez. */
 export async function loadGame(slot: Slot = 1): Promise<GameState | null> {
+  let raw: string | null = null;
   try {
-    const raw = await AsyncStorage.getItem(keyOf(slot));
-    if (!raw) return null;
+    raw = await AsyncStorage.getItem(keyOf(slot));
+  } catch {}
+  const main = raw ? parseSave(raw) : null;
+  if (main) return main;
+  let yedek: string | null = null;
+  try {
+    yedek = await AsyncStorage.getItem(backupKey(slot));
+  } catch {}
+  const b = yedek ? parseSave(yedek) : null;
+  if (b) {
+    b.haberler.unshift('🛟 ' + L("Kayıt okunamadı; son sağlam yedekten geri yüklendi."));
+    await saveGame(b, slot);
+  }
+  return b;
+}
+
+/** Ham kaydı çözer ve eski sürümlerden gelen alanları tamamlar; geçersizse null. */
+export function parseSave(raw: string): GameState | null {
+  try {
     const s = JSON.parse(renameLegacy(raw)) as GameState;
-    if (s.v !== 1) return null;
+    if (s.v !== 1 || !s.fighter?.ad) return null;
     // Eski sürümlerden gelen kayıtları tamamla
     s.puan ??= 0;
     s.envanter ??= [];
@@ -133,16 +155,37 @@ export async function loadGame(slot: Slot = 1): Promise<GameState | null> {
   }
 }
 
+const lastBackup: Partial<Record<Slot, number>> = {};
+
 export async function saveGame(s: GameState, slot: Slot = 1) {
   try {
-    await AsyncStorage.setItem(keyOf(slot), JSON.stringify(s));
+    const json = JSON.stringify(s);
+    await AsyncStorage.setItem(keyOf(slot), json);
+    // Sağlam an: kariyer ekranındayken (en fazla 15 sn'de bir) yedek de güncellenir.
+    if ((s.phase === 'hub' || s.phase === 'emeklilik') && Date.now() - (lastBackup[slot] ?? 0) > 15_000) {
+      lastBackup[slot] = Date.now();
+      await AsyncStorage.setItem(backupKey(slot), json);
+    }
   } catch {
     // Kayıt başarısız olsa da oyun devam eder; bir sonraki hamlede tekrar denenir.
+  }
+}
+
+/** Son sağlam yedeği ana kayda geri yükler (hata ekranındaki "son sağlam kayda dön"). */
+export async function restoreBackup(slot: Slot): Promise<GameState | null> {
+  try {
+    const yedek = await AsyncStorage.getItem(backupKey(slot));
+    const b = yedek ? parseSave(yedek) : null;
+    if (b) await AsyncStorage.setItem(keyOf(slot), yedek!);
+    return b;
+  } catch {
+    return null;
   }
 }
 
 export async function deleteGame(slot: Slot = 1) {
   try {
     await AsyncStorage.removeItem(keyOf(slot));
+    await AsyncStorage.removeItem(backupKey(slot));
   } catch {}
 }

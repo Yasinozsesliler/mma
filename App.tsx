@@ -10,11 +10,12 @@ import { Oswald_700Bold } from '@expo-google-fonts/oswald/700Bold';
 import { useFonts } from 'expo-font';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, BackHandler, View } from 'react-native';
+import { ActivityIndicator, BackHandler, Text, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { createGame } from './src/engine/character';
 import type { GameState } from './src/engine/types';
-import { deleteGame, getActiveSlot, loadAllSlots, saveGame, setActiveSlot, type Slot } from './src/storage';
+import { deleteGame, getActiveSlot, loadAllSlots, restoreBackup, saveGame, setActiveSlot, type Slot } from './src/storage';
+import { ErrorBoundary } from './src/ui/ErrorBoundary';
 import { CreateScreen } from './src/ui/CreateScreen';
 import { FightScreen } from './src/ui/FightScreen';
 import {
@@ -52,7 +53,7 @@ import { onNotificationOpen, rescheduleNotifications } from './src/notify';
 import { loadDaily } from './src/ui/DailyScreen';
 import { socialWelcome } from './src/engine/social';
 import { HasTopBar, TopBar } from './src/ui/components';
-import { C } from './src/ui/theme';
+import { C, F } from './src/ui/theme';
 import type { Phase } from './src/engine/types';
 
 const PHASE_LABELS: Record<Phase, string> = {
@@ -78,6 +79,7 @@ type View_ = 'loading' | 'menu' | 'create' | 'game' | 'daily' | 'locker';
 export default function App() {
   const [view, setView] = useState<View_>('loading');
   const [toast, setToast] = useState<string[]>([]);
+  const [hata, setHata] = useState<string | null>(null);
   const [game, setGameState] = useState<GameState | null>(null);
   // 3 kayıt yuvası: menüde hepsi görünür, oyun aktif yuvaya kaydedilir.
   const [saves, setSaves] = useState<(GameState | null)[]>([null, null, null, null, null]);
@@ -124,7 +126,15 @@ export default function App() {
     const cur = gameRef.current;
     if (!cur) return;
     const next: GameState = JSON.parse(JSON.stringify(cur));
-    fn(next);
+    try {
+      fn(next);
+    } catch (e) {
+      // Motor hatası oyunu çökertmez: durum değişmeden kalır, oyuncuya kısa bir uyarı gösterilir.
+      console.warn('İşlem hatası:', e);
+      setHata(L("Bu işlem şu an yapılamadı. Kariyerin güvende."));
+      setTimeout(() => setHata(null), 4000);
+      return;
+    }
     // Olaylar, sosyal medya, gece hayatı…: popülerlik değişimi takipçiye yansır (maç sonucu kendi hesabını yapar).
     if (!(cur.phase === 'dovus' && next.phase === 'dovusSonrasi') && next.populerlik !== cur.populerlik) popToFollowers(next, next.populerlik - cur.populerlik);
     // Kafes dışındaki başarımlar da (ev, araba, sevgili…) anında açılır.
@@ -208,6 +218,10 @@ export default function App() {
         onDelete={removeSlot}
         onDaily={() => setView('daily')}
         onLocker={() => setView('locker')}
+        onImport={(x, g) => {
+          void deleteGame(x).then(() => saveGame(g, x));
+          putSave(x, g);
+        }}
         onDynasty={(x) => {
           const g = saves[x - 1];
           if (!g) return;
@@ -237,7 +251,8 @@ export default function App() {
           socialWelcome(s);
           setSlot(createSlot);
           setGame(s);
-          saveGame(s, createSlot);
+          // Yuvanın eski kaydı ve yedeği silinir; yeni kariyer temiz başlar.
+          void deleteGame(createSlot).then(() => saveGame(s, createSlot));
           putSave(createSlot, s);
           setView('game');
         }}
@@ -313,7 +328,31 @@ export default function App() {
         {/* Tarayıcıda telefon genişliğinde ortalanır */}
         <View style={{ flex: 1, width: '100%', maxWidth: 560, alignSelf: 'center' }}>
           {topLabel ? <TopBar label={topLabel} onMenu={() => setView('menu')} /> : null}
-          <HasTopBar.Provider value={!!topLabel}>{content}</HasTopBar.Provider>
+          <HasTopBar.Provider value={!!topLabel}>
+            <ErrorBoundary
+              key={view + (game?.phase ?? '')}
+              onMenu={() => setView('menu')}
+              onRestore={
+                view === 'game'
+                  ? () =>
+                      void restoreBackup(slotRef.current).then((b) => {
+                        if (b) {
+                          setGame(b);
+                          putSave(slotRef.current, b);
+                        }
+                        setView('menu');
+                      })
+                  : undefined
+              }
+            >
+              {content}
+            </ErrorBoundary>
+          </HasTopBar.Provider>
+          {hata ? (
+            <View style={{ position: 'absolute', top: 70, left: 16, right: 16, backgroundColor: '#3a0d12', borderColor: C.red, borderWidth: 1, borderRadius: 10, padding: 12 }}>
+              <Text style={{ color: C.text, fontFamily: F.semi, fontSize: 13, textAlign: 'center' }}>{hata}</Text>
+            </View>
+          ) : null}
           {view === 'game' ? <AchievementToast items={toast} onDone={() => setToast([])} /> : null}
         </View>
       </View>
