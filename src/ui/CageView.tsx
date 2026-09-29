@@ -4,7 +4,7 @@ import { sfx, type Sfx } from '../audio';
 import { playerKit } from '../cosmetics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useRef, useState } from 'react';
-import { StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
+import { Modal, Pressable, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
 import Svg, { Circle, Defs, Ellipse, G, Line, Polygon, RadialGradient, Rect, Stop, Text as SvgText } from 'react-native-svg';
 import type { Appearance, FightState } from '../engine/types';
 import { DEFAULT_LOOK } from './FighterAvatar';
@@ -55,7 +55,24 @@ function classify(line: string, fs: FightState): Ev {
 
 // ---------- Sahne ----------
 
-export function CageView({ fs, shown, pLook, oLook, speed = 1 }: { fs: FightState; shown: number; pLook?: Appearance; oLook: Appearance; speed?: number }) {
+export function CageView({
+  fs,
+  shown,
+  pLook,
+  oLook,
+  speed = 1,
+  replayOnly,
+  onReplayEnd,
+}: {
+  fs: FightState;
+  shown: number;
+  pLook?: Appearance;
+  oLook: Appearance;
+  speed?: number;
+  /** Yalnızca nakavt tekrarını oynatan kopya (tam ekran pencerede). */
+  replayOnly?: boolean;
+  onReplayEnd?: () => void;
+}) {
   const [pKit] = useState(playerKit);
   const [w, setW] = useState(340);
   const k = Math.max(0.95, Math.min(1.3, w / 300));
@@ -70,6 +87,12 @@ export function CageView({ fs, shown, pLook, oLook, speed = 1 }: { fs: FightStat
   const raf = useRef<number | null>(null);
   const [, setTick] = useState(0);
   const [caption, setCaption] = useState('');
+  const [replay, setReplay] = useState<string | null>(null);
+  const [showReplay, setShowReplay] = useState(false);
+  const replayed = useRef(false);
+  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const after = (fn: () => void, ms: number) => void timers.current.push(setTimeout(fn, ms));
+  useEffect(() => () => timers.current.forEach(clearTimeout), []);
 
   const now = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
   const loop = () => {
@@ -104,9 +127,11 @@ export function CageView({ fs, shown, pLook, oLook, speed = 1 }: { fs: FightStat
   };
   useEffect(() => () => void (raf.current != null && cancelAnimationFrame(raf.current)), []);
 
-  const sp = 1 / Math.max(0.5, speed);
+  /** Ağır çekim çarpanı (nakavt tekrarında büyür). */
+  const slow = useRef(1);
+  const spd = () => (1 / Math.max(0.5, speed)) * slow.current;
   const queue = (a: Actor, segs: Seg[]) => {
-    tracks.current[a] = { from: { ...cur.current[a] }, segs: segs.map(([n, ms, ov]) => ({ to: pose(n, ov), ms: ms * sp })), t0: now() };
+    tracks.current[a] = { from: { ...cur.current[a] }, segs: segs.map(([n, ms, ov]) => ({ to: pose(n, ov), ms: ms * spd() })), t0: now() };
     kick();
   };
 
@@ -128,15 +153,15 @@ export function CageView({ fs, shown, pLook, oLook, speed = 1 }: { fs: FightStat
       kick();
       const snd: Record<Fx['kind'], Sfx> = { hit: part === 'head' ? 'punch' : 'body', big: 'heavy', lock: 'lock', tap: 'tap', dust: 'slam', stars: 'ooh' };
       sfx(snd[kind]);
-    }, delay * sp);
+    }, delay * spd());
   };
-  const later = (name: Sfx, ms: number, amount = 1) => setTimeout(() => sfx(name, amount), ms * sp);
+  const later = (name: Sfx, ms: number, amount = 1) => setTimeout(() => sfx(name, amount), ms * spd());
 
   const other = (s: Side): Side => (s === 'p' ? 'o' : 'p');
   const idleAfter = (a: Actor, ms: number) =>
     setTimeout(() => {
       if (!tracks.current[a] && (cur.current[a] === POSES.stance || Math.abs(cur.current[a].rot) < 1)) queue(a, [['stance', 260, { y: 1.5 }], ['stance', 260]]);
-    }, ms * sp);
+    }, ms * spd());
 
   const play = (ev: Ev, bitti: boolean) => {
     const A = ev.kim;
@@ -233,7 +258,7 @@ export function CageView({ fs, shown, pLook, oLook, speed = 1 }: { fs: FightStat
           fx.current.push({ ...world(Dd, joints(cur.current[Dd]).head), kind: 'stars', t0: now() });
           kick();
           sfx('swell', 0.8);
-        }, 600 * sp);
+        }, 600 * spd());
         return;
       }
       case 'ko': {
@@ -275,7 +300,7 @@ export function CageView({ fs, shown, pLook, oLook, speed = 1 }: { fs: FightStat
       setTimeout(() => {
         face.current.p = 1;
         face.current.o = -1;
-      }, 1350 * sp);
+      }, 1350 * spd());
     }
     queue(A, aSeg);
     queue(Dd, dSeg);
@@ -283,10 +308,51 @@ export function CageView({ fs, shown, pLook, oLook, speed = 1 }: { fs: FightStat
     if (tap) hitAt(Dd, 'body', 'tap', 1350);
   };
 
+  /** Nakavt anı ağır çekimde, yakın planda ve spiker cümlesiyle yeniden oynar. */
+  const startReplay = (W: Side) => {
+    const Lo = other(W);
+    let ev: Ev | null = null;
+    for (let i = fs.log.length - 1; i >= 0 && !ev; i--) {
+      const e = classify(fs.log[i], fs);
+      if (e.tur === 'ko') ev = e;
+    }
+    const final: Ev = { ...(ev ?? { tur: 'ko', alt: 'cross', miss: false, escape: false, tap: false }), tur: 'ko', kim: W };
+    const winner = W === 'p' ? fs.pAd : fs.oAd;
+    const lines = [tL("“VE BİTTİ! BU GECE {0} KONUŞTU!”", [winner]), tL("“IŞIKLAR SÖNDÜ! İNANILMAZ BİR BİTİRİŞ!”"), tL("“TEK VURUŞ, HER ŞEY DEĞİŞTİ!”"), tL("“BUNU YILLARCA KONUŞACAĞIZ!”")];
+    setCaption('');
+    setReplay(lines[Math.floor(Math.random() * lines.length)].toLocaleUpperCase(LOC));
+    slow.current = 3;
+    tracks.current = {};
+    face.current = { p: 1, o: -1, r: 1 };
+    // Hakem kenarda bekler, vuruştan sonra araya girer (tekrarda görüşü kapatmasın).
+    cur.current = { p: POSES.stance, o: POSES.stance, r: pose('refIdle', { x: 70 }) };
+    kick();
+    after(() => {
+      play(final, true);
+      queue('r', [['refIdle', 400, { x: 70 }], ['refStop', 350, { x: 0 }]]);
+    }, 500);
+    after(() => {
+      slow.current = 1;
+      setReplay(null);
+      face.current = { p: 1, o: -1, r: W === 'p' ? -1 : 1 };
+      queue('r', [['refRaise', 400, { x: 8 }]]);
+      queue(W, [['winHeld', 400, { x: GAP / 2 - 20 }]]);
+      queue(Lo, [['knockedOut', 300, { x: -16 }]]);
+      setCaption(`${tL("KAZANAN")}: ${winner}`.toLocaleUpperCase(LOC));
+      if (replayOnly) after(() => onReplayEnd?.(), 1300);
+    }, 500 + 1100 * 3 + 1400);
+  };
+  useEffect(() => {
+    const kz = fs.sonuc?.kazanan;
+    if (replayOnly && kz && kz !== 'berabere') after(() => startReplay(kz), 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Her yeni satırda sahne oynar
   const last = shown > 0 ? fs.log[shown - 1] : '';
   const done = fs.durum === 'bitti' && shown >= fs.log.length;
   useEffect(() => {
+    if (replayOnly) return;
     if (!last) {
       if (fs.raunt === 1) play({ tur: 'round', alt: '', kim: 'p', miss: false, escape: false, tap: false }, false);
       return;
@@ -297,7 +363,7 @@ export function CageView({ fs, shown, pLook, oLook, speed = 1 }: { fs: FightStat
 
   // Akış bittiğinde: kritik an, raunt arası ya da hakemin el kaldırması
   useEffect(() => {
-    if (shown < fs.log.length) return;
+    if (replayOnly || shown < fs.log.length) return;
     const tm = setTimeout(() => {
       if (fs.durum === 'bitti' && fs.sonuc) {
         const kz = fs.sonuc.kazanan;
@@ -321,6 +387,10 @@ export function CageView({ fs, shown, pLook, oLook, speed = 1 }: { fs: FightStat
         queue(W, [['stance', 500, { x: GAP / 2 - 22 }], ['stance', 300, { x: GAP / 2 - 22 }], ['winHeld', 400, { x: GAP / 2 - 20 }]]);
         if (!bitirme) queue(L, [['dejected', 700, { x: 4 }]]);
         else if (fs.sonuc.yontem === 'SUB') queue(L, [['sitUp', 700, { x: -8 }]]);
+        if ((fs.sonuc.yontem === 'KO' || fs.sonuc.yontem === 'TKO') && !replayed.current) {
+          replayed.current = true;
+          after(() => setShowReplay(true), 2600 * spd());
+        }
       } else if (fs.durum === 'rauntSonu') {
         face.current.p = 1;
         face.current.o = -1;
@@ -370,78 +440,109 @@ export function CageView({ fs, shown, pLook, oLook, speed = 1 }: { fs: FightStat
   const order: Actor[] = cur.current.p.rot < -45 ? ['r', 'p', 'o'] : ['r', 'o', 'p'];
 
   return (
-    <View onLayout={onLayout} style={cv.wrap}>
-      <LinearGradient colors={['#0a0a0d', '#111217', '#050506']} style={{ height: H }}>
-        <Svg width={w} height={H} style={StyleSheet.absoluteFill}>
-          <Defs>
-            <RadialGradient id="cspot" cx="50%" cy="70%" r="55%">
-              <Stop offset="0" stopColor="#ffffff" stopOpacity={0.28} />
-              <Stop offset="1" stopColor="#ffffff" stopOpacity={0} />
-            </RadialGradient>
-          </Defs>
-          {/* Tribün ışıkları */}
-          {Array.from({ length: 18 }, (_, i) => (
-            <Circle key={i} cx={(w / 18) * i + 8} cy={H * 0.06 + (i % 3) * 5} r={1.2} fill="#ffffff" opacity={0.15 + (i % 4) * 0.08} />
-          ))}
-          {/* Arka kafes */}
-          <Polygon points={`${w * 0.08},${H * 0.72} ${w * 0.18},${H * 0.18} ${w * 0.82},${H * 0.18} ${w * 0.92},${H * 0.72}`} fill="none" stroke="#2c2f37" strokeWidth={2} />
-          {Array.from({ length: 15 }, (_, i) => {
-            const x = w * 0.18 + (w * 0.64 * i) / 14;
-            return <Line key={i} x1={x} y1={H * 0.18} x2={x} y2={H * 0.68} stroke="#1d2027" strokeWidth={1} />;
-          })}
-          {Array.from({ length: 7 }, (_, i) => (
-            <Line key={`h${i}`} x1={w * 0.16} y1={H * 0.22 + i * 15} x2={w * 0.84} y2={H * 0.22 + i * 15} stroke="#1a1c22" strokeWidth={1} />
-          ))}
-          {/* Kanvas */}
-          <Ellipse cx={cx} cy={H * 0.8} rx={w * 0.49} ry={H * 0.17} fill="#d6d6d9" />
-          <Ellipse cx={cx} cy={H * 0.8} rx={w * 0.49} ry={H * 0.17} fill="url(#cspot)" />
-          <Ellipse cx={cx} cy={H * 0.8} rx={w * 0.13} ry={H * 0.045} fill="none" stroke={C.red} strokeWidth={2} opacity={0.6} />
-          <SvgText x={cx} y={H * 0.81 + 3} fill={C.red} opacity={0.35} fontSize={9} fontWeight="bold" textAnchor="middle" letterSpacing={3}>
-            YOL
-          </SvgText>
-          {/* Figürler */}
-          {order.map(actor)}
-          {/* Efektler */}
-          {fx.current.map((f, i) => {
-            const age = (tNow - f.t0) / 700;
-            const s = (f.kind === 'big' ? 1.6 : 1) * (0.5 + age) * k;
-            const op = Math.max(0, 1 - age);
-            if (f.kind === 'lock' || f.kind === 'tap' || f.kind === 'stars')
-              return (
-                <SvgText key={i} x={f.x} y={f.y - 10 - age * 14} fontSize={16 * k} textAnchor="middle" opacity={op}>
-                  {f.kind === 'lock' ? '🔒' : f.kind === 'tap' ? '✋' : '💫'}
-                </SvgText>
-              );
-            if (f.kind === 'dust')
-              return <Ellipse key={i} cx={f.x} cy={floorY} rx={30 * s} ry={5 * s} fill="#ffffff" opacity={op * 0.5} />;
-            return (
-              <G key={i} opacity={op}>
-                {Array.from({ length: 8 }, (_, q) => {
-                  const a = (q / 8) * Math.PI * 2;
-                  return <Line key={q} x1={f.x + Math.cos(a) * 4 * s} y1={f.y + Math.sin(a) * 4 * s} x2={f.x + Math.cos(a) * 11 * s} y2={f.y + Math.sin(a) * 11 * s} stroke={f.kind === 'big' ? '#ffd23f' : '#ffffff'} strokeWidth={2} />;
-                })}
-                <Circle cx={f.x} cy={f.y} r={3.5 * s} fill={f.kind === 'big' ? '#ff5a2a' : '#ffffff'} />
-              </G>
-            );
-          })}
-          {/* Ön direkler */}
-          <Line x1={w * 0.03} y1={H * 0.08} x2={w * 0.03} y2={H * 0.98} stroke="#3a3d45" strokeWidth={5} />
-          <Line x1={w * 0.97} y1={H * 0.08} x2={w * 0.97} y2={H * 0.98} stroke="#3a3d45" strokeWidth={5} />
-          <Rect x={w * 0.03 - 4} y={H * 0.08} width={8} height={20} fill={C.red} />
-          <Rect x={w * 0.97 - 4} y={H * 0.08} width={8} height={20} fill={C.blue} />
-        </Svg>
-        {caption ? (
-          <View style={cv.caption}>
-            <Text style={[cv.captionText, done && { color: C.gold }]}>{caption}</Text>
-          </View>
-        ) : null}
-      </LinearGradient>
-    </View>
+    <>
+      <View onLayout={onLayout} style={cv.wrap}>
+        <LinearGradient colors={['#0a0a0d', '#111217', '#050506']} style={{ height: H }}>
+          <Svg width={w} height={H} style={StyleSheet.absoluteFill}>
+            <Defs>
+              <RadialGradient id="cspot" cx="50%" cy="70%" r="55%">
+                <Stop offset="0" stopColor="#ffffff" stopOpacity={0.28} />
+                <Stop offset="1" stopColor="#ffffff" stopOpacity={0} />
+              </RadialGradient>
+            </Defs>
+            {/* Tribün ışıkları */}
+            {Array.from({ length: 18 }, (_, i) => (
+              <Circle key={i} cx={(w / 18) * i + 8} cy={H * 0.06 + (i % 3) * 5} r={1.2} fill="#ffffff" opacity={0.15 + (i % 4) * 0.08} />
+            ))}
+            {/* Arka kafes */}
+            <Polygon points={`${w * 0.08},${H * 0.72} ${w * 0.18},${H * 0.18} ${w * 0.82},${H * 0.18} ${w * 0.92},${H * 0.72}`} fill="none" stroke="#2c2f37" strokeWidth={2} />
+            {Array.from({ length: 15 }, (_, i) => {
+              const x = w * 0.18 + (w * 0.64 * i) / 14;
+              return <Line key={i} x1={x} y1={H * 0.18} x2={x} y2={H * 0.68} stroke="#1d2027" strokeWidth={1} />;
+            })}
+            {Array.from({ length: 7 }, (_, i) => (
+              <Line key={`h${i}`} x1={w * 0.16} y1={H * 0.22 + i * 15} x2={w * 0.84} y2={H * 0.22 + i * 15} stroke="#1a1c22" strokeWidth={1} />
+            ))}
+            {/* Kanvas */}
+            <Ellipse cx={cx} cy={H * 0.8} rx={w * 0.49} ry={H * 0.17} fill="#d6d6d9" />
+            <Ellipse cx={cx} cy={H * 0.8} rx={w * 0.49} ry={H * 0.17} fill="url(#cspot)" />
+            <Ellipse cx={cx} cy={H * 0.8} rx={w * 0.13} ry={H * 0.045} fill="none" stroke={C.red} strokeWidth={2} opacity={0.6} />
+            <SvgText x={cx} y={H * 0.81 + 3} fill={C.red} opacity={0.35} fontSize={9} fontWeight="bold" textAnchor="middle" letterSpacing={3}>
+              YOL
+            </SvgText>
+            <G transform={replay ? `translate(${cx} ${floorY - 40}) scale(1.3) translate(${-cx} ${-(floorY - 40)})` : undefined}>
+              {/* Figürler */}
+              {order.map(actor)}
+              {/* Efektler */}
+              {fx.current.map((f, i) => {
+                const age = (tNow - f.t0) / 700;
+                const s = (f.kind === 'big' ? 1.6 : 1) * (0.5 + age) * k;
+                const op = Math.max(0, 1 - age);
+                if (f.kind === 'lock' || f.kind === 'tap' || f.kind === 'stars')
+                  return (
+                    <SvgText key={i} x={f.x} y={f.y - 10 - age * 14} fontSize={16 * k} textAnchor="middle" opacity={op}>
+                      {f.kind === 'lock' ? '🔒' : f.kind === 'tap' ? '✋' : '💫'}
+                    </SvgText>
+                  );
+                if (f.kind === 'dust')
+                  return <Ellipse key={i} cx={f.x} cy={floorY} rx={30 * s} ry={5 * s} fill="#ffffff" opacity={op * 0.5} />;
+                return (
+                  <G key={i} opacity={op}>
+                    {Array.from({ length: 8 }, (_, q) => {
+                      const a = (q / 8) * Math.PI * 2;
+                      return <Line key={q} x1={f.x + Math.cos(a) * 4 * s} y1={f.y + Math.sin(a) * 4 * s} x2={f.x + Math.cos(a) * 11 * s} y2={f.y + Math.sin(a) * 11 * s} stroke={f.kind === 'big' ? '#ffd23f' : '#ffffff'} strokeWidth={2} />;
+                    })}
+                    <Circle cx={f.x} cy={f.y} r={3.5 * s} fill={f.kind === 'big' ? '#ff5a2a' : '#ffffff'} />
+                  </G>
+                );
+              })}
+            </G>
+            {/* Ön direkler */}
+            <Line x1={w * 0.03} y1={H * 0.08} x2={w * 0.03} y2={H * 0.98} stroke="#3a3d45" strokeWidth={5} />
+            <Line x1={w * 0.97} y1={H * 0.08} x2={w * 0.97} y2={H * 0.98} stroke="#3a3d45" strokeWidth={5} />
+            <Rect x={w * 0.03 - 4} y={H * 0.08} width={8} height={20} fill={C.red} />
+            <Rect x={w * 0.97 - 4} y={H * 0.08} width={8} height={20} fill={C.blue} />
+          </Svg>
+          {replay ? (
+            <>
+              <View style={[cv.bar, { top: 0 }]}>
+                <Text style={cv.replayTag}>● {tL("TEKRAR")}</Text>
+              </View>
+              <View style={[cv.bar, { bottom: 0, justifyContent: 'center' }]}>
+                <Text style={cv.replayLine} numberOfLines={1} adjustsFontSizeToFit>
+                  {replay}
+                </Text>
+              </View>
+            </>
+          ) : null}
+          {caption && !replay ? (
+            <View style={cv.caption}>
+              <Text style={[cv.captionText, done && { color: C.gold }]}>{caption}</Text>
+            </View>
+          ) : null}
+        </LinearGradient>
+      </View>
+      {showReplay ? (
+        <Modal transparent animationType="fade" onRequestClose={() => setShowReplay(false)}>
+          <Pressable style={cv.modal} onPress={() => setShowReplay(false)}>
+            <View style={{ width: '100%', maxWidth: 560 }}>
+              <CageView fs={fs} shown={fs.log.length} pLook={pLook} oLook={oLook} replayOnly onReplayEnd={() => setShowReplay(false)} />
+              <Text style={cv.skip}>{tL("Geçmek için dokun")}</Text>
+            </View>
+          </Pressable>
+        </Modal>
+      ) : null}
+    </>
   );
 }
 
 const cv = StyleSheet.create({
   wrap: { borderRadius: R + 2, overflow: 'hidden', borderWidth: 1, borderColor: '#2a2d34', marginBottom: 10 },
   caption: { position: 'absolute', top: 8, left: 0, right: 0, alignItems: 'center' },
+  modal: { flex: 1, backgroundColor: 'rgba(0,0,0,0.92)', alignItems: 'center', justifyContent: 'center', padding: 12 },
+  skip: { color: C.faint, fontFamily: F.semi, fontSize: 12, textAlign: 'center', marginTop: 6 },
+  bar: { position: 'absolute', left: 0, right: 0, height: 30, backgroundColor: '#000', paddingHorizontal: 10, justifyContent: 'center' },
+  replayTag: { color: C.red, fontFamily: F.display, fontSize: 13, letterSpacing: 2 },
+  replayLine: { color: C.gold, fontFamily: F.display, fontSize: 14, letterSpacing: 1, textAlign: 'center' },
   captionText: { color: '#fff', fontFamily: F.display, fontSize: 16, letterSpacing: 2, backgroundColor: 'rgba(0,0,0,0.55)', paddingHorizontal: 12, paddingVertical: 3, borderRadius: 3, overflow: 'hidden' },
 });

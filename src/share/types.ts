@@ -3,7 +3,7 @@ import type { Appearance, OrgId, WeightClass } from '../engine/types';
 /** Paylaşım kartının içeriği (dile çevrilmiş metinlerle). */
 export type ShareCardData = {
   /** Dosya adı ve vurgu rengi için */
-  tur: 'kemer' | 'bitiris' | 'galibiyet' | 'kariyer';
+  tur: 'kemer' | 'bitiris' | 'galibiyet' | 'kariyer' | 'wiki';
   /** En üstteki büyük başlık: "🏆 YENİ ŞAMPİYON" */
   baslik: string;
   ad: string;
@@ -20,6 +20,8 @@ export type ShareCardData = {
   kemer?: { org: OrgId; siklet: WeightClass };
   /** Paylaşım menüsünde gönderiye eklenecek metin */
   mesaj: string;
+  /** Kafespedia kartı: giriş paragrafı ve bilgi kutusu satırları */
+  wiki?: { ozet: string; bilgi: [string, string][] };
 };
 
 /** Önizleme hazır olunca paylaşım işlemleri (kaydetme yalnızca web'de). */

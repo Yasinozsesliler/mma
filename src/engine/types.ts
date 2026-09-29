@@ -504,6 +504,8 @@ export interface GameState {
   nesil?: number;
   /** Ezeli rakip (kariyer boyunca peşini bırakmayan dövüşçü). */
   ezeli?: import('./nemesis').Nemesis;
+  /** UCC yolunda geçilen basamaklar (büyük organizasyon). */
+  uccYolu?: string[];
   hanedan?: import('./dynasty').Ancestor[];
   /** Ödüllü reklam teklifleri: alındıkları dövüş sayısı (her dövüş arasında birer kez). */
   odul?: { sakatlikMac?: number; profilHafta?: number };

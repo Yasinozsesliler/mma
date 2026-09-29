@@ -41,6 +41,8 @@ import { STAT_KEYS, STAT_LABELS } from '../engine/types';
 import { Button, Card, Choice, Icon, P, Pill, Screen, Section, Title, upName, type IconName } from './components';
 import { NewsFeed, RestPicker } from './HubParts';
 import { ActionGrid, ActionTile, FightCTA, HubHero, Notice } from './HubHome';
+import { UccRoadCard } from './UccRoadCard';
+import { WikiButton } from './WikiPage';
 import { CampLengthStep, CampSummary, CampWeeksStep, FreeWeeksStep } from './CampCalendar';
 import { TechniquePanel } from './TechniquePanel';
 import { FaceOffStage } from './FaceOffStage';
@@ -144,6 +146,7 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
             </Notice>
           ) : null}
 
+          <UccRoadCard s={s} />
           <FightCTA
             title={banned(s) ? L("MEN CEZASI") : L("DÖVÜŞ AYARLA")}
             sub={
@@ -740,6 +743,9 @@ export function RetireScreen({ s, onNew, onDynasty }: { s: GameState; onNew: () 
       </Card>
       <Section>{L("ÜNVANLAR")}</Section>
       {s.unvanlar.length ? s.unvanlar.map((u, i) => <P key={i}>🏆 {u}</P>) : <P dim>{L("Kemer yok. Ama yol yürünmüştü.")}</P>}
+      <View style={{ marginTop: 12 }}>
+        <WikiButton s={s} />
+      </View>
     </Screen>
   );
 }

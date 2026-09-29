@@ -11,6 +11,7 @@ import { Belt } from '../ui/Belt';
 import { FighterAvatar } from '../ui/FighterAvatar';
 import { C, F } from '../ui/theme';
 import type { CardHandle, ShareCardData } from './types';
+import { WikiCardBody } from './WikiCard';
 
 // Tasarım 360×640 birimde yapılır, 3 kat büyütülerek 1080×1920 yakalanır.
 const WD = 360;
@@ -44,6 +45,11 @@ export function CardPreview({ data, onReady }: { data: ShareCardData; onReady: (
   return (
     <View style={st.fit}>
       <View style={{ transform: [{ scale: 0.78 }] }}>
+      {data.tur === 'wiki' ? (
+        <View ref={ref} collapsable={false}>
+          <WikiCardBody data={data} store={L("Google Play’de ücretsiz")} />
+        </View>
+      ) : (
       <View ref={ref} collapsable={false} style={st.card}>
         <LinearGradient colors={['#1c070b', '#0b0c10', '#040405']} locations={[0, 0.45, 1]} style={StyleSheet.absoluteFill} />
         <Svg width={WD} height={HT} style={StyleSheet.absoluteFill}>
@@ -96,6 +102,7 @@ export function CardPreview({ data, onReady }: { data: ShareCardData; onReady: (
           <Text style={st.store}>{L("Google Play’de ücretsiz")}</Text>
         </View>
       </View>
+      )}
       </View>
     </View>
   );

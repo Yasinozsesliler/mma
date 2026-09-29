@@ -1,6 +1,7 @@
 import { L as tL, LOC } from '../i18n';
 import { addStat, advanceWeeks, currentOrg, fullName, statAverage } from './character';
 import { nemesisAfterFight } from './nemesis';
+import { dwcsReady, uccMilestones } from './uccRoad';
 import { campCost, randomInjury, startCamp } from './camp';
 import { ORGS, WEIGHT_CLASSES, WEIGHT_MODS } from './data';
 import { methodLabel } from './fight';
@@ -282,6 +283,7 @@ export function finishFight(s: GameState) {
     }
   }
   divNotes.forEach((n) => s.haberler.unshift(n));
+  if (!caught) lines.push(...uccMilestones(s));
   socialAfterFight(s, opp, won, draw, methodLabel(r.yontem), divNotes);
   if (s.seri >= 3) lines.push(tL("🔥 {0} maçlık galibiyet serisi!", [s.seri]));
   if (s.seri <= -2 && oldSeri <= -1) lines.push(tL("📉 {0} maçlık mağlubiyet serisi. Baskı artıyor.", [-s.seri]));
@@ -532,8 +534,7 @@ export function afterPostFight(s: GameState) {
       return;
     }
     // Dean Wyatt iyi bir galibiyetten sonra arayabilir (kontrat ortasında da).
-    const dwcsHazir = s.sampiyon || (s.rank != null && ((s.rank <= 3 && s.populerlik >= 25) || (s.rank <= 5 && s.seri >= 3)));
-    if (s.stage === 'buyuk' && won && dwcsHazir && s.contract && chance(0.35)) {
+    if (s.stage === 'buyuk' && won && dwcsReady(s) && s.contract && chance(0.35)) {
       openOffers(s, 'dwcsDavet', tL("📞 Telefon çaldı. Arayan: Dean Wyatt. “Seni izliyorum evlat. Challenger Series’e gel, kendini göster.”"));
       return;
     }
@@ -640,7 +641,7 @@ export function openOffers(s: GameState, kind: OfferKind, metin: string) {
       // UCC'ye tek kapı Dean Wyatt's Challenger Series. Davet için şampiyonluk ya da zirvede popüler bir isim olmak gerekir.
       if (s.sampiyon) {
         offers.push(makeOffer(s, 'dwcs', 1, 1, tL("Şampiyonluğun Dean Wyatt’ın dikkatini çekti. DWCS’ye davetlisin. Kazanırsan ve etkilersen UCC kapısı açılır.")));
-      } else if (s.rank != null && ((s.rank <= 3 && s.populerlik >= 25) || (s.rank <= 5 && s.seri >= 3))) {
+      } else if (dwcsReady(s)) {
         offers.push(makeOffer(s, 'dwcs', 1, 1, tL("Zirvedeki performansın izleniyor. Tek dövüş, tek şans: etkilersen UCC kontratı.")));
       }
       offers.push(makeOffer(s, org, 4, 1.3, tL("Mevcut organizasyonun yeni bir kontrat sunuyor.")));

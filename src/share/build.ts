@@ -3,6 +3,7 @@ import { currentOrg } from '../engine/character';
 import { ORGS, WEIGHT_CLASSES } from '../engine/data';
 import { activeBelts, champLabel, legacyScore } from '../engine/legacy';
 import type { GameState } from '../engine/types';
+import { wikiOf } from '../engine/wiki';
 import { L, LOC } from '../i18n';
 import { upName } from '../ui/components';
 import type { ShareCardData } from './types';
@@ -76,5 +77,20 @@ export function careerCard(s: GameState): ShareCardData {
       [L("EFSANE PUANI"), String(legacyScore(s))],
     ],
     alt: L("{0} sokaklarından çıktı; {1} yaşında {2} galibiyete ulaştı, {3} bitiriş.", [s.fighter.memleket, s.fighter.yas, s.rekor.g, s.rekor.ko + s.rekor.sub]),
+  };
+}
+
+/** Kafespedia sayfasının paylaşım kartı. */
+export function wikiCard(s: GameState): ShareCardData {
+  const w = wikiOf(s);
+  return {
+    ...base(s),
+    tur: 'wiki',
+    baslik: w.baslik,
+    ust: '',
+    kutular: [],
+    alt: '',
+    mesaj: L("Kafespedia · Kendi dövüş efsaneni yaz"),
+    wiki: { ozet: w.ozet, bilgi: w.bilgi.slice(0, 9) },
   };
 }

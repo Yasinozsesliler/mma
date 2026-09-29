@@ -2,6 +2,7 @@ import { L, LOC } from '../i18n';
 import { useFrame } from '../cosmetics';
 import { DynastySection } from './DynastyPanel';
 import { NemesisCard } from './NemesisCard';
+import { WikiButton } from './WikiPage';
 import { careerCard } from '../share/build';
 import { ShareButton } from '../share/ShareButton';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -45,7 +46,8 @@ export function ProfilePanel({ s, act }: { s: GameState; act: Act }) {
           <Text style={[pf.tier, { color: tier.renk }]}>{tier.ad}</Text>
         </View>
       </LinearGradient>
-      <View style={{ marginBottom: 12 }}>
+      <View style={{ marginBottom: 12, gap: 8 }}>
+        <WikiButton s={s} />
         <ShareButton data={careerCard(s)} label={L("Kariyer kartını paylaş")} />
       </View>
       <NemesisCard s={s} />

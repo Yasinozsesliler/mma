@@ -70,7 +70,7 @@ export function nemesisAfterFight(s: GameState, opp: Opponent, won: boolean, dra
       s.populerlik = Math.min(100, s.populerlik + 5);
       const msg = L("🏁 Rekabet bitti! {0} sonunda kabul etti: \"Sen daha iyiydin, {1}.\" Aranızdaki seri: {2}. Popülerlik +5.", [name(n), s.fighter.ad, nemesisScore(n)]);
       lines.push(msg);
-      s.haberler.unshift(`📰 ${msg}`);
+      s.haberler.unshift(msg);
       post(s, n, L("Bugün kafeste daha iyi olan kazandı. Saygılar {0}. Bu rekabet beni daha iyi bir dövüşçü yaptı.", [s.fighter.ad]));
     } else if (n.g + n.m + n.b >= MAKS) {
       // Son karşılaşma: ezeli rakip eldivenleri asar.
@@ -80,7 +80,7 @@ export function nemesisAfterFight(s: GameState, opp: Opponent, won: boolean, dra
           ? L("🏁 {0} emekliliğini açıkladı: \"Kariyerimdeki en zor rakip sendin, {1}.\" Seriyi sen kazandın: {2}.", [name(n), s.fighter.ad, nemesisScore(n)])
           : L("🏁 {0} emekliliğini açıkladı. Aranızdaki seri: {1}. Onu hiç tam geçemedin; bu hikâye böyle bitti.", [name(n), nemesisScore(n)]);
       lines.push(msg);
-      s.haberler.unshift(`📰 ${msg}`);
+      s.haberler.unshift(msg);
     } else if (won) {
       lines.push(L("⚔️ Ezeli rakibin {0} karşısında kazandın! Aranızdaki seri: {1}.", [name(n), nemesisScore(n)]));
       post(s, n, pick([L("Bu gece senin gecendi. Ama bu iş bitmedi, {0}.", [s.fighter.ad]), L("Rövanş istiyorum. Organizasyon duysun!"), L("Şans bir kez güler. Üçüncü maçta görüşürüz.")]));
@@ -96,7 +96,7 @@ export function nemesisAfterFight(s: GameState, opp: Opponent, won: boolean, dra
     const m = born(s, opp, 'yenilgi');
     const msg = L("🗡️ {0} maçtan sonra mikrofonu aldı: \"Bu daha başlangıç. Kafeste her karşılaştığımızda aynı sonuç olacak.\" Bu isim peşini kolay bırakmayacak: artık bir ezeli rakibin var.", [name(m)]);
     lines.push(msg);
-    s.haberler.unshift(`📰 ${msg}`);
+    s.haberler.unshift(msg);
     post(s, m, L("{0} iyi dövüşçü ama bana göre değil. Ne zaman isterse tekrar.", [fullName(s.fighter)]));
     return lines;
   }
@@ -106,7 +106,7 @@ export function nemesisAfterFight(s: GameState, opp: Opponent, won: boolean, dra
     const m = born(s, o, 'meydan');
     const msg = L("🗡️ {0} kameralara konuştu: \"{1} yenilmez sanılıyor. O balonu ben patlatacağım.\" Yeni bir ezeli rakibin var.", [name(m), fullName(s.fighter)]);
     lines.push(msg);
-    s.haberler.unshift(`📰 ${msg}`);
+    s.haberler.unshift(msg);
     post(s, m, L("{0}, kaçamazsın. Sıra bende.", [s.fighter.ad]));
     return lines;
   }

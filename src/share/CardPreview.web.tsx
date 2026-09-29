@@ -34,7 +34,7 @@ export function CardPreview({ data, onReady }: { data: ShareCardData; onReady: (
     <>
       <View style={st.hidden} pointerEvents="none">
         <View nativeID={avatarId}>
-          <FighterAvatar look={data.look} size={560} ring={data.tur === 'kemer' ? C.gold : C.red} />
+          <FighterAvatar look={data.look} size={560} ring={data.tur === 'kemer' ? C.gold : data.tur === 'wiki' ? '#a2a9b1' : C.red} bg={data.tur === 'wiki' ? '#eaecf0' : undefined} />
         </View>
         {data.kemer ? (
           <View nativeID={beltId}>

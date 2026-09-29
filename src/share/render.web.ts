@@ -1,6 +1,6 @@
 // Web: paylaşım kartı 1080×1920 (hikâye boyutu) bir tuvale çizilir ve PNG olarak paylaşılır/indirilir.
 // Portre ve kemer, ekranda (gizli) çizilen SVG'lerden alınır; yazılar oyunun kendi yazı tipleriyle çizilir.
-import { LOC } from '../i18n';
+import { L, LOC } from '../i18n';
 import { C, F } from '../ui/theme';
 import type { ShareCardData } from './types';
 
@@ -67,6 +67,7 @@ export async function renderCard(d: ShareCardData, avatarId: string, beltId: str
     [`700 100px ${F.display}`, `500 60px ${F.displayMed}`, `700 40px ${F.bold}`, `400 40px ${F.body}`, `600 40px ${F.semi}`].map((f) => D.fonts?.load(f).catch(() => undefined)),
   );
   const [avatar, belt] = await Promise.all([svgImage(avatarId), d.kemer ? svgImage(beltId) : Promise.resolve(null)]);
+  if (d.tur === 'wiki') return renderWiki(d, avatar);
 
   const cv = D.createElement('canvas');
   cv.width = WD;
@@ -218,6 +219,115 @@ export async function renderCard(d: ShareCardData, avatarId: string, beltId: str
   const blob: Blob | null = await new Promise((r) => cv.toBlob((b) => r(b), 'image/png'));
   const file = blob ? new File([blob], `yol-${d.tur}.png`, { type: 'image/png' }) : null;
   return { url, file };
+}
+
+const SERIF = 'Georgia, "Times New Roman", serif';
+const W_ = { text: '#202122', gray: '#54595d', line: '#a2a9b1', box: '#f8f9fa', head: '#cedff2' };
+
+async function toFile(cv: HTMLCanvasElement, tur: string) {
+  const url = cv.toDataURL('image/png');
+  const blob: Blob | null = await new Promise((r) => cv.toBlob((b) => r(b), 'image/png'));
+  return { url, file: blob ? new File([blob], `yol-${tur}.png`, { type: 'image/png' }) : null };
+}
+
+/** Kafespedia kartı: beyaz ansiklopedi sayfası (yerel çizimle aynı yerleşim, 3 kat). */
+async function renderWiki(d: ShareCardData, avatar: HTMLImageElement | null) {
+  const w = d.wiki!;
+  const cv = doc()!.createElement('canvas');
+  cv.width = WD;
+  cv.height = HT;
+  const ctx = cv.getContext('2d');
+  if (!ctx) return null;
+  const P = 48;
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, WD, HT);
+  // Üst şerit ve logo
+  ctx.fillStyle = W_.box;
+  ctx.fillRect(0, 0, WD, 138);
+  ctx.fillStyle = W_.line;
+  ctx.fillRect(0, 138, WD, 3);
+  ctx.strokeStyle = W_.text;
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.arc(P + 42, 69, 42, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.fillStyle = W_.text;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font = `52px ${SERIF}`;
+  ctx.fillText('K', P + 42, 72);
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
+  ctx.font = `52px ${SERIF}`;
+  ctx.fillText(L("Kafespedia"), P + 108, 70);
+  ctx.fillStyle = W_.gray;
+  ctx.font = `24px ${SERIF}`;
+  ctx.fillText(L("Özgür dövüş ansiklopedisi"), P + 110, 106);
+  // Başlık
+  ctx.fillStyle = W_.text;
+  fit(ctx, d.baslik, (px) => `${px}px ${SERIF}`, 84, WD - P * 2);
+  ctx.fillText(d.baslik, P, 250);
+  ctx.fillStyle = W_.line;
+  ctx.fillRect(P, 268, WD - P * 2, 3);
+  ctx.fillStyle = W_.gray;
+  ctx.font = `italic 27px ${SERIF}`;
+  ctx.fillText(L("Kafespedia, özgür dövüş ansiklopedisi"), P, 308);
+  // Bilgi kutusu
+  const bx = P;
+  const bw = WD - P * 2;
+  const rows = w.bilgi;
+  const bh = 12 + 54 + 360 + rows.length * 50 + 12;
+  const by = 336;
+  ctx.fillStyle = W_.box;
+  ctx.fillRect(bx, by, bw, bh);
+  ctx.strokeStyle = W_.line;
+  ctx.lineWidth = 3;
+  ctx.strokeRect(bx, by, bw, bh);
+  ctx.fillStyle = W_.head;
+  ctx.fillRect(bx + 12, by + 12, bw - 24, 54);
+  ctx.fillStyle = W_.text;
+  ctx.textAlign = 'center';
+  const head = d.lakap ? `${d.ad} “${d.lakap}”` : d.ad;
+  fit(ctx, head, (px) => `bold ${px}px ${SERIF}`, 36, bw - 60);
+  ctx.fillText(head, WD / 2, by + 52);
+  if (avatar) ctx.drawImage(avatar, WD / 2 - 168, by + 78, 336, 336);
+  ctx.textAlign = 'left';
+  rows.forEach(([k, v], i) => {
+    const y = by + 66 + 360 + i * 50;
+    ctx.fillStyle = '#eaecf0';
+    ctx.fillRect(bx + 12, y, bw - 24, 3);
+    ctx.fillStyle = W_.text;
+    ctx.font = `700 28px ${F.bold}`;
+    ctx.fillText(k, bx + 24, y + 36);
+    ctx.font = `400 28px ${F.body}`;
+    const max = bw - 24 - 380;
+    let val = v;
+    while (ctx.measureText(val).width > max && val.length > 3) val = val.slice(0, -2);
+    ctx.fillText(val === v ? v : val + '…', bx + 380, y + 36);
+  });
+  // Giriş paragrafı
+  ctx.fillStyle = W_.text;
+  ctx.font = `34px ${SERIF}`;
+  const lines = wrap(ctx, w.ozet, WD - P * 2);
+  const maxLines = Math.floor((HT - 170 - (by + bh + 40)) / 48);
+  lines.slice(0, maxLines).forEach((l, i) => {
+    const last = i === maxLines - 1 && lines.length > maxLines;
+    ctx.fillText(last ? l.replace(/\s+\S*$/, '') + '…' : l, P, by + bh + 70 + i * 48);
+  });
+  // Alt şerit
+  ctx.fillStyle = C.red;
+  ctx.fillRect(0, HT - 156, WD, 6);
+  ctx.fillStyle = 'rgba(10,11,14,0.97)';
+  ctx.fillRect(0, HT - 150, WD, 150);
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#ffffff';
+  ctx.font = `700 40px ${F.display}`;
+  ctx.fillText(up(L("YOL: Kafesten Kemere · Kendi efsaneni yaz")), WD / 2, HT - 86);
+  const host = (globalThis as { location?: Location }).location?.host ?? '';
+  ctx.fillStyle = C.gold;
+  ctx.font = `700 36px ${F.bold}`;
+  if (host) ctx.fillText(host, WD / 2, HT - 36);
+  return toFile(cv, 'wiki');
 }
 
 /** Telefonun paylaşım menüsünü açar; desteklenmiyorsa görseli indirir. Kullanıcı dokunuşunun içinde çağrılmalı. */
