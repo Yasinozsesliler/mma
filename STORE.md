@@ -13,7 +13,8 @@ Kod tarafı hazır. Aşağıdaki adımlar hesaplar açıldıktan sonra sırayla 
 | Şampiyon Paketi satın alma | `src/monetization/` — ürün kimliği `sampiyon_paketi` |
 | Android sesleri | `assets/sounds/` (`node scripts/render-sounds.mjs` ile yeniden üretilir) |
 | Mağaza metinleri (5 dil) | `store/listing.json` |
-| Ekran görüntüleri + tanıtım görseli | `store/graphics/tr`, `store/graphics/en` (`node scripts/store-shots.mjs tr|en`) |
+| Ekran görüntüleri + tanıtım görseli | `store/graphics/<dil>` · tr, en, es, pt, ru, pl (`node scripts/store-shots.mjs <dil>`) |
+| Tanıtım videosu (YouTube'a yüklenir) | `store/video/yol-tanitim-<dil>.mp4` (`node scripts/promo-video.mjs <ffmpeg.exe> <dil>`) |
 | Gizlilik politikası | `public/gizlilik.html` → web sitesinde `/gizlilik.html` |
 
 ## 1. Doldurulması gereken 3 yer
@@ -78,10 +79,11 @@ Lisans testi: Ayarlar › Lisans testi → kendi Gmail adresini ekle; böylece s
 ## 7. Mağaza girişi
 
 Büyüme › Mağazada görünüm › **Ana mağaza girişi**:
-- Metinler: `store/listing.json` (tr-TR varsayılan; en-US, es-ES, pt-BR, ru-RU için "Çeviri ekle" → kendi metnini gir).
+- Metinler: `store/listing.json` (tr-TR varsayılan; en-US, es-ES, pt-BR, ru-RU, pl-PL için "Çeviri ekle" → kendi metnini gir).
 - Uygulama ikonu 512×512: `public/icon-512.png`
-- Tanıtım görseli 1024×500: `store/graphics/tr/tanitim-1024x500.png` (İngilizce için `en/`)
-- Telefon ekran görüntüleri: `store/graphics/tr/01…07` (diğer diller için `en/`)
+- Tanıtım görseli 1024×500: `store/graphics/<dil>/tanitim-1024x500.png`
+- Telefon ekran görüntüleri (başlıklı, 1080×1920): `store/graphics/<dil>/01…08`. Her dilin çevirisine kendi klasöründekileri yükle.
+- Tanıtım videosu: Play video dosyası kabul etmez; `store/video/yol-tanitim-tr.mp4`'ü (diğer diller için kendi dosyası) YouTube'a **Liste dışı** ya da herkese açık yükle, bağlantıyı "Video" alanına yapıştır. Reklamsız olsun diye YouTube'da para kazanmayı kapat.
 
 ## 8. Uygulama içeriği (Politika bölümü)
 
@@ -115,4 +117,4 @@ npx eas-cli@latest build -p android --profile production
 npx eas-cli@latest submit -p android     # (isteğe bağlı) Google hizmet hesabı JSON'u ile otomatik yükleme
 ```
 
-Ses motoru değişirse `node scripts/render-sounds.mjs`, ikon değişirse `node scripts/make-icons.mjs`, arayüz değişirse `node scripts/store-shots.mjs tr` / `en` yeniden çalıştırılır.
+Ses motoru değişirse `node scripts/render-sounds.mjs`, ikon değişirse `node scripts/make-icons.mjs`, arayüz değişirse `node scripts/store-shots.mjs <dil>` ve `node scripts/promo-video.mjs <ffmpeg.exe> <dil>` yeniden çalıştırılır (ffmpeg: `npm i ffmpeg-static` ile geçici bir klasöre kurulabilir).

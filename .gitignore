@@ -39,3 +39,8 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# Tanıtım videosu ara dosyaları ve çıktıları (büyük; YouTube'a yüklenir)
+store/video/
+# Mağaza görsellerinin çerçevesiz ham halleri
+store/graphics/*/ham/

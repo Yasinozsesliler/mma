@@ -1,5 +1,5 @@
 // Desteklenen diller (bağımlılıksız; hem uygulama hem Node betikleri kullanır).
-export type Lang = 'tr' | 'en' | 'es' | 'pt' | 'ru';
+export type Lang = 'tr' | 'en' | 'es' | 'pt' | 'ru' | 'pl';
 
 export const LANGS: { id: Lang; ad: string; bayrak: string; hazir: boolean }[] = [
   { id: 'tr', ad: 'Türkçe', bayrak: '🇹🇷', hazir: true },
@@ -7,6 +7,7 @@ export const LANGS: { id: Lang; ad: string; bayrak: string; hazir: boolean }[] =
   { id: 'es', ad: 'Español', bayrak: '🇪🇸', hazir: true },
   { id: 'pt', ad: 'Português', bayrak: '🇧🇷', hazir: true },
   { id: 'ru', ad: 'Русский', bayrak: '🇷🇺', hazir: true },
+  { id: 'pl', ad: 'Polski', bayrak: '🇵🇱', hazir: true },
 ];
 
 export const LANG_KEY = 'yol_dil';

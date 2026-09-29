@@ -6,4 +6,5 @@ export function loadLang(): Promise<void> | void {
   else if (LANG === 'es') setDict(require('./es').ES);
   else if (LANG === 'pt') setDict(require('./pt').PT);
   else if (LANG === 'ru') setDict(require('./ru').RU);
+  else if (LANG === 'pl') setDict(require('./pl').PL);
 }

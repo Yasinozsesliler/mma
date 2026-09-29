@@ -22,7 +22,7 @@ const all = walk(dist)
   .sort();
 
 // Dil sözlükleri (en-*.js, es-*.js …) herkese indirilmez: SW yalnızca oyuncunun seçtiği dilinkini önbelleğe alır.
-const LANG_RE = /^_expo\/static\/js\/web\/(en|es|pt|ru)-[0-9a-f]+\.js$/;
+const LANG_RE = /^_expo\/static\/js\/web\/(en|es|pt|ru|pl)-[0-9a-f]+\.js$/;
 const langFiles = {};
 for (const f of all) {
   const m = f.match(LANG_RE);

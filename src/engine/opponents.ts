@@ -61,6 +61,9 @@ function usedNames(s: GameState, extra: Opponent[] = []) {
   s.rakipler.forEach((r) => names.add(`${r.ad} ${r.soyad}`));
   extra.forEach((r) => names.add(`${r.ad} ${r.soyad}`));
   const nicks = new Set([...s.rakipler, ...extra].map((r) => r.lakap));
+  // Rakip, oyuncunun kendi lakabını ve ezeli rakibin lakabını taşımasın.
+  if (s.fighter.lakap) nicks.add(s.fighter.lakap);
+  if (s.ezeli) nicks.add(s.ezeli.lakap);
   return { names, nicks };
 }
 
