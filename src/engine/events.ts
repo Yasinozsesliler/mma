@@ -230,7 +230,7 @@ const EVENTS: Record<string, EventDef> = {
     agirlik: 2,
     kur: () => ({
       baslik: L("🥊 Sert Sparring"),
-      metin: L("Salona gelen deneyimli bir veteran seninle sert sparring yapmak istiyor. Çok şey öğrenebilirsin, ama adam hiç yavaşlamıyor."),
+      metin: L("Salona gelen deneyimli bir veteran seninle sert sparring yapmak istiyor. Çok şey öğrenebilirsin, ama hiç yavaşlamıyor."),
       secenekler: [L("Kabul et, sonuna kadar git"), L("Teknik sparring olsun de"), L("Reddet")],
       params: {},
     }),

@@ -23,6 +23,7 @@ export interface NewFighterInput {
   salonId?: string;
   gorunum?: Appearance;
   boy?: number;
+  kadin?: boolean;
 }
 
 /** noise=false: zar atmadan beklenen değerler (seçim ekranındaki önizleme için). */
@@ -52,7 +53,8 @@ export function createGame(input: NewFighterInput, stats: Stats): GameState {
     siklet: input.siklet,
     gecmis: input.gecmis,
     hikaye: input.hikaye.trim(),
-    gorunum: input.gorunum,
+    gorunum: input.gorunum ? { ...input.gorunum, kadin: input.kadin || undefined, sakal: input.kadin ? 'yok' : input.gorunum.sakal } : input.gorunum,
+    kadin: input.kadin || undefined,
     boy: input.boy ?? BASE_BOY[input.siklet],
     uzanma: reachFor(input.boy ?? BASE_BOY[input.siklet], input.ad.trim() + input.soyad.trim()),
     stats,

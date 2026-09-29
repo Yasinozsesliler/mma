@@ -35,12 +35,14 @@ export type Stage = 'amator' | 'bolgesel' | 'buyuk' | 'ufc';
 
 export interface Appearance {
   ten: number; // SKIN_TONES indeksi
-  sac: 'kazik' | 'kisa' | 'mohawk' | 'uzun' | 'topuz' | 'afro' | 'orgu' | 'kel';
+  sac: 'kazik' | 'kisa' | 'mohawk' | 'uzun' | 'topuz' | 'afro' | 'orgu' | 'kel' | 'atkuyrugu';
   sacRenk: number;
   goz: number;
   sakal: 'yok' | 'kirli' | 'tam' | 'keci' | 'biyik';
   yara: boolean;
   dovme: boolean;
+  /** Kadın dövüşçü görünümü (sakal yok, spor sütyeni) */
+  kadin?: boolean;
   /** Yüz hatları (yoksa varsayılan): yüz şekli 0-4, burun 0-3, göz 0-2, dudak 0-2, kaş 0-2, dövüşçü kulağı 0-1 */
   yuz?: number;
   burun?: number;
@@ -71,6 +73,8 @@ export interface Fighter {
   gecmis: Background;
   hikaye: string;
   hakkinda?: string;
+  /** Kadın dövüşçü: kariyerdeki bütün dünya (rakipler, şampiyonlar, sıralama) kadın dövüşçülerden oluşur. */
+  kadin?: boolean;
   gorunum?: Appearance;
   /** Oluştururken bir kez seçilir, kariyer boyunca değişmez (cm) */
   boy?: number;
@@ -93,6 +97,7 @@ export interface Opponent {
   /** 0 = sıradan, 1+ = kalıcı rakip, 3+ = ezeli rakip */
   rivalry: number;
   karsilasma: number;
+  kadin?: boolean;
   /** Oyuncunun kaçıncı dövüşünde en son karşılaştılar (tekrarı sınırlamak için) */
   sonDovus?: number;
   stage?: Stage;
@@ -434,6 +439,7 @@ export interface Istat {
 }
 
 export interface P4PEntry {
+  kadin?: boolean;
   id: string;
   ad: string;
   soyad: string;

@@ -1,5 +1,5 @@
 import { L } from '../i18n';
-import { BACKGROUNDS, NAME_POOLS, NICKNAMES, ORGS, PERSONALITIES, baseStatsFor } from './data';
+import { BACKGROUNDS, NAME_POOLS, NICKNAMES, ORGS, PERSONALITIES, baseStatsFor, femSurname } from './data';
 import { currentOrg, statAverage } from './character';
 import { chance, clamp, noise, pick, randInt, uid, weighted } from './rng';
 import type { Background, GameState, Opponent, OrgId, StatKey } from './types';
@@ -76,13 +76,14 @@ export function generateOpponent(
   const rank = opts.rank ?? null;
   const champion = !!opts.champion;
   const used = usedNames(s, exclude);
+  // Kadın kariyerinde bütün rakipler kadın dövüşçüler.
+  const kadin = !!s.fighter.kadin;
+  const nameOf = (p: (typeof NAME_POOLS)[number]) => ({ ad: pick(kadin ? p.kadin : p.ad), soyad: kadin && p.slav ? femSurname(pick(p.soyad)) : pick(p.soyad) });
   let pool = pick(NAME_POOLS);
-  let ad = pick(pool.ad);
-  let soyad = pick(pool.soyad);
+  let { ad, soyad } = nameOf(pool);
   for (let i = 0; i < 30 && used.names.has(`${ad} ${soyad}`); i++) {
     pool = pick(NAME_POOLS);
-    ad = pick(pool.ad);
-    soyad = pick(pool.soyad);
+    ({ ad, soyad } = nameOf(pool));
   }
   let lakap = pick(NICKNAMES);
   for (let i = 0; i < 10 && used.nicks.has(lakap); i++) lakap = pick(NICKNAMES);
@@ -105,6 +106,7 @@ export function generateOpponent(
     rivalry: 0,
     karsilasma: 0,
     zorluk: opts.zorluk,
+    ...(kadin ? { kadin: true } : {}),
   };
 }
 
@@ -156,7 +158,7 @@ export function refreshRival(s: GameState, r: Opponent): Opponent {
     etiket: r.rivalry >= 3 ? L("⚔️ EZELİ RAKİP") : r.sonSonuc === 'M' ? L("🔁 RÖVANŞ FIRSATI") : L("🔁 RÖVANŞ İSTİYOR"),
     riskMetni:
       r.sonSonuc === 'M'
-        ? L("Seni yenen adam. İntikam, taraftarı ve basını ateşler.")
+        ? L("Seni yenen dövüşçü. İntikam, taraftarı ve basını ateşler.")
         : L("Seni unutmadı. Bu dövüş kişisel ve çok konuşulacak."),
     zorluk: 1,
     champion: false,

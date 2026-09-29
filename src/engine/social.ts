@@ -74,12 +74,12 @@ const OPP_LOST_BAD = [L("Hakemler bu gece beni soydu. {ph} bunu biliyor."), L("�
 const FAN_WIN = [
   L("{p} maçını 5. kez izliyorum, hâlâ doyamadım 🔥"),
   L("Babam 40 yıldır maç izler, “böylesini görmedim” dedi."),
-  L("Bu adamın posteri odamda artık 🥊"),
+  L("Bu dövüşçünün posteri odamda artık 🥊"),
   L("{p} sıkletin geleceği değil, bugünü!"),
   L("O kombinasyon ne öyle?! Geri sar, geri sar!"),
   L("Salon arkadaşlarımla izledik, ortalık yıkıldı 😂"),
   L("{p} geleceğin şampiyonu!! 🔥🔥"),
-  L("Bu adamı izlemek bir zevk. Kemer an meselesi."),
+  L("Onu izlemek bir zevk. Kemer an meselesi."),
   L("{memleket} gurur duyuyor! 🇹🇷💪"),
   L("Az önce {p} maçını izledim, tüylerim diken diken."),
   L("Bir sonraki maçına bilet alıyorum, kimse beni durduramaz."),
@@ -95,7 +95,7 @@ const FAN_LOSS = [
   L("Kamp değişmeli. Bu oyun planı neydi?"),
   L("Hâlâ arkandayız {p}. 💪"),
 ];
-const FAN_TRASH_OK = [L("HAHAHA efsane 😂🔥"), L("Bu adamın ağzı da yumrukları kadar sert!"), L("Gerilim tırmanıyor, bu maçı kaçırmam!")];
+const FAN_TRASH_OK = [L("HAHAHA efsane 😂🔥"), L("Bu dövüşçünün ağzı da yumrukları kadar sert!"), L("Gerilim tırmanıyor, bu maçı kaçırmam!")];
 const FAN_TRASH_BAD = [L("Önce bir kemer al, sonra konuş."), L("Çok konuşan az dövüşür."), L("Bu biraz fazlaydı…")];
 const FAN_RESPECT = [L("Saygılı sporcu = gerçek sporcu 👏"), L("Bu yüzden seviyoruz seni {p}."), L("Klas bir hareket.")];
 const FAN_NEUTRAL = ['👊', L("Kampa odaklan şampiyon!"), L("Yeni video ne zaman?"), '🔥🔥🔥'];

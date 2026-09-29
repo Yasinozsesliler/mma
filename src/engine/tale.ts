@@ -41,7 +41,7 @@ export function physique(seed: string, siklet: WeightClass) {
 }
 
 /** Rakibin yüzü: kimliğinden ve uyruğundan deterministik olarak üretilir. */
-export function lookFor(o: Pick<Opponent, 'id' | 'uyruk'>): Appearance {
+export function lookFor(o: Pick<Opponent, 'id' | 'uyruk'> & { kadin?: boolean }): Appearance {
   // İki bağımsız hash: her özellik farklı bitlerden gelsin (işaretsiz kaydırma; negatif indeks yok).
   const h = hash(o.id + o.uyruk);
   const h2 = hash(o.uyruk + o.id + '#yuz');
@@ -51,6 +51,25 @@ export function lookFor(o: Pick<Opponent, 'id' | 'uyruk'>): Appearance {
   const ten = darkSkin ? 5 + bits(h, 0, 3) : midSkin ? 2 + bits(h, 0, 3) : bits(h, 0, 4);
   const saclar: Appearance['sac'][] = ['kazik', 'kisa', 'mohawk', 'uzun', 'topuz', 'afro', 'orgu', 'kel'];
   const sakallar: Appearance['sakal'][] = ['yok', 'kirli', 'tam', 'keci', 'biyik'];
+  if (o.kadin) {
+    const kSac: Appearance['sac'][] = ['atkuyrugu', 'topuz', 'orgu', 'uzun', 'atkuyrugu', 'kisa', 'afro', 'orgu'];
+    return {
+      ten,
+      sac: kSac[bits(h, 3, 8)],
+      sacRenk: darkSkin ? bits(h, 6, 2) : bits(h, 6, 8),
+      goz: darkSkin || midSkin ? bits(h, 9, 2) : bits(h, 9, 6),
+      sakal: 'yok',
+      yara: bits(h, 15, 6) === 0,
+      dovme: bits(h, 17, 3) === 0,
+      kadin: true,
+      yuz: [0, 2, 3][bits(h2, 0, 3)],
+      burun: bits(h2, 3, 2) === 0 ? 0 : 3,
+      gozSekil: 1 + bits(h2, 6, 2),
+      dudak: 1 + bits(h2, 9, 2),
+      kas: bits(h2, 12, 2),
+      kulak: 0,
+    };
+  }
   return {
     ten,
     sac: darkSkin ? saclar[[0, 5, 6, 7][bits(h, 3, 4)]] : saclar[bits(h, 3, 8)],

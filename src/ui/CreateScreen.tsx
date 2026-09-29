@@ -5,7 +5,8 @@ import { MONETIZATION, showRewarded, usePremium } from '../monetization';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { generateBackstory, growthMultiplier, rollStartingStats, type NewFighterInput } from '../engine/character';
-import { BACKGROUNDS, COUNTRIES, NAME_POOLS, NICKNAMES, WEIGHT_CLASSES, WEIGHT_MODS } from '../engine/data';
+import { BACKGROUNDS, COUNTRIES, femSurname, NAME_POOLS, NICKNAMES, WEIGHT_CLASSES, WEIGHT_MODS } from '../engine/data';
+import { WOMEN_WEIGHTS } from '../engine/career';
 import { gymsFor } from '../engine/gyms';
 import type { Appearance } from '../engine/types';
 import { BEARDS, BROWS, DEFAULT_LOOK, EYE_COLORS, EYE_SHAPES, FACE_SHAPES, FighterAvatar, HAIR_COLORS, HAIR_STYLES, LIPS, NOSES, SKIN_TONES } from './FighterAvatar';
@@ -23,12 +24,13 @@ const STEPS = 9;
 const LANG_COUNTRY: Record<string, string> = { tr: 'tr', en: 'us', es: 'mx', pt: 'br', ru: 'ru', pl: 'pl' };
 const rnd = <T,>(a: readonly T[]) => a[Math.floor(Math.random() * a.length)];
 
-function randomName(uyruk: string) {
+function randomName(uyruk: string, kadin = false) {
   const ulke = COUNTRIES[uyruk]?.ad ?? '';
   // ABD havuzunun etiketi çevrilmez ('ABD'); diğerleri ülke adıyla eşleşir.
   const pool = NAME_POOLS.find((p) => (uyruk === 'us' ? p.ulke === 'ABD' : ulke.startsWith(p.ulke))) ?? rnd(NAME_POOLS);
   // Lakap havuzu Türkçe; diğer dillerde lakabı oyuncu kendisi yazar.
-  return { ad: rnd(pool.ad), soyad: rnd(pool.soyad), lakap: LANG === 'tr' ? rnd(NICKNAMES) : '' };
+  const soyad = rnd(pool.soyad);
+  return { ad: rnd(kadin ? pool.kadin : pool.ad), soyad: kadin && pool.slav ? femSurname(soyad) : soyad, lakap: LANG === 'tr' ? rnd(NICKNAMES) : '' };
 }
 
 export function CreateScreen({ onDone, onBack, heritage }: { onDone: (input: NewFighterInput, stats: Stats) => void; onBack: () => void; heritage?: Heritage | null }) {
@@ -47,10 +49,25 @@ export function CreateScreen({ onDone, onBack, heritage }: { onDone: (input: New
     salonId: gymsFor(startCountry)[0].id,
     gorunum: { ...DEFAULT_LOOK },
   });
+  /** Cinsiyet: kadın kariyerinde rakipler de kadın, sıkletler sinek-horoz-tüy; görünüm uyarlanır. */
+  const setGender = (kadin: boolean) =>
+    setInp((x) => {
+      const siklet = kadin && !WOMEN_WEIGHTS.includes(x.siklet) ? 'horoz' : x.siklet;
+      const g = x.gorunum ?? DEFAULT_LOOK;
+      return {
+        ...x,
+        kadin,
+        siklet,
+        boy: BASE_BOY[siklet],
+        gorunum: kadin
+          ? { ...g, kadin: true, sakal: 'yok', sac: g.sac === 'kisa' || g.sac === 'kazik' || g.sac === 'mohawk' || g.sac === 'kel' ? 'atkuyrugu' : g.sac, kulak: 0, kas: 0, dudak: 2 }
+          : { ...g, kadin: undefined, sakal: g.sakal === 'yok' ? 'kirli' : g.sakal, sac: g.sac === 'atkuyrugu' ? 'kisa' : g.sac, kas: 1, dudak: 1 },
+      };
+    });
   /** Hızlı başla: kalan adımlar mantıklı/rastgele seçimlerle doldurulur ve kariyer hemen başlar. */
   const quickStart = () => {
-    const name = randomName(inp.uyruk);
-    const siklet = rnd<WeightClass>(['tuy', 'hafif', 'welter', 'orta']);
+    const name = randomName(inp.uyruk, !!inp.kadin);
+    const siklet = rnd<WeightClass>(inp.kadin ? WOMEN_WEIGHTS : ['tuy', 'hafif', 'welter', 'orta']);
     const x: NewFighterInput = {
       ...inp,
       ad: inp.ad.trim() || name.ad,
@@ -60,7 +77,7 @@ export function CreateScreen({ onDone, onBack, heritage }: { onDone: (input: New
       siklet,
       boy: BASE_BOY[siklet],
       gecmis: heritage?.gecmis ?? rnd(Object.keys(BACKGROUNDS) as Background[]),
-      gorunum: lookFor({ id: `oyuncu-${Date.now()}`, uyruk: inp.uyruk }),
+      gorunum: lookFor({ id: `oyuncu-${Date.now()}`, uyruk: COUNTRIES[inp.uyruk]?.ad ?? inp.uyruk, kadin: !!inp.kadin }),
     };
     x.hikaye = generateBackstory(x);
     onDone(x, rollStartingStats(x));
@@ -104,6 +121,17 @@ export function CreateScreen({ onDone, onBack, heritage }: { onDone: (input: New
             {L("Adın ne?")}
           </Title>
           {heritage ? <HeritageBanner h={heritage} /> : null}
+          <View style={cs.genderRow}>
+            {([false, true] as const).map((k) => {
+              const on = !!inp.kadin === k;
+              return (
+                <Pressable key={String(k)} onPress={() => setGender(k)} style={[cs.gender, on && cs.genderOn]}>
+                  <Icon name={k ? 'gender-female' : 'gender-male'} size={18} color={on ? '#000' : C.dim} />
+                  <Text style={[cs.genderText, on && { color: '#000' }]}>{k ? L("KADIN") : L("ERKEK")}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
           <Field label={L("Ad")} value={inp.ad} onChange={(ad) => set({ ad })} />
           {heritage ? (
             <Text style={[cs.label, { marginBottom: 12 }]}>
@@ -211,7 +239,7 @@ export function CreateScreen({ onDone, onBack, heritage }: { onDone: (input: New
       {step === 5 && (
         <>
           <Title sub={L("Hafif sıkletler hızlı ve dayanıklıdır, ağır sıkletler tek yumrukla bitirir.")}>{L("Hangi sıklette dövüşeceksin?")}</Title>
-          {(Object.keys(WEIGHT_CLASSES) as WeightClass[]).map((w) => (
+          {(inp.kadin ? WOMEN_WEIGHTS : (Object.keys(WEIGHT_CLASSES) as WeightClass[])).map((w) => (
             <Choice
               key={w}
               label={L("{0} Sıklet", [WEIGHT_CLASSES[w].ad])}
@@ -443,8 +471,12 @@ function LookPicker({ look, onChange }: { look: Appearance; onChange: (g: Appear
       <Swatches colors={HAIR_COLORS} value={look.sacRenk} onPick={(sacRenk) => set({ sacRenk })} />
       <Text style={cs.label}>{L("GÖZ RENGİ")}</Text>
       <Swatches colors={EYE_COLORS} value={look.goz} onPick={(goz) => set({ goz })} />
-      <Text style={cs.label}>{L("SAKAL")}</Text>
-      <Chips items={BEARDS} value={look.sakal} onPick={(sakal) => set({ sakal })} />
+      {!look.kadin ? (
+        <>
+          <Text style={cs.label}>{L("SAKAL")}</Text>
+          <Chips items={BEARDS} value={look.sakal} onPick={(sakal) => set({ sakal })} />
+        </>
+      ) : null}
       <Text style={cs.label}>{L("YÜZ ŞEKLİ")}</Text>
       <Chips items={FACE_SHAPES} value={String(look.yuz ?? 0)} onPick={(k) => set({ yuz: Number(k) })} />
       <Text style={cs.label}>{L("GÖZLER")}</Text>
@@ -503,6 +535,10 @@ function Field({ label, value, onChange, placeholder }: { label: string; value: 
 }
 
 const cs = StyleSheet.create({
+  genderRow: { flexDirection: 'row', gap: 10, marginBottom: 14 },
+  gender: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12, borderRadius: 10, borderWidth: 1, borderColor: C.border, backgroundColor: C.card },
+  genderOn: { backgroundColor: C.gold, borderColor: C.gold },
+  genderText: { color: C.dim, fontFamily: F.display, fontSize: 15, letterSpacing: 1 },
   dice: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', paddingVertical: 4, marginTop: -4, marginBottom: 14 },
   diceText: { color: C.dim, fontFamily: F.semi, fontSize: 13, textDecorationLine: 'underline' },
   quick: { borderWidth: 1, borderColor: C.goldDeep, borderRadius: 14, padding: 14, gap: 8 },

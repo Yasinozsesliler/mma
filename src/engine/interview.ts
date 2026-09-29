@@ -216,12 +216,12 @@ const LINES: Line[] = [
   },
   {
     id: 'cift', ozel: true, when: (c) => !!c.cift,
-    text: [L("Aynı anda birden fazla kemer! Bunu yapabilen çok az insan var. Tarihe geçtim!"), L("Sıkletler bana dar geliyor! Kemerleri say bakalım!"), L("Omuzlarımda kemerler, kral geri döndü!")],
+    text: [L("Aynı anda birden fazla kemer! Bunu yapabilen çok az insan var. Tarihe geçtim!"), L("Sıkletler bana dar geliyor! Kemerleri say bakalım!"), L("Omuzlarımda kemerler, taht yine benim!")],
     apply: (c, s) => pick([L("Dünya basını manşette: TARİH YAZILDI!"), L("Organizasyon başkanı iki kemeri birlikte taktı. Salon yıkıldı.")]) + mot(s, 2) + pop(s, 8),
   },
   {
     id: 'savunma', ozel: true, when: (c) => c.unvanSavundu,
-    text: [L("Bu tahtı kimseye bırakmam. Sıradaki gelsin!"), L("Kemer benim belimde, sıklet benim evim."), L("Kral hâlâ burada!")],
+    text: [L("Bu tahtı kimseye bırakmam. Sıradaki gelsin!"), L("Kemer benim belimde, sıklet benim evim."), L("Taht hâlâ bende!")],
     apply: (c, s) => pick([L("Şampiyon edası. Sıklet sana meydan okumak için sıraya girdi."), L("Hükümdarlığın tartışılmaz.")]) + pop(s, 3),
   },
   {

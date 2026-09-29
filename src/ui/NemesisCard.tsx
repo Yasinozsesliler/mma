@@ -31,7 +31,7 @@ export function NemesisCard({ s }: { s: GameState }) {
     <View style={[st.box, n.bitti && { opacity: 0.75 }]}>
       <Text style={st.kicker}>{L("⚔️ EZELİ RAKİP")}</Text>
       <View style={st.row}>
-        <FighterAvatar look={lookFor({ id: n.id, uyruk: n.uyruk })} size={60} ring={PURPLE} />
+        <FighterAvatar look={lookFor({ id: n.id, uyruk: n.uyruk, kadin: s.fighter.kadin })} size={60} ring={PURPLE} />
         <View style={{ flex: 1 }}>
           <Text style={st.nick}>“{n.lakap.toLocaleUpperCase(LOC)}”</Text>
           <Text style={[st.name, SLANT]} numberOfLines={1}>

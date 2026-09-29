@@ -78,6 +78,8 @@ export interface Candidate {
 }
 
 const NAMES = [L("Derya"), L("Melis"), L("Aslı"), L("Cansu"), L("Buse"), L("İrem"), L("Ceren"), L("Ezgi"), L("Lara"), L("Sofia"), L("Mia"), L("Elena"), L("Nadia"), L("Yasmin"), L("Kaan"), L("Deniz"), L("Arda"), L("Ege"), L("Jade"), L("Chloe")];
+/** Kadın dövüşçünün randevu destesi. */
+const NAMES_M = [L("Kaan"), L("Arda"), L("Ege"), L("Deniz"), L("Mert"), L("Can"), L("Emir"), L("Onur"), L("Luca"), L("Mateo"), L("Adam"), L("Noah"), L("Leo"), L("Marco"), L("Yusuf"), L("Alex")];
 const JOBS: [string, string, boolean][] = [
   [L("Model"), '💃', true],
   [L("Doktor"), '🩺', false],
@@ -134,7 +136,7 @@ const PHOTO: [string, string][] = [
   ['#c94b4b', '#4b134f'],
 ];
 export const DECK_SIZE = 10;
-const MALE = new Set([L("Kaan"), L("Arda"), L("Ege")]);
+const MALE = new Set([L("Kaan"), L("Arda"), L("Ege"), ...NAMES_M.filter((n) => n !== L("Deniz"))]);
 const FACES_F = ['👩', '👱‍♀️', '👩‍🦰', '👩‍🦱', '👩🏽', '👩🏻', '👩🏾‍🦱', '👩🏼‍🦰'];
 const FACES_M = ['👨', '👱‍♂️', '👨‍🦱', '🧔', '👨🏽', '👨🏻‍🦰'];
 const FACES_N = ['🧑', '🧑‍🦱', '🧑🏽', '👱'];
@@ -142,13 +144,14 @@ const faceFor = (ad: string) => pick(MALE.has(ad) ? FACES_M : ad === L("Deniz") 
 
 function newCandidate(s: GameState, taken: string[]): Candidate {
   const [meslek, emoji, unlu] = pick(JOBS);
-  const free = NAMES.filter((n) => !taken.includes(n));
+  const pool = s.fighter.kadin ? NAMES_M : NAMES;
+  const free = pool.filter((n) => !taken.includes(n));
   const ilgi: string[] = [];
   while (ilgi.length < 3) {
     const i = pick(INTERESTS);
     if (!ilgi.includes(i)) ilgi.push(i);
   }
-  const ad = pick(free.length ? free : NAMES);
+  const ad = pick(free.length ? free : pool);
   return {
     id: uid(),
     ad,

@@ -742,11 +742,15 @@ export function campCostPreview(s: GameState) {
 const WEIGHT_ORDER: WeightClass[] = ['sinek', 'horoz', 'tuy', 'hafif', 'welter', 'orta', 'yariagir', 'agir'];
 
 /** Bir üst ve bir alt sıklet (varsa). */
+/** Kadın sıkletleri (büyük organizasyonlardaki gibi): sinek, horoz, tüy. */
+export const WOMEN_WEIGHTS: WeightClass[] = ['sinek', 'horoz', 'tuy'];
+
 export function weightOptions(s: GameState): { siklet: WeightClass; yon: 'yukari' | 'asagi' }[] {
-  const i = WEIGHT_ORDER.indexOf(s.fighter.siklet);
+  const WEIGHT_ORDER_ = s.fighter.kadin ? WOMEN_WEIGHTS : WEIGHT_ORDER;
+  const i = WEIGHT_ORDER_.indexOf(s.fighter.siklet);
   const out: { siklet: WeightClass; yon: 'yukari' | 'asagi' }[] = [];
-  if (i < WEIGHT_ORDER.length - 1) out.push({ siklet: WEIGHT_ORDER[i + 1], yon: 'yukari' });
-  if (i > 0) out.push({ siklet: WEIGHT_ORDER[i - 1], yon: 'asagi' });
+  if (i < WEIGHT_ORDER_.length - 1) out.push({ siklet: WEIGHT_ORDER_[i + 1], yon: 'yukari' });
+  if (i > 0) out.push({ siklet: WEIGHT_ORDER_[i - 1], yon: 'asagi' });
   return out;
 }
 

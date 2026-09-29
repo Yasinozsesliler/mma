@@ -40,6 +40,7 @@ function Head({ c, ang, look, skin, ref }: { c: { x: number; y: number }; ang: n
       {s === 'afro' ? <Circle cx={c.x - 1} cy={c.y - 3} r={12.5} fill={hair} /> : null}
       {s === 'topuz' ? <Circle cx={c.x - 8} cy={c.y - 7} r={4} fill={hair} /> : null}
       {s === 'uzun' || s === 'orgu' ? <Path d={L("M{0} {1} q-5 10 -2 18 l4 0 q-2 -8 2 -16 z", [c.x - 7, c.y - 6])} fill={hair} /> : null}
+      {s === 'atkuyrugu' ? <Path d={`M${c.x - 6} ${c.y - 7} q-9 1 -9 10 q0 5 -3 9 q7 -2 8 -9 q1 -5 5 -6 z`} fill={hair} /> : null}
       {/* Boyun */}
       <Line x1={c.x - 1} y1={c.y + 6} x2={c.x - 2} y2={c.y + 13} stroke={dark} strokeWidth={7} strokeLinecap="round" />
       {/* Kafa ve çene */}
@@ -48,7 +49,7 @@ function Head({ c, ang, look, skin, ref }: { c: { x: number; y: number }; ang: n
       {/* Kulak */}
       <Ellipse cx={c.x - 3} cy={c.y + 1} rx={2} ry={2.8} fill={dark} />
       {/* Saç */}
-      {s === 'kisa' || s === 'topuz' || s === 'uzun' || s === 'orgu' ? <Path d={L("M{0} {1} q1 -11 10 -10.5 q6 1 7 6 q-7 -3 -13 1 q-1 1 -4 3.5 z", [c.x - 8.4, c.y - 1])} fill={hair} /> : null}
+      {s === 'kisa' || s === 'topuz' || s === 'uzun' || s === 'orgu' || s === 'atkuyrugu' ? <Path d={L("M{0} {1} q1 -11 10 -10.5 q6 1 7 6 q-7 -3 -13 1 q-1 1 -4 3.5 z", [c.x - 8.4, c.y - 1])} fill={hair} /> : null}
       {s === 'kazik' ? <Path d={L("M{0} {1} q1 -9 9.5 -9.3 q6 0.5 7 5 q-8 -2 -16.5 4.3 z", [c.x - 8.2, c.y - 2])} fill={hair} opacity={0.55} /> : null}
       {s === 'mohawk' ? <Path d={L("M{0} {1} q5 -9 12 -4 l-2 3 q-5 -3 -10 1 z", [c.x - 6, c.y - 6])} fill={hair} /> : null}
       {/* Kaş, göz, burun */}
@@ -57,10 +58,10 @@ function Head({ c, ang, look, skin, ref }: { c: { x: number; y: number }; ang: n
       <Path d={L("M{0} {1} l1.8 3.6 l-2 0.6 z", [c.x + 7.6, c.y - 0.5])} fill={dark} />
       <Line x1={c.x + 4.4} y1={c.y + 5.2} x2={c.x + 7} y2={c.y + 4.8} stroke={shade(skin, -60)} strokeWidth={0.9} strokeLinecap="round" />
       {/* Sakal */}
-      {look.sakal === 'tam' ? <Path d={L("M{0} {1} q5 11 11 2 l-1 -3 q-4 4 -10 1 z", [c.x - 3, c.y + 2])} fill={hair} /> : null}
-      {look.sakal === 'kirli' ? <Path d={L("M{0} {1} q5 8 10 1", [c.x - 2, c.y + 3])} stroke={hair} strokeWidth={2.4} opacity={0.45} fill="none" /> : null}
-      {look.sakal === 'keci' ? <Path d={L("M{0} {1} q2 5 5 0", [c.x + 3, c.y + 6])} stroke={hair} strokeWidth={2.2} fill="none" /> : null}
-      {look.sakal === 'biyik' ? <Line x1={c.x + 4.4} y1={c.y + 3.6} x2={c.x + 8} y2={c.y + 3.4} stroke={hair} strokeWidth={1.6} strokeLinecap="round" /> : null}
+      {!look.kadin && look.sakal === 'tam' ? <Path d={L("M{0} {1} q5 11 11 2 l-1 -3 q-4 4 -10 1 z", [c.x - 3, c.y + 2])} fill={hair} /> : null}
+      {!look.kadin && look.sakal === 'kirli' ? <Path d={L("M{0} {1} q5 8 10 1", [c.x - 2, c.y + 3])} stroke={hair} strokeWidth={2.4} opacity={0.45} fill="none" /> : null}
+      {!look.kadin && look.sakal === 'keci' ? <Path d={L("M{0} {1} q2 5 5 0", [c.x + 3, c.y + 6])} stroke={hair} strokeWidth={2.2} fill="none" /> : null}
+      {!look.kadin && look.sakal === 'biyik' ? <Line x1={c.x + 4.4} y1={c.y + 3.6} x2={c.x + 8} y2={c.y + 3.4} stroke={hair} strokeWidth={1.6} strokeLinecap="round" /> : null}
       {look.yara ? <Line x1={c.x + 2} y1={c.y - 5} x2={c.x + 4} y2={c.y - 1} stroke="#b04a4a" strokeWidth={0.8} /> : null}
     </G>
   );
@@ -105,6 +106,12 @@ export function Figure({ p, look, kit }: { p: Pose; look: Appearance; kit: Kit }
           <Path d={L("M{0} {1} Q{2} {3} {4} {5}", [pt(chest, 8).x, pt(chest, 8).y, pt(chest, 2).x, pt(chest, 2).y + 4, pt(chest, -3).x, pt(chest, -3).y])} stroke={skinD} strokeWidth={1} fill="none" opacity={0.7} />
           <Line x1={pt(abs, 4).x} y1={pt(abs, 4).y} x2={pt(abs, 4).x + j.td.x * 8} y2={pt(abs, 4).y + j.td.y * 8} stroke={skinD} strokeWidth={0.8} opacity={0.6} />
           {look.dovme ? <Path d={L("M{0} {1} q3 5 -1 9", [pt(chest, -6).x, pt(chest, -6).y])} stroke="#1d1d1d" strokeWidth={1.3} fill="none" opacity={0.55} /> : null}
+          {look.kadin ? (
+            <>
+              <Line x1={pt(add(chest, j.td, 1.5), 10.5).x} y1={pt(add(chest, j.td, 1.5), 10.5).y} x2={pt(add(chest, j.td, 1.5), -9.5).x} y2={pt(add(chest, j.td, 1.5), -9.5).y} stroke={kit.shorts} strokeWidth={8} strokeLinecap="round" />
+              <Line x1={pt(add(chest, j.td, 4.5), 10).x} y1={pt(add(chest, j.td, 4.5), 10).y} x2={pt(add(chest, j.td, 4.5), -9).x} y2={pt(add(chest, j.td, 4.5), -9).y} stroke={kit.trim} strokeWidth={1} opacity={0.7} />
+            </>
+          ) : null}
         </>
       ) : (
         <Line x1={pt(sC, 3).x} y1={pt(sC, 3).y} x2={pt(j.pelvis, 3).x} y2={pt(j.pelvis, 3).y} stroke="#ffffff" strokeWidth={0.8} opacity={0.35} />

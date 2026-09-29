@@ -17,6 +17,7 @@ export const HAIR_STYLES: { key: Appearance['sac']; ad: string }[] = [
   { key: 'afro', ad: tL("Afro") },
   { key: 'orgu', ad: tL("Örgü") },
   { key: 'kel', ad: tL("Kel") },
+  { key: 'atkuyrugu', ad: tL("At kuyruğu") },
 ];
 export const BEARDS: { key: Appearance['sakal']; ad: string }[] = [
   { key: 'yok', ad: tL("Yok") },
@@ -163,13 +164,24 @@ function AvatarBase({ look = DEFAULT_LOOK, size = 72, ring = '#e63946', bg = '#0
         {look.sac === 'afro' ? <Circle cx={50} cy={35} r={26} fill={`url(#${id('hair')})`} /> : null}
         {look.sac === 'topuz' ? <Circle cx={50} cy={12} r={8} fill={`url(#${id('hair')})`} /> : null}
         {look.sac === 'uzun' ? <Path d="M28 34 Q25 64 31 80 L39 80 Q35 58 37 38 Z M72 34 Q75 64 69 80 L61 80 Q65 58 63 38 Z" fill={hair} /> : null}
+        {look.sac === 'atkuyrugu' ? <Path d="M60 20 Q83 22 81 48 Q80 63 71 72 Q75 55 69 40 Q66 30 60 26 Z" fill={`url(#${id('hair')})`} /> : null}
 
         {/* Gövde: trapez, omuzlar, köprücük, göğüs */}
         <Path d="M6 100 Q8 80 26 75 Q36 72 41 66 L59 66 Q64 72 74 75 Q92 80 94 100 Z" fill={`url(#${id('body')})`} />
         <Path d="M26 75 Q36 71 41 66 L43 70 Q36 75 28 78 Z M74 75 Q64 71 59 66 L57 70 Q64 75 72 78 Z" fill={skinD} opacity={0.45} />
-        <Path d="M34 82 Q42 79 49 82 M51 82 Q58 79 66 82" stroke={skinL} strokeWidth={1.2} fill="none" opacity={0.7} />
-        <Path d="M30 96 Q40 88 50 91 Q60 88 70 96" stroke={skinDD} strokeWidth={1} fill="none" opacity={0.45} />
-        <Path d="M50 84 L50 100" stroke={skinDD} strokeWidth={0.8} opacity={0.35} />
+        {look.kadin ? (
+          <>
+            <Path d="M19 100 Q21 87 32 82 Q41 88.5 50 88.5 Q59 88.5 68 82 Q79 87 81 100 Z" fill="#1c1e24" />
+            <Path d="M32 82.5 L37 71.5 M68 82.5 L63 71.5" stroke="#1c1e24" strokeWidth={3.2} strokeLinecap="round" />
+            <Path d="M32 82 Q41 88.5 50 88.5 Q59 88.5 68 82" stroke={ring} strokeWidth={1.1} fill="none" opacity={0.7} />
+          </>
+        ) : (
+          <>
+            <Path d="M34 82 Q42 79 49 82 M51 82 Q58 79 66 82" stroke={skinL} strokeWidth={1.2} fill="none" opacity={0.7} />
+            <Path d="M30 96 Q40 88 50 91 Q60 88 70 96" stroke={skinDD} strokeWidth={1} fill="none" opacity={0.45} />
+            <Path d="M50 84 L50 100" stroke={skinDD} strokeWidth={0.8} opacity={0.35} />
+          </>
+        )}
         {look.dovme ? (
           <G fill="#16161c" opacity={0.8}>
             <Path d="M74 82 q7 -2 9 5 q-5 0 -7 5 q-2 -5 -7 -4 q2 -3 5 -6 Z" />
@@ -210,7 +222,7 @@ function AvatarBase({ look = DEFAULT_LOOK, size = 72, ring = '#e63946', bg = '#0
 
         {/* Saç (ön) */}
         {look.sac === 'kazik' ? <Path d="M31.5 38 Q32 21.5 50 20.5 Q68 21.5 68.5 38 Q60 29.5 50 29.5 Q40 29.5 31.5 38 Z" fill={hair} opacity={0.55} /> : null}
-        {look.sac === 'kisa' || look.sac === 'uzun' || look.sac === 'topuz' || look.sac === 'orgu' ? (
+        {look.sac === 'kisa' || look.sac === 'uzun' || look.sac === 'topuz' || look.sac === 'orgu' || look.sac === 'atkuyrugu' ? (
           <Path d="M30.5 41 Q28.5 17.5 50 16.5 Q71.5 17.5 69.5 41 Q67 30 58.5 27.5 Q52 31.5 44 28.5 Q35 30.5 30.5 41 Z" fill={`url(#${id('hair')})`} />
         ) : null}
         {look.sac === 'kisa' || look.sac === 'uzun' ? (
@@ -256,6 +268,16 @@ function AvatarBase({ look = DEFAULT_LOOK, size = 72, ring = '#e63946', bg = '#0
         <Circle cx={56.7} cy={43.3} r={0.5} fill="#ffffff" />
         <Path d={tL("M{0} 44 Q42.5 {1} {2} 44 M{3} 44 Q57.5 {4} {5} 44", [42.5 - eyeW - 0.2, 44 - eyeH * 1.3, 42.5 + eyeW + 0.2, 57.5 - eyeW - 0.2, 44 - eyeH * 1.3, 57.5 + eyeW + 0.2])} stroke={skinDD} strokeWidth={gs === 0 ? 1.5 : 1.1} fill="none" />
 
+        {look.kadin ? (
+          <Path
+            d={`M${42.5 - eyeW - 0.2} 44 Q42.5 ${44 - eyeH * 1.3} ${42.5 + eyeW + 0.2} 44 M${57.5 - eyeW - 0.2} 44 Q57.5 ${44 - eyeH * 1.3} ${57.5 + eyeW + 0.2} 44 M${42.5 - eyeW - 0.2} 44 l-1.6 -1 M${57.5 + eyeW + 0.2} 44 l1.6 -1`}
+            stroke="#17110e"
+            strokeWidth={1.25}
+            strokeLinecap="round"
+            fill="none"
+          />
+        ) : null}
+
         {/* Burun */}
         {burun === 2 ? (
           <Path d="M49.5 44 L48.4 47.5 L50.2 50 L49 52.5" stroke="#ffffff" strokeWidth={1} opacity={0.2} fill="none" />
@@ -276,10 +298,11 @@ function AvatarBase({ look = DEFAULT_LOOK, size = 72, ring = '#e63946', bg = '#0
         {/* Dudaklar */}
         <Path d={tL("M{0} 59 Q47.5 {1} 50 58.8 Q52.5 {2} {3} 59 Q50 60.2 {4} 59 Z", [45 - dudak * 0.4, 58.2 - dudak * 0.4, 58.2 - dudak * 0.4, 55 + dudak * 0.4, 45 - dudak * 0.4])} fill={shade(skin, -45)} />
         <Path d={tL("M{0} 59.3 Q50 {1} {2} 59.3 Q50 60.6 {3} 59.3 Z", [45.6 - dudak * 0.3, 60.8 + dudak * 1.1, 54.4 + dudak * 0.3, 45.6 - dudak * 0.3])} fill={shade(skin, -18)} />
+        {look.kadin ? <Path d={`M${45.6 - dudak * 0.3} 59.3 Q50 ${60.8 + dudak * 1.1} ${54.4 + dudak * 0.3} 59.3 Q50 60.6 ${45.6 - dudak * 0.3} 59.3 Z`} fill="#c0506a" opacity={0.35} /> : null}
         <Path d="M47.5 60.7 Q50 61.4 52.5 60.7" stroke="#ffffff" strokeWidth={0.5} opacity={0.25} fill="none" />
 
         {/* Sakal */}
-        {look.sakal === 'kirli' ? (
+        {!look.kadin && look.sakal === 'kirli' ? (
           <G fill={hair} opacity={0.55}>
             {STUBBLE.map((p, i) => (
               <Circle key={i} cx={p.x} cy={p.y} r={0.45} />
@@ -287,7 +310,7 @@ function AvatarBase({ look = DEFAULT_LOOK, size = 72, ring = '#e63946', bg = '#0
             <Path d="M34 51 Q35 64 50 67.5 Q65 64 66 51 Q64 61 56 62.5 Q50 64.5 44 62.5 Q36 61 34 51 Z" opacity={0.28} />
           </G>
         ) : null}
-        {look.sakal === 'tam' ? (
+        {!look.kadin && look.sakal === 'tam' ? (
           <>
             <Path d="M32 48 Q32 71 50 73 Q68 71 68 48 Q66 58 58 60.5 Q50 57 42 60.5 Q34 58 32 48 Z M44 57.8 Q50 55.8 56 57.8 Q54 56.8 50 57.3 Q46 56.8 44 57.8 Z" fill={`url(#${id('hair')})`} />
             <G stroke={hairL} strokeWidth={0.6} opacity={0.4}>
@@ -295,8 +318,8 @@ function AvatarBase({ look = DEFAULT_LOOK, size = 72, ring = '#e63946', bg = '#0
             </G>
           </>
         ) : null}
-        {look.sakal === 'keci' ? <Path d="M45 60.5 Q50 71 55 60.5 Q52 62 50 62 Q48 62 45 60.5 Z M45.5 57.5 Q50 56 54.5 57.5 L54 58.4 Q50 57.3 46 58.4 Z" fill={hair} /> : null}
-        {look.sakal === 'biyik' ? <Path d="M43.5 57.8 Q50 54.5 56.5 57.8 Q50 56.8 43.5 57.8 Z" fill={hair} stroke={hair} strokeWidth={1.3} /> : null}
+        {!look.kadin && look.sakal === 'keci' ? <Path d="M45 60.5 Q50 71 55 60.5 Q52 62 50 62 Q48 62 45 60.5 Z M45.5 57.5 Q50 56 54.5 57.5 L54 58.4 Q50 57.3 46 58.4 Z" fill={hair} /> : null}
+        {!look.kadin && look.sakal === 'biyik' ? <Path d="M43.5 57.8 Q50 54.5 56.5 57.8 Q50 56.8 43.5 57.8 Z" fill={hair} stroke={hair} strokeWidth={1.3} /> : null}
       </G>
     </Svg>
   );

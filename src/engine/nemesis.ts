@@ -88,7 +88,7 @@ export function nemesisAfterFight(s: GameState, opp: Opponent, won: boolean, dra
       lines.push(L("⚔️ Ezeli rakibinle berabere. Aranızdaki seri: {0}. Kimse tatmin olmadı.", [nemesisScore(n)]));
     } else {
       lines.push(L("⚔️ {0} yine kazandı. Aranızdaki seri: {1}. Bu iş bitmedi.", [name(n), nemesisScore(n)]));
-      post(s, n, pick([L("Söylemiştim. Kafeste ne zaman karşılaşsak aynı son. 😏"), L("{0}, bir daha karşıma çıkmadan önce iki kere düşün.", [s.fighter.ad]), L("Kral benim. Anlaşıldı mı?")]));
+      post(s, n, pick([L("Söylemiştim. Kafeste ne zaman karşılaşsak aynı son. 😏"), L("{0}, bir daha karşıma çıkmadan önce iki kere düşün.", [s.fighter.ad]), L("Bu kafesin sahibi benim. Anlaşıldı mı?")]));
     }
     return lines;
   }

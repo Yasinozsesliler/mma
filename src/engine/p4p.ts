@@ -19,7 +19,7 @@ export const dative = (n: number) => DAT[n % 10];
 function makeEntry(s: GameState, siklet: WeightClass, puan: number, sampiyon: boolean): P4PEntry {
   const o = generateOpponent(s, { zorluk: 0, org: 'ufc', rank: 1 });
   const g = randInt(14, 26) + Math.round((puan - 70) / 3);
-  return { id: o.id, ad: o.ad, soyad: o.soyad, lakap: o.lakap, uyruk: o.uyruk, siklet, rekor: { g, m: randInt(0, 4), b: chance(0.15) ? 1 : 0 }, puan, sampiyon };
+  return { ...(o.kadin ? { kadin: true } : {}), id: o.id, ad: o.ad, soyad: o.soyad, lakap: o.lakap, uyruk: o.uyruk, siklet, rekor: { g, m: randInt(0, 4), b: chance(0.15) ? 1 : 0 }, puan, sampiyon };
 }
 
 export function ensureP4P(s: GameState) {

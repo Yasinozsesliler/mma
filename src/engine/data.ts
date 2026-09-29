@@ -268,31 +268,45 @@ export const ORGS: Record<OrgId, OrgInfo> = {
 };
 
 // ---------- Kurgusal isim havuzları ----------
-export const NAME_POOLS: { ulke: string; ad: string[]; soyad: string[] }[] = [
-  { ulke: 'ABD', ad: [L("Tyler"), L("Marcus"), L("Cody"), L("Jalen"), L("Brody"), L("Devon"), L("Wyatt"), L("Trevor"), L("Dante"), L("Colby"), L("Reggie"), L("Austin")], soyad: [L("Hargrove"), L("Mitchell"), L("Pruitt"), L("Dawson"), L("Kincaid"), L("Rourke"), L("Sallee"), L("Whitfield"), L("Garrison"), L("Boone"), L("Calloway"), L("Stroud")] },
-  { ulke: L("Brezilya"), ad: [L("Thiago"), L("Rafael"), L("Diego"), L("Caio"), L("Bruno"), L("Wanderlei"), L("Gilberto"), L("Renan"), L("Edson"), L("Luan"), L("Vitor")], soyad: [L("Moraes"), L("Lacerda"), L("Pimentel"), L("Batista"), L("Coutinho"), L("Farias"), L("Nogueira"), L("Teixeira"), 'Brandão', L("Quintela"), L("Arruda")] },
-  { ulke: L("Rusya"), ad: [L("Dmitri"), L("Artem"), L("Ruslan"), L("Kirill"), L("Zaur"), L("Islam"), L("Shamil"), L("Magomed"), L("Timur"), L("Rasul"), L("Yuri")], soyad: [L("Volkov"), L("Sorokin"), L("Magomedov"), L("Gadzhiev"), L("Belov"), L("Kurbanov"), L("Abdulaev"), L("Zhukov"), L("Omarov"), L("Tagirov"), L("Kasimov")] },
-  { ulke: L("Polonya"), ad: [L("Kamil"), L("Piotr"), L("Szymon"), 'Łukasz', L("Mateusz"), L("Bartosz"), L("Tomasz")], soyad: ['Wróbel', L("Kowalczyk"), L("Mazur"), L("Nowicki"), L("Grabowski"), L("Pawlak"), L("Sikora")] },
-  { ulke: L("Meksika"), ad: [L("Alejandro"), L("Emiliano"), L("Iker"), L("Santiago"), L("Rodrigo"), 'Joaquín', L("Mateo")], soyad: [L("Ortega"), L("Villalobos"), 'Cárdenas', L("Salgado"), L("Quiroga"), 'Montaño', 'Rentería'] },
-  { ulke: L("Japonya"), ad: [L("Kenta"), L("Ryo"), L("Daichi"), L("Shun"), L("Takeru"), L("Yuto"), L("Haruki")], soyad: [L("Moriyama"), L("Kishida"), L("Hayashi"), L("Sakurai"), L("Onodera"), L("Fujimoto"), L("Kanemura")] },
-  { ulke: L("Nijerya"), ad: [L("Chidi"), L("Tunde"), L("Obinna"), L("Femi"), L("Kelechi"), L("Ayodele")], soyad: [L("Adeyemi"), L("Okonkwo"), L("Balogun"), L("Eze"), L("Nwosu"), L("Olatunji")] },
-  { ulke: L("Birleşik Krallık"), ad: [L("Callum"), L("Jack"), L("Reece"), L("Liam"), L("Kieran"), L("Declan"), L("Ashley")], soyad: [L("Hollis"), L("Pembroke"), L("Tate"), L("Ashworth"), L("Barrow"), L("Fairbanks"), L("Crowther")] },
-  { ulke: L("İrlanda"), ad: [L("Cian"), 'Oisín', L("Darragh"), L("Rory"), L("Fionn")], soyad: [L("Gallagher"), L("Keane"), L("Byrne"), L("Moloney"), L("Quinlan")] },
-  { ulke: L("Gürcistan"), ad: [L("Giorgi"), L("Zurab"), L("Irakli"), L("Levan"), L("Davit"), L("Nika")], soyad: [L("Kapanadze"), L("Lomidze"), L("Tsereteli"), L("Gelashvili"), L("Mamulashvili"), L("Kvaratskhelia")] },
-  { ulke: L("Kazakistan"), ad: [L("Arman"), L("Yerlan"), L("Daulet"), L("Nursultan"), L("Askar")], soyad: [L("Abenov"), L("Zhakupov"), L("Serikbayev"), L("Tokayev"), L("Mukhamedov")] },
-  { ulke: L("Fransa"), ad: [L("Mathis"), L("Yanis"), 'Théo', L("Karim"), L("Enzo"), L("Bastien")], soyad: [L("Lemaire"), L("Duchamp"), 'Bensaïd', L("Rousseau"), L("Marchetti"), L("Diallo")] },
-  { ulke: L("Türkiye"), ad: [L("Burak"), L("Emre"), L("Oğuz"), L("Serkan"), L("Tolga"), L("Kaan"), L("Mert"), L("Volkan"), L("Cenk"), L("Barış")], soyad: [L("Karakaya"), L("Yıldırım"), L("Demirtaş"), L("Aslan"), L("Çelikkol"), L("Kocabaş"), L("Tunç"), L("Özbek"), L("Sarıkaya"), L("Erdem")] },
-  { ulke: L("Azerbaycan"), ad: [L("Elvin"), L("Rauf"), L("Tural"), L("Orxan")], soyad: ['Məmmədov', L("Hüseynli"), 'Əliyev', L("Quliyev")] },
-  { ulke: L("Avustralya"), ad: [L("Brock"), L("Nathan"), L("Jarrah"), L("Lachlan"), L("Mitchell")], soyad: [L("Keane"), 'McAllister', L("Doherty"), L("Whitlock"), L("Harlow")] },
-  { ulke: L("Tayland"), ad: [L("Somchai"), L("Anan"), L("Kittisak"), L("Petch"), L("Sakda")], soyad: [L("Sitthichai"), L("Petchyindee"), L("Kaewsamrit"), L("Sor Rungvisai"), L("Banchamek")] },
-  { ulke: L("Hollanda"), ad: [L("Daan"), L("Jorrit"), L("Sem"), L("Rico")], soyad: [L("de Vries"), L("Bakker"), L("van Dijk"), L("Visser")] },
-  { ulke: L("İsveç"), ad: [L("Oskar"), L("Linus"), L("Viktor"), L("Emil")], soyad: [L("Lindqvist"), L("Bergström"), L("Nyberg"), L("Holm")] },
-  { ulke: L("Küba"), ad: [L("Yoel"), L("Yosvany"), 'Lázaro', L("Dairon")], soyad: ['Rodríguez', 'Céspedes', L("Mendieta"), L("Arencibia")] },
-  { ulke: L("Güney Kore"), ad: ['Min-jun', 'Seung-woo', 'Ji-hoon', 'Dong-hyun'], soyad: [L("Park"), L("Kang"), L("Choi"), L("Jung")] },
-  { ulke: L("Çin"), ad: [L("Wei"), L("Jian"), L("Hao"), L("Zhen")], soyad: [L("Li"), L("Zhang"), L("Wu"), L("Song")] },
-  { ulke: L("Şili"), ad: [L("Ignacio"), 'Benjamín', 'Tomás'], soyad: [L("Fuentes"), L("Araya"), 'Sepúlveda'] },
-  { ulke: L("Kamerun"), ad: [L("Francis"), L("Serge"), L("Blaise")], soyad: [L("Mbarga"), L("Ngono"), L("Etoundi")] },
+/** İsim havuzları; kadın adları ayrı, 'slav' havuzlarında soyadı kadın biçimine çevrilir (Volkov → Volkova). */
+export const NAME_POOLS: { ulke: string; ad: string[]; kadin: string[]; soyad: string[]; slav?: boolean }[] = [
+  { ulke: 'ABD', ad: [L("Tyler"), L("Marcus"), L("Cody"), L("Jalen"), L("Brody"), L("Devon"), L("Wyatt"), L("Trevor"), L("Dante"), L("Colby"), L("Reggie"), L("Austin")], kadin: ['Jessica', 'Amanda', 'Brianna', 'Kayla', 'Taylor', 'Morgan', 'Paige', 'Jasmine', 'Haley', 'Destiny'], soyad: [L("Hargrove"), L("Mitchell"), L("Pruitt"), L("Dawson"), L("Kincaid"), L("Rourke"), L("Sallee"), L("Whitfield"), L("Garrison"), L("Boone"), L("Calloway"), L("Stroud")] },
+  { ulke: L("Brezilya"), ad: [L("Thiago"), L("Rafael"), L("Diego"), L("Caio"), L("Bruno"), L("Wanderlei"), L("Gilberto"), L("Renan"), L("Edson"), L("Luan"), L("Vitor")], kadin: ['Juliana', 'Larissa', 'Bruna', 'Camila', 'Mayra', 'Thaís', 'Gabriela', 'Letícia'], soyad: [L("Moraes"), L("Lacerda"), L("Pimentel"), L("Batista"), L("Coutinho"), L("Farias"), L("Nogueira"), L("Teixeira"), 'Brandão', L("Quintela"), L("Arruda")] },
+  { ulke: L("Rusya"), ad: [L("Dmitri"), L("Artem"), L("Ruslan"), L("Kirill"), L("Zaur"), L("Islam"), L("Shamil"), L("Magomed"), L("Timur"), L("Rasul"), L("Yuri")], kadin: ['Anastasia', 'Ekaterina', 'Irina', 'Marina', 'Olga', 'Svetlana', 'Aida', 'Madina', 'Zarina'], soyad: [L("Volkov"), L("Sorokin"), L("Magomedov"), L("Gadzhiev"), L("Belov"), L("Kurbanov"), L("Abdulaev"), L("Zhukov"), L("Omarov"), L("Tagirov"), L("Kasimov")], slav: true },
+  { ulke: L("Polonya"), ad: [L("Kamil"), L("Piotr"), L("Szymon"), 'Łukasz', L("Mateusz"), L("Bartosz"), L("Tomasz")], kadin: ['Katarzyna', 'Agnieszka', 'Joanna', 'Karolina', 'Magdalena', 'Aleksandra', 'Natalia'], soyad: ['Wróbel', L("Kowalczyk"), L("Mazur"), L("Nowicki"), L("Grabowski"), L("Pawlak"), L("Sikora")], slav: true },
+  { ulke: L("Meksika"), ad: [L("Alejandro"), L("Emiliano"), L("Iker"), L("Santiago"), L("Rodrigo"), 'Joaquín', L("Mateo")], kadin: ['Alexa', 'Valeria', 'Ximena', 'Daniela', 'Fernanda', 'Irene', 'Lupita'], soyad: [L("Ortega"), L("Villalobos"), 'Cárdenas', L("Salgado"), L("Quiroga"), 'Montaño', 'Rentería'] },
+  { ulke: L("Japonya"), ad: [L("Kenta"), L("Ryo"), L("Daichi"), L("Shun"), L("Takeru"), L("Yuto"), L("Haruki")], kadin: ['Ayaka', 'Mizuki', 'Rin', 'Sakura', 'Yui', 'Haruka', 'Kanako'], soyad: [L("Moriyama"), L("Kishida"), L("Hayashi"), L("Sakurai"), L("Onodera"), L("Fujimoto"), L("Kanemura")] },
+  { ulke: L("Nijerya"), ad: [L("Chidi"), L("Tunde"), L("Obinna"), L("Femi"), L("Kelechi"), L("Ayodele")], kadin: ['Chioma', 'Ngozi', 'Funmi', 'Adaeze', 'Bisola', 'Kemi'], soyad: [L("Adeyemi"), L("Okonkwo"), L("Balogun"), L("Eze"), L("Nwosu"), L("Olatunji")] },
+  { ulke: L("Birleşik Krallık"), ad: [L("Callum"), L("Jack"), L("Reece"), L("Liam"), L("Kieran"), L("Declan"), L("Ashley")], kadin: ['Molly', 'Chloe', 'Lauren', 'Megan', 'Rosie', 'Kirsty'], soyad: [L("Hollis"), L("Pembroke"), L("Tate"), L("Ashworth"), L("Barrow"), L("Fairbanks"), L("Crowther")] },
+  { ulke: L("İrlanda"), ad: [L("Cian"), 'Oisín', L("Darragh"), L("Rory"), L("Fionn")], kadin: ['Aoife', 'Siobhan', 'Niamh', 'Caoimhe', 'Ciara'], soyad: [L("Gallagher"), L("Keane"), L("Byrne"), L("Moloney"), L("Quinlan")] },
+  { ulke: L("Gürcistan"), ad: [L("Giorgi"), L("Zurab"), L("Irakli"), L("Levan"), L("Davit"), L("Nika")], kadin: ['Nino', 'Tamar', 'Mariam', 'Salome', 'Ana'], soyad: [L("Kapanadze"), L("Lomidze"), L("Tsereteli"), L("Gelashvili"), L("Mamulashvili"), L("Kvaratskhelia")] },
+  { ulke: L("Kazakistan"), ad: [L("Arman"), L("Yerlan"), L("Daulet"), L("Nursultan"), L("Askar")], kadin: ['Aigerim', 'Dana', 'Saule', 'Aruzhan', 'Madina'], soyad: [L("Abenov"), L("Zhakupov"), L("Serikbayev"), L("Tokayev"), L("Mukhamedov")], slav: true },
+  { ulke: L("Fransa"), ad: [L("Mathis"), L("Yanis"), 'Théo', L("Karim"), L("Enzo"), L("Bastien")], kadin: ['Manon', 'Léa', 'Chloé', 'Inès', 'Camille'], soyad: [L("Lemaire"), L("Duchamp"), 'Bensaïd', L("Rousseau"), L("Marchetti"), L("Diallo")] },
+  { ulke: L("Türkiye"), ad: [L("Burak"), L("Emre"), L("Oğuz"), L("Serkan"), L("Tolga"), L("Kaan"), L("Mert"), L("Volkan"), L("Cenk"), L("Barış")], kadin: ['Elif', 'Zeynep', 'Defne', 'Buse', 'Ece', 'Selin', 'Derya', 'Merve', 'Aslı', 'Gizem'], soyad: [L("Karakaya"), L("Yıldırım"), L("Demirtaş"), L("Aslan"), L("Çelikkol"), L("Kocabaş"), L("Tunç"), L("Özbek"), L("Sarıkaya"), L("Erdem")] },
+  { ulke: L("Azerbaycan"), ad: [L("Elvin"), L("Rauf"), L("Tural"), L("Orxan")], kadin: ['Aysel', 'Leyla', 'Nigar', 'Günay'], soyad: ['Məmmədov', L("Hüseynli"), 'Əliyev', L("Quliyev")], slav: true },
+  { ulke: L("Avustralya"), ad: [L("Brock"), L("Nathan"), L("Jarrah"), L("Lachlan"), L("Mitchell")], kadin: ['Casey', 'Tayla', 'Kiara', 'Jade', 'Brooke'], soyad: [L("Keane"), 'McAllister', L("Doherty"), L("Whitlock"), L("Harlow")] },
+  { ulke: L("Tayland"), ad: [L("Somchai"), L("Anan"), L("Kittisak"), L("Petch"), L("Sakda")], kadin: ['Ploy', 'Fah', 'Mali', 'Dao', 'Nong'], soyad: [L("Sitthichai"), L("Petchyindee"), L("Kaewsamrit"), L("Sor Rungvisai"), L("Banchamek")] },
+  { ulke: L("Hollanda"), ad: [L("Daan"), L("Jorrit"), L("Sem"), L("Rico")], kadin: ['Sanne', 'Femke', 'Lotte', 'Anouk'], soyad: [L("de Vries"), L("Bakker"), L("van Dijk"), L("Visser")] },
+  { ulke: L("İsveç"), ad: [L("Oskar"), L("Linus"), L("Viktor"), L("Emil")], kadin: ['Elin', 'Klara', 'Saga', 'Freja'], soyad: [L("Lindqvist"), L("Bergström"), L("Nyberg"), L("Holm")] },
+  { ulke: L("Küba"), ad: [L("Yoel"), L("Yosvany"), 'Lázaro', L("Dairon")], kadin: ['Yarelis', 'Idalys', 'Dayana', 'Yaimé'], soyad: ['Rodríguez', 'Céspedes', L("Mendieta"), L("Arencibia")] },
+  { ulke: L("Güney Kore"), ad: ['Min-jun', 'Seung-woo', 'Ji-hoon', 'Dong-hyun'], kadin: ['Seo-yeon', 'Ji-woo', 'Min-seo', 'Ha-eun'], soyad: [L("Park"), L("Kang"), L("Choi"), L("Jung")] },
+  { ulke: L("Çin"), ad: [L("Wei"), L("Jian"), L("Hao"), L("Zhen")], kadin: ['Mei', 'Xiaoling', 'Yan', 'Jing'], soyad: [L("Li"), L("Zhang"), L("Wu"), L("Song")] },
+  { ulke: L("Şili"), ad: [L("Ignacio"), 'Benjamín', 'Tomás'], kadin: ['Valentina', 'Catalina', 'Javiera'], soyad: [L("Fuentes"), L("Araya"), 'Sepúlveda'] },
+  { ulke: L("Kamerun"), ad: [L("Francis"), L("Serge"), L("Blaise")], kadin: ['Marie', 'Clarisse', 'Nadège'], soyad: [L("Mbarga"), L("Ngono"), L("Etoundi")] },
 ];
+
+/** Slav soyadlarının kadın biçimi (Latin ve Kiril): -ov/-ev/-in → -ova/-eva/-ina, -ski/-cki → -ska/-cka. */
+export function femSurname(s: string): string {
+  const rules: [RegExp, string][] = [
+    [/(ski)$/, 'ska'],
+    [/(cki)$/, 'cka'],
+    [/(ov|ev|yev|in)$/, '$1a'],
+    [/(ский)$/, 'ская'],
+    [/(ов|ев|ин)$/, '$1а'],
+  ];
+  for (const [re, rep] of rules) if (re.test(s)) return s.replace(re, rep);
+  return s;
+}
 
 export const NICKNAMES = [
   L("Kasırga"), L("Buz Adam"), L("Cellat"), L("Kobra"), L("Tank"), L("Gölge"), L("Balyoz"), L("Çakal"), L("Yıldırım"), L("Doktor"), L("Boğa"),
