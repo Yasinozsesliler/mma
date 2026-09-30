@@ -3,6 +3,8 @@
 //
 // 1) AdMob (admob.google.com) → Uygulama ekle (Android, "YOL: Kafesten Kemere")
 //    • Uygulama kimliği (ca-app-pub-XXXX~YYYY) → app.json › plugins › react-native-google-mobile-ads › androidAppId
+//      ve AYNI kimlik app.json'un en üstündeki "react-native-google-mobile-ads" › android_app_id alanına (kütüphanenin
+//      Android derlemesi bu bloğu arar; yoksa derleme çöker).
 //    • "Ödüllü" reklam birimi oluştur → aşağıdaki REAL.rewarded
 //    • "Geçiş (interstitial)" reklam birimi oluştur → aşağıdaki REAL.interstitial
 // 2) Google Play Console → Para kazanma › Ürünler › Uygulama içi ürünler → skus.ts'deki her kimlik için bir ürün
