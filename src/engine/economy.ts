@@ -1,6 +1,7 @@
 // Ekonomi: yükseltilebilir işletmeler (haftalık gelir) ve dalgalanan yatırımlar.
 // Bilinçli olarak character.ts'i içe aktarmaz; advanceWeeks buradan beslenir.
 import { L, LOC } from '../i18n';
+import { gymTick } from './academy';
 import { clamp, noise } from './rng';
 import { nightTick } from './nightlifeCore';
 import { petTick, weeklyPetCost } from './pets';
@@ -139,6 +140,7 @@ export function economyTick(s: GameState, weeks: number): string[] {
     notes.push(L("🐾 Hayvan bakımı: -{0}", [$(bakim)]));
   }
   notes.push(...petTick(s, weeks, s.para < 0), ...nightTick(s, weeks));
+  notes.push(...gymTick(s, weeks));
   (s.yatirimlar ?? []).forEach((y) => {
     const d = investDef(y.id);
     if (!d) return;

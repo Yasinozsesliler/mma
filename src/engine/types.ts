@@ -413,6 +413,7 @@ export type Phase =
   | 'kutlama'
   | 'gece'
   | 'basarimlar'
+  | 'salon'
   | 'emeklilik';
 
 export interface Istat {
@@ -519,6 +520,8 @@ export interface GameState {
   hikayeler?: string[];
   hikayeSon?: number;
   hanedan?: import('./dynasty').Ancestor[];
+  /** Kendi salonun (academy.ts) */
+  salon?: import('./academy').Gym;
   /** Ödüllü reklam teklifleri: alındıkları dövüş sayısı (her dövüş arasında birer kez). */
   odul?: { sakatlikMac?: number; profilHafta?: number };
   saglik: number;

@@ -16,6 +16,7 @@ import { createGame } from './src/engine/character';
 import type { GameState } from './src/engine/types';
 import { deleteGame, getActiveSlot, loadAllSlots, restoreBackup, saveGame, setActiveSlot, type Slot } from './src/storage';
 import { ErrorBoundary } from './src/ui/ErrorBoundary';
+import { GymScreen } from './src/ui/GymScreen';
 import { warmAnnouncer } from './src/announcer';
 import { CreateScreen } from './src/ui/CreateScreen';
 import { FightScreen } from './src/ui/FightScreen';
@@ -72,6 +73,7 @@ const PHASE_LABELS: Record<Phase, string> = {
   kutlama: L("Şampiyonluk"),
   gece: L("Gece Hayatı"),
   basarimlar: L("Başarımlar"),
+  salon: L("Salonum"),
   emeklilik: L("Emeklilik"),
 };
 
@@ -301,6 +303,9 @@ export default function App() {
         break;
       case 'basarimlar':
         content = <AchievementsScreen {...props} />;
+        break;
+      case 'salon':
+        content = <GymScreen {...props} />;
         break;
       case 'kutlama':
         content = game.kutlama ? <CelebrationScreen {...props} /> : <HubScreen {...props} />;

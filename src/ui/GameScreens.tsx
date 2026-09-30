@@ -41,6 +41,7 @@ import { STAT_KEYS, STAT_LABELS } from '../engine/types';
 import { Button, Card, Choice, Icon, P, Pill, Screen, Section, Title, upName, type IconName } from './components';
 import { NewsFeed, RestPicker } from './HubParts';
 import { ActionGrid, ActionTile, FightCTA, HubHero, Notice } from './HubHome';
+import { pendingBouts, weeklyGymNet } from '../engine/academy';
 import { UccRoadCard } from './UccRoadCard';
 import { WikiButton } from './WikiPage';
 import { CampLengthStep, CampSummary, CampWeeksStep, FreeWeeksStep } from './CampCalendar';
@@ -146,6 +147,11 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
             </Notice>
           ) : null}
 
+          {pendingBouts(s) ? (
+            <Notice color={C.orange} icon="bullhorn" action={<Button label={L("Köşesine geç")} icon="weight-lifter" tone="gold" onPress={() => act((x) => (x.phase = 'salon'))} />}>
+              {L("Öğrencilerinden {0} kişinin maçı var. Köşede sen dur!", [pendingBouts(s)])}
+            </Notice>
+          ) : null}
           <UccRoadCard s={s} />
           <FightCTA
             title={banned(s) ? L("MEN CEZASI") : L("DÖVÜŞ AYARLA")}
@@ -162,6 +168,14 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
             <ActionTile icon="bed" label={L("Dinlen")} sub={L("Sağlık {0}/100", [s.saglik])} accent={C.green} selected={resting} onPress={() => { setResting(!resting); setWeightOpen(false); }} badge={s.sakatliklar.length || null} />
             <ActionTile icon="shopping" label={L("Mağaza")} sub={weeklyBusinessIncome(s) ? `+${money(weeklyBusinessIncome(s))}/hafta` : L("Ekipman · yaşam · tatil")} accent={C.gold} onPress={() => act((x) => (x.phase = 'magaza'))} />
             <ActionTile icon="whistle" label={L("Takım")} sub={`${(s.sponsorlar ?? []).length} sponsor`} accent={C.blue} badge={(s.sponsorTeklif ?? []).length || null} onPress={() => act((x) => (x.phase = 'takim'))} />
+            <ActionTile
+              icon="weight-lifter"
+              label={L("Salonum")}
+              sub={s.salon ? L("{0} öğrenci · {1}/hafta", [s.salon.ogrenciler.length, `${weeklyGymNet(s.salon) >= 0 ? '+' : '-'}${money(Math.abs(weeklyGymNet(s.salon)))}`]) : L("Kendi salonunu aç")}
+              accent={C.orange}
+              badge={pendingBouts(s) || null}
+              onPress={() => act((x) => (x.phase = 'salon'))}
+            />
             <ActionTile icon="medal" label={L("Başarımlar")} sub={s.hof ? L("🏛 Hall of Fame") : `${(s.basarimlar ?? []).length}/100`} accent={C.gold} onPress={() => act((x) => (x.phase = 'basarimlar'))} />
             <ActionTile icon="cellphone-message" label={L("Sosyal medya")} sub={L("{0} paylaşım", [(s.sosyal ?? []).length])} accent="#3aa8ff" onPress={() => act((x) => (x.phase = 'sosyal'))} />
             <ActionTile icon="glass-cocktail" label={L("Gece hayatı")} sub={s.iliski ? `💞 ${s.iliski.ad}` : L("Randevu · kulüp · kumar")} accent="#fd267a" onPress={() => act((x) => (x.phase = 'gece'))} />
