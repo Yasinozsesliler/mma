@@ -21,7 +21,10 @@
       },
       "predictiveBackGestureEnabled": false,
       "blockedPermissions": [
-        "android.permission.RECORD_AUDIO"
+        "android.permission.RECORD_AUDIO",
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE"
       ]
     },
     "web": {
@@ -38,7 +41,8 @@
         "expo-audio",
         {
           "recordAudioAndroid": false,
-          "microphonePermission": false
+          "microphonePermission": false,
+          "enableBackgroundPlayback": false
         }
       ],
       "expo-sharing",
@@ -70,6 +74,12 @@
           "color": "#e63946"
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "32aeff93-bed4-47e6-ad53-c301ad4f0f07"
+      }
+    },
+    "owner": "yasinozsesliler"
   }
 }
