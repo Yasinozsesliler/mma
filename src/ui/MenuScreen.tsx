@@ -1,6 +1,8 @@
 import { L, LANG, LANGS, LOC } from '../i18n';
 import { useCosmetics, useFrame } from '../cosmetics';
 import { ExportButton, ImportCard } from './CareerTransfer';
+import { setAnnouncer, useAnnouncer } from '../announcer';
+import { setHaptics, useHaptics } from '../haptics';
 import { setLang } from '../i18n/boot';
 import { setSoundSettings, useSoundSettings } from '../audio';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -185,6 +187,8 @@ export function MenuScreen({
   const SLOTS = slotsFor(premium);
   const firstEmpty = SLOTS.find((x) => !saves[x - 1]);
   const ses = useSoundSettings();
+  const spiker = useAnnouncer();
+  const titresim = useHaptics();
   const bildirim = useNotifyState();
   const yeniKoz = useCosmetics().yeni.length;
   return (
@@ -250,6 +254,19 @@ export function MenuScreen({
             </Pressable>
           );
         })}
+        {(
+          [
+            ['spiker', spiker, 'microphone-variant', 'microphone-variant-off', L("Spiker"), () => setAnnouncer(!spiker)],
+            ['titresim', titresim, 'vibrate', 'vibrate-off', L("Titreşim"), () => setHaptics(!titresim)],
+          ] as const
+        ).map(([k, on, icon, offIcon, ad, toggle]) => (
+          <Pressable key={k} onPress={toggle} style={[ms.lang, on && ms.langOn]}>
+            <Icon name={on ? icon : offIcon} size={14} color={on ? C.gold : C.faint} />
+            <Text style={[ms.langText, on && { color: C.gold }]}>
+              {ad} · {on ? L("AÇIK") : L("KAPALI")}
+            </Text>
+          </Pressable>
+        ))}
         {NOTIFY ? (
           <Pressable onPress={() => void (bildirim === 'acik' ? disableNotifications() : enableNotifications())} style={[ms.lang, bildirim === 'acik' && ms.langOn]}>
             <Icon name={bildirim === 'acik' ? 'bell-ring' : 'bell-off'} size={14} color={bildirim === 'acik' ? C.gold : C.faint} />

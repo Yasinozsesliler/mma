@@ -16,6 +16,7 @@ import { createGame } from './src/engine/character';
 import type { GameState } from './src/engine/types';
 import { deleteGame, getActiveSlot, loadAllSlots, restoreBackup, saveGame, setActiveSlot, type Slot } from './src/storage';
 import { ErrorBoundary } from './src/ui/ErrorBoundary';
+import { warmAnnouncer } from './src/announcer';
 import { CreateScreen } from './src/ui/CreateScreen';
 import { FightScreen } from './src/ui/FightScreen';
 import {
@@ -110,6 +111,7 @@ export default function App() {
   const ready = fontsLoaded || !!fontError;
 
   useEffect(() => {
+    warmAnnouncer();
     Promise.all([loadAllSlots(), getActiveSlot()]).then(([all, active]) => {
       setSaves(all);
       slotRef.current = active;

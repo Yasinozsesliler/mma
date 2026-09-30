@@ -4,6 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useState } from 'react';
 import { Animated, Easing, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Defs, Ellipse, G, RadialGradient, Stop } from 'react-native-svg';
+import { announce, stopAnnounce } from '../announcer';
 import { playWalkout, sfx, walkoutSeconds } from '../audio';
 import { playerKit, walkoutNow } from '../cosmetics';
 import { currentOrg } from '../engine/character';
@@ -17,7 +18,10 @@ import { DEFAULT_LOOK } from './FighterAvatar';
 import { Figure, HIP_H, POSES } from './rig';
 import { C, F } from './theme';
 
-type Card = { kicker: string; lines: string[]; name?: string; nick?: string; side?: 'p' | 'o'; ms: number };
+type Card = { kicker: string; lines: string[]; name?: string; nick?: string; side?: 'p' | 'o'; ms: number; say?: string };
+
+/** Spikerin okuyacağı isim: ad, "lakap", soyad. */
+const spoken = (x: { ad: string; soyad: string; lakap?: string }) => [x.ad, x.lakap ? `"${x.lakap}"` : '', x.soyad].filter(Boolean).join(', ');
 
 const BLUE_KIT = { shorts: '#1f4fbf', trim: '#ffffff', glove: '#1740a8' };
 
@@ -37,15 +41,16 @@ function script(s: GameState): Card[] {
     name: upName(`${f.ad} ${f.soyad}`, f.uyruk),
     side: 'p',
     ms: 4200,
+    say: !big ? L("Kırmızı köşede! {0}!", [spoken(f)]) : r.g + r.m === 0 ? L("Ve kırmızı köşede! İlk maçına çıkıyor… {0}!", [spoken(f)]) : L("Ve kırmızı köşede! {0} galibiyet, {1} mağlubiyet… {2}!", [r.g, r.m, spoken(f)]),
   };
-  if (!big) return [pCard, { kicker: L("KURALLAR BELLİ. DÖVÜŞÜN!"), lines: [], ms: 1300 }];
+  if (!big) return [pCard, { kicker: L("KURALLAR BELLİ. DÖVÜŞÜN!"), lines: [], ms: 1300, say: L("Kurallar belli. Dövüşün!") }];
   const baslik = fs.unvanMaci
     ? L("{0} sıklet şampiyonluk maçı", [WEIGHT_CLASSES[f.siklet].ad])
     : s.ezeli?.id === o.id
       ? L("Ezeli rakipler yine karşı karşıya")
       : L("{0} sıklet · {1} raunt", [WEIGHT_CLASSES[f.siklet].ad, fs.maxRaunt]);
   return [
-    { kicker: L("BAYANLAR VE BAYLAR…"), lines: [org.ad.toLocaleUpperCase(LOC), baslik], ms: 2600 },
+    { kicker: L("BAYANLAR VE BAYLAR…"), lines: [org.ad.toLocaleUpperCase(LOC), baslik], ms: 2600, say: L("Bayanlar ve baylar! {0}. {1}!", [org.ad, baslik.replace(/ · /g, ', ')]) },
     {
       kicker: L("MAVİ KÖŞEDE…"),
       lines: [L("Rekor: {0}", [oppRecord(o)]), o.uyruk],
@@ -53,13 +58,18 @@ function script(s: GameState): Card[] {
       name: upName(`${o.ad} ${o.soyad}`, o.uyruk),
       side: 'o',
       ms: 3200,
+      say: L("Mavi köşede! {0}!", [spoken(o)]),
     },
     pCard,
-    { kicker: L("HAYDİ BAŞLAYALIM!"), lines: [], ms: 1500 },
+    { kicker: L("HAYDİ BAŞLAYALIM!"), lines: [], ms: 1500, say: L("Haydi başlayalım!") },
   ];
 }
 
-export function WalkoutScene({ s, onDone }: { s: GameState; onDone: () => void }) {
+export function WalkoutScene({ s, onDone: finish }: { s: GameState; onDone: () => void }) {
+  const onDone = () => {
+    stopAnnounce();
+    finish();
+  };
   const [cards] = useState(() => script(s));
   const [i, setI] = useState(0);
   const [fade] = useState(() => new Animated.Value(0));
@@ -80,8 +90,17 @@ export function WalkoutScene({ s, onDone }: { s: GameState; onDone: () => void }
     else if (i === cards.length - 1) sfx('bell');
     const w = card.side === 'p' ? walkoutNow() : null;
     const ms = w ? Math.max(card.ms, Math.min(6000, walkoutSeconds(w) * 1000)) : card.ms;
-    const t = setTimeout(() => (i + 1 < cards.length ? setI(i + 1) : onDone()), ms);
-    return () => clearTimeout(t);
+    // Kart en az kendi süresi kadar ekranda kalır; spiker cümlesini bitirmeden sonrakine geçilmez.
+    let alive = true;
+    let t: ReturnType<typeof setTimeout> | undefined;
+    const wait = new Promise<void>((r) => (t = setTimeout(r, ms)));
+    void Promise.all([wait, card.say ? announce(card.say, 9000) : null]).then(() => {
+      if (alive) (i + 1 < cards.length ? setI(i + 1) : onDone());
+    });
+    return () => {
+      alive = false;
+      clearTimeout(t);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [i]);
 

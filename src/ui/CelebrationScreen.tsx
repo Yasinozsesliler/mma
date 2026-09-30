@@ -2,7 +2,9 @@ import { L, LOC } from '../i18n';
 import { askReview } from '../review';
 import { beltCard } from '../share/build';
 import { ShareButton } from '../share/ShareButton';
+import { announce } from '../announcer';
 import { sfx } from '../audio';
+import { buzz } from '../haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useMemo, useRef } from 'react';
 import { Animated, Dimensions, StyleSheet, Text, View } from 'react-native';
@@ -74,6 +76,22 @@ export function CelebrationScreen({ s, act }: { s: GameState; act: Act }) {
   useEffect(() => {
     Animated.spring(scale, { toValue: 1, friction: 5, tension: 60, useNativeDriver: true }).start();
     sfx('fanfare');
+    buzz('basari');
+    const ad = fullName(s.fighter);
+    const kim = s.fighter.lakap ? `${s.fighter.ad}, "${s.fighter.lakap}", ${s.fighter.soyad}` : ad;
+    const t = setTimeout(
+      () =>
+        void announce(
+          k.tur === 'savunma'
+            ? L("Ve hâlâ… {0} sıklet şampiyonu… {1}!", [WEIGHT_CLASSES[k.siklet].ad, kim])
+            : L("Ve yeni… {0} sıklet şampiyonu… {1}!", [WEIGHT_CLASSES[k.siklet].ad, kim]),
+          9000,
+        ),
+      700,
+    );
+    return () => clearTimeout(t);
+    // Kutlama açılışında bir kez.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scale]);
   const belts = k.tur === 'cift' ? activeBelts(s).filter((b) => b.org === k.org) : activeBelts(s).filter((b) => b.org === k.org && b.siklet === k.siklet);
   const belt = belts.find((b) => b.siklet === k.siklet);

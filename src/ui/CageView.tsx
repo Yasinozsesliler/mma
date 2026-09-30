@@ -1,6 +1,8 @@
 // Kafes sahnesi: eklemli dövüşçüler ve hakem, maç akışındaki her olayı koreografiyle canlandırır.
 import { L as tL, LOC } from '../i18n';
+import { announce } from '../announcer';
 import { sfx, type Sfx } from '../audio';
+import { buzz } from '../haptics';
 import { playerKit } from '../cosmetics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useRef, useState } from 'react';
@@ -158,6 +160,10 @@ export function CageView({
       kick();
       const snd: Record<Fx['kind'], Sfx> = { hit: part === 'head' ? 'punch' : 'body', big: 'heavy', lock: 'lock', tap: 'tap', dust: 'slam', stars: 'ooh' };
       sfx(snd[kind]);
+      // Titreşim: sert darbe ve yere çarpma her zaman, sıradan vuruş yalnızca oyuncu yediğinde.
+      if (kind === 'big') buzz('guclu');
+      else if (kind === 'dust' || kind === 'tap') buzz('orta');
+      else if (kind === 'hit' && a === 'p') buzz('hafif');
     }, delay * spd());
   };
   const later = (name: Sfx, ms: number, amount = 1) => setTimeout(() => sfx(name, amount), ms * spd());
@@ -376,6 +382,17 @@ export function CageView({
         setCaption(kz === 'berabere' ? tL("BERABERE") : `KAZANAN: ${kz === 'p' ? fs.pAd : fs.oAd}`.toLocaleUpperCase(LOC));
         sfx('bell2');
         setTimeout(() => sfx(kz === 'berabere' ? 'ooh' : 'applause', kz === 'p' ? 1.3 : 0.7), 900);
+        const kazanan = kz === 'p' ? fs.pAd : fs.oAd;
+        if (bitirme) buzz('nakavt');
+        void announce(
+          kz === 'berabere'
+            ? tL("Hakemler kararını verdi… Berabere!")
+            : fs.sonuc.yontem === 'SUB'
+              ? tL("Tap attı! Bitti! Kazanan… {0}!", [kazanan])
+              : bitirme
+                ? tL("Ve bitti! Nakavt! Kazanan… {0}!", [kazanan])
+                : tL("Hakemlerin kararıyla… kazanan… {0}!", [kazanan]),
+        );
         if (kz === 'berabere') {
           queue('r', [['refBoth', 600, { x: 0 }]]);
           queue('p', [['dejected', 500, { x: GAP / 2 - 30 }]]);
