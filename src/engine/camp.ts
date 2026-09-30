@@ -16,6 +16,7 @@ import { diseaseMods, untreated } from './nightlifeCore';
 import { scandal } from './sponsors';
 import { campMotivation, cutBonus, fightItemMods, injuryMultiplier, owns, restMultiplier } from './shop';
 import { chance, clamp, pick, rand, randInt } from './rng';
+import { drillBonus, recordDrill } from './drills';
 import type {
   GameState,
   Injury,
@@ -158,6 +159,7 @@ export function campChoose(s: GameState, value: string | number) {
       else freeWeek(s, String(value));
       return;
     case 'haftalik':
+      if (typeof value === 'string' && value.startsWith('idman:')) return recordDrill(s, Number(value.slice(6)));
       if (value === 'hepsi') while ((k.kampIdx ?? 0) < k.hafta) campWeek(s);
       else campWeek(s);
       if ((k.kampIdx ?? 0) >= k.hafta) runCamp(s);
@@ -236,6 +238,7 @@ function runCamp(s: GameState) {
   k.ozet.push(L("📍 Kamp yeri: {0}{1}", [site.ad, site.salonUcreti ? ` (${s.takim.antrenor})` : '']));
 
   // Gelişim
+  const drill = drillBonus(s);
   let artis = 0;
   if (k.focus) {
     const g =
@@ -249,7 +252,8 @@ function runCamp(s: GameState) {
       staffGrowth(s, k.focus) *
       (k.focus === 'kondisyon' && petRunner(s) ? 1.1 : 1) *
       (1 + (s.motivasyon + campMotivation(s)) * 0.1) *
-      (k.kisaHaber ? 1 : len.carpan);
+      (k.kisaHaber ? 1 : len.carpan) *
+      drill.gelisim;
     // Kamp odak alanı en kötü +2 gelişir; iyi koşullarda +5'e kadar.
     const d = addStat(f.stats, k.focus, clamp(Math.round(g), 2, 5), 2);
     artis = d;
@@ -257,6 +261,7 @@ function runCamp(s: GameState) {
     if (k.focus === site.bonusStat) k.ozet.push(L("🔥 {0} tam bu alanda uzman: gelişim arttı.", [site.ad]));
     else if (site.salonUcreti && k.focus === s.takim.uzmanlik) k.ozet.push(L("🔥 {0} bu alanın ustası: gelişim arttı.", [s.takim.antrenor]));
   }
+  if (drill.ort) k.ozet.push(L("🎯 Antrenman seansları: ortalama {0} puan · gelişim +%{1}, sakatlık riski -%{2}", [drill.ort, Math.round((drill.gelisim - 1) * 100), Math.round((1 - drill.risk) * 100)]));
   s.motivasyon += campMotivation(s);
   const puan = clamp(campPoints(s, k.intensity ?? 'orta', !!k.kisaHaber) + site.puan + staffCampPoints(s), k.kisaHaber ? 1 : 2, 3);
   s.puan += puan;
@@ -321,7 +326,7 @@ function runCamp(s: GameState) {
   k.ozet.push(...notes);
 
   // Sakatlık zarı
-  const risk = intensity.risk * (1.3 - s.saglik / 200) * (k.kisaHaber ? 0.5 : len.risk) * injuryMultiplier(s) * site.risk;
+  const risk = intensity.risk * (1.3 - s.saglik / 200) * (k.kisaHaber ? 0.5 : len.risk) * injuryMultiplier(s) * site.risk * drill.risk;
   if (chance(risk)) {
     const inj = randomInjury(3, 8);
     s.sakatliklar.push(inj);

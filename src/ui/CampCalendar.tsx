@@ -5,6 +5,7 @@ import { useState, type ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { campLengthsFor, CAMP_LENGTH_INFO, currentEvent, FREE_ACTS } from '../engine/calendar';
 import { campQuote } from '../engine/camp';
+import { DRILLS, drillDone, drillFor, drillGrade } from '../engine/drills';
 import { money } from '../engine/career';
 import { TECHNIQUES, techLevel, MAX_TECH, xpNeed } from '../engine/techniques';
 import type { GameState } from '../engine/types';
@@ -13,6 +14,7 @@ import { Button, Icon, Screen, Section, SLANT, type IconName } from './component
 import type { Act } from './GameScreens';
 import { SkillPanel } from './SkillPanel';
 import { TechniquePanel } from './TechniquePanel';
+import { DrillGame } from './DrillGame';
 import { C, F, R } from './theme';
 
 type Choose = (v: string | number) => void;
@@ -202,6 +204,10 @@ export function FreeWeeksStep({ s, header, choose }: { s: GameState; header: Rea
 export function CampWeeksStep({ s, header, choose }: { s: GameState; header: ReactNode; choose: Choose }) {
   const k = s.pending.kamp!;
   const done = k.kampIdx ?? 0;
+  const [drill, setDrill] = useState(false);
+  const oyun = drillFor(k.focus);
+  const played = drillDone(s);
+  const lastDrill = k.idman?.at(-1);
   return (
     <Screen
       footer={
@@ -214,6 +220,33 @@ export function CampWeeksStep({ s, header, choose }: { s: GameState; header: Rea
       {header}
       <FightDateHero s={s} />
       <Text style={cc.title}>{L('Antrenman kampı · {0}/{1} hafta', [done, k.hafta])}</Text>
+      <Pressable
+        disabled={played}
+        onPress={() => setDrill(true)}
+        style={({ pressed }) => [cc.drill, played && { opacity: 0.75 }, pressed && { borderColor: C.gold }]}
+      >
+        <View style={cc.drillIcon}>
+          <Icon name={(played ? 'check-bold' : DRILLS[oyun].ikon) as IconName} size={24} color={played ? C.green : C.gold} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={cc.drillKicker}>{L("HAFTANIN SEANSI · İSTEĞE BAĞLI")}</Text>
+          <Text style={cc.drillTitle}>{DRILLS[oyun].ad}</Text>
+          <Text style={cc.drillDesc}>
+            {played && lastDrill ? L("Bu hafta: {0} puan · {1}", [lastDrill.puan, drillGrade(lastDrill.puan)]) : L("15 saniyelik mini oyun. İyi oynarsan kamp daha verimli, sakatlık riski daha düşük.")}
+          </Text>
+        </View>
+        {played ? null : <Icon name="play-circle" size={30} color={C.gold} />}
+      </Pressable>
+      {drill ? (
+        <DrillGame
+          oyun={oyun}
+          onClose={() => setDrill(false)}
+          onDone={(p) => {
+            setDrill(false);
+            choose(`idman:${p}`);
+          }}
+        />
+      ) : null}
       <View style={cc.panel}>
         {(k.haftaLog ?? []).length ? (
           (k.haftaLog ?? []).map((l, i) => (
@@ -373,6 +406,11 @@ const cc = StyleSheet.create({
   log: { flex: 1, color: C.dim, fontFamily: F.body, fontSize: 13, lineHeight: 19, paddingVertical: 6 },
   divider: { borderTopWidth: 1, borderTopColor: C.border },
   campRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  drill: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#15120a', borderRadius: R, borderWidth: 1, borderColor: C.goldDeep, padding: 12, marginBottom: 10 },
+  drillIcon: { width: 46, height: 46, borderRadius: 23, borderWidth: 1, borderColor: C.goldDeep, alignItems: 'center', justifyContent: 'center' },
+  drillKicker: { color: C.gold, fontFamily: F.display, fontSize: 10, letterSpacing: 1.5 },
+  drillTitle: { color: C.text, fontFamily: F.display, fontSize: 17 },
+  drillDesc: { color: C.dim, fontFamily: F.body, fontSize: 12, lineHeight: 17 },
   campDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#d99a3a' },
   sumHero: { marginHorizontal: -16, marginTop: -16, paddingTop: 22, paddingHorizontal: 16, paddingBottom: 20, alignItems: 'center', marginBottom: 12 },
   glowLine: { position: 'absolute', top: 0, left: 0, right: 0, height: 2 },

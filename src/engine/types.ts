@@ -233,6 +233,8 @@ export interface CampState {
   /** Kampta simüle edilen hafta sayısı ve hafta hafta günlük */
   kampIdx?: number;
   haftaLog?: string[];
+  /** Haftalık antrenman mini oyunları: hangi kamp haftasında, hangi oyun, kaç puan (0–100) */
+  idman?: { idx: number; oyun: 'pad' | 'refleks' | 'ritim'; puan: number }[];
   /** Kamp sonu ekranı için yapılandırılmış özet */
   sonuc?: {
     focus?: StatKey;
