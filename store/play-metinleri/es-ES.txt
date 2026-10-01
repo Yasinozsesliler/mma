@@ -1,0 +1,53 @@
+﻿PLAY CONSOLE · es-ES · Español (España)
+Görseller: store\graphics\es   ·   Simge: public\icon-512.png
+
+=== UYGULAMA ADI (28/30) ===
+YOL: Carrera de Luchador MMA
+
+=== KISA AÇIKLAMA (77/80) ===
+De la calle al cinturón: un juego de carrera MMA donde cada decisión es tuya.
+
+=== TAM AÇIKLAMA (2374/4000) ===
+Empieza desde cero y llega al cinturón. YOL: De la jaula al cinturón es un simulador de carrera de luchador de MMA donde cada decisión cambia tu historia.
+
+🥊 CREA A TU LUCHADOR
+Elige tu nacionalidad, edad, categoría y base de combate: boxeo, muay thai, lucha, BJJ, sambo, judo, kyokushin, kickboxing o peleador callejero. Diseña tu cara, escribe tu historia y tira los dados.
+
+🏋️ DIRIGE TU CAMPAMENTO
+Antes de cada pelea elige la duración, la sede, la intensidad y el plan de pelea. Encuentra la debilidad de tu rival y arma tu plan. Corta peso, lanza pullas en la conferencia de prensa y quédate cara a cara en el pesaje.
+
+⚡ PELEAS EN VIVO
+Luchadores animados en la jaula, narración asalto a asalto y momentos críticos: cuando tu rival está sacudido, ¿vas por la finalización o buscas la sumisión? Administra tu cardio y escucha a tu esquina.
+
+🏆 DE AMATEUR A CAMPEÓN MUNDIAL
+De la liga amateur a las promotoras regionales y al escenario más grande del mundo. Sube en el ranking, gana cinturones, defiende tu título, sé campeón en dos categorías, entra en la lista Pound for Pound y en el Salón de la Fama.
+
+🌃 LA VIDA FUERA DE LA JAULA
+Mánagers, patrocinadores, tu equipo, coches y casas de lujo, inversiones, mascotas, peleas en redes, vida nocturna, citas y casino. Pero recuerda: todo tiene un precio.
+
+📲 COMPARTE
+Comparte tu cinturón, tu nocaut o toda tu carrera en tu historia con un toque.
+
+✨ CARACTERÍSTICAS
+• Tu propio gimnasio: ficha a jóvenes talentos y ve a su esquina
+• Minijuegos de entrenamiento en cada campamento
+• Presentador en la jaula y golpes con vibración
+• Modo carrera profundo basado en decisiones
+• Némesis: un rival que te persigue toda la carrera
+• Modo dinastía: retírate y continúa con tu hijo
+• Repeticiones de KO, música de entrada y presentación en el ring
+• Jaulapedia: una página de enciclopedia escrita sola para tu peleador
+• Desafía a tus amigos en la Pelea del Día
+• Vestidor: shorts, guantes, cinturones y música de entrada. Sin pagar para ganar
+• Una Pelea del Día cada día, igual para todos: comparte tu puntuación y mantén la racha
+• Peleas animadas en la jaula y narración dinámica
+• 100 logros y Salón de la Fama
+• 3 ranuras de carrera
+• Efectos de sonido, público y música
+• Se puede jugar sin conexión
+• Türkçe, English, Español, Português, Русский, Polski
+
+Todas las promotoras, personas y marcas del juego son ficticias.
+
+=== SÜRÜM NOTU ===
+¡Primera versión! Bienvenido a la jaula.

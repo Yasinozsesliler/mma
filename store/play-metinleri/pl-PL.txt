@@ -1,0 +1,51 @@
+﻿PLAY CONSOLE · pl-PL · Polski
+Görseller: store\graphics\pl   ·   Simge: public\icon-512.png
+
+=== UYGULAMA ADI (26/30) ===
+YOL: Kariera Zawodnika MMA
+
+=== KISA AÇIKLAMA (76/80) ===
+Z ulicy po pas: gra o karierze w MMA, w której każdy wybór należy do ciebie.
+
+=== TAM AÇIKLAMA (2188/4000) ===
+Zacznij od zera i wywalcz pas. YOL: Z klatki do pasa to symulator kariery zawodnika MMA, w którym każda decyzja pisze twoją historię.
+
+🥊 STWÓRZ ZAWODNIKA
+Wybierz narodowość, wiek, kategorię wagową i styl walki: boks, muay thai, zapasy, BJJ, sambo, judo, kyokushin, kickboxing albo walka uliczna. Zaprojektuj twarz, napisz historię, rzuć kośćmi.
+
+🏋️ POPROWADŹ OBÓZ
+Przed każdą walką wybierz długość obozu, miejsce, intensywność i plan walki. Znajdź słabość rywala i zbuduj na niej plan. Zbij wagę, rzuć trash talk na konferencji, stań twarzą w twarz na ważeniu.
+
+⚡ WALKI NA ŻYWO
+Animowani zawodnicy w klatce, komentarz runda po rundzie i krytyczne momenty: gdy rywal jest wstrząśnięty, idziesz po skończenie czy szukasz poddania? Pilnuj kondycji i słuchaj narożnika.
+
+🏆 OD AMATORA DO MISTRZA ŚWIATA
+Od ligi amatorskiej przez organizacje regionalne aż na największą scenę świata. Wspinaj się w rankingu, zdobywaj pasy, broń tytułu, zostań mistrzem dwóch kategorii, wejdź na listę Pound for Pound i do Galerii Sław.
+
+🌃 ŻYCIE POZA KLATKĄ
+Menedżerowie, sponsorzy, sztab, luksusowe auta i domy, inwestycje, zwierzaki, kłótnie w mediach społecznościowych, życie nocne, randki i kasyno. Ale pamiętaj: wszystko ma swoją cenę.
+
+📲 UDOSTĘPNIAJ
+Udostępnij pas, nokaut albo całą karierę na swoim storysie jednym dotknięciem.
+
+✨ FUNKCJE
+• Własny klub: zapisuj młode talenty i stawaj w ich narożniku
+• Minigry treningowe na każdym obozie
+• Spiker w klatce i wibracje przy ciosach
+• Głęboki tryb kariery oparty na wyborach
+• Arcyrywal, który prześladuje cię przez całą karierę
+• Tryb dynastii: zakończ karierę i kontynuuj jako swoje dziecko
+• Powtórki nokautów, muzyka wejściowa i zapowiedź spikera
+• Klatkopedia: automatycznie pisana strona encyklopedii o twoim zawodniku
+• Codziennie nowy Bój dnia, ten sam dla wszystkich: udostępnij wynik, rzuć wyzwanie znajomym, utrzymaj serię
+• Szafka: spodenki, rękawice, pasy i muzyka wejściowa. Bez pay-to-win
+• Animowane walki w klatce i dynamiczny komentarz
+• 100 osiągnięć i Galeria Sław
+• Efekty dźwiękowe, publiczność i muzyka
+• Gra offline
+• Türkçe, English, Español, Português, Русский, Polski
+
+Wszystkie organizacje, osoby i marki w grze są fikcyjne.
+
+=== SÜRÜM NOTU ===
+Pierwsze wydanie! Witaj w klatce.

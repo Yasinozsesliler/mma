@@ -1,0 +1,53 @@
+﻿PLAY CONSOLE · en-US · English (US)
+Görseller: store\graphics\en   ·   Simge: public\icon-512.png
+
+=== UYGULAMA ADI (27/30) ===
+YOL: MMA Fighter Career Sim
+
+=== KISA AÇIKLAMA (77/80) ===
+From the streets to the belt: an MMA career game where every choice is yours.
+
+=== TAM AÇIKLAMA (2243/4000) ===
+Start from nothing, fight your way to the belt. YOL: From Cage to Belt is an MMA fighter career simulator where every decision shapes your story.
+
+🥊 CREATE YOUR FIGHTER
+Pick your nationality, age, weight class and fighting background: boxing, muay thai, wrestling, BJJ, sambo, judo, kyokushin, kickboxing or street fighter. Design your face, write your story, roll the dice.
+
+🏋️ RUN YOUR CAMP
+Before every fight choose your camp length, location, intensity and game plan. Find your opponent's weakness and build your plan around it. Cut weight, talk trash at the press conference, go face to face at the weigh-in.
+
+⚡ LIVE FIGHTS
+Animated fighters in the cage, round-by-round commentary and critical moments: when your opponent is rocked, do you go for the finish or hunt the submission? Manage your cardio and listen to your corner.
+
+🏆 FROM AMATEUR TO WORLD CHAMPION
+From the amateur league to regional promotions to the biggest stage in the world. Climb the rankings, win belts, defend your title, become a two-division champion, crack the Pound for Pound list and enter the Hall of Fame.
+
+🌃 LIFE OUTSIDE THE CAGE
+Managers, sponsors, your training team, luxury cars and homes, investments, pets, social media beefs, nightlife, dating and the casino. But remember: everything has a price.
+
+📲 SHARE
+Share your belt, your knockout or your whole career to your story with one tap.
+
+✨ FEATURES
+• Your own gym: sign young talent and work their corner
+• Training mini games in every camp
+• Ring announcer and haptic hits
+• Deep, choice-driven career mode
+• Nemesis system: a rival who haunts your whole career
+• Dynasty mode: retire and carry on with your child
+• KO replays, walkout music and ring announcements
+• Cagepedia: an auto-written encyclopedia page for your fighter
+• Challenge your friends in the Daily Fight
+• Locker: shorts, gloves, belts and walkout music. No pay-to-win
+• A new Daily Fight every day, the same for everyone: share your score, keep your streak
+• Animated cage fights and dynamic commentary
+• 100 achievements and a Hall of Fame
+• 3 career slots
+• Sound effects, crowd and music
+• Playable offline
+• Türkçe, English, Español, Português, Русский, Polski
+
+All promotions, people and brands in the game are fictional.
+
+=== SÜRÜM NOTU ===
+First release! Welcome to the cage.

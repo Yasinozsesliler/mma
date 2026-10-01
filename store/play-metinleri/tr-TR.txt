@@ -1,0 +1,53 @@
+﻿PLAY CONSOLE · tr-TR · Türkçe
+Görseller: store\graphics\tr   ·   Simge: public\icon-512.png
+
+=== UYGULAMA ADI (28/30) ===
+YOL: MMA Kariyer Simülasyonu
+
+=== KISA AÇIKLAMA (67/80) ===
+Sokaktan şampiyonluğa: her kararı senin olan bir MMA kariyer oyunu.
+
+=== TAM AÇIKLAMA (2158/4000) ===
+Sıfırdan başla, kemere uzan. YOL: Kafesten Kemere, her kararın kariyerini değiştirdiği bir MMA dövüşçü simülasyonu.
+
+🥊 DÖVÜŞÇÜNÜ YARAT
+Uyruğunu, yaşını, sikletini ve dövüş geçmişini seç: boks, muay thai, güreş, BJJ, sambo, judo, kyokushin, kickboks ya da sokak dövüşçüsü. Yüzünü tasarla, hikâyeni yaz, zarları at.
+
+🏋️ KAMPINI YÖNET
+Her dövüşten önce kamp süresini, yerini, yoğunluğunu ve oyun planını seç. Rakibin zayıf yönünü bul, planını ona göre kur. Kilo ver, basın toplantısında laf sok, tartıda burun buruna gel.
+
+⚡ CANLI DÖVÜŞLER
+Kafeste animasyonlu dövüşçüler, raunt raunt akan anlatım ve kritik anlar: rakip sarsıldığında bitirmeye mi gideceksin, submission'a mı yatacaksın? Kondisyonunu yönet, köşendeki hocayı dinle.
+
+🏆 AMATÖRDEN DÜNYA ŞAMPİYONLUĞUNA
+Amatör ligden bölgesel organizasyonlara, oradan dünyanın en büyük sahnesine. Sıralamada yüksel, kemer kazan, unvanını savun, iki sıklette şampiyon ol, Pound for Pound listesine gir, Hall of Fame'e adını yazdır.
+
+🌃 KAFES DIŞINDA HAYAT
+Menajer, sponsorlar, antrenman ekibi, lüks arabalar ve evler, yatırımlar, evcil hayvanlar, sosyal medya kavgaları, gece hayatı, randevular ve kumarhane. Ama unutma: her şeyin bir bedeli var.
+
+📲 PAYLAŞ
+Kemerini, nakavtını ya da tüm kariyerini tek dokunuşla hikâyende paylaş.
+
+✨ ÖZELLİKLER
+• Kendi salonun: genç yetenekleri yetiştir, köşelerinde dur
+• Her kampta antrenman mini oyunları
+• Ring spikeri ve titreşimli darbeler
+• Seçimlerle ilerleyen derin kariyer modu
+• Ezeli rakip: kariyer boyunca peşini bırakmayan bir düşman
+• Nesil modu: emekli ol, çocuğunla hanedanını sürdür
+• Nakavt tekrarları, kafese giriş müziği ve ring anonsu
+• Kafespedia: dövüşçün için otomatik yazılan ansiklopedi sayfası
+• Günün Dövüşü'nde arkadaşlarına meydan oku
+• Dolap: şort, eldiven, kemer ve giriş müziği. Kazanmak için ödeme yok
+• Her gün herkes için aynı “Günün Dövüşü”: skorunu paylaş, serini koru
+• Animasyonlu kafes dövüşleri ve dinamik anlatım
+• 100 başarım ve Hall of Fame
+• 3 kariyer yuvası
+• Ses efektleri, seyirci ve müzik
+• İnternetsiz oynanabilir
+• Türkçe, English, Español, Português, Русский, Polski
+
+Oyundaki organizasyonlar, kişiler ve markalar kurgusaldır.
+
+=== SÜRÜM NOTU ===
+İlk sürüm! Kafese hoş geldin.

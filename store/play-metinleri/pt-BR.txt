@@ -1,0 +1,53 @@
+﻿PLAY CONSOLE · pt-BR · Português (Brasil)
+Görseller: store\graphics\pt   ·   Simge: public\icon-512.png
+
+=== UYGULAMA ADI (28/30) ===
+YOL: Carreira de Lutador MMA
+
+=== KISA AÇIKLAMA (73/80) ===
+Das ruas ao cinturão: um jogo de carreira de MMA onde cada decisão é sua.
+
+=== TAM AÇIKLAMA (2261/4000) ===
+Comece do zero e chegue ao cinturão. YOL: Do Octógono ao Cinturão é um simulador de carreira de lutador de MMA em que cada decisão muda sua história.
+
+🥊 CRIE SEU LUTADOR
+Escolha nacionalidade, idade, categoria e base de luta: boxe, muay thai, wrestling, BJJ, sambo, judô, kyokushin, kickboxing ou lutador de rua. Crie seu rosto, escreva sua história e role os dados.
+
+🏋️ COMANDE SEU CAMP
+Antes de cada luta escolha duração, local, intensidade e plano de luta. Descubra o ponto fraco do adversário e monte seu plano. Corte peso, provoque na coletiva e encare o rival na pesagem.
+
+⚡ LUTAS AO VIVO
+Lutadores animados no octógono, narração round a round e momentos críticos: quando o adversário balança, você vai para a finalização ou caça o mata-leão? Controle seu cardio e ouça seu córner.
+
+🏆 DE AMADOR A CAMPEÃO MUNDIAL
+Da liga amadora às organizações regionais e ao maior palco do mundo. Suba no ranking, conquiste cinturões, defenda o título, seja campeão em duas categorias, entre na lista Pound for Pound e no Hall da Fama.
+
+🌃 VIDA FORA DO OCTÓGONO
+Empresários, patrocinadores, sua equipe, carros e casas de luxo, investimentos, pets, tretas nas redes, vida noturna, encontros e cassino. Mas lembre: tudo tem um preço.
+
+📲 COMPARTILHE
+Compartilhe seu cinturão, seu nocaute ou toda a sua carreira no story com um toque.
+
+✨ RECURSOS
+• Sua própria academia: contrate jovens talentos e fique no córner deles
+• Minijogos de treino em todo camp
+• Locutor no octógono e golpes com vibração
+• Modo carreira profundo, guiado por escolhas
+• Arquirrival: um rival que te persegue a carreira inteira
+• Modo dinastia: aposente-se e continue com seu filho
+• Replays de nocaute, música de entrada e anúncio do octógono
+• Octopédia: uma página de enciclopédia escrita sozinha para seu lutador
+• Desafie seus amigos na Luta do Dia
+• Vestiário: calções, luvas, cinturões e música de entrada. Sem pagar para ganhar
+• Uma Luta do Dia todo dia, igual para todos: compartilhe sua pontuação e mantenha a sequência
+• Lutas animadas e narração dinâmica
+• 100 conquistas e Hall da Fama
+• 3 espaços de carreira
+• Efeitos sonoros, torcida e música
+• Jogue offline
+• Türkçe, English, Español, Português, Русский, Polski
+
+Todas as organizações, pessoas e marcas do jogo são fictícias.
+
+=== SÜRÜM NOTU ===
+Primeira versão! Bem-vindo ao octógono.
