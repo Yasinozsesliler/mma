@@ -1,8 +1,7 @@
 // TikTok / Reels / Shorts özellik tanıtımı (dikey 1080×1920, ~31 sn).
 // Her sahne: üstte büyük özellik başlığı, ortada telefon çerçevesinde oyun ekranı, beyaz flaşla hızlı geçiş.
 // Önce: CI=1 npm run build:web  ve  npx serve dist -s -l 8088
-// Spiker sesleri: powershell -ExecutionPolicy Bypass -File scripts/tts-lines.ps1 <ses klasörü>
-// Çalıştırma: node scripts/tiktok-tanitim.mjs <ffmpeg.exe> <ses klasörü>
+// Çalıştırma: node scripts/tiktok-tanitim.mjs <ffmpeg.exe>  (seslendirme yok: müzik ve efektler)
 // Çıktı: store/video/tiktok-tanitim.mp4
 import { execFileSync, spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -10,9 +9,7 @@ import { fileURLToPath } from 'node:url';
 import puppeteer from 'puppeteer-core';
 
 const FF = process.argv[2];
-const VOX = process.argv[3];
 if (!FF || !existsSync(FF)) throw new Error('ffmpeg yolu gerekli');
-if (!VOX || !existsSync(`${VOX}/nakavt.wav`)) throw new Error('spiker ses klasörü gerekli (scripts/tts-lines.ps1)');
 const root = fileURLToPath(new URL('..', import.meta.url));
 const tmp = `${root}/store/video/tanitim-parca`;
 rmSync(tmp, { recursive: true, force: true });
@@ -24,12 +21,13 @@ const SCENES = [
   ['create', 'DÖVÜŞÇÜNÜ YARAT', 'YÜZ · SAÇ · DÖVME · DÖVÜŞ STİLİ', 2.4],
   ['rival', 'RAKİBİNİ SEÇ', 'ZAYIF YÖNÜNÜ BUL', 2.2],
   ['plan', 'OYUN PLANINI KUR', '11 FARKLI TAKTİK', 2.2],
-  ['drill', 'ANTRENMANI SEN YAP', 'ZAMANLAMAN = GELİŞİMİN', 2.6],
   ['faceoff', 'TARTIDA GÖZDAĞI VER', 'YÜZ YÜZE GELME ANI', 2.4],
   ['tactic', 'HER RAUNTTA KARAR SENİN', 'BASKI · GÜREŞ · SUBMISSION', 2.2],
   ['interview', 'MİKROFON SENDE 🎤', 'MEYDAN OKU, TRASH TALK YAP', 2.2],
   ['shop', 'KAFES DIŞINDA HAYAT', 'LÜKS ARABALAR · EVLER · YATIRIM', 2.2],
   ['gym', 'KENDİ SALONUNU KUR', 'ŞAMPİYON YETİŞTİR', 2.4],
+  ['profile', 'EFSANENİ YAZ', 'KARNE · MAÇ GEÇMİŞİ · KEMERLER', 2.4],
+  ['hof', "HALL OF FAME'E GİR 🏛", 'ADIN ÖLÜMSÜZ OLSUN', 2.6],
   ['locker', 'TARZINI SEÇ', 'ŞORT · ELDİVEN · GİRİŞ MÜZİĞİ', 2.2],
   ['belt', 'DÜNYA ŞAMPİYONU OL 👑', 'AMATÖRDEN UCC KEMERİNE', 2.8],
 ];
@@ -115,18 +113,6 @@ const rec = async (name, fn) => {
   console.log('🎬', name, ((Date.now() - t0) / 1000).toFixed(1), 'sn', JSON.stringify(marks));
 };
 
-// Mini oyun botu
-const taps = [];
-let tapClock = null;
-await page.exposeFunction('nodeTap', async () => {
-  const el = await page.$('[data-testid="drill-area"]');
-  const b = el && (await el.boundingBox());
-  if (b) {
-    if (tapClock) taps.push(tapClock());
-    await page.touchscreen.tap(b.x + b.width / 2, b.y + b.height - 60);
-  }
-});
-
 await page.goto('http://localhost:8088/', { waitUntil: 'networkidle0' });
 await sleep(900);
 
@@ -191,41 +177,6 @@ for (let i = 0; i < 25; i++) {
   }
   if (!(await firstChoice())) await sleep(400);
 }
-
-// ---------- Mini oyun ----------
-await click('HAFTANIN SEANSI');
-await sleep(500);
-await rec('drill', async (now) => {
-  tapClock = now;
-  await click('Başla');
-  const start = now();
-  await page.evaluate(() => {
-    let armed = true;
-    const loop = () => {
-      const ring = document.querySelector('[data-testid="drill-ring"]');
-      if (ring) {
-        const m = getComputedStyle(ring).transform.match(/matrix\(([-\d.]+)/);
-        const sc = m ? parseFloat(m[1]) : null;
-        if (sc != null) {
-          if (sc > 2) armed = true;
-          if (armed && sc <= 1.09) {
-            armed = false;
-            window.nodeTap();
-          }
-        }
-      }
-      if (!window.__ttStop) requestAnimationFrame(loop);
-    };
-    requestAnimationFrame(loop);
-  });
-  await sleep(7000);
-  return { start };
-});
-tapClock = null;
-await page.evaluate(() => (window.__ttStop = true));
-for (let i = 0; i < 20 && !up(await body()).includes('KAMPA DÖN'); i++) await sleep(500);
-await click('Kampa dön');
-await sleep(500);
 
 // ---------- Tartı ve yüz yüze ----------
 for (let i = 0; i < 20; i++) {
@@ -334,6 +285,45 @@ await rec('gym', async () => {
   await sleep(500);
 });
 
+// ---------- Profil + Hall of Fame: efsane bir kariyer ----------
+const achIds = [...readFileSync(`${root}/src/engine/achievements.ts`, 'utf8').matchAll(/id: '([^']+)'/g)].map((m) => m[1]).slice(0, 78);
+await page.evaluate((achIds) => {
+  const key = Object.keys(localStorage).find((k) => k.startsWith('yol_kariyer'));
+  const s = JSON.parse(localStorage.getItem(key));
+  const R = ['Diego Alvarez', 'Timur Bekov', 'Jake Morrison', 'Luka Novak', 'Rafael Costa', 'Sean Doyle', 'Arman Petrosyan', 'Marcus Pruitt', 'Dmitri Volkov', 'Caio Moraes', 'Tyler Boone', 'Wei Li', 'Kenji Mori', 'Ivan Sorokin', 'Brody Stroud', 'Luan Farias', 'Callum Tate', 'Zaur Omarov'];
+  const Y = ['KO', 'TKO', 'SUB', 'UD', 'KO', 'SD', 'TKO', 'UD'];
+  const orgs = ['amator', 'amator', 'cfc', 'cfc', 'cfc', 'pfl', 'pfl', 'pfl', 'pfl', 'dwcs', 'ufc', 'ufc', 'ufc', 'ufc', 'ufc', 'ufc', 'ufc', 'ufc'];
+  s.gecmis = orgs.map((org, i) => ({ rakip: R[i], rakipId: 'r' + i, org, sonuc: i === 4 || i === 9 ? 'M' : 'G', yontem: Y[i % Y.length], raunt: 1 + (i % 3), yas: 21 + Math.floor(i / 2) })).reverse();
+  Object.assign(s, { stage: 'ufc', phase: 'hub', pending: {}, rank: 1, sampiyon: true, savunma: 4, populerlik: 96, takipci: 12400000, para: 18500000 });
+  s.contract = { org: 'ufc', kalan: 3, ucret: 750000, bonus: 750000, munhasir: true };
+  s.rekor = { ...s.rekor, g: 27, m: 2, b: 0, ko: 15, sub: 6, karar: 6 };
+  s.kemerler = [
+    { org: 'cfc', siklet: s.fighter.siklet, hafta: 90, yas: 23, savunma: 2, aktif: false },
+    { org: 'ufc', siklet: s.fighter.siklet, hafta: 300, yas: 29, savunma: 4, aktif: true },
+  ];
+  s.unvanlar = ['CFC', 'UCC'];
+  s.hof = { hafta: s.hafta, yas: 34, skor: 1180, goruldu: false };
+  s.basarimlar = achIds;
+  s.fighter.yas = 34;
+  localStorage.setItem(key, JSON.stringify(s));
+}, achIds);
+await reloadContinue();
+await click('PROFİL');
+await sleep(800);
+await rec('profile', async () => {
+  await sleep(300);
+  await smoothScroll(520, 1700);
+  await sleep(400);
+});
+await mutate("s.phase = 'basarimlar';");
+await reloadContinue();
+await sleep(400);
+await rec('hof', async () => {
+  await sleep(500);
+  await smoothScroll(480, 1700);
+  await sleep(500);
+});
+
 // ---------- Dolap ----------
 await click('ANA MENÜ');
 await sleep(700);
@@ -409,7 +399,6 @@ for (const k of Object.keys(segs)) segs[k].sn = dur(`${tmp}/${k}.webm`);
 const startOf = (name, d) => {
   const sg = segs[name];
   if (name === 'ko') return Math.max(0, (sg.marks.ko ?? sg.sn - 6) - 1.7); // son yumruk, düşüş ve KAZANDIN
-  if (name === 'drill') return (sg.marks.start ?? 0) + 3.2; // geri sayımdan sonra, ritim oturunca
   return Math.max(0, Math.min(0.25, sg.sn - d));
 };
 const parts = [];
@@ -451,17 +440,15 @@ SCENES.forEach((_, i) => i > 0 && add(snd('whoosh'), at[i] - 0.05, 0.5));
 add(snd('whoosh'), endAt - 0.05, 0.6);
 // Nakavt (ilk sahne): tekrar penceresi ağır çekim
 add(snd('heavy'), 0.35, 1);
-add(`${VOX}/nakavt.wav`, 0.7, 1.7);
-add(snd('roar'), 1.2, 0.8);
-const di = SCENES.findIndex((s) => s[0] === 'drill');
-const d0 = startOf('drill', SCENES[di][3]);
-taps.filter((x) => x >= d0 && x < d0 + SCENES[di][3]).forEach((x, i) => add(snd(`punch${(i % 3) + 1}`), at[di] + (x - d0), 0.9));
+add(snd('roar'), 0.9, 0.9);
 const fo = SCENES.findIndex((s) => s[0] === 'faceoff');
 add(snd('ooh'), at[fo] + 1.0, 0.7);
 const bi = SCENES.findIndex((s) => s[0] === 'belt');
-add(snd('fanfare'), at[bi], 0.7);
-add(`${VOX}/sampiyon.wav`, at[bi] + 0.2, 1.7);
-add(snd('applause'), at[bi] + 1.0, 0.6);
+add(snd('fanfare'), at[bi], 0.8);
+add(snd('applause'), at[bi] + 0.6, 0.7);
+const hi = SCENES.findIndex((s) => s[0] === 'hof');
+add(snd('swell'), at[hi] + 0.1, 0.7);
+add(snd('applause'), at[hi] + 0.8, 0.5);
 add(snd('bell'), endAt + 0.1, 0.9);
 const args = ['-y', '-f', 'concat', '-safe', '0', '-i', `${tmp}/liste.txt`];
 audio.forEach((a) => args.push(...(a.loop ? ['-stream_loop', '-1'] : []), '-i', a.file));
