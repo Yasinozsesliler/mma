@@ -196,7 +196,7 @@ export type PressChoice = 'saygili' | 'trash' | 'sessiz';
 export interface CampState {
   /** Ödüllü detaylı keşif raporu açıldı mı */
   kesif?: boolean;
-  step: 'hoca' | 'sure' | 'takvim' | 'yer' | 'focus' | 'plan' | 'intensity' | 'kilo' | 'basin' | 'haftalik' | 'sakatlik' | 'ozet' | 'tarti' | 'yuzyuze';
+  step: 'hoca' | 'planla' | 'sure' | 'takvim' | 'yer' | 'focus' | 'plan' | 'intensity' | 'kilo' | 'basin' | 'haftalik' | 'sakatlik' | 'ozet' | 'tarti' | 'yuzyuze';
   pKilo?: number;
   oKilo?: number;
   kafesKilo?: number;
@@ -233,6 +233,8 @@ export interface CampState {
   /** Kampta simüle edilen hafta sayısı ve hafta hafta günlük */
   kampIdx?: number;
   haftaLog?: string[];
+  /** Kamp tek ekranda planlandı: serbest haftalardan sonra doğrudan kamp haftalarına geçilir. */
+  planli?: boolean;
   /** Haftalık antrenman mini oyunları: hangi kamp haftasında, hangi oyun, kaç puan (0–100) */
   idman?: { idx: number; oyun: 'pad' | 'refleks' | 'ritim'; puan: number }[];
   /** Kamp sonu ekranı için yapılandırılmış özet */
@@ -520,6 +522,8 @@ export interface GameState {
   hikayeler?: string[];
   hikayeSon?: number;
   hanedan?: import('./dynasty').Ancestor[];
+  /** Son kampta seçilenler (bir sonraki kamp planının varsayılanı) */
+  sonKamp?: { hafta: number; yer: string; focus: StatKey; intensity: Intensity; kilo: WeightCut; basin?: PressChoice };
   /** Kendi salonun (academy.ts) */
   salon?: import('./academy').Gym;
   /** Ödüllü reklam teklifleri: alındıkları dövüş sayısı (her dövüş arasında birer kez). */

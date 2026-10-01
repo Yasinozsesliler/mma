@@ -5,7 +5,7 @@ import { PLANS, startFight } from './fight';
 import { weakest } from './opponents';
 import { siteById, CAMP_SITES, type CampSite } from './gyms';
 import { campPoints } from './progression';
-import { autoFreeWeeks, campWeek, CAMP_LENGTH_INFO, freeWeek, setCampLength } from './calendar';
+import { autoFreeWeeks, campLengthsFor, campWeek, CAMP_LENGTH_INFO, freeWeek, setCampLength } from './calendar';
 import { techLevels } from './techniques';
 import { trashTalkFollowers } from './fame';
 import { socialCampStart } from './social';
@@ -117,6 +117,61 @@ function applyCoachPlan(s: GameState) {
   startCampWeeks(s);
 }
 
+export interface CampPlan {
+  hafta: number;
+  yer: string;
+  focus: StatKey;
+  plan: PlanKey;
+  intensity: Intensity;
+  kilo: WeightCut;
+  basin?: PressChoice;
+}
+
+/** Tek ekranlık kamp planının varsayılanı: son kampta seçtiklerin; ilk kezse hocanın önerisi. Oyun planı her rakibe göre hocadan gelir. */
+export function defaultCampPlan(s: GameState): CampPlan {
+  const k = s.pending.kamp!;
+  const c = coachCampPlan(s);
+  const last = s.sonKamp;
+  const lengths = campLengthsFor(k.macHafta ?? 8);
+  const hafta = last && lengths.includes(last.hafta) ? last.hafta : lengths.includes(8) ? 8 : lengths[lengths.length - 1];
+  const open = availableSites(s).map((x) => x.id);
+  const yer = last && open.includes(last.yer) ? last.yer : 'salon';
+  return {
+    hafta,
+    yer,
+    focus: last?.focus ?? c.focus,
+    plan: c.plan,
+    intensity: last?.intensity ?? 'orta',
+    kilo: last?.kilo ?? 'normal',
+    basin: hasPress(s) ? last?.basin ?? 'saygili' : undefined,
+  };
+}
+
+/** Hocanın önerisi (tek dokunuş): rakibe göre plan ve odak, güvenli tempo ve kilo. */
+export function coachPlanFull(s: GameState): CampPlan {
+  const k = s.pending.kamp!;
+  const c = coachCampPlan(s);
+  const lengths = campLengthsFor(k.macHafta ?? 8);
+  return { hafta: lengths.includes(8) ? 8 : lengths[lengths.length - 1], yer: 'salon', focus: c.focus, plan: c.plan, intensity: 'orta', kilo: 'normal', basin: hasPress(s) ? 'saygili' : undefined };
+}
+
+/** Tek ekranda seçilen planı uygular; serbest hafta varsa takvime, yoksa doğrudan kamp haftalarına geçilir. */
+export function applyCampPlan(s: GameState, p: CampPlan) {
+  const k = s.pending.kamp;
+  if (!k || k.step !== 'planla') return;
+  const lengths = campLengthsFor(k.macHafta ?? 8);
+  const open = availableSites(s).map((x) => x.id);
+  k.planli = true;
+  k.yer = open.includes(p.yer) ? p.yer : 'salon';
+  k.focus = STAT_KEYS.includes(p.focus) ? p.focus : coachCampPlan(s).focus;
+  k.plan = p.plan in PLANS ? p.plan : coachCampPlan(s).plan;
+  k.intensity = p.intensity in INTENSITY ? p.intensity : 'orta';
+  k.kilo = p.kilo in WEIGHT_CUTS ? p.kilo : 'normal';
+  if (hasPress(s)) k.basin = p.basin && p.basin in PRESS ? p.basin : 'saygili';
+  s.sonKamp = { hafta: p.hafta, yer: k.yer, focus: k.focus, intensity: k.intensity, kilo: k.kilo, basin: k.basin };
+  setCampLength(s, lengths.includes(p.hafta) ? p.hafta : lengths[lengths.length - 1]);
+}
+
 export function startCamp(s: GameState) {
   const kisa = s.kisaHaber;
   s.kisaHaber = false;
@@ -124,7 +179,7 @@ export function startCamp(s: GameState) {
   const mac = s.pending.rakip?.macHafta ?? (kisa ? 3 : s.stage === 'amator' ? 6 : 9);
   const hafta = kisa ? mac : Math.min(8, mac);
   s.pending.kamp = {
-    step: kisa ? 'plan' : isFirstCamp(s) ? 'hoca' : 'sure',
+    step: kisa ? 'plan' : isFirstCamp(s) ? 'hoca' : 'planla',
     yer: kisa ? 'salon' : undefined,
     hafta,
     macHafta: mac,
@@ -149,7 +204,10 @@ export function campChoose(s: GameState, value: string | number) {
   switch (k.step) {
     case 'hoca':
       if (value === 'kabul') applyCoachPlan(s);
-      else k.step = 'sure';
+      else k.step = 'planla';
+      return;
+    case 'planla':
+      if (typeof value === 'string' && value.startsWith('plan:')) applyCampPlan(s, JSON.parse(value.slice(5)) as CampPlan);
       return;
     case 'sure':
       setCampLength(s, Number(value));

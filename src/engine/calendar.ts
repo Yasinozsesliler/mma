@@ -57,7 +57,17 @@ export function setCampLength(s: GameState, weeks: number) {
   k.takvimIdx = 0;
   k.takvimLog = [];
   k.olaylar = planEvents(s, k.serbest);
-  k.step = k.serbest > 0 ? 'takvim' : 'yer';
+  if (k.serbest > 0) k.step = 'takvim';
+  else afterFreeWeeks(k);
+}
+
+/** Serbest haftalar bitti: planlı kampta doğrudan kamp haftalarına, değilse adım adım plana. */
+function afterFreeWeeks(k: NonNullable<GameState['pending']['kamp']>) {
+  if (k.planli) {
+    k.kampIdx = 0;
+    k.haftaLog = [];
+    k.step = 'haftalik';
+  } else k.step = 'yer';
 }
 
 // ---------- Serbest haftalar ----------
@@ -268,7 +278,7 @@ export function freeWeek(s: GameState, act: string): string {
   k.takvimIdx = hafta;
   k.serbest = (k.serbest ?? 1) - 1;
   k.takvimLog = [L("{0}. hafta · {1}{2}", [hafta, msg, notes.length ? ` ${notes.join(' ')}` : '']), ...(k.takvimLog ?? [])];
-  if (k.serbest <= 0) k.step = 'yer';
+  if (k.serbest <= 0) afterFreeWeeks(k);
   return msg;
 }
 

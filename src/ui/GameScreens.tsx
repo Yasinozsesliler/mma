@@ -46,6 +46,7 @@ import { ACHIEVEMENTS } from '../engine/achievements';
 import { UccRoadCard } from './UccRoadCard';
 import { WikiButton } from './WikiPage';
 import { CampLengthStep, CampSummary, CampWeeksStep, FreeWeeksStep } from './CampCalendar';
+import { CampPlanner } from './CampPlanner';
 import { TechniquePanel } from './TechniquePanel';
 import { FaceOffStage } from './FaceOffStage';
 import { RankingsTab } from './P4PPanel';
@@ -409,17 +410,27 @@ export function OpponentScreen({ s, act }: { s: GameState; act: Act }) {
 
 // ---------- Kamp ----------
 
+// Kamp akışı 4 aşama: plan (tek ekran ya da kısa haberde adım adım), serbest haftalar, kamp, tartı.
 const CAMP_STEPS: { key: CampState['step'][]; label: string }[] = [
-  { key: ['hoca', 'sure', 'takvim'], label: L("Takvim") },
-  { key: ['yer'], label: L("Yer") },
-  { key: ['focus'], label: L("Odak") },
-  { key: ['plan'], label: L("Plan") },
-  { key: ['intensity'], label: L("Yoğunluk") },
-  { key: ['kilo'], label: L("Kilo") },
-  { key: ['basin'], label: L("Basın") },
+  { key: ['hoca', 'planla', 'sure', 'yer', 'focus', 'plan', 'intensity', 'kilo', 'basin'], label: L("Plan") },
+  { key: ['takvim'], label: L("Takvim") },
   { key: ['haftalik', 'sakatlik', 'ozet'], label: L("Kamp") },
   { key: ['tarti', 'yuzyuze'], label: L("Tartı") },
 ];
+
+function CampSteps({ k }: { k: CampState }) {
+  const cur = CAMP_STEPS.findIndex((x) => x.key.includes(k.step));
+  return (
+    <View style={gs.steps}>
+      {CAMP_STEPS.map((st, i) => (
+        <View key={st.label} style={{ flex: 1, alignItems: 'center' }}>
+          <View style={[gs.stepBar, { backgroundColor: i < cur ? C.red : i === cur ? C.gold : C.border }]} />
+          <Text style={[gs.stepText, i === cur && { color: C.gold }]}>{st.label}</Text>
+        </View>
+      ))}
+    </View>
+  );
+}
 
 const INT_ICONS: Record<Intensity, IconName> = { dusuk: 'meditation', orta: 'dumbbell', yuksek: 'weight-lifter' };
 const CUT_ICONS: Record<WeightCut, IconName> = { kademeli: 'food-apple', normal: 'scale-bathroom', sert: 'alert-octagon' };
@@ -430,17 +441,9 @@ const STEP_TIPS: Partial<Record<CampState['step'], TipId>> = { sure: 'kamp', pla
 function CampHeader({ s, k, act }: { s: GameState; k: CampState; act: Act }) {
   const o = s.pending.rakip!;
   const d = describeOpponent(o);
-  const cur = CAMP_STEPS.findIndex((x) => x.key.includes(k.step));
   return (
     <>
-      <View style={gs.steps}>
-        {CAMP_STEPS.map((st, i) => (
-          <View key={st.label} style={{ flex: 1, alignItems: 'center' }}>
-            <View style={[gs.stepBar, { backgroundColor: i < cur ? C.red : i === cur ? C.gold : C.border }]} />
-            <Text style={[gs.stepText, i === cur && { color: C.gold }]}>{st.label}</Text>
-          </View>
-        ))}
-      </View>
+      <CampSteps k={k} />
       <CoachTip s={s} act={act} id={STEP_TIPS[k.step] ?? null} />
       <Card>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
@@ -498,6 +501,20 @@ export function CampScreen({ s, act }: { s: GameState; act: Act }) {
       </Screen>
     );
   }
+  if (k.step === 'planla')
+    return (
+      <CampPlanner
+        s={s}
+        act={act}
+        choose={choose}
+        steps={
+          <>
+            <CampSteps k={k} />
+            <CoachTip s={s} act={act} id="kamp" />
+          </>
+        }
+      />
+    );
   if (k.step === 'sure') return <CampLengthStep s={s} header={header} choose={choose} />;
   if (k.step === 'takvim') return <FreeWeeksStep s={s} header={header} choose={choose} />;
   if (k.step === 'haftalik') return <CampWeeksStep s={s} header={header} choose={choose} />;
