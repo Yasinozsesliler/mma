@@ -5,7 +5,7 @@ import { useState, type ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { campLengthsFor, CAMP_LENGTH_INFO, currentEvent, FREE_ACTS } from '../engine/calendar';
 import { campQuote } from '../engine/camp';
-import { DRILLS, drillDone, drillFor, drillGrade } from '../engine/drills';
+import { DRILLS, drillDone, drillGrade, drillOfWeek } from '../engine/drills';
 import { money } from '../engine/career';
 import { TECHNIQUES, techLevel, MAX_TECH, xpNeed } from '../engine/techniques';
 import type { GameState } from '../engine/types';
@@ -15,6 +15,7 @@ import type { Act } from './GameScreens';
 import { SkillPanel } from './SkillPanel';
 import { TechniquePanel } from './TechniquePanel';
 import { DrillGame } from './DrillGame';
+import { lookFor } from '../engine/tale';
 import { C, F, R } from './theme';
 
 type Choose = (v: string | number) => void;
@@ -205,7 +206,7 @@ export function CampWeeksStep({ s, header, choose }: { s: GameState; header: Rea
   const k = s.pending.kamp!;
   const done = k.kampIdx ?? 0;
   const [drill, setDrill] = useState(false);
-  const oyun = drillFor(k.focus);
+  const oyun = drillOfWeek(s);
   const played = drillDone(s);
   const lastDrill = k.idman?.at(-1);
   return (
@@ -240,6 +241,8 @@ export function CampWeeksStep({ s, header, choose }: { s: GameState; header: Rea
       {drill ? (
         <DrillGame
           oyun={oyun}
+          pLook={s.fighter.gorunum}
+          oLook={s.pending.rakip ? lookFor(s.pending.rakip) : undefined}
           onClose={() => setDrill(false)}
           onDone={(p) => {
             setDrill(false);
