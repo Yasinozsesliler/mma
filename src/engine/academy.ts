@@ -84,6 +84,9 @@ export interface Gym {
   sira?: number;
   /** Ulaşılan en iyi sıra (eşik haberleri bir kez çıksın) */
   enIyiSira?: number;
+  /** Öğrencilerin toplam galibiyeti ve köşede senin durduğun galibiyetler (başarımlar için) */
+  galibiyet?: number;
+  koseG?: number;
 }
 
 export interface RankRow {
@@ -434,6 +437,10 @@ export function finishBout(s: GameState, id: string, call: CornerCall | null): B
   let un = kazandi ? (finish ? 3 : 2) + TIER_ORDER.indexOf(st.seviye) : -1;
   if (kazandi) st.rekor.g++;
   else st.rekor.m++;
+  if (kazandi) {
+    g.galibiyet = (g.galibiyet ?? 0) + 1;
+    if (kose) g.koseG = (g.koseG ?? 0) + 1;
+  }
   st.lig = { g: (st.lig?.g ?? 0) + (kazandi ? 1 : 0), m: (st.lig?.m ?? 0) + (kazandi ? 0 : 1) };
   st.moral = clamp(st.moral + (kazandi ? 10 : -12) + (kose ? 6 : -4), 0, 100);
   // Maç tecrübesi: kazanan da kaybeden de biraz gelişir.

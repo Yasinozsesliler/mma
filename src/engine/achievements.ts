@@ -1,11 +1,11 @@
-// 100 başarım. Bazıları kolay, bazıları bir kariyer boyu sürer. 🏛 işaretliler Onur Listesi (Hall of Fame) eşikleridir.
+// 111 başarım. Bazıları kolay, bazıları bir kariyer boyu sürer. 🏛 işaretliler Onur Listesi (Hall of Fame) eşikleridir.
 import { L } from '../i18n';
 import { MAX_LEVEL, weeklyBusinessIncome } from './economy';
 import { readIstat } from './istat';
 import { followers } from './fame';
 import type { GameState, Istat } from './types';
 
-export type AchCategory = 'dovus' | 'kemer' | 'kariyer' | 'servet' | 'yasam' | 'sohret';
+export type AchCategory = 'dovus' | 'kemer' | 'kariyer' | 'servet' | 'yasam' | 'sohret' | 'salon';
 export type AchTier = 'bronz' | 'gumus' | 'altin' | 'efsane';
 
 export interface Achievement {
@@ -32,6 +32,7 @@ export const CATEGORIES: { id: AchCategory; ad: string; ikon: string }[] = [
   { id: 'servet', ad: L("SERVET"), ikon: 'cash-multiple' },
   { id: 'yasam', ad: L("YAŞAM"), ikon: 'home-heart' },
   { id: 'sohret', ad: L("ŞÖHRET"), ikon: 'star-shooting' },
+  { id: 'salon', ad: L("SALON"), ikon: 'weight-lifter' },
 ];
 
 export const TIERS: Record<AchTier, { ad: string; renk: string; puan: number }> = {
@@ -188,6 +189,19 @@ export const ACHIEVEMENTS: Achievement[] = [
   a({ id: 'pop50', ad: L("Tanınan Yüz"), aciklama: L("50 bin takipçi."), ikon: 'account-eye', kat: 'sohret', tier: 'bronz', get: followers, hedef: 50_000 }),
   a({ id: 'pop80', ad: L("Yıldız"), aciklama: L("1 milyon takipçi."), ikon: 'star-face', kat: 'sohret', tier: 'gumus', get: followers, hedef: 1_000_000 }),
   a({ id: 'pop100', ad: L("Süperstar"), aciklama: L("10 milyon takipçi."), ikon: 'star-shooting', kat: 'sohret', tier: 'altin', get: followers, hedef: 10_000_000 }),
+  // ---------------- SALON (11) ----------------
+  a({ id: 'salon_ac', ad: L("Kendi Salonum"), aciklama: L("Kendi salonunu aç."), ikon: 'key', kat: 'salon', tier: 'bronz', check: (s) => !!s.salon }),
+  a({ id: 'salon_g1', ad: L("İlk Öğrenci Zaferi"), aciklama: L("Bir öğrencin maç kazansın."), ikon: 'hand-back-right', kat: 'salon', tier: 'bronz', get: (s) => s.salon?.galibiyet ?? 0, hedef: 1 }),
+  a({ id: 'salon_kose10', ad: L("Köşenin Ustası"), aciklama: L("Köşesinde durduğun 10 maçı öğrencilerin kazansın."), ikon: 'bullhorn', kat: 'salon', tier: 'gumus', get: (s) => s.salon?.koseG ?? 0, hedef: 10 }),
+  a({ id: 'salon_g50', ad: L("Galibiyet Fabrikası"), aciklama: L("Öğrencilerin toplam 50 maç kazansın."), ikon: 'factory', kat: 'salon', tier: 'altin', get: (s) => s.salon?.galibiyet ?? 0, hedef: 50 }),
+  a({ id: 'salon_lv3', ad: L("Akademi"), aciklama: L("Salonunu profesyonel akademiye büyüt."), ikon: 'domain', kat: 'salon', tier: 'gumus', get: (s) => s.salon?.seviye ?? 0, hedef: 3 }),
+  a({ id: 'salon_lv5', ad: L("Efsanenin Evi"), aciklama: L("Salonunu efsane akademisine büyüt."), ikon: 'castle', kat: 'salon', tier: 'altin', get: (s) => s.salon?.seviye ?? 0, hedef: 5 }),
+  a({ id: 'salon_uye500', ad: L("Dolup Taşan Salon"), aciklama: L("Salonunda 500 üye olsun."), ikon: 'account-group', kat: 'salon', tier: 'gumus', get: (s) => s.salon?.uye ?? 0, hedef: 500 }),
+  a({ id: 'salon_ucc', ad: L("Yıldız Fabrikası"), aciklama: L("Bir öğrencin UCC ile sözleşme imzalasın."), ikon: 'rocket-launch', kat: 'salon', tier: 'altin', get: (s) => s.salon?.uccSayisi ?? 0, hedef: 1 }),
+  a({ id: 'salon_ilk10', ad: L("Dünya Çapında"), aciklama: L("Salon sıralamasında ilk 10'a gir."), ikon: 'podium', kat: 'salon', tier: 'gumus', check: (s) => (s.salon?.enIyiSira ?? 99) <= 10 }),
+  a({ id: 'salon_bir', ad: L("Bir Numara"), aciklama: L("Dünyanın 1 numaralı salonu ol."), ikon: 'podium-gold', kat: 'salon', tier: 'efsane', gizli: true, check: (s) => (s.salon?.enIyiSira ?? 99) <= 1 }),
+  a({ id: 'salon_sampiyon', ad: L("Şampiyonların Hocası"), aciklama: L("Bir öğrencin UCC şampiyonu olsun."), ikon: 'crown', kat: 'salon', tier: 'efsane', gizli: true, get: (s) => s.salon?.sampiyonSayisi ?? 0, hedef: 1 }),
+
   a({ id: 'gonderi20', ad: L("İçerik Üreticisi"), aciklama: L("Sosyal medyada 20 paylaşım yap."), ikon: 'cellphone-text', kat: 'sohret', tier: 'bronz', get: (s) => I(s).gonderi, hedef: 20 }),
 ];
 

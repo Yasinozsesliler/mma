@@ -58,6 +58,7 @@ function career(seed: number, corner: 'iyi' | 'yok' | 'kotu', weeks = 260) {
 }
 
 import { PLANS } from '../src/engine/fight';
+import { ACHIEVEMENTS } from '../src/engine/achievements';
 import { weakOf } from '../src/engine/academy';
 const isGood = (p: keyof typeof PLANS, st: Parameters<typeof weakOf>[0]) => PLANS[p].hedef.includes(weakOf(st));
 
@@ -124,6 +125,9 @@ check(rk.sira <= 5, "iyi yönetilen salon 5 yılda ilk 5'e girer");
 check(log.some((h) => h.includes('en iyi') || h.includes('1 numaralı')), 'sıralama haberi çıktı');
 console.log('   ' + log.filter((h) => h.includes('en iyi') || h.includes('1 numaralı')).join(' | '));
 check(g.kasa < 8_000_000, 'salon parayı patlatmıyor');
+const acik = ACHIEVEMENTS.filter((x) => x.kat === 'salon' && x.check(s)).map((x) => x.id);
+console.log('   açılan salon başarımları:', acik.join(', '));
+check(['salon_ac', 'salon_g1', 'salon_kose10', 'salon_lv5', 'salon_ucc', 'salon_ilk10'].every((id) => acik.includes(id)), 'salon başarımları açılıyor');
 check(s.haberler.every((h) => !h.includes('undefined') && !h.includes('NaN')), 'haberlerde undefined/NaN yok');
 
 console.log(fails ? `\n${fails} kontrol başarısız` : '\nTümü geçti');
