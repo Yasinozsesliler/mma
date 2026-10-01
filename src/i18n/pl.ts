@@ -3931,4 +3931,6 @@ export const PL: Record<string, string> = {
   "KİLO": "WAGA",
   "⚠️ Bu organizasyonda hidrasyon testi var: sert kilo verme maçı iptal ettirebilir.": "⚠️ Ta organizacja robi testy nawodnienia: ostre zbijanie może odwołać walkę.",
   "BASIN TOPLANTISI": "KONFERENCJA PRASOWA",
+  "Güney Afrika": "RPA",
+  "Kırgızistan": "Kirgistan",
 };

@@ -1,4 +1,5 @@
 import { L } from '../i18n';
+import { pickStar } from './uccRoster';
 import { BACKGROUNDS, NAME_POOLS, NICKNAMES, ORGS, PERSONALITIES, baseStatsFor, femSurname } from './data';
 import { currentOrg, statAverage } from './character';
 import { chance, clamp, noise, pick, randInt, uid, weighted } from './rng';
@@ -87,16 +88,21 @@ export function generateOpponent(
   }
   let lakap = pick(NICKNAMES);
   for (let i = 0; i < 10 && used.nicks.has(lakap); i++) lakap = pick(NICKNAMES);
-  const stil = weighted(STYLE_WEIGHTS);
+  let stil = weighted(STYLE_WEIGHTS);
+  let uyruk = pool.ulke;
+  // UCC: kadrodaki yıldızlar (şampiyon ve üst sıralar en tanınmışlar)
+  const star = org === 'ufc' ? pickStar(s, s.fighter.siklet, kadin, rank, champion, used.names) : null;
+  if (star) ({ ad, soyad, lakap, uyruk, stil } = star);
   const level = levelFor(s, org, opts.zorluk, rank, champion);
   const stats = baseStatsFor(stil, level);
   STAT_KEYS.forEach((k) => (stats[k] = Math.round(clamp(stats[k] + noise(4), 12, 96))));
   return {
-    id: uid(),
+    // Kadro yıldızlarının kimliği sabit: sıralamaya geri dönen aynı kişi sayılır.
+    id: star ? `ucc-${star.ad}-${star.soyad}`.toLowerCase().replace(/[^a-z0-9-]/g, '') : uid(),
     ad,
     soyad,
     lakap,
-    uyruk: pool.ulke,
+    uyruk,
     stil,
     kisilik: pick(PERSONALITIES).ad,
     stats,

@@ -3,6 +3,7 @@
 import { L } from '../i18n';
 import { WEIGHT_CLASSES } from './data';
 import { generateOpponent } from './opponents';
+import { pickStar, UCC_WOMEN_CLASSES } from './uccRoster';
 import { chance, clamp, noise, pick, randInt } from './rng';
 import type { GameState, P4PEntry, WeightClass } from './types';
 
@@ -16,19 +17,31 @@ const DAT = ['a', 'e', 'ye', 'e', 'e', 'e', 'ya', 'ye', 'e', 'a'];
 export const ablative = (n: number) => ABL[n % 10];
 export const dative = (n: number) => DAT[n % 10];
 
-function makeEntry(s: GameState, siklet: WeightClass, puan: number, sampiyon: boolean): P4PEntry {
+function makeEntry(s: GameState, siklet: WeightClass, puan: number, sampiyon: boolean, used: Set<string>): P4PEntry {
+  // P4P: o sıkletin kadrosundan yıldız (şampiyon kadronun ilki); kadro yoksa rastgele dövüşçü.
+  const kadin = !!s.fighter.kadin;
+  const star = pickStar({ ...s, sampiyon: false }, siklet, kadin, sampiyon ? null : 1 + randInt(0, 4), sampiyon, used);
+  if (star) {
+    used.add(`${star.ad} ${star.soyad}`);
+    const g = randInt(14, 26) + Math.round((puan - 70) / 3);
+    return { ...(kadin ? { kadin: true } : {}), id: `p4p-${star.ad}-${star.soyad}`, ad: star.ad, soyad: star.soyad, lakap: star.lakap, uyruk: star.uyruk, siklet, rekor: { g, m: randInt(0, 4), b: chance(0.15) ? 1 : 0 }, puan, sampiyon };
+  }
   const o = generateOpponent(s, { zorluk: 0, org: 'ufc', rank: 1 });
   const g = randInt(14, 26) + Math.round((puan - 70) / 3);
   return { ...(o.kadin ? { kadin: true } : {}), id: o.id, ad: o.ad, soyad: o.soyad, lakap: o.lakap, uyruk: o.uyruk, siklet, rekor: { g, m: randInt(0, 4), b: chance(0.15) ? 1 : 0 }, puan, sampiyon };
 }
 
+/** P4P'nin sıkletleri: kadın kariyerinde yalnızca kadın sıkletleri. */
+const p4pClasses = (s: GameState): WeightClass[] => (s.fighter.kadin ? UCC_WOMEN_CLASSES : (Object.keys(WEIGHT_CLASSES) as WeightClass[]));
+
 export function ensureP4P(s: GameState) {
   if (s.p4p?.liste.length) return;
-  const classes = Object.keys(WEIGHT_CLASSES) as WeightClass[];
+  const classes = p4pClasses(s);
   const liste: P4PEntry[] = [];
   // Her sıkletin şampiyonu listede; kalanlar güçlü yarışmacılar.
-  classes.forEach((w) => liste.push(makeEntry(s, w, randInt(80, 97), true)));
-  while (liste.length < P4P_SIZE) liste.push(makeEntry(s, pick(classes), randInt(70, 88), false));
+  const used = new Set<string>();
+  classes.forEach((w) => liste.push(makeEntry(s, w, randInt(80, 97), true, used)));
+  while (liste.length < P4P_SIZE) liste.push(makeEntry(s, pick(classes), randInt(70, 88), false, used));
   liste.sort((a, b) => b.puan - a.puan);
   s.p4p = { liste, sira: null };
 }
@@ -78,7 +91,8 @@ export function updateP4P(s: GameState): string | null {
   });
   // Emekli olanlar ve yükselen yıldızlar
   p.liste = p.liste.filter((e) => e.puan >= 66 || !chance(0.5));
-  while (p.liste.length < P4P_SIZE) p.liste.push(makeEntry(s, pick(Object.keys(WEIGHT_CLASSES) as WeightClass[]), randInt(74, 82), false));
+  const used = new Set(p.liste.map((e) => `${e.ad} ${e.soyad}`));
+  while (p.liste.length < P4P_SIZE) p.liste.push(makeEntry(s, pick(p4pClasses(s)), randInt(74, 82), false, used));
   p.liste.sort((a, b) => b.puan - a.puan);
   const once = p.sira;
   const simdi = p4pRank(s);

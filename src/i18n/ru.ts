@@ -3999,4 +3999,6 @@ export const RU: Record<string, string> = {
   "KİLO": "ВЕС",
   "⚠️ Bu organizasyonda hidrasyon testi var: sert kilo verme maçı iptal ettirebilir.": "⚠️ В этой организации тест на гидратацию: жёсткая сгонка может сорвать бой.",
   "BASIN TOPLANTISI": "ПРЕСС-КОНФЕРЕНЦИЯ",
+  "Güney Afrika": "ЮАР",
+  "Kırgızistan": "Киргизия",
 };
