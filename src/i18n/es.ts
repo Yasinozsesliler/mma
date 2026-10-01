@@ -3881,4 +3881,8 @@ export const ES: Record<string, string> = {
   "{0} öğrenci · {1}/hafta": "{0} alumnos · {1}/semana",
   "Kendi salonunu aç": "Abre tu propio gimnasio",
   "{0} · {1} hafta içinde gelmezsen ekip köşede durur": "{0} · si no vienes en {1} semanas, el equipo se encarga de la esquina",
+  "AÇILIŞ ŞARTLARI": "REQUISITOS",
+  "Büyük organizasyonda ya da UCC'de dövüşmek": "Pelear en una gran organización o en la UCC",
+  "En az {0} takipçi (şu an {1})": "Al menos {0} seguidores (ahora {1})",
+  "Açılış için {0} (şu an {1})": "{0} para abrir (tienes {1})",
 };

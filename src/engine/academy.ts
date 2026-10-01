@@ -2,6 +2,7 @@
 // Profesyonel olunca açılır; salon büyüdükçe daha çok üye, daha çok öğrenci, daha hızlı gelişim.
 import { L, LOC } from '../i18n';
 import { growthMultiplier, statAverage } from './character';
+import { followers } from './fame';
 import { BACKGROUNDS, baseStatsFor, COUNTRIES, femSurname, NAME_POOLS, NICKNAMES, WEIGHT_CLASSES } from './data';
 import { PLANS } from './fight';
 import { chance, clamp, noise, pick, rand, randInt, shuffle, uid, weighted } from './rng';
@@ -80,14 +81,17 @@ export interface Gym {
 }
 
 export const GYM_LEVELS = [
-  { ad: L("Garaj salonu"), maliyet: 25_000, kapasite: 2, maxUye: 60, kira: 350, gelisim: 1 },
-  { ad: L("Mahalle salonu"), maliyet: 60_000, kapasite: 3, maxUye: 120, kira: 900, gelisim: 1.15 },
-  { ad: L("Profesyonel akademi"), maliyet: 150_000, kapasite: 4, maxUye: 300, kira: 2_000, gelisim: 1.3 },
-  { ad: L("Elit merkez"), maliyet: 350_000, kapasite: 5, maxUye: 700, kira: 4_500, gelisim: 1.45 },
-  { ad: L("Efsane akademisi"), maliyet: 800_000, kapasite: 6, maxUye: 1_200, kira: 9_000, gelisim: 1.6 },
+  { ad: L("Garaj salonu"), maliyet: 150_000, kapasite: 2, maxUye: 100, kira: 1_500, gelisim: 1 },
+  { ad: L("Mahalle salonu"), maliyet: 300_000, kapasite: 3, maxUye: 220, kira: 3_000, gelisim: 1.15 },
+  { ad: L("Profesyonel akademi"), maliyet: 600_000, kapasite: 4, maxUye: 450, kira: 6_000, gelisim: 1.3 },
+  { ad: L("Elit merkez"), maliyet: 1_200_000, kapasite: 5, maxUye: 800, kira: 11_000, gelisim: 1.45 },
+  { ad: L("Efsane akademisi"), maliyet: 2_500_000, kapasite: 6, maxUye: 1_200, kira: 18_000, gelisim: 1.6 },
 ];
 
-export const AIDAT = 20;
+export const AIDAT = 50;
+
+/** Salon açma şartları: büyük organizasyon ya da UCC ve yeterli şöhret. */
+export const GYM_MIN_FOLLOWERS = 50_000;
 
 export const TIERS: Record<Tier, { ad: string; seviye: number; kese: number; aralik: [number, number] }> = {
   amator: { ad: L("Amatör"), seviye: 30, kese: 0, aralik: [4, 6] },
@@ -106,7 +110,8 @@ const $ = (n: number) => `$${Math.round(n).toLocaleString(LOC)}`;
 const TIER_ORDER: Tier[] = ['amator', 'bolgesel', 'buyuk', 'ucc'];
 
 export const gymLevel = (g: Gym) => GYM_LEVELS[g.seviye - 1];
-export const canOpenGym = (s: GameState) => s.stage !== 'amator';
+export const gymStageOk = (s: GameState) => s.stage === 'buyuk' || s.stage === 'ufc';
+export const canOpenGym = (s: GameState) => gymStageOk(s) && followers(s) >= GYM_MIN_FOLLOWERS;
 export const power = (st: Stats) => Math.round(statAverage(st));
 
 export function weeklyGymNet(g: Gym) {
@@ -122,7 +127,7 @@ export function gymName(s: GameState) {
 export function openGym(s: GameState) {
   if (s.salon || !canOpenGym(s) || s.para < GYM_LEVELS[0].maliyet) return;
   s.para -= GYM_LEVELS[0].maliyet;
-  s.salon = { ad: gymName(s), seviye: 1, un: 15 + Math.round(s.populerlik / 5), uye: 20, acilis: s.hafta, ogrenciler: [], sonuclar: [], kasa: 0 };
+  s.salon = { ad: gymName(s), seviye: 1, un: 15 + Math.round(s.populerlik / 5), uye: 30, acilis: s.hafta, ogrenciler: [], sonuclar: [], kasa: 0 };
   refreshCandidates(s, true);
   s.haberler.unshift(L("🏠 {0} kapılarını açtı! İlk üyeler kayıt oldu.", [s.salon.ad]));
 }
@@ -203,7 +208,7 @@ export function refreshCandidates(s: GameState, force = false) {
 }
 
 /** Aday için kayıt ücreti (yetenekli olan pahalı). */
-export const signCost = (st: Student) => Math.round((st.potansiyel - 40) * 60 / 50) * 50;
+export const signCost = (st: Student) => Math.round(((st.potansiyel - 40) * 600) / 500) * 500;
 
 /** Potansiyel yıldızı (1-5): kesin sayı gizli, hoca gözüyle tahmin. */
 export const potStars = (st: Student) => clamp(Math.round((st.potansiyel - 45) / 9), 1, 5);

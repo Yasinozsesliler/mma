@@ -14,9 +14,10 @@ const input = { ad: 'Test', soyad: 'Kişi', lakap: 'Çelik', uyruk: 'tr', memlek
 function career(seed: number, corner: 'iyi' | 'yok' | 'kotu', weeks = 260) {
   setSeed(seed);
   const s = createGame(input, rollStartingStats(input));
-  s.stage = 'bolgesel';
-  s.populerlik = 30;
-  s.para = 1_000_000;
+  s.stage = 'buyuk';
+  s.populerlik = 40;
+  s.takipci = 80_000;
+  s.para = 10_000_000;
   openGym(s);
   const g = s.salon!;
   const stats = { mac: 0, g: 0, ucc: 0, champ: 0, maxLv: 0, paraBas: s.para, terfi: 0 };
@@ -63,20 +64,30 @@ const isGood = (p: keyof typeof PLANS, st: Parameters<typeof weakOf>[0]) => PLAN
 setSeed(1);
 {
   const s = createGame(input, rollStartingStats(input));
-  s.para = 10_000;
+  s.para = 1_000_000;
+  s.takipci = 80_000;
   openGym(s);
   check(!s.salon, 'amatörken salon açılmaz');
   s.stage = 'bolgesel';
   openGym(s);
-  check(!s.salon, 'para yetmezse açılmaz');
-  s.para = 30_000;
+  check(!s.salon, 'bölgeselde salon açılmaz');
+  s.stage = 'buyuk';
+  s.takipci = 20_000;
   openGym(s);
-  check(!!s.salon && s.para === 5_000, 'açılış 25 bin dolar');
+  check(!s.salon, '50 binden az takipçiyle açılmaz');
+  s.takipci = 80_000;
+  s.para = 100_000;
+  openGym(s);
+  check(!s.salon, 'para yetmezse açılmaz');
+  s.para = 155_000;
+  openGym(s);
+  check(!!s.salon && s.para === 5_000, 'açılış 150 bin dolar');
   check(s.salon!.adaylar!.list.length === 3, '3 aday gelir');
   const c = s.salon!.adaylar!.list[0];
   const cost = signCost(c);
+  s.para += 50_000;
   signStudent(s, c.id);
-  check(s.salon!.ogrenciler.length === 1 && s.para === 5_000 - cost, `kayıt ücreti düşüldü (${cost})`);
+  check(s.salon!.ogrenciler.length === 1 && s.para === 55_000 - cost, `kayıt ücreti düşüldü (${cost})`);
   advanceWeeks(s, 8);
   const st = s.salon!.ogrenciler[0];
   check(!!st.mac, `8 hafta içinde ilk maç geldi (rakip ${st.mac?.rakip.soyad})`);
@@ -103,7 +114,7 @@ check(iyi.ucc >= 0.5 && iyi.ucc <= 4, "iyi yönetilen salon 5 yılda UCC'ye öğ
 const { g, s } = career(21, 'iyi');
 console.log(`   5 yıl sonra: seviye ${g.seviye}, ün ${g.un}, ${g.uye} üye, haftalık net ${weeklyGymNet(g)}, toplam kasa ${g.kasa}, öğrenci ${g.ogrenciler.length}`);
 check(weeklyGymNet(g) > 0, 'büyümüş salon kâr ediyor');
-check(g.kasa < 3_000_000, 'salon parayı patlatmıyor');
+check(g.kasa < 8_000_000, 'salon parayı patlatmıyor');
 check(s.haberler.every((h) => !h.includes('undefined') && !h.includes('NaN')), 'haberlerde undefined/NaN yok');
 
 console.log(fails ? `\n${fails} kontrol başarısız` : '\nTümü geçti');

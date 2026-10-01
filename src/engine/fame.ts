@@ -19,8 +19,10 @@ export function fmtFollowers(n: number) {
   const a = Math.abs(n);
   const sign = n < 0 ? '-' : '';
   const dec = LANG === 'en' ? '.' : ',';
-  if (a >= 1e6) return `${sign}${(a / 1e6).toFixed(a >= 1e7 ? 0 : 1).replace('.', dec)}M`;
-  if (a >= 1e3) return `${sign}${(a / 1e3).toFixed(a >= 1e5 ? 0 : 1).replace('.', dec)}${LANG === 'tr' ? 'B' : 'K'}`;
+  // Tam sayılarda gereksiz ",0" yazılmaz (50,0B değil 50B).
+  const num = (v: number, d: number) => v.toFixed(d).replace(/\.0$/, '').replace('.', dec);
+  if (a >= 1e6) return `${sign}${num(a / 1e6, a >= 1e7 ? 0 : 1)}M`;
+  if (a >= 1e3) return `${sign}${num(a / 1e3, a >= 1e5 ? 0 : 1)}${LANG === 'tr' ? 'B' : 'K'}`;
   return `${sign}${Math.round(a)}`;
 }
 

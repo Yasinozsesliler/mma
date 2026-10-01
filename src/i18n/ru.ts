@@ -3921,4 +3921,8 @@ export const RU: Record<string, string> = {
   "{0} öğrenci · {1}/hafta": "Учеников: {0} · {1}/нед.",
   "Kendi salonunu aç": "Открой свой зал",
   "{0} · {1} hafta içinde gelmezsen ekip köşede durur": "{0} · не придёшь (недель: {1}) — в углу будет команда",
+  "AÇILIŞ ŞARTLARI": "УСЛОВИЯ",
+  "Büyük organizasyonda ya da UCC'de dövüşmek": "Выступать в крупной организации или в UCC",
+  "En az {0} takipçi (şu an {1})": "Подписчиков не меньше {0} (сейчас {1})",
+  "Açılış için {0} (şu an {1})": "Открытие: {0} (у тебя {1})",
 };

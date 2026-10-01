@@ -7,6 +7,8 @@ import { sfx } from '../audio';
 import {
   BEKLEME,
   canOpenGym,
+  GYM_MIN_FOLLOWERS,
+  gymStageOk,
   CORNER_CALLS,
   boutPlans,
   describeStyle,
@@ -29,6 +31,7 @@ import {
   type Student,
 } from '../engine/academy';
 import { money } from '../engine/career';
+import { fmtFollowers, followers } from '../engine/fame';
 import { WEIGHT_CLASSES } from '../engine/data';
 import { PLANS } from '../engine/fight';
 import { lookFor } from '../engine/tale';
@@ -94,7 +97,19 @@ function OpenGym({ s, act }: { s: GameState; act: Act }) {
           </View>
         ))}
       </Card>
-      {!ok ? <P dim>{L("Salon açmak için önce profesyonel olmalısın (bölgesel organizasyon).")}</P> : !rich ? <P dim>{L("Açılış için {0} gerekiyor. Şu an {1} var.", [money(cost), money(s.para)])}</P> : null}
+      <Card accent={ok ? C.green : C.orange}>
+        <Text style={gy.cardKicker}>{L("AÇILIŞ ŞARTLARI")}</Text>
+        {[
+          [gymStageOk(s), L("Büyük organizasyonda ya da UCC'de dövüşmek")],
+          [followers(s) >= GYM_MIN_FOLLOWERS, L("En az {0} takipçi (şu an {1})", [fmtFollowers(GYM_MIN_FOLLOWERS), fmtFollowers(followers(s))])],
+          [rich, L("Açılış için {0} (şu an {1})", [money(cost), money(s.para)])],
+        ].map(([done, t]) => (
+          <View key={t as string} style={gy.bullet}>
+            <Icon name={done ? 'check-circle' : 'circle-outline'} size={18} color={done ? C.green : C.faint} />
+            <Text style={[gy.bulletText, !done && { color: C.dim }]}>{t as string}</Text>
+          </View>
+        ))}
+      </Card>
       <Button label={L("Salonu aç · {0}", [money(cost)])} icon="key" tone="gold" disabled={!ok || !rich} onPress={() => act(openGym)} />
     </Screen>
   );
