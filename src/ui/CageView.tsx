@@ -7,7 +7,7 @@ import { playerKit } from '../cosmetics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useRef, useState } from 'react';
 import { Modal, Platform, Pressable, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
-import Svg, { Circle, Defs, Ellipse, G, Line, Polygon, RadialGradient, Rect, Stop, Text as SvgText } from 'react-native-svg';
+import Svg, { Circle, Defs, Ellipse, G, Line, LinearGradient as SvgLinear, Polygon, RadialGradient, Rect, Stop, Text as SvgText } from 'react-native-svg';
 import type { Appearance, FightState } from '../engine/types';
 import { DEFAULT_LOOK } from './FighterAvatar';
 import { Figure, HIP_H, joints, lerpPose, POSES, type Pose, type PoseName } from './rig';
@@ -16,7 +16,24 @@ import { C, F, R } from './theme';
 type Actor = 'p' | 'o' | 'r';
 type Side = 'p' | 'o';
 type Seg = [PoseName | Pose, number, Partial<Pose>?];
-type Fx = { x: number; y: number; kind: 'hit' | 'big' | 'lock' | 'tap' | 'dust' | 'stars'; t0: number };
+type Fx = { x: number; y: number; kind: 'hit' | 'big' | 'lock' | 'tap' | 'dust' | 'stars' | 'drop'; t0: number; vx?: number; vy?: number; blood?: boolean };
+/** Efekt ömrü (ms) */
+const LIFE = (f: Fx) => (f.kind === 'drop' ? 650 : 700);
+/** Sahne titremesi, beyaz flaş ve seyirci coşkusu: başlangıç anı ve şiddet */
+type Pulse = { t0: number; amp: number; ms: number };
+const pulseAt = (p: Pulse | null, t: number) => (p && t - p.t0 < p.ms ? p.amp * (1 - (t - p.t0) / p.ms) : 0);
+/** Kalabalık: sabit sözde-rastgele kafa dizisi (her çizimde aynı) */
+const hash = (n: number) => {
+  const x = Math.sin(n * 127.1 + 311.7) * 43758.5453;
+  return x - Math.floor(x);
+};
+const CROWD = Array.from({ length: 46 }, (_, i) => ({
+  row: i < 24 ? 0 : 1,
+  u: ((i < 24 ? i : i - 24) + 0.3 + hash(i) * 0.4) / (i < 24 ? 24 : 22),
+  s: 0.8 + hash(i + 50) * 0.45,
+  c: ['#2a2c34', '#33353f', '#24262d', '#3a3d48'][Math.floor(hash(i + 90) * 4)],
+  ph: hash(i + 7) * 6.28,
+}));
 
 const H = 250;
 const GAP = 72; // ayaktayken iki kalça arası (yerel birim)
@@ -99,6 +116,12 @@ export function CageView({
   const now = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
   // Telefonlarda sahne 30 fps çizilir (SVG'nin tamamı her karede yeniden çiziliyor); web'de 60 fps.
   const lastPaint = useRef(0);
+  const shake = useRef<Pulse | null>(null);
+  const flash = useRef<Pulse | null>(null);
+  const hype = useRef<Pulse | null>(null);
+  const zoom = useRef<Pulse | null>(null);
+  /** Kanvastaki kan lekeleri (dövüş boyunca kalır) */
+  const stains = useRef<{ x: number; y: number; r: number; o: number }[]>([]);
   const loop = () => {
     const t = now();
     let active = false;
@@ -121,8 +144,8 @@ export function CageView({
         delete tracks.current[a];
       } else active = true;
     });
-    fx.current = fx.current.filter((f) => t - f.t0 < 700);
-    if (fx.current.length) active = true;
+    fx.current = fx.current.filter((f) => t - f.t0 < LIFE(f));
+    if (fx.current.length || pulseAt(shake.current, t) || pulseAt(flash.current, t) || pulseAt(hype.current, t) || pulseAt(zoom.current, t)) active = true;
     if (Platform.OS === 'web' || t - lastPaint.current >= 32 || !active) {
       lastPaint.current = t;
       setTick((n) => (n + 1) % 1e6);
@@ -152,13 +175,29 @@ export function CageView({
     const ry = lp.x * Math.sin(r) + lp.y * Math.cos(r);
     return { x: baseX(a) + f * k * (ps.x + rx), y: floorY - HIP_H * k + k * (ps.y + ry) };
   };
-  const hitAt = (a: Actor, part: 'head' | 'body' | 'leg', kind: Fx['kind'], delay: number) => {
+  const hitAt = (a: Actor, part: 'head' | 'body' | 'leg', kind: Exclude<Fx['kind'], 'drop'>, delay: number) => {
     setTimeout(() => {
       const j = joints(cur.current[a]);
       const lp = part === 'head' ? j.head : part === 'body' ? { x: (j.neck.x + j.pelvis.x) / 2, y: (j.neck.y + j.pelvis.y) / 2 } : j.knL;
-      fx.current.push({ ...world(a, lp), kind, t0: now() });
+      const at = world(a, lp);
+      const t = now();
+      fx.current.push({ ...at, kind, t0: t });
+      if (kind === 'hit' || kind === 'big') {
+        // Ter ve (sert darbede) kan damlaları vuruşun tersine saçılır
+        const dir = face.current[a] === 1 ? -1 : 1;
+        const blood = kind === 'big' ? Math.random() < 0.6 : part === 'head' && Math.random() < 0.12;
+        const n = kind === 'big' ? 7 : 4;
+        for (let q = 0; q < n; q++) fx.current.push({ ...at, kind: 'drop', t0: t, vx: dir * (40 + Math.random() * 120) * k, vy: (-120 - Math.random() * 110) * k, blood: blood && q % 2 === 0 });
+        if (blood && stains.current.length < 14)
+          stains.current.push({ x: at.x + dir * (14 + Math.random() * 26) * k, y: floorY + 2 + (Math.random() - 0.3) * 8 * k, r: (2 + Math.random() * 3.5) * k, o: 0.35 + Math.random() * 0.3 });
+      }
+      if (kind === 'big') {
+        shake.current = { t0: t, amp: 7, ms: 380 };
+        hype.current = { t0: t, amp: 1, ms: 1600 };
+      } else if (kind === 'dust') shake.current = { t0: t, amp: 4.5, ms: 300 };
+      else if (kind === 'hit' && a === 'p') shake.current = { t0: t, amp: 2, ms: 160 };
       kick();
-      const snd: Record<Fx['kind'], Sfx> = { hit: part === 'head' ? 'punch' : 'body', big: 'heavy', lock: 'lock', tap: 'tap', dust: 'slam', stars: 'ooh' };
+      const snd: Record<Exclude<Fx['kind'], 'drop'>, Sfx> = { hit: part === 'head' ? 'punch' : 'body', big: 'heavy', lock: 'lock', tap: 'tap', dust: 'slam', stars: 'ooh' };
       sfx(snd[kind]);
       // Titreşim: sert darbe ve yere çarpma her zaman, sıradan vuruş yalnızca oyuncu yediğinde.
       if (kind === 'big') buzz('guclu');
@@ -269,17 +308,30 @@ export function CageView({
           fx.current.push({ ...world(Dd, joints(cur.current[Dd]).head), kind: 'stars', t0: now() });
           kick();
           sfx('swell', 0.8);
+          hype.current = { t0: now(), amp: 1.2, ms: 2000 };
         }, 600 * spd());
         return;
       }
       case 'ko': {
         const alt = ev.alt as PoseName;
+        // Canlı nakavtta darbe anı kısa bir ağır çekimle oynar (tekrar zaten yavaş)
+        const prevSlow = slow.current;
+        if (prevSlow === 1) slow.current = 1.7;
+        setTimeout(() => {
+          const t = now();
+          flash.current = { t0: t, amp: 0.85, ms: 320 };
+          zoom.current = { t0: t, amp: 0.14, ms: 900 };
+          shake.current = { t0: t, amp: 10, ms: 520 };
+          hype.current = { t0: t, amp: 1.6, ms: 3200 };
+          kick();
+        }, 290 * spd());
         queue(A, [['stance', 150, { x: reach }], [alt, 140, { x: reach + 6 }], ['stance', 300, { x: reach - 10 }], ['win', 500, { x: 0 }]]);
         queue(Dd, [['stance', 280], ['reel', 130, { x: -6 }], ['knockedOut', 420, { x: -16 }]]);
         queue('r', [['refIdle', 300], ['refStop', 350, { x: 0 }], ['refStop', 400, { x: 0 }]]);
         face.current.r = Dd === 'o' ? 1 : -1;
         hitAt(Dd, 'head', 'big', 290);
         later('roar', 520);
+        slow.current = prevSlow;
         return;
       }
     }
@@ -381,6 +433,8 @@ export function CageView({
         const bitirme = ['KO', 'TKO', 'SUB'].includes(fs.sonuc.yontem);
         setCaption(kz === 'berabere' ? tL("BERABERE") : `KAZANAN: ${kz === 'p' ? fs.pAd : fs.oAd}`.toLocaleUpperCase(LOC));
         sfx('bell2');
+        hype.current = { t0: now(), amp: bitirme ? 1.4 : 0.6, ms: 3000 };
+        kick();
         setTimeout(() => sfx(kz === 'berabere' ? 'ooh' : 'applause', kz === 'p' ? 1.3 : 0.7), 900);
         const kazanan = kz === 'p' ? fs.pAd : fs.oAd;
         if (bitirme) buzz('nakavt');
@@ -442,6 +496,14 @@ export function CageView({
 
   const onLayout = (e: LayoutChangeEvent) => setW(e.nativeEvent.layout.width);
   const tNow = now();
+  const shk = pulseAt(shake.current, tNow);
+  const sx = shk ? Math.sin(tNow / 17) * shk : 0;
+  const sy = shk ? Math.cos(tNow / 23) * shk * 0.6 : 0;
+  const flashOp = pulseAt(flash.current, tNow);
+  const hp = pulseAt(hype.current, tNow);
+  const zm = pulseAt(zoom.current, tNow);
+  const zoomS = 1 + (zm ? Math.sin(Math.min(1, (tNow - zoom.current!.t0) / 260) * (Math.PI / 2)) * zm : 0);
+  const crowdTop = H * 0.05;
   const actor = (a: Actor) => {
     const ps = cur.current[a];
     const f = face.current[a];
@@ -471,11 +533,42 @@ export function CageView({
                 <Stop offset="0" stopColor="#ffffff" stopOpacity={0.28} />
                 <Stop offset="1" stopColor="#ffffff" stopOpacity={0} />
               </RadialGradient>
+              <SvgLinear id="cone" x1="0" y1="0" x2="0" y2="1">
+                <Stop offset="0" stopColor="#fff6dc" stopOpacity={0.16} />
+                <Stop offset="1" stopColor="#fff6dc" stopOpacity={0} />
+              </SvgLinear>
+              <SvgLinear id="crowdGlow" x1="0" y1="0" x2="0" y2="1">
+                <Stop offset="0" stopColor="#5a3a2a" stopOpacity={0.35} />
+                <Stop offset="1" stopColor="#5a3a2a" stopOpacity={0} />
+              </SvgLinear>
+              <RadialGradient id="vig" cx="50%" cy="55%" r="70%">
+                <Stop offset="0.6" stopColor="#000" stopOpacity={0} />
+                <Stop offset="1" stopColor="#000" stopOpacity={0.55} />
+              </RadialGradient>
             </Defs>
+            <G transform={sx || sy ? `translate(${sx} ${sy})` : undefined}>
             {/* Tribün ışıkları */}
             {Array.from({ length: 18 }, (_, i) => (
-              <Circle key={i} cx={(w / 18) * i + 8} cy={H * 0.06 + (i % 3) * 5} r={1.2} fill="#ffffff" opacity={0.15 + (i % 4) * 0.08} />
+              <Circle key={i} cx={(w / 18) * i + 8} cy={H * 0.03 + (i % 3) * 4} r={1.2} fill="#ffffff" opacity={0.15 + (i % 4) * 0.08} />
             ))}
+            <Rect x={0} y={crowdTop + 4} width={w} height={H * 0.16} fill="url(#crowdGlow)" />
+            {/* Seyirci: büyük anlarda ayağa kalkar, foto flaşları patlar */}
+            {CROWD.map((p, i) => {
+              const bounce = hp ? Math.abs(Math.sin(tNow / 110 + p.ph)) * 5 * hp * p.s : 0;
+              const x = w * (0.02 + p.u * 0.96);
+              const y = crowdTop + 18 + p.row * 13 - bounce;
+              return (
+                <G key={`c${i}`}>
+                  <Ellipse cx={x} cy={y + 9 * p.s} rx={8 * p.s} ry={6 * p.s} fill={p.c} />
+                  <Circle cx={x} cy={y} r={4.2 * p.s} fill={p.c} />
+                  {hp > 0.25 && hash(i * 13 + Math.floor(tNow / 90)) < 0.05 * hp ? <Circle cx={x + 2} cy={y - 1} r={3} fill="#ffffff" opacity={0.9} /> : null}
+                  {hp > 0.4 && p.row === 1 && i % 3 === 0 ? <Line x1={x + 5 * p.s} y1={y + 6} x2={x + 7 * p.s} y2={y - 6 - bounce * 0.6} stroke={p.c} strokeWidth={2.4 * p.s} strokeLinecap="round" /> : null}
+                </G>
+              );
+            })}
+            {/* Tavan spotları */}
+            <Polygon points={`${w * 0.36},0 ${w * 0.44},0 ${w * 0.62},${H * 0.86} ${w * 0.18},${H * 0.86}`} fill="url(#cone)" />
+            <Polygon points={`${w * 0.56},0 ${w * 0.64},0 ${w * 0.82},${H * 0.86} ${w * 0.38},${H * 0.86}`} fill="url(#cone)" />
             {/* Arka kafes */}
             <Polygon points={`${w * 0.08},${H * 0.72} ${w * 0.18},${H * 0.18} ${w * 0.82},${H * 0.18} ${w * 0.92},${H * 0.72}`} fill="none" stroke="#2c2f37" strokeWidth={2} />
             {Array.from({ length: 15 }, (_, i) => {
@@ -492,7 +585,10 @@ export function CageView({
             <SvgText x={cx} y={H * 0.81 + 3} fill={C.red} opacity={0.35} fontSize={9} fontWeight="bold" textAnchor="middle" letterSpacing={3}>
               YOL
             </SvgText>
-            <G transform={replay ? `translate(${cx} ${floorY - 40}) scale(1.3) translate(${-cx} ${-(floorY - 40)})` : undefined}>
+            {stains.current.map((s2, i) => (
+              <Ellipse key={`s${i}`} cx={s2.x} cy={s2.y} rx={s2.r * 1.4} ry={s2.r * 0.5} fill="#7a0d12" opacity={s2.o} />
+            ))}
+            <G transform={replay || zoomS !== 1 ? `translate(${cx} ${floorY - 40}) scale(${(replay ? 1.3 : 1) * zoomS}) translate(${-cx} ${-(floorY - 40)})` : undefined}>
               {/* Figürler */}
               {order.map(actor)}
               {/* Efektler */}
@@ -506,6 +602,12 @@ export function CageView({
                       {f.kind === 'lock' ? '🔒' : f.kind === 'tap' ? '✋' : '💫'}
                     </SvgText>
                   );
+                if (f.kind === 'drop') {
+                  const ts = (tNow - f.t0) / 1000;
+                  const dx = f.x + (f.vx ?? 0) * ts;
+                  const dy = Math.min(floorY + 2, f.y + (f.vy ?? 0) * ts + 0.5 * 900 * k * ts * ts);
+                  return <Circle key={i} cx={dx} cy={dy} r={(f.blood ? 2.1 : 1.6) * k} fill={f.blood ? '#c0161e' : '#cfe8ff'} opacity={Math.max(0, 1 - (tNow - f.t0) / 650) * (f.blood ? 1 : 0.8)} />;
+                }
                 if (f.kind === 'dust')
                   return <Ellipse key={i} cx={f.x} cy={floorY} rx={30 * s} ry={5 * s} fill="#ffffff" opacity={op * 0.5} />;
                 return (
@@ -524,6 +626,9 @@ export function CageView({
             <Line x1={w * 0.97} y1={H * 0.08} x2={w * 0.97} y2={H * 0.98} stroke="#3a3d45" strokeWidth={5} />
             <Rect x={w * 0.03 - 4} y={H * 0.08} width={8} height={20} fill={C.red} />
             <Rect x={w * 0.97 - 4} y={H * 0.08} width={8} height={20} fill={C.blue} />
+            </G>
+            <Rect x={0} y={0} width={w} height={H} fill="url(#vig)" />
+            {flashOp ? <Rect x={0} y={0} width={w} height={H} fill="#ffffff" opacity={flashOp} /> : null}
           </Svg>
           {replay ? (
             <>
