@@ -3,6 +3,7 @@
 import { L, LOC } from '../i18n';
 import { growthMultiplier, statAverage } from './character';
 import { followers } from './fame';
+import { GYMS } from './gyms';
 import { BACKGROUNDS, baseStatsFor, COUNTRIES, femSurname, NAME_POOLS, NICKNAMES, WEIGHT_CLASSES } from './data';
 import { PLANS } from './fight';
 import { chance, clamp, noise, pick, rand, randInt, shuffle, uid, weighted } from './rng';
@@ -78,6 +79,19 @@ export interface Gym {
   /** Sıralamaya giren / UCC'ye çıkan / şampiyon olan öğrenci sayıları */
   uccSayisi?: number;
   sampiyonSayisi?: number;
+  /** Rakip salonların puanları (isimler gyms.ts'ten) ve bilinen son sıran */
+  rakipler?: { id: string; puan: number }[];
+  sira?: number;
+  /** Ulaşılan en iyi sıra (eşik haberleri bir kez çıksın) */
+  enIyiSira?: number;
+}
+
+export interface RankRow {
+  id: string;
+  ad: string;
+  ulke: string;
+  puan: number;
+  sen?: boolean;
 }
 
 export const GYM_LEVELS = [
@@ -129,6 +143,8 @@ export function openGym(s: GameState) {
   s.para -= GYM_LEVELS[0].maliyet;
   s.salon = { ad: gymName(s), seviye: 1, un: 15 + Math.round(s.populerlik / 5), uye: 30, acilis: s.hafta, ogrenciler: [], sonuclar: [], kasa: 0 };
   refreshCandidates(s, true);
+  ensureRivals(s.salon);
+  s.salon.sira = gymRanking(s).sira;
   s.haberler.unshift(L("🏠 {0} kapılarını açtı! İlk üyeler kayıt oldu.", [s.salon.ad]));
 }
 
@@ -141,6 +157,67 @@ export function upgradeGym(s: GameState) {
   g.seviye++;
   g.un = clamp(g.un + 5, 0, 100);
   s.haberler.unshift(L("🏗️ Salon büyüdü: artık bir {0}.", [next.ad]));
+}
+
+// ---------- Salon sıralaması ----------
+
+/** Dünya çapındaki elit salonların ülkesi (bayrak/ülke adı için). */
+const ELITE_COUNTRY: Record<string, string> = { 'elit-summit': 'us', 'elit-kaspiyelit': 'ru', 'elit-tiger': '', 'elit-altitude': 'us', 'elit-atos': 'br' };
+
+const RIVAL_GYMS = GYMS.filter((x) => x.kalite >= 4);
+const rivalBase = (kalite: number) => kalite * kalite * 20;
+
+/** Rakip salonlar ilk açılışta (ya da eski kayıtta ilk haftada) kurulur. */
+function ensureRivals(g: Gym) {
+  if (g.rakipler?.length) return;
+  g.rakipler = RIVAL_GYMS.map((x) => ({ id: x.id, puan: Math.round(rivalBase(x.kalite) + noise(x.kalite * 8)) }));
+}
+
+/** Salon puanı: ün, seviye, üyeler, son maçlardaki galibiyetler, UCC'ye çıkan öğrenciler ve şampiyonlar. */
+export function gymScore(g: Gym) {
+  const wins = g.sonuclar.filter((r) => r.kazandi).length;
+  return Math.round(g.un * 8 + g.seviye * 80 + g.uye / 5 + wins * 6 + (g.uccSayisi ?? 0) * 150 + (g.sampiyonSayisi ?? 0) * 300);
+}
+
+/** Tüm salonlar puana göre sıralı; oyuncunun salonu `sen` ile işaretli. */
+export function gymRanking(s: GameState): { rows: RankRow[]; sira: number } {
+  const g = s.salon;
+  if (!g) return { rows: [], sira: 0 };
+  const rivals = g.rakipler?.length ? g.rakipler : RIVAL_GYMS.map((x) => ({ id: x.id, puan: rivalBase(x.kalite) }));
+  const rows: RankRow[] = rivals.map((r) => {
+    const def = GYMS.find((x) => x.id === r.id);
+    const code = def ? (def.ulke === 'elit' ? ELITE_COUNTRY[def.id] ?? '' : def.ulke) : '';
+    return { id: r.id, ad: def?.salon ?? r.id, ulke: COUNTRIES[code]?.ad ?? (r.id === 'elit-tiger' ? L("Tayland") : L("Dünya")), puan: r.puan };
+  });
+  rows.push({ id: 'sen', ad: g.ad, ulke: COUNTRIES[s.fighter.uyruk]?.ad ?? '', puan: gymScore(g), sen: true });
+  rows.sort((a, b) => b.puan - a.puan);
+  return { rows, sira: rows.findIndex((r) => r.sen) + 1 };
+}
+
+// Küçükten büyüğe: tek seferde birden çok eşik aşılırsa en iyisi duyurulur.
+const RANK_MILESTONES = [1, 3, 5, 10, 20];
+
+function rankTick(s: GameState, weeks: number): string[] {
+  const g = s.salon!;
+  ensureRivals(g);
+  for (let w = 0; w < weeks; w++)
+    g.rakipler!.forEach((r) => {
+      const def = RIVAL_GYMS.find((x) => x.id === r.id);
+      const base = def ? rivalBase(def.kalite) : r.puan;
+      // Rakipler kendi seviyeleri etrafında dalgalanır: iyi ve kötü sezonlar.
+      r.puan = Math.max(50, Math.round(r.puan + (base - r.puan) * 0.03 + noise(base * 0.012)));
+    });
+  const { sira } = gymRanking(s);
+  const once = g.enIyiSira ?? g.sira ?? sira;
+  g.sira = sira;
+  g.enIyiSira = Math.min(once, sira);
+  const m = RANK_MILESTONES.find((x) => sira <= x && once > x);
+  if (!m) return [];
+  return [
+    sira === 1
+      ? L("🥇 {0} dünyanın 1 numaralı salonu oldu!", [g.ad])
+      : L("📈 {0} artık dünyanın en iyi {1} salonu arasında ({2}. sıra).", [g.ad, m, sira]),
+  ];
 }
 
 // ---------- Öğrenci üretimi ----------
@@ -457,6 +534,7 @@ export function gymTick(s: GameState, weeks: number): string[] {
     return true;
   });
   refreshCandidates(s);
+  notes.push(...rankTick(s, weeks));
   return notes;
 }
 

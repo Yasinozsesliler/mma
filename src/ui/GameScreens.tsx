@@ -171,7 +171,7 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
             <ActionTile
               icon="weight-lifter"
               label={L("Salonum")}
-              sub={s.salon ? L("{0} öğrenci · {1}/hafta", [s.salon.ogrenciler.length, `${weeklyGymNet(s.salon) >= 0 ? '+' : '-'}${money(Math.abs(weeklyGymNet(s.salon)))}`]) : L("Kendi salonunu aç")}
+              sub={s.salon ? L("#{0} dünyada · {1}/hafta", [s.salon.sira ?? '-', `${weeklyGymNet(s.salon) >= 0 ? '+' : '-'}${money(Math.abs(weeklyGymNet(s.salon)))}`]) : L("Kendi salonunu aç")}
               accent={C.orange}
               badge={pendingBouts(s) || null}
               onPress={() => act((x) => (x.phase = 'salon'))}

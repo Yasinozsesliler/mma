@@ -1,6 +1,6 @@
 // Salon testi: açılış, kayıt, gelişim, maçlar (köşede / köşesiz), terfi, gelir dengesi.
 // Çalıştırma: npx tsx scripts/academy-test.ts
-import { finishBout, GYM_LEVELS, openGym, power, signCost, signStudent, startBout, boutPlans, upgradeGym, weeklyGymNet, type CornerCall } from '../src/engine/academy';
+import { gymRanking, gymScore, finishBout, GYM_LEVELS, openGym, power, signCost, signStudent, startBout, boutPlans, upgradeGym, weeklyGymNet, type CornerCall } from '../src/engine/academy';
 import { advanceWeeks, createGame, rollStartingStats } from '../src/engine/character';
 import { setSeed } from '../src/engine/rng';
 
@@ -20,6 +20,7 @@ function career(seed: number, corner: 'iyi' | 'yok' | 'kotu', weeks = 260) {
   s.para = 10_000_000;
   openGym(s);
   const g = s.salon!;
+  const log: string[] = [];
   const stats = { mac: 0, g: 0, ucc: 0, champ: 0, maxLv: 0, paraBas: s.para, terfi: 0 };
   for (let w = 0; w < weeks; w++) {
     // Kapasite boşsa aday kaydet; ara ara salonu büyüt.
@@ -29,7 +30,7 @@ function career(seed: number, corner: 'iyi' | 'yok' | 'kotu', weeks = 260) {
     }
     if (w % 52 === 51 && g.seviye < 5) upgradeGym(s);
     const before = g.sonuclar.length ? g.sonuclar[0] : null;
-    advanceWeeks(s, 1);
+    log.push(...advanceWeeks(s, 1));
     if (corner === 'yok' && g.sonuclar[0] && g.sonuclar[0] !== before) {
       stats.mac++;
       if (g.sonuclar[0].kazandi) stats.g++;
@@ -53,7 +54,7 @@ function career(seed: number, corner: 'iyi' | 'yok' | 'kotu', weeks = 260) {
   stats.ucc = g.uccSayisi ?? 0;
   stats.champ = g.sampiyonSayisi ?? 0;
   stats.maxLv = Math.max(0, ...g.ogrenciler.map((x) => power(x.stats)));
-  return { s, g, stats };
+  return { s, g, stats, log };
 }
 
 import { PLANS } from '../src/engine/fight';
@@ -91,6 +92,9 @@ setSeed(1);
   advanceWeeks(s, 8);
   const st = s.salon!.ogrenciler[0];
   check(!!st.mac, `8 hafta içinde ilk maç geldi (rakip ${st.mac?.rakip.soyad})`);
+  const r0 = gymRanking(s);
+  console.log(`   sıralama: ${r0.sira}/${r0.rows.length} (puan ${gymScore(s.salon!)}, 1. ${r0.rows[0].ad} ${r0.rows[0].puan})`);
+  check(r0.rows.length >= 30 && r0.sira > r0.rows.length * 0.7, 'yeni salon sıralamanın alt kısmında başlar');
   const net = weeklyGymNet(s.salon!);
   console.log(`   8. hafta: ${s.salon!.uye} üye, haftalık net ${net}`);
 }
@@ -111,9 +115,14 @@ check(iyi.oran > yok.oran, 'köşede durmak, durmamaktan iyi');
 check(iyi.ucc >= 0.5 && iyi.ucc <= 4, "iyi yönetilen salon 5 yılda UCC'ye öğrenci çıkarır ama kolay değil");
 
 // Gelir dengesi
-const { g, s } = career(21, 'iyi');
+const { g, s, log } = career(21, 'iyi');
 console.log(`   5 yıl sonra: seviye ${g.seviye}, ün ${g.un}, ${g.uye} üye, haftalık net ${weeklyGymNet(g)}, toplam kasa ${g.kasa}, öğrenci ${g.ogrenciler.length}`);
 check(weeklyGymNet(g) > 0, 'büyümüş salon kâr ediyor');
+const rk = gymRanking(s);
+console.log(`   5 yıl sonra sıralama: ${rk.sira}/${rk.rows.length} (puan ${gymScore(g)})`);
+check(rk.sira <= 5, "iyi yönetilen salon 5 yılda ilk 5'e girer");
+check(log.some((h) => h.includes('en iyi') || h.includes('1 numaralı')), 'sıralama haberi çıktı');
+console.log('   ' + log.filter((h) => h.includes('en iyi') || h.includes('1 numaralı')).join(' | '));
 check(g.kasa < 8_000_000, 'salon parayı patlatmıyor');
 check(s.haberler.every((h) => !h.includes('undefined') && !h.includes('NaN')), 'haberlerde undefined/NaN yok');
 

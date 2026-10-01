@@ -16,6 +16,8 @@ import {
   GYM_LEVELS,
   gymLevel,
   gymName,
+  gymRanking,
+  gymScore,
   openGym,
   potStars,
   power,
@@ -28,6 +30,7 @@ import {
   weeklyGymNet,
   type BoutOutcome,
   type CornerCall,
+  type RankRow,
   type Student,
 } from '../engine/academy';
 import { money } from '../engine/career';
@@ -269,6 +272,47 @@ function BoutModal({ s, view, act, onClose }: { s: GameState; view: BoutView; ac
   );
 }
 
+// ---------- Salon sıralaması ----------
+
+function RankTable({ rows, sira, puan }: { rows: RankRow[]; sira: number; puan: number }) {
+  const [all, setAll] = useState(false);
+  // Kısa görünüm: ilk 5 ve senin çevren (bir üst, bir alt).
+  const show = all ? rows.map((_, i) => i) : [...new Set([0, 1, 2, 3, 4, sira - 2, sira - 1, sira].filter((i) => i >= 0 && i < rows.length))].sort((a, b) => a - b);
+  return (
+    <>
+      <Section>{L("SALON SIRALAMASI")}</Section>
+      <View style={gy.table}>
+        {show.map((i, k) => {
+          const r = rows[i];
+          const gap = k > 0 && i - show[k - 1] > 1;
+          return (
+            <View key={r.id}>
+              {gap ? <Text style={gy.gap}>⋯</Text> : null}
+              <View style={[gy.rankRow, r.sen && gy.rankMe]}>
+                <Text style={[gy.rankNo, i < 3 && { color: [C.gold, '#c0c6cf', '#cd7f32'][i] }]}>{i + 1}</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={[gy.rankName, r.sen && { color: C.gold }]} numberOfLines={1}>
+                    {r.ad}
+                    {r.sen ? L(" (SEN)") : ''}
+                  </Text>
+                  <Text style={gy.meta} numberOfLines={1}>
+                    {r.ulke}
+                  </Text>
+                </View>
+                <Text style={[gy.rankPts, r.sen && { color: C.gold }]}>{r.puan.toLocaleString(LOC)}</Text>
+              </View>
+            </View>
+          );
+        })}
+        <Pressable onPress={() => setAll(!all)} hitSlop={6} style={{ alignSelf: 'center', paddingTop: 8 }}>
+          <Text style={gy.link}>{all ? L("Kısalt") : L("Tüm sıralamayı gör ({0} salon)", [rows.length])}</Text>
+        </Pressable>
+      </View>
+      <Text style={gy.hint}>{L("Puanın {0}. Ün, salon seviyesi, üyeler, öğrencilerinin galibiyetleri, UCC'ye çıkanlar ve şampiyonlar puan kazandırır.", [puan.toLocaleString(LOC)])}</Text>
+    </>
+  );
+}
+
 // ---------- Salon ----------
 
 export function GymScreen({ s, act }: { s: GameState; act: Act }) {
@@ -281,6 +325,7 @@ export function GymScreen({ s, act }: { s: GameState; act: Act }) {
   const full = g.ogrenciler.length >= lv.kapasite;
   const bouts = g.ogrenciler.filter((x) => x.mac);
   const yeniAday = Math.max(0, 8 - (s.hafta - (g.adaylar?.hafta ?? s.hafta)));
+  const rank = gymRanking(s);
 
   return (
     <Screen footer={<Button label={L("Ana ekrana dön")} icon="arrow-left" tone="ghost" onPress={() => act((x) => (x.phase = 'hub'))} />}>
@@ -290,6 +335,10 @@ export function GymScreen({ s, act }: { s: GameState; act: Act }) {
           {g.ad.toLocaleUpperCase(LOC)}
         </Text>
         <Stars n={g.seviye} />
+        <View style={gy.rankPill}>
+          <Icon name="podium-gold" size={14} color={C.gold} />
+          <Text style={gy.rankPillText}>{L("DÜNYA SIRALAMASI #{0} / {1}", [rank.sira, rank.rows.length])}</Text>
+        </View>
         <View style={gy.stats}>
           <Stat label={L("ÜYE")} value={`${g.uye}/${lv.maxUye}`} />
           <Stat label={L("HAFTALIK")} value={`${net >= 0 ? '+' : '-'}${money(Math.abs(net))}`} color={net >= 0 ? C.green : C.red} />
@@ -331,6 +380,8 @@ export function GymScreen({ s, act }: { s: GameState; act: Act }) {
           ))}
         </>
       ) : null}
+
+      <RankTable rows={rank.rows} sira={rank.sira} puan={gymScore(g)} />
 
       <Section>{L("ÖĞRENCİLER ({0}/{1})", [g.ogrenciler.length, lv.kapasite])}</Section>
       {g.ogrenciler.length ? (
@@ -423,6 +474,15 @@ const gy = StyleSheet.create({
   boutTitle: { color: C.text, fontFamily: F.display, fontSize: 16 },
   boutBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: C.gold, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8 },
   boutBtnText: { color: '#1f1605', fontFamily: F.display, fontSize: 12, letterSpacing: 1 },
+  rankPill: { flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1, borderColor: C.goldDeep, borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4, marginTop: 4 },
+  rankPillText: { color: C.gold, fontFamily: F.display, fontSize: 11, letterSpacing: 1 },
+  table: { backgroundColor: C.card, borderRadius: R, borderWidth: 1, borderColor: C.border, padding: 8, marginBottom: 4 },
+  rankRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 7, paddingHorizontal: 6, borderRadius: 8 },
+  rankMe: { backgroundColor: '#2a1d06', borderWidth: 1, borderColor: C.goldDeep },
+  rankNo: { width: 26, textAlign: 'center', color: C.dim, fontFamily: F.display, fontSize: 16 },
+  rankName: { color: C.text, fontFamily: F.semi, fontSize: 14 },
+  rankPts: { color: C.dim, fontFamily: F.display, fontSize: 15 },
+  gap: { color: C.faint, textAlign: 'center', fontSize: 14, lineHeight: 14 },
   modal: { flex: 1, backgroundColor: C.bg, width: '100%', maxWidth: 560, alignSelf: 'center' },
   modalFooter: { padding: 16, borderTopWidth: 1, borderTopColor: C.border },
   vs: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 },
