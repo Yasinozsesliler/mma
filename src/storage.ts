@@ -1,4 +1,5 @@
 import { L } from './i18n';
+import { ensureGoals } from './engine/goals';
 import { istat } from './engine/istat';
 import { startingTechniques } from './engine/techniques';
 import { playerPhysique } from './engine/tale';
@@ -149,6 +150,7 @@ export function parseSave(raw: string): GameState | null {
     }
     checkAchievements(s, true);
     ensureDivision(s);
+    if (s.phase !== 'emeklilik') ensureGoals(s);
     return s;
   } catch {
     return null;

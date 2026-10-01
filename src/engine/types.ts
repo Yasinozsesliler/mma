@@ -526,6 +526,8 @@ export interface GameState {
   sonKamp?: { hafta: number; yer: string; focus: StatKey; intensity: Intensity; kilo: WeightCut; basin?: PressChoice };
   /** Kendi salonun (academy.ts) */
   salon?: import('./academy').Gym;
+  /** Kariyer hedefleri (goals.ts): kısa/orta/uzun vadeli üç hedef ve tamamlanan sayısı */
+  hedefler?: { list: import('./goals').Goal[]; tamam: number };
   /** Ödüllü reklam teklifleri: alındıkları dövüş sayısı (her dövüş arasında birer kez). */
   odul?: { sakatlikMac?: number; profilHafta?: number };
   saglik: number;

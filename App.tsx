@@ -40,6 +40,7 @@ import { NightlifeScreen } from './src/ui/NightlifeScreen';
 import { AchievementsScreen } from './src/ui/AchievementsScreen';
 import { AchievementToast } from './src/ui/AchievementToast';
 import { checkAchievements } from './src/engine/legacy';
+import { ensureGoals, refreshStaleGoals } from './src/engine/goals';
 import { popToFollowers } from './src/engine/fame';
 import { useSoundScene, type Scene } from './src/audio';
 import { initMonetization, PremiumManager } from './src/monetization';
@@ -143,6 +144,7 @@ export default function App() {
     if (!(cur.phase === 'dovus' && next.phase === 'dovusSonrasi') && next.populerlik !== cur.populerlik) popToFollowers(next, next.populerlik - cur.populerlik);
     // Kafes dışındaki başarımlar da (ev, araba, sevgili…) anında açılır.
     const yeni = next.phase === 'emeklilik' ? [] : checkAchievements(next);
+    if (next.phase === 'hub') refreshStaleGoals(next);
     if (yeni.length) setToast(yeni);
     setGame(next);
     saveGame(next, slotRef.current);
@@ -253,6 +255,7 @@ export default function App() {
           if (heritage) applyHeritage(s, heritage);
           setHeritage(null);
           socialWelcome(s);
+          ensureGoals(s);
           setSlot(createSlot);
           setGame(s);
           // Yuvanın eski kaydı ve yedeği silinir; yeni kariyer temiz başlar.

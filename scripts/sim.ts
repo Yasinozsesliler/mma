@@ -1,6 +1,7 @@
 // Motor denge testi: botlar tam kariyerleri otomatik oynar.
 // Çalıştırma: npx tsx scripts/sim.ts [kariyerSayisi]
 import { legacyScore } from '../src/engine/legacy';
+import { claimGoal, goalDone, refreshStaleGoals } from '../src/engine/goals';
 import { campChoose } from '../src/engine/camp';
 import {
   acceptOffer,
@@ -20,6 +21,7 @@ import { canSpend, spendPoint } from '../src/engine/progression';
 import { pick, randInt, setSeed } from '../src/engine/rng';
 import type { Background, GameState, PlanKey, Tactic } from '../src/engine/types';
 import { STAT_KEYS } from '../src/engine/types';
+const goalStat = { n: 0, para: 0, puan: 0, tur: {} as Record<string, number> };
 
 const BGS: Background[] = ['boks', 'muaythai', 'kickboks', 'gures', 'judo', 'bjj', 'sambo', 'kyokushin', 'sokak'];
 const N = Number(process.argv[2] ?? 300);
@@ -99,6 +101,8 @@ function playCareer() {
     spendAll();
     switch (s.phase) {
       case 'hub':
+        refreshStaleGoals(s);
+        for (const g of [...s.hedefler!.list]) if (goalDone(s, g)) { goalStat.n++; goalStat.para += g.odul.para; goalStat.puan += g.odul.puan; goalStat.tur[g.tur] = (goalStat.tur[g.tur] ?? 0) + 1; claimGoal(s, g.id); }
         if (s.fighter.yas >= 25 && !rec25 && input.yas <= 20) { rec25 = `${s.rekor.g}-${s.rekor.m}`; stats.rec25.push(rec25); stats.fights25.push(s.rekor.g + s.rekor.m + s.rekor.b + s.amator.g + s.amator.m + s.amator.b); }
         if (s.gecmis.length >= 90) return finalize();
         if (s.saglik < 55 || s.sakatliklar.length) rest(s);
@@ -234,6 +238,7 @@ console.log(`Maçlar arası gün ort. ${mean(stats.gaps)} (min ${Math.min(...sta
 console.log('Rakip − oyuncu güç farkı / galibiyet oranı:', Object.entries(stats.gap).map(([k, v]) => `${k} ${mean(v)} (%${Math.round((stats.stageWins[k][0] / (stats.stageWins[k][0] + stats.stageWins[k][1])) * 100)})`).join(' · '));
 console.log(`Kariyer boyu dövüş ort. ${mean(stats.totalFights)}, bitiş yaşı ort. ${mean(stats.retireAge)}`);
 console.log(`Başarım ort. ${mean(stats.ach)}, maks ${Math.max(...stats.ach)} · Efsane puanı ort. ${mean(stats.legacy)}, maks ${Math.max(...stats.legacy)} · Hall of Fame: ${((stats.hof / N) * 100).toFixed(1)}%`);
+console.log(`Hedefler: kariyer başına ${(goalStat.n / N).toFixed(1)} tamamlanan, ort. ödül $${Math.round(goalStat.para / N).toLocaleString('tr-TR')} + ${(goalStat.puan / N).toFixed(1)} puan ·`, Object.entries(goalStat.tur).map(([k, v]) => `${k} ${v}`).join(', '));
 console.log(`Kariyer: ${stats.careers}, dövüş: ${stats.fights}, çökme: ${stats.crashes}`);
 console.log(`G/M/B: ${pct(stats.wins, stats.fights)} / ${pct(stats.losses, stats.fights)} / ${pct(stats.draws, stats.fights)}`);
 console.log('Yöntemler:', Object.entries(stats.methods).map(([k, v]) => `${k} ${pct(v, stats.fights)}`).join(', '));

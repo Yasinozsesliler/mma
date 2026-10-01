@@ -44,6 +44,7 @@ import { ActionGrid, ActionTile, FightCTA, HubHero, Notice } from './HubHome';
 import { pendingBouts, weeklyGymNet } from '../engine/academy';
 import { ACHIEVEMENTS } from '../engine/achievements';
 import { UccRoadCard } from './UccRoadCard';
+import { GoalsCard } from './GoalsCard';
 import { WikiButton } from './WikiPage';
 import { CampLengthStep, CampSummary, CampWeeksStep, FreeWeeksStep } from './CampCalendar';
 import { CampPlanner } from './CampPlanner';
@@ -165,6 +166,7 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
             disabled={banned(s)}
             onPress={() => act(findNextFight)}
           />
+          <GoalsCard s={s} act={act} />
 
           <ActionGrid>
             <ActionTile icon="bed" label={L("Dinlen")} sub={L("Sağlık {0}/100", [s.saglik])} accent={C.green} selected={resting} onPress={() => { setResting(!resting); setWeightOpen(false); }} badge={s.sakatliklar.length || null} />
