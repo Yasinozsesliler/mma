@@ -378,7 +378,9 @@ const shot = async (html, file, transparent = false) => {
   await page.screenshot({ path: file, omitBackground: transparent });
 };
 for (const [name, t, s] of SCENES) {
-  await shot(`<html><head><style>${CSS}</style></head><body><div class="grid"></div><div class="logo"><img src="data:image/png;base64,${ICON}"/>YOL</div><div class="top"><div class="t">${t}</div><div class="s">${s}</div></div><div class="ph"></div>${BADGE}</body></html>`, `${tmp}/bg-${name}.png`);
+  // Arka plan (başlıksız) ve başlık (saydam, ayrı katman: sahne başında zıplayarak girer)
+  await shot(`<html><head><style>${CSS}</style></head><body><div class="grid"></div><div class="logo"><img src="data:image/png;base64,${ICON}"/>YOL</div><div class="ph"></div>${BADGE}</body></html>`, `${tmp}/bg-${name}.png`);
+  await shot(`<html><head><style>${CSS} body{background:transparent!important}</style></head><body><div class="top"><div class="t">${t}</div><div class="s">${s}</div></div></body></html>`, `${tmp}/title-${name}.png`, true);
 }
 await shot(`<html><head><style>*{margin:0}body{width:540px;height:960px;background:#000}div{position:absolute;left:${PH.x / 2}px;top:${PH.y / 2}px;width:${PH.w / 2}px;height:${PH.h / 2}px;border-radius:24px;background:#fff}</style></head><body><div></div></body></html>`, `${tmp}/mask-full.png`);
 await shot(`<html><head><style>${CSS}
@@ -401,6 +403,10 @@ const startOf = (name, d) => {
   if (name === 'ko') return Math.max(0, (sg.marks.ko ?? sg.sn - 6) - 1.7); // son yumruk, düşüş ve KAZANDIN
   return Math.max(0, Math.min(0.25, sg.sn - d));
 };
+// Başlık bandı (1080×1920'de) ve zıplama: küçükten %115'e, sonra yerine oturur.
+const TB = { y: 120, h: 340 };
+const POP_AT = 0.3; // geçiş bittikten hemen sonra
+const POP = `if(lt(t,${POP_AT}),0.5,if(lt(t,${POP_AT + 0.13}),0.5+0.65*(t-${POP_AT})/0.13,if(lt(t,${POP_AT + 0.24}),1.15-0.15*(t-${POP_AT + 0.13})/0.11,1)))`;
 const parts = [];
 for (const [name, , , d] of SCENES) {
   const ss = Math.min(startOf(name, d), Math.max(0, segs[name].sn - d));
@@ -409,35 +415,42 @@ for (const [name, , , d] of SCENES) {
     '-y', '-loop', '1', '-t', String(d), '-i', `${tmp}/bg-${name}.png`,
     '-ss', ss.toFixed(2), '-t', String(d), '-i', `${tmp}/${name}.webm`,
     '-loop', '1', '-t', String(d), '-i', `${tmp}/mask-full.png`,
+    '-loop', '1', '-t', String(d), '-i', `${tmp}/title-${name}.png`,
     '-filter_complex',
-    `[1:v]fps=30,scale=${PH.w}:${PH.h}:flags=lanczos,setsar=1,pad=1080:1920:${PH.x}:${PH.y}:black,format=rgba[ph];[2:v]scale=1080:1920,format=gray[mk];[ph][mk]alphamerge[phm];[0:v]scale=1080:1920,format=rgba[bg];[bg][phm]overlay=0:0:shortest=1,` +
-      `scale=w='trunc(1080*(1+0.04*t/${d})/2)*2':h=-2:eval=frame,crop=1080:1920,fade=t=in:st=0:d=0.12:color=white,format=yuv420p[v]`,
+    `[1:v]fps=30,scale=${PH.w}:${PH.h}:flags=lanczos,setsar=1,pad=1080:1920:${PH.x}:${PH.y}:black,format=rgba[ph];[2:v]scale=1080:1920,format=gray[mk];[ph][mk]alphamerge[phm];[0:v]scale=1080:1920,format=rgba[bg];[bg][phm]overlay=0:0:shortest=1[base];` +
+      `[3:v]scale=1080:1920,format=rgba,crop=1080:${TB.h}:0:${TB.y},scale=w='trunc(1080*(${POP})/2)*2':h=-2:eval=frame[tt];` +
+      `[base][tt]overlay=x='(W-w)/2':y='${TB.y}+(${TB.h}-h)/2':eval=frame:enable='gte(t,${POP_AT})',` +
+      `scale=w='trunc(1080*(1+0.07*max(0,1-(t-0.26)/0.22)*gte(t,0.26)+0.035*t/${d})/2)*2':h=-2:eval=frame,crop=1080:1920,format=yuv420p[v]`,
     '-map', '[v]', '-t', String(d), '-r', '30', '-c:v', 'libx264', '-preset', 'medium', '-crf', '18', out,
   ], { stdio: 'ignore' });
   parts.push(out);
 }
 const endOut = `${tmp}/scene-end.mp4`;
-execFileSync(FF, ['-y', '-loop', '1', '-t', String(END_SEC), '-i', `${tmp}/end.png`, '-filter_complex', `[0:v]scale=1080:1920,scale=w='trunc(1080*(1+0.05*t/${END_SEC})/2)*2':h=-2:eval=frame,crop=1080:1920,fade=t=in:st=0:d=0.15:color=white,format=yuv420p[v]`, '-map', '[v]', '-r', '30', '-c:v', 'libx264', '-preset', 'medium', '-crf', '18', endOut], { stdio: 'ignore' });
+execFileSync(FF, ['-y', '-loop', '1', '-t', String(END_SEC), '-i', `${tmp}/end.png`, '-filter_complex', `[0:v]scale=1080:1920,scale=w='trunc(1080*(1+0.05*t/${END_SEC})/2)*2':h=-2:eval=frame,crop=1080:1920,format=yuv420p[v]`, '-map', '[v]', '-r', '30', '-c:v', 'libx264', '-preset', 'medium', '-crf', '18', endOut], { stdio: 'ignore' });
 parts.push(endOut);
-writeFileSync(`${tmp}/liste.txt`, parts.map((p) => `file '${p.replace(/\\/g, '/')}'`).join('\n'));
 
 // Ses: seyirci + müzik, her kesmede whoosh, mini oyun vuruşları, nakavt ve şampiyon anonsu.
+// Geçişler: her biri XF sn üst üste biner; sırayla farklı hareketli geçişler.
+const XF = 0.26;
+// Temiz itme geçişleri (yeni sahne eskisini iterek girer); kapanışa daire açılımı.
+const TRANS = ['slideleft', 'slideup', 'slideleft', 'slidedown', 'slideright', 'slideup', 'slideleft', 'slideup', 'slideright', 'slidedown', 'slideleft', 'slideup', 'circleopen'];
+const durs = [...SCENES.map((x) => x[3]), END_SEC];
 const at = [];
 let t = 0;
-for (const sc of SCENES) {
+durs.forEach((d, i) => {
   at.push(t);
-  t += sc[3];
-}
-const endAt = t;
-const total = t + END_SEC;
+  t += d - (i < durs.length - 1 ? XF : 0);
+});
+const endAt = at[at.length - 1];
+const total = t;
 const snd = (n) => `${root}/assets/sounds/${n}.wav`;
 const audio = [];
 const add = (file, startSec, vol = 1, loop = false) => audio.push({ file, startSec, vol, loop });
 add(snd('crowd_loop'), 0, 0.3, true);
 add(snd('giris_epik'), 0, 0.8);
 add(snd('music_hub'), 6.4, 0.55, true);
-SCENES.forEach((_, i) => i > 0 && add(snd('whoosh'), at[i] - 0.05, 0.5));
-add(snd('whoosh'), endAt - 0.05, 0.6);
+// Her geçişin başında whoosh
+at.forEach((x, i) => i > 0 && add(snd('whoosh'), x - 0.02, 0.55));
 // Nakavt (ilk sahne): tekrar penceresi ağır çekim
 add(snd('heavy'), 0.35, 1);
 add(snd('roar'), 0.9, 0.9);
@@ -450,10 +463,22 @@ const hi = SCENES.findIndex((s) => s[0] === 'hof');
 add(snd('swell'), at[hi] + 0.1, 0.7);
 add(snd('applause'), at[hi] + 0.8, 0.5);
 add(snd('bell'), endAt + 0.1, 0.9);
-const args = ['-y', '-f', 'concat', '-safe', '0', '-i', `${tmp}/liste.txt`];
+const args = ['-y'];
+parts.forEach((p) => args.push('-i', p));
 audio.forEach((a) => args.push(...(a.loop ? ['-stream_loop', '-1'] : []), '-i', a.file));
-const af = audio.map((a, i) => `[${i + 1}:a]aresample=44100,aformat=channel_layouts=stereo,volume=${a.vol},adelay=${Math.round(a.startSec * 1000)}|${Math.round(a.startSec * 1000)}[a${i}]`).join(';');
+const NV = parts.length;
+const vprep = parts.map((_, i) => `[${i}:v]settb=AVTB,fps=30,format=yuv420p,setsar=1[s${i}]`).join(';');
+let vchain = '';
+let prev = 's0';
+for (let k = 1; k < NV; k++) {
+  const tag = k === NV - 1 ? 'vout' : `x${k}`;
+  vchain += `;[${prev}][s${k}]xfade=transition=${TRANS[(k - 1) % TRANS.length]}:duration=${XF}:offset=${at[k].toFixed(3)}[${tag}]`;
+  prev = tag;
+}
+const af = audio.map((a, i) => `[${NV + i}:a]aresample=44100,aformat=channel_layouts=stereo,volume=${a.vol},adelay=${Math.round(a.startSec * 1000)}|${Math.round(a.startSec * 1000)}[a${i}]`).join(';');
 const mix = `${audio.map((_, i) => `[a${i}]`).join('')}amix=inputs=${audio.length}:duration=longest:normalize=0,afade=t=out:st=${(total - 0.9).toFixed(2)}:d=0.9,alimiter=limit=0.95[aout]`;
 const out = `${root}/store/video/tiktok-tanitim.mp4`;
-execFileSync(FF, [...args, '-filter_complex', `${af};${mix}`, '-map', '0:v', '-map', '[aout]', '-t', total.toFixed(2), '-c:v', 'copy', '-c:a', 'aac', '-b:a', '192k', '-movflags', '+faststart', out], { stdio: 'ignore' });
+writeFileSync(`${tmp}/filtre.txt`, `${vprep}${vchain};${af};${mix}`);
+const r = spawnSync(FF, [...args, '-filter_complex_script', `${tmp}/filtre.txt`, '-map', '[vout]', '-map', '[aout]', '-t', total.toFixed(2), '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-preset', 'medium', '-crf', '19', '-r', '30', '-c:a', 'aac', '-b:a', '192k', '-movflags', '+faststart', out], { encoding: 'utf8' });
+if (r.status !== 0) throw new Error('ffmpeg: ' + (r.stderr ?? '').split(String.fromCharCode(10)).slice(-8).join(' | '));
 console.log('✅', out, `${total.toFixed(1)} sn`);
