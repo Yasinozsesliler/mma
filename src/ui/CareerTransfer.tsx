@@ -4,6 +4,7 @@ import { Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-nativ
 import { shareText } from '../challenge';
 import type { GameState } from '../engine/types';
 import { L } from '../i18n';
+import { FEEDBACK_EMAIL, sendFeedback } from '../feedback';
 import { exportCode, importCode } from '../saveCode';
 import { Button, Icon } from './components';
 import { C, F } from './theme';
@@ -71,6 +72,27 @@ export function ImportCard({ canImport, onImport }: { canImport: boolean; onImpo
           </View>
         </Modal>
       ) : null}
+    </>
+  );
+}
+
+/** Menüdeki "Geri bildirim gönder" satırı: e-posta, sürüm ve cihaz bilgisiyle açılır. */
+export function FeedbackRow() {
+  const [msg, setMsg] = useState('');
+  return (
+    <>
+      <Pressable
+        onPress={async () => {
+          const ok = await sendFeedback();
+          setMsg(ok ? '' : L("E-posta uygulaması açılamadı. Bize şu adresten yazabilirsin: {0}", [FEEDBACK_EMAIL]));
+        }}
+        style={({ pressed }) => [st.row, pressed && { borderColor: C.gold }]}
+      >
+        <Icon name="message-alert-outline" size={18} color={C.gold} />
+        <Text style={[st.rowText, { color: C.text }]}>{L("Geri bildirim gönder")}</Text>
+        <Icon name="chevron-right" size={18} color={C.faint} />
+      </Pressable>
+      {msg ? <Text style={[st.msg, { color: C.dim, marginTop: 6 }]} selectable>{msg}</Text> : null}
     </>
   );
 }

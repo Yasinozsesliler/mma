@@ -3957,4 +3957,8 @@ export const RU: Record<string, string> = {
   "Dünyanın 1 numaralı salonu ol.": "Стань залом № 1 в мире.",
   "Şampiyonların Hocası": "Тренер чемпионов",
   "Bir öğrencin UCC şampiyonu olsun.": "Твой ученик становится чемпионом UCC.",
+  "YOL geri bildirim": "Отзыв о YOL",
+  "Ne oldu / ne önerirsin?": "Что случилось / что предлагаешь?",
+  "E-posta uygulaması açılamadı. Bize şu adresten yazabilirsin: {0}": "Не удалось открыть почтовое приложение. Напиши нам: {0}",
+  "Geri bildirim gönder": "Отправить отзыв",
 };

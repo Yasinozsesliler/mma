@@ -3902,4 +3902,8 @@ export const EN: Record<string, string> = {
   "Dünyanın 1 numaralı salonu ol.": "Become the #1 gym in the world.",
   "Şampiyonların Hocası": "Coach of Champions",
   "Bir öğrencin UCC şampiyonu olsun.": "Have a student become a UCC champion.",
+  "YOL geri bildirim": "YOL feedback",
+  "Ne oldu / ne önerirsin?": "What happened / what would you suggest?",
+  "E-posta uygulaması açılamadı. Bize şu adresten yazabilirsin: {0}": "Couldn't open your email app. You can write to us at: {0}",
+  "Geri bildirim gönder": "Send feedback",
 };

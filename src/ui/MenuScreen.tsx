@@ -1,6 +1,6 @@
 import { L, LANG, LANGS, LOC } from '../i18n';
 import { useCosmetics, useFrame } from '../cosmetics';
-import { ExportButton, ImportCard } from './CareerTransfer';
+import { ExportButton, FeedbackRow, ImportCard } from './CareerTransfer';
 import { setAnnouncer, useAnnouncer } from '../announcer';
 import { setHaptics, useHaptics } from '../haptics';
 import { setLang } from '../i18n/boot';
@@ -294,6 +294,7 @@ export function MenuScreen({
         <SlotCard key={x} n={x} save={saves[x - 1]} active={x === active && !!saves[x - 1]} onNew={() => onNew(x)} onContinue={() => onContinue(x)} onDelete={() => onDelete(x)} onDynasty={() => onDynasty(x)} />
       ))}
       <ImportCard canImport={!!firstEmpty} onImport={(g) => firstEmpty && onImport(firstEmpty, g)} />
+      <FeedbackRow />
       {!any ? (
         <Card>
           <Text style={ms.intro}>{L("Saat gece 02:14. Şehrin kenarında, tabelasının yarısı yanmayan bir spor salonu var.")}</Text>
