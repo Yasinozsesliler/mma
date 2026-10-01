@@ -3,7 +3,7 @@
 // WEB_URL: oyunun web adresi (Vercel), örn. 'https://yol-mma.vercel.app' (sonunda / olmadan).
 // Gizlilik politikası bu adreste /gizlilik.html olarak yayınlanır; Google Play'de de bu bağlantı verilir.
 // ─────────────────────────────────────────────────────────────────────────────
-export const WEB_URL = '';
+export const WEB_URL = 'https://mma-five-psi.vercel.app';
 
 export const PRIVACY_PATH = '/gizlilik.html';
 
