@@ -774,8 +774,16 @@ export function chooseTactic(prev: FightState, t: Tactic): FightState {
   return fs;
 }
 
-export function resolveCritical(prev: FightState, choice: number): FightState {
+/**
+ * Kritik anı çözer. q: oyuncunun elle oynanan andaki performansı (0–1; 0.5 = nötr/otomatik).
+ * İyi performans bitirme, kurtulma ve kaçma şansını yaklaşık ±%30 değiştirir.
+ */
+export function resolveCritical(prev: FightState, choice: number, q = 0.5): FightState {
   const fs = clone(prev);
+  const qq = clamp(q, 0, 1);
+  const up = 0.7 + 0.6 * qq; // iyi oynayınca 1.3'e, kötüde 0.7'ye
+  const down = 1.3 - 0.6 * qq;
+  const add = (qq - 0.5) * 0.45;
   const kind = fs.kritik!;
   const b = fs.vurusSira - 1;
   const P = sideDom(fs, 'p');
@@ -785,7 +793,7 @@ export function resolveCritical(prev: FightState, choice: number): FightState {
   fs.durum = 'taktik';
 
   if (kind === 'rakipSersem') {
-    const fp = clamp(0.4 + (fs.pStats.vurus - o.cene) / 140 + fs.oHasar / 200 + bestLevel(fs.mods.teknik, 'vurus') * 0.012, 0.15, 0.86);
+    const fp = clamp((0.4 + (fs.pStats.vurus - o.cene) / 140 + fs.oHasar / 200 + bestLevel(fs.mods.teknik, 'vurus') * 0.012) * up, 0.1, 0.92);
     if (choice === 0) {
       drain(fs, 'p', 'baski', 6);
       if (chance(fp)) {
@@ -797,7 +805,7 @@ export function resolveCritical(prev: FightState, choice: number): FightState {
           b);
         return fs;
       }
-      if (chance(0.25 + O.power / 400)) {
+      if (chance((0.25 + O.power / 400) * down)) {
         fs.log.push(L("😱 {0} umutsuz bir kontra savurdu ve TAM İSABET! Durum tersine döndü!", [fs.oAd]));
         addDmg(fs, 'p', 12);
         if (rockCheck(fs, 'p', 14, b)) return fs;
@@ -835,16 +843,16 @@ export function resolveCritical(prev: FightState, choice: number): FightState {
       }
     }
   } else if (kind === 'sarsildin') {
-    const fp = clamp(0.42 + (o.vurus - fs.pStats.cene) / 140 + fs.pHasar / 200, 0.15, 0.85);
+    const fp = clamp((0.42 + (o.vurus - fs.pStats.cene) / 140 + fs.pHasar / 200) * down, 0.1, 0.9);
     let survive: number;
     if (choice === 0) survive = 0.62 + (P.wrestling - O.striking) / 180 + fs.pStats.cene / 400;
     else if (choice === 1) survive = 0.55 + (fs.pStats.hiz - o.hiz) / 150 + fs.pKondisyon / 500;
     else survive = 0.4;
-    if (choice === 2 && chance(0.3 + (P.power - O.power) / 250)) {
+    if (choice === 2 && chance(0.3 + (P.power - O.power) / 250 + add * 0.7)) {
       fs.log.push(L("🔥 İnanılmaz! Sarsılmışken savurduğun sağ el {0} dövüşçüsünü de sarstı!", [fs.oAd]));
       addDmg(fs, 'o', 13);
       if (rockCheck(fs, 'o', 16, b)) return fs;
-    } else if (chance(clamp(survive, 0.15, 0.9))) {
+    } else if (chance(clamp(survive + add, 0.12, 0.93))) {
       fs.log.push(
         choice === 0
           ? L("Rakibine sarıldın, kafanı yasladın. Saniyeler geçiyor… toparlanıyorsun.")
@@ -869,7 +877,7 @@ export function resolveCritical(prev: FightState, choice: number): FightState {
     }
   } else if (kind === 'subFirsat') {
     if (choice === 0) {
-      const sp = clamp(0.32 + (P.grappling - O.grappling) / 90 + (100 - fs.oKondisyon) / 400 + techLv(fs, subFromText(fs.subAdi)?.id) * 0.03, 0.1, 0.88);
+      const sp = clamp(0.32 + (P.grappling - O.grappling) / 90 + (100 - fs.oKondisyon) / 400 + techLv(fs, subFromText(fs.subAdi)?.id) * 0.03 + add, 0.08, 0.92);
       drain(fs, 'p', 'clinch', 3);
       if (chance(sp)) {
         finish(fs, 'p', 'SUB', L("🔒 {0} {1} kilidini sonuna kadar sıktı… {2} TAP ATTI!", [fs.pAd, fs.subAdi, fs.oAd]), b);
@@ -892,7 +900,7 @@ export function resolveCritical(prev: FightState, choice: number): FightState {
         ? 0.55 + (P.grappling - O.grappling) / 90 + fs.pStats.iq / 500
         : 0.48 + (P.wrestling - O.grappling) / 90 + fs.pKondisyon / 400;
     if (choice === 1) drain(fs, 'p', 'baski', 8);
-    if (chance(clamp(ep, 0.12, 0.9))) {
+    if (chance(clamp(ep + add, 0.1, 0.93))) {
       fs.log.push(
         choice === 0
           ? L("Elleri kontrol ettin, açıyı kırdın ve {0} kilidinden çıktın!", [fs.subAdi])

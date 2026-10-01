@@ -13,6 +13,8 @@ import { oppRecord } from '../engine/opponents';
 import type { CriticalKind, FightState, GameState, Tactic } from '../engine/types';
 import type { Act } from './GameScreens';
 import { CageView } from './CageView';
+import { FightQTE, qteFor, type QteSpec } from './FightQTE';
+import { qteOn } from '../qtePref';
 import { lookFor } from '../engine/tale';
 import { Bar, Button, Card, Choice, Icon, P, Screen, Section, upName, type IconName } from './components';
 import { C, F, G, R } from './theme';
@@ -217,6 +219,15 @@ export function FightScreen({ s, act }: { s: GameState; act: Act }) {
   // Olaylar tek tek akar; kullanıcı hız seçebilir ya da atlayabilir.
   const [shown, setShown] = useState(fs.log.length);
   const [speed, setSpeed] = useState(1);
+  // Kritik anda seçilen hamle için elle oynanan an (BİTİR!, KAÇ!, SIK!…)
+  const [qte, setQte] = useState<{ i: number; spec: QteSpec } | null>(null);
+  const pickCritical = (i: number) => {
+    const o = fs.opp.stats;
+    const resist = Math.max(0.2, Math.min(0.42, 0.3 + ((o.yer + o.gures) / 2 - (fs.pStats.yer + fs.pStats.gures) / 2) / 250));
+    const spec = qteOn() ? qteFor(fs.kritik!, i, resist) : null;
+    if (spec) setQte({ i, spec });
+    else setFs((f) => resolveCritical(f, i));
+  };
   const roundRef = useRef(fs.raunt);
   useEffect(() => {
     if (fs.raunt !== roundRef.current || fs.log.length < shown) {
@@ -292,8 +303,19 @@ export function FightScreen({ s, act }: { s: GameState; act: Act }) {
           </Pulse>
           <Section>{L("HIZLI KARAR!")}</Section>
           {CRITICAL_OPTIONS[fs.kritik].map((o, i) => (
-            <Choice key={i} icon={CRIT_ICONS[fs.kritik!][i]} label={o.ad} desc={o.aciklama} tone="gold" onPress={() => setFs((f) => resolveCritical(f, i))} />
+            <Choice key={i} icon={CRIT_ICONS[fs.kritik!][i]} label={o.ad} desc={o.aciklama} tone="gold" onPress={() => pickCritical(i)} />
           ))}
+          {qte ? (
+            <FightQTE
+              spec={qte.spec}
+              oLook={lookFor(fs.opp)}
+              onDone={(q) => {
+                const i = qte.i;
+                setQte(null);
+                setFs((f) => (f.kritik ? resolveCritical(f, i, q) : f));
+              }}
+            />
+          ) : null}
         </>
       )}
 
