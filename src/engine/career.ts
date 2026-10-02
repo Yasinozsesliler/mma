@@ -1,4 +1,5 @@
 import { L as tL, LOC } from '../i18n';
+import { signatureFinish } from './signature';
 import { perkPointNote, perkWinPop } from './perks';
 import { familyCosts } from './family';
 import { merchSales } from './merch';
@@ -202,6 +203,7 @@ export function finishFight(s: GameState) {
   if (won && !caught && finishMethod && r.teknik) {
     teknikNot = addTechXp(s, r.teknik, 2);
     lines.push(tL("🎯 Bitiren hareket: {0} · {1}", [techById(r.teknik)?.ad, teknikNot]));
+    lines.push(...signatureFinish(s, r.teknik));
   }
   const oldSeri = s.seri;
   s.seri = won ? Math.max(1, s.seri + 1) : draw ? 0 : Math.min(-1, s.seri - 1);

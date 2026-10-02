@@ -4568,4 +4568,13 @@ export const PL: Record<string, string> = {
   "Perki al": "Weź perk",
   "Önce bu daldaki önceki perki almalısın.": "Najpierw weź poprzedni perk w tej gałęzi.",
   "Perk puanın yok.": "Brak punktów perków.",
+  "✍️ İmza hareketin artık belli: “{0}”.": "✍️ Twój popisowy ruch: „{0}”.",
+  "🔥 İMZA HAREKETİ: “{0}”! Bu kariyerde {1}. kez. Popülerlik +2, {2} takipçi.": "🔥 POPISOWY RUCH: „{0}”! {1}. raz w karierze. Popularność +2, obserwujący {2}.",
+  "✍️ İMZA HAREKETİN": "✍️ TWÓJ POPISOWY RUCH",
+  "{0} · bu hareketle {1} kez bitirdin": "{0} · kończyłeś nim {1} razy",
+  "Bir tekniği {0}. ustalık seviyesine getirince ona kendi adını verip imza hareketin yapabilirsin.": "Doprowadź technikę do {0}. poziomu mistrzostwa, by nadać jej nazwę i uczynić popisowym ruchem.",
+  "İMZA YAP": "ZRÓB POPISOWYM",
+  "İmza hareketine bir isim ver:": "Nazwij swój popisowy ruch:",
+  "🔥 İMZA HAREKETİ: “{0}”!": "🔥 POPISOWY RUCH: „{0}”!",
+  "İmza hareketi: “{0}”.": "Popisowy ruch: „{0}”.",
 };

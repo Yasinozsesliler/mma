@@ -4581,4 +4581,13 @@ export const EN: Record<string, string> = {
   "Perki al": "Take perk",
   "Önce bu daldaki önceki perki almalısın.": "Take the previous perk in this branch first.",
   "Perk puanın yok.": "No perk points available.",
+  "✍️ İmza hareketin artık belli: “{0}”.": "✍️ Your signature move is set: “{0}”.",
+  "🔥 İMZA HAREKETİ: “{0}”! Bu kariyerde {1}. kez. Popülerlik +2, {2} takipçi.": "🔥 SIGNATURE MOVE: “{0}”! Number {1} this career. Popularity +2, {2} followers.",
+  "✍️ İMZA HAREKETİN": "✍️ YOUR SIGNATURE MOVE",
+  "{0} · bu hareketle {1} kez bitirdin": "{0} · {1} finishes with it",
+  "Bir tekniği {0}. ustalık seviyesine getirince ona kendi adını verip imza hareketin yapabilirsin.": "Bring a technique to mastery level {0} to name it and make it your signature move.",
+  "İMZA YAP": "MAKE SIGNATURE",
+  "İmza hareketine bir isim ver:": "Name your signature move:",
+  "🔥 İMZA HAREKETİ: “{0}”!": "🔥 SIGNATURE MOVE: “{0}”!",
+  "İmza hareketi: “{0}”.": "Signature move: “{0}”.",
 };

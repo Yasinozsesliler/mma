@@ -578,7 +578,7 @@ function beginFight(s: GameState) {
     pAd: s.fighter.lakap || s.fighter.soyad,
     koseAdi: s.takim.antrenor,
     opp,
-    mods: { stats: mods, plan: k.plan ?? 'ayakta', planUyum: !!k.planUyum, oppStats: k.oppMods, cutman: staffCutman(s), teknik: techLevels(s) },
+    mods: { stats: mods, plan: k.plan ?? 'ayakta', planUyum: !!k.planUyum, oppStats: k.oppMods, cutman: staffCutman(s), teknik: techLevels(s), imza: s.imza ? { id: s.imza.teknik, ad: s.imza.ad } : undefined },
     maxRaunt: unvan || anaMac ? 5 : 3,
     unvanMaci: unvan,
     anaMac,

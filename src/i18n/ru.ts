@@ -4636,4 +4636,13 @@ export const RU: Record<string, string> = {
   "Perki al": "Взять перк",
   "Önce bu daldaki önceki perki almalısın.": "Сначала возьми предыдущий перк этой ветки.",
   "Perk puanın yok.": "Нет очков перков.",
+  "✍️ İmza hareketin artık belli: “{0}”.": "✍️ Твой фирменный приём: «{0}».",
+  "🔥 İMZA HAREKETİ: “{0}”! Bu kariyerde {1}. kez. Popülerlik +2, {2} takipçi.": "🔥 ФИРМЕННЫЙ ПРИЁМ: «{0}»! {1}-й раз за карьеру. Популярность +2, подписчики {2}.",
+  "✍️ İMZA HAREKETİN": "✍️ ТВОЙ ФИРМЕННЫЙ ПРИЁМ",
+  "{0} · bu hareketle {1} kez bitirdin": "{0} · побед этим приёмом: {1}",
+  "Bir tekniği {0}. ustalık seviyesine getirince ona kendi adını verip imza hareketin yapabilirsin.": "Доведи технику до {0}-го уровня мастерства, чтобы назвать её своим фирменным приёмом.",
+  "İMZA YAP": "СДЕЛАТЬ ФИРМЕННЫМ",
+  "İmza hareketine bir isim ver:": "Назови свой фирменный приём:",
+  "🔥 İMZA HAREKETİ: “{0}”!": "🔥 ФИРМЕННЫЙ ПРИЁМ: «{0}»!",
+  "İmza hareketi: “{0}”.": "Фирменный приём: «{0}».",
 };

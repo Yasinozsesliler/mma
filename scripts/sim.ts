@@ -9,6 +9,7 @@ import { awardsDue, prepareAwards } from '../src/engine/awards';
 import { chooseTreatment } from '../src/engine/treatment';
 import { canStartBrand, launchProduct, startBrand } from '../src/engine/merch';
 import { BRANCHES, canTakePerk, perkPointsFree, takePerk, type PerkId } from '../src/engine/perks';
+import { canSign, setSignature } from '../src/engine/signature';
 import { campChoose } from '../src/engine/camp';
 import {
   acceptOffer,
@@ -30,6 +31,7 @@ import type { Background, GameState, PlanKey, Tactic } from '../src/engine/types
 import { STAT_KEYS } from '../src/engine/types';
 const krizStat: Record<string, number> = {};
 const podcastStat = { n: 0 };
+const imzaStat = { n: 0, sayi: 0 };
 const markaStat = { n: 0, toplam: 0, maxPara: 0 };
 const odulStat: Record<string, number> = {};
 const gpStat = { katilim: 0, sampiyon: 0, tur: {} as Record<number, number> };
@@ -122,6 +124,7 @@ function playCareer() {
           const opts = Object.values(BRANCHES).flatMap((b) => b.perkler).filter((p) => canTakePerk(s, p as PerkId));
           if (opts.length) takePerk(s, pick(opts) as PerkId);
         }
+        if (!s.imza) { const tk = Object.keys(s.teknik ?? {}).find((id) => canSign(s, id)); if (tk) setSignature(s, tk, ''); }
         if (s.tedavi) chooseTreatment(s, s.para > 50000 ? 'ameliyat' : pick(['fizik', 'fizik', 'igne'] as const));
         if (awardsDue(s) && prepareAwards(s)) {
           s.odulToren!.sonuclar.forEach((r) => r.oyuncu && (odulStat[r.kat] = (odulStat[r.kat] ?? 0) + 1));
@@ -238,6 +241,7 @@ function playCareer() {
 
   function finalize() {
     (s.kartlar ?? []).forEach((c) => { kartStat[c.nadir] = (kartStat[c.nadir] ?? 0) + 1; kartStat.toplam++; });
+    if (s.imza) { imzaStat.n++; imzaStat.sayi += s.imza.sayi; }
     if (s.marka) { markaStat.n++; markaStat.toplam += s.marka.toplam; }
     markaStat.maxPara += s.istat?.maxPara ?? 0;
     if (s.kanka?.durum === 'kanka') kankaStat.kanka++;
@@ -285,6 +289,7 @@ console.log(`Hedefler: kariyer başına ${(goalStat.n / N).toFixed(1)} tamamlana
 console.log(`Grand Prix: kariyer başına ${(gpStat.katilim / N).toFixed(2)} katılım, şampiyonluk oranı ${pct(gpStat.sampiyon, gpStat.katilim)}, elendiği tur ${JSON.stringify(gpStat.tur)}`);
 console.log('Ödüller (kariyer başına):', Object.entries(odulStat).map(([k, v]) => `${k} ${(v / N).toFixed(2)}`).join(', '));
 console.log(`Marka: ${pct(markaStat.n, N)} kariyerde, marka başına toplam kâr $${Math.round(markaStat.toplam / Math.max(1, markaStat.n)).toLocaleString('tr-TR')} · en yüksek bakiye ort. $${Math.round(markaStat.maxPara / N).toLocaleString('tr-TR')}`);
+console.log(`İmza hareketi: ${pct(imzaStat.n, N)} kariyerde, imza ile bitiriş ort. ${(imzaStat.sayi / Math.max(1, imzaStat.n)).toFixed(1)}`);
 console.log(`Podcast (kariyer başına): ${(podcastStat.n / N).toFixed(1)}`);
 console.log('Kartlar (kariyer başına):', Object.entries(kartStat).map(([k, v]) => `${k} ${(v / N).toFixed(1)}`).join(', '));
 console.log(`Antrenman ortağı: kanka ${pct(kankaStat.kanka, N)}, rakip ${pct(kankaStat.rakip, N)}`);

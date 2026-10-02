@@ -4596,4 +4596,13 @@ export const ES: Record<string, string> = {
   "Perki al": "Tomar habilidad",
   "Önce bu daldaki önceki perki almalısın.": "Primero toma la habilidad anterior de esta rama.",
   "Perk puanın yok.": "No tienes puntos.",
+  "✍️ İmza hareketin artık belli: “{0}”.": "✍️ Tu movimiento característico ya tiene nombre: “{0}”.",
+  "🔥 İMZA HAREKETİ: “{0}”! Bu kariyerde {1}. kez. Popülerlik +2, {2} takipçi.": "🔥 MOVIMIENTO CARACTERÍSTICO: “{0}”! Vez n.º {1} en tu carrera. Popularidad +2, {2} seguidores.",
+  "✍️ İMZA HAREKETİN": "✍️ TU MOVIMIENTO CARACTERÍSTICO",
+  "{0} · bu hareketle {1} kez bitirdin": "{0} · {1} finalizaciones con él",
+  "Bir tekniği {0}. ustalık seviyesine getirince ona kendi adını verip imza hareketin yapabilirsin.": "Lleva una técnica al nivel de maestría {0} para ponerle nombre y hacerla tu movimiento característico.",
+  "İMZA YAP": "HACER CARACTERÍSTICO",
+  "İmza hareketine bir isim ver:": "Ponle nombre a tu movimiento:",
+  "🔥 İMZA HAREKETİ: “{0}”!": "🔥 ¡MOVIMIENTO CARACTERÍSTICO: “{0}”!",
+  "İmza hareketi: “{0}”.": "Movimiento característico: “{0}”.",
 };

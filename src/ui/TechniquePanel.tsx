@@ -1,7 +1,8 @@
 import { L } from '../i18n';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { canUpgradeTech, MAX_TECH, TECH_KINDS, TECHNIQUES, techCost, techLevel, upgradeTech, xpNeed } from '../engine/techniques';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { canUpgradeTech, MAX_TECH, TECH_KINDS, TECHNIQUES, techById, techCost, techLevel, upgradeTech, xpNeed } from '../engine/techniques';
+import { canSign, defaultSignatureName, setSignature, SIGNATURE_LEVEL } from '../engine/signature';
 import type { GameState } from '../engine/types';
 import { Icon, Section, type IconName } from './components';
 import type { Act } from './GameScreens';
@@ -12,9 +13,20 @@ const KIND_COLOR = { sub: '#3aa8ff', vurus: C.red, ozel: C.gold } as const;
 /** Bitiriş teknikleri: seviye, ustalık ve puanla geliştirme. */
 export function TechniquePanel({ s, act }: { s: GameState; act: Act }) {
   const [all, setAll] = useState(false);
+  const [naming, setNaming] = useState<string | null>(null);
+  const [name, setName] = useState('');
   return (
     <>
       <Section>{L("BİTİRİŞ TEKNİKLERİ")}</Section>
+      {s.imza ? (
+        <View style={tp.sig}>
+          <Text style={tp.sigKicker}>{L("✍️ İMZA HAREKETİN")}</Text>
+          <Text style={tp.sigName}>“{s.imza.ad}”</Text>
+          <Text style={tp.desc}>{L("{0} · bu hareketle {1} kez bitirdin", [techById(s.imza.teknik)?.ad ?? '', s.imza.sayi])}</Text>
+        </View>
+      ) : (
+        <Text style={tp.hint}>{L("Bir tekniği {0}. ustalık seviyesine getirince ona kendi adını verip imza hareketin yapabilirsin.", [SIGNATURE_LEVEL])}</Text>
+      )}
       <Text style={tp.hint}>
         
         {L("Bir maçı hangi hareketle bitirirsen o hareket ustalık kazanır. Teknik çalışması ve spar da ustalık verir. Özel hareketler dövüş sırasında riskli ama görkemli fırsatlar açar. Gelişim puanın:")}{' '}<Text style={{ color: C.gold }}>{s.puan}</Text>
@@ -51,6 +63,17 @@ export function TechniquePanel({ s, act }: { s: GameState; act: Act }) {
                       {t.aciklama}
                     </Text>
                   </View>
+                  {canSign(s, t.id) && s.imza?.teknik !== t.id ? (
+                    <Pressable
+                      onPress={() => {
+                        setNaming(naming === t.id ? null : t.id);
+                        setName(defaultSignatureName(s, t.id));
+                      }}
+                      style={[tp.btn, { borderColor: C.gold }]}
+                    >
+                      <Text style={[tp.btnText, { color: C.gold }]}>{L("İMZA YAP")}</Text>
+                    </Pressable>
+                  ) : null}
                   {max ? (
                     <Text style={[tp.master, { color: col }]}>{L('USTA')}</Text>
                   ) : (
@@ -62,6 +85,22 @@ export function TechniquePanel({ s, act }: { s: GameState; act: Act }) {
                 </View>
               );
             })}
+            {naming && list.some((t) => t.id === naming) ? (
+              <View style={tp.nameBox}>
+                <Text style={tp.desc}>{L("İmza hareketine bir isim ver:")}</Text>
+                <TextInput value={name} onChangeText={setName} maxLength={32} style={tp.input} />
+                <Pressable
+                  onPress={() => {
+                    const id = naming;
+                    setNaming(null);
+                    act((x) => setSignature(x, id, name));
+                  }}
+                  style={[tp.btn, { borderColor: C.gold, alignSelf: 'flex-end' }]}
+                >
+                  <Text style={[tp.btnText, { color: C.gold }]}>{L("KAYDET")}</Text>
+                </Pressable>
+              </View>
+            ) : null}
           </View>
         );
       })}
@@ -73,6 +112,11 @@ export function TechniquePanel({ s, act }: { s: GameState; act: Act }) {
 }
 
 const tp = StyleSheet.create({
+  sig: { backgroundColor: '#1a150a', borderWidth: 1, borderColor: C.gold, borderRadius: R, padding: 12, gap: 2, marginBottom: 8 },
+  sigKicker: { color: C.gold, fontFamily: F.semi, fontSize: 11, letterSpacing: 1 },
+  sigName: { color: C.text, fontFamily: F.display, fontSize: 18 },
+  nameBox: { gap: 6, paddingTop: 8, borderTopWidth: 1, borderTopColor: C.border },
+  input: { color: C.text, fontFamily: F.semi, fontSize: 15, borderWidth: 1, borderColor: C.border, borderRadius: 8, padding: 8, backgroundColor: '#0f1014' },
   hint: { color: C.faint, fontFamily: F.body, fontSize: 12, lineHeight: 17, marginBottom: 8 },
   group: { backgroundColor: C.card, borderRadius: R, borderWidth: 1, borderColor: C.border, padding: 10, marginBottom: 8 },
   groupHead: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 },

@@ -287,6 +287,8 @@ export interface FightMods {
   oppStats: Partial<Stats>;
   cutman?: number;
   teknik?: Record<string, number>;
+  /** İmza hareketi: anlatımda kendi adıyla geçer */
+  imza?: { id: string; ad: string };
 }
 
 export interface FightResult {
@@ -584,6 +586,8 @@ export interface GameState {
   ozelKozmetik?: string[];
   /** Alınan perkler (perks.ts) */
   perkler?: string[];
+  /** İmza hareketi (signature.ts) */
+  imza?: import('./signature').Signature;
   /** Yıl sonu ödülleri (awards.ts): son işlenen yıl, süren tören, kazanılan ödüller */
   odulYil?: number;
   /** Tedavi kararı bekleyen ciddi sakatlık (treatment.ts) */

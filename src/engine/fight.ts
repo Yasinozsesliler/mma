@@ -240,7 +240,7 @@ function finish(fs: FightState, kazanan: Side, yontem: Method, aciklama: string,
       (yontem === 'SUB' ? subFromText(aciklama) ?? pickTech(fs.mods.teknik, 'sub') : pickTech(fs.mods.teknik, 'vurus'));
     if (t) {
       fs.sonuc.teknik = t.id;
-      fs.log.push(L("🎯 Bitiren hareket: {0}", [t.ad]));
+      fs.log.push(fs.mods.imza?.id === t.id ? L("🔥 İMZA HAREKETİ: “{0}”!", [fs.mods.imza.ad]) : L("🎯 Bitiren hareket: {0}", [t.ad]));
     }
   }
 }

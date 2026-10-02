@@ -4596,4 +4596,13 @@ export const PT: Record<string, string> = {
   "Perki al": "Pegar habilidade",
   "Önce bu daldaki önceki perki almalısın.": "Pegue antes a habilidade anterior deste ramo.",
   "Perk puanın yok.": "Sem pontos disponíveis.",
+  "✍️ İmza hareketin artık belli: “{0}”.": "✍️ Seu golpe característico está definido: “{0}”.",
+  "🔥 İMZA HAREKETİ: “{0}”! Bu kariyerde {1}. kez. Popülerlik +2, {2} takipçi.": "🔥 GOLPE CARACTERÍSTICO: “{0}”! {1}ª vez na carreira. Popularidade +2, {2} seguidores.",
+  "✍️ İMZA HAREKETİN": "✍️ SEU GOLPE CARACTERÍSTICO",
+  "{0} · bu hareketle {1} kez bitirdin": "{0} · {1} finalizações com ele",
+  "Bir tekniği {0}. ustalık seviyesine getirince ona kendi adını verip imza hareketin yapabilirsin.": "Leve uma técnica ao nível de maestria {0} para dar um nome e torná-la seu golpe característico.",
+  "İMZA YAP": "TORNAR ASSINATURA",
+  "İmza hareketine bir isim ver:": "Dê um nome ao seu golpe:",
+  "🔥 İMZA HAREKETİ: “{0}”!": "🔥 GOLPE CARACTERÍSTICO: “{0}”!",
+  "İmza hareketi: “{0}”.": "Golpe característico: “{0}”.",
 };

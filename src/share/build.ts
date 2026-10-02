@@ -77,7 +77,9 @@ export function careerCard(s: GameState): ShareCardData {
       [L("KEMER"), String(kemer)],
       [L("EFSANE PUANI"), String(legacyScore(s))],
     ],
-    alt: L("{0} sokaklarından çıktı; {1} yaşında {2} galibiyete ulaştı, {3} bitiriş.", [s.fighter.memleket, s.fighter.yas, s.rekor.g, s.rekor.ko + s.rekor.sub]),
+    alt:
+      L("{0} sokaklarından çıktı; {1} yaşında {2} galibiyete ulaştı, {3} bitiriş.", [s.fighter.memleket, s.fighter.yas, s.rekor.g, s.rekor.ko + s.rekor.sub]) +
+      (s.imza ? ' ' + L("İmza hareketi: “{0}”.", [s.imza.ad]) : ''),
   };
 }
 
