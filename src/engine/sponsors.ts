@@ -1,6 +1,6 @@
 // Sponsorluklar: markalar popülerliğe ve kariyer aşamasına göre teklif verir, dövüş başına ödeme yapar.
 import { L, LOC } from '../i18n';
-import { chance, clamp, pick, randInt, shuffle, uid } from './rng';
+import { chance, clamp, pick, rand, randInt, shuffle, uid } from './rng';
 import type { GameState, Stage } from './types';
 
 const $ = (n: number) => `$${Math.round(n).toLocaleString(LOC)}`;
@@ -60,6 +60,22 @@ export interface SponsorDeal {
   galibiyet: number;
   bitiris: number;
   pazarlik?: boolean;
+  /** Süren pazarlık (masadayken) */
+  pz?: Haggle;
+}
+
+/** Pazarlık masası: markanın gizli bütçe tavanı (ilk teklife göre çarpan) ve sabrı. */
+export interface Haggle {
+  tavan: number;
+  sabir: number;
+  sabirMax: number;
+  /** Masadaki teklifin ilk teklife oranı */
+  carpan: number;
+  baz: { dovusBasi: number; galibiyet: number; bitiris: number };
+  mesaj: string;
+  ruh: 'sicak' | 'gergin' | 'kizgin' | 'son';
+  /** Menajerin tahmini (iyi menajerde) */
+  ipucu?: string;
 }
 
 export function sponsorSlots(s: GameState) {
@@ -119,22 +135,83 @@ export function rejectSponsor(s: GameState, id: string) {
   s.sponsorTeklif = (s.sponsorTeklif ?? []).filter((x) => x.id !== id);
 }
 
-export function negotiateSponsor(s: GameState, id: string): string {
+const r50 = (n: number) => Math.round(n / 50) * 50;
+function applyMult(d: SponsorDeal, k: number) {
+  const b = d.pz!.baz;
+  d.dovusBasi = r50(b.dovusBasi * k);
+  d.galibiyet = r50(b.galibiyet * k);
+  d.bitiris = r50(b.bitiris * k);
+}
+
+/** Pazarlık masasına otur. */
+export function startHaggle(s: GameState, id: string) {
   const d = (s.sponsorTeklif ?? []).find((x) => x.id === id);
   const b = d && brandById(d.marka);
-  if (!d || !b || d.pazarlik) return L("Bu teklifte pazarlık yapıldı.");
+  if (!d || !b || d.pazarlik || d.pz) return;
+  const mq = s.takim.menajerKalite;
+  const tavan = 1.1 + mq * 0.025 + s.populerlik / 300 + (s.sampiyon ? 0.1 : 0) + rand() * 0.2;
+  const sabir = 3 + (mq >= 6 ? 1 : 0);
+  let ipucu: string | undefined;
+  if (mq >= 5) {
+    // İyi menajer tavanı aşağı yukarı sezer (kötü menajer yanılabilir)
+    const guess = Math.round(((tavan - 1) * 100 + (rand() - 0.5) * (40 - mq * 3)) / 5) * 5;
+    ipucu = L("Menajerin fısıldıyor: “Bence %{0} civarına kadar çıkarlar.”", [Math.max(5, guess)]);
+  }
+  d.pz = { tavan, sabir, sabirMax: sabir, carpan: 1, baz: { dovusBasi: d.dovusBasi, galibiyet: d.galibiyet, bitiris: d.bitiris }, mesaj: L("{0}: “Teklifimiz masada. Ne düşünüyorsunuz?”", [b.ad]), ruh: 'sicak', ipucu };
+}
+
+/** Teklifi artırmasını iste (adım: ilk teklife göre +%10/+%25/+%50). Anlaşma olursa hemen imzalanır. */
+export function haggleAsk(s: GameState, id: string, adim: number): string | null {
+  const d = (s.sponsorTeklif ?? []).find((x) => x.id === id);
+  const b = d && brandById(d.marka);
+  const pz = d?.pz;
+  if (!d || !b || !pz || pz.ruh === 'son') return null;
+  const ask = pz.carpan + adim;
+  if (ask <= pz.tavan) {
+    pz.carpan = ask;
+    applyMult(d, ask);
+    d.pazarlik = true;
+    d.pz = undefined;
+    return L("🤝 {0}: “Anlaştık!” Dövüş başı {1}. ", [b.ad, $(d.dovusBasi)]) + acceptSponsor(s, id);
+  }
+  const fark = ask / pz.tavan;
+  pz.sabir -= fark > 1.3 ? 2 : 1;
+  if (pz.sabir <= 0) {
+    if (chance(0.5)) {
+      rejectSponsor(s, id);
+      return L("❌ {0} masadan kalktı: “Bu işi başka biriyle yaparız.”", [b.ad]);
+    }
+    pz.carpan += (pz.tavan - pz.carpan) * 0.7;
+    applyMult(d, pz.carpan);
+    pz.ruh = 'son';
+    pz.mesaj = L("{0}: “Son teklifimiz bu: dövüş başı {1}. Ya kabul edin ya da yollarımız ayrılsın.”", [b.ad, $(d.dovusBasi)]);
+    return null;
+  }
+  pz.carpan += (pz.tavan - pz.carpan) * (0.35 + rand() * 0.15);
+  applyMult(d, pz.carpan);
+  pz.ruh = fark > 1.3 ? 'kizgin' : 'gergin';
+  pz.mesaj =
+    fark > 1.3
+      ? L("{0}: “Bu ciddi olamaz… Yine de dövüş başı {1} verebiliriz.”", [b.ad, $(d.dovusBasi)])
+      : L("{0}: “Bütçemizi zorluyorsunuz. Dövüş başı {1} yapalım.”", [b.ad, $(d.dovusBasi)]);
+  return null;
+}
+
+/** Masadaki teklifi kabul et ve imzala. */
+export function haggleAccept(s: GameState, id: string): string {
+  const d = (s.sponsorTeklif ?? []).find((x) => x.id === id);
+  if (!d?.pz) return L("Teklif bulunamadı.");
   d.pazarlik = true;
-  if (chance(0.3 + s.takim.menajerKalite * 0.05 + s.populerlik / 300)) {
-    const k = 1.2 + Math.random() * 0.2;
-    d.dovusBasi = Math.round((d.dovusBasi * k) / 50) * 50;
-    d.galibiyet = Math.round((d.galibiyet * k) / 50) * 50;
-    return L("✅ {0} geri adım attı: dövüş başı {1}.", [b.ad, $(d.dovusBasi)]);
-  }
-  if (chance(0.3)) {
-    rejectSponsor(s, id);
-    return L("❌ {0} teklifi geri çekti.", [b.ad]);
-  }
-  return L("🤝 {0}: “Son teklifimiz bu.”", [b.ad]);
+  d.pz = undefined;
+  return acceptSponsor(s, id);
+}
+
+/** Masadan kalk: teklif son haliyle bekler, bir daha pazarlık yapılmaz. */
+export function haggleLeave(s: GameState, id: string) {
+  const d = (s.sponsorTeklif ?? []).find((x) => x.id === id);
+  if (!d?.pz) return;
+  d.pazarlik = true;
+  d.pz = undefined;
 }
 
 /** Dövüş sonrası sponsor ödemeleri. */

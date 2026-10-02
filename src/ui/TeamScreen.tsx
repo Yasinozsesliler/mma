@@ -3,7 +3,8 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { money } from '../engine/career';
 import { AGENTS, COUNTRIES } from '../engine/data';
-import { acceptSponsor, brandById, negotiateSponsor, rejectSponsor, sponsorSlots } from '../engine/sponsors';
+import { acceptSponsor, brandById, rejectSponsor, sponsorSlots, startHaggle } from '../engine/sponsors';
+import { HagglePanel } from './HagglePanel';
 import { agentSeverance, agentSigning, agentUnlocked, availableGyms, fireAgent, hireAgent, switchGym } from '../engine/team';
 import type { GameState } from '../engine/types';
 import { STAT_LABELS } from '../engine/types';
@@ -112,12 +113,13 @@ export function TeamScreen({ s, act }: { s: GameState; act: Act }) {
                   {b.imaj ? <Pill text={L("İmaj maddesi: skandalda iptal")} icon="alert-octagon" color={C.red} /> : null}
                   {b.bahis ? <Pill text={L("Tartışmalı marka: popülerlik -3")} icon="alert" color={C.red} /> : null}
                 </View>
+                {d.pz ? <HagglePanel d={d} act={act} setMsg={setMsg} /> : (
                 <View style={[tm.footer, { gap: 8 }]}>
                   <Pressable onPress={() => act((x) => setMsg(acceptSponsor(x, d.id)))} style={({ pressed }) => [tm.btn, { opacity: pressed ? 0.7 : 1 }]}>
                     <Text style={tm.btnText}>{L("İMZALA")}</Text>
                   </Pressable>
                   {!d.pazarlik ? (
-                    <Pressable onPress={() => act((x) => setMsg(negotiateSponsor(x, d.id)))} style={({ pressed }) => [tm.btn, { backgroundColor: C.cardAlt, opacity: pressed ? 0.7 : 1 }]}>
+                    <Pressable onPress={() => act((x) => startHaggle(x, d.id))} style={({ pressed }) => [tm.btn, { backgroundColor: C.cardAlt, opacity: pressed ? 0.7 : 1 }]}>
                       <Text style={tm.btnText}>{L("PAZARLIK")}</Text>
                     </Pressable>
                   ) : null}
@@ -125,6 +127,7 @@ export function TeamScreen({ s, act }: { s: GameState; act: Act }) {
                     <Text style={[tm.btnText, { color: C.dim }]}>{L("REDDET")}</Text>
                   </Pressable>
                 </View>
+                )}
               </View>
             );
           })}
