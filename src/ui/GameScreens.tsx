@@ -240,6 +240,9 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
             {s.stage !== 'amator' ? (
               <ActionTile icon="draw-pen" label={L("Hayran buluşması")} sub={canFanMeet(s) ? L("İmza günü düzenle") : L("Sonraki maçtan sonra")} accent="#ff8fb1" badge={canFanMeet(s) ? '!' : null} onPress={() => canFanMeet(s) && setFanMeet(true)} />
             ) : null}
+            {s.stage !== 'amator' ? (
+              <ActionTile icon="tag-heart" label={L("Markam")} sub={s.marka ? `${s.marka.ad} · ${money(s.marka.toplam)}` : L("Kendi markanı kur")} accent={C.gold} onPress={() => act((x) => (x.phase = 'marka'))} />
+            ) : null}
             <ActionTile icon="cards" label={L("Kart Albümü")} sub={L("{0} kart", [(s.kartlar ?? []).length])} accent="#c86bff" badge={unclaimedMilestones(s) || null} onPress={() => act((x) => (x.phase = 'album'))} />
             <ActionTile icon="cellphone-message" label={L("Sosyal medya")} sub={L("{0} paylaşım", [(s.sosyal ?? []).length])} accent="#3aa8ff" onPress={() => act((x) => (x.phase = 'sosyal'))} />
             <ActionTile icon="glass-cocktail" label={L("Gece hayatı")} sub={s.iliski ? `💞 ${s.iliski.ad}` : L("Randevu · kulüp · kumar")} accent="#fd267a" onPress={() => act((x) => (x.phase = 'gece'))} />

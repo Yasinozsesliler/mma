@@ -437,6 +437,7 @@ export type Phase =
   | 'album'
   | 'podcast'
   | 'odul'
+  | 'marka'
   | 'emeklilik';
 
 export interface Istat {
@@ -574,6 +575,8 @@ export interface GameState {
   bulusmaSon?: number;
   /** Son memleket maçının dövüş sayısı */
   memleketSon?: number;
+  /** Kendi markan (merch.ts) */
+  marka?: import('./merch').MerchBrand;
   /** Yıl sonu ödülleri (awards.ts): son işlenen yıl, süren tören, kazanılan ödüller */
   odulYil?: number;
   /** Tedavi kararı bekleyen ciddi sakatlık (treatment.ts) */
