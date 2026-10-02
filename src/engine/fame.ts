@@ -1,5 +1,6 @@
 // Takipçi: sınırsız şöhret göstergesi. Kazandıkça artar, kaybettikçe erir; trash talk ile büyük kazanır ya da kaybedersin.
 // (İç mekaniklerdeki 0-100 popülerlik ayrı tutulur; oyuncunun gördüğü ve kovaladığı sayı takipçidir.)
+import { perkFollowers } from './perks';
 import { L, LANG } from '../i18n';
 import { chance, clamp, rand } from './rng';
 import type { GameState, Opponent, P4PEntry } from './types';
@@ -49,7 +50,7 @@ export function fightFollowers(s: GameState, o: { won: boolean; draw: boolean; f
   if (o.won) d = F * (0.05 + (o.finish ? 0.04 : 0) + o.bonus * 0.03 + (o.title ? 0.3 : 0) + (o.trash ? 0.04 : 0)) * damp(s, F) + base * (o.finish ? 10 : 6);
   else if (o.draw) d = F * 0.005;
   else d = -F * (0.025 + (o.koLoss ? 0.025 : 0) + (o.trash ? 0.06 : 0));
-  return addFollowers(s, d * (0.85 + rand() * 0.3));
+  return addFollowers(s, d * (0.85 + rand() * 0.3) * (o.won ? perkFollowers(s) : 1));
 }
 
 /**

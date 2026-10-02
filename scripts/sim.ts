@@ -8,6 +8,7 @@ import { acceptGp, closeGp, declineGp } from '../src/engine/grandPrix';
 import { awardsDue, prepareAwards } from '../src/engine/awards';
 import { chooseTreatment } from '../src/engine/treatment';
 import { canStartBrand, launchProduct, startBrand } from '../src/engine/merch';
+import { BRANCHES, canTakePerk, perkPointsFree, takePerk, type PerkId } from '../src/engine/perks';
 import { campChoose } from '../src/engine/camp';
 import {
   acceptOffer,
@@ -117,6 +118,10 @@ function playCareer() {
         refreshStaleGoals(s);
         if (!process.env.NOMERCH && !s.marka && canStartBrand(s)) startBrand(s, '');
         if (s.marka) (['tisort', 'eldiven', 'icecek'] as const).forEach((p) => s.para > 100000 && launchProduct(s, p));
+        if (!process.env.NOPERK) for (let q = 0; q < 3 && perkPointsFree(s) > 0; q++) {
+          const opts = Object.values(BRANCHES).flatMap((b) => b.perkler).filter((p) => canTakePerk(s, p as PerkId));
+          if (opts.length) takePerk(s, pick(opts) as PerkId);
+        }
         if (s.tedavi) chooseTreatment(s, s.para > 50000 ? 'ameliyat' : pick(['fizik', 'fizik', 'igne'] as const));
         if (awardsDue(s) && prepareAwards(s)) {
           s.odulToren!.sonuclar.forEach((r) => r.oyuncu && (odulStat[r.kat] = (odulStat[r.kat] ?? 0) + 1));

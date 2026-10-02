@@ -1,4 +1,5 @@
 import { L, LOC } from '../i18n';
+import { perkCamp, perkFightMods } from './perks';
 import { familyMods } from './family';
 import { hometownMods } from './hometown';
 import { cutAction, CUT_SLOTS, manualCutResult, startManualCut, type CutAction } from './weightCut';
@@ -344,7 +345,8 @@ function runCamp(s: GameState) {
       (k.focus === 'kondisyon' && petRunner(s) ? 1.1 : 1) *
       (1 + (s.motivasyon + campMotivation(s)) * 0.1) *
       (k.kisaHaber ? 1 : len.carpan) *
-      drill.gelisim;
+      drill.gelisim *
+      perkCamp(s);
     // Kamp odak alanı en kötü +2 gelişir; iyi koşullarda +5'e kadar.
     const d = addStat(f.stats, k.focus, clamp(Math.round(g), 2, 5), 2);
     artis = d;
@@ -560,6 +562,7 @@ function beginFight(s: GameState) {
   applyWalkout(s, mods, k.oppMods);
   hometownMods(s, opp, mods);
   familyMods(s, mods);
+  perkFightMods(s, mods);
   Object.entries(fightItemMods(s)).forEach(([st, v]) => (mods[st as StatKey] = (mods[st as StatKey] ?? 0) + (v ?? 0)));
   Object.entries(diseaseMods(s)).forEach(([st, v]) => (mods[st as StatKey] = (mods[st as StatKey] ?? 0) + (v ?? 0)));
   if (dopingActive(s)) {

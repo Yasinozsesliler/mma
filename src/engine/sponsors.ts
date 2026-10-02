@@ -1,4 +1,5 @@
 // Sponsorluklar: markalar popülerliğe ve kariyer aşamasına göre teklif verir, dövüş başına ödeme yapar.
+import { perkIncome } from './perks';
 import { L, LOC } from '../i18n';
 import { chance, clamp, pick, rand, randInt, shuffle, uid } from './rng';
 import type { GameState, Stage } from './types';
@@ -221,7 +222,7 @@ export function paySponsors(s: GameState, won: boolean, finish: boolean): { topl
   (s.sponsorlar ?? []).forEach((d) => {
     const b = brandById(d.marka);
     if (!b) return;
-    const para = d.dovusBasi + (won ? d.galibiyet : 0) + (won && finish ? d.bitiris : 0);
+    const para = Math.round((d.dovusBasi + (won ? d.galibiyet : 0) + (won && finish ? d.bitiris : 0)) * perkIncome(s));
     toplam += para;
     d.dovus--;
     satirlar.push(`💼 ${b.ad}: +${$(para)}`);

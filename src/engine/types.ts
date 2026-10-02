@@ -582,6 +582,8 @@ export interface GameState {
   /** Özel gün etkinliği ve kazanılan etkinlik kozmetikleri (specialEvent.ts) */
   ozelEtkinlik?: import('./specialEvent').SpecialEvent;
   ozelKozmetik?: string[];
+  /** Alınan perkler (perks.ts) */
+  perkler?: string[];
   /** Yıl sonu ödülleri (awards.ts): son işlenen yıl, süren tören, kazanılan ödüller */
   odulYil?: number;
   /** Tedavi kararı bekleyen ciddi sakatlık (treatment.ts) */

@@ -1,5 +1,6 @@
 // Kendi markan: tişört, eldiven, enerji içeceği. Her dövüşten sonra satış; talep takipçi, popülerlik, sonuç,
 // fiyat seviyesi, kalite ve reklam kampanyasına bağlı. Süren sosyal medya krizi satışları düşürür.
+import { perkIncome } from './perks';
 import { L, LOC } from '../i18n';
 import { followers } from './fame';
 import { rand } from './rng';
@@ -97,6 +98,7 @@ export function merchSales(s: GameState, won: boolean): string[] {
   const m = s.marka;
   if (!m || !Object.keys(m.urunler).length) return [];
   const r = sell(s, won, true);
+  r.kazanc = Math.round(r.kazanc * perkIncome(s));
   s.para += r.kazanc;
   m.toplam += r.kazanc;
   m.gecmis = [{ kazanc: r.kazanc, adet: r.adet }, ...m.gecmis].slice(0, 8);

@@ -1,4 +1,5 @@
 import { L as tL, LOC } from '../i18n';
+import { perkPointNote, perkWinPop } from './perks';
 import { familyCosts } from './family';
 import { merchSales } from './merch';
 import { hometownAfter, maybeHometown } from './hometown';
@@ -173,6 +174,10 @@ export function finishFight(s: GameState) {
     // No Contest: karneye işlenmez
   } else if (won) {
     karne.g++;
+    if (pro) {
+      const pn = perkPointNote(s, karne.g - 1);
+      if (pn) lines.push(pn);
+    }
     if (r.yontem === 'KO' || r.yontem === 'TKO') karne.ko++;
     else if (r.yontem === 'SUB') karne.sub++;
     else karne.karar++;
@@ -262,7 +267,7 @@ export function finishFight(s: GameState) {
   if (won && opp.champion) pop += 10;
   if (won && opp.rivalry >= 2) pop += 3;
   pop += (fs.sov ?? 0) * (won ? 2 : -1);
-  pop = prAdjust(s, Math.round(pop * exposure));
+  pop = prAdjust(s, Math.round(pop * exposure)) + (won ? perkWinPop(s) : 0);
   s.populerlik = clamp(s.populerlik + pop, 0, 100);
   lines.push(tL("🔥 Popülerlik {0}{1} → {2}/100", [pop >= 0 ? '+' : '', pop, s.populerlik]));
   const tDelta = caught

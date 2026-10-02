@@ -44,6 +44,8 @@ import { pendingBouts, weeklyGymNet } from '../engine/academy';
 import { ACHIEVEMENTS } from '../engine/achievements';
 import { UccRoadCard } from './UccRoadCard';
 import { GoalsCard } from './GoalsCard';
+import { PerkTree } from './PerkTree';
+import { perkPointsFree } from '../engine/perks';
 import { SpecialEventCard } from './SpecialEventCard';
 import { chooseTreatment, treatmentCostText, treatmentOptions } from '../engine/treatment';
 import { ContractTablePanel } from './ContractTablePanel';
@@ -124,7 +126,7 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
         onChange={setTab}
         items={[
           { key: 'ana', label: L("KARİYER") },
-          { key: 'gelisim', label: L("GELİŞİM"), badge: s.puan },
+          { key: 'gelisim', label: L("GELİŞİM"), badge: s.puan + perkPointsFree(s) },
           { key: 'siralama', label: L("SIRALAMA") },
           { key: 'gecmis', label: L("PROFİL") },
         ]}
@@ -320,6 +322,7 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
         <>
           <CoachTip s={s} act={act} id="gelisim" />
           <SkillPanel s={s} act={act} />
+          <PerkTree s={s} act={act} />
           <TechniquePanel s={s} act={act} />
         </>
       ) : tab === 'siralama' ? (
