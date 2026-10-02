@@ -554,6 +554,10 @@ export interface GameState {
   /** Podcast daveti (podcast.ts) ve son katılınan podcastin dövüş sayısı */
   podcast?: import('./podcast').Podcast;
   podcastSon?: number;
+  /** Grand Prix turnuvası, daveti ve son katılım (grandPrix.ts) */
+  gp?: import('./grandPrix').GrandPrix;
+  gpDavet?: { dovus: number; odul: number };
+  gpSon?: number;
   /** Ödüllü reklam teklifleri: alındıkları dövüş sayısı (her dövüş arasında birer kez). */
   odul?: { sakatlikMac?: number; profilHafta?: number };
   saglik: number;

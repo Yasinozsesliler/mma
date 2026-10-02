@@ -1,4 +1,5 @@
 import { L as tL, LOC } from '../i18n';
+import { gpAfterFight, gpCurrentOpponent, maybeGpInvite, withdrawGp } from './grandPrix';
 import { maybePodcast } from './podcast';
 import { addCard } from './cards';
 import { addStat, advanceWeeks, currentOrg, fullName, statAverage } from './character';
@@ -53,7 +54,13 @@ export function findNextFight(s: GameState) {
     return;
   }
   const org = ORGS[currentOrg(s)];
-  if (org.rakipSecimi && !s.kisaHaber) {
+  // Organizasyon değiştiyse süren Grand Prix'den çekilmiş sayılır
+  if (s.gp && !s.gp.bitti && s.gp.org !== currentOrg(s)) withdrawGp(s);
+  const gpOpp = gpCurrentOpponent(s);
+  if (gpOpp) {
+    s.pending.secenekler = [gpOpp];
+    s.pending.dayatma = true;
+  } else if (org.rakipSecimi && !s.kisaHaber) {
     s.pending.secenekler = opponentChoices(s);
     s.pending.dayatma = false;
   } else {
@@ -77,6 +84,12 @@ export function pickOpponent(s: GameState, idx: number) {
 }
 
 export function rejectImposed(s: GameState) {
+  if (gpCurrentOpponent(s)) {
+    withdrawGp(s);
+    s.pending = {};
+    findNextFight(s);
+    return;
+  }
   s.reddedilen++;
   s.populerlik = clamp(s.populerlik - 3, 0, 100);
   advanceWeeks(s, 3);
@@ -173,6 +186,7 @@ export function finishFight(s: GameState) {
     const kart = addCard(s, opp, org, methodLabel(r.yontem));
     if (kart) lines.push(kart);
   }
+  lines.push(...gpAfterFight(s, opp, won && !caught));
   // Bitiren hareket ustalık kazanır (maçı hangi teknikle bitirdiysen).
   let teknikNot: string | undefined;
   if (won && !caught && finishMethod && r.teknik) {
@@ -327,6 +341,7 @@ export function finishFight(s: GameState) {
   checkAchievements(s).forEach((a) => lines.push(tL("⭐ Yeni başarım: {0}", [a])));
   if (caught) lines.push(...dopingFallout(s, banWeeks!));
   maybePodcast(s);
+  maybeGpInvite(s);
   const teklif = refreshSponsorOffers(s, won && !caught);
   if (teklif) lines.push(teklif);
   // Toparlanma: maçtan sonra kısa bir ara. Sıradaki maçın tarihi teklifte belirlenir (toplam ~60-90 gün).

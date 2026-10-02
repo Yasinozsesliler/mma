@@ -45,6 +45,7 @@ import { pendingBouts, weeklyGymNet } from '../engine/academy';
 import { ACHIEVEMENTS } from '../engine/achievements';
 import { UccRoadCard } from './UccRoadCard';
 import { GoalsCard } from './GoalsCard';
+import { GrandPrixCard } from './GrandPrixCard';
 import { declinePodcast } from '../engine/podcast';
 import { unclaimedMilestones } from '../engine/cards';
 import { crisisTitle } from '../engine/crisis';
@@ -185,6 +186,7 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
             </Notice>
           ) : null}
           <UccRoadCard s={s} />
+          <GrandPrixCard s={s} act={act} />
           <FightCTA
             title={banned(s) ? L("MEN CEZASI") : L("DÖVÜŞ AYARLA")}
             sub={
