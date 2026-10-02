@@ -42,6 +42,8 @@ import { AchievementToast } from './src/ui/AchievementToast';
 import { checkAchievements } from './src/engine/legacy';
 import { AlbumScreen } from './src/ui/AlbumScreen';
 import { PodcastScreen } from './src/ui/PodcastScreen';
+import { AwardsCeremony } from './src/ui/AwardsCeremony';
+import { awardsDue, prepareAwards } from './src/engine/awards';
 import { ensureGoals, refreshStaleGoals } from './src/engine/goals';
 import { ensureEvent } from './src/engine/weeklyEvent';
 import { popToFollowers } from './src/engine/fame';
@@ -80,6 +82,7 @@ const PHASE_LABELS: Record<Phase, string> = {
   salon: L("Salonum"),
   album: L("Kart Albümü"),
   podcast: L("Podcast"),
+  odul: L("Ödül Töreni"),
   emeklilik: L("Emeklilik"),
 };
 
@@ -149,7 +152,11 @@ export default function App() {
     if (!(cur.phase === 'dovus' && next.phase === 'dovusSonrasi') && next.populerlik !== cur.populerlik) popToFollowers(next, next.populerlik - cur.populerlik);
     // Kafes dışındaki başarımlar da (ev, araba, sevgili…) anında açılır.
     const yeni = next.phase === 'emeklilik' ? [] : checkAchievements(next);
-    if (next.phase === 'hub') refreshStaleGoals(next);
+    if (next.phase === 'hub') {
+      refreshStaleGoals(next);
+      // Yeni yıla girildiyse ödül töreni
+      if (awardsDue(next) && prepareAwards(next)) next.phase = 'odul';
+    }
     if (next.phase !== 'emeklilik') ensureEvent(next);
     if (yeni.length) setToast(yeni);
     setGame(next);
@@ -322,6 +329,9 @@ export default function App() {
         break;
       case 'podcast':
         content = <PodcastScreen {...props} />;
+        break;
+      case 'odul':
+        content = <AwardsCeremony {...props} />;
         break;
       case 'kutlama':
         content = game.kutlama ? <CelebrationScreen {...props} /> : <HubScreen {...props} />;

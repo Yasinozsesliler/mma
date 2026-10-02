@@ -2,9 +2,10 @@
 // Ayrı bir kayıt tutmaz; eski kayıtlarda da çalışır.
 import { L } from '../i18n';
 import { ORGS, WEIGHT_CLASSES } from './data';
+import { AWARD_NAMES } from './awards';
 import type { GameState, OrgId } from './types';
 
-export type MomentKind = 'ilk' | 'galibiyet' | 'ko' | 'sub' | 'maglubiyet' | 'pro' | 'org' | 'kemer' | 'salon' | 'hof' | 'kilometre' | 'seri';
+export type MomentKind = 'ilk' | 'galibiyet' | 'ko' | 'sub' | 'maglubiyet' | 'pro' | 'org' | 'kemer' | 'salon' | 'hof' | 'kilometre' | 'seri' | 'odul';
 
 export interface Moment {
   yas: number;
@@ -77,6 +78,7 @@ export function careerTimeline(s: GameState): Moment[] {
   (s.kemerler ?? []).forEach((b) =>
     out.push({ yas: b.yas, sira: n, tur: 'kemer', baslik: L("{0} şampiyonu", [ORGS[b.org]?.kisa ?? b.org]), alt: b.savunma ? L("{0} sıklet · {1} savunma", [WEIGHT_CLASSES[b.siklet].ad, b.savunma]) : L("{0} sıklet", [WEIGHT_CLASSES[b.siklet].ad]) }),
   );
+  (s.oduller ?? []).forEach((o) => out.push({ yas: o.yas, sira: n, tur: 'odul', baslik: AWARD_NAMES[o.kat](), alt: L("Yıl sonu ödülü") }));
   if (s.salon) out.push({ yas: yasAt(s.salon.acilis), sira: n, tur: 'salon', baslik: L("Kendi salonunu açtı"), alt: s.salon.ad });
   if (s.hof) out.push({ yas: s.hof.yas, sira: n + 1, tur: 'hof', baslik: L("Hall of Fame"), alt: L("Adı ölümsüzleşti") });
   return out.sort((a, b) => a.yas - b.yas || a.sira - b.sira);
@@ -95,6 +97,7 @@ export const MOMENT_ICON: Record<MomentKind, string> = {
   hof: 'pillar',
   kilometre: 'medal',
   seri: 'fire',
+  odul: 'trophy-award',
 };
 
 /** Paylaşım kartı için kısa yolculuk satırı: "İlk dövüş: 18 · İlk KO: 19 · Kemer: 26" */

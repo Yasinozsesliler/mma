@@ -429,6 +429,7 @@ export type Phase =
   | 'salon'
   | 'album'
   | 'podcast'
+  | 'odul'
   | 'emeklilik';
 
 export interface Istat {
@@ -564,6 +565,10 @@ export interface GameState {
   gpSon?: number;
   /** Son hayran buluşmasının dövüş sayısı (fanMeet.ts) */
   bulusmaSon?: number;
+  /** Yıl sonu ödülleri (awards.ts): son işlenen yıl, süren tören, kazanılan ödüller */
+  odulYil?: number;
+  odulToren?: import('./awards').AwardShow;
+  oduller?: { kat: import('./awards').AwardCat; yas: number }[];
   /** Ödüllü reklam teklifleri: alındıkları dövüş sayısı (her dövüş arasında birer kez). */
   odul?: { sakatlikMac?: number; profilHafta?: number };
   saglik: number;

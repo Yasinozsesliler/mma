@@ -5,6 +5,7 @@ import { claimGoal, goalDone, refreshStaleGoals } from '../src/engine/goals';
 import { answerCrisis, closeCrisis } from '../src/engine/crisis';
 import { podcastAnswer } from '../src/engine/podcast';
 import { acceptGp, closeGp, declineGp } from '../src/engine/grandPrix';
+import { awardsDue, prepareAwards } from '../src/engine/awards';
 import { campChoose } from '../src/engine/camp';
 import {
   acceptOffer,
@@ -26,6 +27,7 @@ import type { Background, GameState, PlanKey, Tactic } from '../src/engine/types
 import { STAT_KEYS } from '../src/engine/types';
 const krizStat: Record<string, number> = {};
 const podcastStat = { n: 0 };
+const odulStat: Record<string, number> = {};
 const gpStat = { katilim: 0, sampiyon: 0, tur: {} as Record<number, number> };
 const kankaStat = { kanka: 0, rakip: 0 };
 const kartStat: Record<string, number> = { toplam: 0 };
@@ -110,6 +112,11 @@ function playCareer() {
     switch (s.phase) {
       case 'hub':
         refreshStaleGoals(s);
+        if (awardsDue(s) && prepareAwards(s)) {
+          s.odulToren!.sonuclar.forEach((r) => r.oyuncu && (odulStat[r.kat] = (odulStat[r.kat] ?? 0) + 1));
+          odulStat.toren = (odulStat.toren ?? 0) + 1;
+          s.odulToren = undefined;
+        }
         // Kriz: oyuncu cevap verir (rastgele, bazen hiç ilgilenmez)
         if (s.kriz && !s.kriz.sonuc && chance(0.7)) answerCrisis(s, pick(['ozur', 'espri', 'sert', 'sessiz', 'kanit'] as const));
         if (s.gpDavet && !s.gp) { if (chance(0.6)) { acceptGp(s); gpStat.katilim++; } else declineGp(s); }
@@ -263,6 +270,7 @@ console.log(`Kariyer boyu dövüş ort. ${mean(stats.totalFights)}, bitiş yaş�
 console.log(`Başarım ort. ${mean(stats.ach)}, maks ${Math.max(...stats.ach)} · Efsane puanı ort. ${mean(stats.legacy)}, maks ${Math.max(...stats.legacy)} · Hall of Fame: ${((stats.hof / N) * 100).toFixed(1)}%`);
 console.log(`Hedefler: kariyer başına ${(goalStat.n / N).toFixed(1)} tamamlanan, ort. ödül $${Math.round(goalStat.para / N).toLocaleString('tr-TR')} + ${(goalStat.puan / N).toFixed(1)} puan ·`, Object.entries(goalStat.tur).map(([k, v]) => `${k} ${v}`).join(', '));
 console.log(`Grand Prix: kariyer başına ${(gpStat.katilim / N).toFixed(2)} katılım, şampiyonluk oranı ${pct(gpStat.sampiyon, gpStat.katilim)}, elendiği tur ${JSON.stringify(gpStat.tur)}`);
+console.log('Ödüller (kariyer başına):', Object.entries(odulStat).map(([k, v]) => `${k} ${(v / N).toFixed(2)}`).join(', '));
 console.log(`Podcast (kariyer başına): ${(podcastStat.n / N).toFixed(1)}`);
 console.log('Kartlar (kariyer başına):', Object.entries(kartStat).map(([k, v]) => `${k} ${(v / N).toFixed(1)}`).join(', '));
 console.log(`Antrenman ortağı: kanka ${pct(kankaStat.kanka, N)}, rakip ${pct(kankaStat.rakip, N)}`);

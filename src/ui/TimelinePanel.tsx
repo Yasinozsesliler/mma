@@ -10,7 +10,7 @@ import { ShareButton } from '../share/ShareButton';
 import { Card, Icon, Section, type IconName } from './components';
 import { C, F } from './theme';
 
-const COLOR: Partial<Record<MomentKind, string>> = { kemer: C.gold, hof: C.gold, ko: C.red, sub: C.green, maglubiyet: C.faint, pro: C.blue, org: C.blue, seri: C.orange, salon: C.orange };
+const COLOR: Partial<Record<MomentKind, string>> = { odul: C.gold, kemer: C.gold, hof: C.gold, ko: C.red, sub: C.green, maglubiyet: C.faint, pro: C.blue, org: C.blue, seri: C.orange, salon: C.orange };
 const SHOW = 8;
 
 export function TimelinePanel({ s }: { s: GameState }) {
