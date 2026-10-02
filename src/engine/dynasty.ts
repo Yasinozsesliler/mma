@@ -1,5 +1,6 @@
 // Nesil modu: emekli dövüşçünün çocuğu kariyere devam eder. Miras dengeli tutulur (oyunu kolaylaştırmadan başlangıcı
 // hızlandırır); ebeveyn antrenör olur, aile akademisi devralınır, hanedan geçmişi profilde saklanır.
+import { heirName } from './family';
 import { L } from '../i18n';
 import { followers } from './fame';
 import { activeBelts, legacyScore } from './legacy';
@@ -21,6 +22,8 @@ export type Ancestor = {
 };
 
 export type Heritage = {
+  /** Büyük çocuğun adı (varsa yeni kariyerde önerilir) */
+  cocukAd?: string;
   ebeveyn: Ancestor;
   nesil: number;
   soyad: string;
@@ -60,6 +63,7 @@ export function heritageOf(s: GameState): Heritage {
   const enIyi = STAT_KEYS.reduce((a, k) => (s.fighter.stats[k] > s.fighter.stats[a] ? k : a), STAT_KEYS[0]);
   const akademi = (s.isletmeler ?? []).find((x) => x.id === 'akademi');
   return {
+    cocukAd: heirName(s),
     ebeveyn: eb,
     nesil: eb.nesil + 1,
     soyad: s.fighter.soyad,

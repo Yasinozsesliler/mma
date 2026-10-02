@@ -61,4 +61,4 @@ export function diseaseMods(s: GameState): Partial<Stats> {
 }
 
 /** Sevgili motivasyon verir. */
-export const partnerMotivation = (s: GameState) => (s.iliski?.durum === 'sevgili' ? 1 : 0);
+export const partnerMotivation = (s: GameState) => (s.iliski ? 1 : 0);

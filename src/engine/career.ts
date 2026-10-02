@@ -1,4 +1,5 @@
 import { L as tL, LOC } from '../i18n';
+import { familyCosts } from './family';
 import { merchSales } from './merch';
 import { hometownAfter, maybeHometown } from './hometown';
 import { needsTreatment } from './treatment';
@@ -217,6 +218,7 @@ export function finishFight(s: GameState) {
     lines.push(tL("💵 Ücret: {0}{1}", [money(purse), won && s.contract.bonus ? tL(" (galibiyet bonusu dahil)") : '']));
     lines.push(...hometownAfter(s, opp, won && !caught, purse));
     lines.push(...merchSales(s, won && !caught));
+    lines.push(...familyCosts(s));
   } else if (won) {
     kazanc += 200;
     lines.push(tL("💵 Yerel bir kasap dükkânı sana $200 ödül verdi. Başlangıç böyle olur."));

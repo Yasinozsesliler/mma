@@ -1,4 +1,5 @@
 import { L, LOC } from '../i18n';
+import { FamilyPanel } from './FamilyPanel';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
@@ -83,17 +84,17 @@ function MatchModal({ s, c, onClose, onDate }: { s: GameState; c: Candidate | nu
   );
 }
 
-function BreakUpButton({ act, onMsg, ad, flex }: { act: Act; onMsg: (m: string) => void; ad: string; flex?: boolean }) {
+function BreakUpButton({ act, onMsg, ad, flex, evli }: { act: Act; onMsg: (m: string) => void; ad: string; flex?: boolean; evli?: boolean }) {
   const [sure, setSure] = useState(false);
   if (!sure)
     return (
       <Pressable onPress={() => setSure(true)} style={[nl.small, nl.breakBtn, flex && { flex: 1 }]}>
-        <Text style={nl.smallText}>{L("💔 AYRIL")}</Text>
+        <Text style={nl.smallText}>{evli ? L("💔 BOŞAN") : L("💔 AYRIL")}</Text>
       </Pressable>
     );
   return (
     <View style={[nl.confirm, flex && { flex: 1 }]}>
-      <Text style={nl.confirmText}>{ad} {L("ile ayrılmak istediğine emin misin? (Motivasyon -1)")}</Text>
+      <Text style={nl.confirmText}>{evli ? L("{0} ile boşanmak istediğine emin misin? Servetinin %30'u gider. (Motivasyon -2)", [ad]) : `${ad} ${L("ile ayrılmak istediğine emin misin? (Motivasyon -1)")}`}</Text>
       <View style={{ flexDirection: 'row', gap: 8 }}>
         <Pressable onPress={() => setSure(false)} style={[nl.small, { flex: 1 }]}>
           <Text style={nl.smallText}>{L("VAZGEÇ")}</Text>
@@ -173,15 +174,16 @@ function Dates({ s, act, onMsg }: { s: GameState; act: Act; onMsg: (m: string) =
         <LinearGradient colors={['#3a0a1c', '#12060a']} style={nl.partner}>
           <Text style={{ fontSize: 38 }}>{s.iliski.emoji}</Text>
           <View style={{ flex: 1 }}>
-            <Text style={nl.label}>{L("SEVGİLİN")}</Text>
+            <Text style={nl.label}>{s.iliski.durum === 'evli' ? L("EŞİN") : L("SEVGİLİN")}</Text>
             <Text style={[nl.name, SLANT]}>💞 {s.iliski.ad.toLocaleUpperCase(LOC)}</Text>
             <Text style={nl.meta}>{s.iliski.meslek} {L("· Kamp motivasyonu +1. Başkalarıyla görüşürsen yakalanabilirsin.")}</Text>
           </View>
         </LinearGradient>
       ) : null}
+      <FamilyPanel s={s} act={act} onMsg={onMsg} />
       {s.iliski ? (
         <View style={{ marginBottom: 8 }}>
-          <BreakUpButton act={act} onMsg={onMsg} ad={s.iliski.ad} />
+          <BreakUpButton act={act} onMsg={onMsg} ad={s.iliski.ad} evli={s.iliski.durum === 'evli'} />
         </View>
       ) : null}
       <View style={nl.appHead}>

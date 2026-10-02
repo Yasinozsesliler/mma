@@ -1,4 +1,5 @@
 // Gece hayatı: striptiz kulübü ve randevular. Eğlencenin bedeli: para, disiplin, skandal ve sağlık riski.
+import { divorce } from './family';
 import { L, LOC } from '../i18n';
 import { addStat } from './character';
 import { riskyAct, treatmentCost } from './nightlifeCore';
@@ -283,6 +284,7 @@ export function makePartner(s: GameState, id: string): string {
 
 export function breakUp(s: GameState): string {
   if (!s.iliski) return '';
+  if (s.iliski.durum === 'evli') return divorce(s);
   const ad = s.iliski.ad;
   s.iliski = undefined;
   s.motivasyon = Math.max(-2, s.motivasyon - 1);

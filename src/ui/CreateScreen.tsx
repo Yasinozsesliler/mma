@@ -37,7 +37,7 @@ export function CreateScreen({ onDone, onBack, heritage }: { onDone: (input: New
   const [step, setStep] = useState(1);
   const startCountry = heritage?.uyruk ?? (COUNTRIES[LANG_COUNTRY[LANG]] ? LANG_COUNTRY[LANG] : 'tr');
   const [inp, setInp] = useState<NewFighterInput>({
-    ad: '',
+    ad: heritage?.cocukAd ?? '',
     soyad: heritage?.soyad ?? '',
     lakap: '',
     uyruk: startCountry,

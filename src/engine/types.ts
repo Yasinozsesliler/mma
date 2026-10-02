@@ -507,7 +507,9 @@ export interface GameState {
   hayvanlar?: Pet[];
   gece?: { risk: number; ziyaret: number };
   hastalik?: { ad: string; hafta: number; tedaviBitis?: number };
-  iliski?: { id: string; ad: string; meslek: string; emoji: string; durum: 'sevgili'; hafta: number };
+  iliski?: { id: string; ad: string; meslek: string; emoji: string; durum: 'sevgili' | 'evli'; hafta: number };
+  /** Çocuklar (family.ts) */
+  cocuklar?: import('./family').Child[];
   /** Haftanın kaydırma destesi (Tinder) */
   adaylar?: { hafta: number; list: Candidate[]; super?: boolean };
   /** Sağa kaydırılıp eşleşilen kişiler */

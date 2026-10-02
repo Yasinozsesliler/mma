@@ -185,6 +185,29 @@ const EVENTS: Record<string, EventDef> = {
       return L("Yapamadığını söyledin. Telefonu kapattıktan sonra uzun süre tavana baktın. Motivasyon düştü.");
     },
   },
+  dogumgunu: {
+    kosul: (s) => (s.cocuklar ?? []).length > 0,
+    agirlik: 1.5,
+    kur: (s) => {
+      const c = pick(s.cocuklar!);
+      return {
+        baslik: L("🎂 Doğum Günü"),
+        metin: L("{0} bugün bir yaş daha büyüdü. Ama aynı saatte sponsorun açık antrenmanı var, kameralar seni bekliyor.", [c.ad]),
+        secenekler: [L("Doğum gününe git"), L("Açık antrenmana git")],
+        params: { ad: c.ad },
+      };
+    },
+    uygula: (s, i, p) => {
+      if (i === 0) {
+        s.motivasyon = Math.min(2, s.motivasyon + 1);
+        pop(s, -1);
+        return L("Pastayı {0} ile birlikte kestiniz. O gözlerdeki ışık her şeye değdi. (Motivasyon +1, popülerlik -1)", [p.ad]);
+      }
+      s.motivasyon = Math.max(-2, s.motivasyon - 1);
+      pop(s, 2);
+      return L("Kameralar mutluydu, sponsor da. Ama eve döndüğünde parti bitmişti. (Popülerlik +2, motivasyon -1)");
+    },
+  },
   parti: {
     kosul: (s) => s.populerlik >= 20,
     agirlik: 1,
