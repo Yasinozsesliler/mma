@@ -99,6 +99,15 @@ export function maybeCrisis(s: GameState, weeks = 1) {
   s.haberler.unshift(L("🔥 Sosyal medya krizi: {0}", [crisisTitle(s.kriz)]));
 }
 
+/** Belirli bir krizi hemen başlat (ör. podcastte tartışmalı söz). Süren kriz varsa başlamaz. */
+export function forceCrisis(s: GameState, tur: CrisisType): boolean {
+  if (s.kriz) return false;
+  s.kriz = { tur, isi: randInt(50, 68), cevaplar: [], yorumlar: [], hafta: s.hafta };
+  s.krizSon = s.hafta;
+  s.haberler.unshift(L("🔥 Sosyal medya krizi: {0}", [crisisTitle(s.kriz)]));
+  return true;
+}
+
 /** Görmezden gelinen kriz büyür; ısı tavan yaparsa kendiliğinden patlar. */
 export function crisisTick(s: GameState, weeks = 1) {
   const c = s.kriz;

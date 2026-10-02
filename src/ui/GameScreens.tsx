@@ -45,6 +45,7 @@ import { pendingBouts, weeklyGymNet } from '../engine/academy';
 import { ACHIEVEMENTS } from '../engine/achievements';
 import { UccRoadCard } from './UccRoadCard';
 import { GoalsCard } from './GoalsCard';
+import { declinePodcast } from '../engine/podcast';
 import { unclaimedMilestones } from '../engine/cards';
 import { crisisTitle } from '../engine/crisis';
 import { EventCard } from './EventCard';
@@ -155,6 +156,24 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
             </Notice>
           ) : null}
 
+          {s.podcast && !s.podcast.sonuc ? (
+            <Notice
+              color={C.gold}
+              icon="microphone"
+              action={
+                <View style={{ flexDirection: 'row', gap: 8 }}>
+                  <View style={{ flex: 1 }}>
+                    <Button label={L("Stüdyoya git")} icon="microphone" tone="gold" onPress={() => act((x) => (x.phase = 'podcast'))} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Button label={L("Reddet")} icon="close" tone="ghost" onPress={() => act(declinePodcast)} />
+                  </View>
+                </View>
+              }
+            >
+              {L("🎙️ {0} seni konuk etmek istiyor. Sunucu {1} üç soru soracak. Davet bir sonraki maçına kadar geçerli.", [s.podcast.show, s.podcast.host])}
+            </Notice>
+          ) : null}
           {s.kriz ? (
             <Notice color={C.red} icon="fire-alert" action={<Button label={s.kriz.sonuc ? L("Sonucu gör") : L("Müdahale et")} icon="cellphone-message" tone="red" onPress={() => act((x) => (x.phase = 'sosyal'))} />}>
               {s.kriz.sonuc ? L("Sosyal medya krizi sonuçlandı.") : L("🔥 Sosyal medyada kriz var: {0}. Gündem ısısı {1}.", [crisisTitle(s.kriz), s.kriz.isi])}

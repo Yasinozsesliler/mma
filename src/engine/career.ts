@@ -1,4 +1,5 @@
 import { L as tL, LOC } from '../i18n';
+import { maybePodcast } from './podcast';
 import { addCard } from './cards';
 import { addStat, advanceWeeks, currentOrg, fullName, statAverage } from './character';
 import { nemesisAfterFight } from './nemesis';
@@ -325,6 +326,7 @@ export function finishFight(s: GameState) {
   }
   checkAchievements(s).forEach((a) => lines.push(tL("⭐ Yeni başarım: {0}", [a])));
   if (caught) lines.push(...dopingFallout(s, banWeeks!));
+  maybePodcast(s);
   const teklif = refreshSponsorOffers(s, won && !caught);
   if (teklif) lines.push(teklif);
   // Toparlanma: maçtan sonra kısa bir ara. Sıradaki maçın tarihi teklifte belirlenir (toplam ~60-90 gün).

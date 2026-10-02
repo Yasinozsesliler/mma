@@ -424,6 +424,7 @@ export type Phase =
   | 'basarimlar'
   | 'salon'
   | 'album'
+  | 'podcast'
   | 'emeklilik';
 
 export interface Istat {
@@ -550,6 +551,9 @@ export interface GameState {
   /** Dövüşçü kartı albümü ve alınan albüm ödülleri (cards.ts) */
   kartlar?: import('./cards').FighterCard[];
   albumOdul?: number[];
+  /** Podcast daveti (podcast.ts) ve son katılınan podcastin dövüş sayısı */
+  podcast?: import('./podcast').Podcast;
+  podcastSon?: number;
   /** Ödüllü reklam teklifleri: alındıkları dövüş sayısı (her dövüş arasında birer kez). */
   odul?: { sakatlikMac?: number; profilHafta?: number };
   saglik: number;
