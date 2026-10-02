@@ -7,7 +7,8 @@ import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import { finishFight } from '../engine/career';
 import { currentOrg, fullName } from '../engine/character';
 import { ORGS } from '../engine/data';
-import { chooseTactic, methodLabel, nextRound, resolveCritical, resolveDecision } from '../engine/fight';
+import { chooseTactic, cornerBreath, cornerCut, methodLabel, nextRound, resolveCritical, resolveDecision } from '../engine/fight';
+import { CornerMoment } from './CornerMoment';
 import { CRITICAL_OPTIONS, TACTICS } from '../engine/narration';
 import { oppRecord } from '../engine/opponents';
 import type { CriticalKind, FightState, GameState, Tactic } from '../engine/types';
@@ -331,6 +332,7 @@ export function FightScreen({ s, act }: { s: GameState; act: Act }) {
               <P key={i}>{l}</P>
             ))}
           </Card>
+          <CornerMoment fs={fs} onBreath={(q) => setFs((f) => cornerBreath(f, q))} onCut={(ok) => setFs((f) => cornerCut(f, ok))} />
           <TacticList fs={fs} title={L("{0}. RAUNT İÇİN PLANI DEĞİŞTİR", [fs.raunt + 1])} onPick={(t) => setFs((f) => nextRound(f, t))} />
         </>
       )}

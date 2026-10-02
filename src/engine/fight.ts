@@ -932,7 +932,9 @@ function endRound(fs: FightState) {
     return;
   }
   // Köşe durdurmaları
-  if (fs.kesik && fs.pHasar > 70 && chance(0.2 * (1 - (fs.mods.cutman ?? 0) * 0.3))) {
+  const bakim = fs.kesikBakim ? 0.5 : 1;
+  fs.kesikBakim = false;
+  if (fs.kesik && fs.pHasar > 70 && chance(0.2 * (1 - (fs.mods.cutman ?? 0) * 0.3) * bakim)) {
     finish(fs, 'o', 'TKO', L("🩺 Ringside doktoru kesiğe bakıp başını salladı. Maç durduruldu. Doktor kararıyla TKO."), 2);
     return;
   }
@@ -949,6 +951,25 @@ function endRound(fs: FightState) {
 }
 
 /** Sonraki raunda geç. Taktik verilirse raunt hemen o taktikle akmaya başlar. */
+/** Raunt arası nefes: zamanlama kalitesine göre kondisyon +1..+3 (raunt başına bir kez). */
+export function cornerBreath(prev: FightState, q: number): FightState {
+  if (prev.nefesRaunt === prev.raunt) return prev;
+  const fs = clone(prev);
+  fs.nefesRaunt = fs.raunt;
+  fs.nefesQ = q;
+  fs.pKondisyon = clamp(fs.pKondisyon + Math.round(1 + 2 * clamp(q, 0, 1)), 5, 100);
+  return fs;
+}
+
+/** Cutman'e yardım: başarılıysa bir sonraki doktor kontrolünde durdurma riski yarıya iner. */
+export function cornerCut(prev: FightState, ok: boolean): FightState {
+  if (prev.kesikRaunt === prev.raunt) return prev;
+  const fs = clone(prev);
+  fs.kesikRaunt = fs.raunt;
+  fs.kesikBakim = ok;
+  return fs;
+}
+
 export function nextRound(prev: FightState, t?: Tactic): FightState {
   const fs = clone(prev);
   fs.raunt++;

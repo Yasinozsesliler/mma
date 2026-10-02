@@ -350,6 +350,11 @@ export interface FightState {
   /** Her andan sonraki durum fotoğrafı: ekran, akışın gösterildiği noktaya kadar olan durumu çizer (sonucu önceden göstermez). */
   anlar?: FightSnap[];
   kesik: boolean;
+  /** Raunt arası köşe anı: nefes alınan raunt ve kesik bakımı (bir sonraki doktor kontrolünde risk yarıya iner) */
+  nefesRaunt?: number;
+  nefesQ?: number;
+  kesikRaunt?: number;
+  kesikBakim?: boolean;
   yerde?: boolean;
   /** Oyuncunun bitirişte kullandığı teknik */
   pTeknik?: string;
