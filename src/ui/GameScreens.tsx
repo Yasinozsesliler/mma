@@ -23,7 +23,6 @@ import {
   campCostPreview,
   findNextFight,
   money,
-  negotiateOffer,
   pickOpponent,
   rejectImposed,
   rejectOffer,
@@ -45,6 +44,8 @@ import { pendingBouts, weeklyGymNet } from '../engine/academy';
 import { ACHIEVEMENTS } from '../engine/achievements';
 import { UccRoadCard } from './UccRoadCard';
 import { GoalsCard } from './GoalsCard';
+import { ContractTablePanel } from './ContractTablePanel';
+import { openTable } from '../engine/contractTable';
 import { FanMeetGame } from './FanMeetGame';
 import { canFanMeet, fanMeet } from '../engine/fanMeet';
 import { GrandPrixCard } from './GrandPrixCard';
@@ -783,11 +784,12 @@ export function OffersScreen({ s, act }: { s: GameState; act: Act }) {
               {o.ozel ? <Pill text={o.ozel} icon="file-sign" color={o.fesih ? C.red : C.gold} /> : null}
             </View>
             <View style={{ gap: 8, marginTop: 14 }}>
+              {o.masa ? <ContractTablePanel s={s} o={o} act={act} setMsg={setMsg} /> : null}
               <Button label={o.devam ? L("Kontrata devam et") : o.fesih ? L("Kabul et (-{0})", [money(o.fesih)]) : L("Kabul et")} icon="file-sign" tone={ufc || o.org === 'dwcs' ? 'gold' : 'red'} disabled={!!o.fesih && s.para < o.fesih} onPress={() => act((x) => acceptOffer(x, o.id))} />
               <View style={{ flexDirection: 'row', gap: 8 }}>
-                {!o.pazarlikYapildi ? (
+                {!o.pazarlikYapildi && !o.masa ? (
                   <View style={{ flex: 1 }}>
-                    <Button label={L("Pazarlık")} icon="handshake" tone="ghost" onPress={() => act((x) => setMsg(negotiateOffer(x, o.id)))} />
+                    <Button label={L("Pazarlık")} icon="handshake" tone="ghost" onPress={() => act((x) => openTable(x, o.id))} />
                   </View>
                 ) : null}
                 {offers.length > 1 && !o.devam && !o.fesih ? (

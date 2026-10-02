@@ -157,6 +157,8 @@ export interface Offer extends Contract {
   fesih?: number;
   /** Mevcut kontrata aynen devam seçeneği */
   devam?: boolean;
+  /** Süren kontrat pazarlığı (contractTable.ts) */
+  masa?: import('./contractTable').ContractTable;
 }
 
 export interface Injury {
