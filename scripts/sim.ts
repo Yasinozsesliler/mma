@@ -6,6 +6,7 @@ import { answerCrisis, closeCrisis } from '../src/engine/crisis';
 import { podcastAnswer } from '../src/engine/podcast';
 import { acceptGp, closeGp, declineGp } from '../src/engine/grandPrix';
 import { awardsDue, prepareAwards } from '../src/engine/awards';
+import { chooseTreatment } from '../src/engine/treatment';
 import { campChoose } from '../src/engine/camp';
 import {
   acceptOffer,
@@ -112,6 +113,7 @@ function playCareer() {
     switch (s.phase) {
       case 'hub':
         refreshStaleGoals(s);
+        if (s.tedavi) chooseTreatment(s, s.para > 50000 ? 'ameliyat' : pick(['fizik', 'fizik', 'igne'] as const));
         if (awardsDue(s) && prepareAwards(s)) {
           s.odulToren!.sonuclar.forEach((r) => r.oyuncu && (odulStat[r.kat] = (odulStat[r.kat] ?? 0) + 1));
           odulStat.toren = (odulStat.toren ?? 0) + 1;

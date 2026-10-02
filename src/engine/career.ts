@@ -1,4 +1,5 @@
 import { L as tL, LOC } from '../i18n';
+import { needsTreatment } from './treatment';
 import { gpAfterFight, gpCurrentOpponent, maybeGpInvite, withdrawGp } from './grandPrix';
 import { maybePodcast } from './podcast';
 import { addCard } from './cards';
@@ -272,10 +273,12 @@ export function finishFight(s: GameState) {
   if (r.sakatlik) {
     const inj = { ad: tL("Kol bağları koptu"), stat: 'yer' as const, ceza: 12, hafta: 12 };
     s.sakatliklar.push(inj);
+    s.tedavi = { ...inj };
     lines.push(tL("🦴 {0}: {1} hafta sürecek. Tap atmamanın bedeli.", [inj.ad, inj.hafta]));
   } else if (chance(fs.pHasar / 260)) {
     const inj = randomInjury(3, 7);
     s.sakatliklar.push(inj);
+    if (needsTreatment(inj)) s.tedavi = { ...inj };
     lines.push(tL("🩹 Dövüşten {0} ile çıktın ({1} hafta).", [inj.ad, inj.hafta]));
   }
   if (!won && r.yontem === 'KO') {

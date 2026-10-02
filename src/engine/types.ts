@@ -567,6 +567,8 @@ export interface GameState {
   bulusmaSon?: number;
   /** Yıl sonu ödülleri (awards.ts): son işlenen yıl, süren tören, kazanılan ödüller */
   odulYil?: number;
+  /** Tedavi kararı bekleyen ciddi sakatlık (treatment.ts) */
+  tedavi?: Injury;
   odulToren?: import('./awards').AwardShow;
   oduller?: { kat: import('./awards').AwardCat; yas: number }[];
   /** Ödüllü reklam teklifleri: alındıkları dövüş sayısı (her dövüş arasında birer kez). */

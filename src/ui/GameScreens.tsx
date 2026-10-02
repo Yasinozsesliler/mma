@@ -44,6 +44,7 @@ import { pendingBouts, weeklyGymNet } from '../engine/academy';
 import { ACHIEVEMENTS } from '../engine/achievements';
 import { UccRoadCard } from './UccRoadCard';
 import { GoalsCard } from './GoalsCard';
+import { chooseTreatment, treatmentCostText, treatmentOptions } from '../engine/treatment';
 import { ContractTablePanel } from './ContractTablePanel';
 import { openTable } from '../engine/contractTable';
 import { FanMeetGame } from './FanMeetGame';
@@ -161,6 +162,25 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
             </Notice>
           ) : null}
 
+          {s.tedavi ? (
+            <Notice color={C.red} icon="hospital-box">
+              {L("🦴 {0}: {1} haftalık sakatlık. Nasıl tedavi olacaksın?", [s.tedavi.ad, s.tedavi.hafta])}
+            </Notice>
+          ) : null}
+          {s.tedavi
+            ? treatmentOptions(s).map((o, i) => (
+                <Choice
+                  key={o.key}
+                  n={i + 1}
+                  icon={o.icon as IconName}
+                  label={`${o.ad} · ${treatmentCostText(o.maliyet)}`}
+                  desc={o.aciklama}
+                  tone={o.key === 'igne' ? 'red' : 'gold'}
+                  disabled={s.para < o.maliyet}
+                  onPress={() => act((x) => { chooseTreatment(x, o.key); })}
+                />
+              ))
+            : null}
           {s.podcast && !s.podcast.sonuc ? (
             <Notice
               color={C.gold}
