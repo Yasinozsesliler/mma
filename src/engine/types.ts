@@ -196,7 +196,7 @@ export type PressChoice = 'saygili' | 'trash' | 'sessiz';
 export interface CampState {
   /** Ödüllü detaylı keşif raporu açıldı mı */
   kesif?: boolean;
-  step: 'hoca' | 'planla' | 'sure' | 'takvim' | 'yer' | 'focus' | 'plan' | 'intensity' | 'kilo' | 'basin' | 'haftalik' | 'sakatlik' | 'ozet' | 'tarti' | 'yuzyuze' | 'duello';
+  step: 'hoca' | 'planla' | 'sure' | 'takvim' | 'yer' | 'focus' | 'plan' | 'intensity' | 'kilo' | 'basin' | 'haftalik' | 'sakatlik' | 'ozet' | 'tarti' | 'yuzyuze' | 'duello' | 'kesim';
   pKilo?: number;
   oKilo?: number;
   kafesKilo?: number;
@@ -217,6 +217,8 @@ export interface CampState {
   /** Antrenman ortağıyla karar anı (kamp başına en fazla bir) */
   kankaAn?: import('./partner').PartnerMoment;
   kankaBitti?: boolean;
+  /** Elle kilo verme (weightCut.ts) */
+  kesim?: import('./weightCut').ManualCut;
   ozet: string[];
   tartiMetni?: string;
   sakatlik?: Injury;

@@ -1,4 +1,5 @@
 import { L, LOC } from '../i18n';
+import { cutAction, CUT_SLOTS, manualCutResult, startManualCut, type CutAction } from './weightCut';
 import { choosePartner, closePartnerMoment, ensurePartner, partnerCorner } from './partner';
 import { addStat, currentOrg, growthMultiplier, fullName } from './character';
 import { ORGS, WEIGHT_CLASSES } from './data';
@@ -279,7 +280,13 @@ export function campChoose(s: GameState, value: string | number) {
       }
       return;
     case 'ozet':
-      weighIn(s);
+      if (value === 'kesim') startManualCut(s);
+      else weighIn(s);
+      return;
+    case 'kesim':
+      if (value === 'tarti') {
+        if ((k.kesim?.dilim ?? 0) >= CUT_SLOTS) weighIn(s);
+      } else cutAction(s, value as CutAction);
       return;
     case 'tarti':
       if (k.iptal) {
@@ -446,7 +453,8 @@ function weighIn(s: GameState) {
   const org = ORGS[currentOrg(s)];
   const lines: string[] = [L("⚖️ TARTI GÜNÜ")];
   const cut = k.kilo ?? 'normal';
-  if (cut === 'kademeli') {
+  if (k.kesim) manualCutResult(s, lines, !!org.hidrasyon);
+  else if (cut === 'kademeli') {
     if (chance(0.97)) lines.push(L("Kilon tam. Taze ve güçlü hissediyorsun."));
     else {
       lines.push(L("Her şeyi doğru yapmana rağmen 200 gram fazlasın! Saunada son bir terleme ile zar zor geçtin."));
@@ -494,7 +502,7 @@ function weighIn(s: GameState) {
   const limit = WEIGHT_CLASSES[s.fighter.siklet].kg;
   const r1 = (n: number) => Math.round(n * 10) / 10;
   const kacirdi = k.ucretCeza > 0;
-  k.pKilo = r1(kacirdi ? limit + (cut === 'sert' ? 1.5 : 1) : cut === 'sert' ? limit - rand() * 0.1 : limit - 0.1 - rand() * 0.5);
+  k.pKilo = r1(k.kesim ? limit + k.kesim.fazla : kacirdi ? limit + (cut === 'sert' ? 1.5 : 1) : cut === 'sert' ? limit - rand() * 0.1 : limit - 0.1 - rand() * 0.5);
   k.oKilo = r1(k.rakipCeza ? limit + 1.2 : limit - rand() * 0.4);
   k.kafesKilo = r1(k.pKilo * (cut === 'sert' ? 1.09 : cut === 'normal' ? 1.05 : 1.03));
   k.tartiMetni = lines.join('\n');

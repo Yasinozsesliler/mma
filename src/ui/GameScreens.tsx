@@ -49,6 +49,7 @@ import { unclaimedMilestones } from '../engine/cards';
 import { crisisTitle } from '../engine/crisis';
 import { EventCard } from './EventCard';
 import { TrashTalkDuel } from './TrashTalkDuel';
+import { WeightCutStep } from './WeightCutStep';
 import { WikiButton } from './WikiPage';
 import { CampLengthStep, CampSummary, CampWeeksStep, FreeWeeksStep } from './CampCalendar';
 import { CampPlanner } from './CampPlanner';
@@ -428,7 +429,7 @@ const CAMP_STEPS: { key: CampState['step'][]; label: string }[] = [
   { key: ['hoca', 'planla', 'sure', 'yer', 'focus', 'plan', 'intensity', 'kilo', 'basin'], label: L("Plan") },
   { key: ['takvim'], label: L("Takvim") },
   { key: ['haftalik', 'duello', 'sakatlik', 'ozet'], label: L("Kamp") },
-  { key: ['tarti', 'yuzyuze'], label: L("Tartı") },
+  { key: ['kesim', 'tarti', 'yuzyuze'], label: L("Tartı") },
 ];
 
 function CampSteps({ k }: { k: CampState }) {
@@ -533,6 +534,7 @@ export function CampScreen({ s, act }: { s: GameState; act: Act }) {
   if (k.step === 'haftalik') return <CampWeeksStep s={s} header={header} choose={choose} />;
   if (k.step === 'duello') return <TrashTalkDuel key={o.id} s={s} header={header} choose={choose} />;
   if (k.step === 'ozet') return <CampSummary s={s} act={act} choose={choose} />;
+  if (k.step === 'kesim') return <WeightCutStep s={s} header={header} choose={choose} />;
 
   if (k.step === 'yer') {
     const open = availableSites(s);

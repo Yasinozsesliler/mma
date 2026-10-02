@@ -295,7 +295,14 @@ export function CampSummary({ s, act, choose }: { s: GameState; act: Act; choose
   const r = k.sonuc;
   const rest = k.ozet.filter((l) => !SUMMARY_SKIP.some((re) => re.test(l)));
   return (
-    <Screen footer={<Button label={L("Tartıya çık")} icon="scale-bathroom" tone="gold" onPress={() => choose(0)} />}>
+    <Screen
+      footer={
+        <>
+          <Button label={L("Tartıya çık")} icon="scale-bathroom" tone="gold" onPress={() => choose(0)} />
+          {s.stage !== 'amator' && !k.kisaHaber ? <Button label={L("Kilonu kendin yönet (son 48 saat)")} icon="scale-bathroom" tone="ghost" onPress={() => choose('kesim')} /> : null}
+        </>
+      }
+    >
       <LinearGradient colors={['#10301f', '#08140e', '#040405']} style={cc.sumHero}>
         <View style={[cc.glowLine, { backgroundColor: C.green }]} />
         <Text style={cc.sumOrg}>{(r?.yer ?? L('KAMP')).toLocaleUpperCase(LOC)} · {k.hafta} {L("HAFTA")}</Text>
