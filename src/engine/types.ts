@@ -421,6 +421,7 @@ export type Phase =
   | 'gece'
   | 'basarimlar'
   | 'salon'
+  | 'album'
   | 'emeklilik';
 
 export interface Istat {
@@ -544,6 +545,9 @@ export interface GameState {
   krizSon?: number;
   /** Salon arkadaşı / antrenman ortağı (partner.ts) */
   kanka?: import('./partner').Partner;
+  /** Dövüşçü kartı albümü ve alınan albüm ödülleri (cards.ts) */
+  kartlar?: import('./cards').FighterCard[];
+  albumOdul?: number[];
   /** Ödüllü reklam teklifleri: alındıkları dövüş sayısı (her dövüş arasında birer kez). */
   odul?: { sakatlikMac?: number; profilHafta?: number };
   saglik: number;

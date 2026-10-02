@@ -45,6 +45,7 @@ import { pendingBouts, weeklyGymNet } from '../engine/academy';
 import { ACHIEVEMENTS } from '../engine/achievements';
 import { UccRoadCard } from './UccRoadCard';
 import { GoalsCard } from './GoalsCard';
+import { unclaimedMilestones } from '../engine/cards';
 import { crisisTitle } from '../engine/crisis';
 import { EventCard } from './EventCard';
 import { TrashTalkDuel } from './TrashTalkDuel';
@@ -190,6 +191,7 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
               onPress={() => act((x) => (x.phase = 'salon'))}
             />
             <ActionTile icon="medal" label={L("Başarımlar")} sub={s.hof ? L("🏛 Hall of Fame") : `${(s.basarimlar ?? []).length}/${ACHIEVEMENTS.length}`} accent={C.gold} onPress={() => act((x) => (x.phase = 'basarimlar'))} />
+            <ActionTile icon="cards" label={L("Kart Albümü")} sub={L("{0} kart", [(s.kartlar ?? []).length])} accent="#c86bff" badge={unclaimedMilestones(s) || null} onPress={() => act((x) => (x.phase = 'album'))} />
             <ActionTile icon="cellphone-message" label={L("Sosyal medya")} sub={L("{0} paylaşım", [(s.sosyal ?? []).length])} accent="#3aa8ff" onPress={() => act((x) => (x.phase = 'sosyal'))} />
             <ActionTile icon="glass-cocktail" label={L("Gece hayatı")} sub={s.iliski ? `💞 ${s.iliski.ad}` : L("Randevu · kulüp · kumar")} accent="#fd267a" onPress={() => act((x) => (x.phase = 'gece'))} />
             {s.stage !== 'amator' ? (

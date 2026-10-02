@@ -24,6 +24,7 @@ import type { Background, GameState, PlanKey, Tactic } from '../src/engine/types
 import { STAT_KEYS } from '../src/engine/types';
 const krizStat: Record<string, number> = {};
 const kankaStat = { kanka: 0, rakip: 0 };
+const kartStat: Record<string, number> = { toplam: 0 };
 const goalStat = { n: 0, para: 0, puan: 0, tur: {} as Record<string, number> };
 
 const BGS: Background[] = ['boks', 'muaythai', 'kickboks', 'gures', 'judo', 'bjj', 'sambo', 'kyokushin', 'sokak'];
@@ -207,6 +208,7 @@ function playCareer() {
   finalize();
 
   function finalize() {
+    (s.kartlar ?? []).forEach((c) => { kartStat[c.nadir] = (kartStat[c.nadir] ?? 0) + 1; kartStat.toplam++; });
     if (s.kanka?.durum === 'kanka') kankaStat.kanka++;
     if (s.kanka?.durum === 'rakip') kankaStat.rakip++;
     seen.forEach((x) => (stats.stageCareers[x] = (stats.stageCareers[x] ?? 0) + 1));
@@ -249,6 +251,7 @@ console.log('Rakip − oyuncu güç farkı / galibiyet oranı:', Object.entries(
 console.log(`Kariyer boyu dövüş ort. ${mean(stats.totalFights)}, bitiş yaşı ort. ${mean(stats.retireAge)}`);
 console.log(`Başarım ort. ${mean(stats.ach)}, maks ${Math.max(...stats.ach)} · Efsane puanı ort. ${mean(stats.legacy)}, maks ${Math.max(...stats.legacy)} · Hall of Fame: ${((stats.hof / N) * 100).toFixed(1)}%`);
 console.log(`Hedefler: kariyer başına ${(goalStat.n / N).toFixed(1)} tamamlanan, ort. ödül $${Math.round(goalStat.para / N).toLocaleString('tr-TR')} + ${(goalStat.puan / N).toFixed(1)} puan ·`, Object.entries(goalStat.tur).map(([k, v]) => `${k} ${v}`).join(', '));
+console.log('Kartlar (kariyer başına):', Object.entries(kartStat).map(([k, v]) => `${k} ${(v / N).toFixed(1)}`).join(', '));
 console.log(`Antrenman ortağı: kanka ${pct(kankaStat.kanka, N)}, rakip ${pct(kankaStat.rakip, N)}`);
 console.log('Krizler (kariyer başına):', Object.entries(krizStat).map(([k, v]) => `${k} ${(v / N).toFixed(2)}`).join(', '));
 console.log(`Kariyer: ${stats.careers}, dövüş: ${stats.fights}, çökme: ${stats.crashes}`);

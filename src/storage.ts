@@ -1,4 +1,5 @@
 import { L } from './i18n';
+import { ensureAlbum } from './engine/cards';
 import { ensureGoals } from './engine/goals';
 import { ensureEvent } from './engine/weeklyEvent';
 import { istat } from './engine/istat';
@@ -154,6 +155,7 @@ export function parseSave(raw: string): GameState | null {
     if (s.phase !== 'emeklilik') {
       ensureGoals(s);
       ensureEvent(s);
+      ensureAlbum(s);
     }
     return s;
   } catch {

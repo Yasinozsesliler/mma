@@ -40,6 +40,7 @@ import { NightlifeScreen } from './src/ui/NightlifeScreen';
 import { AchievementsScreen } from './src/ui/AchievementsScreen';
 import { AchievementToast } from './src/ui/AchievementToast';
 import { checkAchievements } from './src/engine/legacy';
+import { AlbumScreen } from './src/ui/AlbumScreen';
 import { ensureGoals, refreshStaleGoals } from './src/engine/goals';
 import { ensureEvent } from './src/engine/weeklyEvent';
 import { popToFollowers } from './src/engine/fame';
@@ -76,6 +77,7 @@ const PHASE_LABELS: Record<Phase, string> = {
   gece: L("Gece Hayatı"),
   basarimlar: L("Başarımlar"),
   salon: L("Salonum"),
+  album: L("Kart Albümü"),
   emeklilik: L("Emeklilik"),
 };
 
@@ -312,6 +314,9 @@ export default function App() {
         break;
       case 'salon':
         content = <GymScreen {...props} />;
+        break;
+      case 'album':
+        content = <AlbumScreen {...props} />;
         break;
       case 'kutlama':
         content = game.kutlama ? <CelebrationScreen {...props} /> : <HubScreen {...props} />;
