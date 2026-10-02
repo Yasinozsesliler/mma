@@ -579,6 +579,9 @@ export interface GameState {
   memleketSon?: number;
   /** Kendi markan (merch.ts) */
   marka?: import('./merch').MerchBrand;
+  /** Özel gün etkinliği ve kazanılan etkinlik kozmetikleri (specialEvent.ts) */
+  ozelEtkinlik?: import('./specialEvent').SpecialEvent;
+  ozelKozmetik?: string[];
   /** Yıl sonu ödülleri (awards.ts): son işlenen yıl, süren tören, kazanılan ödüller */
   odulYil?: number;
   /** Tedavi kararı bekleyen ciddi sakatlık (treatment.ts) */

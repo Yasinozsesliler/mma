@@ -6,7 +6,7 @@ import { readIstat } from './istat';
 import type { GameState } from './types';
 
 export type EventTheme = 'nakavt' | 'yer' | 'seri' | 'taraftar' | 'kamp';
-type Counter = 'ko' | 'sub' | 'finish' | 'win' | 'r1' | 'gonderi' | 'duello' | 'idman' | 'takipci' | 'seri';
+export type Counter = 'ko' | 'sub' | 'finish' | 'win' | 'r1' | 'gonderi' | 'duello' | 'idman' | 'takipci' | 'seri';
 
 export interface WeeklyEvent {
   hafta: number;
@@ -83,7 +83,7 @@ export const THEMES: Record<EventTheme, { ad: () => string; alt: () => string; i
   },
 };
 
-function count(s: GameState, c: Counter): number {
+export function count(s: GameState, c: Counter): number {
   const ist = readIstat(s);
   switch (c) {
     case 'ko':

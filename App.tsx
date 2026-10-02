@@ -47,6 +47,7 @@ import { MerchScreen } from './src/ui/MerchScreen';
 import { awardsDue, prepareAwards } from './src/engine/awards';
 import { ensureGoals, refreshStaleGoals } from './src/engine/goals';
 import { ensureEvent } from './src/engine/weeklyEvent';
+import { ensureSpecial } from './src/engine/specialEvent';
 import { popToFollowers } from './src/engine/fame';
 import { useSoundScene, type Scene } from './src/audio';
 import { initMonetization, PremiumManager } from './src/monetization';
@@ -159,7 +160,10 @@ export default function App() {
       // Yeni yıla girildiyse ödül töreni
       if (awardsDue(next) && prepareAwards(next)) next.phase = 'odul';
     }
-    if (next.phase !== 'emeklilik') ensureEvent(next);
+    if (next.phase !== 'emeklilik') {
+      ensureEvent(next);
+      ensureSpecial(next);
+    }
     if (yeni.length) setToast(yeni);
     setGame(next);
     saveGame(next, slotRef.current);

@@ -2,6 +2,7 @@ import { L } from './i18n';
 import { ensureAlbum } from './engine/cards';
 import { ensureGoals } from './engine/goals';
 import { ensureEvent } from './engine/weeklyEvent';
+import { ensureSpecial } from './engine/specialEvent';
 import { istat } from './engine/istat';
 import { startingTechniques } from './engine/techniques';
 import { playerPhysique } from './engine/tale';
@@ -156,6 +157,7 @@ export function parseSave(raw: string): GameState | null {
       ensureGoals(s);
       ensureEvent(s);
       ensureAlbum(s);
+      ensureSpecial(s);
     }
     return s;
   } catch {

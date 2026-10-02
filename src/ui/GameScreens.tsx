@@ -44,6 +44,7 @@ import { pendingBouts, weeklyGymNet } from '../engine/academy';
 import { ACHIEVEMENTS } from '../engine/achievements';
 import { UccRoadCard } from './UccRoadCard';
 import { GoalsCard } from './GoalsCard';
+import { SpecialEventCard } from './SpecialEventCard';
 import { chooseTreatment, treatmentCostText, treatmentOptions } from '../engine/treatment';
 import { ContractTablePanel } from './ContractTablePanel';
 import { openTable } from '../engine/contractTable';
@@ -221,6 +222,7 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
             disabled={banned(s)}
             onPress={() => act(findNextFight)}
           />
+          <SpecialEventCard s={s} act={act} />
           <EventCard s={s} act={act} />
           <GoalsCard s={s} act={act} />
 
