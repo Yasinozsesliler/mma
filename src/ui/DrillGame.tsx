@@ -11,6 +11,7 @@ import { Button, Icon, SLANT, type IconName } from './components';
 import { avg, cm, INSTANT, judge, ND, now, Progress, useFlash } from './drills/common';
 import { PadMitts } from './drills/PadMitts';
 import { TakedownGame } from './drills/TakedownGame';
+import { SparGame } from './drills/SparGame';
 import { C, F } from './theme';
 
 // ---------- İp atlama: ip yere değdiği anda dokun ----------
@@ -161,6 +162,8 @@ export function DrillGame({ oyun, onDone, onClose, pLook, oLook }: { oyun: Drill
             <PadMitts onEnd={end} />
           ) : oyun === 'refleks' ? (
             <TakedownGame onEnd={end} pLook={pLook} oLook={oLook} />
+          ) : oyun === 'spar' ? (
+            <SparGame onEnd={end} pLook={pLook} oLook={oLook} />
           ) : (
             <RhythmGame onEnd={end} />
           )

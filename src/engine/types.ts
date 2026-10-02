@@ -253,7 +253,7 @@ export interface CampState {
   /** Kamp tek ekranda planlandı: serbest haftalardan sonra doğrudan kamp haftalarına geçilir. */
   planli?: boolean;
   /** Haftalık antrenman mini oyunları: hangi kamp haftasında, hangi oyun, kaç puan (0–100) */
-  idman?: { idx: number; oyun: 'pad' | 'refleks' | 'ritim'; puan: number }[];
+  idman?: { idx: number; oyun: import('./drills').DrillId; puan: number }[];
   /** Kamp sonu ekranı için yapılandırılmış özet */
   sonuc?: {
     focus?: StatKey;

@@ -5,15 +5,16 @@ import { L } from '../i18n';
 import { clamp } from './rng';
 import type { GameState } from './types';
 
-export type DrillId = 'pad' | 'refleks' | 'ritim';
+export type DrillId = 'pad' | 'refleks' | 'ritim' | 'spar';
 
 export const DRILLS: Record<DrillId, { ad: string; aciklama: string; ikon: string }> = {
   pad: { ad: L("Pad çalışması"), aciklama: L("Hoca kombinasyonu söyler. Sırası gelen pad yanar: halka pada oturduğu anda o pada vur."), ikon: 'boxing-glove' },
   refleks: { ad: L("Takedown savunması"), aciklama: L("Rakibi oku: gerçekten dalarsa hemen dokun ve sprawl yap. Eğilip doğrulursa ya da jab atarsa bekle. Sprawl'dan sonra giyotin fırsatını kaçırma!"), ikon: 'run-fast' },
   ritim: { ad: L("İp atlama"), aciklama: L("İp yere değdiği anda dokun. Ritmi kaçırma."), ikon: 'jump-rope' },
+  spar: { ad: L("Canlı sparring"), aciklama: L("25 saniyelik gerçek zamanlı spar. Partner ⚠️ ile saldırı hazırlar: KAÇ ve hemen kontra vur. Hazırlık sırasında DİREKT vurursan saldırısını kesersin; 🛡️ gardına vurma."), ikon: 'karate' },
 };
 
-const DRILL_IDS: DrillId[] = ['pad', 'refleks', 'ritim'];
+const DRILL_IDS: DrillId[] = ['pad', 'refleks', 'ritim', 'spar'];
 
 /** Bu kamp haftasının oyunu: her hafta rastgele, ama aynı hafta hep aynı (yeniden açınca değişmez); art arda aynısı gelmez. */
 export function drillOfWeek(s: GameState): DrillId {
