@@ -219,6 +219,8 @@ export interface CampState {
   kankaBitti?: boolean;
   /** Elle kilo verme (weightCut.ts) */
   kesim?: import('./weightCut').ManualCut;
+  /** Kafese giriş şovu (WALKOUT_STYLES) */
+  giris?: string;
   ozet: string[];
   tartiMetni?: string;
   sakatlik?: Injury;

@@ -9,7 +9,7 @@ import { siteById, CAMP_SITES, type CampSite } from './gyms';
 import { campPoints } from './progression';
 import { autoFreeWeeks, campLengthsFor, campWeek, CAMP_LENGTH_INFO, freeWeek, setCampLength } from './calendar';
 import { techLevels } from './techniques';
-import { trashTalkFollowers } from './fame';
+import { addFollowers, fmtDelta, followers, trashTalkFollowers } from './fame';
 import { socialCampStart } from './social';
 import { dopingActive, DOPING_MODS } from './doping';
 import { prAdjust, staffCampHealth, staffCampPoints, staffCutman, staffFreeCut, staffGrowth } from './staff';
@@ -299,6 +299,7 @@ export function campChoose(s: GameState, value: string | number) {
       return;
     case 'yuzyuze':
       if (!k.yuzyuze) faceOff(s, String(value));
+      else if (typeof value === 'string' && value.startsWith('giris:')) k.giris = value.slice(6);
       else beginFight(s);
       return;
   }
@@ -509,10 +510,52 @@ function weighIn(s: GameState) {
   k.step = 'tarti';
 }
 
+/** Kafese giriş şovu: dövüşün başında küçük etkiler. */
+export const WALKOUT_STYLES = [
+  { key: 'sakin', ad: L("Odaklı yürüyüş"), aciklama: L("Kulaklık, sakin yüz. Kafana odaklanırsın (IQ +1)."), ikon: 'headphones' },
+  { key: 'bayrak', ad: L("Bayrakla gir"), aciklama: L("Bayrağın omzunda. Salon coşar (popülerlik +1, kondisyon +1)."), ikon: 'flag-variant' },
+  { key: 'dans', ad: L("Şov yap"), aciklama: L("Dans et, kameralara oyna. Takipçi patlar ama rakip sinirlenebilir."), ikon: 'party-popper' },
+  { key: 'bakis', ad: L("Rakibi süz"), aciklama: L("Kafeste ona kilitlen. Ya gözünü kaçırır ya da sen gerilirsin."), ikon: 'eye-circle' },
+] as const;
+
+function applyWalkout(s: GameState, mods: Partial<Stats>, oppMods: Partial<Stats>) {
+  const k = s.pending.kamp!;
+  const add = (m: Partial<Stats>, st: StatKey, n: number) => (m[st] = (m[st] ?? 0) + n);
+  const g = k.giris ?? 'sakin';
+  const o = s.pending.rakip!.soyad;
+  let line: string;
+  if (g === 'bayrak') {
+    s.populerlik = clamp(s.populerlik + 1, 0, 100);
+    add(mods, 'kondisyon', 1);
+    line = L("🚩 Bayrağınla kafese yürüdün, salon ayağa kalktı.");
+  } else if (g === 'dans') {
+    s.populerlik = clamp(s.populerlik + 2, 0, 100);
+    const d = addFollowers(s, followers(s) * (0.02 + rand() * 0.02));
+    if (chance(0.35)) {
+      add(oppMods, 'vurus', 1);
+      line = L("💃 Girişin viral oldu ({0} takipçi) ama {1} çok sinirlendi (rakip vuruş +1).", [fmtDelta(d), o]);
+    } else line = L("💃 Girişin viral oldu: {0} takipçi.", [fmtDelta(d)]);
+  } else if (g === 'bakis') {
+    if (chance(0.5 + s.fighter.stats.iq / 400)) {
+      add(oppMods, 'iq', -1);
+      line = L("👁️ {0} gözünü kaçırdı (rakip IQ -1).", [o]);
+    } else {
+      add(mods, 'iq', -1);
+      line = L("👁️ {0} sana gülümsedi; gerilen sen oldun (IQ -1).", [o]);
+    }
+  } else {
+    add(mods, 'iq', 1);
+    line = L("🎧 Kafana odaklanarak yürüdün (IQ +1).");
+  }
+  s.haberler.unshift(line);
+}
+
 function beginFight(s: GameState) {
   const k = s.pending.kamp!;
   const opp = s.pending.rakip!;
   const mods: Partial<Stats> = { ...k.mods };
+  k.oppMods = { ...k.oppMods };
+  applyWalkout(s, mods, k.oppMods);
   Object.entries(fightItemMods(s)).forEach(([st, v]) => (mods[st as StatKey] = (mods[st as StatKey] ?? 0) + (v ?? 0)));
   Object.entries(diseaseMods(s)).forEach(([st, v]) => (mods[st as StatKey] = (mods[st as StatKey] ?? 0) + (v ?? 0)));
   if (dopingActive(s)) {

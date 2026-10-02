@@ -9,7 +9,7 @@ import { ShareButton } from '../share/ShareButton';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { availableSites, campChoose, campQuote, coachCampPlan, cutCost, FACEOFF, INTENSITY, PRESS, WEIGHT_CUTS } from '../engine/camp';
+import { availableSites, campChoose, campQuote, coachCampPlan, cutCost, FACEOFF, INTENSITY, PRESS, WALKOUT_STYLES, WEIGHT_CUTS } from '../engine/camp';
 import { PLANS } from '../engine/fight';
 import { lookFor } from '../engine/tale';
 import { FighterAvatar } from './FighterAvatar';
@@ -693,7 +693,14 @@ export function CampScreen({ s, act }: { s: GameState; act: Act }) {
               <Choice key={f.key} n={i + 1} icon={f.ikon as IconName} label={f.ad} desc={f.aciklama} tone="gold" onPress={() => choose(f.key)} />
             ))}
           </>
-        ) : null}
+        ) : (
+          <>
+            <Text style={gs.faceAsk}>{L("Dövüş gecesi kafese nasıl gireceksin?")}</Text>
+            {WALKOUT_STYLES.map((w, i) => (
+              <Choice key={w.key} n={i + 1} icon={w.ikon as IconName} label={w.ad} desc={w.aciklama} tone="gold" selected={(k.giris ?? 'sakin') === w.key} onPress={() => choose(`giris:${w.key}`)} />
+            ))}
+          </>
+        )}
       </Screen>
     );
   // tarti
