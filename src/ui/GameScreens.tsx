@@ -44,6 +44,8 @@ import { pendingBouts, weeklyGymNet } from '../engine/academy';
 import { ACHIEVEMENTS } from '../engine/achievements';
 import { UccRoadCard } from './UccRoadCard';
 import { GoalsCard } from './GoalsCard';
+import { canStream, startStream, STREAM_MIN_FOLLOWERS } from '../engine/stream';
+import { followers } from '../engine/fame';
 import { appeal, appealChance, appealFee, appealFeeText, dismissAppeal } from '../engine/appeal';
 import { acceptCrossover, declineCrossover } from '../engine/crossover';
 import { LegendPanel } from './LegendPanel';
@@ -285,6 +287,9 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
             ) : null}
             {s.stage !== 'amator' ? (
               <ActionTile icon="tag-heart" label={L("Markam")} sub={s.marka ? `${s.marka.ad} · ${money(s.marka.toplam)}` : L("Kendi markanı kur")} accent={C.gold} onPress={() => act((x) => (x.phase = 'marka'))} />
+            ) : null}
+            {s.stage !== 'amator' ? (
+              <ActionTile icon="broadcast" label={L("Canlı yayın")} sub={canStream(s) ? L("Yayına geç") : followers(s) < STREAM_MIN_FOLLOWERS ? L("5B takipçi gerekli") : L("Sonraki maçtan sonra")} accent="#9146ff" badge={canStream(s) ? '!' : null} onPress={() => canStream(s) && act(startStream)} />
             ) : null}
             <ActionTile icon="cards" label={L("Kart Albümü")} sub={L("{0} kart", [(s.kartlar ?? []).length])} accent="#c86bff" badge={unclaimedMilestones(s) || null} onPress={() => act((x) => (x.phase = 'album'))} />
             <ActionTile icon="cellphone-message" label={L("Sosyal medya")} sub={L("{0} paylaşım", [(s.sosyal ?? []).length])} accent="#3aa8ff" onPress={() => act((x) => (x.phase = 'sosyal'))} />

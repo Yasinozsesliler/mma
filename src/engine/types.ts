@@ -441,6 +441,7 @@ export type Phase =
   | 'odul'
   | 'marka'
   | 'boks'
+  | 'yayin'
   | 'emeklilik';
 
 export interface Istat {
@@ -598,6 +599,9 @@ export interface GameState {
   boksYapildi?: boolean;
   /** Karara itiraz hakkı (appeal.ts) */
   itiraz?: import('./appeal').Appeal;
+  /** Canlı yayın (stream.ts) */
+  yayin?: import('./stream').Stream;
+  yayinSon?: number;
   /** Yıl sonu ödülleri (awards.ts): son işlenen yıl, süren tören, kazanılan ödüller */
   odulYil?: number;
   /** Tedavi kararı bekleyen ciddi sakatlık (treatment.ts) */
