@@ -1,4 +1,5 @@
 import { L } from '../i18n';
+import { diffOf } from './challenges';
 import { pickStar } from './uccRoster';
 import { BACKGROUNDS, NAME_POOLS, NICKNAMES, ORGS, PERSONALITIES, baseStatsFor, femSurname } from './data';
 import { currentOrg, statAverage } from './character';
@@ -36,7 +37,7 @@ function levelFor(s: GameState, org: OrgId, zorluk: number, rank: number | null,
   if (champion) tb += 20;
   const pa = statAverage(s.fighter.stats);
   // Oyuncu güçlendikçe rakipler de güçlenir: rekabet hep canlı kalır.
-  return tb * 0.55 + pa * 0.45 - 2.5 + zorluk * 5 + noise(2);
+  return tb * 0.55 + pa * 0.45 - 2.5 + zorluk * 5 + noise(2) + diffOf(s).rakip;
 }
 
 function recordFor(org: OrgId, rank: number | null, champion: boolean) {

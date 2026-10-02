@@ -1,4 +1,5 @@
 // Mağaza: ekipman (dövüş bonusu) ve yaşam (popülerlik, motivasyon, dinlenme) eşyaları.
+import { diffOf } from './challenges';
 import { perkCut, perkInjury, perkRest } from './perks';
 import { L, LOC } from '../i18n';
 import { clamp } from './rng';
@@ -178,7 +179,7 @@ export const itemBonusTotal = (s: GameState) => Object.values(fightItemMods(s)).
 export const itemPopGain = (s: GameState, it: ShopItem) => Math.max(it.populerlik ? 1 : 0, Math.round((it.populerlik ?? 0) * (1 - s.populerlik / 130)));
 
 export const restMultiplier = (s: GameState) => 1 + activeItems(s).reduce((a, it) => a + (it.dinlenme ?? 0), 0) + staffRest(s) + perkRest(s);
-export const injuryMultiplier = (s: GameState) => activeItems(s).reduce((a, it) => a * (it.sakatlikRiski ?? 1), 1) * staffInjury(s) * perkInjury(s);
+export const injuryMultiplier = (s: GameState) => activeItems(s).reduce((a, it) => a * (it.sakatlikRiski ?? 1), 1) * staffInjury(s) * perkInjury(s) * diffOf(s).sakatlik;
 /** Kamp motivasyonu: eşyalar + kadro (psikolog) + evcil hayvan + sevgili. */
 export const campMotivation = (s: GameState) =>
   activeItems(s).reduce((a, it) => a + (it.motivasyon ?? 0), 0) + staffMotivation(s) + petMotivation(s) + partnerMotivation(s);

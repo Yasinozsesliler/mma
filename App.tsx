@@ -43,6 +43,8 @@ import { checkAchievements } from './src/engine/legacy';
 import { AlbumScreen } from './src/ui/AlbumScreen';
 import { PodcastScreen } from './src/ui/PodcastScreen';
 import { AwardsCeremony } from './src/ui/AwardsCeremony';
+import { challengeOnRetire, type ChallengeId } from './src/engine/challenges';
+import { markChallenge } from './src/challengePrefs';
 import { MerchScreen } from './src/ui/MerchScreen';
 import { CrossoverScreen } from './src/ui/CrossoverScreen';
 import { StreamScreen } from './src/ui/StreamScreen';
@@ -159,6 +161,8 @@ export default function App() {
     if (!(cur.phase === 'dovus' && next.phase === 'dovusSonrasi') && next.populerlik !== cur.populerlik) popToFollowers(next, next.populerlik - cur.populerlik);
     // Kafes dışındaki başarımlar da (ev, araba, sevgili…) anında açılır.
     const yeni = next.phase === 'emeklilik' ? [] : checkAchievements(next);
+    if (next.phase === 'emeklilik') challengeOnRetire(next);
+    if (next.meydan?.durum === 'basarili') markChallenge(next.meydan.id);
     if (next.phase === 'hub') {
       refreshStaleGoals(next);
       // Yeni yıla girildiyse ödül töreni
@@ -176,8 +180,10 @@ export default function App() {
 
   // Yuvadaki eski kayıt ancak yeni karakter tamamlanınca üzerine yazılır; oluşturmadan geri dönülürse kaybolmaz.
   const [createSlot, setCreateSlot] = useState<Slot>(1);
+  const [challenge, setChallenge] = useState<ChallengeId | null>(null);
   const [heritage, setHeritage] = useState<Heritage | null>(null);
-  const newCareer = (x: Slot = slotRef.current) => {
+  const newCareer = (x: Slot = slotRef.current, ch: ChallengeId | null = null) => {
+    setChallenge(ch);
     setHeritage(null);
     setCreateSlot(x);
     setView('create');
@@ -242,7 +248,8 @@ export default function App() {
       <MenuScreen
         saves={saves}
         active={slot}
-        onNew={newCareer}
+        onNew={(x) => newCareer(x)}
+        onChallenge={(id, x) => newCareer(x, id)}
         onContinue={continueSlot}
         onDelete={removeSlot}
         onDaily={() => setView('daily')}
@@ -269,12 +276,15 @@ export default function App() {
     content = (
       <CreateScreen
         heritage={heritage}
+        challenge={challenge}
         onBack={() => {
           setHeritage(null);
           setView('menu');
         }}
         onDone={(input, stats) => {
           const s = createGame(input, stats);
+          if (input.zorluk) s.zorluk = input.zorluk;
+          if (input.meydan) s.meydan = { id: input.meydan, durum: 'devam' };
           if (heritage) applyHeritage(s, heritage);
           setHeritage(null);
           socialWelcome(s);

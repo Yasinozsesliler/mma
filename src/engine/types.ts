@@ -602,6 +602,10 @@ export interface GameState {
   /** Canlı yayın (stream.ts) */
   yayin?: import('./stream').Stream;
   yayinSon?: number;
+  /** Zorluk seviyesi ve meydan okuma modu (challenges.ts) */
+  zorluk?: import('./challenges').Difficulty;
+  meydan?: import('./challenges').Challenge;
+  meydanBitti?: boolean;
   /** Yıl sonu ödülleri (awards.ts): son işlenen yıl, süren tören, kazanılan ödüller */
   odulYil?: number;
   /** Tedavi kararı bekleyen ciddi sakatlık (treatment.ts) */

@@ -32,6 +32,8 @@ import type { Background, GameState, PlanKey, Tactic } from '../src/engine/types
 import { STAT_KEYS } from '../src/engine/types';
 const krizStat: Record<string, number> = {};
 const podcastStat = { n: 0 };
+const meydanStat: Record<string, number> = {};
+const startStreak: number[] = [];
 const itirazStat = { n: 0, kabul: 0 };
 const imzaStat = { n: 0, sayi: 0 };
 const markaStat = { n: 0, toplam: 0, maxPara: 0 };
@@ -99,7 +101,11 @@ function playCareer() {
     ad: 'Test', soyad: 'Bot', lakap: 'Sim', uyruk: pick(['tr', 'us', 'br', 'ru', 'ie']), memleket: '',
     yas: randInt(18, 30), siklet: pick(['hafif', 'welter', 'orta', 'agir'] as const), gecmis: bg, hikaye: '',
   };
+  if (process.env.CH === 'sonsans') input.yas = 35;
+  if (process.env.CH === 'sokak') (input as { gecmis: Background }).gecmis = 'sokak';
   const s = createGame(input, rollStartingStats(input));
+  if (process.env.DIFF) s.zorluk = process.env.DIFF as 'kolay' | 'efsane';
+  if (process.env.CH) s.meydan = { id: process.env.CH as 'yenilmez', durum: 'devam' };
   stats.careers++;
   stats.byBg[bg] ??= { w: 0, l: 0 };
   let pro = false, big = false, ufc = false, fights = 0;
@@ -244,6 +250,8 @@ function playCareer() {
 
   function finalize() {
     (s.kartlar ?? []).forEach((c) => { kartStat[c.nadir] = (kartStat[c.nadir] ?? 0) + 1; kartStat.toplam++; });
+    { const pro = [...s.gecmis].reverse().filter((h) => h.org !== 'amator'); let k = 0; while (k < pro.length && pro[k].sonuc === 'G') k++; startStreak.push(k); }
+    if (s.meydan) meydanStat[s.meydan.durum] = (meydanStat[s.meydan.durum] ?? 0) + 1;
     if (s.imza) { imzaStat.n++; imzaStat.sayi += s.imza.sayi; }
     if (s.marka) { markaStat.n++; markaStat.toplam += s.marka.toplam; }
     markaStat.maxPara += s.istat?.maxPara ?? 0;
@@ -294,6 +302,8 @@ console.log('Ödüller (kariyer başına):', Object.entries(odulStat).map(([k, v
 console.log(`Marka: ${pct(markaStat.n, N)} kariyerde, marka başına toplam kâr $${Math.round(markaStat.toplam / Math.max(1, markaStat.n)).toLocaleString('tr-TR')} · en yüksek bakiye ort. $${Math.round(markaStat.maxPara / N).toLocaleString('tr-TR')}`);
 console.log(`İmza hareketi: ${pct(imzaStat.n, N)} kariyerde, imza ile bitiriş ort. ${(imzaStat.sayi / Math.max(1, imzaStat.n)).toFixed(1)}`);
 console.log(`İtiraz: kariyer başına ${(itirazStat.n / N).toFixed(2)}, kabul ${pct(itirazStat.kabul, itirazStat.n)}`);
+console.log('Pro başlangıç serisi dağılımı:', [0, 1, 2, 3, 5, 8, 10].map((n) => `≥${n}: ${pct(startStreak.filter((x) => x >= n).length, N)}`).join(' '));
+if (process.env.CH) console.log('Meydan okuma:', process.env.CH, JSON.stringify(meydanStat));
 console.log(`Podcast (kariyer başına): ${(podcastStat.n / N).toFixed(1)}`);
 console.log('Kartlar (kariyer başına):', Object.entries(kartStat).map(([k, v]) => `${k} ${(v / N).toFixed(1)}`).join(', '));
 console.log(`Antrenman ortağı: kanka ${pct(kankaStat.kanka, N)}, rakip ${pct(kankaStat.rakip, N)}`);

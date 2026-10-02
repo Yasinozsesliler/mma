@@ -1,4 +1,6 @@
 import { L, LANG, LANGS, LOC } from '../i18n';
+import { ChallengeList } from './ChallengeList';
+import type { ChallengeId } from '../engine/challenges';
 import { useCosmetics, useFrame } from '../cosmetics';
 import { ExportButton, FeedbackRow, ImportCard } from './CareerTransfer';
 import { setAnnouncer, useAnnouncer } from '../announcer';
@@ -162,6 +164,7 @@ export function MenuScreen({
   saves,
   active,
   onNew,
+  onChallenge,
   onContinue,
   onDelete,
   onDaily,
@@ -172,6 +175,7 @@ export function MenuScreen({
   saves: (GameState | null)[];
   active: Slot;
   onNew: (slot: Slot) => void;
+  onChallenge: (id: ChallengeId, slot: Slot) => void;
   onContinue: (slot: Slot) => void;
   onDelete: (slot: Slot) => void;
   onDynasty: (slot: Slot) => void;
@@ -281,6 +285,7 @@ export function MenuScreen({
       </View>
 
       <DailyCard onPress={onDaily} />
+      <ChallengeList canStart={!!firstEmpty} onStart={(id) => firstEmpty && onChallenge(id, firstEmpty)} />
 
       <Pressable onPress={onLocker} style={({ pressed }) => [ms.locker, pressed && { borderColor: C.gold }]}>
         <Icon name="hanger" size={22} color={C.gold} />

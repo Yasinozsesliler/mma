@@ -1,4 +1,5 @@
 // Ana ekranın sade, premium parçaları: kompakt kariyer kartı, ana eylem ve eylem kutucukları.
+import { CHALLENGES, DIFFICULTIES } from '../engine/challenges';
 import { L, LOC } from '../i18n';
 import { useFrame } from '../cosmetics';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -60,6 +61,17 @@ export function HubHero({ s }: { s: GameState }) {
               </>
             ) : null}
           </View>
+          {s.meydan || (s.zorluk && s.zorluk !== 'normal') ? (
+            <View style={hh.chips}>
+              {s.zorluk && s.zorluk !== 'normal' ? <Text style={[hh.chip, { color: s.zorluk === 'efsane' ? C.red : C.green }]}>{DIFFICULTIES[s.zorluk].ad().toLocaleUpperCase(LOC)}</Text> : null}
+              {s.meydan ? (
+                <Text style={[hh.chip, { color: s.meydan.durum === 'basarili' ? C.gold : s.meydan.durum === 'basarisiz' ? C.faint : C.orange }]}>
+                  {s.meydan.durum === 'basarili' ? '🏅 ' : s.meydan.durum === 'basarisiz' ? '✖ ' : '⚔️ '}
+                  {CHALLENGES[s.meydan.id].ad().toLocaleUpperCase(LOC)}
+                </Text>
+              ) : null}
+            </View>
+          ) : null}
         </View>
         <OvrBadge value={Math.round(statAverage(f.stats))} size={50} />
       </View>

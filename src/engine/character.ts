@@ -24,6 +24,9 @@ export interface NewFighterInput {
   gorunum?: Appearance;
   boy?: number;
   kadin?: boolean;
+  /** Zorluk ve meydan okuma (challenges.ts) */
+  zorluk?: import('./challenges').Difficulty;
+  meydan?: import('./challenges').ChallengeId;
 }
 
 /** noise=false: zar atmadan beklenen değerler (seçim ekranındaki önizleme için). */

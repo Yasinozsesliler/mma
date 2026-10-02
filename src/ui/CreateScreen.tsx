@@ -1,4 +1,5 @@
 import { L, LANG, LOC } from '../i18n';
+import { CHALLENGES, DIFFICULTIES, type ChallengeId, type Difficulty } from '../engine/challenges';
 import { HeritageBanner } from './DynastyPanel';
 import type { Heritage } from '../engine/dynasty';
 import { MONETIZATION, showRewarded, usePremium } from '../monetization';
@@ -33,7 +34,26 @@ function randomName(uyruk: string, kadin = false) {
   return { ad: rnd(kadin ? pool.kadin : pool.ad), soyad: kadin && pool.slav ? femSurname(soyad) : soyad, lakap: LANG === 'tr' ? rnd(NICKNAMES) : '' };
 }
 
-export function CreateScreen({ onDone, onBack, heritage }: { onDone: (input: NewFighterInput, stats: Stats) => void; onBack: () => void; heritage?: Heritage | null }) {
+export function CreateScreen({
+  onDone: onDoneRaw,
+  onBack,
+  heritage,
+  challenge,
+}: {
+  onDone: (input: NewFighterInput, stats: Stats) => void;
+  onBack: () => void;
+  heritage?: Heritage | null;
+  challenge?: ChallengeId | null;
+}) {
+  const ch = challenge ? CHALLENGES[challenge] : null;
+  const [zorluk, setZorluk] = useState<Difficulty>('normal');
+  /** Meydan okuma kuralları (yaş, branş) ve zorluk karakter bitince uygulanır; değişen alan olursa istatistik yeniden atılır. */
+  const onDone = (input: NewFighterInput, stats: Stats) => {
+    const x: NewFighterInput = { ...input, zorluk, meydan: challenge ?? undefined };
+    if (ch?.yas) x.yas = ch.yas;
+    if (ch?.gecmis) x.gecmis = ch.gecmis;
+    onDoneRaw(x, x.yas !== input.yas || x.gecmis !== input.gecmis ? rollStartingStats(x) : stats);
+  };
   const [step, setStep] = useState(1);
   const startCountry = heritage?.uyruk ?? (COUNTRIES[LANG_COUNTRY[LANG]] ? LANG_COUNTRY[LANG] : 'tr');
   const [inp, setInp] = useState<NewFighterInput>({
@@ -121,6 +141,25 @@ export function CreateScreen({ onDone, onBack, heritage }: { onDone: (input: New
             {L("Adın ne?")}
           </Title>
           {heritage ? <HeritageBanner h={heritage} /> : null}
+          {ch ? (
+            <View style={cs.challenge}>
+              <Text style={cs.challengeKicker}>{L("MEYDAN OKUMA")}</Text>
+              <Text style={cs.challengeName}>{ch.ad()}</Text>
+              <Text style={cs.challengeDesc}>{ch.aciklama()}</Text>
+            </View>
+          ) : null}
+          <Text style={cs.label}>{L("Zorluk")}</Text>
+          <View style={cs.genderRow}>
+            {(Object.keys(DIFFICULTIES) as Difficulty[]).map((d) => {
+              const on = zorluk === d;
+              return (
+                <Pressable key={d} onPress={() => setZorluk(d)} style={[cs.gender, on && cs.genderOn]}>
+                  <Text style={[cs.genderText, on && { color: '#000' }]}>{DIFFICULTIES[d].ad().toLocaleUpperCase(LOC)}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+          <Text style={[cs.challengeDesc, { marginBottom: 10 }]}>{DIFFICULTIES[zorluk].aciklama()}</Text>
           <View style={cs.genderRow}>
             {([false, true] as const).map((k) => {
               const on = !!inp.kadin === k;
@@ -535,6 +574,10 @@ function Field({ label, value, onChange, placeholder }: { label: string; value: 
 }
 
 const cs = StyleSheet.create({
+  challenge: { backgroundColor: '#2a0a0f', borderWidth: 1, borderColor: C.red, borderRadius: 12, padding: 12, gap: 2, marginBottom: 12 },
+  challengeKicker: { color: C.red, fontFamily: F.semi, fontSize: 10, letterSpacing: 2 },
+  challengeName: { color: C.text, fontFamily: F.display, fontSize: 17 },
+  challengeDesc: { color: C.dim, fontFamily: F.body, fontSize: 12, lineHeight: 17 },
   genderRow: { flexDirection: 'row', gap: 10, marginBottom: 14 },
   gender: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12, borderRadius: 10, borderWidth: 1, borderColor: C.border, backgroundColor: C.card },
   genderOn: { backgroundColor: C.gold, borderColor: C.gold },

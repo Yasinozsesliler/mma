@@ -1,4 +1,5 @@
 import { L as tL, LOC } from '../i18n';
+import { challengeCheck, challengeOnRetire, diffOf } from './challenges';
 import { offerAppeal } from './appeal';
 import { maybeCrossover } from './crossover';
 import { signatureFinish } from './signature';
@@ -201,6 +202,7 @@ export function finishFight(s: GameState) {
     if (kart) lines.push(kart);
   }
   lines.push(...gpAfterFight(s, opp, won && !caught));
+  lines.push(...challengeCheck(s, won && !caught, !won && !draw && (r.yontem === 'KO' || r.yontem === 'TKO')));
   // Bitiren hareket ustalık kazanır (maçı hangi teknikle bitirdiysen).
   let teknikNot: string | undefined;
   if (won && !caught && finishMethod && r.teknik) {
@@ -214,7 +216,7 @@ export function finishFight(s: GameState) {
   // Para
   let kazanc = 0;
   if (pro && s.contract) {
-    let purse = s.contract.ucret + (won && !caught ? s.contract.bonus : 0);
+    let purse = (s.contract.ucret + (won && !caught ? s.contract.bonus : 0)) * diffOf(s).ucret;
     if (caught) {
       purse *= 0.7;
       lines.push(tL("🚫 Doping cezası: ücretin %30’u kesildi."));
@@ -536,7 +538,8 @@ export function afterPostFight(s: GameState) {
   s.pending = {};
   s.phase = 'hub';
 
-  if (s.fighter.yas >= 45) {
+  if (s.fighter.yas >= 45 || s.meydanBitti) {
+    challengeOnRetire(s);
     s.phase = 'emeklilik';
     return;
   }
