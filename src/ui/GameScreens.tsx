@@ -45,6 +45,8 @@ import { pendingBouts, weeklyGymNet } from '../engine/academy';
 import { ACHIEVEMENTS } from '../engine/achievements';
 import { UccRoadCard } from './UccRoadCard';
 import { GoalsCard } from './GoalsCard';
+import { FanMeetGame } from './FanMeetGame';
+import { canFanMeet, fanMeet } from '../engine/fanMeet';
 import { GrandPrixCard } from './GrandPrixCard';
 import { declinePodcast } from '../engine/podcast';
 import { unclaimedMilestones } from '../engine/cards';
@@ -108,6 +110,7 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
   const [resting, setResting] = useState(false);
   const [weightOpen, setWeightOpen] = useState(false);
   const [newsAll, setNewsAll] = useState(false);
+  const [fanMeetOpen, setFanMeet] = useState(false);
   const org = ORGS[currentOrg(s)];
   const injured = s.sakatliklar.length > 0;
   return (
@@ -213,6 +216,9 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
               onPress={() => act((x) => (x.phase = 'salon'))}
             />
             <ActionTile icon="medal" label={L("Başarımlar")} sub={s.hof ? L("🏛 Hall of Fame") : `${(s.basarimlar ?? []).length}/${ACHIEVEMENTS.length}`} accent={C.gold} onPress={() => act((x) => (x.phase = 'basarimlar'))} />
+            {s.stage !== 'amator' ? (
+              <ActionTile icon="draw-pen" label={L("Hayran buluşması")} sub={canFanMeet(s) ? L("İmza günü düzenle") : L("Sonraki maçtan sonra")} accent="#ff8fb1" badge={canFanMeet(s) ? '!' : null} onPress={() => canFanMeet(s) && setFanMeet(true)} />
+            ) : null}
             <ActionTile icon="cards" label={L("Kart Albümü")} sub={L("{0} kart", [(s.kartlar ?? []).length])} accent="#c86bff" badge={unclaimedMilestones(s) || null} onPress={() => act((x) => (x.phase = 'album'))} />
             <ActionTile icon="cellphone-message" label={L("Sosyal medya")} sub={L("{0} paylaşım", [(s.sosyal ?? []).length])} accent="#3aa8ff" onPress={() => act((x) => (x.phase = 'sosyal'))} />
             <ActionTile icon="glass-cocktail" label={L("Gece hayatı")} sub={s.iliski ? `💞 ${s.iliski.ad}` : L("Randevu · kulüp · kumar")} accent="#fd267a" onPress={() => act((x) => (x.phase = 'gece'))} />
@@ -220,6 +226,17 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
               <ActionTile icon="scale-balance" label={L("Sıklet")} sub={s.sampiyon ? L("Çift kemere git") : WEIGHT_CLASSES[s.fighter.siklet].ad} accent={C.orange} selected={weightOpen} onPress={() => { setWeightOpen(!weightOpen); setResting(false); }} />
             ) : null}
           </ActionGrid>
+          {fanMeetOpen ? (
+            <FanMeetGame
+              onClose={() => setFanMeet(false)}
+              onDone={(p) => {
+                setFanMeet(false);
+                act((x) => {
+                  fanMeet(x, p);
+                });
+              }}
+            />
+          ) : null}
           {resting ? <RestPicker s={s} act={act} onDone={() => setResting(false)} /> : null}
           {weightOpen ? (
             <Card accent={C.gold}>

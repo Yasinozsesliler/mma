@@ -560,6 +560,8 @@ export interface GameState {
   gp?: import('./grandPrix').GrandPrix;
   gpDavet?: { dovus: number; odul: number };
   gpSon?: number;
+  /** Son hayran buluşmasının dövüş sayısı (fanMeet.ts) */
+  bulusmaSon?: number;
   /** Ödüllü reklam teklifleri: alındıkları dövüş sayısı (her dövüş arasında birer kez). */
   odul?: { sakatlikMac?: number; profilHafta?: number };
   saglik: number;
