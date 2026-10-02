@@ -1,4 +1,5 @@
 import { L, LOC } from '../i18n';
+import { CrisisCard } from './CrisisCard';
 import { fmtFollowers, followerBoard, followers } from '../engine/fame';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -145,6 +146,7 @@ export function SocialScreen({ s, act }: { s: GameState; act: Act }) {
         
         {L("Sosyal Medya")}
       </Title>
+      <CrisisCard s={s} act={act} />
       <View style={so.profile}>
         <FighterAvatar look={s.fighter.gorunum} size={52} />
         <View style={{ flex: 1 }}>

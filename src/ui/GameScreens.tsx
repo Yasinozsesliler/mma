@@ -45,6 +45,7 @@ import { pendingBouts, weeklyGymNet } from '../engine/academy';
 import { ACHIEVEMENTS } from '../engine/achievements';
 import { UccRoadCard } from './UccRoadCard';
 import { GoalsCard } from './GoalsCard';
+import { crisisTitle } from '../engine/crisis';
 import { EventCard } from './EventCard';
 import { TrashTalkDuel } from './TrashTalkDuel';
 import { WikiButton } from './WikiPage';
@@ -152,6 +153,11 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
             </Notice>
           ) : null}
 
+          {s.kriz ? (
+            <Notice color={C.red} icon="fire-alert" action={<Button label={s.kriz.sonuc ? L("Sonucu gör") : L("Müdahale et")} icon="cellphone-message" tone="red" onPress={() => act((x) => (x.phase = 'sosyal'))} />}>
+              {s.kriz.sonuc ? L("Sosyal medya krizi sonuçlandı.") : L("🔥 Sosyal medyada kriz var: {0}. Gündem ısısı {1}.", [crisisTitle(s.kriz), s.kriz.isi])}
+            </Notice>
+          ) : null}
           {pendingBouts(s) ? (
             <Notice color={C.orange} icon="bullhorn" action={<Button label={L("Köşesine geç")} icon="weight-lifter" tone="gold" onPress={() => act((x) => (x.phase = 'salon'))} />}>
               {L("Öğrencilerinden {0} kişinin maçı var. Köşede sen dur!", [pendingBouts(s)])}

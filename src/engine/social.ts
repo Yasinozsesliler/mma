@@ -1,4 +1,5 @@
 // Sosyal medya: dövüşçüler atışır, taraftarlar yorum yapar, maçların hikâyesi yazılır.
+import { crisisTick, maybeCrisis } from './crisis';
 import { L, LOC } from '../i18n';
 import { fullName, statAverage } from './character';
 import { bump } from './istat';
@@ -458,6 +459,8 @@ function handleName(o: Opponent) {
 
 /** Zaman geçtikçe akış canlanır: 1-3 yeni paylaşım. */
 export function socialTick(s: GameState, weeks = 1) {
+  crisisTick(s, weeks);
+  maybeCrisis(s, weeks);
   if (s.stage === 'amator' && chance(0.5)) return;
   const liste = s.bolum?.liste ?? [];
   const champ = s.bolum?.sampiyon ?? null;

@@ -536,6 +536,9 @@ export interface GameState {
   /** Haftalık etkinlik (weeklyEvent.ts) ve kazanılan koleksiyon rozetleri ("tema:hafta") */
   etkinlik?: import('./weeklyEvent').WeeklyEvent;
   rozetler?: string[];
+  /** Süren sosyal medya krizi (crisis.ts) ve son krizin haftası */
+  kriz?: import('./crisis').Crisis;
+  krizSon?: number;
   /** Ödüllü reklam teklifleri: alındıkları dövüş sayısı (her dövüş arasında birer kez). */
   odul?: { sakatlikMac?: number; profilHafta?: number };
   saglik: number;
