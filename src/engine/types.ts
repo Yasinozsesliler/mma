@@ -443,6 +443,9 @@ export interface Istat {
   sikletler: string[];
   yenilmezZirve?: number;
   rovans?: number;
+  /** 80+ puanlı antrenman oyunu ve kazanılan basın düellosu sayısı (haftalık etkinlik) */
+  idmanIyi: number;
+  duelloG: number;
 }
 
 export interface P4PEntry {
@@ -530,6 +533,9 @@ export interface GameState {
   salon?: import('./academy').Gym;
   /** Kariyer hedefleri (goals.ts): kısa/orta/uzun vadeli üç hedef ve tamamlanan sayısı */
   hedefler?: { list: import('./goals').Goal[]; tamam: number };
+  /** Haftalık etkinlik (weeklyEvent.ts) ve kazanılan koleksiyon rozetleri ("tema:hafta") */
+  etkinlik?: import('./weeklyEvent').WeeklyEvent;
+  rozetler?: string[];
   /** Ödüllü reklam teklifleri: alındıkları dövüş sayısı (her dövüş arasında birer kez). */
   odul?: { sakatlikMac?: number; profilHafta?: number };
   saglik: number;

@@ -17,6 +17,7 @@ import { scandal } from './sponsors';
 import { campMotivation, cutBonus, fightItemMods, injuryMultiplier, owns, restMultiplier } from './shop';
 import { chance, clamp, pick, rand, randInt } from './rng';
 import { drillBonus, recordDrill } from './drills';
+import { bump } from './istat';
 import { answerDuel, autoAnswer, createDuel, duelOutcome, type DuelAnswer } from './trashTalk';
 import type {
   GameState,
@@ -386,6 +387,7 @@ function runCamp(s: GameState) {
       if (k.duello) {
         // Düelloyu kazandın: rakip sinirli, kafası karışık
         k.oppMods = { iq: -2 };
+        bump(s, 'duelloG');
       }
       s.populerlik = clamp(s.populerlik + 6, 0, 100);
       const t = trashTalkFollowers(s, true, !!k.duello);

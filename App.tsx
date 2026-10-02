@@ -41,6 +41,7 @@ import { AchievementsScreen } from './src/ui/AchievementsScreen';
 import { AchievementToast } from './src/ui/AchievementToast';
 import { checkAchievements } from './src/engine/legacy';
 import { ensureGoals, refreshStaleGoals } from './src/engine/goals';
+import { ensureEvent } from './src/engine/weeklyEvent';
 import { popToFollowers } from './src/engine/fame';
 import { useSoundScene, type Scene } from './src/audio';
 import { initMonetization, PremiumManager } from './src/monetization';
@@ -145,6 +146,7 @@ export default function App() {
     // Kafes dışındaki başarımlar da (ev, araba, sevgili…) anında açılır.
     const yeni = next.phase === 'emeklilik' ? [] : checkAchievements(next);
     if (next.phase === 'hub') refreshStaleGoals(next);
+    if (next.phase !== 'emeklilik') ensureEvent(next);
     if (yeni.length) setToast(yeni);
     setGame(next);
     saveGame(next, slotRef.current);
@@ -256,6 +258,7 @@ export default function App() {
           setHeritage(null);
           socialWelcome(s);
           ensureGoals(s);
+          ensureEvent(s);
           setSlot(createSlot);
           setGame(s);
           // Yuvanın eski kaydı ve yedeği silinir; yeni kariyer temiz başlar.

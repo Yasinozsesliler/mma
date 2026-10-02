@@ -45,6 +45,7 @@ import { pendingBouts, weeklyGymNet } from '../engine/academy';
 import { ACHIEVEMENTS } from '../engine/achievements';
 import { UccRoadCard } from './UccRoadCard';
 import { GoalsCard } from './GoalsCard';
+import { EventCard } from './EventCard';
 import { TrashTalkDuel } from './TrashTalkDuel';
 import { WikiButton } from './WikiPage';
 import { CampLengthStep, CampSummary, CampWeeksStep, FreeWeeksStep } from './CampCalendar';
@@ -167,6 +168,7 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
             disabled={banned(s)}
             onPress={() => act(findNextFight)}
           />
+          <EventCard s={s} act={act} />
           <GoalsCard s={s} act={act} />
 
           <ActionGrid>

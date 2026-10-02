@@ -1,5 +1,6 @@
 // Antrenman mini oyunları: her kamp haftasında isteğe bağlı kısa bir seans.
 // Oynamayan normal kamp sonucunu alır; iyi oynayan daha hızlı gelişir ve daha az sakatlanır.
+import { bump } from './istat';
 import { L } from '../i18n';
 import { clamp } from './rng';
 import type { GameState } from './types';
@@ -42,6 +43,7 @@ export function recordDrill(s: GameState, puan: number) {
   const oyun = drillOfWeek(s);
   const p = clamp(Math.round(puan), 0, 100);
   k.idman = [...(k.idman ?? []), { idx: k.kampIdx ?? 0, oyun, puan: p }];
+  if (p >= 80) bump(s, 'idmanIyi');
   k.haftaLog = [...(k.haftaLog ?? []), L("🎯 {0}: {1} puan · {2}", [DRILLS[oyun].ad, p, drillGrade(p)])];
 }
 

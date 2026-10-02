@@ -21,6 +21,8 @@ const EMPTY: Istat = {
   eslesme: 0,
   sevgili: 0,
   maxPara: 0,
+  idmanIyi: 0,
+  duelloG: 0,
   sikletler: [],
 };
 
