@@ -1,4 +1,5 @@
 // Takvim: maç tarihi, kamp süresi, kamp öncesi serbest haftalar (etkinlikler) ve kampın hafta hafta akışı.
+import { maybePartnerMoment, partnerSparName } from './partner';
 import { L, LOC } from '../i18n';
 import { addStat, advanceWeeks } from './character';
 import { chance, clamp, pick, randInt } from './rng';
@@ -314,7 +315,7 @@ export function campWeek(s: GameState): string {
     if (r <= 1) {
       const t = randomKnown(s);
       const xp = t && chance(0.5) ? ` ${addTechXp(s, t.id, 1)}.` : '';
-      msg = L("🥊 {0} ile spar: {1}.{2}", [partnerName(s), pick([L("temposu yüksek 5 raunt"), L("sert ama öğretici"), L("rakibinin stilini taklit etti")]), xp]);
+      msg = L("🥊 {0} ile spar: {1}.{2}", [partnerSparName(s) ?? partnerName(s), pick([L("temposu yüksek 5 raunt"), L("sert ama öğretici"), L("rakibinin stilini taklit etti")]), xp]);
     } else if (r === 2) {
       const t = randomKnown(s, 'sub') ?? randomKnown(s);
       msg = t ? L("🎯 Teknik günü: {0}.", [addTechXp(s, t.id, 2)]) : L("🎯 Teknik günü: temel hareketler.");
@@ -323,6 +324,7 @@ export function campWeek(s: GameState): string {
   }
   const notes = advanceWeeks(s, 1);
   socialTick(s, 1);
+  if (i > 1 && !son) maybePartnerMoment(s);
   k.kampIdx = i;
   k.haftaLog = [...(k.haftaLog ?? []), L("{0}. hafta · {1}{2}", [i, msg, notes.length ? ` ${notes.join(' ')}` : ''])];
   return msg;

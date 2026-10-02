@@ -152,6 +152,7 @@ export function riskText(zorluk: number, stage: string) {
 
 /** Kalıcı rakibi oyuncunun güncel seviyesine taşır. */
 export function refreshRival(s: GameState, r: Opponent): Opponent {
+  const exPartner = s.kanka?.durum === 'rakip' && s.kanka.o.id === r.id;
   const org = currentOrg(s);
   const target = Math.max(statAverage(r.stats) + randInt(1, 3), levelFor(s, org, 0, r.rank, false));
   const shift = target - statAverage(r.stats);
@@ -161,9 +162,12 @@ export function refreshRival(s: GameState, r: Opponent): Opponent {
     ...r,
     stats,
     rekor: { ...r.rekor, g: r.rekor.g + randInt(1, 3), m: r.rekor.m + randInt(0, 1) },
-    etiket: r.rivalry >= 3 ? L("⚔️ EZELİ RAKİP") : r.sonSonuc === 'M' ? L("🔁 RÖVANŞ FIRSATI") : L("🔁 RÖVANŞ İSTİYOR"),
-    riskMetni:
-      r.sonSonuc === 'M'
+    etiket: exPartner && !r.sonSonuc
+      ? L("💔 ESKİ ANTRENMAN ORTAĞIN")
+      : r.rivalry >= 3 ? L("⚔️ EZELİ RAKİP") : r.sonSonuc === 'M' ? L("🔁 RÖVANŞ FIRSATI") : L("🔁 RÖVANŞ İSTİYOR"),
+    riskMetni: exPartner && !r.sonSonuc
+      ? L("Yıllarca seninle ter döktü: bütün hareketlerini biliyor. Bu dövüş çok kişisel.")
+      : r.sonSonuc === 'M'
         ? L("Seni yenen dövüşçü. İntikam, taraftarı ve basını ateşler.")
         : L("Seni unutmadı. Bu dövüş kişisel ve çok konuşulacak."),
     zorluk: 1,

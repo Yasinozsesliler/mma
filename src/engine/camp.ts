@@ -1,4 +1,5 @@
 import { L, LOC } from '../i18n';
+import { choosePartner, closePartnerMoment, ensurePartner, partnerCorner } from './partner';
 import { addStat, currentOrg, growthMultiplier, fullName } from './character';
 import { ORGS, WEIGHT_CLASSES } from './data';
 import { PLANS, startFight } from './fight';
@@ -195,6 +196,7 @@ export function startCamp(s: GameState) {
     iptal: false,
   };
   s.phase = 'kamp';
+  ensurePartner(s);
   socialCampStart(s);
 }
 
@@ -220,8 +222,13 @@ export function campChoose(s: GameState, value: string | number) {
       return;
     case 'haftalik':
       if (typeof value === 'string' && value.startsWith('idman:')) return recordDrill(s, Number(value.slice(6)));
-      if (value === 'hepsi') while ((k.kampIdx ?? 0) < k.hafta) campWeek(s);
+      if (typeof value === 'string' && value.startsWith('kanka:')) return choosePartner(s, Number(value.slice(6)));
+      if (value === 'kankaKapat') return closePartnerMoment(s);
+      // Antrenman ortağıyla karar anı bekliyorsa hafta ilerlemez
+      if (k.kankaAn) return;
+      if (value === 'hepsi') while ((k.kampIdx ?? 0) < k.hafta && !k.kankaAn) campWeek(s);
       else campWeek(s);
+      if (k.kankaAn) return;
       if ((k.kampIdx ?? 0) >= k.hafta) {
         // Trash talk seçildiyse basın toplantısı elle oynanan bir düelloya döner
         if (k.basin === 'trash' && !k.duello) {
@@ -410,6 +417,8 @@ function runCamp(s: GameState) {
     k.ozet.push(L("🎤 Az konuştun. \"Kafeste görüşürüz.\""));
   }
 
+  const corner = partnerCorner(s);
+  if (corner) notes.push(corner);
   k.ozet.push(...notes);
 
   // Sakatlık zarı

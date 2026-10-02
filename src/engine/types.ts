@@ -214,6 +214,9 @@ export interface CampState {
   basin?: PressChoice;
   /** Trash talk seçildiyse basın toplantısı düellosu (trashTalk.ts) */
   duello?: import('./trashTalk').Duel;
+  /** Antrenman ortağıyla karar anı (kamp başına en fazla bir) */
+  kankaAn?: import('./partner').PartnerMoment;
+  kankaBitti?: boolean;
   ozet: string[];
   tartiMetni?: string;
   sakatlik?: Injury;
@@ -539,6 +542,8 @@ export interface GameState {
   /** Süren sosyal medya krizi (crisis.ts) ve son krizin haftası */
   kriz?: import('./crisis').Crisis;
   krizSon?: number;
+  /** Salon arkadaşı / antrenman ortağı (partner.ts) */
+  kanka?: import('./partner').Partner;
   /** Ödüllü reklam teklifleri: alındıkları dövüş sayısı (her dövüş arasında birer kez). */
   odul?: { sakatlikMac?: number; profilHafta?: number };
   saglik: number;
