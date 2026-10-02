@@ -196,7 +196,7 @@ export type PressChoice = 'saygili' | 'trash' | 'sessiz';
 export interface CampState {
   /** Ödüllü detaylı keşif raporu açıldı mı */
   kesif?: boolean;
-  step: 'hoca' | 'planla' | 'sure' | 'takvim' | 'yer' | 'focus' | 'plan' | 'intensity' | 'kilo' | 'basin' | 'haftalik' | 'sakatlik' | 'ozet' | 'tarti' | 'yuzyuze';
+  step: 'hoca' | 'planla' | 'sure' | 'takvim' | 'yer' | 'focus' | 'plan' | 'intensity' | 'kilo' | 'basin' | 'haftalik' | 'sakatlik' | 'ozet' | 'tarti' | 'yuzyuze' | 'duello';
   pKilo?: number;
   oKilo?: number;
   kafesKilo?: number;
@@ -212,6 +212,8 @@ export interface CampState {
   intensity?: Intensity;
   kilo?: WeightCut;
   basin?: PressChoice;
+  /** Trash talk seçildiyse basın toplantısı düellosu (trashTalk.ts) */
+  duello?: import('./trashTalk').Duel;
   ozet: string[];
   tartiMetni?: string;
   sakatlik?: Injury;

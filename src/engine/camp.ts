@@ -17,6 +17,7 @@ import { scandal } from './sponsors';
 import { campMotivation, cutBonus, fightItemMods, injuryMultiplier, owns, restMultiplier } from './shop';
 import { chance, clamp, pick, rand, randInt } from './rng';
 import { drillBonus, recordDrill } from './drills';
+import { answerDuel, autoAnswer, createDuel, duelOutcome, type DuelAnswer } from './trashTalk';
 import type {
   GameState,
   Injury,
@@ -43,7 +44,7 @@ export const WEIGHT_CUTS: Record<WeightCut, { ad: string; aciklama: string }> = 
 
 export const PRESS: Record<PressChoice, { ad: string; aciklama: string }> = {
   saygili: { ad: L("Saygılı ol"), aciklama: L("Profesyonel görün. Az ama güvenli popülerlik.") },
-  trash: { ad: L("Trash talk yap"), aciklama: L("Ortalığı ateşle. Popülerlik patlayabilir… ya da ters teper. Rakibi de gaza getirir.") },
+  trash: { ad: L("Trash talk yap"), aciklama: L("Basın toplantısında rakiple canlı laf düellosuna gir. Kazanırsan popülerlik patlar, kaybedersen alay konusu olursun.") },
   sessiz: { ad: L("Kısa kes"), aciklama: L("Konuşmayı kafese bırak. Etkisi yok.") },
 };
 
@@ -220,8 +221,22 @@ export function campChoose(s: GameState, value: string | number) {
       if (typeof value === 'string' && value.startsWith('idman:')) return recordDrill(s, Number(value.slice(6)));
       if (value === 'hepsi') while ((k.kampIdx ?? 0) < k.hafta) campWeek(s);
       else campWeek(s);
-      if ((k.kampIdx ?? 0) >= k.hafta) runCamp(s);
+      if ((k.kampIdx ?? 0) >= k.hafta) {
+        // Trash talk seçildiyse basın toplantısı elle oynanan bir düelloya döner
+        if (k.basin === 'trash' && !k.duello) {
+          k.duello = createDuel(s);
+          k.step = 'duello';
+        } else runCamp(s);
+      }
       return;
+    case 'duello': {
+      const d = k.duello!;
+      if (value === 'oto') while (!d.bitti) answerDuel(s, d, autoAnswer(s, d));
+      else if (value === 'devam') {
+        if (d.bitti) runCamp(s);
+      } else answerDuel(s, d, String(value) as DuelAnswer);
+      return;
+    }
     case 'yer':
       k.yer = String(value);
       k.step = 'focus';
@@ -363,10 +378,22 @@ function runCamp(s: GameState) {
     s.trashTalk = true;
     opp.rivalry = Math.max(opp.rivalry, 1);
     k.oppMods = { vurus: 2, kondisyon: 2 };
-    if (chance(0.45 + f.stats.iq / 250 + s.populerlik / 300)) {
+    const duel = k.duello ? duelOutcome(k.duello) : chance(0.45 + f.stats.iq / 250 + s.populerlik / 300) ? 'kazandi' : 'kaybetti';
+    if (duel === 'berabere') {
+      s.populerlik = clamp(s.populerlik + 2, 0, 100);
+      k.ozet.push(L("🎤 Basın toplantısında laflar havada uçuştu, kimse üstün gelemedi. Popülerlik +2. {0} gaza geldi.", [opp.soyad]));
+    } else if (duel === 'kazandi') {
+      if (k.duello) {
+        // Düelloyu kazandın: rakip sinirli, kafası karışık
+        k.oppMods = { iq: -2 };
+      }
       s.populerlik = clamp(s.populerlik + 6, 0, 100);
-      const t = trashTalkFollowers(s, true);
-      k.ozet.push(L("🎤 Trash talk tuttu! Video milyonlarca izlendi. {0}. {1} ise seni öldürmeye geliyor.", [t.metin, opp.soyad]));
+      const t = trashTalkFollowers(s, true, !!k.duello);
+      k.ozet.push(
+        k.duello
+          ? L("🎤 Basın toplantısını sen kazandın! Video milyonlarca izlendi. {0}. {1} sinirden ne dediğini bilmiyordu (rakip IQ -2).", [t.metin, opp.soyad])
+          : L("🎤 Trash talk tuttu! Video milyonlarca izlendi. {0}. {1} ise seni öldürmeye geliyor.", [t.metin, opp.soyad]),
+      );
     } else {
       s.populerlik = clamp(s.populerlik - 2, 0, 100);
       const t = trashTalkFollowers(s, false);

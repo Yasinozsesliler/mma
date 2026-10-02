@@ -56,9 +56,9 @@ export function fightFollowers(s: GameState, o: { won: boolean; draw: boolean; f
  * Trash talk: çoğu zaman kazandırır ama bazen dengeyi kaçırırsın.
  * Dönen metin ekrana yazılır, yüzde değişim takipçiye uygulanır.
  */
-export function trashTalkFollowers(s: GameState, basari: boolean): { delta: number; metin: string } {
+export function trashTalkFollowers(s: GameState, basari: boolean, temiz = false): { delta: number; metin: string } {
   const F = followers(s);
-  if (basari && chance(0.15)) {
+  if (basari && !temiz && chance(0.15)) {
     // Çizgiyi aştı: konuşulan sensin ama bir kesim takibi bıraktı.
     const d = addFollowers(s, -F * (0.04 + rand() * 0.05));
     return { delta: d, metin: L("Sözlerin çizgiyi aştı, bir kesim takibi bıraktı. ({0} takipçi)", [fmtDelta(d)]) };

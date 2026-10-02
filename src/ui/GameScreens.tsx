@@ -45,6 +45,7 @@ import { pendingBouts, weeklyGymNet } from '../engine/academy';
 import { ACHIEVEMENTS } from '../engine/achievements';
 import { UccRoadCard } from './UccRoadCard';
 import { GoalsCard } from './GoalsCard';
+import { TrashTalkDuel } from './TrashTalkDuel';
 import { WikiButton } from './WikiPage';
 import { CampLengthStep, CampSummary, CampWeeksStep, FreeWeeksStep } from './CampCalendar';
 import { CampPlanner } from './CampPlanner';
@@ -416,7 +417,7 @@ export function OpponentScreen({ s, act }: { s: GameState; act: Act }) {
 const CAMP_STEPS: { key: CampState['step'][]; label: string }[] = [
   { key: ['hoca', 'planla', 'sure', 'yer', 'focus', 'plan', 'intensity', 'kilo', 'basin'], label: L("Plan") },
   { key: ['takvim'], label: L("Takvim") },
-  { key: ['haftalik', 'sakatlik', 'ozet'], label: L("Kamp") },
+  { key: ['haftalik', 'duello', 'sakatlik', 'ozet'], label: L("Kamp") },
   { key: ['tarti', 'yuzyuze'], label: L("Tartı") },
 ];
 
@@ -520,6 +521,7 @@ export function CampScreen({ s, act }: { s: GameState; act: Act }) {
   if (k.step === 'sure') return <CampLengthStep s={s} header={header} choose={choose} />;
   if (k.step === 'takvim') return <FreeWeeksStep s={s} header={header} choose={choose} />;
   if (k.step === 'haftalik') return <CampWeeksStep s={s} header={header} choose={choose} />;
+  if (k.step === 'duello') return <TrashTalkDuel key={o.id} s={s} header={header} choose={choose} />;
   if (k.step === 'ozet') return <CampSummary s={s} act={act} choose={choose} />;
 
   if (k.step === 'yer') {

@@ -118,9 +118,10 @@ function playCareer() {
       case 'kamp': {
         const k = s.pending.kamp!;
         const focus = STAT_KEYS.reduce((a, b) => (s.fighter.stats[b] < s.fighter.stats[a] ? b : a));
+        const basin = s.fighter.stats.iq > 55 ? 'trash' : 'saygili';
         const vals: Record<string, string | number> = {
           // Tek ekranlık kamp planı (pro kamplar)
-          planla: 'plan:' + JSON.stringify({ hafta: Math.min(8, k.macHafta ?? 8), yer: s.para > 20000 ? 'irtifa' : 'salon', focus, plan: PLAN_FOR[weakest(s.pending.rakip!)], intensity: 'orta', kilo: 'normal', basin: 'saygili' }),
+          planla: 'plan:' + JSON.stringify({ hafta: Math.min(8, k.macHafta ?? 8), yer: s.para > 20000 ? 'irtifa' : 'salon', focus, plan: PLAN_FOR[weakest(s.pending.rakip!)], intensity: 'orta', kilo: 'normal', basin }),
           sure: Math.min(8, k.macHafta ?? 8),
           takvim: 'hizli',
           haftalik: 'hepsi',
@@ -129,7 +130,8 @@ function playCareer() {
           plan: PLAN_FOR[weakest(s.pending.rakip!)],
           intensity: 'orta',
           kilo: 'normal',
-          basin: 'saygili',
+          basin,
+          duello: k.duello?.bitti ? 'devam' : 'oto',
           sakatlik: 0,
           ozet: 0,
           tarti: 0,
