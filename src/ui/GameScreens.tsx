@@ -44,6 +44,7 @@ import { pendingBouts, weeklyGymNet } from '../engine/academy';
 import { ACHIEVEMENTS } from '../engine/achievements';
 import { UccRoadCard } from './UccRoadCard';
 import { GoalsCard } from './GoalsCard';
+import { appeal, appealChance, appealFee, appealFeeText, dismissAppeal } from '../engine/appeal';
 import { acceptCrossover, declineCrossover } from '../engine/crossover';
 import { LegendPanel } from './LegendPanel';
 import { PerkTree } from './PerkTree';
@@ -186,6 +187,24 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
                 />
               ))
             : null}
+          {s.itiraz && s.itiraz.dovus === s.gecmis.length ? (
+            <Notice
+              color={C.orange}
+              icon="scale-balance"
+              action={
+                <View style={{ flexDirection: 'row', gap: 8 }}>
+                  <View style={{ flex: 1 }}>
+                    <Button label={L("İtiraz et · {0}", [appealFeeText(s)])} icon="gavel" tone="gold" disabled={s.para < appealFee(s)} onPress={() => act((x) => { appeal(x); })} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Button label={L("Kabullen")} icon="close" tone="ghost" onPress={() => act(dismissAppeal)} />
+                  </View>
+                </View>
+              }
+            >
+              {L("⚖️ {0} karşısındaki tartışmalı karar herkesin ağzında. Komisyona itiraz edebilirsin: kabul edilirse sonuç No Contest olur (şans ~%{1}).", [s.itiraz.rakip, Math.round(appealChance(s) * 100)])}
+            </Notice>
+          ) : null}
           {s.boksTeklif ? (
             <Notice
               color={C.gold}

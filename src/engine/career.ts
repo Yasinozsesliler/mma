@@ -1,4 +1,5 @@
 import { L as tL, LOC } from '../i18n';
+import { offerAppeal } from './appeal';
 import { maybeCrossover } from './crossover';
 import { signatureFinish } from './signature';
 import { perkPointNote, perkWinPop } from './perks';
@@ -194,6 +195,7 @@ export function finishFight(s: GameState) {
     raunt: r.raunt,
     yas: s.fighter.yas,
   });
+  offerAppeal(s, r.yontem, won && !caught, draw, `${opp.ad} ${opp.soyad}`, opp.id);
   if (won && !caught) {
     const kart = addCard(s, opp, org, methodLabel(r.yontem));
     if (kart) lines.push(kart);

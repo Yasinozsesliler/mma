@@ -596,6 +596,8 @@ export interface GameState {
   boks?: import('./crossover').BoxFight;
   boksTeklif?: { boksor: import('./crossover').Boxer; ucret: number };
   boksYapildi?: boolean;
+  /** Karara itiraz hakkı (appeal.ts) */
+  itiraz?: import('./appeal').Appeal;
   /** Yıl sonu ödülleri (awards.ts): son işlenen yıl, süren tören, kazanılan ödüller */
   odulYil?: number;
   /** Tedavi kararı bekleyen ciddi sakatlık (treatment.ts) */

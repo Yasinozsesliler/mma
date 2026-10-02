@@ -4652,4 +4652,11 @@ export const EN: Record<string, string> = {
   "Ücret: {0}": "Purse: {0}",
   "🥊 SÜPER MAÇ TEKLİFİ: Boks efsanesi {0} “{1}” ({2}) seninle boks ringinde karşılaşmak istiyor. Ücret {3}. Tekme yok, güreş yok, sadece yumruk.": "🥊 SUPER FIGHT OFFER: Boxing legend {0} “{1}” ({2}) wants to face you in a boxing ring. Purse {3}. No kicks, no wrestling, just punches.",
   "Süper Maç": "Super Fight",
+  "Avukat ücreti için paran yetmiyor.": "You can't afford the lawyer's fee.",
+  "⚖️ Komisyon itirazını reddetti. Sonuç geçerli. Bazı taraftarlar “kötü kaybeden” diyor. (Popülerlik -1)": "⚖️ The commission rejected your appeal. The result stands. Some fans call you a “sore loser.” (Popularity -1)",
+  "No Contest (itiraz)": "No Contest (appeal)",
+  "⚖️ İTİRAZ KABUL EDİLDİ! {0} maçı No Contest oldu, mağlubiyet karnenden silindi. Rövanş masada.": "⚖️ APPEAL UPHELD! The {0} fight is now a No Contest and the loss is off your record. A rematch is on the table.",
+  "İtiraz et · {0}": "Appeal · {0}",
+  "Kabullen": "Accept it",
+  "⚖️ {0} karşısındaki tartışmalı karar herkesin ağzında. Komisyona itiraz edebilirsin: kabul edilirse sonuç No Contest olur (şans ~%{1}).": "⚖️ Everyone's talking about the controversial decision against {0}. You can appeal to the commission: if upheld, it becomes a No Contest (chance ~{1}%).",
 };

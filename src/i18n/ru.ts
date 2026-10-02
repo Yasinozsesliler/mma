@@ -4707,4 +4707,11 @@ export const RU: Record<string, string> = {
   "Ücret: {0}": "Гонорар: {0}",
   "🥊 SÜPER MAÇ TEKLİFİ: Boks efsanesi {0} “{1}” ({2}) seninle boks ringinde karşılaşmak istiyor. Ücret {3}. Tekme yok, güreş yok, sadece yumruk.": "🥊 ПРЕДЛОЖЕНИЕ СУПЕРБОЯ: Легенда бокса {0} «{1}» ({2}) хочет встретиться с тобой на ринге. Гонорар {3}. Без ног, без борьбы, только кулаки.",
   "Süper Maç": "Супербой",
+  "Avukat ücreti için paran yetmiyor.": "Не хватает денег на адвоката.",
+  "⚖️ Komisyon itirazını reddetti. Sonuç geçerli. Bazı taraftarlar “kötü kaybeden” diyor. (Popülerlik -1)": "⚖️ Комиссия отклонила апелляцию. Результат в силе. Некоторые зовут тебя «плохим проигравшим». (Популярность -1)",
+  "No Contest (itiraz)": "Не состоялся (апелляция)",
+  "⚖️ İTİRAZ KABUL EDİLDİ! {0} maçı No Contest oldu, mağlubiyet karnenden silindi. Rövanş masada.": "⚖️ АПЕЛЛЯЦИЯ ПРИНЯТА! Бой с {0} признан несостоявшимся, поражение снято. Реванш на столе.",
+  "İtiraz et · {0}": "Обжаловать · {0}",
+  "Kabullen": "Смириться",
+  "⚖️ {0} karşısındaki tartışmalı karar herkesin ağzında. Komisyona itiraz edebilirsin: kabul edilirse sonuç No Contest olur (şans ~%{1}).": "⚖️ Все обсуждают спорное решение в бою с {0}. Можно подать апелляцию: если примут — бой не состоялся (шанс ~{1}%).",
 };
