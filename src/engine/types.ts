@@ -225,6 +225,10 @@ export interface CampState {
   kesim?: import('./weightCut').ManualCut;
   /** Kafese giriş şovu (WALKOUT_STYLES) */
   giris?: string;
+  /** Büyük maç hype'ı (hype.ts) ve son katkılar; belgesel izlendi mi */
+  hype?: number;
+  hypeLog?: string[];
+  belgesel?: boolean;
   ozet: string[];
   tartiMetni?: string;
   sakatlik?: Injury;

@@ -44,6 +44,8 @@ import { pendingBouts, weeklyGymNet } from '../engine/academy';
 import { ACHIEVEMENTS } from '../engine/achievements';
 import { UccRoadCard } from './UccRoadCard';
 import { GoalsCard } from './GoalsCard';
+import { CountdownButton, HypeMeter } from './CountdownDoc';
+import { watchCountdown } from '../engine/hype';
 import { canStream, startStream, STREAM_MIN_FOLLOWERS } from '../engine/stream';
 import { followers } from '../engine/fame';
 import { appeal, appealChance, appealFee, appealFeeText, dismissAppeal } from '../engine/appeal';
@@ -586,6 +588,8 @@ function CampHeader({ s, k, act }: { s: GameState; k: CampState; act: Act }) {
           </View>
         </View>
       </Card>
+      <HypeMeter s={s} />
+      <CountdownButton s={s} onWatched={() => act(watchCountdown)} />
     </>
   );
 }
@@ -776,6 +780,7 @@ export function CampScreen({ s, act }: { s: GameState; act: Act }) {
           {L("Face to Face")}
         </Title>
         <CoachTip s={s} act={act} id="yuzyuze" />
+        <HypeMeter s={s} />
         <FaceOffStage s={s} />
         {!k.yuzyuze ? (
           <>

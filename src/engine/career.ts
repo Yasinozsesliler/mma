@@ -1,4 +1,5 @@
 import { L as tL, LOC } from '../i18n';
+import { ppvPayout } from './hype';
 import { challengeCheck, challengeOnRetire, diffOf } from './challenges';
 import { offerAppeal } from './appeal';
 import { maybeCrossover } from './crossover';
@@ -229,6 +230,7 @@ export function finishFight(s: GameState) {
     kazanc += purse;
     lines.push(tL("💵 Ücret: {0}{1}", [money(purse), won && s.contract.bonus ? tL(" (galibiyet bonusu dahil)") : '']));
     lines.push(...hometownAfter(s, opp, won && !caught, purse));
+    lines.push(...ppvPayout(s, opp, kamp.hype));
     lines.push(...merchSales(s, won && !caught));
     lines.push(...familyCosts(s));
   } else if (won) {

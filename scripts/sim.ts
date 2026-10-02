@@ -11,6 +11,7 @@ import { canStartBrand, launchProduct, startBrand } from '../src/engine/merch';
 import { BRANCHES, canTakePerk, perkPointsFree, takePerk, type PerkId } from '../src/engine/perks';
 import { canSign, setSignature } from '../src/engine/signature';
 import { appeal } from '../src/engine/appeal';
+import { watchCountdown } from '../src/engine/hype';
 import { campChoose } from '../src/engine/camp';
 import {
   acceptOffer,
@@ -32,6 +33,7 @@ import type { Background, GameState, PlanKey, Tactic } from '../src/engine/types
 import { STAT_KEYS } from '../src/engine/types';
 const krizStat: Record<string, number> = {};
 const podcastStat = { n: 0 };
+const hypeStat = { n: 0, top: 0 };
 const meydanStat: Record<string, number> = {};
 const startStreak: number[] = [];
 const itirazStat = { n: 0, kabul: 0 };
@@ -167,6 +169,7 @@ function playCareer() {
         const k = s.pending.kamp!;
         const focus = STAT_KEYS.reduce((a, b) => (s.fighter.stats[b] < s.fighter.stats[a] ? b : a));
         const basin = s.fighter.stats.iq > 55 ? 'trash' : 'saygili';
+        if (k.hype != null) { if (!k.belgesel) { watchCountdown(s); hypeStat.n++; hypeStat.top += k.hype; } }
         const vals: Record<string, string | number> = {
           // Tek ekranlık kamp planı (pro kamplar)
           planla: 'plan:' + JSON.stringify({ hafta: Math.min(8, k.macHafta ?? 8), yer: s.para > 20000 ? 'irtifa' : 'salon', focus, plan: PLAN_FOR[weakest(s.pending.rakip!)], intensity: 'orta', kilo: 'normal', basin }),
@@ -304,6 +307,7 @@ console.log(`İmza hareketi: ${pct(imzaStat.n, N)} kariyerde, imza ile bitiriş 
 console.log(`İtiraz: kariyer başına ${(itirazStat.n / N).toFixed(2)}, kabul ${pct(itirazStat.kabul, itirazStat.n)}`);
 console.log('Pro başlangıç serisi dağılımı:', [0, 1, 2, 3, 5, 8, 10].map((n) => `≥${n}: ${pct(startStreak.filter((x) => x >= n).length, N)}`).join(' '));
 if (process.env.CH) console.log('Meydan okuma:', process.env.CH, JSON.stringify(meydanStat));
+console.log(`Büyük maç (hype): kariyer başına ${(hypeStat.n / N).toFixed(1)}, ort. başlangıç hype ${(hypeStat.top / Math.max(1, hypeStat.n)).toFixed(0)}`);
 console.log(`Podcast (kariyer başına): ${(podcastStat.n / N).toFixed(1)}`);
 console.log('Kartlar (kariyer başına):', Object.entries(kartStat).map(([k, v]) => `${k} ${(v / N).toFixed(1)}`).join(', '));
 console.log(`Antrenman ortağı: kanka ${pct(kankaStat.kanka, N)}, rakip ${pct(kankaStat.rakip, N)}`);

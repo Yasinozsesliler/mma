@@ -1,4 +1,5 @@
 import { L, LOC } from '../i18n';
+import { addHype, initHype } from './hype';
 import { perkCamp, perkFightMods } from './perks';
 import { familyMods } from './family';
 import { hometownMods } from './hometown';
@@ -200,6 +201,7 @@ export function startCamp(s: GameState) {
     iptal: false,
   };
   s.phase = 'kamp';
+  initHype(s);
   ensurePartner(s);
   socialCampStart(s);
 }
@@ -399,6 +401,7 @@ function runCamp(s: GameState) {
     opp.rivalry = Math.max(opp.rivalry, 1);
     k.oppMods = { vurus: 2, kondisyon: 2 };
     const duel = k.duello ? duelOutcome(k.duello) : chance(0.45 + f.stats.iq / 250 + s.populerlik / 300) ? 'kazandi' : 'kaybetti';
+    addHype(s, duel === 'kazandi' ? 18 : duel === 'berabere' ? 10 : 8, L("Basın toplantısı"));
     if (duel === 'berabere') {
       s.populerlik = clamp(s.populerlik + 2, 0, 100);
       k.ozet.push(L("🎤 Basın toplantısında laflar havada uçuştu, kimse üstün gelemedi. Popülerlik +2. {0} gaza geldi.", [opp.soyad]));
@@ -421,6 +424,7 @@ function runCamp(s: GameState) {
       k.ozet.push(L("🎤 Dengeyi kaçırdın: sözlerin ters tepti, sosyal medyada alay konusu oldun. {0}. {1} gaza geldi.", [t.metin, opp.soyad]));
     }
   } else if (k.basin === 'saygili') {
+    addHype(s, 2, L("Basın toplantısı"));
     s.trashTalk = false;
     s.populerlik = clamp(s.populerlik + 1, 0, 100);
     k.ozet.push(L("🎤 Basın toplantısında saygılı ve kendinden emindin. Popülerlik +1."));
@@ -527,6 +531,8 @@ function applyWalkout(s: GameState, mods: Partial<Stats>, oppMods: Partial<Stats
   const add = (m: Partial<Stats>, st: StatKey, n: number) => (m[st] = (m[st] ?? 0) + n);
   const g = k.giris ?? 'sakin';
   const o = s.pending.rakip!.soyad;
+  addHype(s, g === 'dans' ? 6 : g === 'bayrak' ? 4 : g === 'bakis' ? 3 : 1, L("Kafese giriş"));
+  if (s.kriz && !s.kriz.sonuc) addHype(s, 8, L("Gündemdeki kriz"));
   let line: string;
   if (g === 'bayrak') {
     s.populerlik = clamp(s.populerlik + 1, 0, 100);
@@ -688,4 +694,5 @@ function faceOff(s: GameState, key: string) {
   const pre = hamle ? `${RIVAL_MOVES[hamle].metin(o.soyad)} ` : '';
   k.yuzyuze = `${pre}${r.metin}`;
   k.yuzyuzeSonuc = { anim: r.anim, kazanan: r.kazanan, baslik: r.baslik, etkiler: r.etkiler };
+  addHype(s, r.anim === 'brawl' ? 15 : r.kazanan === 'p' ? 6 : r.kazanan === 'o' ? 3 : 1, L("Face to face"));
 }
