@@ -13,7 +13,7 @@ import { fullName } from '../engine/character';
 import { ACHIEVEMENTS, activeBelts, legacyScore, legacyTier } from '../engine/legacy';
 import type { GameState } from '../engine/types';
 import { BeltShowcase } from './BeltShowcase';
-import { Card, Icon, OctIcon, Section, SLANT } from './components';
+import { Button, Card, Icon, OctIcon, Section, SLANT } from './components';
 import { FighterAvatar } from './FighterAvatar';
 import { PetBadge } from './PetPanel';
 import { ItemArt } from './ItemArt';
@@ -49,6 +49,7 @@ export function ProfilePanel({ s, act }: { s: GameState; act: Act }) {
       </LinearGradient>
       <View style={{ marginBottom: 12, gap: 8 }}>
         <WikiButton s={s} />
+        <Button label={L("💈 Berber ve dövmeci")} icon="content-cut" tone="ghost" onPress={() => act((x) => (x.phase = 'stil'))} />
         <ShareButton data={careerCard(s)} label={L("Kariyer kartını paylaş")} />
       </View>
       <NemesisCard s={s} />

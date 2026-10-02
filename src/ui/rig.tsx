@@ -106,6 +106,8 @@ export function Figure({ p, look, kit }: { p: Pose; look: Appearance; kit: Kit }
           <Path d={L("M{0} {1} Q{2} {3} {4} {5}", [pt(chest, 8).x, pt(chest, 8).y, pt(chest, 2).x, pt(chest, 2).y + 4, pt(chest, -3).x, pt(chest, -3).y])} stroke={skinD} strokeWidth={1} fill="none" opacity={0.7} />
           <Line x1={pt(abs, 4).x} y1={pt(abs, 4).y} x2={pt(abs, 4).x + j.td.x * 8} y2={pt(abs, 4).y + j.td.y * 8} stroke={skinD} strokeWidth={0.8} opacity={0.6} />
           {look.dovme ? <Path d={L("M{0} {1} q3 5 -1 9", [pt(chest, -6).x, pt(chest, -6).y])} stroke="#1d1d1d" strokeWidth={1.3} fill="none" opacity={0.55} /> : null}
+          {look.dovmeler?.includes('gogus') ? <Path d={`M${pt(chest, 5).x} ${pt(chest, 5).y} q3 -3 6 0 q-3 2 -6 0 M${pt(chest, 2).x} ${pt(chest, 2).y} l0 3`} stroke="#1d1d1d" strokeWidth={1.2} fill="none" opacity={0.6} /> : null}
+          {look.dovmeler?.includes('boyun') ? <Circle cx={pt(j.neck, 2.5).x} cy={pt(j.neck, 2.5).y} r={1.1} fill="#1d1d1d" opacity={0.6} /> : null}
           {look.kadin ? (
             <>
               <Line x1={pt(add(chest, j.td, 1.5), 10.5).x} y1={pt(add(chest, j.td, 1.5), 10.5).y} x2={pt(add(chest, j.td, 1.5), -9.5).x} y2={pt(add(chest, j.td, 1.5), -9.5).y} stroke={kit.shorts} strokeWidth={8} strokeLinecap="round" />
@@ -139,6 +141,9 @@ export function Figure({ p, look, kit }: { p: Pose; look: Appearance; kit: Kit }
         </>
       ) : null}
       <Limb a={j.shL} b={j.elL} w={8} color={ref ? '#15161a' : armC} />
+      {!ref && look.dovmeler?.includes('kol') ? (
+        <Line x1={j.shL.x + (j.elL.x - j.shL.x) * 0.2} y1={j.shL.y + (j.elL.y - j.shL.y) * 0.2} x2={j.shL.x + (j.elL.x - j.shL.x) * 0.85} y2={j.shL.y + (j.elL.y - j.shL.y) * 0.85} stroke="#1d1d1d" strokeWidth={2.6} strokeDasharray="2 1.5" opacity={0.5} />
+      ) : null}
       <Limb a={j.elL} b={j.wrL} w={6.8} color={armC} />
       <Glove at={j.wrL} dir={p.aL1 + p.aL2} color={kit.glove} bare={ref} skin={skin} />
     </G>

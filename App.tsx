@@ -48,6 +48,7 @@ import { markChallenge } from './src/challengePrefs';
 import { MerchScreen } from './src/ui/MerchScreen';
 import { CrossoverScreen } from './src/ui/CrossoverScreen';
 import { StreamScreen } from './src/ui/StreamScreen';
+import { StyleScreen } from './src/ui/StyleScreen';
 import { awardsDue, prepareAwards } from './src/engine/awards';
 import { ensureGoals, refreshStaleGoals } from './src/engine/goals';
 import { ensureEvent } from './src/engine/weeklyEvent';
@@ -92,6 +93,7 @@ const PHASE_LABELS: Record<Phase, string> = {
   marka: L("Markam"),
   boks: L("Süper Maç"),
   yayin: L("Canlı Yayın"),
+  stil: L("Berber ve Dövmeci"),
   emeklilik: L("Emeklilik"),
 };
 
@@ -361,6 +363,9 @@ export default function App() {
         break;
       case 'yayin':
         content = <StreamScreen {...props} />;
+        break;
+      case 'stil':
+        content = <StyleScreen {...props} />;
         break;
       case 'kutlama':
         content = game.kutlama ? <CelebrationScreen {...props} /> : <HubScreen {...props} />;

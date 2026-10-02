@@ -189,6 +189,14 @@ function AvatarBase({ look = DEFAULT_LOOK, size = 72, ring = '#e63946', bg = '#0
             <Path d="M16 90 q4 -4 8 0 q-4 4 -8 0 Z" />
           </G>
         ) : null}
+        {look.dovmeler?.includes('gogus') ? (
+          <G fill="#16161c" opacity={0.75}>
+            <Path d="M50 90 q-8 -7 -16 -3 q6 1 9 5 q3 -2 7 -2 Z M50 90 q8 -7 16 -3 q-6 1 -9 5 q-3 -2 -7 -2 Z" />
+            <Path d="M50 88 l-1.5 4 l1.5 3 l1.5 -3 Z" />
+          </G>
+        ) : null}
+        {look.dovmeler?.includes('kol') ? <Path d="M19 98 q3 -8 10 -12 M21 93 q3 -4 8 -6 M24 88 q2 -2 5 -3" stroke="#16161c" strokeWidth={1.6} fill="none" opacity={0.75} /> : null}
+        {look.dovmeler?.includes('boyun') ? <Path d="M56 69 l1.5 -3 l1.5 3 l-3 -1.8 h3 Z" fill="#16161c" opacity={0.75} /> : null}
         {/* Omuz kenar ışığı */}
         <Path d="M94 100 Q92 80 74 75" stroke={ring} strokeWidth={1.4} fill="none" opacity={0.55} />
 

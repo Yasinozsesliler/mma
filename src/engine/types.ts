@@ -41,6 +41,8 @@ export interface Appearance {
   sakal: 'yok' | 'kirli' | 'tam' | 'keci' | 'biyik';
   yara: boolean;
   dovme: boolean;
+  /** Ek dövmeler (berber ve dövmeci): göğüs, kol, boyun */
+  dovmeler?: ('gogus' | 'kol' | 'boyun')[];
   /** Kadın dövüşçü görünümü (sakal yok, spor sütyeni) */
   kadin?: boolean;
   /** Yüz hatları (yoksa varsayılan): yüz şekli 0-4, burun 0-3, göz 0-2, dudak 0-2, kaş 0-2, dövüşçü kulağı 0-1 */
@@ -446,6 +448,7 @@ export type Phase =
   | 'marka'
   | 'boks'
   | 'yayin'
+  | 'stil'
   | 'emeklilik';
 
 export interface Istat {
