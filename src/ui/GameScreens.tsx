@@ -44,6 +44,7 @@ import { pendingBouts, weeklyGymNet } from '../engine/academy';
 import { ACHIEVEMENTS } from '../engine/achievements';
 import { UccRoadCard } from './UccRoadCard';
 import { GoalsCard } from './GoalsCard';
+import { acceptCrossover, declineCrossover } from '../engine/crossover';
 import { LegendPanel } from './LegendPanel';
 import { PerkTree } from './PerkTree';
 import { perkPointsFree } from '../engine/perks';
@@ -185,6 +186,24 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
                 />
               ))
             : null}
+          {s.boksTeklif ? (
+            <Notice
+              color={C.gold}
+              icon="boxing-glove"
+              action={
+                <View style={{ flexDirection: 'row', gap: 8 }}>
+                  <View style={{ flex: 1 }}>
+                    <Button label={L("Kabul et")} icon="boxing-glove" tone="gold" onPress={() => act(acceptCrossover)} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Button label={L("Reddet")} icon="close" tone="ghost" onPress={() => act(declineCrossover)} />
+                  </View>
+                </View>
+              }
+            >
+              {L("🥊 SÜPER MAÇ TEKLİFİ: Boks efsanesi {0} “{1}” ({2}) seninle boks ringinde karşılaşmak istiyor. Ücret {3}. Tekme yok, güreş yok, sadece yumruk.", [s.boksTeklif.boksor.ad, s.boksTeklif.boksor.lakap, s.boksTeklif.boksor.rekor, money(s.boksTeklif.ucret)])}
+            </Notice>
+          ) : null}
           {s.podcast && !s.podcast.sonuc ? (
             <Notice
               color={C.gold}

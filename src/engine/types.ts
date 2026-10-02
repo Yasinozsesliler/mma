@@ -440,6 +440,7 @@ export type Phase =
   | 'podcast'
   | 'odul'
   | 'marka'
+  | 'boks'
   | 'emeklilik';
 
 export interface Istat {
@@ -591,6 +592,10 @@ export interface GameState {
   /** Ders alınan efsane ustalar ve son dersin dövüş sayısı (legends.ts) */
   ustalar?: string[];
   ustaSon?: number;
+  /** Crossover boks maçı (crossover.ts) */
+  boks?: import('./crossover').BoxFight;
+  boksTeklif?: { boksor: import('./crossover').Boxer; ucret: number };
+  boksYapildi?: boolean;
   /** Yıl sonu ödülleri (awards.ts): son işlenen yıl, süren tören, kazanılan ödüller */
   odulYil?: number;
   /** Tedavi kararı bekleyen ciddi sakatlık (treatment.ts) */

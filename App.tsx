@@ -44,6 +44,7 @@ import { AlbumScreen } from './src/ui/AlbumScreen';
 import { PodcastScreen } from './src/ui/PodcastScreen';
 import { AwardsCeremony } from './src/ui/AwardsCeremony';
 import { MerchScreen } from './src/ui/MerchScreen';
+import { CrossoverScreen } from './src/ui/CrossoverScreen';
 import { awardsDue, prepareAwards } from './src/engine/awards';
 import { ensureGoals, refreshStaleGoals } from './src/engine/goals';
 import { ensureEvent } from './src/engine/weeklyEvent';
@@ -86,6 +87,7 @@ const PHASE_LABELS: Record<Phase, string> = {
   podcast: L("Podcast"),
   odul: L("Ödül Töreni"),
   marka: L("Markam"),
+  boks: L("Süper Maç"),
   emeklilik: L("Emeklilik"),
 };
 
@@ -341,6 +343,9 @@ export default function App() {
         break;
       case 'marka':
         content = <MerchScreen {...props} />;
+        break;
+      case 'boks':
+        content = <CrossoverScreen {...props} />;
         break;
       case 'kutlama':
         content = game.kutlama ? <CelebrationScreen {...props} /> : <HubScreen {...props} />;

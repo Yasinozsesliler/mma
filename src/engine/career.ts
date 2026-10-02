@@ -1,4 +1,5 @@
 import { L as tL, LOC } from '../i18n';
+import { maybeCrossover } from './crossover';
 import { signatureFinish } from './signature';
 import { perkPointNote, perkWinPop } from './perks';
 import { familyCosts } from './family';
@@ -359,6 +360,7 @@ export function finishFight(s: GameState) {
   if (caught) lines.push(...dopingFallout(s, banWeeks!));
   maybePodcast(s);
   maybeGpInvite(s);
+  maybeCrossover(s);
   const teklif = refreshSponsorOffers(s, won && !caught);
   if (teklif) lines.push(teklif);
   // Toparlanma: maçtan sonra kısa bir ara. Sıradaki maçın tarihi teklifte belirlenir (toplam ~60-90 gün).
