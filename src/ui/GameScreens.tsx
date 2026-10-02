@@ -44,6 +44,7 @@ import { pendingBouts, weeklyGymNet } from '../engine/academy';
 import { ACHIEVEMENTS } from '../engine/achievements';
 import { UccRoadCard } from './UccRoadCard';
 import { GoalsCard } from './GoalsCard';
+import { LegendPanel } from './LegendPanel';
 import { PerkTree } from './PerkTree';
 import { perkPointsFree } from '../engine/perks';
 import { SpecialEventCard } from './SpecialEventCard';
@@ -324,6 +325,7 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
           <SkillPanel s={s} act={act} />
           <PerkTree s={s} act={act} />
           <TechniquePanel s={s} act={act} />
+          <LegendPanel s={s} act={act} />
         </>
       ) : tab === 'siralama' ? (
         <RankingsTab s={s} act={act} />

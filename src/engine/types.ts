@@ -588,6 +588,9 @@ export interface GameState {
   perkler?: string[];
   /** İmza hareketi (signature.ts) */
   imza?: import('./signature').Signature;
+  /** Ders alınan efsane ustalar ve son dersin dövüş sayısı (legends.ts) */
+  ustalar?: string[];
+  ustaSon?: number;
   /** Yıl sonu ödülleri (awards.ts): son işlenen yıl, süren tören, kazanılan ödüller */
   odulYil?: number;
   /** Tedavi kararı bekleyen ciddi sakatlık (treatment.ts) */
