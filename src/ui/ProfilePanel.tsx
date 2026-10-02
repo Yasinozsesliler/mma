@@ -2,6 +2,7 @@ import { L, LOC } from '../i18n';
 import { useFrame } from '../cosmetics';
 import { DynastySection } from './DynastyPanel';
 import { NemesisCard } from './NemesisCard';
+import { TimelinePanel } from './TimelinePanel';
 import { WikiButton } from './WikiPage';
 import { careerCard } from '../share/build';
 import { ShareButton } from '../share/ShareButton';
@@ -52,6 +53,7 @@ export function ProfilePanel({ s, act }: { s: GameState; act: Act }) {
       </View>
       <NemesisCard s={s} />
       <DynastySection s={s} />
+      <TimelinePanel s={s} />
 
       <Section>{L("HAKKINDA")}</Section>
       <Card>

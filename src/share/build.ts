@@ -7,6 +7,7 @@ import { wikiOf } from '../engine/wiki';
 import { L, LOC } from '../i18n';
 import { upName } from '../ui/components';
 import type { ShareCardData } from './types';
+import { journeyLine, type Moment } from '../engine/timeline';
 
 const up = (s: string) => s.toLocaleUpperCase(LOC);
 const rec = (s: GameState) => `${s.rekor.g}-${s.rekor.m}-${s.rekor.b}`;
@@ -77,6 +78,23 @@ export function careerCard(s: GameState): ShareCardData {
       [L("EFSANE PUANI"), String(legacyScore(s))],
     ],
     alt: L("{0} sokaklarından çıktı; {1} yaşında {2} galibiyete ulaştı, {3} bitiriş.", [s.fighter.memleket, s.fighter.yas, s.rekor.g, s.rekor.ko + s.rekor.sub]),
+  };
+}
+
+/** Kariyer yolculuğu: önemli anların yaşları tek satırda. */
+export function timelineCard(s: GameState, m: Moment[]): ShareCardData {
+  const kemer = (s.kemerler ?? []).length;
+  return {
+    ...base(s),
+    tur: 'kariyer',
+    baslik: L("KARİYER YOLCULUĞU"),
+    ust: up(`${ORGS[currentOrg(s)].kisa} · ${L("{0} Sıklet", [WEIGHT_CLASSES[s.fighter.siklet].ad])}`),
+    kutular: [
+      [L("REKOR"), rec(s)],
+      [L("KEMER"), String(kemer)],
+      [L("ÖNEMLİ AN"), String(m.length)],
+    ],
+    alt: journeyLine(m),
   };
 }
 
