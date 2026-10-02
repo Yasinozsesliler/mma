@@ -213,7 +213,11 @@ export function CageView({
       if (!tracks.current[a] && (cur.current[a] === POSES.stance || Math.abs(cur.current[a].rot) < 1)) queue(a, [['stance', 260, { y: 1.5 }], ['stance', 260]]);
     }, ms * spd());
 
+  /** Nakavt ya da tap ile bitti: sonraki satırlar ("Bitiren hareket", imza…) yere düşeni ayağa kaldırmasın. */
+  const finished = useRef(false);
   const play = (ev: Ev, bitti: boolean) => {
+    if (finished.current && ev.tur !== 'round') return;
+    if (ev.tur === 'ko' || (ev.tur === 'sub' && (ev.tap || bitti))) finished.current = true;
     const A = ev.kim;
     const Dd = other(A);
     const reach = GAP - 40;
