@@ -4507,4 +4507,10 @@ export const RU: Record<string, string> = {
   "🫁 Kesik kesik nefes. Kondisyon +1": "🫁 Сбивчивое дыхание. Выносливость +1",
   "🩹 Kanama durdu. Doktor riski yarıya indi.": "🩹 Кровь остановлена. Риск остановки врачом вдвое ниже.",
   "🩸 Kanama sürüyor… Doktor yakından bakacak.": "🩸 Кровь не останавливается… Врач присмотрится.",
+  "🏠 MEMLEKETTE ANA MAÇ · {0}": "🏠 ГЛАВНЫЙ БОЙ ДОМА · {0}",
+  "Bütün şehir tribünde. Kazanırsan kahraman olursun, kaybedersen kendi insanının önünde düşersin. Ücret %50 fazla.": "Весь город на трибунах. Победишь — станешь героем, проиграешь — упадёшь перед своими. Гонорар +50%.",
+  "🏠 {0} seni ayakta karşıladı. Tribün senin!": "🏠 {0} встретил тебя стоя. Трибуны твои!",
+  "🏠 Memleket primi: +${0}": "🏠 Домашний бонус: +${0}",
+  "🏠 {0} sokaklara döküldü! Şehrin kahramanısın. Popülerlik +6, {1} takipçi.": "🏠 {0} высыпал на улицы! Ты герой города. Популярность +6, подписчики {1}.",
+  "🏠 Kendi seyircinin önünde kaybettin. Salon sessizliğe gömüldü. Popülerlik -5, motivasyon düştü.": "🏠 Ты проиграл перед своими. Зал затих. Популярность -5, мотивация упала.",
 };

@@ -4439,4 +4439,10 @@ export const PL: Record<string, string> = {
   "🫁 Kesik kesik nefes. Kondisyon +1": "🫁 Urywany oddech. Kondycja +1",
   "🩹 Kanama durdu. Doktor riski yarıya indi.": "🩹 Krwawienie ustało. Ryzyko przerwania przez lekarza o połowę mniejsze.",
   "🩸 Kanama sürüyor… Doktor yakından bakacak.": "🩸 Wciąż krwawi… Lekarz przyjrzy się z bliska.",
+  "🏠 MEMLEKETTE ANA MAÇ · {0}": "🏠 WALKA WIECZORU W RODZINNYM MIEŚCIE · {0}",
+  "Bütün şehir tribünde. Kazanırsan kahraman olursun, kaybedersen kendi insanının önünde düşersin. Ücret %50 fazla.": "Całe miasto na trybunach. Wygrasz — zostaniesz bohaterem, przegrasz — upadniesz przed swoimi. Gaża +50%.",
+  "🏠 {0} seni ayakta karşıladı. Tribün senin!": "🏠 {0} przywitało cię na stojąco. Trybuny są twoje!",
+  "🏠 Memleket primi: +${0}": "🏠 Premia u siebie: +${0}",
+  "🏠 {0} sokaklara döküldü! Şehrin kahramanısın. Popülerlik +6, {1} takipçi.": "🏠 {0} wyszło na ulice! Jesteś bohaterem miasta. Popularność +6, obserwujący {1}.",
+  "🏠 Kendi seyircinin önünde kaybettin. Salon sessizliğe gömüldü. Popülerlik -5, motivasyon düştü.": "🏠 Przegrałeś przed własną publicznością. Hala ucichła. Popularność -5, motywacja spadła.",
 };

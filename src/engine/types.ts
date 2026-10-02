@@ -83,6 +83,8 @@ export interface Fighter {
 }
 
 export interface Opponent {
+  /** Memlekette ana maç (hometown.ts) */
+  memleket?: boolean;
   id: string;
   ad: string;
   soyad: string;
@@ -570,6 +572,8 @@ export interface GameState {
   gpSon?: number;
   /** Son hayran buluşmasının dövüş sayısı (fanMeet.ts) */
   bulusmaSon?: number;
+  /** Son memleket maçının dövüş sayısı */
+  memleketSon?: number;
   /** Yıl sonu ödülleri (awards.ts): son işlenen yıl, süren tören, kazanılan ödüller */
   odulYil?: number;
   /** Tedavi kararı bekleyen ciddi sakatlık (treatment.ts) */

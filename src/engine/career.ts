@@ -1,4 +1,5 @@
 import { L as tL, LOC } from '../i18n';
+import { hometownAfter, maybeHometown } from './hometown';
 import { needsTreatment } from './treatment';
 import { gpAfterFight, gpCurrentOpponent, maybeGpInvite, withdrawGp } from './grandPrix';
 import { maybePodcast } from './podcast';
@@ -73,6 +74,7 @@ export function findNextFight(s: GameState) {
     s.pending.secenekler = [o];
     s.pending.dayatma = true;
   }
+  if (!gpOpp) maybeHometown(s, s.pending.secenekler);
   s.pending.secenekler.forEach((o) => (o.macHafta = leadWeeks(s, o, s.kisaHaber)));
   s.phase = 'rakipSecimi';
 }
@@ -212,6 +214,7 @@ export function finishFight(s: GameState) {
     if (kamp.rakipCeza) purse += s.contract.ucret * 0.2;
     kazanc += purse;
     lines.push(tL("💵 Ücret: {0}{1}", [money(purse), won && s.contract.bonus ? tL(" (galibiyet bonusu dahil)") : '']));
+    lines.push(...hometownAfter(s, opp, won && !caught, purse));
   } else if (won) {
     kazanc += 200;
     lines.push(tL("💵 Yerel bir kasap dükkânı sana $200 ödül verdi. Başlangıç böyle olur."));

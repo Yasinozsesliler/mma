@@ -1,4 +1,5 @@
 import { L, LOC } from '../i18n';
+import { hometownMods } from './hometown';
 import { cutAction, CUT_SLOTS, manualCutResult, startManualCut, type CutAction } from './weightCut';
 import { choosePartner, closePartnerMoment, ensurePartner, partnerCorner } from './partner';
 import { addStat, currentOrg, growthMultiplier, fullName } from './character';
@@ -556,6 +557,7 @@ function beginFight(s: GameState) {
   const mods: Partial<Stats> = { ...k.mods };
   k.oppMods = { ...k.oppMods };
   applyWalkout(s, mods, k.oppMods);
+  hometownMods(s, opp, mods);
   Object.entries(fightItemMods(s)).forEach(([st, v]) => (mods[st as StatKey] = (mods[st as StatKey] ?? 0) + (v ?? 0)));
   Object.entries(diseaseMods(s)).forEach(([st, v]) => (mods[st as StatKey] = (mods[st as StatKey] ?? 0) + (v ?? 0)));
   if (dopingActive(s)) {

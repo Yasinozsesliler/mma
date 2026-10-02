@@ -4467,4 +4467,10 @@ export const ES: Record<string, string> = {
   "🫁 Kesik kesik nefes. Kondisyon +1": "🫁 Respiración entrecortada. Cardio +1",
   "🩹 Kanama durdu. Doktor riski yarıya indi.": "🩹 La hemorragia paró. Riesgo de detención médica a la mitad.",
   "🩸 Kanama sürüyor… Doktor yakından bakacak.": "🩸 Sigue sangrando… El médico mirará de cerca.",
+  "🏠 MEMLEKETTE ANA MAÇ · {0}": "🏠 EVENTO ESTELAR EN CASA · {0}",
+  "Bütün şehir tribünde. Kazanırsan kahraman olursun, kaybedersen kendi insanının önünde düşersin. Ücret %50 fazla.": "Toda la ciudad está en las gradas. Si ganas, serás un héroe; si pierdes, caerás ante los tuyos. Bolsa +50%.",
+  "🏠 {0} seni ayakta karşıladı. Tribün senin!": "🏠 {0} te recibió de pie. ¡El público es tuyo!",
+  "🏠 Memleket primi: +${0}": "🏠 Prima local: +${0}",
+  "🏠 {0} sokaklara döküldü! Şehrin kahramanısın. Popülerlik +6, {1} takipçi.": "🏠 ¡{0} salió a las calles! Eres el héroe de la ciudad. Popularidad +6, {1} seguidores.",
+  "🏠 Kendi seyircinin önünde kaybettin. Salon sessizliğe gömüldü. Popülerlik -5, motivasyon düştü.": "🏠 Perdiste ante tu propio público. La arena enmudeció. Popularidad -5, la motivación cae.",
 };
