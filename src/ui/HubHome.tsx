@@ -13,15 +13,20 @@ import type { GameState } from '../engine/types';
 import { CageBg, Icon, SLANT, upName, type IconName } from './components';
 import { FighterAvatar } from './FighterAvatar';
 import { OvrBadge } from './StatusPanel';
+import { CountText } from './anim';
 import { C, F, R } from './theme';
 
-function Meter({ label, value, color, sub }: { label: string; value: string; color?: string; sub?: number }) {
+function Meter({ label, value, color, sub, count }: { label: string; value: string; color?: string; sub?: number; count?: { n: number; fmt: (n: number) => string; delta: (d: number) => string } }) {
   return (
     <View style={hh.meter}>
       <Text style={hh.meterLabel}>{label}</Text>
-      <Text style={[hh.meterVal, color ? { color } : null]} numberOfLines={1} adjustsFontSizeToFit>
-        {value}
-      </Text>
+      {count ? (
+        <CountText value={count.n} format={count.fmt} delta={count.delta} style={[hh.meterVal, color ? { color } : null]} numberOfLines={1} />
+      ) : (
+        <Text style={[hh.meterVal, color ? { color } : null]} numberOfLines={1} adjustsFontSizeToFit>
+          {value}
+        </Text>
+      )}
       {sub != null ? (
         <View style={hh.meterBar}>
           <View style={{ width: `${Math.max(0, Math.min(100, sub))}%`, height: '100%', backgroundColor: color ?? C.dim, borderRadius: 2 }} />
@@ -77,9 +82,9 @@ export function HubHero({ s }: { s: GameState }) {
       </View>
       <View style={hh.meters}>
         <Meter label={amator ? L("AMATÖR") : L("KARNE")} value={`${r.g}-${r.m}-${r.b}`} />
-        <Meter label="PARA" value={money(s.para)} color={s.para < 0 ? '#ff4d5e' : C.green} />
+        <Meter label="PARA" value={money(s.para)} color={s.para < 0 ? '#ff4d5e' : C.green} count={{ n: s.para, fmt: money, delta: (d) => `${d > 0 ? '+' : '-'}${money(Math.abs(d))}` }} />
         <Meter label={L("SAĞLIK")} value={`${s.saglik}`} color={health} sub={s.saglik} />
-        <Meter label={L("TAKİPÇİ")} value={fmtFollowers(followers(s))} color={C.gold} />
+        <Meter label={L("TAKİPÇİ")} value={fmtFollowers(followers(s))} color={C.gold} count={{ n: followers(s), fmt: fmtFollowers, delta: (d) => `${d > 0 ? '+' : '-'}${fmtFollowers(Math.abs(d))}` }} />
       </View>
     </LinearGradient>
   );

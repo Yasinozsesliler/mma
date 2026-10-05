@@ -52,6 +52,7 @@ import { StyleScreen } from './src/ui/StyleScreen';
 import { WorldMapScreen } from './src/ui/WorldMapScreen';
 import { KafesEviScreen } from './src/ui/KafesEviScreen';
 import { FanClubScreen } from './src/ui/FanClubScreen';
+import { FadeIn } from './src/ui/anim';
 import { acceptComeback } from './src/engine/comeback';
 import { awardsDue, prepareAwards } from './src/engine/awards';
 import { ensureGoals, refreshStaleGoals } from './src/engine/goals';
@@ -429,7 +430,9 @@ export default function App() {
                   : undefined
               }
             >
-              {content}
+              <FadeIn key={view === 'game' && game ? game.phase : view} style={{ flex: 1 }}>
+                {content}
+              </FadeIn>
             </ErrorBoundary>
           </HasTopBar.Provider>
           {hata ? (

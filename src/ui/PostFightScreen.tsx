@@ -7,6 +7,8 @@ import { CoachTip } from './CoachTip';
 import { winCard } from '../share/build';
 import { ShareButton } from '../share/ShareButton';
 import { sfx } from '../audio';
+import type { Sfx } from '../audio/types';
+import { CountText, PopIn } from './anim';
 import { useEffect } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -39,18 +41,29 @@ function splitEmoji(line: string): [string, string] {
   return head && !/[\p{L}\p{N}]/u.test(head) ? [head, line.slice(i + 1)] : ['•', line];
 }
 
-function Tile({ label, value, sub, color, icon }: { label: string; value: string; sub?: string; color: string; icon: IconName }) {
+/** Ödül kutucuğu: sırayla büyüyerek gelir, değer sıfırdan sayar ve gelince kendi sesini çalar. */
+function Tile({ label, value, sub, color, icon, i, count, snd }: { label: string; value: string; sub?: string; color: string; icon: IconName; i: number; count?: { n: number; fmt: (n: number) => string }; snd?: Sfx }) {
+  const delay = 350 + i * 320;
+  useEffect(() => {
+    if (!snd) return;
+    const t = setTimeout(() => sfx(snd, 0.8), delay);
+    return () => clearTimeout(t);
+  }, [snd, delay]);
   return (
-    <View style={pf.tile}>
+    <PopIn delay={delay} style={pf.tile}>
       <View style={pf.tileHead}>
         <Icon name={icon} size={13} color={C.faint} />
         <Text style={pf.tileLabel}>{label}</Text>
       </View>
-      <Text style={[pf.tileVal, { color }]} numberOfLines={1} adjustsFontSizeToFit>
-        {value}
-      </Text>
+      {count ? (
+        <CountText value={count.n} format={count.fmt} fromZero delay={delay} ms={900} style={[pf.tileVal, { color }]} numberOfLines={1} />
+      ) : (
+        <Text style={[pf.tileVal, { color }]} numberOfLines={1} adjustsFontSizeToFit>
+          {value}
+        </Text>
+      )}
       {sub ? <Text style={pf.tileSub}>{sub}</Text> : null}
-    </View>
+    </PopIn>
   );
 }
 
@@ -149,10 +162,10 @@ export function PostFightScreen({ s, act }: { s: GameState; act: Act }) {
 
       {o ? (
         <View style={pf.tiles}>
-          <Tile label={L("KAZANÇ")} icon="cash" value={o.kazanc > 0 ? `+${money(o.kazanc)}` : '$0'} sub={o.bonus ? L("{0} bonus dahil", [o.bonus]) : o.amator ? L("Amatör") : L("Net")} color={o.kazanc > 0 ? C.green : C.dim} />
-          <Tile label={L("TAKİPÇİ")} icon="account-group" value={o.takipciDelta != null ? fmtDelta(o.takipciDelta) : `${o.popDelta >= 0 ? '+' : ''}${o.popDelta}`} sub={o.takipci != null ? L("Toplam {0}", [fmtFollowers(o.takipci)]) : undefined} color={(o.takipciDelta ?? o.popDelta) >= 0 ? C.gold : '#ff4d5e'} />
-          <Tile label={L("GELİŞİM")} icon="star-four-points" value={`+${o.puan}`} sub="puan" color={C.blue} />
-          <Tile label={L("SAĞLIK")} icon="heart-pulse" value={`${o.saglik}`} sub={o.hasar ? L("-{0} bu gece", [o.hasar]) : L("Temiz çıktın")} color={o.saglik < 50 ? '#ff4d5e' : o.saglik < 75 ? C.orange : C.green} />
+          <Tile i={0} snd={o.kazanc > 0 ? 'cash' : undefined} label={L("KAZANÇ")} icon="cash" value={o.kazanc > 0 ? `+${money(o.kazanc)}` : '$0'} count={o.kazanc > 0 ? { n: o.kazanc, fmt: (n) => `+${money(n)}` } : undefined} sub={o.bonus ? L("{0} bonus dahil", [o.bonus]) : o.amator ? L("Amatör") : L("Net")} color={o.kazanc > 0 ? C.green : C.dim} />
+          <Tile i={1} snd={(o.takipciDelta ?? o.popDelta) > 0 ? 'chime' : undefined} label={L("TAKİPÇİ")} icon="account-group" value={o.takipciDelta != null ? fmtDelta(o.takipciDelta) : `${o.popDelta >= 0 ? '+' : ''}${o.popDelta}`} count={o.takipciDelta != null ? { n: o.takipciDelta, fmt: fmtDelta } : undefined} sub={o.takipci != null ? L("Toplam {0}", [fmtFollowers(o.takipci)]) : undefined} color={(o.takipciDelta ?? o.popDelta) >= 0 ? C.gold : '#ff4d5e'} />
+          <Tile i={2} snd={o.puan > 0 ? 'flash' : undefined} label={L("GELİŞİM")} icon="star-four-points" value={`+${o.puan}`} count={{ n: o.puan, fmt: (n) => `+${n}` }} sub="puan" color={C.blue} />
+          <Tile i={3} label={L("SAĞLIK")} icon="heart-pulse" value={`${o.saglik}`} sub={o.hasar ? L("-{0} bu gece", [o.hasar]) : L("Temiz çıktın")} color={o.saglik < 50 ? '#ff4d5e' : o.saglik < 75 ? C.orange : C.green} />
         </View>
       ) : null}
 

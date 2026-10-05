@@ -5164,4 +5164,6 @@ export const PT: Record<string, string> = {
   "✅ {0}: +${1}, {2} takipçi.": "✅ {0}: +${1}, {2} seguidores.",
   "İLK ADIMLAR": "PRIMEIROS PASSOS",
   "Üstte paran, sağlığın ve popülerliğin var. Hazır olduğunda “DÖVÜŞ AYARLA” ile rakibini seç. “İlk adımlar” sana yol gösterecek; maç yaptıkça yeni şeyler açılacak. Ama unutma, her şeyin bir bedeli var.": "No topo estão seu dinheiro, saúde e popularidade. Quando estiver pronto, escolha o rival em “MARCAR LUTA”. “Primeiros passos” vai te guiar; novidades se abrem conforme você luta. Mas lembre: tudo tem um preço.",
+  "ANTRENMAN": "TREINO",
+  "MARKA": "MARCA",
 };
