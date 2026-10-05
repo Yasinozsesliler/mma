@@ -9,7 +9,14 @@ import { currentOrg, fullName } from '../engine/character';
 import { ORGS } from '../engine/data';
 import { applyLiveRound, chooseTactic, cornerBreath, cornerCut, nextRound, resolveCritical, resolveDecision, startLiveRound } from '../engine/fight';
 import { setLive, useLive } from '../livePref';
-import { LiveFight } from './LiveFight';
+import { LiveFight, SPECIAL_NAMES, type Special } from './LiveFight';
+import { SPECIAL_FOR } from '../engine/liveFight';
+
+/** Oyuncunun tarza özel hamlesi (imza hareketi varsa onun adıyla). */
+const specialOf = (s: GameState): Special => {
+  const kind = SPECIAL_FOR[s.fighter.gecmis] ?? 'kombo';
+  return { kind, imza: !!s.imza, ad: s.imza?.ad ?? SPECIAL_NAMES[kind]() };
+};
 import { CornerMoment } from './CornerMoment';
 import { CRITICAL_OPTIONS, TACTICS } from '../engine/narration';
 import { oppRecord } from '../engine/opponents';
@@ -317,7 +324,7 @@ export function FightScreen({ s, act }: { s: GameState; act: Act }) {
       {flowing ? <Flowing speed={speed} setSpeed={setSpeed} onSkip={() => setShown(fs.log.length)} /> : null}
 
       {!flowing && fs.durum === 'taktik' && <TacticList fs={fs} title={L("OYUN PLANIN: MAÇA NASIL BAŞLAYACAKSIN?")} onPick={(t) => setFs((f) => begin(f, t))} />}
-      {fs.durum === 'canli' && !intro ? <LiveFight key={fs.raunt} fs={fs} pLook={s.fighter.gorunum} oLook={lookFor(fs.opp)} onEnd={(r) => setFs((f) => applyLiveRound(f, r))} /> : null}
+      {fs.durum === 'canli' && !intro ? <LiveFight key={fs.raunt} fs={fs} pLook={s.fighter.gorunum} oLook={lookFor(fs.opp)} ozel={specialOf(s)} onEnd={(r) => setFs((f) => applyLiveRound(f, r))} /> : null}
 
       {!flowing && fs.durum === 'karar' && fs.karar && (
         <>

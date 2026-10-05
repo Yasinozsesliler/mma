@@ -8,17 +8,18 @@ import Svg, { Circle, Defs, Ellipse, G, Line, LinearGradient as SvgLinear, Polyg
 import { sfx } from '../audio';
 import { playerKit } from '../cosmetics';
 import { oppStatsOf } from '../engine/fight';
-import { liveCreate, liveElapsed, liveInput, livePos, liveResult, liveStep, type LiveEvent, type LiveInput, type LiveRoundResult, type LiveSim } from '../engine/liveFight';
+import { liveCreate, liveElapsed, liveInput, livePos, liveResult, liveShift, liveStep, SPECIAL_COOLDOWN, type SpecialKind, type LiveEvent, type LiveInput, type LiveRoundResult, type LiveSim } from '../engine/liveFight';
 import type { Appearance, FightState } from '../engine/types';
 import { buzz } from '../haptics';
 import { L, LOC } from '../i18n';
 import { INSTANT, ND, useFlash } from './drills/common';
+import { getPref, setPref } from '../prefs';
 import { DEFAULT_LOOK } from './FighterAvatar';
 import { Figure, HIP_H, lerpPose, POSES, type Pose, type PoseName } from './rig';
 import { C, F } from './theme';
 
 type Actor = 'p' | 'o';
-type Frame = { t: number; p: Pose; o: Pose; pHp: number; pSta: number; oHp: number; oSta: number; left: number; ring: { r: number; gold: boolean } | null; icon: string | null; pos: 'ayakta' | 'ustte' | 'altta'; guard: boolean; counter: boolean; fx: { x: number; y: number; t0: number; big: boolean }[]; sx: number };
+type Frame = { t: number; p: Pose; o: Pose; pHp: number; pSta: number; oHp: number; oSta: number; left: number; ring: { r: number; gold: boolean } | null; icon: string | null; pos: 'ayakta' | 'ustte' | 'altta'; special: { ready: boolean; pct: number } | null; guard: boolean; counter: boolean; fx: { x: number; y: number; t0: number; big: boolean }[]; sx: number };
 const BLUE = { shorts: '#1f4fbf', trim: '#ffffff', glove: '#1740a8' };
 const P = (n: PoseName, ov: Partial<Pose> = {}): Pose => ({ ...POSES[n], ...ov });
 type Btn = [LiveInput, () => string, string];
@@ -42,6 +43,7 @@ const GUARD: Partial<Pose> = { aL1: 70, aL2: 145, aR1: 62, aR2: 150, torso: 4, h
 const now = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
 /** Rakibin hazırladığı hamlenin uyarı ikonu */
 const ICONS: Record<string, string> = { td: '⬇️', gsub: '🔒', escape: '⤴️', gnp: '👊' };
+const TUTORIAL_KEY = 'yol_canli_rehber';
 const VB_W = 200;
 const VB_H = 130;
 const FLOOR = 118;
@@ -99,7 +101,25 @@ function Bar({ v, color, right }: { v: number; color: string; right?: boolean })
   );
 }
 
-export function LiveFight({ fs, pLook, oLook, onEnd }: { fs: FightState; pLook?: Appearance; oLook: Appearance; onEnd: (r: LiveRoundResult) => void }) {
+export type Special = { kind: SpecialKind; imza: boolean; ad: string };
+
+/** Tarza özel hamlenin görünen adı */
+export const SPECIAL_NAMES: Record<SpecialKind, () => string> = {
+  kombo: () => L("Kombinasyon"),
+  kafaTekmesi: () => L("Kafa tekmesi"),
+  diz: () => L("Clinch dizi"),
+  suplex: () => L("Suplex"),
+  guardCek: () => L("Guard çek + kilit"),
+  savurma: () => L("Savurma yumruk"),
+};
+
+const TUTORIAL = () => [
+  { icon: '⚠️', baslik: L("Rakibi oku"), metin: L("Rakip saldırı hazırlarken başında küçülen bir halka çıkar. Halka ALTIN olunca KAÇ'a bas, sonra hemen vur: kontra vuruşların çift hasar yapar.") },
+  { icon: '🥊', baslik: L("Vur ve kes"), metin: L("JAB hızlı ve ucuz, DİREKT ve TEKME ağırdır. Rakip hazırlanırken DİREKT ya da TEKME atarsan saldırısını kesersin. Sarı çubuk nefesin: bitince vuruşların zayıflar.") },
+  { icon: '🤼', baslik: L("Yere götür"), metin: L("İNDİR ile takedown dene; rakip ⬇️ ile dalarsa KAÇ ile sprawl yap. Yerde düğmeler değişir: üstteyken vur ve submission ara, alttayken 🔒 görünce hemen KURTUL.") },
+];
+
+export function LiveFight({ fs, pLook, oLook, onEnd, ozel }: { fs: FightState; pLook?: Appearance; oLook: Appearance; onEnd: (r: LiveRoundResult) => void; ozel?: Special }) {
   const { width: W, height: H } = useWindowDimensions();
   const [kit] = useState(playerKit);
   const sim = useRef<LiveSim | null>(null);
@@ -110,8 +130,13 @@ export function LiveFight({ fs, pLook, oLook, onEnd }: { fs: FightState; pLook?:
   });
   const fx = useRef<{ x: number; y: number; t0: number; big: boolean }[]>([]);
   const shake = useRef({ t0: 0, amp: 0 });
-  const [frame, setFrame] = useState<Frame>(() => ({ t: 0, p: P('stance'), o: P('stance'), pHp: 100 - fs.pHasar, pSta: fs.pKondisyon, oHp: 100 - fs.oHasar, oSta: fs.oKondisyon, left: 30000, ring: null, icon: null, pos: 'ayakta', guard: false, counter: false, fx: [], sx: 0 }));
+  const [frame, setFrame] = useState<Frame>(() => ({ t: 0, p: P('stance'), o: P('stance'), pHp: 100 - fs.pHasar, pSta: fs.pKondisyon, oHp: 100 - fs.oHasar, oSta: fs.oKondisyon, left: 30000, ring: null, icon: null, pos: 'ayakta', special: null, guard: false, counter: false, fx: [], sx: 0 }));
   const [banner, setBanner] = useState<string | null>(() => L("{0}. RAUNT", [fs.raunt]));
+  // İlk canlı maçta kısa rehber; görüldükten sonra raunt hemen başlar
+  const [started, setStarted] = useState(() => getPref(TUTORIAL_KEY) === '1');
+  const [step, setStep] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const pausedAt = useRef<number | null>(null);
   const flash = useFlash(H * 0.3);
   const ended = useRef(false);
 
@@ -276,7 +301,8 @@ export function LiveFight({ fs, pLook, oLook, onEnd }: { fs: FightState; pLook?:
   };
 
   useEffect(() => {
-    const s = liveCreate(fs, oppStatsOf(fs), now());
+    if (!started) return;
+    const s = liveCreate(fs, oppStatsOf(fs), now(), undefined, ozel ? { kind: ozel.kind, imza: ozel.imza } : undefined);
     sim.current = s;
     sfx('bell');
     const t1 = setTimeout(() => setBanner(L("DÖVÜŞ!")), 700);
@@ -285,6 +311,10 @@ export function LiveFight({ fs, pLook, oLook, onEnd }: { fs: FightState; pLook?:
     let last = 0;
     const loop = () => {
       const t = now();
+      if (pausedAt.current != null) {
+        raf = requestAnimationFrame(loop);
+        return;
+      }
       liveStep(s, t);
       while (seen.current < s.events.length) onEvent(s.events[seen.current++]);
       fx.current = fx.current.filter((f) => t - f.t0 < 400);
@@ -310,6 +340,7 @@ export function LiveFight({ fs, pLook, oLook, onEnd }: { fs: FightState; pLook?:
           counter: t < s.p.counterUntil,
           fx: fx.current.map((f) => ({ ...f })),
           sx: shk ? Math.sin(t / 15) * shk : 0,
+          special: s.special ? { ready: t >= s.special.readyAt && livePos(s) === 'ayakta', pct: Math.min(1, 1 - (s.special.readyAt - t) / SPECIAL_COOLDOWN) } : null,
         });
       }
       const done = s.over || (t >= s.start && liveElapsed(s) >= s.dur);
@@ -329,13 +360,26 @@ export function LiveFight({ fs, pLook, oLook, onEnd }: { fs: FightState; pLook?:
       clearTimeout(t1);
       clearTimeout(t2);
     };
-    // Raunt bir kez başlar.
+    // Raunt bir kez başlar (rehber kapandığında).
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [started]);
+
+  const togglePause = () => {
+    const sm = sim.current;
+    if (!sm) return;
+    if (pausedAt.current == null) {
+      pausedAt.current = now();
+      setPaused(true);
+    } else {
+      liveShift(sm, now() - pausedAt.current);
+      pausedAt.current = null;
+      setPaused(false);
+    }
+  };
 
   const press = (k: LiveInput) => {
     const sm = sim.current;
-    if (!sm) return;
+    if (!sm || pausedAt.current != null) return;
     liveStep(sm, now());
     liveInput(sm, k);
   };
@@ -361,6 +405,9 @@ export function LiveFight({ fs, pLook, oLook, onEnd }: { fs: FightState; pLook?:
     <Modal animationType="fade" onRequestClose={() => undefined}>
       <View style={lf.root}>
         <LinearGradient colors={['#0b0c10', '#050507']} style={StyleSheet.absoluteFill} />
+        <Pressable onPress={togglePause} hitSlop={10} style={lf.pause}>
+          <Text style={lf.pauseText}>{paused ? '▶' : 'II'}</Text>
+        </Pressable>
         {/* Skor tablosu */}
         <View style={lf.hud}>
           <View style={{ flex: 1 }}>
@@ -431,6 +478,15 @@ export function LiveFight({ fs, pLook, oLook, onEnd }: { fs: FightState; pLook?:
 
         {/* Kontroller: konuma göre değişir */}
         <View style={lf.controls}>
+          {ozel && frame.pos === 'ayakta' ? (
+            <Pressable {...INSTANT} onPressIn={() => press('ozel')} style={[lf.special, frame.special?.ready && lf.specialOn]}>
+              <View style={[lf.specialFill, { width: `${Math.round((frame.special?.pct ?? 0) * 100)}%` }]} />
+              <Text style={[lf.specialText, frame.special?.ready && { color: '#1f1605' }]} numberOfLines={1}>
+                ⚡ {ozel.ad.toLocaleUpperCase(LOC)}
+                {ozel.imza ? ' ★' : ''}
+              </Text>
+            </Pressable>
+          ) : null}
           {BUTTONS[frame.pos].map((row, ri) => (
             <View key={`${frame.pos}${ri}`} style={lf.row}>
               {row.map(([k, label, col]) => (
@@ -448,12 +504,58 @@ export function LiveFight({ fs, pLook, oLook, onEnd }: { fs: FightState; pLook?:
                 : L("Halka altın olunca KAÇ (⬇️ takedown'a karşı da). DİREKT ve TEKME hazırlığı keser.")}
           </Text>
         </View>
+        {paused ? (
+          <View style={lf.overlay}>
+            <Text style={lf.overlayTitle}>{L("DURAKLATILDI")}</Text>
+            <Pressable onPress={togglePause} style={lf.overlayBtn}>
+              <Text style={lf.overlayBtnText}>{L("Devam et")}</Text>
+            </Pressable>
+          </View>
+        ) : null}
+        {!started ? (
+          <View style={lf.overlay}>
+            <Text style={lf.tutIcon}>{TUTORIAL()[step].icon}</Text>
+            <Text style={lf.overlayTitle}>{TUTORIAL()[step].baslik}</Text>
+            <Text style={lf.tutText}>{TUTORIAL()[step].metin}</Text>
+            <View style={lf.tutDots}>
+              {TUTORIAL().map((_, i) => (
+                <View key={i} style={[lf.tutDot, i === step && { backgroundColor: C.gold }]} />
+              ))}
+            </View>
+            <Pressable
+              onPress={() => {
+                if (step < TUTORIAL().length - 1) setStep(step + 1);
+                else {
+                  setPref(TUTORIAL_KEY, '1');
+                  setStarted(true);
+                }
+              }}
+              style={lf.overlayBtn}
+            >
+              <Text style={lf.overlayBtnText}>{step < TUTORIAL().length - 1 ? L("Sonraki") : L("Anladım, dövüşelim!")}</Text>
+            </Pressable>
+          </View>
+        ) : null}
       </View>
     </Modal>
   );
 }
 
 const lf = StyleSheet.create({
+  pause: { position: 'absolute', top: 8, right: 14, zIndex: 5, width: 30, height: 26, borderRadius: 6, borderWidth: 1, borderColor: '#2a2d34', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0d0e12' },
+  pauseText: { color: C.dim, fontFamily: F.display, fontSize: 12 },
+  overlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.88)', alignItems: 'center', justifyContent: 'center', padding: 28, zIndex: 10 },
+  overlayTitle: { color: '#fff', fontFamily: F.display, fontSize: 30, letterSpacing: 1, textAlign: 'center', marginBottom: 10 },
+  overlayBtn: { marginTop: 22, backgroundColor: C.gold, borderRadius: 12, paddingVertical: 14, paddingHorizontal: 28 },
+  overlayBtnText: { color: '#1f1605', fontFamily: F.display, fontSize: 17, letterSpacing: 1 },
+  tutIcon: { fontSize: 54, marginBottom: 8 },
+  tutText: { color: '#d9dbe0', fontFamily: F.body, fontSize: 15, lineHeight: 22, textAlign: 'center' },
+  tutDots: { flexDirection: 'row', gap: 6, marginTop: 18 },
+  tutDot: { width: 9, height: 9, borderRadius: 5, backgroundColor: '#33363e' },
+  special: { height: 40, borderRadius: 12, borderWidth: 2, borderColor: C.goldDeep, backgroundColor: '#14110a', justifyContent: 'center', overflow: 'hidden' },
+  specialOn: { borderColor: C.gold, backgroundColor: C.gold },
+  specialFill: { position: 'absolute', left: 0, top: 0, bottom: 0, backgroundColor: C.gold + '33' },
+  specialText: { color: C.gold, fontFamily: F.display, fontSize: 15, letterSpacing: 1, textAlign: 'center' },
   root: { flex: 1, paddingTop: 40, paddingHorizontal: 12, userSelect: 'none' } as object,
   hud: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 10, padding: 10, borderWidth: 1, borderColor: '#1c1f25' },
   name: { fontFamily: F.display, fontSize: 15, letterSpacing: 0.5, marginBottom: 4 },

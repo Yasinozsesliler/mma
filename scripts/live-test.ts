@@ -1,7 +1,7 @@
 // Canlı dövüş denge testi: farklı beceride otomatik oyuncular, farklı güç farkındaki rakiplere karşı tam maç oynar.
 // Çalıştır: npx tsx scripts/live-test.ts
 import { applyLiveRound, nextRound, oppStatsOf, startFight, startLiveRound } from '../src/engine/fight';
-import { liveCreate, liveInput, livePos, liveResult, liveRunning, liveStep, type LiveInput, type LiveSim } from '../src/engine/liveFight';
+import { liveCreate, liveInput, livePos, liveResult, liveRunning, liveStep, SPECIAL_FOR, type LiveInput, type LiveSim, type SpecialKind } from '../src/engine/liveFight';
 import { rand, setSeed } from '../src/engine/rng';
 import { STAT_KEYS, type Background, type FightState, type Opponent, type Stats, type Tactic } from '../src/engine/types';
 
@@ -94,6 +94,10 @@ function playRound(sim: LiveSim, bot: Bot, wrestler: boolean) {
       continue;
     }
     if (o.state === 'guard') continue;
+    if (sim.special && t >= sim.special.readyAt && sim.p.sta > 40 && rand() < 0.02) {
+      liveInput(sim, 'ozel');
+      continue;
+    }
     if (t >= nextAtk && sim.p.sta > 35) {
       liveInput(sim, wrestler && rand() < 0.15 ? 'indir' : rand() < 0.65 ? 'jab' : rand() < 0.7 ? 'direkt' : 'tekme');
       nextAtk = t + 450 + rand() * 500;
@@ -101,7 +105,7 @@ function playRound(sim: LiveSim, bot: Bot, wrestler: boolean) {
   }
 }
 
-function fight(bot: Bot, pLv: number, oLv: number, profile: 'denk' | 'gurescivsvurus' | 'vurusvsgurescl' = 'denk') {
+function fight(bot: Bot, pLv: number, oLv: number, profile: 'denk' | 'gurescivsvurus' | 'vurusvsgurescl' = 'denk', special?: SpecialKind) {
   const ps = statsAt(pLv);
   const op = opp(oLv);
   if (profile === 'gurescivsvurus') {
@@ -123,7 +127,7 @@ function fight(bot: Bot, pLv: number, oLv: number, profile: 'denk' | 'gurescivsv
   while (fs.durum !== 'bitti' && guard++ < 10) {
     if (fs.durum === 'rauntSonu') fs = nextRound(fs);
     fs = startLiveRound(fs, profile === 'gurescivsvurus' ? 'takedown' : TACS[Math.floor(rand() * TACS.length)]);
-    const sim = liveCreate(fs, oppStatsOf(fs), 0);
+    const sim = liveCreate(fs, oppStatsOf(fs), 0, undefined, special ? { kind: special, imza: false } : undefined);
     playRound(sim, bot, profile === 'gurescivsvurus');
     fs = applyLiveRound(fs, liveResult(sim));
   }
@@ -166,4 +170,14 @@ for (const profile of ['denk', 'gurescivsvurus', 'vurusvsgurescl'] as const) {
     if (fs.sonuc?.yontem === 'SUB') sub++;
   }
   console.log(`${profile.padEnd(16)} ${Math.round((w / N) * 100)}% · ${Math.round((ko / N) * 100)}% · ${Math.round((sub / N) * 100)}%`);
+}
+
+console.log('');
+console.log('Özel hamle etkisi (eşit güç, "iyi" oyuncu): galibiyet %');
+const base0 = (() => { let w = 0; for (let i = 0; i < N; i++) if (fight(BOTS[2], 55, 55).sonuc?.kazanan === 'p') w++; return Math.round((w / N) * 100); })();
+console.log(`özel yok        ${base0}%`);
+for (const k of [...new Set(Object.values(SPECIAL_FOR))]) {
+  let w = 0;
+  for (let i = 0; i < N; i++) if (fight(BOTS[2], 55, 55, 'denk', k).sonuc?.kazanan === 'p') w++;
+  console.log(`${k.padEnd(15)} ${Math.round((w / N) * 100)}%`);
 }
