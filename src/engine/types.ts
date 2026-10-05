@@ -85,6 +85,8 @@ export interface Fighter {
 }
 
 export interface Opponent {
+  /** Maçın yapılacağı şehir (worldMap.ts) */
+  sehir?: string;
   /** Memlekette ana maç (hometown.ts) */
   memleket?: boolean;
   id: string;
@@ -191,6 +193,8 @@ export interface FightHistory {
   yontem: string;
   raunt: number;
   yas: number;
+  /** Maçın şehri (worldMap.ts) */
+  sehir?: string;
 }
 
 // ---------- Kamp ----------
@@ -449,6 +453,7 @@ export type Phase =
   | 'boks'
   | 'yayin'
   | 'stil'
+  | 'harita'
   | 'emeklilik';
 
 export interface Istat {
@@ -600,6 +605,10 @@ export interface GameState {
   /** Ders alınan efsane ustalar ve son dersin dövüş sayısı (legends.ts) */
   ustalar?: string[];
   ustaSon?: number;
+  /** Dövüşülen şehirler: id → maç sayısı */
+  sehirler?: Record<string, number>;
+  /** Alınan harita kilometre taşları (c5, k3...) */
+  haritaOdul?: string[];
   /** Crossover boks maçı (crossover.ts) */
   boks?: import('./crossover').BoxFight;
   boksTeklif?: { boksor: import('./crossover').Boxer; ucret: number };

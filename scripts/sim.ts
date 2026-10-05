@@ -1,3 +1,4 @@
+import { visitedCount, visitedKitalar } from '../src/engine/worldMap';
 // Motor denge testi: botlar tam kariyerleri otomatik oynar.
 // Çalıştırma: npx tsx scripts/sim.ts [kariyerSayisi]
 import { legacyScore } from '../src/engine/legacy';
@@ -43,6 +44,7 @@ const odulStat: Record<string, number> = {};
 const gpStat = { katilim: 0, sampiyon: 0, tur: {} as Record<number, number> };
 const kankaStat = { kanka: 0, rakip: 0 };
 const kartStat: Record<string, number> = { toplam: 0 };
+const mapStat = { sehir: 0, kita: 0, odul: 0 };
 const goalStat = { n: 0, para: 0, puan: 0, tur: {} as Record<string, number> };
 
 const BGS: Background[] = ['boks', 'muaythai', 'kickboks', 'gures', 'judo', 'bjj', 'sambo', 'kyokushin', 'sokak'];
@@ -252,6 +254,7 @@ function playCareer() {
   finalize();
 
   function finalize() {
+    mapStat.sehir += visitedCount(s); mapStat.kita += visitedKitalar(s).length; mapStat.odul += (s.haritaOdul ?? []).length;
     (s.kartlar ?? []).forEach((c) => { kartStat[c.nadir] = (kartStat[c.nadir] ?? 0) + 1; kartStat.toplam++; });
     { const pro = [...s.gecmis].reverse().filter((h) => h.org !== 'amator'); let k = 0; while (k < pro.length && pro[k].sonuc === 'G') k++; startStreak.push(k); }
     if (s.meydan) meydanStat[s.meydan.durum] = (meydanStat[s.meydan.durum] ?? 0) + 1;
@@ -309,6 +312,7 @@ console.log('Pro başlangıç serisi dağılımı:', [0, 1, 2, 3, 5, 8, 10].map(
 if (process.env.CH) console.log('Meydan okuma:', process.env.CH, JSON.stringify(meydanStat));
 console.log(`Büyük maç (hype): kariyer başına ${(hypeStat.n / N).toFixed(1)}, ort. başlangıç hype ${(hypeStat.top / Math.max(1, hypeStat.n)).toFixed(0)}`);
 console.log(`Podcast (kariyer başına): ${(podcastStat.n / N).toFixed(1)}`);
+console.log(`Harita: ort. ${(mapStat.sehir / N).toFixed(1)} şehir, ${(mapStat.kita / N).toFixed(1)} kıta, ${(mapStat.odul / N).toFixed(1)} ödül`);
 console.log('Kartlar (kariyer başına):', Object.entries(kartStat).map(([k, v]) => `${k} ${(v / N).toFixed(1)}`).join(', '));
 console.log(`Antrenman ortağı: kanka ${pct(kankaStat.kanka, N)}, rakip ${pct(kankaStat.rakip, N)}`);
 console.log('Krizler (kariyer başına):', Object.entries(krizStat).map(([k, v]) => `${k} ${(v / N).toFixed(2)}`).join(', '));

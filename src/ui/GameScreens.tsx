@@ -39,6 +39,7 @@ import type { CampState, GameState, Intensity, Opponent, PressChoice, StatKey, S
 import { STAT_KEYS, STAT_LABELS } from '../engine/types';
 import { Button, Card, Choice, Icon, P, Pill, Screen, Section, Title, upName, type IconName } from './components';
 import { NewsFeed, RestPicker } from './HubParts';
+import { cityPin, visitedCount, visitedKitalar } from '../engine/worldMap';
 import { ActionGrid, ActionTile, FightCTA, HubHero, Notice } from './HubHome';
 import { pendingBouts, weeklyGymNet } from '../engine/academy';
 import { ACHIEVEMENTS } from '../engine/achievements';
@@ -293,6 +294,7 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
             {s.stage !== 'amator' ? (
               <ActionTile icon="broadcast" label={L("Canlı yayın")} sub={canStream(s) ? L("Yayına geç") : followers(s) < STREAM_MIN_FOLLOWERS ? L("5B takipçi gerekli") : L("Sonraki maçtan sonra")} accent="#9146ff" badge={canStream(s) ? '!' : null} onPress={() => canStream(s) && act(startStream)} />
             ) : null}
+            <ActionTile icon="earth" label={L("Dünya turu")} sub={L("{0} şehir · {1} kıta", [visitedCount(s), visitedKitalar(s).length])} accent="#4cc9f0" onPress={() => act((x) => (x.phase = 'harita'))} />
             <ActionTile icon="cards" label={L("Kart Albümü")} sub={L("{0} kart", [(s.kartlar ?? []).length])} accent="#c86bff" badge={unclaimedMilestones(s) || null} onPress={() => act((x) => (x.phase = 'album'))} />
             <ActionTile icon="cellphone-message" label={L("Sosyal medya")} sub={L("{0} paylaşım", [(s.sosyal ?? []).length])} accent="#3aa8ff" onPress={() => act((x) => (x.phase = 'sosyal'))} />
             <ActionTile icon="glass-cocktail" label={L("Gece hayatı")} sub={s.iliski ? `💞 ${s.iliski.ad}` : L("Randevu · kulüp · kumar")} accent="#fd267a" onPress={() => act((x) => (x.phase = 'gece'))} />
@@ -476,14 +478,16 @@ function OpponentCard({ o, me }: { o: Opponent; me: Stats }) {
   );
 }
 
-function FightDate({ o }: { o: Opponent }) {
+function FightDate({ o, s }: { o: Opponent; s: GameState }) {
   if (!o.macHafta) return null;
+  const city = o.sehir ? cityPin(s, o.sehir) : undefined;
   return (
     <View style={gs.date}>
       <Icon name="calendar-clock" size={16} color={C.gold} />
       <Text style={gs.dateText}>
         
         {L("Maç tarihi:")}{' '}<Text style={{ color: C.text }}>{o.macHafta} {L("hafta sonra")}</Text> · {o.macHafta * 7} {L("gün")}
+        {city ? <Text style={{ color: C.text }}>{' · 📍 '}{city.ad}</Text> : null}
       </Text>
     </View>
   );
@@ -510,7 +514,7 @@ export function OpponentScreen({ s, act }: { s: GameState; act: Act }) {
         </Title>
         <Card accent={C.red}>
           <OpponentCard o={o} me={me} />
-          <FightDate o={o} />
+          <FightDate o={o} s={s} />
         </Card>
         {s.reddedilen > 0 ? <P style={{ color: C.orange }}>{L("⚠️ Bu")}{' '}{s.reddedilen + 1}{L(". reddedişin olur. Üçüncüde kontratın feshedilir.")}</P> : null}
       </Screen>
@@ -526,7 +530,7 @@ export function OpponentScreen({ s, act }: { s: GameState; act: Act }) {
       {list.map((o, i) => (
         <Card key={o.id} accent={o.zorluk === 1 ? C.red : o.zorluk === -1 ? C.green : C.gold}>
           <OpponentCard o={o} me={me} />
-          <FightDate o={o} />
+          <FightDate o={o} s={s} />
           <View style={{ marginTop: 12 }}>
             <Button label={L("Bu rakibi seç")} icon="sword-cross" tone={i === 1 ? 'red' : 'ghost'} onPress={() => act((x) => pickOpponent(x, i))} />
           </View>

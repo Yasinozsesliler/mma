@@ -9,6 +9,7 @@ import { familyCosts } from './family';
 import { merchSales } from './merch';
 import { hometownAfter, maybeHometown } from './hometown';
 import { needsTreatment } from './treatment';
+import { assignCities, pickCity, visitCity } from './worldMap';
 import { gpAfterFight, gpCurrentOpponent, maybeGpInvite, withdrawGp } from './grandPrix';
 import { maybePodcast } from './podcast';
 import { addCard } from './cards';
@@ -83,6 +84,7 @@ export function findNextFight(s: GameState) {
     s.pending.dayatma = true;
   }
   if (!gpOpp) maybeHometown(s, s.pending.secenekler);
+  assignCities(s, s.pending.secenekler, currentOrg(s));
   s.pending.secenekler.forEach((o) => (o.macHafta = leadWeeks(s, o, s.kisaHaber)));
   s.phase = 'rakipSecimi';
 }
@@ -188,6 +190,7 @@ export function finishFight(s: GameState) {
     else karne.karar++;
   } else if (draw) karne.b++;
   else karne.m++;
+  const sehir = opp.sehir ?? pickCity(s, opp, org);
   s.gecmis.unshift({
     rakip: `${opp.ad} ${opp.soyad}`,
     rakipId: opp.id,
@@ -196,7 +199,9 @@ export function finishFight(s: GameState) {
     yontem: methodLabel(r.yontem),
     raunt: r.raunt,
     yas: s.fighter.yas,
+    sehir,
   });
+  lines.push(...visitCity(s, sehir));
   offerAppeal(s, r.yontem, won && !caught, draw, `${opp.ad} ${opp.soyad}`, opp.id);
   if (won && !caught) {
     const kart = addCard(s, opp, org, methodLabel(r.yontem));
