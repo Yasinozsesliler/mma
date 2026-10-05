@@ -22,6 +22,7 @@ export function spendPoint(s: GameState, k: StatKey) {
   if (!canSpend(s, k)) return;
   s.puan -= statCost(s.fighter.stats[k]);
   s.fighter.stats[k]++;
+  s.harcanan = (s.harcanan ?? 0) + 1;
 }
 
 const CAMP_BASE: Record<Intensity, number> = { dusuk: 0.8, orta: 1.4, yuksek: 2 };

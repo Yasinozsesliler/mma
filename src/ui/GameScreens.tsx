@@ -64,6 +64,8 @@ import { GrandPrixCard } from './GrandPrixCard';
 import { KafesEviInvite } from './KafesEviScreen';
 import { BrainCard } from './BrainCard';
 import { PosterCard } from './PosterCard';
+import { FirstStepsCard } from './FirstStepsCard';
+import { featureOpen, isNewFeature, seeFeature } from '../engine/onboarding';
 import { canActivity, canFoundClub, members } from '../engine/fanClub';
 import { brainEpilogue } from '../engine/brain';
 import { comebackOffer } from '../engine/comeback';
@@ -276,23 +278,28 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
             disabled={banned(s)}
             onPress={() => act(findNextFight)}
           />
-          <SpecialEventCard s={s} act={act} />
-          <EventCard s={s} act={act} />
-          <GoalsCard s={s} act={act} />
+          <FirstStepsCard s={s} act={act} />
+          {featureOpen(s, 'etkinlik') ? <SpecialEventCard s={s} act={act} /> : null}
+          {featureOpen(s, 'etkinlik') ? <EventCard s={s} act={act} /> : null}
+          {featureOpen(s, 'hedef') ? <GoalsCard s={s} act={act} /> : null}
 
           <ActionGrid>
             <ActionTile icon="bed" label={L("Dinlen")} sub={L("Sağlık {0}/100", [s.saglik])} accent={C.green} selected={resting} onPress={() => { setResting(!resting); setWeightOpen(false); }} badge={s.sakatliklar.length || null} />
             <ActionTile icon="shopping" label={L("Mağaza")} sub={weeklyBusinessIncome(s) ? `+${money(weeklyBusinessIncome(s))}/hafta` : L("Ekipman · yaşam · tatil")} accent={C.gold} onPress={() => act((x) => (x.phase = 'magaza'))} />
             <ActionTile icon="whistle" label={L("Takım")} sub={`${(s.sponsorlar ?? []).length} sponsor`} accent={C.blue} badge={(s.sponsorTeklif ?? []).length || null} onPress={() => act((x) => (x.phase = 'takim'))} />
+            {featureOpen(s, 'salon') ? (
             <ActionTile
               icon="weight-lifter"
               label={L("Salonum")}
               sub={s.salon ? L("#{0} dünyada · {1}/hafta", [s.salon.sira ?? '-', `${weeklyGymNet(s.salon) >= 0 ? '+' : '-'}${money(Math.abs(weeklyGymNet(s.salon)))}`]) : L("Kendi salonunu aç")}
               accent={C.orange}
-              badge={pendingBouts(s) || null}
-              onPress={() => act((x) => (x.phase = 'salon'))}
+              badge={isNewFeature(s, 'salon') ? L("YENİ") : pendingBouts(s) || null}
+              onPress={() => act((x) => (seeFeature(x, 'salon'), (x.phase = 'salon')))}
             />
-            <ActionTile icon="medal" label={L("Başarımlar")} sub={s.hof ? L("🏛 Hall of Fame") : `${(s.basarimlar ?? []).length}/${ACHIEVEMENTS.length}`} accent={C.gold} onPress={() => act((x) => (x.phase = 'basarimlar'))} />
+            ) : null}
+            {featureOpen(s, 'basarim') ? (
+              <ActionTile icon="medal" label={L("Başarımlar")} sub={s.hof ? L("🏛 Hall of Fame") : `${(s.basarimlar ?? []).length}/${ACHIEVEMENTS.length}`} accent={C.gold} badge={isNewFeature(s, 'basarim') ? L("YENİ") : null} onPress={() => act((x) => (seeFeature(x, 'basarim'), (x.phase = 'basarimlar')))} />
+            ) : null}
             {s.stage !== 'amator' ? (
               <ActionTile icon="draw-pen" label={L("Hayran buluşması")} sub={canFanMeet(s) ? L("İmza günü düzenle") : L("Sonraki maçtan sonra")} accent="#ff8fb1" badge={canFanMeet(s) ? '!' : null} onPress={() => canFanMeet(s) && setFanMeet(true)} />
             ) : null}
@@ -305,10 +312,16 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
             {s.stage !== 'amator' ? (
               <ActionTile icon="broadcast" label={L("Canlı yayın")} sub={canStream(s) ? L("Yayına geç") : followers(s) < STREAM_MIN_FOLLOWERS ? L("5B takipçi gerekli") : L("Sonraki maçtan sonra")} accent="#9146ff" badge={canStream(s) ? '!' : null} onPress={() => canStream(s) && act(startStream)} />
             ) : null}
-            <ActionTile icon="earth" label={L("Dünya turu")} sub={L("{0} şehir · {1} kıta", [visitedCount(s), visitedKitalar(s).length])} accent="#4cc9f0" onPress={() => act((x) => (x.phase = 'harita'))} />
-            <ActionTile icon="cards" label={L("Kart Albümü")} sub={L("{0} kart", [(s.kartlar ?? []).length])} accent="#c86bff" badge={unclaimedMilestones(s) || null} onPress={() => act((x) => (x.phase = 'album'))} />
+            {featureOpen(s, 'harita') ? (
+              <ActionTile icon="earth" label={L("Dünya turu")} sub={L("{0} şehir · {1} kıta", [visitedCount(s), visitedKitalar(s).length])} accent="#4cc9f0" badge={isNewFeature(s, 'harita') ? L("YENİ") : null} onPress={() => act((x) => (seeFeature(x, 'harita'), (x.phase = 'harita')))} />
+            ) : null}
+            {featureOpen(s, 'album') ? (
+              <ActionTile icon="cards" label={L("Kart Albümü")} sub={L("{0} kart", [(s.kartlar ?? []).length])} accent="#c86bff" badge={isNewFeature(s, 'album') ? L("YENİ") : unclaimedMilestones(s) || null} onPress={() => act((x) => (seeFeature(x, 'album'), (x.phase = 'album')))} />
+            ) : null}
             <ActionTile icon="cellphone-message" label={L("Sosyal medya")} sub={L("{0} paylaşım", [(s.sosyal ?? []).length])} accent="#3aa8ff" onPress={() => act((x) => (x.phase = 'sosyal'))} />
-            <ActionTile icon="glass-cocktail" label={L("Gece hayatı")} sub={s.iliski ? `💞 ${s.iliski.ad}` : L("Randevu · kulüp · kumar")} accent="#fd267a" onPress={() => act((x) => (x.phase = 'gece'))} />
+            {featureOpen(s, 'gece') ? (
+              <ActionTile icon="glass-cocktail" label={L("Gece hayatı")} sub={s.iliski ? `💞 ${s.iliski.ad}` : L("Randevu · kulüp · kumar")} accent="#fd267a" badge={isNewFeature(s, 'gece') ? L("YENİ") : null} onPress={() => act((x) => (seeFeature(x, 'gece'), (x.phase = 'gece')))} />
+            ) : null}
             {s.stage !== 'amator' ? (
               <ActionTile icon="scale-balance" label={L("Sıklet")} sub={s.sampiyon ? L("Çift kemere git") : WEIGHT_CLASSES[s.fighter.siklet].ad} accent={C.orange} selected={weightOpen} onPress={() => { setWeightOpen(!weightOpen); setResting(false); }} />
             ) : null}

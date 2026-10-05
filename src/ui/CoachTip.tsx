@@ -12,7 +12,7 @@ export type TipId = 'hub' | 'gelisim' | 'rakip' | 'kamp' | 'plan' | 'yuzyuze' | 
 const TIPS: Record<TipId, { baslik: string; metin: string }> = {
   hub: {
     baslik: L("Burası senin köşen"),
-    metin: L("Üstte paran, sağlığın ve popülerliğin var. Hazır olduğunda “DÖVÜŞ AYARLA” ile rakibini seç. Aradaki haftalarda mağaza, sosyal medya ve gece hayatı seni bekliyor; ama unutma, her şeyin bir bedeli var."),
+    metin: L("Üstte paran, sağlığın ve popülerliğin var. Hazır olduğunda “DÖVÜŞ AYARLA” ile rakibini seç. “İlk adımlar” sana yol gösterecek; maç yaptıkça yeni şeyler açılacak. Ama unutma, her şeyin bir bedeli var."),
   },
   gelisim: {
     baslik: L("Gelişim puanları"),

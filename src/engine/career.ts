@@ -13,6 +13,7 @@ import { assignCities, pickCity, visitCity } from './worldMap';
 import { brainAfterFight } from './brain';
 import { comebackAfter, isComebackFight } from './comeback';
 import { fanClubAfterFight } from './fanClub';
+import { announceUnlocks } from './onboarding';
 import { continueKafesEvi, maybeKafesEviInvite } from './kafesEvi';
 import { gpAfterFight, gpCurrentOpponent, maybeGpInvite, withdrawGp } from './grandPrix';
 import { maybePodcast } from './podcast';
@@ -550,6 +551,7 @@ export function interview(s: GameState, idx: number) {
 
 /** Röportajdan sonra kariyer ilerlemesini kontrol eder. */
 export function afterPostFight(s: GameState) {
+  announceUnlocks(s);
   const dwcsIkna = !!s.pending.sonrasi?.dwcsIkna;
   const org = currentOrg(s);
   const won = !!s.pending.sonrasi?.kazandi;
@@ -614,6 +616,7 @@ export function afterPostFight(s: GameState) {
   maybeKafesEviInvite(s);
   maybeEvent(s);
 }
+
 
 /** Kafes Evi sonuç ekranından devam: şampiyona büyük organizasyon teklifleri, amatör finaliste profesyonel teklif. */
 export function nextKafesEvi(s: GameState) {

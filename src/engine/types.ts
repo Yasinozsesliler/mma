@@ -626,6 +626,11 @@ export interface GameState {
   geriDonus?: { yil: number; dovus: number; sonuc?: 'G' | 'M' };
   /** Taraftar kulübü (fanClub.ts) */
   kulup?: import('./fanClub').FanClub;
+  /** İlk 10 dakika (onboarding.ts): görülen yeni özellikler, duyurulanlar, alınan ilk adım ödülleri, harcanan gelişim puanı */
+  acilanlar?: string[];
+  duyurulan?: string[];
+  ilkAdim?: string[];
+  harcanan?: number;
   /** Kafes Evi realite şovu (kafesEvi.ts) */
   kafesEvi?: import('./kafesEvi').KafesEvi;
   /** Alınan harita kilometre taşları (c5, k3...) */
