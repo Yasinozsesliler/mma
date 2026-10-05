@@ -9,7 +9,17 @@ import puppeteer from 'puppeteer-core';
 const lang = process.argv[2] ?? 'tr';
 const URL_ = process.argv[3] ?? 'http://localhost:8088/';
 const root = fileURLToPath(new URL('..', import.meta.url));
-const out = `${root}/store/graphics/${lang}`;
+// IOS=1: App Store için iPhone oranında çekim (390×844 @3x) ve 1290×2796 çerçeve; tanıtım görseli üretilmez.
+const IOS = !!process.env.IOS;
+const out = `${root}/store/${IOS ? 'graphics-ios' : 'graphics'}/${lang}`;
+const VW = IOS ? 390 : 360;
+const VH = IOS ? 844 : 640;
+// Çerçeve ölçüleri: tuval, telefon kutusu (genişlik, yükseklik, sol), başlık ölçeği
+const FW = IOS ? 1290 : 1080;
+const FH = IOS ? 2796 : 1920;
+const K = FW / 1080;
+const PW = Math.round(IOS ? FW * 0.78 : 780 * K);
+const PH = Math.round(IOS ? (PW * VH) / VW : 1387);
 const raw = `${out}/ham`;
 mkdirSync(raw, { recursive: true });
 
@@ -39,7 +49,7 @@ const BANNER = {
 
 const browser = await puppeteer.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true, args: ['--no-sandbox'] });
 const page = await browser.newPage();
-await page.setViewport({ width: 360, height: 640, deviceScaleFactor: 3, isMobile: true, hasTouch: true });
+await page.setViewport({ width: VW, height: VH, deviceScaleFactor: 3, isMobile: true, hasTouch: true });
 await page.evaluateOnNewDocument((l) => {
   if (sessionStorage.getItem('hazir')) return;
   sessionStorage.setItem('hazir', '1');
@@ -110,7 +120,7 @@ for (let i = 0; i < 40; i++) {
 for (let i = 0; i < 60 && !(await body()).includes(up(t('VE KIRMIZI KÖŞEDE…'))); i++) await sleep(250);
 await sleep(2300);
 await shot('01-yuruyus');
-await page.mouse.click(180, 320); // anonsu geç
+await page.mouse.click(VW / 2, VH / 2); // anonsu geç
 await sleep(900);
 
 // 2) Canlı dövüş: ilk raunt elle, kalan rauntlar taktik modunda
@@ -215,7 +225,7 @@ await sleep(700);
 await click('Kafespedia sayfan');
 await sleep(1000);
 await shot('06-kafespedia');
-await page.mouse.click(335, 30); // kapat (×)
+await page.mouse.click(VW - 25, 30); // kapat (×)
 await sleep(600);
 await click('ANA MENÜ');
 await sleep(700);
@@ -247,7 +257,7 @@ const font = (f) => readFileSync(`${root}/node_modules/@expo-google-fonts/${f}`)
 const OS = font('oswald/700Bold/Oswald_700Bold.ttf');
 const INTER = font('inter/600SemiBold/Inter_600SemiBold.ttf');
 const g = await browser.newPage();
-await g.setViewport({ width: 1080, height: 1920, deviceScaleFactor: 1 });
+await g.setViewport({ width: FW, height: FH, deviceScaleFactor: 1 });
 const ORDER = ['01-yuruyus', '02-dovus', '03-mac-sonrasi', '04-kariyer', '05-ezeli-rakip', '06-kafespedia', '07-dolap', '08-kemer'];
 for (const name of shots) {
   const i = ORDER.indexOf(name);
@@ -255,13 +265,13 @@ for (const name of shots) {
   await g.setContent(`<html><head><style>
 @font-face{font-family:Os;src:url(data:font/ttf;base64,${OS})}
 @font-face{font-family:In;src:url(data:font/ttf;base64,${INTER})}
-body{margin:0;width:1080px;height:1920px;overflow:hidden;background:linear-gradient(165deg,#3b0d14 0%,#12070a 38%,#060607 100%);position:relative;font-family:In}
+body{margin:0;width:${FW}px;height:${FH}px;overflow:hidden;background:linear-gradient(165deg,#3b0d14 0%,#12070a 38%,#060607 100%);position:relative;font-family:In}
 .s{position:absolute;top:-200px;width:22px;height:2600px;background:#e63946;opacity:.10;transform:rotate(28deg)}
-.cap{position:absolute;top:92px;left:70px;right:70px;text-align:center;font-family:Os;font-size:${CAP[i].length > 30 ? 74 : 86}px;line-height:1.08;color:#fff;transform:skewX(-8deg);text-shadow:0 6px 30px rgba(0,0,0,.6)}
-.bar{position:absolute;top:${CAP[i].length > 22 ? 330 : 250}px;left:470px;width:140px;height:8px;background:#f2c14e}
-.ph{position:absolute;left:150px;top:${CAP[i].length > 22 ? 400 : 330}px;width:780px;height:1387px;border-radius:56px;overflow:hidden;border:10px solid #1b1d22;box-shadow:0 40px 120px rgba(0,0,0,.75),0 0 0 2px #2c2f37}
+.cap{position:absolute;top:${Math.round(92 * K)}px;left:${Math.round(70 * K)}px;right:${Math.round(70 * K)}px;text-align:center;font-family:Os;font-size:${Math.round((CAP[i].length > 30 ? 74 : 86) * K)}px;line-height:1.08;color:#fff;transform:skewX(-8deg);text-shadow:0 6px 30px rgba(0,0,0,.6)}
+.bar{position:absolute;top:${Math.round((CAP[i].length > 22 ? 330 : 250) * K)}px;left:${Math.round(FW / 2 - 70 * K)}px;width:${Math.round(140 * K)}px;height:8px;background:#f2c14e}
+.ph{position:absolute;left:${Math.round((FW - PW) / 2)}px;top:${Math.round((CAP[i].length > 22 ? 400 : 330) * K)}px;width:${PW}px;height:${PH}px;border-radius:56px;overflow:hidden;border:10px solid #1b1d22;box-shadow:0 40px 120px rgba(0,0,0,.75),0 0 0 2px #2c2f37}
 .ph img{width:100%;height:100%;object-fit:cover}
-.yol{position:absolute;bottom:40px;left:0;right:0;text-align:center;font-family:Os;font-size:34px;letter-spacing:14px;color:#e63946}
+.yol{position:absolute;bottom:${Math.round(40 * K)}px;left:0;right:0;text-align:center;font-family:Os;font-size:${Math.round(34 * K)}px;letter-spacing:14px;color:#e63946}
 </style></head><body>
 ${[0, 1, 2, 3].map((k) => `<div class="s" style="left:${300 + k * 170}px"></div>`).join('')}
 <div class="cap">${CAP[i]}</div><div class="bar"></div>
@@ -272,6 +282,12 @@ ${[0, 1, 2, 3].map((k) => `<div class="s" style="left:${300 + k * 170}px"></div>
   await g.screenshot({ path: `${out}/${name}.png` });
 }
 console.log('🖼️ çerçevelendi:', shots.length);
+
+// App Store'da tanıtım görseli yok
+if (IOS) {
+  await browser.close();
+  process.exit(0);
+}
 
 // Tanıtım görseli 1024×500
 const icon = readFileSync(`${root}/assets/splash-icon.png`).toString('base64');

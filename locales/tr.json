@@ -1,0 +1,6 @@
+{
+  "ios": {
+    "CFBundleDisplayName": "YOL",
+    "NSUserTrackingUsageDescription": "Verilerin sana daha alakalı reklamlar göstermek için kullanılır. Reklamlar oyunu ücretsiz tutar; asla güç vermez."
+  }
+}

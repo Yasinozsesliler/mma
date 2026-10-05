@@ -8,8 +8,36 @@
     "userInterfaceStyle": "dark",
     "backgroundColor": "#0d0e11",
     "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.yolmma.game"
+      "supportsTablet": false,
+      "bundleIdentifier": "com.yolmma.game",
+      "config": {
+        "usesNonExemptEncryption": false
+      },
+      "infoPlist": {
+        "CFBundleAllowMixedLocalizations": true
+      },
+      "privacyManifests": {
+        "NSPrivacyAccessedAPITypes": [
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryUserDefaults",
+            "NSPrivacyAccessedAPITypeReasons": [
+              "CA92.1"
+            ]
+          },
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryFileTimestamp",
+            "NSPrivacyAccessedAPITypeReasons": [
+              "C617.1"
+            ]
+          },
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategorySystemBootTime",
+            "NSPrivacyAccessedAPITypeReasons": [
+              "35F9.1"
+            ]
+          }
+        ]
+      }
     },
     "android": {
       "package": "com.yolmma.game",
@@ -62,7 +90,11 @@
         {
           "androidAppId": "ca-app-pub-3940256099942544~3347511713",
           "iosAppId": "ca-app-pub-3940256099942544~1458002511",
-          "delayAppMeasurementInit": true
+          "delayAppMeasurementInit": true,
+          "userTrackingUsageDescription": "Your data is used to show you more relevant ads. Ads keep the game free; they never give power.",
+          "skAdNetworkItems": [
+            "cstr6suwn9.skadnetwork"
+          ]
         }
       ],
       "expo-iap",
@@ -80,7 +112,15 @@
         "projectId": "32aeff93-bed4-47e6-ad53-c301ad4f0f07"
       }
     },
-    "owner": "yasinozsesliler"
+    "owner": "yasinozsesliler",
+    "locales": {
+      "tr": "./locales/tr.json",
+      "en": "./locales/en.json",
+      "es": "./locales/es.json",
+      "pt": "./locales/pt.json",
+      "ru": "./locales/ru.json",
+      "pl": "./locales/pl.json"
+    }
   },
   "react-native-google-mobile-ads": {
     "android_app_id": "ca-app-pub-3940256099942544~3347511713"

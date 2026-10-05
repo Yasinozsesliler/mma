@@ -1,0 +1,6 @@
+{
+  "ios": {
+    "CFBundleDisplayName": "YOL",
+    "NSUserTrackingUsageDescription": "Tus datos se usan para mostrarte anuncios más relevantes. Los anuncios mantienen el juego gratis; nunca dan ventaja."
+  }
+}

@@ -1,0 +1,51 @@
+﻿APP STORE CONNECT · es-ES
+Gizlilik politikası: WEB_URL/gizlilik.html
+
+=== AD (Name) (28/30) ===
+YOL: Carrera de Luchador MMA
+
+=== ALT BAŞLIK (Subtitle) (29/30) ===
+Pelea en vivo, gana el título
+
+=== TANITIM METNİ (Promotional Text) (153/170) ===
+Nuevo: ¡juega cada asalto en tiempo real! Jab, recto, patada, derribos y sumisiones. Pelea en la jaula con tus propias manos y llega a campeón del mundo.
+
+=== ANAHTAR KELİMELER (Keywords) (93/100) ===
+mma,lucha,boxeo,carrera,simulador,jaula,kickboxing,muay thai,campeón,nocaut,jiu jitsu,deporte
+
+=== AÇIKLAMA (Description) (2452/4000) ===
+Empieza de cero y gánate el cinturón. YOL: De la jaula al cinturón es un juego de MMA en el que peleas en la jaula con tus propias manos y cada decisión fuera de ella cambia tu carrera.
+
+🥊 PELEAS EN VIVO
+Juega cada asalto en tiempo real: jab, recto, patada, esquiva y guardia. Lee la preparación de tu rival, esquiva en el momento justo y contraataca. Busca el derribo o haz sprawl; en el suelo golpea desde arriba, busca la sumisión o escapa desde abajo. Usa el golpe especial de tu estilo y tu técnica firma. ¿No te van los reflejos? Elige "Ver táctica", decide tu plan y mira la pelea.
+
+🎬 NOCHE DE PELEAS
+Baja la rampa bajo los focos mientras el presentador grita tu nombre. Cara a cara, suena la campana y revive tu nocaut a cámara lenta.
+
+🏋️ CREA TU PELEADOR, DIRIGE TU CAMPAMENTO
+Elige nacionalidad, peso y estilo: boxeo, muay thai, lucha, BJJ, sambo, judo, kyokushin, kickboxing o callejero. Define la duración, el lugar y el plan del campamento; da el peso, provoca en la rueda de prensa y aprende técnicas de maestros legendarios.
+
+🏆 DE AMATEUR A CAMPEÓN DEL MUNDO
+De la liga amateur a las promotoras regionales y al mayor escenario del mundo. Sube en el ranking, gana cinturones, defiende tu título, entra en torneos Grand Prix, pelea en nuevas ciudades en tu gira mundial y entra en el Salón de la Fama.
+
+📺 VIDA FUERA DE LA JAULA
+El reality La Casa de la Jaula, tu club de fans, tu propia marca, directos, podcasts, negociaciones con patrocinadores, crisis en redes, vida familiar, vida nocturna y tu propio gimnasio. Pero recuerda: todo tiene un precio. Cuida tu salud cerebral y llega lúcido al retiro.
+
+⚔️ DESAFÍATE
+Empieza en dificultad Fácil, Normal o Leyenda y ponte a prueba en modos de desafío como Última Oportunidad, De la Calle a la Cima y Hombre de Hierro. Comparte tu puntuación en la Pelea del Día, igual para todos cada día.
+
+✨ CARACTERÍSTICAS
+• Peleas en vivo en tiempo real o modo táctico
+• Salidas cinematográficas, transiciones de asalto y repeticiones de KO
+• Árbol de habilidades, golpes firma y maestros legendarios
+• Rival eterno, modo dinastía y regreso del retiro
+• Carteles de pelea y tarjetas de carrera para compartir
+• Álbum de cartas, mapa mundial y 111 logros
+• Vestuario: pantalones, guantes, cinturones y música de entrada. Sin pagar para ganar
+• 3 ranuras de carrera, juega sin conexión
+• Türkçe, English, Español, Português, Русский, Polski
+
+Todas las promotoras, personas y marcas del juego son ficticias.
+
+=== YENİLİKLER (What’s New) (135/4000) ===
+¡Bienvenido a la jaula! Peleas en vivo en tiempo real, noches de pelea cinematográficas, La Casa de la Jaula, gira mundial y mucho más.
