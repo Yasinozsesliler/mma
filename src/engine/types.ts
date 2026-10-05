@@ -206,6 +206,8 @@ export type PressChoice = 'saygili' | 'trash' | 'sessiz';
 export interface CampState {
   /** Ödüllü detaylı keşif raporu açıldı mı */
   kesif?: boolean;
+  /** Maç afişi oyun içinde paylaşıldı (bir kez) */
+  afis?: boolean;
   step: 'hoca' | 'planla' | 'sure' | 'takvim' | 'yer' | 'focus' | 'plan' | 'intensity' | 'kilo' | 'basin' | 'haftalik' | 'sakatlik' | 'ozet' | 'tarti' | 'yuzyuze' | 'duello' | 'kesim';
   pKilo?: number;
   oKilo?: number;
@@ -455,6 +457,7 @@ export type Phase =
   | 'stil'
   | 'harita'
   | 'kafesEvi'
+  | 'kulup'
   | 'emeklilik';
 
 export interface Istat {
@@ -608,6 +611,20 @@ export interface GameState {
   ustaSon?: number;
   /** Dövüşülen şehirler: id → maç sayısı */
   sehirler?: Record<string, number>;
+  /** Beyin hasarı 0-100 (brain.ts) */
+  beyin?: number;
+  /** Kafa sparringini bıraktı: hasar %25 az birikir */
+  beyinKoruma?: boolean;
+  /** Okunmuş doktor raporu eşikleri */
+  beyinEsik?: number[];
+  /** Bekleyen doktor raporu eşiği */
+  beyinUyari?: 30 | 55 | 75 | 90;
+  /** Doktor tavsiyesiyle emekli oldu */
+  beyinEmekli?: boolean;
+  /** Emeklilikten dönüş (comeback.ts): kaç yıl sonra, döndüğü andaki dövüş sayısı, dönüş maçı sonucu */
+  geriDonus?: { yil: number; dovus: number; sonuc?: 'G' | 'M' };
+  /** Taraftar kulübü (fanClub.ts) */
+  kulup?: import('./fanClub').FanClub;
   /** Kafes Evi realite şovu (kafesEvi.ts) */
   kafesEvi?: import('./kafesEvi').KafesEvi;
   /** Alınan harita kilometre taşları (c5, k3...) */

@@ -125,6 +125,12 @@ export function cityPin(s: GameState, id: string): Pin | undefined {
   return CITIES.find((x) => x.id === id);
 }
 
+/** Deplasman: maç oyuncunun ülkesi dışındaki bir şehirde. */
+export function isAway(s: GameState, sehir?: string) {
+  if (!sehir || sehir === HOME_ID) return false;
+  return CITIES.find((x) => x.id === sehir)?.ulke !== s.fighter.uyruk;
+}
+
 /** Bir maçın şehri: memleket ve amatör maçları evde; UCC unvan maçları çoğunlukla Las Vegas'ta. */
 export function pickCity(s: GameState, opp: Opponent, org: OrgId): string {
   if (org === 'amator' || opp.memleket) return HOME_ID;

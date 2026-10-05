@@ -51,6 +51,8 @@ import { StreamScreen } from './src/ui/StreamScreen';
 import { StyleScreen } from './src/ui/StyleScreen';
 import { WorldMapScreen } from './src/ui/WorldMapScreen';
 import { KafesEviScreen } from './src/ui/KafesEviScreen';
+import { FanClubScreen } from './src/ui/FanClubScreen';
+import { acceptComeback } from './src/engine/comeback';
 import { awardsDue, prepareAwards } from './src/engine/awards';
 import { ensureGoals, refreshStaleGoals } from './src/engine/goals';
 import { ensureEvent } from './src/engine/weeklyEvent';
@@ -98,6 +100,7 @@ const PHASE_LABELS: Record<Phase, string> = {
   stil: L("Berber ve Dövmeci"),
   harita: L("Dünya Turu"),
   kafesEvi: L("Kafes Evi"),
+  kulup: L("Taraftar Kulübü"),
   emeklilik: L("Emeklilik"),
 };
 
@@ -371,6 +374,9 @@ export default function App() {
       case 'stil':
         content = <StyleScreen {...props} />;
         break;
+      case 'kulup':
+        content = <FanClubScreen {...props} />;
+        break;
       case 'kafesEvi':
         content = game.kafesEvi?.durum === 'aktif' ? <KafesEviScreen {...props} /> : <HubScreen {...props} />;
         break;
@@ -385,6 +391,7 @@ export default function App() {
           <RetireScreen
             s={game}
             onNew={() => setView('menu')}
+            onComeback={() => act(acceptComeback)}
             onDynasty={() => {
               setHeritage(heritageOf(game));
               setCreateSlot(slotRef.current);

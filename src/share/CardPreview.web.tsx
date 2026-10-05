@@ -18,7 +18,7 @@ export function CardPreview({ data, onReady }: { data: ShareCardData; onReady: (
     let alive = true;
     // Gizli çizimler DOM'a yerleşsin diye kısa bir süre beklenir.
     const t = setTimeout(async () => {
-      const card = await renderCard(data, avatarId, beltId).catch(() => null);
+      const card = await renderCard(data, avatarId, beltId, `po${uid}`).catch(() => null);
       if (!alive) return;
       setUrl(card?.url ?? null);
       onReady(card ? { share: (text) => shareCard(card, text), save: () => saveCard(card) } : null);
@@ -28,7 +28,7 @@ export function CardPreview({ data, onReady }: { data: ShareCardData; onReady: (
       clearTimeout(t);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data, avatarId, beltId]);
+  }, [data, avatarId, beltId, uid]);
 
   return (
     <>
@@ -36,6 +36,11 @@ export function CardPreview({ data, onReady }: { data: ShareCardData; onReady: (
         <View nativeID={avatarId}>
           <FighterAvatar look={data.look} size={560} ring={data.tur === 'kemer' ? C.gold : data.tur === 'wiki' ? '#a2a9b1' : C.red} bg={data.tur === 'wiki' ? '#eaecf0' : undefined} />
         </View>
+        {data.afis ? (
+          <View nativeID={`po${uid}`}>
+            <FighterAvatar look={data.afis.oLook} size={560} ring={C.blue} />
+          </View>
+        ) : null}
         {data.kemer ? (
           <View nativeID={beltId}>
             <Belt org={data.kemer.org} siklet={data.kemer.siklet} width={900} />

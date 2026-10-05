@@ -1,3 +1,4 @@
+import { brainMods } from './brain';
 import { L, LOC } from '../i18n';
 import { addHype, initHype } from './hype';
 import { perkCamp, perkFightMods } from './perks';
@@ -569,6 +570,7 @@ function beginFight(s: GameState) {
   hometownMods(s, opp, mods);
   familyMods(s, mods);
   perkFightMods(s, mods);
+  brainMods(s, mods);
   Object.entries(fightItemMods(s)).forEach(([st, v]) => (mods[st as StatKey] = (mods[st as StatKey] ?? 0) + (v ?? 0)));
   Object.entries(diseaseMods(s)).forEach(([st, v]) => (mods[st as StatKey] = (mods[st as StatKey] ?? 0) + (v ?? 0)));
   if (dopingActive(s)) {

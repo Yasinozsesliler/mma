@@ -12,6 +12,7 @@ import { FighterAvatar } from '../ui/FighterAvatar';
 import { C, F } from '../ui/theme';
 import type { CardHandle, ShareCardData } from './types';
 import { WikiCardBody } from './WikiCard';
+import { PosterView } from './PosterView';
 
 // Tasarım 360×640 birimde yapılır, 3 kat büyütülerek 1080×1920 yakalanır.
 const WD = 360;
@@ -45,7 +46,11 @@ export function CardPreview({ data, onReady }: { data: ShareCardData; onReady: (
   return (
     <View style={st.fit}>
       <View style={{ transform: [{ scale: 0.78 }] }}>
-      {data.tur === 'wiki' ? (
+      {data.tur === 'afis' && data.afis ? (
+        <View ref={ref} collapsable={false}>
+          <PosterView data={data} />
+        </View>
+      ) : data.tur === 'wiki' ? (
         <View ref={ref} collapsable={false}>
           <WikiCardBody data={data} store={L("Google Play’de ücretsiz")} />
         </View>

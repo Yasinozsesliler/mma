@@ -1,16 +1,18 @@
 // Büyük maçlarda hype ve PPV: maç öncesi yapılan her şey (basın düellosu, face-off, giriş şovu, kriz, belgesel)
 // hype'ı yükseltir; dövüşten sonra hype ve takipçiye göre PPV satışı hesaplanır, oyuncu pay alır.
+import { isComebackFight } from './comeback';
 import { L, LOC } from '../i18n';
-import { currentOrg } from './character';
+import { currentOrg, fullName } from './character';
 import { diffOf } from './challenges';
-import { followers } from './fame';
+import { addFollowers, fmtDelta, followers } from './fame';
+import { addPost } from './social';
 import type { GameState, Opponent } from './types';
 
 /** Büyük maç mı? (unvan, UCC ilk 5, memleket, rekabet/ezeli rakip, Grand Prix finali) */
 export function isBigFight(s: GameState, o: Opponent) {
   if (!['buyuk', 'ufc'].includes(s.stage)) return false;
   const gpFinal = !!s.gp && !s.gp.bitti && s.gp.turlar.length === 2;
-  return o.champion || s.sampiyon || (currentOrg(s) === 'ufc' && s.rank != null && s.rank <= 5) || !!o.memleket || o.rivalry >= 2 || s.ezeli?.id === o.id || gpFinal;
+  return o.champion || s.sampiyon || (currentOrg(s) === 'ufc' && s.rank != null && s.rank <= 5) || !!o.memleket || o.rivalry >= 2 || s.ezeli?.id === o.id || gpFinal || isComebackFight(s);
 }
 
 /** Kamp başında hype tabanı (büyük maç değilse hype yok). */
@@ -41,6 +43,18 @@ export function ppvPayout(s: GameState, opp: Opponent, hype: number | undefined)
   const pay = Math.round((buys * price * share) / 100) * 100;
   s.para += pay;
   return [L("📺 PPV: {0} satış (hype {1}). Payın: ${2}", [buys.toLocaleString(LOC), hype, pay.toLocaleString(LOC)])];
+}
+
+/** Maç afişini sosyal medyada paylaş: takipçi, büyük maçta hype +4 (bir kez). */
+export function postPoster(s: GameState): string {
+  const k = s.pending.kamp;
+  const o = s.pending.rakip;
+  if (!k || !o || k.afis) return '';
+  k.afis = true;
+  const d = addFollowers(s, Math.max(30, followers(s) * 0.01));
+  addPost(s, { yazar: fullName(s.fighter), kullanici: `@${s.fighter.soyad.toLocaleLowerCase(LOC).replace(/\s+/g, '')}`, tur: 'oyuncu', metin: L("🖼️ Afiş hazır. {0} ile kafeste buluşuyoruz. Kaçırmayın! 🔥", [`${o.ad} ${o.soyad}`]) });
+  addHype(s, 4, L("Maç afişi"));
+  return L("🖼️ Afişi paylaştın: {0} takipçi.", [fmtDelta(d)]);
 }
 
 /** Maç öncesi belgesel izlendi: hype +10 (bir kez). */

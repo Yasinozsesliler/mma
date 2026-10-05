@@ -1,3 +1,6 @@
+import { canActivity, canFoundClub, doActivity, fanLevel, foundClub } from '../src/engine/fanClub';
+import { acceptComeback, comebackOffer } from '../src/engine/comeback';
+import { chooseBrain } from '../src/engine/brain';
 import { acceptKafesEvi, chooseScene, finishKeFight, kafesEviInvite, keOpponent, startKeFight } from '../src/engine/kafesEvi';
 import { visitedCount, visitedKitalar } from '../src/engine/worldMap';
 // Motor denge testi: botlar tam kariyerleri otomatik oynar.
@@ -47,6 +50,9 @@ const gpStat = { katilim: 0, sampiyon: 0, tur: {} as Record<number, number> };
 const kankaStat = { kanka: 0, rakip: 0 };
 const kartStat: Record<string, number> = { toplam: 0 };
 const mapStat = { sehir: 0, kita: 0, odul: 0 };
+const cbStat = { n: 0, g: 0 };
+const fanStat: Record<string, number> = { kurulan: 0, sadakat: 0 };
+const brainStat: Record<string, number> = { toplam: 0, emekli: 0 };
 const keStat: Record<string, number> = { davet: 0, kabul: 0, ekran: 0 };
 const goalStat = { n: 0, para: 0, puan: 0, tur: {} as Record<string, number> };
 
@@ -128,11 +134,25 @@ function playCareer() {
       spendPoint(s, k);
     }
   };
-  for (let step = 0; step < 4000 && s.phase !== 'emeklilik'; step++) {
+  const tryComeback = () => {
+    if (process.env.NODONUS || !comebackOffer(s) || !chance(0.5)) return false;
+    acceptComeback(s);
+    cbStat.n++;
+    return true;
+  };
+  for (let step = 0; step < 4000 && (s.phase !== 'emeklilik' || tryComeback()); step++) {
     spendAll();
     switch (s.phase) {
       case 'hub':
         refreshStaleGoals(s);
+        if (canFoundClub(s)) foundClub(s, '');
+        if (canActivity(s)) doActivity(s, s.para > 50000 ? 'gece' : pick(['antrenman', 'roportaj'] as const));
+        if (s.beyinUyari) {
+          const t = s.beyinUyari;
+          brainStat['u' + t] = (brainStat['u' + t] ?? 0) + 1;
+          chooseBrain(s, t === 30 ? (chance(0.5) ? 'koruma' : 'devam') : t === 55 ? 'dinlen' : t === 75 ? (chance(0.3) ? 'emekli' : 'devam') : s.para > 100000 ? 'lisans' : 'emekli');
+          if (s.phase !== 'hub') break;
+        }
         if (kafesEviInvite(s)) { keStat.davet++; if (!process.env.NOKE) { keStat.kabul++; acceptKafesEvi(s); break; } }
         if (!process.env.NOMERCH && !s.marka && canStartBrand(s)) startBrand(s, '');
         if (s.marka) (['tisort', 'eldiven', 'icecek'] as const).forEach((p) => s.para > 100000 && launchProduct(s, p));
@@ -279,6 +299,9 @@ function playCareer() {
   finalize();
 
   function finalize() {
+    brainStat.toplam += s.beyin ?? 0; if (s.beyinEmekli) brainStat.emekli++;
+    if (s.geriDonus?.sonuc === 'G') cbStat.g++;
+    if (s.kulup) { fanStat.kurulan++; fanStat.sadakat += s.kulup.sadakat; fanStat['L' + fanLevel(s)] = (fanStat['L' + fanLevel(s)] ?? 0) + 1; }
     mapStat.sehir += visitedCount(s); mapStat.kita += visitedKitalar(s).length; mapStat.odul += (s.haritaOdul ?? []).length;
     (s.kartlar ?? []).forEach((c) => { kartStat[c.nadir] = (kartStat[c.nadir] ?? 0) + 1; kartStat.toplam++; });
     { const pro = [...s.gecmis].reverse().filter((h) => h.org !== 'amator'); let k = 0; while (k < pro.length && pro[k].sonuc === 'G') k++; startStreak.push(k); }
@@ -338,6 +361,9 @@ if (process.env.CH) console.log('Meydan okuma:', process.env.CH, JSON.stringify(
 console.log(`Büyük maç (hype): kariyer başına ${(hypeStat.n / N).toFixed(1)}, ort. başlangıç hype ${(hypeStat.top / Math.max(1, hypeStat.n)).toFixed(0)}`);
 console.log(`Podcast (kariyer başına): ${(podcastStat.n / N).toFixed(1)}`);
 console.log(`Kafes Evi: davet ${pct(keStat.davet, N)}, sonuçlar ${JSON.stringify(keStat)}, ort. ekran ${(keStat.ekran / Math.max(1, keStat.kabul)).toFixed(0)}`);
+console.log(`Beyin: kariyer sonu ort. ${(brainStat.toplam / N).toFixed(1)}, doktorla emekli ${pct(brainStat.emekli, N)}, raporlar ${['u30', 'u55', 'u75', 'u90'].map((k) => `${k} ${pct(brainStat[k] ?? 0, N)}`).join(' ')}`);
+console.log(`Geri dönüş: ${pct(cbStat.n, N)} kariyer, dönüş maçı galibiyeti ${pct(cbStat.g, cbStat.n)}`);
+console.log(`Taraftar kulübü: ${pct(fanStat.kurulan, N)} kuruldu, ort. sadakat ${(fanStat.sadakat / Math.max(1, fanStat.kurulan)).toFixed(0)}, seviyeler ${JSON.stringify(fanStat)}`);
 console.log(`Harita: ort. ${(mapStat.sehir / N).toFixed(1)} şehir, ${(mapStat.kita / N).toFixed(1)} kıta, ${(mapStat.odul / N).toFixed(1)} ödül`);
 console.log('Kartlar (kariyer başına):', Object.entries(kartStat).map(([k, v]) => `${k} ${(v / N).toFixed(1)}`).join(', '));
 console.log(`Antrenman ortağı: kanka ${pct(kankaStat.kanka, N)}, rakip ${pct(kankaStat.rakip, N)}`);

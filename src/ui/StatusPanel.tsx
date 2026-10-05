@@ -1,4 +1,5 @@
 import { L } from '../i18n';
+import { brainColor, brainLabel, brainOf } from '../engine/brain';
 import { useFrame } from '../cosmetics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StyleSheet, Text, View } from 'react-native';
@@ -108,6 +109,7 @@ export function StatusPanel({ s, compact }: { s: GameState; compact?: boolean })
         <Info icon="cash" label={L("Para")} value={money(s.para)} color={s.para < 0 ? C.red : undefined} />
         <Info icon="account-group" label={L("Takipçi")} value={`${fmtFollowers(followers(s))} · ${followerTier(followers(s))}`} />
         <Info icon="heart-pulse" label={L("Sağlık")} value={`${s.saglik}/100`} color={s.saglik < 60 ? C.orange : undefined} />
+        <Info icon="brain" label={L("Beyin hasarı")} value={`${brainOf(s)}/100 · ${brainLabel(brainOf(s))}`} color={brainOf(s) >= 30 ? brainColor(brainOf(s)) : undefined} />
         <Info icon="file-sign" label={L("Kontrat")} value={s.contract ? L("{0} dövüş kaldı", [s.contract.kalan]) : L("Yok")} />
         <Info icon="stairs-up" label={L("Aşama")} value={STAGE_LABELS[s.stage].replace(/^Aşama \d · /, '')} />
       </View>

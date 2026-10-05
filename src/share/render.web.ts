@@ -60,7 +60,7 @@ function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
 
 const up = (s: string) => s.toLocaleUpperCase(LOC);
 
-export async function renderCard(d: ShareCardData, avatarId: string, beltId: string): Promise<{ url: string; file: File | null } | null> {
+export async function renderCard(d: ShareCardData, avatarId: string, beltId: string, oppId?: string): Promise<{ url: string; file: File | null } | null> {
   const D = doc();
   if (!D) return null;
   await Promise.all(
@@ -68,6 +68,7 @@ export async function renderCard(d: ShareCardData, avatarId: string, beltId: str
   );
   const [avatar, belt] = await Promise.all([svgImage(avatarId), d.kemer ? svgImage(beltId) : Promise.resolve(null)]);
   if (d.tur === 'wiki') return renderWiki(d, avatar);
+  if (d.tur === 'afis' && d.afis) return renderPoster(d, avatar, oppId ? await svgImage(oppId) : null);
 
   const cv = D.createElement('canvas');
   cv.width = WD;
@@ -219,6 +220,123 @@ export async function renderCard(d: ShareCardData, avatarId: string, beltId: str
   const blob: Blob | null = await new Promise((r) => cv.toBlob((b) => r(b), 'image/png'));
   const file = blob ? new File([blob], `yol-${d.tur}.png`, { type: 'image/png' }) : null;
   return { url, file };
+}
+
+/** Maç afişi (PosterView ile aynı yerleşim, 3 kat). */
+async function renderPoster(d: ShareCardData, pImg: HTMLImageElement | null, oImg: HTMLImageElement | null) {
+  const a = d.afis!;
+  const cv = doc()!.createElement('canvas');
+  cv.width = WD;
+  cv.height = HT;
+  const ctx = cv.getContext('2d');
+  if (!ctx) return null;
+  const accent = a.altin ? C.gold : C.red;
+  const bg = ctx.createLinearGradient(0, HT * 0.3, WD, HT * 0.7);
+  bg.addColorStop(0, '#3a0710');
+  bg.addColorStop(0.5, '#0b0c10');
+  bg.addColorStop(1, '#071433');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, WD, HT);
+  ctx.save();
+  ctx.globalAlpha = 0.18;
+  ctx.fillStyle = accent;
+  ctx.beginPath();
+  ctx.moveTo(510, 0);
+  ctx.lineTo(570, 0);
+  ctx.lineTo(450, HT);
+  ctx.lineTo(390, HT);
+  ctx.fill();
+  ctx.globalAlpha = 0.45;
+  ctx.fillStyle = '#000';
+  ctx.beginPath();
+  ctx.moveTo(0, HT - 360);
+  ctx.lineTo(WD, HT - 570);
+  ctx.lineTo(WD, HT);
+  ctx.lineTo(0, HT);
+  ctx.fill();
+  ctx.restore();
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillStyle = C.red;
+  ctx.font = `700 34px ${F.display}`;
+  ctx.fillText('Y  O  L', WD / 2, 96);
+  ctx.fillStyle = accent;
+  ctx.font = `700 92px ${F.display}`;
+  ctx.fillText(up(a.org), WD / 2, 220);
+  ctx.save();
+  ctx.translate(WD / 2, 340);
+  ctx.transform(1, 0, -0.14, 1, 0, 0);
+  ctx.fillStyle = '#ffffff';
+  fit(ctx, up(d.baslik), (p) => `700 ${p}px ${F.display}`, 116, 960);
+  ctx.fillText(up(d.baslik), 0, 0);
+  ctx.restore();
+  ctx.fillStyle = 'rgba(241,242,245,0.6)';
+  ctx.font = `500 36px ${F.displayMed}`;
+  ctx.fillText(up(a.etiket), WD / 2, 396);
+  const S = 450;
+  const top = 480;
+  ctx.save();
+  ctx.shadowBlur = 50;
+  ctx.shadowColor = 'rgba(230,57,70,0.6)';
+  if (pImg) ctx.drawImage(pImg, 54, top, S, S);
+  ctx.shadowColor = 'rgba(58,134,255,0.6)';
+  if (oImg) ctx.drawImage(oImg, WD - 54 - S, top, S, S);
+  ctx.restore();
+  ctx.save();
+  ctx.translate(WD / 2, top + S / 2 + 56);
+  ctx.transform(1, 0, -0.18, 1, 0, 0);
+  ctx.shadowColor = '#000';
+  ctx.shadowBlur = 30;
+  ctx.fillStyle = accent;
+  ctx.font = `700 160px ${F.display}`;
+  ctx.fillText('VS', 0, 0);
+  ctx.restore();
+  const col = (cx: number, lakap: string, name: string, rec: string, nickColor: string) => {
+    let y = top + S + 70;
+    if (lakap) {
+      ctx.fillStyle = nickColor;
+      fit(ctx, `“${up(lakap)}”`, (p) => `500 ${p}px ${F.displayMed}`, 36, 480);
+      ctx.fillText(`“${up(lakap)}”`, cx, y);
+    }
+    y += 100;
+    ctx.save();
+    ctx.translate(cx, y);
+    ctx.transform(1, 0, -0.14, 1, 0, 0);
+    ctx.fillStyle = '#ffffff';
+    fit(ctx, name, (p) => `700 ${p}px ${F.display}`, 90, 480);
+    ctx.fillText(name, 0, 0);
+    ctx.restore();
+    ctx.fillStyle = '#d9dbe0';
+    ctx.font = `700 42px ${F.bold}`;
+    ctx.fillText(rec, cx, y + 60);
+  };
+  col(WD / 4 + 10, d.lakap, a.pSoyad, a.pRekor, C.red);
+  col((WD * 3) / 4 - 10, a.oLakap, a.oSoyad, a.oRekor, '#6ea8ff');
+  let y = HT - 430;
+  ctx.fillStyle = accent;
+  ctx.font = `700 72px ${F.display}`;
+  ctx.fillText(a.tarih, WD / 2, y);
+  y += 70;
+  ctx.fillStyle = '#ffffff';
+  ctx.font = `700 46px ${F.bold}`;
+  ctx.fillText(`📍 ${up(a.sehir)}`, WD / 2, y);
+  if (a.hype) {
+    ctx.fillStyle = 'rgba(241,242,245,0.7)';
+    ctx.font = `600 36px ${F.semi}`;
+    ctx.fillText(a.hype, WD / 2, y + 62);
+  }
+  ctx.fillStyle = accent;
+  ctx.fillRect(0, HT - 156, WD, 6);
+  ctx.fillStyle = 'rgba(10,11,14,0.95)';
+  ctx.fillRect(0, HT - 150, WD, 150);
+  ctx.fillStyle = '#ffffff';
+  ctx.font = `700 40px ${F.display}`;
+  ctx.fillText(up(d.mesaj.split('·').slice(1).join('·').trim() || d.mesaj), WD / 2, HT - 86);
+  const host = (globalThis as { location?: Location }).location?.host ?? '';
+  ctx.fillStyle = C.gold;
+  ctx.font = `700 36px ${F.bold}`;
+  if (host) ctx.fillText(host, WD / 2, HT - 36);
+  return toFile(cv, 'afis');
 }
 
 const SERIF = 'Georgia, "Times New Roman", serif';

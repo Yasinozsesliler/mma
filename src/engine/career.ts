@@ -10,6 +10,9 @@ import { merchSales } from './merch';
 import { hometownAfter, maybeHometown } from './hometown';
 import { needsTreatment } from './treatment';
 import { assignCities, pickCity, visitCity } from './worldMap';
+import { brainAfterFight } from './brain';
+import { comebackAfter, isComebackFight } from './comeback';
+import { fanClubAfterFight } from './fanClub';
 import { continueKafesEvi, maybeKafesEviInvite } from './kafesEvi';
 import { gpAfterFight, gpCurrentOpponent, maybeGpInvite, withdrawGp } from './grandPrix';
 import { maybePodcast } from './podcast';
@@ -61,6 +64,10 @@ export function rankLabel(s: GameState) {
 // ---------- Rakip seçimi ----------
 
 export function findNextFight(s: GameState) {
+  if (s.beyinUyari === 90) {
+    s.haberler.unshift(tL("🩺 Lisansın askıda. Önce doktor raporu hakkında karar vermelisin."));
+    return;
+  }
   if (banned(s)) {
     s.haberler.unshift(tL("🚫 Men cezan sürüyor: {0} hafta kaldı.", [banWeeksLeft(s)]));
     return;
@@ -85,6 +92,7 @@ export function findNextFight(s: GameState) {
     s.pending.dayatma = true;
   }
   if (!gpOpp) maybeHometown(s, s.pending.secenekler);
+  if (isComebackFight(s)) s.pending.secenekler.forEach((o) => (o.etiket = tL("🔥 DÖNÜŞ MAÇI")));
   assignCities(s, s.pending.secenekler, currentOrg(s));
   s.pending.secenekler.forEach((o) => (o.macHafta = leadWeeks(s, o, s.kisaHaber)));
   s.phase = 'rakipSecimi';
@@ -209,6 +217,8 @@ export function finishFight(s: GameState) {
     if (kart) lines.push(kart);
   }
   lines.push(...gpAfterFight(s, opp, won && !caught));
+  lines.push(...comebackAfter(s, won && !caught));
+  lines.push(...fanClubAfterFight(s, won && !caught, finishMethod, !won && !draw && (r.yontem === 'KO' || r.yontem === 'TKO'), !!opp.memleket));
   lines.push(...challengeCheck(s, won && !caught, !won && !draw && (r.yontem === 'KO' || r.yontem === 'TKO')));
   // Bitiren hareket ustalık kazanır (maçı hangi teknikle bitirdiysen).
   let teknikNot: string | undefined;
@@ -296,6 +306,7 @@ export function finishFight(s: GameState) {
   // Sağlık ve sakatlık
   const hasar = Math.round(fs.pHasar * 0.35 + (!won && (r.yontem === 'KO' || r.yontem === 'TKO') ? 15 : 0));
   s.saglik = clamp(s.saglik - hasar, 5, 100);
+  lines.push(...brainAfterFight(s, fs, !won && !draw && (r.yontem === 'KO' || r.yontem === 'TKO')));
   lines.push(hasar ? tL("🩹 Sağlık -{0} → {1}/100", [hasar, s.saglik]) : tL("🩹 Temiz çıktın, sağlık {0}/100", [s.saglik]));
   if (r.sakatlik) {
     const inj = { ad: tL("Kol bağları koptu"), stat: 'yer' as const, ceza: 12, hafta: 12 };

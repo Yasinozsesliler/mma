@@ -1,5 +1,7 @@
 // Dövüş gecesi açılışı: kafese yürüyüş ve ring anonsu ("Kırmızı köşede…"). Giriş müziği ve kıyafet burada sahnelenir.
 // Büyük maçlarda (ilk maç, ana maç, unvan, ezeli rakip) tam anons; diğerlerinde kısa sürüm. Dokununca geçilir.
+import { fanLevel, SONGS, UNLOCKS, walkoutCrowd } from '../engine/fanClub';
+import { isAway } from '../engine/worldMap';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useState } from 'react';
 import { Animated, Easing, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
@@ -43,7 +45,11 @@ function script(s: GameState): Card[] {
     ms: 4200,
     say: !big ? L("Kırmızı köşede! {0}!", [spoken(f)]) : r.g + r.m === 0 ? L("Ve kırmızı köşede! İlk maçına çıkıyor… {0}!", [spoken(f)]) : L("Ve kırmızı köşede! {0} galibiyet, {1} mağlubiyet… {2}!", [r.g, r.m, spoken(f)]),
   };
-  if (!big) return [pCard, { kicker: L("KURALLAR BELLİ. DÖVÜŞÜN!"), lines: [], ms: 1300, say: L("Kurallar belli. Dövüşün!") }];
+  const crowd = walkoutCrowd(s, isAway(s, o.sehir));
+  const fanCard: Card[] = crowd ? [{ kicker: L("TRİBÜNLER AYAKTA…"), lines: [crowd.baslik.toLocaleUpperCase(LOC), crowd.satirlar[crowd.satirlar.length - 1]], ms: 2400, say: crowd.soz }] : [];
+  const kulup = s.kulup;
+  if (kulup?.sarki != null && fanLevel(s) >= UNLOCKS.sarki) pCard.lines = [...pCard.lines, `🎵 ${SONGS()[kulup.sarki]}`];
+  if (!big) return [...fanCard, pCard, { kicker: L("KURALLAR BELLİ. DÖVÜŞÜN!"), lines: [], ms: 1300, say: L("Kurallar belli. Dövüşün!") }];
   const baslik = fs.unvanMaci
     ? L("{0} sıklet şampiyonluk maçı", [WEIGHT_CLASSES[f.siklet].ad])
     : s.ezeli?.id === o.id
@@ -60,6 +66,7 @@ function script(s: GameState): Card[] {
       ms: 3200,
       say: L("Mavi köşede! {0}!", [spoken(o)]),
     },
+    ...fanCard,
     pCard,
     { kicker: L("HAYDİ BAŞLAYALIM!"), lines: [], ms: 1500, say: L("Haydi başlayalım!") },
   ];

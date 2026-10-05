@@ -1,5 +1,6 @@
 // Kamp planı: süre, yer, odak, oyun planı, yoğunluk, kilo ve basın tek ekranda.
 // Varsayılan: son kampta seçtiklerin (ilk kezse hocanın önerisi); çoğu zaman tek dokunuşla "Kampa başla".
+import { PosterCard } from './PosterCard';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useMemo, useState, type ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -152,6 +153,7 @@ export function CampPlanner({ s, act, choose, steps }: { s: GameState; act: Act;
           </View>
           <OvrBadge value={d.guc} size={44} />
         </LinearGradient>
+        <PosterCard s={s} act={act} />
 
         <Pressable onPress={() => setP(coach)} style={({ pressed }) => [cp.coachBtn, isCoach && cp.coachOn, pressed && { opacity: 0.85 }]}>
           <Icon name={isCoach ? 'check-decagram' : 'whistle'} size={18} color={isCoach ? '#111' : C.gold} />

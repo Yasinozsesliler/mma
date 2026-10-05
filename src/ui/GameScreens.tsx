@@ -48,7 +48,7 @@ import { GoalsCard } from './GoalsCard';
 import { CountdownButton, HypeMeter } from './CountdownDoc';
 import { watchCountdown } from '../engine/hype';
 import { canStream, startStream, STREAM_MIN_FOLLOWERS } from '../engine/stream';
-import { followers } from '../engine/fame';
+import { fmtFollowers, followers } from '../engine/fame';
 import { appeal, appealChance, appealFee, appealFeeText, dismissAppeal } from '../engine/appeal';
 import { acceptCrossover, declineCrossover } from '../engine/crossover';
 import { LegendPanel } from './LegendPanel';
@@ -62,6 +62,11 @@ import { FanMeetGame } from './FanMeetGame';
 import { canFanMeet, fanMeet } from '../engine/fanMeet';
 import { GrandPrixCard } from './GrandPrixCard';
 import { KafesEviInvite } from './KafesEviScreen';
+import { BrainCard } from './BrainCard';
+import { PosterCard } from './PosterCard';
+import { canActivity, canFoundClub, members } from '../engine/fanClub';
+import { brainEpilogue } from '../engine/brain';
+import { comebackOffer } from '../engine/comeback';
 import { declinePodcast } from '../engine/podcast';
 import { unclaimedMilestones } from '../engine/cards';
 import { crisisTitle } from '../engine/crisis';
@@ -260,6 +265,7 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
           <UccRoadCard s={s} />
           <GrandPrixCard s={s} act={act} />
           <KafesEviInvite s={s} act={act} />
+          <BrainCard s={s} act={act} />
           <FightCTA
             title={banned(s) ? L("MEN CEZASI") : L("DÖVÜŞ AYARLA")}
             sub={
@@ -289,6 +295,9 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
             <ActionTile icon="medal" label={L("Başarımlar")} sub={s.hof ? L("🏛 Hall of Fame") : `${(s.basarimlar ?? []).length}/${ACHIEVEMENTS.length}`} accent={C.gold} onPress={() => act((x) => (x.phase = 'basarimlar'))} />
             {s.stage !== 'amator' ? (
               <ActionTile icon="draw-pen" label={L("Hayran buluşması")} sub={canFanMeet(s) ? L("İmza günü düzenle") : L("Sonraki maçtan sonra")} accent="#ff8fb1" badge={canFanMeet(s) ? '!' : null} onPress={() => canFanMeet(s) && setFanMeet(true)} />
+            ) : null}
+            {s.stage !== 'amator' ? (
+              <ActionTile icon="flag-variant" label={L("Taraftar kulübü")} sub={s.kulup ? `${s.kulup.ad} · ${fmtFollowers(members(s))}` : canFoundClub(s) ? L("Kulübünü kur") : L("3B takipçi gerekli")} accent="#ff8fb1" badge={(s.kulup && canActivity(s)) || canFoundClub(s) ? '!' : null} onPress={() => act((x) => (x.phase = 'kulup'))} />
             ) : null}
             {s.stage !== 'amator' ? (
               <ActionTile icon="tag-heart" label={L("Markam")} sub={s.marka ? `${s.marka.ad} · ${money(s.marka.toplam)}` : L("Kendi markanı kur")} accent={C.gold} onPress={() => act((x) => (x.phase = 'marka'))} />
@@ -596,6 +605,7 @@ function CampHeader({ s, k, act }: { s: GameState; k: CampState; act: Act }) {
       </Card>
       <HypeMeter s={s} />
       <CountdownButton s={s} onWatched={() => act(watchCountdown)} />
+      <PosterCard s={s} act={act} />
     </>
   );
 }
@@ -892,8 +902,9 @@ export function OffersScreen({ s, act }: { s: GameState; act: Act }) {
 
 // ---------- Emeklilik ----------
 
-export function RetireScreen({ s, onNew, onDynasty }: { s: GameState; onNew: () => void; onDynasty?: () => void }) {
+export function RetireScreen({ s, onNew, onDynasty, onComeback }: { s: GameState; onNew: () => void; onDynasty?: () => void; onComeback?: () => void }) {
   const r = s.rekor;
+  const donus = comebackOffer(s);
   const ufcChamp = s.unvanlar.some((u) => u.startsWith('UCC'));
   return (
     <Screen
@@ -912,6 +923,16 @@ export function RetireScreen({ s, onNew, onDynasty }: { s: GameState; onNew: () 
           {fullName(s.fighter)} · {s.fighter.yas} {L("yaşında eldivenlerini astı")}
         </Text>
       </LinearGradient>
+      {donus && onComeback ? (
+        <Card accent={C.orange}>
+          <Text style={gs.kicker}>{L("📞 {0} YIL SONRA… TELEFON ÇALDI", [donus.yil])}</Text>
+          <P>{donus.metin}</P>
+          <P dim>
+            {L("{0} · 2 maçlık kontrat · maç başı {1}. {2} yaşında döneceksin; yıllar hızını ve kondisyonunu törpüledi.", [ORGS[donus.org].kisa, money(donus.ucret), s.fighter.yas + donus.yil])}
+          </P>
+          <Button label={L("Son bir dans")} icon="fire" tone="gold" onPress={onComeback} />
+        </Card>
+      ) : null}
       <StatusPanel s={s} />
       <Card>
         <P>
@@ -922,6 +943,8 @@ export function RetireScreen({ s, onNew, onDynasty }: { s: GameState; onNew: () 
       </Card>
       <Section>{L("ÜNVANLAR")}</Section>
       {s.unvanlar.length ? s.unvanlar.map((u, i) => <P key={i}>🏆 {u}</P>) : <P dim>{L("Kemer yok. Ama yol yürünmüştü.")}</P>}
+      <Section>{L("KAFESTEN SONRA")}</Section>
+      <P>🧠 {brainEpilogue(s)}</P>
       <View style={{ marginTop: 12 }}>
         <WikiButton s={s} />
       </View>

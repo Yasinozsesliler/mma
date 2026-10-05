@@ -3,7 +3,7 @@ import type { Appearance, OrgId, WeightClass } from '../engine/types';
 /** Paylaşım kartının içeriği (dile çevrilmiş metinlerle). */
 export type ShareCardData = {
   /** Dosya adı ve vurgu rengi için */
-  tur: 'kemer' | 'bitiris' | 'galibiyet' | 'kariyer' | 'wiki';
+  tur: 'kemer' | 'bitiris' | 'galibiyet' | 'kariyer' | 'wiki' | 'afis';
   /** En üstteki büyük başlık: "🏆 YENİ ŞAMPİYON" */
   baslik: string;
   ad: string;
@@ -22,6 +22,22 @@ export type ShareCardData = {
   mesaj: string;
   /** Kafespedia kartı: giriş paragrafı ve bilgi kutusu satırları */
   wiki?: { ozet: string; bilgi: [string, string][] };
+  /** Maç afişi: karşı köşe ve etkinlik bilgisi */
+  afis?: {
+    oAd: string;
+    oSoyad: string;
+    oLakap: string;
+    oLook: Appearance;
+    pSoyad: string;
+    pRekor: string;
+    oRekor: string;
+    org: string;
+    etiket: string;
+    tarih: string;
+    sehir: string;
+    hype: string;
+    altin: boolean;
+  };
 };
 
 /** Önizleme hazır olunca paylaşım işlemleri (kaydetme yalnızca web'de). */

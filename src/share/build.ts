@@ -8,6 +8,10 @@ import { L, LOC } from '../i18n';
 import { upName } from '../ui/components';
 import type { ShareCardData } from './types';
 import { journeyLine, type Moment } from '../engine/timeline';
+import { cityPin } from '../engine/worldMap';
+import { lookFor } from '../engine/tale';
+import { hypeLabel, isBigFight } from '../engine/hype';
+import { isComebackFight } from '../engine/comeback';
 
 const up = (s: string) => s.toLocaleUpperCase(LOC);
 const rec = (s: GameState) => `${s.rekor.g}-${s.rekor.m}-${s.rekor.b}`;
@@ -97,6 +101,41 @@ export function timelineCard(s: GameState, m: Moment[]): ShareCardData {
       [L("ÖNEMLİ AN"), String(m.length)],
     ],
     alt: journeyLine(m),
+  };
+}
+
+/** Maç afişi: kamp sırasında iki dövüşçü karşı karşıya. */
+export function posterCard(s: GameState): ShareCardData | null {
+  const o = s.pending.rakip;
+  const k = s.pending.kamp;
+  if (!o || !k) return null;
+  const org = currentOrg(s);
+  const city = o.sehir ? cityPin(s, o.sehir) : undefined;
+  const unvan = o.champion || s.sampiyon;
+  const kalan = Math.max(1, (k.macHafta ?? k.hafta) - (k.takvimIdx ?? 0) - (k.kampIdx ?? 0));
+  const rekor = (r: { g: number; m: number; b: number }) => `${r.g}-${r.m}-${r.b}`;
+  return {
+    ...base(s),
+    tur: 'afis',
+    baslik: unvan ? L("ÜNVAN MAÇI") : isComebackFight(s) ? L("DÖNÜŞ MAÇI") : o.memleket ? L("MEMLEKETTE ANA MAÇ") : s.ezeli?.id === o.id ? L("EZELİ REKABET") : isBigFight(s, o) ? L("ANA MAÇ") : L("DÖVÜŞ GECESİ"),
+    ust: '',
+    kutular: [],
+    alt: '',
+    afis: {
+      oAd: o.ad,
+      oSoyad: upName(o.soyad, o.uyruk),
+      oLakap: o.lakap,
+      oLook: lookFor(o),
+      pSoyad: upName(s.fighter.soyad, s.fighter.uyruk),
+      pRekor: rekor(s.stage === 'amator' ? s.amator : s.rekor),
+      oRekor: rekor(o.rekor),
+      org: ORGS[org].kisa,
+      etiket: `${WEIGHT_CLASSES[s.fighter.siklet].ad} · ${unvan ? L("5 raunt") : L("3 raunt")}`,
+      tarih: L("{0} HAFTA SONRA", [kalan]),
+      sehir: city?.ad ?? s.fighter.memleket,
+      hype: k.hype != null ? hypeLabel(k.hype) : '',
+      altin: !!unvan || (k.hype ?? 0) >= 65,
+    },
   };
 }
 
