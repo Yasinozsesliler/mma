@@ -7,13 +7,14 @@ import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import { finishFight } from '../engine/career';
 import { currentOrg, fullName } from '../engine/character';
 import { ORGS } from '../engine/data';
-import { chooseTactic, cornerBreath, cornerCut, methodLabel, nextRound, resolveCritical, resolveDecision } from '../engine/fight';
+import { chooseTactic, cornerBreath, cornerCut, nextRound, resolveCritical, resolveDecision } from '../engine/fight';
 import { CornerMoment } from './CornerMoment';
 import { CRITICAL_OPTIONS, TACTICS } from '../engine/narration';
 import { oppRecord } from '../engine/opponents';
 import type { CriticalKind, FightState, GameState, Tactic } from '../engine/types';
 import type { Act } from './GameScreens';
 import { CageView } from './CageView';
+import { ResultReveal, RoundBanner } from './FightFx';
 import { FightQTE, qteFor, type QteSpec } from './FightQTE';
 import { qteOn } from '../qtePref';
 import { lookFor } from '../engine/tale';
@@ -253,7 +254,14 @@ export function FightScreen({ s, act }: { s: GameState; act: Act }) {
     <Screen footer={footer}>
       <Scoreboard fs={view} org={org} pUyruk={s.fighter.uyruk} />
       {/* Anons bitene kadar kafes beklemede: ilk zil anonstan sonra çalsın. */}
-      {intro ? <View style={{ height: 252, marginBottom: 10 }} /> : <CageView fs={fs} shown={shown} speed={speed} pLook={s.fighter.gorunum} oLook={lookFor(fs.opp)} />}
+      {intro ? (
+        <View style={{ height: 252, marginBottom: 10 }} />
+      ) : (
+        <View>
+          <CageView fs={fs} shown={shown} speed={speed} pLook={s.fighter.gorunum} oLook={lookFor(fs.opp)} />
+          {fs.durum !== 'bitti' && shown <= 1 ? <RoundBanner key={fs.raunt} raunt={fs.raunt} max={fs.maxRaunt} /> : null}
+        </View>
+      )}
       {intro ? <WalkoutScene s={s} onDone={() => setIntro(false)} /> : null}
       {fresh ? <CoachTip s={s} act={act} id="dovus" /> : null}
       {!fresh ? <Momentum fs={view} shown={shown} logLen={fs.log.length} /> : null}
@@ -337,18 +345,7 @@ export function FightScreen({ s, act }: { s: GameState; act: Act }) {
         </>
       )}
 
-      {!flowing && fs.durum === 'bitti' && fs.sonuc && (
-        <LinearGradient
-          colors={fs.sonuc.kazanan === 'p' ? ['#1f6b3f', '#0f2a1b'] : fs.sonuc.kazanan === 'o' ? ['#7a1420', '#2a0b10'] : ['#7a5a14', '#2a200b']}
-          style={sb.result}
-        >
-          <Text style={sb.resultKicker}>{methodLabel(fs.sonuc.yontem).toUpperCase()} {L("· R")}{fs.sonuc.raunt} {fs.sonuc.sure}</Text>
-          <Text style={sb.resultTitle}>
-            {fs.sonuc.kazanan === 'p' ? L("KAZANDIN") : fs.sonuc.kazanan === 'o' ? L("KAYBETTİN") : L("BERABERE")}
-          </Text>
-          {fs.sonuc.kartlar ? <Text style={sb.resultCards}>{L("Hakem kartları:")}{' '}{fs.sonuc.kartlar}</Text> : null}
-        </LinearGradient>
-      )}
+      {!flowing && fs.durum === 'bitti' && fs.sonuc ? <ResultReveal r={fs.sonuc} /> : null}
 
       {!fresh && shown > 0 ? <Feed fs={fs} shown={shown} /> : null}
     </Screen>

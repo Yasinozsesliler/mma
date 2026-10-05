@@ -5073,4 +5073,8 @@ export const EN: Record<string, string> = {
   "MEMLEKETTE ANA MAÇ": "HOMETOWN MAIN EVENT",
   "EZELİ REKABET": "BITTER RIVALRY",
   "DÖVÜŞ GECESİ": "FIGHT NIGHT",
+  "SON RAUNT": "FINAL ROUND",
+  "{0} / {1}": "{0} / {1}",
+  "RAUNT {0}": "ROUND {0}",
+  "HAKEM KARARI": "DECISION",
 };

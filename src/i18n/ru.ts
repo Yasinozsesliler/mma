@@ -5128,4 +5128,8 @@ export const RU: Record<string, string> = {
   "MEMLEKETTE ANA MAÇ": "ГЛАВНЫЙ БОЙ НА РОДИНЕ",
   "EZELİ REKABET": "ВЕЧНОЕ СОПЕРНИЧЕСТВО",
   "DÖVÜŞ GECESİ": "ВЕЧЕР БОЁВ",
+  "SON RAUNT": "ФИНАЛЬНЫЙ РАУНД",
+  "{0} / {1}": "{0} / {1}",
+  "RAUNT {0}": "РАУНД {0}",
+  "HAKEM KARARI": "РЕШЕНИЕ",
 };

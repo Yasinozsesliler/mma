@@ -5088,4 +5088,8 @@ export const ES: Record<string, string> = {
   "MEMLEKETTE ANA MAÇ": "ESTELAR EN CASA",
   "EZELİ REKABET": "RIVALIDAD ETERNA",
   "DÖVÜŞ GECESİ": "NOCHE DE PELEAS",
+  "SON RAUNT": "ÚLTIMO ASALTO",
+  "{0} / {1}": "{0} / {1}",
+  "RAUNT {0}": "ASALTO {0}",
+  "HAKEM KARARI": "DECISIÓN",
 };

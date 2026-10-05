@@ -5060,4 +5060,8 @@ export const PL: Record<string, string> = {
   "MEMLEKETTE ANA MAÇ": "WALKA WIECZORU W RODZINNYM MIEŚCIE",
   "EZELİ REKABET": "ODWIECZNA RYWALIZACJA",
   "DÖVÜŞ GECESİ": "GALA WALK",
+  "SON RAUNT": "OSTATNIA RUNDA",
+  "{0} / {1}": "{0} / {1}",
+  "RAUNT {0}": "RUNDA {0}",
+  "HAKEM KARARI": "DECYZJA",
 };
