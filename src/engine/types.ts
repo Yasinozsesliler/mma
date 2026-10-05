@@ -454,6 +454,7 @@ export type Phase =
   | 'yayin'
   | 'stil'
   | 'harita'
+  | 'kafesEvi'
   | 'emeklilik';
 
 export interface Istat {
@@ -607,6 +608,8 @@ export interface GameState {
   ustaSon?: number;
   /** Dövüşülen şehirler: id → maç sayısı */
   sehirler?: Record<string, number>;
+  /** Kafes Evi realite şovu (kafesEvi.ts) */
+  kafesEvi?: import('./kafesEvi').KafesEvi;
   /** Alınan harita kilometre taşları (c5, k3...) */
   haritaOdul?: string[];
   /** Crossover boks maçı (crossover.ts) */

@@ -10,6 +10,7 @@ import { merchSales } from './merch';
 import { hometownAfter, maybeHometown } from './hometown';
 import { needsTreatment } from './treatment';
 import { assignCities, pickCity, visitCity } from './worldMap';
+import { continueKafesEvi, maybeKafesEviInvite } from './kafesEvi';
 import { gpAfterFight, gpCurrentOpponent, maybeGpInvite, withdrawGp } from './grandPrix';
 import { maybePodcast } from './podcast';
 import { addCard } from './cards';
@@ -599,12 +600,21 @@ export function afterPostFight(s: GameState) {
     s.phase = 'event';
     return;
   }
+  maybeKafesEviInvite(s);
   maybeEvent(s);
+}
+
+/** Kafes Evi sonuç ekranından devam: şampiyona büyük organizasyon teklifleri, amatör finaliste profesyonel teklif. */
+export function nextKafesEvi(s: GameState) {
+  const sonuc = s.kafesEvi?.sonuc;
+  if (continueKafesEvi(s) !== 'bitti') return;
+  if (sonuc === 'sampiyon') openOffers(s, 'kafesEvi', tL("🏆 Kafes Evi şampiyonluğu bütün kapıları açtı. Büyük organizasyonlar seni kadrosunda istiyor!"));
+  else if (sonuc === 'final' && s.stage === 'amator') openOffers(s, 'profesyonel', tL("📺 Finale kadar gittin ve herkes seni tanıdı. Profesyonel teklifler geldi!"));
 }
 
 // ---------- Teklifler ----------
 
-type OfferKind = 'profesyonel' | 'yenileme' | 'serbest' | 'kovuldu' | 'ufcGiris' | 'dwcsDavet' | 'ufcZam';
+type OfferKind = 'profesyonel' | 'yenileme' | 'serbest' | 'kovuldu' | 'ufcGiris' | 'dwcsDavet' | 'ufcZam' | 'kafesEvi';
 
 /** UCC maaş basamakları: sıralamada yükseldikçe maaş katlanır. */
 export const UFC_TIERS = [
@@ -673,6 +683,9 @@ export function openOffers(s: GameState, kind: OfferKind, metin: string) {
     offers.push(
       makeOffer(s, 'ufc', Math.max(3, s.contract.kalan), UFC_TIERS[t].carpan, tL("{0} basamağı için yeni kontrat.", [UFC_TIERS[t].ad]), t === 4 ? tL("Şampiyon maddesi: PPV gelir payı ve ana maç garantisi") : undefined),
     );
+  } else if (kind === 'kafesEvi') {
+    pickN(bigOrgs, 2).forEach((o) => offers.push(makeOffer(s, o, 3, 1.1, tL("Kafes Evi şampiyonuna özel kontrat."))));
+    if (s.contract && org !== 'amator') offers.push(makeOffer(s, org, 3, 1.4, tL("Mevcut organizasyonun seni bırakmak istemiyor.")));
   } else if (kind === 'profesyonel') {
     offers.push(makeOffer(s, 'cfc', 3), makeOffer(s, 'oktagon', 3));
   } else if (kind === 'ufcGiris') {

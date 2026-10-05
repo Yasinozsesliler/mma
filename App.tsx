@@ -50,6 +50,7 @@ import { CrossoverScreen } from './src/ui/CrossoverScreen';
 import { StreamScreen } from './src/ui/StreamScreen';
 import { StyleScreen } from './src/ui/StyleScreen';
 import { WorldMapScreen } from './src/ui/WorldMapScreen';
+import { KafesEviScreen } from './src/ui/KafesEviScreen';
 import { awardsDue, prepareAwards } from './src/engine/awards';
 import { ensureGoals, refreshStaleGoals } from './src/engine/goals';
 import { ensureEvent } from './src/engine/weeklyEvent';
@@ -96,6 +97,7 @@ const PHASE_LABELS: Record<Phase, string> = {
   yayin: L("Canlı Yayın"),
   stil: L("Berber ve Dövmeci"),
   harita: L("Dünya Turu"),
+  kafesEvi: L("Kafes Evi"),
   emeklilik: L("Emeklilik"),
 };
 
@@ -237,7 +239,7 @@ export default function App() {
   }, [view]);
 
   const phase = view === 'game' && game ? game.phase : null;
-  const scene: Scene = !phase || phase === 'emeklilik' ? 'menu' : phase === 'dovus' ? 'fight' : phase === 'kutlama' ? 'celebrate' : 'hub';
+  const scene: Scene = !phase || phase === 'emeklilik' ? 'menu' : phase === 'dovus' || (phase === 'kafesEvi' && game?.kafesEvi?.adim === 'dovus') ? 'fight' : phase === 'kutlama' ? 'celebrate' : 'hub';
   useSoundScene(scene);
 
   let content;
@@ -368,6 +370,9 @@ export default function App() {
         break;
       case 'stil':
         content = <StyleScreen {...props} />;
+        break;
+      case 'kafesEvi':
+        content = game.kafesEvi?.durum === 'aktif' ? <KafesEviScreen {...props} /> : <HubScreen {...props} />;
         break;
       case 'harita':
         content = <WorldMapScreen {...props} />;

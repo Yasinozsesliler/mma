@@ -61,6 +61,7 @@ import { openTable } from '../engine/contractTable';
 import { FanMeetGame } from './FanMeetGame';
 import { canFanMeet, fanMeet } from '../engine/fanMeet';
 import { GrandPrixCard } from './GrandPrixCard';
+import { KafesEviInvite } from './KafesEviScreen';
 import { declinePodcast } from '../engine/podcast';
 import { unclaimedMilestones } from '../engine/cards';
 import { crisisTitle } from '../engine/crisis';
@@ -258,6 +259,7 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
           ) : null}
           <UccRoadCard s={s} />
           <GrandPrixCard s={s} act={act} />
+          <KafesEviInvite s={s} act={act} />
           <FightCTA
             title={banned(s) ? L("MEN CEZASI") : L("DÖVÜŞ AYARLA")}
             sub={

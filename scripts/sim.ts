@@ -1,3 +1,4 @@
+import { acceptKafesEvi, chooseScene, finishKeFight, kafesEviInvite, keOpponent, startKeFight } from '../src/engine/kafesEvi';
 import { visitedCount, visitedKitalar } from '../src/engine/worldMap';
 // Motor denge testi: botlar tam kariyerleri otomatik oynar.
 // Çalıştırma: npx tsx scripts/sim.ts [kariyerSayisi]
@@ -23,6 +24,7 @@ import {
   negotiateOffer,
   pickOpponent,
   rest,
+  nextKafesEvi,
 } from '../src/engine/career';
 import { createGame, rollStartingStats } from '../src/engine/character';
 import { chooseEvent, closeEvent } from '../src/engine/events';
@@ -45,6 +47,7 @@ const gpStat = { katilim: 0, sampiyon: 0, tur: {} as Record<number, number> };
 const kankaStat = { kanka: 0, rakip: 0 };
 const kartStat: Record<string, number> = { toplam: 0 };
 const mapStat = { sehir: 0, kita: 0, odul: 0 };
+const keStat: Record<string, number> = { davet: 0, kabul: 0, ekran: 0 };
 const goalStat = { n: 0, para: 0, puan: 0, tur: {} as Record<string, number> };
 
 const BGS: Background[] = ['boks', 'muaythai', 'kickboks', 'gures', 'judo', 'bjj', 'sambo', 'kyokushin', 'sokak'];
@@ -130,6 +133,7 @@ function playCareer() {
     switch (s.phase) {
       case 'hub':
         refreshStaleGoals(s);
+        if (kafesEviInvite(s)) { keStat.davet++; if (!process.env.NOKE) { keStat.kabul++; acceptKafesEvi(s); break; } }
         if (!process.env.NOMERCH && !s.marka && canStartBrand(s)) startBrand(s, '');
         if (s.marka) (['tisort', 'eldiven', 'icecek'] as const).forEach((p) => s.para > 100000 && launchProduct(s, p));
         if (!process.env.NOPERK) for (let q = 0; q < 3 && perkPointsFree(s) > 0; q++) {
@@ -191,6 +195,27 @@ function playCareer() {
           yuzyuze: 'sakin',
         };
         campChoose(s, vals[k.step]);
+        break;
+      }
+      case 'kafesEvi': {
+        const k = s.kafesEvi!;
+        if (k.adim === 'sahne') chooseScene(s, randInt(0, 2));
+        else if (k.adim === 'plan') startKeFight(s, PLAN_FOR[weakest(keOpponent(k)!)] as PlanKey);
+        else if (k.adim === 'dovus') {
+          let fs = k.dovus!;
+          let guard = 0;
+          while (fs.durum !== 'bitti' && guard++ < 200) {
+            if (fs.durum === 'taktik') fs = chooseTactic(fs, smartTactic(s));
+            else if (fs.durum === 'kritik') fs = resolveCritical(fs, 0);
+            else if (fs.durum === 'karar') fs = resolveDecision(fs, randInt(0, fs.karar!.secenekler.length - 1));
+            else if (fs.durum === 'rauntSonu') fs = nextRound(fs);
+          }
+          k.dovus = fs;
+          finishKeFight(s);
+        } else {
+          if (k.sonuc) { keStat[k.sonuc] = (keStat[k.sonuc] ?? 0) + 1; keStat.ekran += k.ekran; }
+          nextKafesEvi(s);
+        }
         break;
       }
       case 'dovus': {
@@ -312,6 +337,7 @@ console.log('Pro başlangıç serisi dağılımı:', [0, 1, 2, 3, 5, 8, 10].map(
 if (process.env.CH) console.log('Meydan okuma:', process.env.CH, JSON.stringify(meydanStat));
 console.log(`Büyük maç (hype): kariyer başına ${(hypeStat.n / N).toFixed(1)}, ort. başlangıç hype ${(hypeStat.top / Math.max(1, hypeStat.n)).toFixed(0)}`);
 console.log(`Podcast (kariyer başına): ${(podcastStat.n / N).toFixed(1)}`);
+console.log(`Kafes Evi: davet ${pct(keStat.davet, N)}, sonuçlar ${JSON.stringify(keStat)}, ort. ekran ${(keStat.ekran / Math.max(1, keStat.kabul)).toFixed(0)}`);
 console.log(`Harita: ort. ${(mapStat.sehir / N).toFixed(1)} şehir, ${(mapStat.kita / N).toFixed(1)} kıta, ${(mapStat.odul / N).toFixed(1)} ödül`);
 console.log('Kartlar (kariyer başına):', Object.entries(kartStat).map(([k, v]) => `${k} ${(v / N).toFixed(1)}`).join(', '));
 console.log(`Antrenman ortağı: kanka ${pct(kankaStat.kanka, N)}, rakip ${pct(kankaStat.rakip, N)}`);
