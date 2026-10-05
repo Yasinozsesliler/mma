@@ -1,5 +1,6 @@
 import { L, LOC } from '../i18n';
 import { SUBMISSIONS } from './data';
+import type { LiveRoundResult } from './liveFight';
 import { bestLevel, bestSpecial, pickTech, TECHNIQUES, techById, type TechDef } from './techniques';
 import { CRITICAL_INTRO, evenLine, groundLine, strikeLine, TACTICS, tdLine } from './narration';
 import { chance, clamp, fill, noise, pick, rand, randInt, weighted } from './rng';
@@ -424,6 +425,25 @@ function streak(hist: Tactic[], t: Tactic) {
   return n;
 }
 
+/** Kart arayüzü için: a taktiğinin b'ye karşı üstünlüğü (-0.11 … +0.11). */
+export const tacticEdge = (a: Tactic, b: Tactic) => ADV[a][b];
+/** Taktiğin raunt başı kondisyon maliyeti. */
+export const tacticDrain = (t: Tactic) => DRAIN[t];
+
+/** Rakip okuma: tarzına ve durumuna göre taktik eğilimleri (uyum sağlamadan önceki temel dağılım, yüzde). */
+export function oppTendency(fs: FightState): [Tactic, number][] {
+  const w = new Map<Tactic, number>(STYLE_TACTICS[fs.opp.stil]);
+  const mul = (t: Tactic, m: number) => w.set(t, (w.get(t) ?? 0) * m);
+  if (fs.oKondisyon < 45) {
+    mul('mesafe', 2);
+    mul('kontra', 1.8);
+    mul('baski', 0.5);
+  }
+  if (fs.raunt === fs.maxRaunt && fs.rauntFarklari.reduce((a, b) => a + b, 0) > 0) mul('baski', 2.2);
+  const total = [...w.values()].reduce((a, b) => a + b, 0) || 1;
+  return [...w.entries()].map(([t, v]) => [t, Math.round((v / total) * 100)] as [Tactic, number]).sort((a, b) => b[1] - a[1]);
+}
+
 export const counterOf = (t: Tactic) => (Object.keys(ADV) as Tactic[]).reduce((a, b) => (ADV[b][t] > ADV[a][t] ? b : a));
 
 function oppTactic(fs: FightState): Tactic {
@@ -771,6 +791,56 @@ export function chooseTactic(prev: FightState, t: Tactic): FightState {
   fs.anlar = [{ i: 1, pP: 0, oP: 0, pH: fs.pHasar, oH: fs.oHasar, pK: fs.pKondisyon, oK: fs.oKondisyon, dk: 0 }];
   if (rep > 0) fs.log.push(L("🧠 {0} bu hamleyi bekliyordu. Aynı oyunu {1}. kez oynamak seni öngörülebilir yapıyor.", [fs.oAd, rep + 1]));
   runBeats(fs);
+  return fs;
+}
+
+/** Canlı raunt: rakip taktiğini seçer, raunt gerçek zamanlı oynanmak üzere bekler (beats koşulmaz). */
+export function startLiveRound(prev: FightState, t: Tactic): FightState {
+  const fs = clone(prev);
+  fs.rakipTaktik = oppTactic(fs);
+  const hist = fs.oyuncuTaktikGecmisi ?? [];
+  hist.push(t);
+  fs.oyuncuTaktikGecmisi = hist;
+  fs.taktik = t;
+  fs.rakipTaktikGecmisi.push(fs.rakipTaktik);
+  fs.log = [L("— {0}. RAUNT — Sen: {1}", [fs.raunt, TACTICS[t].ad])];
+  fs.anlar = undefined;
+  fs.durum = 'canli';
+  return fs;
+}
+
+/** Rakibin bu dövüşteki istatistikleri (planlar dahil); canlı motor için. */
+export const oppStatsOf = (fs: FightState) => oStats(fs);
+
+/** Canlı raundun sonucunu dövüşe işler: hasar, kondisyon, puan; nakavt ya da raunt sonu/hakem kararı. */
+export function applyLiveRound(prev: FightState, r: LiveRoundResult): FightState {
+  const fs = clone(prev);
+  if (fs.durum !== 'canli') return fs;
+  fs.pHasar = clamp(100 - r.pHp, 0, 100);
+  fs.oHasar = clamp(100 - r.oHp, 0, 100);
+  fs.pKondisyon = clamp(r.pSta, 5, 100);
+  fs.oKondisyon = clamp(r.oSta, 5, 100);
+  fs.pPuan = r.pLanded * 0.25 + r.pDealt * 0.18 + r.oKd * 3;
+  fs.oPuan = r.oLanded * 0.25 + r.oDealt * 0.18 + r.pKd * 3;
+  fs.vurusSira = BEATS;
+  fs.log.push(L("📊 İsabet: {0} – {1} · Verilen hasar: {2} – {3}", [r.pLanded, r.oLanded, Math.round(r.pDealt), Math.round(r.oDealt)]));
+  if (r.oKd) fs.log.push(L("💥 {0} {1} kez yere gitti!", [fs.oAd, r.oKd]));
+  if (r.pKd) fs.log.push(L("😵 {0} kez sarsıldın.", [r.pKd]));
+  if (r.bitis) {
+    const beat = Math.min(BEATS - 1, Math.floor(r.oran * BEATS));
+    const kazanan = r.bitis.kazanan;
+    const aciklama =
+      kazanan === 'p'
+        ? r.bitis.yontem === 'KO'
+          ? L("💥 NAKAVT! {0} yere serildi, hakem saymaya bile gerek görmedi!", [fs.oAd])
+          : L("🛑 Hakem araya girdi! {0} kendini savunamıyor. TKO!", [fs.oAd])
+        : r.bitis.yontem === 'KO'
+          ? L("💥 Işıklar söndü… {0} seni nakavt etti.", [fs.oAd])
+          : L("🛑 Hakem maçı durdurdu. {0} TKO ile kazandı.", [fs.oAd]);
+    finish(fs, kazanan, r.bitis.yontem, aciklama, beat);
+    return fs;
+  }
+  endRound(fs);
   return fs;
 }
 

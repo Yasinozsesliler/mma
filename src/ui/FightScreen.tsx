@@ -7,7 +7,9 @@ import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import { finishFight } from '../engine/career';
 import { currentOrg, fullName } from '../engine/character';
 import { ORGS } from '../engine/data';
-import { chooseTactic, cornerBreath, cornerCut, nextRound, resolveCritical, resolveDecision } from '../engine/fight';
+import { applyLiveRound, chooseTactic, cornerBreath, cornerCut, nextRound, resolveCritical, resolveDecision, startLiveRound } from '../engine/fight';
+import { setLive, useLive } from '../livePref';
+import { LiveFight } from './LiveFight';
 import { CornerMoment } from './CornerMoment';
 import { CRITICAL_OPTIONS, TACTICS } from '../engine/narration';
 import { oppRecord } from '../engine/opponents';
@@ -183,11 +185,32 @@ function Flowing({ speed, setSpeed, onSkip }: { speed: number; setSpeed: (n: num
   );
 }
 
+/** Dövüş modu: canlı (elle oyna) ya da taktik (izle). */
+function ModeSwitch() {
+  const live = useLive();
+  return (
+    <View style={sb.mode}>
+      {(
+        [
+          [true, 'gamepad-variant', L("CANLI DÖVÜŞ")],
+          [false, 'eye', L("TAKTİK İZLE")],
+        ] as const
+      ).map(([v, icon, label]) => (
+        <Pressable key={label} onPress={() => setLive(v)} style={[sb.modeBtn, live === v && sb.modeOn]}>
+          <Icon name={icon} size={15} color={live === v ? '#fff' : C.dim} />
+          <Text style={[sb.modeText, live === v && { color: '#fff' }]}>{label}</Text>
+        </Pressable>
+      ))}
+    </View>
+  );
+}
+
 function TacticList({ fs, onPick, title }: { fs: FightState; onPick: (t: Tactic) => void; title: string }) {
   const last = fs.oyuncuTaktikGecmisi?.at(-1);
   return (
     <>
       <Section>{title}</Section>
+      <ModeSwitch />
       {(Object.keys(TACTICS) as Tactic[]).map((t) => (
         <Choice
           key={t}
@@ -245,9 +268,12 @@ export function FightScreen({ s, act }: { s: GameState; act: Act }) {
   const flowing = shown < fs.log.length;
   const view = viewAt(fs, shown);
 
+  const live = useLive();
+  /** Raundu seçilen modda başlat: canlı oynanır ya da akış olarak izlenir. */
+  const begin = (f: FightState, t: Tactic) => (live ? startLiveRound(f, t) : chooseTactic(f, t));
   let footer = null;
   if (!flowing && fs.durum === 'rauntSonu')
-    footer = <Button label={L("Aynı planla {0}. raunda çık", [fs.raunt + 1])} icon="bell-ring" onPress={() => setFs((f) => nextRound(f, f.taktik ?? 'mesafe'))} />;
+    footer = <Button label={L("Aynı planla {0}. raunda çık", [fs.raunt + 1])} icon="bell-ring" onPress={() => setFs((f) => begin(nextRound(f), f.taktik ?? 'mesafe'))} />;
   if (!flowing && fs.durum === 'bitti') footer = <Button label={L("Dövüş sonrası")} tone="gold" icon="microphone-variant" onPress={() => act(finishFight)} />;
 
   return (
@@ -290,7 +316,8 @@ export function FightScreen({ s, act }: { s: GameState; act: Act }) {
 
       {flowing ? <Flowing speed={speed} setSpeed={setSpeed} onSkip={() => setShown(fs.log.length)} /> : null}
 
-      {!flowing && fs.durum === 'taktik' && <TacticList fs={fs} title={L("OYUN PLANIN: MAÇA NASIL BAŞLAYACAKSIN?")} onPick={(t) => setFs((f) => chooseTactic(f, t))} />}
+      {!flowing && fs.durum === 'taktik' && <TacticList fs={fs} title={L("OYUN PLANIN: MAÇA NASIL BAŞLAYACAKSIN?")} onPick={(t) => setFs((f) => begin(f, t))} />}
+      {fs.durum === 'canli' && !intro ? <LiveFight key={fs.raunt} fs={fs} pLook={s.fighter.gorunum} oLook={lookFor(fs.opp)} onEnd={(r) => setFs((f) => applyLiveRound(f, r))} /> : null}
 
       {!flowing && fs.durum === 'karar' && fs.karar && (
         <>
@@ -341,7 +368,7 @@ export function FightScreen({ s, act }: { s: GameState; act: Act }) {
             ))}
           </Card>
           <CornerMoment fs={fs} onBreath={(q) => setFs((f) => cornerBreath(f, q))} onCut={(ok) => setFs((f) => cornerCut(f, ok))} />
-          <TacticList fs={fs} title={L("{0}. RAUNT İÇİN PLANI DEĞİŞTİR", [fs.raunt + 1])} onPick={(t) => setFs((f) => nextRound(f, t))} />
+          <TacticList fs={fs} title={L("{0}. RAUNT İÇİN PLANI DEĞİŞTİR", [fs.raunt + 1])} onPick={(t) => setFs((f) => begin(nextRound(f), t))} />
         </>
       )}
 
@@ -385,6 +412,10 @@ const sb = StyleSheet.create({
   foName: { fontFamily: F.display, fontSize: 18, lineHeight: 22 },
   foRec: { color: C.dim, fontFamily: F.semi, fontSize: 12, marginTop: 2 },
   vs: { color: C.gold, fontFamily: F.display, fontSize: 28 },
+  mode: { flexDirection: 'row', backgroundColor: C.card, borderRadius: 10, borderWidth: 1, borderColor: C.border, padding: 3, marginBottom: 10 },
+  modeBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 9, borderRadius: 8 },
+  modeOn: { backgroundColor: C.red },
+  modeText: { color: C.dim, fontFamily: F.display, fontSize: 12, letterSpacing: 1 },
   result: { borderRadius: R, padding: 20, alignItems: 'center', marginTop: 4 },
   resultKicker: { color: 'rgba(255,255,255,0.75)', fontFamily: F.display, fontSize: 13, letterSpacing: 1.5 },
   resultTitle: { color: '#fff', fontFamily: F.display, fontSize: 44, letterSpacing: 2 },

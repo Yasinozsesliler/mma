@@ -6,6 +6,7 @@ import { ExportButton, FeedbackRow, ImportCard } from './CareerTransfer';
 import { setAnnouncer, useAnnouncer } from '../announcer';
 import { setHaptics, useHaptics } from '../haptics';
 import { setQte, useQte } from '../qtePref';
+import { setLive, useLive } from '../livePref';
 import { setLang } from '../i18n/boot';
 import { setSoundSettings, useSoundSettings } from '../audio';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -195,6 +196,7 @@ export function MenuScreen({
   const spiker = useAnnouncer();
   const titresim = useHaptics();
   const qteAcik = useQte();
+  const canli = useLive();
   const bildirim = useNotifyState();
   const yeniKoz = useCosmetics().yeni.length;
   return (
@@ -264,6 +266,7 @@ export function MenuScreen({
           [
             ['spiker', spiker, 'microphone-variant', 'microphone-variant-off', L("Spiker"), () => setAnnouncer(!spiker)],
             ['titresim', titresim, 'vibrate', 'vibrate-off', L("Titreşim"), () => setHaptics(!titresim)],
+            ['canli', canli, 'gamepad-variant', 'eye', L("Canlı dövüş"), () => setLive(!canli)],
             ['qte', qteAcik, 'gesture-tap', 'gesture-tap-hold', L("Dövüşte elle oyna"), () => setQte(!qteAcik)],
           ] as const
         ).map(([k, on, icon, offIcon, ad, toggle]) => (

@@ -356,7 +356,8 @@ export interface FightState {
   kritikMetni: string;
   subAdi: string;
   kose: string | null;
-  durum: 'taktik' | 'kritik' | 'karar' | 'rauntSonu' | 'bitti';
+  /** canli: raunt gerçek zamanlı oynanıyor (liveFight.ts) */
+  durum: 'taktik' | 'canli' | 'kritik' | 'karar' | 'rauntSonu' | 'bitti';
   /** Maç akarken çıkan karar anı */
   karar?: { tip: string; metin: string; secenekler: { ad: string; aciklama: string }[] } | null;
   /** Karar anından gelen geçici üstünlük (sonraki birkaç an) */
