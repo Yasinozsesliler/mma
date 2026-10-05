@@ -4,48 +4,42 @@ Görseller: store\graphics\pl   ·   Simge: public\icon-512.png
 === UYGULAMA ADI (26/30) ===
 YOL: Kariera Zawodnika MMA
 
-=== KISA AÇIKLAMA (76/80) ===
-Z ulicy po pas: gra o karierze w MMA, w której każdy wybór należy do ciebie.
+=== KISA AÇIKLAMA (71/80) ===
+Walcz w klatce sam i prowadź swoją karierę. Z ulicy po mistrzowski pas.
 
-=== TAM AÇIKLAMA (2188/4000) ===
-Zacznij od zera i wywalcz pas. YOL: Z klatki do pasa to symulator kariery zawodnika MMA, w którym każda decyzja pisze twoją historię.
+=== TAM AÇIKLAMA (2301/4000) ===
+Zacznij od zera i wywalcz pas. YOL: Z klatki do pasa to gra o MMA, w której walczysz w klatce własnymi rękami, a każda decyzja poza nią zmienia twoją karierę.
 
-🥊 STWÓRZ ZAWODNIKA
-Wybierz narodowość, wiek, kategorię wagową i styl walki: boks, muay thai, zapasy, BJJ, sambo, judo, kyokushin, kickboxing albo walka uliczna. Zaprojektuj twarz, napisz historię, rzuć kośćmi.
+🥊 WALKI NA ŻYWO
+Graj każdą rundę w czasie rzeczywistym: jab, prosty, kopnięcie, unik i garda. Czytaj zamach rywala, unikaj w odpowiedniej chwili i kontruj. Próbuj sprowadzeń albo broń się sprawlem; w parterze bij z góry, szukaj poddania lub uciekaj z dołu. Używaj specjalnego ciosu swojego stylu i firmowej techniki. Nie lubisz gier na refleks? Wybierz "Oglądaj taktykę", ustal plan i oglądaj walkę.
 
-🏋️ POPROWADŹ OBÓZ
-Przed każdą walką wybierz długość obozu, miejsce, intensywność i plan walki. Znajdź słabość rywala i zbuduj na niej plan. Zbij wagę, rzuć trash talk na konferencji, stań twarzą w twarz na ważeniu.
+🎬 GALA
+Zejdź rampą w świetle reflektorów, gdy spiker wykrzykuje twoje imię. Twarzą w twarz, gong i powtórka nokautu w zwolnionym tempie.
 
-⚡ WALKI NA ŻYWO
-Animowani zawodnicy w klatce, komentarz runda po rundzie i krytyczne momenty: gdy rywal jest wstrząśnięty, idziesz po skończenie czy szukasz poddania? Pilnuj kondycji i słuchaj narożnika.
+🏋️ STWÓRZ ZAWODNIKA, PROWADŹ OBÓZ
+Wybierz narodowość, kategorię wagową i styl: boks, muay thai, zapasy, BJJ, sambo, judo, kyokushin, kickboxing albo ulica. Ustal długość, miejsce i plan obozu; zbijaj wagę, prowokuj na konferencji i ucz się technik od legendarnych mistrzów.
 
 🏆 OD AMATORA DO MISTRZA ŚWIATA
-Od ligi amatorskiej przez organizacje regionalne aż na największą scenę świata. Wspinaj się w rankingu, zdobywaj pasy, broń tytułu, zostań mistrzem dwóch kategorii, wejdź na listę Pound for Pound i do Galerii Sław.
+Od ligi amatorskiej przez federacje regionalne po największą scenę świata. Wspinaj się w rankingu, zdobywaj pasy, broń tytułu, startuj w turniejach Grand Prix, walcz w nowych miastach w trasie światowej i trafiaj do Galerii Sław.
 
-🌃 ŻYCIE POZA KLATKĄ
-Menedżerowie, sponsorzy, sztab, luksusowe auta i domy, inwestycje, zwierzaki, kłótnie w mediach społecznościowych, życie nocne, randki i kasyno. Ale pamiętaj: wszystko ma swoją cenę.
+📺 ŻYCIE POZA KLATKĄ
+Reality show Dom w Klatce, fanklub, własna marka, transmisje na żywo, podcasty, negocjacje ze sponsorami, kryzysy w mediach społecznościowych, rodzina, nocne życie i własna sala. Ale pamiętaj: wszystko ma swoją cenę. Dbaj o zdrowie mózgu, by zachować jasny umysł na emeryturze.
 
-📲 UDOSTĘPNIAJ
-Udostępnij pas, nokaut albo całą karierę na swoim storysie jednym dotknięciem.
+⚔️ RZUĆ WYZWANIE
+Zacznij na poziomie Łatwy, Normalny lub Legenda i sprawdź się w trybach wyzwań, takich jak Ostatnia Szansa, Z Ulicy na Szczyt i Żelazny Człowiek. Dziel się wynikiem w Walce Dnia, takiej samej dla wszystkich.
 
-✨ FUNKCJE
-• Własny klub: zapisuj młode talenty i stawaj w ich narożniku
-• Minigry treningowe na każdym obozie
-• Spiker w klatce i wibracje przy ciosach
-• Głęboki tryb kariery oparty na wyborach
-• Arcyrywal, który prześladuje cię przez całą karierę
-• Tryb dynastii: zakończ karierę i kontynuuj jako swoje dziecko
-• Powtórki nokautów, muzyka wejściowa i zapowiedź spikera
-• Klatkopedia: automatycznie pisana strona encyklopedii o twoim zawodniku
-• Codziennie nowy Bój dnia, ten sam dla wszystkich: udostępnij wynik, rzuć wyzwanie znajomym, utrzymaj serię
+✨ CECHY
+• Walki na żywo w czasie rzeczywistym lub tryb taktyczny
+• Filmowe wejścia, przejścia między rundami i powtórki nokautów
+• Drzewko umiejętności, firmowe ciosy i legendarni mistrzowie
+• Arcyrywal, tryb dynastii i powrót z emerytury
+• Plakaty walk i karty kariery do udostępniania
+• Album kart, mapa świata i 111 osiągnięć
 • Szafka: spodenki, rękawice, pasy i muzyka wejściowa. Bez pay-to-win
-• Animowane walki w klatce i dynamiczny komentarz
-• 111 osiągnięć i Galeria Sław
-• Efekty dźwiękowe, publiczność i muzyka
-• Gra offline
+• 3 sloty kariery, gra offline
 • Türkçe, English, Español, Português, Русский, Polski
 
-Wszystkie organizacje, osoby i marki w grze są fikcyjne.
+Wszystkie federacje, osoby i marki w grze są fikcyjne.
 
 === SÜRÜM NOTU ===
-Pierwsze wydanie! Witaj w klatce.
+Witaj w klatce! Walki na żywo w czasie rzeczywistym, filmowe gale, Dom w Klatce, trasa światowa i wiele więcej.

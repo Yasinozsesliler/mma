@@ -4,50 +4,42 @@ Görseller: store\graphics\tr   ·   Simge: public\icon-512.png
 === UYGULAMA ADI (28/30) ===
 YOL: MMA Kariyer Simülasyonu
 
-=== KISA AÇIKLAMA (67/80) ===
-Sokaktan şampiyonluğa: her kararı senin olan bir MMA kariyer oyunu.
+=== KISA AÇIKLAMA (74/80) ===
+Kafeste kendin dövüş, kariyerini sen yönet. Sokaktan dünya şampiyonluğuna.
 
-=== TAM AÇIKLAMA (2158/4000) ===
-Sıfırdan başla, kemere uzan. YOL: Kafesten Kemere, her kararın kariyerini değiştirdiği bir MMA dövüşçü simülasyonu.
+=== TAM AÇIKLAMA (2212/4000) ===
+Sıfırdan başla, kemere uzan. YOL: Kafesten Kemere, kafeste kendi elinle dövüştüğün, kafes dışında her kararın kariyerini değiştirdiği bir MMA dövüşçü oyunu.
 
-🥊 DÖVÜŞÇÜNÜ YARAT
-Uyruğunu, yaşını, sikletini ve dövüş geçmişini seç: boks, muay thai, güreş, BJJ, sambo, judo, kyokushin, kickboks ya da sokak dövüşçüsü. Yüzünü tasarla, hikâyeni yaz, zarları at.
+🥊 CANLI DÖVÜŞ
+Rauntları gerçek zamanlı oyna: jab, direkt, tekme, kaç ve gard. Rakibin saldırısını oku, tam zamanında sıyrıl ve kontra vur. Takedown'a dal ya da sprawl yap; yerde üstten vur, submission'a yat ya da alttan kurtul. Tarzına özel hamleni ve imza hareketini kullan. Refleks oyunlarını sevmiyorsan "Taktik izle" modunda planını seç, dövüşü izle.
 
-🏋️ KAMPINI YÖNET
-Her dövüşten önce kamp süresini, yerini, yoğunluğunu ve oyun planını seç. Rakibin zayıf yönünü bul, planını ona göre kur. Kilo ver, basın toplantısında laf sok, tartıda burun buruna gel.
+🎬 DÖVÜŞ GECESİ
+Spotların altında rampadan kafese yürü, spiker adını haykırsın. Yüz yüze gel, raunt zilini duy, nakavtı ağır çekim tekrarda izle.
 
-⚡ CANLI DÖVÜŞLER
-Kafeste animasyonlu dövüşçüler, raunt raunt akan anlatım ve kritik anlar: rakip sarsıldığında bitirmeye mi gideceksin, submission'a mı yatacaksın? Kondisyonunu yönet, köşendeki hocayı dinle.
+🏋️ DÖVÜŞÇÜNÜ YARAT, KAMPINI YÖNET
+Uyruk, siklet ve dövüş geçmişini seç: boks, muay thai, güreş, BJJ, sambo, judo, kyokushin, kickboks ya da sokak. Kamp süresini, yerini ve oyun planını belirle; kilo ver, basın toplantısında laf sok, efsane ustalardan teknik öğren.
 
 🏆 AMATÖRDEN DÜNYA ŞAMPİYONLUĞUNA
-Amatör ligden bölgesel organizasyonlara, oradan dünyanın en büyük sahnesine. Sıralamada yüksel, kemer kazan, unvanını savun, iki sıklette şampiyon ol, Pound for Pound listesine gir, Hall of Fame'e adını yazdır.
+Amatör ligden bölgesel organizasyonlara, oradan dünyanın en büyük sahnesine. Sıralamada yüksel, kemer kazan, unvanını savun, Grand Prix turnuvalarına katıl, dünya turunda yeni şehirlerde dövüş ve Hall of Fame'e adını yazdır.
 
-🌃 KAFES DIŞINDA HAYAT
-Menajer, sponsorlar, antrenman ekibi, lüks arabalar ve evler, yatırımlar, evcil hayvanlar, sosyal medya kavgaları, gece hayatı, randevular ve kumarhane. Ama unutma: her şeyin bir bedeli var.
+📺 KAFES DIŞINDA HAYAT
+Kafes Evi realite şovu, taraftar kulübün, kendi markan, canlı yayınlar, podcastler, sponsor pazarlıkları, sosyal medya krizleri, aile hayatı, gece hayatı ve kendi salonun. Ama unutma: her şeyin bir bedeli var. Beyin sağlığını koru, emeklilikte de sağlıklı kal.
 
-📲 PAYLAŞ
-Kemerini, nakavtını ya da tüm kariyerini tek dokunuşla hikâyende paylaş.
+⚔️ MEYDAN OKU
+Kolay, Normal ya da Efsane zorlukta başla; Son Şans, Sokaktan Zirveye, Demir Adam gibi meydan okuma modlarıyla kendini sına. Her gün herkes için aynı "Günün Dövüşü"nde skorunu paylaş.
 
 ✨ ÖZELLİKLER
-• Kendi salonun: genç yetenekleri yetiştir, köşelerinde dur
-• Her kampta antrenman mini oyunları
-• Ring spikeri ve titreşimli darbeler
-• Seçimlerle ilerleyen derin kariyer modu
-• Ezeli rakip: kariyer boyunca peşini bırakmayan bir düşman
-• Nesil modu: emekli ol, çocuğunla hanedanını sürdür
-• Nakavt tekrarları, kafese giriş müziği ve ring anonsu
-• Kafespedia: dövüşçün için otomatik yazılan ansiklopedi sayfası
-• Günün Dövüşü'nde arkadaşlarına meydan oku
+• Gerçek zamanlı canlı dövüş ya da taktik modu
+• Sinematik kafese giriş, raunt geçişleri ve nakavt tekrarları
+• Yetenek ağacı, imza hareketi ve efsane ustalar
+• Ezeli rakip, nesil modu ve emeklilikten dönüş
+• Paylaşılabilir maç afişleri ve kariyer kartları
+• Kart albümü, dünya haritası ve 111 başarım
 • Dolap: şort, eldiven, kemer ve giriş müziği. Kazanmak için ödeme yok
-• Her gün herkes için aynı “Günün Dövüşü”: skorunu paylaş, serini koru
-• Animasyonlu kafes dövüşleri ve dinamik anlatım
-• 111 başarım ve Hall of Fame
-• 3 kariyer yuvası
-• Ses efektleri, seyirci ve müzik
-• İnternetsiz oynanabilir
+• 3 kariyer yuvası, internetsiz oynanabilir
 • Türkçe, English, Español, Português, Русский, Polski
 
 Oyundaki organizasyonlar, kişiler ve markalar kurgusaldır.
 
 === SÜRÜM NOTU ===
-İlk sürüm! Kafese hoş geldin.
+Kafese hoş geldin! Gerçek zamanlı canlı dövüş, sinematik dövüş gecesi, Kafes Evi, dünya turu ve çok daha fazlası.

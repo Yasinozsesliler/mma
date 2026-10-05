@@ -21,12 +21,12 @@ const LOC = { tr: 'tr', en: 'en', es: 'es', pt: 'pt', ru: 'ru', pl: 'pl' }[lang]
 
 // Pazarlama başlıkları (sırayla: yürüyüş, dövüş, maç sonu, kariyer, ezeli rakip, Kafespedia, dolap, kemer)
 const CAP = {
-  tr: ['Kafese yürü, adını haykırsınlar', 'Her raunt senin kararın', 'Zaferini dünyaya göster', "Sokaktan UCC'ye uzanan yol", 'Ezeli rakibin seni bekliyor', 'Efsaneni ansiklopedi yazsın', 'Tarzını yarat · Güç satılmaz', 'Kemeri kaldır, tarihe geç'],
-  en: ['Walk out. Hear your name.', 'Every round is your call', 'Show the world your win', 'From the streets to the UCC', 'Your nemesis is waiting', 'Your legend, written for you', 'Your style · No pay-to-win', 'Raise the belt. Make history.'],
-  es: ['Sal a la jaula. Oye tu nombre.', 'Cada asalto lo decides tú', 'Enseña tu victoria al mundo', 'De la calle a la UCC', 'Tu némesis te espera', 'Tu leyenda, escrita para ti', 'Tu estilo · Sin pagar para ganar', 'Alza el cinturón. Haz historia.'],
-  pt: ['Entre no octógono. Ouça seu nome.', 'Cada round é decisão sua', 'Mostre sua vitória ao mundo', 'Das ruas ao UCC', 'Seu arquirrival te espera', 'Sua lenda, escrita para você', 'Seu estilo · Sem pagar para ganhar', 'Erga o cinturão. Faça história.'],
-  ru: ['Выходи в клетку. Услышь своё имя.', 'Каждый раунд решаешь ты', 'Покажи миру свою победу', 'С улицы до UCC', 'Заклятый соперник ждёт', 'Твоя легенда уже написана', 'Твой стиль · Без pay-to-win', 'Подними пояс. Войди в историю.'],
-  pl: ['Wejdź do klatki. Usłysz swoje imię.', 'Każda runda to twoja decyzja', 'Pokaż światu swoje zwycięstwo', 'Z ulicy do UCC', 'Arcyrywal na ciebie czeka', 'Twoja legenda, spisana dla ciebie', 'Twój styl · Bez pay-to-win', 'Unieś pas. Zapisz się w historii.'],
+  tr: ['Kafese yürü, adını haykırsınlar', 'Kafeste kendi elinle dövüş', 'Zaferini dünyaya göster', "Sokaktan UCC'ye uzanan yol", 'Dünyayı dolaş, her şehirde dövüş', 'Efsaneni ansiklopedi yazsın', 'Tarzını yarat · Güç satılmaz', 'Kemeri kaldır, tarihe geç'],
+  en: ['Walk out. Hear your name.', 'Fight with your own hands', 'Show the world your win', 'From the streets to the UCC', 'Fight your way around the world', 'Your legend, written for you', 'Your style · No pay-to-win', 'Raise the belt. Make history.'],
+  es: ['Sal a la jaula. Oye tu nombre.', 'Pelea con tus propias manos', 'Enseña tu victoria al mundo', 'De la calle a la UCC', 'Pelea por todo el mundo', 'Tu leyenda, escrita para ti', 'Tu estilo · Sin pagar para ganar', 'Alza el cinturón. Haz historia.'],
+  pt: ['Entre no octógono. Ouça seu nome.', 'Lute com as próprias mãos', 'Mostre sua vitória ao mundo', 'Das ruas ao UCC', 'Lute pelo mundo inteiro', 'Sua lenda, escrita para você', 'Seu estilo · Sem pagar para ganhar', 'Erga o cinturão. Faça história.'],
+  ru: ['Выходи в клетку. Услышь своё имя.', 'Дерись своими руками', 'Покажи миру свою победу', 'С улицы до UCC', 'Дерись по всему миру', 'Твоя легенда уже написана', 'Твой стиль · Без pay-to-win', 'Подними пояс. Войди в историю.'],
+  pl: ['Wejdź do klatki. Usłysz swoje imię.', 'Walcz własnymi rękami', 'Pokaż światu swoje zwycięstwo', 'Z ulicy do UCC', 'Walcz na całym świecie', 'Twoja legenda, spisana dla ciebie', 'Twój styl · Bez pay-to-win', 'Unieś pas. Zapisz się w historii.'],
 }[lang];
 const BANNER = {
   tr: ['KAFESTEN KEMERE', 'Sokaktan dünya şampiyonluğuna. Her karar senin.'],
@@ -45,7 +45,8 @@ await page.evaluateOnNewDocument((l) => {
   sessionStorage.setItem('hazir', '1');
   localStorage.clear();
   localStorage.setItem('yol_dil', l);
-  localStorage.setItem('yol_ipucu', '1');
+  localStorage.setItem('yol_ipucu', '0');
+  localStorage.setItem('yol_canli_rehber', '1');
   // Vitrin için Altın Seri kuşanılmış
   localStorage.setItem('yol_satinalim', JSON.stringify(['paket_altin']));
   localStorage.setItem('yol_kozmetik', JSON.stringify({ equip: { sort: 'sort_altin', eldiven: 'eld_altin', cerceve: 'cer_altin', kemer: 'kem_altin', giris: 'gir_epik' }, acik: ['sort_gece', 'eld_siyah', 'gir_rock'], yeni: [] }));
@@ -85,7 +86,7 @@ await sleep(500);
 // Kayıt düzenleme yardımcısı: kaydı değiştir, yeniden yükle, kariyere dön.
 const edit = async (fn) => {
   await page.evaluate((src) => {
-    const key = Object.keys(localStorage).find((k) => k.startsWith('yol_kariyer'));
+    const key = 'yol_kariyer_v1';
     const s = JSON.parse(localStorage.getItem(key));
     new Function('s', src)(s);
     localStorage.setItem(key, JSON.stringify(s));
@@ -100,25 +101,53 @@ const PRI = ['DÖVÜŞ AYARLA', 'Bu rakibi seç', 'Hocanın planıyla başla', '
 for (let i = 0; i < 40; i++) {
   if ((await body()).includes(t('BAYANLAR VE BAYLAR…'))) break;
   // Dövüş gecesinden hemen önce: anonsta görünecek amatör rekor
-  if ((await buttons()).some((b) => up(b).includes(up(t('Dövüş gecesi'))))) await edit('s.amator = { g: 9, m: 1, b: 0 };');
+  if ((await buttons()).some((b) => up(b).includes(up(t('Dövüş gecesi'))))) await edit('s.amator = { g: 9, m: 1, b: 0 }; Object.keys(s.fighter.stats).forEach((k) => (s.fighter.stats[k] = 88));');
   let ok = false;
   for (const p of PRI) if (await click(p)) { ok = true; break; }
   if (!ok) await sleep(400);
 }
-await sleep(6400); // mavi köşe → kırmızı köşe
+// Kırmızı köşe anonsu: dövüşçü yürüsün, yayın bandı girsin
+for (let i = 0; i < 60 && !(await body()).includes(up(t('VE KIRMIZI KÖŞEDE…'))); i++) await sleep(250);
+await sleep(2300);
 await shot('01-yuruyus');
 await page.mouse.click(180, 320); // anonsu geç
 await sleep(900);
 
-// 2) Canlı dövüş ve 3) maç sonu
+// 2) Canlı dövüş: ilk raunt elle, kalan rauntlar taktik modunda
+const pressLive = async (label) => {
+  const box = await page.evaluate((label) => {
+    const el = [...document.querySelectorAll('div')].filter((d) => d.innerText?.trim() === label).pop();
+    if (!el) return null;
+    const r = el.getBoundingClientRect();
+    return { x: r.x + r.width / 2, y: r.y + r.height / 2 };
+  }, up(label));
+  if (!box) return;
+  await page.mouse.move(box.x, box.y);
+  await page.mouse.down();
+  await sleep(40);
+  await page.mouse.up();
+};
+for (let i = 0; i < 20 && !(await body()).includes(up(t('CANLI DÖVÜŞ'))); i++) await sleep(300);
+await click('Baskı kur');
+await sleep(2200);
+for (const k of ['JAB', 'DİREKT', 'JAB', 'TEKME', 'JAB', 'DİREKT']) {
+  await pressLive(t(k));
+  await sleep(380);
+}
+await sleep(120);
+await shot('02-dovus');
+// Raundun bitmesini bekle, sonra taktik moduna geç
+for (let i = 0; i < 90 && !(await body()).includes(t('MAÇ AKIYOR')); i++) await sleep(500);
+let tacticSet = false;
+
+// 3) Maç sonu
 const FIGHT = ['ATLA', 'Aynı planla', 'Bitirmeye git', 'Sık, bitir', 'Sabırla savun', 'Takedown dene', 'Baskı kur'];
-let fightShot = false;
 for (let i = 0; i < 300; i++) {
   const txt = await body();
-  if (!fightShot && txt.includes(t('MAÇ AKIYOR'))) {
-    await sleep(2200);
-    await shot('02-dovus');
-    fightShot = true;
+  if (!tacticSet && txt.includes(up(t('TAKTİK İZLE')))) {
+    await click('TAKTİK İZLE');
+    tacticSet = true;
+    continue;
   }
   if (txt.includes(t('KAFES İÇİ RÖPORTAJ'))) break;
   if (await click('Dövüş sonrası')) { await sleep(700); continue; }
@@ -131,12 +160,12 @@ for (let i = 0; i < 300; i++) {
     if (j >= 0) { await (await page.$$('[tabindex="0"]'))[j].click(); await sleep(250); } else await sleep(500);
   }
 }
-await sleep(900);
-await shot('03-mac-sonrasi');
+await sleep(2800); // ödüller sayarak gelsin
+await shot('03-mac-sonrasi', up(t('KAZANAN')));
 
 // Zengin kariyer: büyük organizasyon, ezeli rakip, hanedan, UCC yolu
 await page.evaluate(() => {
-  const key = Object.keys(localStorage).find((k) => k.startsWith('yol_kariyer'));
+  const key = 'yol_kariyer_v1';
   const s = JSON.parse(localStorage.getItem(key));
   const R = ['Diego Alvarez', 'Timur Bekov', 'Jake Morrison', 'Luka Novak', 'Rafael Costa', 'Sean Doyle', 'Arman Petrosyan', 'Marcus Pruitt', 'Dmitri Volkov', 'Caio Moraes', 'Tyler Boone', 'Wei Li', 'Kenji Mori', 'Ivan Sorokin', 'Brody Stroud', 'Luan Farias'];
   const Y = ['KO', 'TKO', 'SUB', 'UD', 'KO', 'SD', 'TKO', 'UD'];
@@ -167,9 +196,22 @@ await sleep(900);
 await click('DEVAM ET');
 await sleep(900);
 await shot('04-kariyer', up(t('UCC YOLU')));
+await edit(`s.sehirler = { ev: 4, chicago: 2, londra: 2, prag: 3, tokyo: 1, vegas: 3, rio: 1, sidney: 1, abudabi: 1, singapur: 1 };
+  s.haritaOdul = ['c3', 'c6', 'c10', 'k2', 'k3', 'k4', 'k5'];
+  const C = ['vegas', 'tokyo', 'londra', 'prag', 'abudabi', 'rio', 'sidney', 'chicago', 'singapur', 'prag', 'ev', 'ev'];
+  s.gecmis.forEach((g, i) => (g.sehir = C[i % C.length]));`);
+await click('KOLEKSİYON');
+await sleep(400);
+await click('Dünya turu');
+await sleep(900);
+await page.evaluate(() => document.querySelectorAll('div').forEach((d) => (d.scrollTop = 0)));
+await page.evaluate(() => window.scrollTo(0, 0));
+await sleep(400);
+await shot('05-ezeli-rakip');
+await click('Kariyere dön');
+await sleep(600);
 await click('PROFİL');
 await sleep(700);
-await shot('05-ezeli-rakip', t('⚔️ EZELİ RAKİP'));
 await click('Kafespedia sayfan');
 await sleep(1000);
 await shot('06-kafespedia');
@@ -183,7 +225,7 @@ await shot('07-dolap');
 
 // Kemer kutlaması
 await page.evaluate(() => {
-  const key = Object.keys(localStorage).find((k) => k.startsWith('yol_kariyer'));
+  const key = 'yol_kariyer_v1';
   const s = JSON.parse(localStorage.getItem(key));
   s.stage = 'ufc';
   s.contract = { org: 'ufc', kalan: 4, ucret: 250000, bonus: 250000, munhasir: true };

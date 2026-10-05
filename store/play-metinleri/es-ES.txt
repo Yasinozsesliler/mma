@@ -1,53 +1,45 @@
-﻿PLAY CONSOLE · es-ES · Español (España)
+﻿PLAY CONSOLE · es-ES · Español
 Görseller: store\graphics\es   ·   Simge: public\icon-512.png
 
 === UYGULAMA ADI (28/30) ===
 YOL: Carrera de Luchador MMA
 
-=== KISA AÇIKLAMA (77/80) ===
-De la calle al cinturón: un juego de carrera MMA donde cada decisión es tuya.
+=== KISA AÇIKLAMA (72/80) ===
+Pelea tú mismo en la jaula y dirige tu carrera. De la calle al cinturón.
 
-=== TAM AÇIKLAMA (2374/4000) ===
-Empieza desde cero y llega al cinturón. YOL: De la jaula al cinturón es un simulador de carrera de luchador de MMA donde cada decisión cambia tu historia.
+=== TAM AÇIKLAMA (2452/4000) ===
+Empieza de cero y gánate el cinturón. YOL: De la jaula al cinturón es un juego de MMA en el que peleas en la jaula con tus propias manos y cada decisión fuera de ella cambia tu carrera.
 
-🥊 CREA A TU LUCHADOR
-Elige tu nacionalidad, edad, categoría y base de combate: boxeo, muay thai, lucha, BJJ, sambo, judo, kyokushin, kickboxing o peleador callejero. Diseña tu cara, escribe tu historia y tira los dados.
+🥊 PELEAS EN VIVO
+Juega cada asalto en tiempo real: jab, recto, patada, esquiva y guardia. Lee la preparación de tu rival, esquiva en el momento justo y contraataca. Busca el derribo o haz sprawl; en el suelo golpea desde arriba, busca la sumisión o escapa desde abajo. Usa el golpe especial de tu estilo y tu técnica firma. ¿No te van los reflejos? Elige "Ver táctica", decide tu plan y mira la pelea.
 
-🏋️ DIRIGE TU CAMPAMENTO
-Antes de cada pelea elige la duración, la sede, la intensidad y el plan de pelea. Encuentra la debilidad de tu rival y arma tu plan. Corta peso, lanza pullas en la conferencia de prensa y quédate cara a cara en el pesaje.
+🎬 NOCHE DE PELEAS
+Baja la rampa bajo los focos mientras el presentador grita tu nombre. Cara a cara, suena la campana y revive tu nocaut a cámara lenta.
 
-⚡ PELEAS EN VIVO
-Luchadores animados en la jaula, narración asalto a asalto y momentos críticos: cuando tu rival está sacudido, ¿vas por la finalización o buscas la sumisión? Administra tu cardio y escucha a tu esquina.
+🏋️ CREA TU PELEADOR, DIRIGE TU CAMPAMENTO
+Elige nacionalidad, peso y estilo: boxeo, muay thai, lucha, BJJ, sambo, judo, kyokushin, kickboxing o callejero. Define la duración, el lugar y el plan del campamento; da el peso, provoca en la rueda de prensa y aprende técnicas de maestros legendarios.
 
-🏆 DE AMATEUR A CAMPEÓN MUNDIAL
-De la liga amateur a las promotoras regionales y al escenario más grande del mundo. Sube en el ranking, gana cinturones, defiende tu título, sé campeón en dos categorías, entra en la lista Pound for Pound y en el Salón de la Fama.
+🏆 DE AMATEUR A CAMPEÓN DEL MUNDO
+De la liga amateur a las promotoras regionales y al mayor escenario del mundo. Sube en el ranking, gana cinturones, defiende tu título, entra en torneos Grand Prix, pelea en nuevas ciudades en tu gira mundial y entra en el Salón de la Fama.
 
-🌃 LA VIDA FUERA DE LA JAULA
-Mánagers, patrocinadores, tu equipo, coches y casas de lujo, inversiones, mascotas, peleas en redes, vida nocturna, citas y casino. Pero recuerda: todo tiene un precio.
+📺 VIDA FUERA DE LA JAULA
+El reality La Casa de la Jaula, tu club de fans, tu propia marca, directos, podcasts, negociaciones con patrocinadores, crisis en redes, vida familiar, vida nocturna y tu propio gimnasio. Pero recuerda: todo tiene un precio. Cuida tu salud cerebral y llega lúcido al retiro.
 
-📲 COMPARTE
-Comparte tu cinturón, tu nocaut o toda tu carrera en tu historia con un toque.
+⚔️ DESAFÍATE
+Empieza en dificultad Fácil, Normal o Leyenda y ponte a prueba en modos de desafío como Última Oportunidad, De la Calle a la Cima y Hombre de Hierro. Comparte tu puntuación en la Pelea del Día, igual para todos cada día.
 
 ✨ CARACTERÍSTICAS
-• Tu propio gimnasio: ficha a jóvenes talentos y ve a su esquina
-• Minijuegos de entrenamiento en cada campamento
-• Presentador en la jaula y golpes con vibración
-• Modo carrera profundo basado en decisiones
-• Némesis: un rival que te persigue toda la carrera
-• Modo dinastía: retírate y continúa con tu hijo
-• Repeticiones de KO, música de entrada y presentación en el ring
-• Jaulapedia: una página de enciclopedia escrita sola para tu peleador
-• Desafía a tus amigos en la Pelea del Día
-• Vestidor: shorts, guantes, cinturones y música de entrada. Sin pagar para ganar
-• Una Pelea del Día cada día, igual para todos: comparte tu puntuación y mantén la racha
-• Peleas animadas en la jaula y narración dinámica
-• 111 logros y Salón de la Fama
-• 3 ranuras de carrera
-• Efectos de sonido, público y música
-• Se puede jugar sin conexión
+• Peleas en vivo en tiempo real o modo táctico
+• Salidas cinematográficas, transiciones de asalto y repeticiones de KO
+• Árbol de habilidades, golpes firma y maestros legendarios
+• Rival eterno, modo dinastía y regreso del retiro
+• Carteles de pelea y tarjetas de carrera para compartir
+• Álbum de cartas, mapa mundial y 111 logros
+• Vestuario: pantalones, guantes, cinturones y música de entrada. Sin pagar para ganar
+• 3 ranuras de carrera, juega sin conexión
 • Türkçe, English, Español, Português, Русский, Polski
 
 Todas las promotoras, personas y marcas del juego son ficticias.
 
 === SÜRÜM NOTU ===
-¡Primera versión! Bienvenido a la jaula.
+¡Bienvenido a la jaula! Peleas en vivo en tiempo real, noches de pelea cinematográficas, La Casa de la Jaula, gira mundial y mucho más.

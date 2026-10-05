@@ -1,53 +1,45 @@
-﻿PLAY CONSOLE · pt-BR · Português (Brasil)
+﻿PLAY CONSOLE · pt-BR · Português (BR)
 Görseller: store\graphics\pt   ·   Simge: public\icon-512.png
 
 === UYGULAMA ADI (28/30) ===
 YOL: Carreira de Lutador MMA
 
-=== KISA AÇIKLAMA (73/80) ===
-Das ruas ao cinturão: um jogo de carreira de MMA onde cada decisão é sua.
+=== KISA AÇIKLAMA (70/80) ===
+Lute na jaula você mesmo e comande sua carreira. Das ruas ao cinturão.
 
-=== TAM AÇIKLAMA (2261/4000) ===
-Comece do zero e chegue ao cinturão. YOL: Do Octógono ao Cinturão é um simulador de carreira de lutador de MMA em que cada decisão muda sua história.
+=== TAM AÇIKLAMA (2335/4000) ===
+Comece do zero e conquiste o cinturão. YOL: Do Octógono ao Cinturão é um jogo de MMA em que você luta na jaula com as próprias mãos e cada decisão fora dela muda sua carreira.
 
-🥊 CRIE SEU LUTADOR
-Escolha nacionalidade, idade, categoria e base de luta: boxe, muay thai, wrestling, BJJ, sambo, judô, kyokushin, kickboxing ou lutador de rua. Crie seu rosto, escreva sua história e role os dados.
+🥊 LUTAS AO VIVO
+Jogue cada round em tempo real: jab, direto, chute, esquiva e guarda. Leia a preparação do adversário, esquive na hora certa e contra-ataque. Tente a queda ou faça o sprawl; no chão, bata por cima, busque a finalização ou escape por baixo. Use o golpe especial do seu estilo e sua técnica assinatura. Não curte reflexo? Escolha "Assistir tática", defina o plano e assista à luta.
 
-🏋️ COMANDE SEU CAMP
-Antes de cada luta escolha duração, local, intensidade e plano de luta. Descubra o ponto fraco do adversário e monte seu plano. Corte peso, provoque na coletiva e encare o rival na pesagem.
+🎬 NOITE DE LUTAS
+Desça a rampa sob os holofotes enquanto o locutor grita seu nome. Encare o rival, ouça o gongo e reveja seu nocaute em câmera lenta.
 
-⚡ LUTAS AO VIVO
-Lutadores animados no octógono, narração round a round e momentos críticos: quando o adversário balança, você vai para a finalização ou caça o mata-leão? Controle seu cardio e ouça seu córner.
+🏋️ CRIE SEU LUTADOR, COMANDE O CAMP
+Escolha nacionalidade, categoria e estilo: boxe, muay thai, wrestling, BJJ, sambo, judô, kyokushin, kickboxing ou rua. Defina duração, local e plano do camp; bata o peso, provoque na coletiva e aprenda técnicas com mestres lendários.
 
 🏆 DE AMADOR A CAMPEÃO MUNDIAL
-Da liga amadora às organizações regionais e ao maior palco do mundo. Suba no ranking, conquiste cinturões, defenda o título, seja campeão em duas categorias, entre na lista Pound for Pound e no Hall da Fama.
+Da liga amadora às organizações regionais e ao maior palco do mundo. Suba no ranking, conquiste cinturões, defenda seu título, entre em torneios Grand Prix, lute em novas cidades na turnê mundial e entre para o Hall da Fama.
 
-🌃 VIDA FORA DO OCTÓGONO
-Empresários, patrocinadores, sua equipe, carros e casas de luxo, investimentos, pets, tretas nas redes, vida noturna, encontros e cassino. Mas lembre: tudo tem um preço.
+📺 VIDA FORA DA JAULA
+O reality Casa da Jaula, seu fã-clube, sua própria marca, lives, podcasts, negociação com patrocinadores, crises nas redes, vida em família, vida noturna e sua própria academia. Mas lembre: tudo tem um preço. Cuide da saúde cerebral e chegue lúcido à aposentadoria.
 
-📲 COMPARTILHE
-Compartilhe seu cinturão, seu nocaute ou toda a sua carreira no story com um toque.
+⚔️ DESAFIE-SE
+Comece no Fácil, Normal ou Lenda e se teste em modos de desafio como Última Chance, Das Ruas ao Topo e Homem de Ferro. Compartilhe sua pontuação na Luta do Dia, igual para todos todos os dias.
 
 ✨ RECURSOS
-• Sua própria academia: contrate jovens talentos e fique no córner deles
-• Minijogos de treino em todo camp
-• Locutor no octógono e golpes com vibração
-• Modo carreira profundo, guiado por escolhas
-• Arquirrival: um rival que te persegue a carreira inteira
-• Modo dinastia: aposente-se e continue com seu filho
-• Replays de nocaute, música de entrada e anúncio do octógono
-• Octopédia: uma página de enciclopédia escrita sozinha para seu lutador
-• Desafie seus amigos na Luta do Dia
-• Vestiário: calções, luvas, cinturões e música de entrada. Sem pagar para ganhar
-• Uma Luta do Dia todo dia, igual para todos: compartilhe sua pontuação e mantenha a sequência
-• Lutas animadas e narração dinâmica
-• 111 conquistas e Hall da Fama
-• 3 espaços de carreira
-• Efeitos sonoros, torcida e música
-• Jogue offline
+• Lutas ao vivo em tempo real ou modo tático
+• Entradas cinematográficas, transições de round e replays de nocaute
+• Árvore de habilidades, golpes assinatura e mestres lendários
+• Arquirrival, modo dinastia e volta da aposentadoria
+• Pôsteres de luta e cartões de carreira para compartilhar
+• Álbum de cartas, mapa-múndi e 111 conquistas
+• Vestiário: shorts, luvas, cinturões e música de entrada. Sem pagar para ganhar
+• 3 espaços de carreira, jogue offline
 • Türkçe, English, Español, Português, Русский, Polski
 
 Todas as organizações, pessoas e marcas do jogo são fictícias.
 
 === SÜRÜM NOTU ===
-Primeira versão! Bem-vindo ao octógono.
+Bem-vindo à jaula! Lutas ao vivo em tempo real, noites de luta cinematográficas, a Casa da Jaula, turnê mundial e muito mais.

@@ -136,6 +136,7 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel }: { fs: FightState; p
   const [started, setStarted] = useState(() => getPref(TUTORIAL_KEY) === '1');
   const [step, setStep] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [mid, setMid] = useState({ w: 0, h: 0 });
   const pausedAt = useRef<number | null>(null);
   const flash = useFlash(H * 0.3);
   const ended = useRef(false);
@@ -399,7 +400,8 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel }: { fs: FightState; p
       </G>
     );
   };
-  const stageW = Math.min(W - 24, (H - 330) * ASPECT);
+  // Sahne, düğmelerden sonra kalan gerçek alana sığar (uzun çevirilerde düğmeler büyüse de skor tablosuna binmez)
+  const stageW = Math.max(120, Math.min(W - 24, (mid.h || H - 330) * ASPECT, mid.w || W - 24));
 
   return (
     <Modal animationType="fade" onRequestClose={() => undefined}>
@@ -435,7 +437,7 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel }: { fs: FightState; p
         </View>
 
         {/* Sahne */}
-        <View style={lf.middle}>
+        <View style={lf.middle} onLayout={(e) => setMid({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height - 8 })}>
         <View style={[lf.stage, { width: stageW, height: stageW / ASPECT }]} pointerEvents="none">
           <ArenaBg />
           <Svg width="100%" height="100%" viewBox={VIEW} preserveAspectRatio="xMidYMid meet" style={StyleSheet.absoluteFill}>
@@ -491,7 +493,9 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel }: { fs: FightState; p
             <View key={`${frame.pos}${ri}`} style={lf.row}>
               {row.map(([k, label, col]) => (
                 <Pressable key={k} {...INSTANT} onPressIn={() => press(k)} style={({ pressed }) => [lf.btn, ri === 1 && lf.btnBig, { borderColor: col }, pressed && { backgroundColor: col + '40' }]}>
-                  <Text style={[lf.btnText, { color: col }]}>{label()}</Text>
+                  <Text style={[lf.btnText, { color: col }, label().length > 8 && { fontSize: 13 }, label().length > 11 && { fontSize: 11 }]} numberOfLines={1}>
+                    {label()}
+                  </Text>
                 </Pressable>
               ))}
             </View>
@@ -573,6 +577,6 @@ const lf = StyleSheet.create({
   row: { flexDirection: 'row', gap: 10 },
   btn: { flex: 1, borderWidth: 2, borderRadius: 14, paddingVertical: 14, alignItems: 'center', backgroundColor: '#0d0e12' },
   btnBig: { paddingVertical: 22 },
-  btnText: { fontFamily: F.display, fontSize: 17, letterSpacing: 1 },
+  btnText: { fontFamily: F.display, fontSize: 17, letterSpacing: 1, textAlign: 'center' },
   hint: { color: C.faint, fontFamily: F.body, fontSize: 11, textAlign: 'center' },
 });

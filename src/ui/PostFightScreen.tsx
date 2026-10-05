@@ -270,7 +270,7 @@ const pf = StyleSheet.create({
   vs: { width: 36, alignItems: 'center', paddingTop: 58 },
   vsText: { color: C.faint, fontFamily: F.display, fontSize: 16, letterSpacing: 1 },
   tiles: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 4 },
-  tile: { width: '48.8%', flexGrow: 1, backgroundColor: C.card, borderRadius: R, borderWidth: 1, borderColor: C.border, padding: 12 },
+  tile: { width: '47%', flexGrow: 1, backgroundColor: C.card, borderRadius: R, borderWidth: 1, borderColor: C.border, padding: 12 },
   tileHead: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   tileLabel: { color: C.faint, fontFamily: F.display, fontSize: 10, letterSpacing: 1.5 },
   tileVal: { fontFamily: F.display, fontSize: 26, marginTop: 2 },
