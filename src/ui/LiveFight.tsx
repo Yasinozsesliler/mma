@@ -8,7 +8,7 @@ import Svg, { Circle, Defs, Ellipse, G, Line, LinearGradient as SvgLinear, Polyg
 import { sfx } from '../audio';
 import { playerKit } from '../cosmetics';
 import { oppStatsOf } from '../engine/fight';
-import { liveCreate, liveElapsed, liveInput, liveResult, liveStep, type LiveEvent, type LiveInput, type LiveRoundResult, type LiveSim } from '../engine/liveFight';
+import { liveCreate, liveElapsed, liveInput, livePos, liveResult, liveStep, type LiveEvent, type LiveInput, type LiveRoundResult, type LiveSim } from '../engine/liveFight';
 import type { Appearance, FightState } from '../engine/types';
 import { buzz } from '../haptics';
 import { L, LOC } from '../i18n';
@@ -18,11 +18,30 @@ import { Figure, HIP_H, lerpPose, POSES, type Pose, type PoseName } from './rig'
 import { C, F } from './theme';
 
 type Actor = 'p' | 'o';
-type Frame = { t: number; p: Pose; o: Pose; pHp: number; pSta: number; oHp: number; oSta: number; left: number; ring: { r: number; gold: boolean } | null; guard: boolean; counter: boolean; fx: { x: number; y: number; t0: number; big: boolean }[]; sx: number };
+type Frame = { t: number; p: Pose; o: Pose; pHp: number; pSta: number; oHp: number; oSta: number; left: number; ring: { r: number; gold: boolean } | null; icon: string | null; pos: 'ayakta' | 'ustte' | 'altta'; guard: boolean; counter: boolean; fx: { x: number; y: number; t0: number; big: boolean }[]; sx: number };
 const BLUE = { shorts: '#1f4fbf', trim: '#ffffff', glove: '#1740a8' };
 const P = (n: PoseName, ov: Partial<Pose> = {}): Pose => ({ ...POSES[n], ...ov });
+type Btn = [LiveInput, () => string, string];
+const PURPLE = '#b77dff';
+/** Konuma göre düğmeler: üst sıra savunma/özel, alt sıra vuruşlar */
+const BUTTONS: Record<'ayakta' | 'ustte' | 'altta', Btn[][]> = {
+  ayakta: [
+    [['kac', () => L("KAÇ"), C.blue], ['gard', () => L("GARD"), '#9aa3b2'], ['indir', () => L("İNDİR"), PURPLE]],
+    [['jab', () => L("JAB"), C.green], ['direkt', () => L("DİREKT"), C.red], ['tekme', () => L("TEKME"), C.orange]],
+  ],
+  ustte: [
+    [['kalk', () => L("KALK"), '#9aa3b2'], ['gard', () => L("KONTROL"), C.blue], ['sub', () => L("SUB"), PURPLE]],
+    [['jab', () => L("YUMRUK"), C.green], ['direkt', () => L("DİRSEK"), C.red]],
+  ],
+  altta: [
+    [['gard', () => L("GARD"), '#9aa3b2'], ['sub', () => L("SUB"), PURPLE]],
+    [['kac', () => L("KURTUL"), C.blue]],
+  ],
+};
 const GUARD: Partial<Pose> = { aL1: 70, aL2: 145, aR1: 62, aR2: 150, torso: 4, head: -4 };
 const now = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
+/** Rakibin hazırladığı hamlenin uyarı ikonu */
+const ICONS: Record<string, string> = { td: '⬇️', gsub: '🔒', escape: '⤴️', gnp: '👊' };
 const VB_W = 200;
 const VB_H = 130;
 const FLOOR = 118;
@@ -91,7 +110,7 @@ export function LiveFight({ fs, pLook, oLook, onEnd }: { fs: FightState; pLook?:
   });
   const fx = useRef<{ x: number; y: number; t0: number; big: boolean }[]>([]);
   const shake = useRef({ t0: 0, amp: 0 });
-  const [frame, setFrame] = useState<Frame>(() => ({ t: 0, p: P('stance'), o: P('stance'), pHp: 100 - fs.pHasar, pSta: fs.pKondisyon, oHp: 100 - fs.oHasar, oSta: fs.oKondisyon, left: 30000, ring: null, guard: false, counter: false, fx: [], sx: 0 }));
+  const [frame, setFrame] = useState<Frame>(() => ({ t: 0, p: P('stance'), o: P('stance'), pHp: 100 - fs.pHasar, pSta: fs.pKondisyon, oHp: 100 - fs.oHasar, oSta: fs.oKondisyon, left: 30000, ring: null, icon: null, pos: 'ayakta', guard: false, counter: false, fx: [], sx: 0 }));
   const [banner, setBanner] = useState<string | null>(() => L("{0}. RAUNT", [fs.raunt]));
   const flash = useFlash(H * 0.3);
   const ended = useRef(false);
@@ -113,38 +132,52 @@ export function LiveFight({ fs, pLook, oLook, onEnd }: { fs: FightState; pLook?:
     shake.current = { t0: now(), amp: big ? 3.2 : a === 'p' ? 1.6 : 0.8 };
   };
 
+  /** Yer dövüşünde kim üstte (pozlar buna göre) */
+  const ground = useRef<'p' | 'o' | null>(null);
+  const base = (a: Actor, ov: Partial<Pose> = {}): Pose => {
+    const g = ground.current;
+    if (!g) return P('stance', ov);
+    return g === a ? P('kneelTop', { x: 18, ...ov }) : P('onBack', { x: 24, ...ov });
+  };
+
   const onEvent = (e: LiveEvent) => {
     switch (e.kind) {
       case 'pAttack':
-        if (e.alt === 'jab') seq('p', [[P('jab', { x: 14 }), 80], [P('stance'), 150]]);
-        else if (e.alt === 'direkt') seq('p', [[P('stance', { torso: 8, x: 2 }), 110], [P('cross', { x: 16 }), 100], [P('stance'), 180]]);
-        else seq('p', [[P('stance', { x: -2 }), 120], [P('bodyKick', { x: 10 }), 160], [P('stance'), 220]]);
+        if (e.alt === 'yumruk' || e.alt === 'dirsek') seq('p', [[P('gnp', { x: 18 }), e.alt === 'dirsek' ? 150 : 100], [P('gnpHit', { x: 20 }), 90], [base('p'), 200]]);
+        else if (e.alt === 'jab') seq('p', [[P('jab', { x: 14 }), 80], [base('p'), 150]]);
+        else if (e.alt === 'direkt') seq('p', [[P('stance', { torso: 8, x: 2 }), 110], [P('cross', { x: 16 }), 100], [base('p'), 180]]);
+        else seq('p', [[P('stance', { x: -2 }), 120], [P('bodyKick', { x: 10 }), 160], [base('p'), 220]]);
         sfx('whoosh', 0.4);
         return;
       case 'pDodge':
-        seq('p', [[P('stance', { torso: -20, head: -16, x: -10, y: 3 }), 90], [P('stance'), 220]]);
+        seq('p', [[P('stance', { torso: -20, head: -16, x: -10, y: 3 }), 90], [base('p'), 220]]);
         return;
       case 'pGuard':
-        seq('p', [[P('stance', GUARD), 90], [P('stance', GUARD), 520], [P('stance'), 160]]);
+        if (ground.current) return;
+        seq('p', [[P('stance', GUARD), 90], [P('stance', GUARD), 520], [base('p'), 160]]);
         return;
       case 'oWindup':
-        go('o', P('stance', { torso: -14, x: -6, y: 2 }), 150);
+        if (ground.current === 'o') go('o', P('gnp', { x: 18 }), 150);
+        else if (ground.current === 'p') go('o', P('onBack', { x: 24, head: 18 }), 150);
+        else if (e.alt === 'td') go('o', P('stance', { torso: 30, y: 6, x: -2 }), 160);
+        else go('o', P('stance', { torso: -14, x: -6, y: 2 }), 150);
         return;
       case 'oFeint':
-        go('o', P('stance'), 160);
+        go('o', base('o'), 160);
         return;
       case 'oGuard':
         go('o', P('stance', GUARD), 140);
         return;
       case 'oAttack':
-        seq('o', [[P(e.alt === 'kick' ? 'bodyKick' : e.alt === 'jab' ? 'jab' : Math.random() < 0.5 ? 'cross' : 'hook', { x: 14 }), 110], [P('stance'), 240]]);
+        if (e.alt === 'gnp') seq('o', [[P('gnpHit', { x: 20 }), 100], [base('o'), 220]]);
+        else seq('o', [[P(e.alt === 'kick' ? 'bodyKick' : e.alt === 'jab' ? 'jab' : Math.random() < 0.5 ? 'cross' : 'hook', { x: 14 }), 110], [base('o'), 240]]);
         sfx('whoosh', 0.6);
         return;
       case 'hit': {
         const a = e.side as Actor;
         const big = (e.dmg ?? 0) >= 3;
         spark(a, big);
-        seq(a, [[P('stance', { torso: -12, head: -22, x: -7 }), 90], [P('stance'), 220]]);
+        seq(a, ground.current ? [[base(a, { head: ground.current === a ? -14 : 22 }), 90], [base(a), 200]] : [[P('stance', { torso: -12, head: -22, x: -7 }), 90], [P('stance'), 220]]);
         sfx(big ? 'heavy' : 'punch');
         if (a === 'p') buzz(big ? 'guclu' : 'orta');
         else buzz(big ? 'orta' : 'hafif');
@@ -154,6 +187,7 @@ export function LiveFight({ fs, pLook, oLook, onEnd }: { fs: FightState; pLook?:
       }
       case 'blocked':
         if (e.alt === 'miss') flash.show({ puan: 30, metin: L("BOŞA"), renk: C.dim });
+        else if (e.alt === 'escape') flash.show({ puan: 20, metin: L("KURTULAMADIN"), renk: C.dim });
         else flash.show({ puan: 40, metin: e.side === 'p' ? L("GARD!") : L("GARDA"), renk: C.dim });
         sfx('body', 0.6);
         return;
@@ -167,13 +201,50 @@ export function LiveFight({ fs, pLook, oLook, onEnd }: { fs: FightState; pLook?:
       case 'counter':
         flash.show({ puan: 100, metin: L("KONTRA!"), renk: C.gold });
         return;
+      case 'td':
+        if (e.alt === 'stuffed') {
+          flash.show({ puan: e.side === 'o' ? 100 : 20, metin: e.side === 'o' ? L("TAKEDOWN SAVUNULDU!") : L("DALIŞ BOŞA ÇIKTI"), renk: e.side === 'o' ? C.gold : C.red });
+          seq(e.side as Actor, [[P('shot', { x: 20 }), 200], [P('stance'), 350]]);
+        } else seq(e.side as Actor, [[P('shot', { x: 24 }), 200]]);
+        sfx('whoosh');
+        return;
+      case 'sprawl':
+        seq('p', [[P('sprawl', { x: 6 }), 220], [P('stance'), 400]]);
+        buzz('basari');
+        return;
+      case 'ground': {
+        const top = e.side as Actor;
+        ground.current = top;
+        go(top, P('kneelTop', { x: 18 }), 280);
+        go(top === 'p' ? 'o' : 'p', P('onBack', { x: 24 }), 280);
+        shake.current = { t0: now(), amp: 3 };
+        sfx('slam');
+        buzz('orta');
+        setBanner(top === 'p' ? L("YERE İNDİRDİN!") : L("YERE İNDİRİLDİN!"));
+        setTimeout(() => setBanner(null), 1000);
+        return;
+      }
+      case 'stand':
+        ground.current = null;
+        go('p', P('stance'), 350);
+        go('o', P('stance'), 350);
+        flash.show({ puan: 50, metin: L("AYAKTA"), renk: C.text });
+        return;
+      case 'held':
+        flash.show({ puan: 100, metin: e.alt === 'gsub' ? L("KİLİDİ BOZDUN!") : L("BASTIRDIN!"), renk: C.gold });
+        buzz('basari');
+        return;
+      case 'sub':
+        if (e.alt === 'fail') flash.show({ puan: 30, metin: e.side === 'p' ? L("KİLİT KAÇTI") : L("KURTULDUN!"), renk: e.side === 'p' ? C.dim : C.gold });
+        else sfx('lock');
+        return;
       case 'kd':
         if (e.side === 'o') {
-          seq('o', [[P('reel', { x: -8 }), 150], [P('hurt', { x: -6 }), 300], [P('reel', { x: -10 }), 400], [P('stance'), 600]]);
+          if (!ground.current) seq('o', [[P('reel', { x: -8 }), 150], [P('hurt', { x: -6 }), 300], [P('reel', { x: -10 }), 400], [P('stance'), 600]]);
           setBanner(L("SARSILDI! BİTİR!"));
           sfx('roar');
         } else {
-          seq('p', [[P('reel', { x: -8 }), 150], [P('hurt', { x: -6 }), 400], [P('stance'), 800]]);
+          if (!ground.current) seq('p', [[P('reel', { x: -8 }), 150], [P('hurt', { x: -6 }), 400], [P('stance'), 800]]);
           setBanner(L("SARSILDIN! KAÇ, GARD AL!"));
           sfx('ooh');
         }
@@ -186,10 +257,17 @@ export function LiveFight({ fs, pLook, oLook, onEnd }: { fs: FightState; pLook?:
         return;
       case 'end': {
         const loser = e.side as Actor;
-        seq(loser, [[P('reel', { x: -8 }), 150], [P('knockedOut', { x: -16 }), 450]]);
-        seq(loser === 'p' ? 'o' : 'p', [[P('stance'), 400], [P('win', { x: 0 }), 500]]);
-        setBanner(loser === 'o' ? L("NAKAVT!") : L("NAKAVT OLDUN"));
-        sfx('roar');
+        const sub = sim.current?.over?.yontem === 'SUB';
+        if (sub) {
+          setBanner(loser === 'o' ? L("TAP! SUBMISSION!") : L("TAP ATTIN"));
+          sfx('tap');
+        } else {
+          ground.current = null;
+          seq(loser, [[P('reel', { x: -8 }), 150], [P('knockedOut', { x: -16 }), 450]]);
+          seq(loser === 'p' ? 'o' : 'p', [[P('stance'), 400], [P('win', { x: 0 }), 500]]);
+          setBanner(loser === 'o' ? L("NAKAVT!") : L("NAKAVT OLDUN"));
+          sfx('roar');
+        }
         buzz('nakavt');
         shake.current = { t0: now(), amp: 6 };
         return;
@@ -226,6 +304,8 @@ export function LiveFight({ fs, pLook, oLook, onEnd }: { fs: FightState; pLook?:
           left: Math.max(0, s.dur - liveElapsed(s)),
           // Zamanlama halkası: hazırlık süresince küçülür, kaçış penceresine girince altın olur.
           ring: rem >= 0 ? { r: 10 + Math.min(1, rem / 700) * 14, gold: rem < s.cfg.dodgeMs * 0.8 } : null,
+          icon: rem >= 0 ? ICONS[o.attack] ?? '⚠️' : o.state === 'guard' ? '🛡️' : null,
+          pos: livePos(s),
           guard: o.state === 'guard',
           counter: t < s.p.counterUntil,
           fx: fx.current.map((f) => ({ ...f })),
@@ -338,7 +418,7 @@ export function LiveFight({ fs, pLook, oLook, onEnd }: { fs: FightState; pLook?:
               ) : null}
             </G>
           </Svg>
-          {frame.guard ? <Text style={lf.icon}>🛡️</Text> : ring ? <Text style={lf.icon}>⚠️</Text> : null}
+          {frame.icon ? <Text style={lf.icon}>{frame.icon}</Text> : null}
           {counter ? <Text style={lf.counter}>{L("KONTRA PENCERESİ!")}</Text> : null}
         </View>
         </View>
@@ -349,34 +429,24 @@ export function LiveFight({ fs, pLook, oLook, onEnd }: { fs: FightState; pLook?:
           </View>
         ) : null}
 
-        {/* Kontroller */}
+        {/* Kontroller: konuma göre değişir */}
         <View style={lf.controls}>
-          <View style={lf.row}>
-            {(
-              [
-                ['kac', L("KAÇ"), C.blue],
-                ['gard', L("GARD"), '#9aa3b2'],
-              ] as const
-            ).map(([k, label, col]) => (
-              <Pressable key={k} {...INSTANT} onPressIn={() => press(k)} style={({ pressed }) => [lf.btn, { borderColor: col }, pressed && { backgroundColor: col + '40' }]}>
-                <Text style={[lf.btnText, { color: col }]}>{label}</Text>
-              </Pressable>
-            ))}
-          </View>
-          <View style={lf.row}>
-            {(
-              [
-                ['jab', L("JAB"), C.green],
-                ['direkt', L("DİREKT"), C.red],
-                ['tekme', L("TEKME"), C.orange],
-              ] as const
-            ).map(([k, label, col]) => (
-              <Pressable key={k} {...INSTANT} onPressIn={() => press(k)} style={({ pressed }) => [lf.btn, lf.btnBig, { borderColor: col }, pressed && { backgroundColor: col + '40' }]}>
-                <Text style={[lf.btnText, { color: col }]}>{label}</Text>
-              </Pressable>
-            ))}
-          </View>
-          <Text style={lf.hint}>{L("Halka altın olunca KAÇ, sonra hemen vur. DİREKT ve TEKME saldırı hazırlığını keser.")}</Text>
+          {BUTTONS[frame.pos].map((row, ri) => (
+            <View key={`${frame.pos}${ri}`} style={lf.row}>
+              {row.map(([k, label, col]) => (
+                <Pressable key={k} {...INSTANT} onPressIn={() => press(k)} style={({ pressed }) => [lf.btn, ri === 1 && lf.btnBig, { borderColor: col }, pressed && { backgroundColor: col + '40' }]}>
+                  <Text style={[lf.btnText, { color: col }]}>{label()}</Text>
+                </Pressable>
+              ))}
+            </View>
+          ))}
+          <Text style={lf.hint}>
+            {frame.pos === 'ustte'
+              ? L("🔒 ya da ⤴️ görünce KONTROL. Rakip yorulunca SUB dene.")
+              : frame.pos === 'altta'
+                ? L("🔒 görünce hemen KURTUL. 👊 gelirken GARD al.")
+                : L("Halka altın olunca KAÇ (⬇️ takedown'a karşı da). DİREKT ve TEKME hazırlığı keser.")}
+          </Text>
         </View>
       </View>
     </Modal>

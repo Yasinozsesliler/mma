@@ -1,14 +1,16 @@
 // Canlı dövüş motoru: bir raunt gerçek zamanlı oynanır. Saf ve zaman adımlıdır (ekrandan bağımsız): ekran her
 // karede liveStep çağırır, düğmeler liveInput'a gider; otomatik test oyuncuları da aynı motoru kullanır.
-// İstatistikler belirleyicidir: vuruş gücü / çene hasarı, kondisyon nefesi, rakibin hızı ve zekâsı saldırı
-// hazırlığının süresini ve çalım sıklığını belirler. Refleks farkı yaratır ama çok güçlü rakibi tek başına yenemez.
+// Ayakta: jab/direkt/tekme, kaç (sprawl), gard, indir. Yerde (üstte): yumruk, dirsek, submission, kontrol, kalk;
+// (altta): kurtul, gard, submission. İstatistikler belirleyicidir: vuruş/çene hasarı, güreş takedown ve sprawl'u,
+// yer dövüşü submission'ları, kondisyon nefesi, rakibin hız ve zekâsı hazırlık süresini ve çalımları belirler.
 import { chance, clamp, rand } from './rng';
 import type { FightState, Stats, Tactic } from './types';
 import { tacticEdge } from './fight';
 
-export type LiveInput = 'jab' | 'direkt' | 'tekme' | 'kac' | 'gard';
+export type LiveInput = 'jab' | 'direkt' | 'tekme' | 'kac' | 'gard' | 'indir' | 'sub' | 'kalk';
 export type OState = 'idle' | 'windup' | 'strike' | 'guard' | 'hurt' | 'rocked';
-export type OAttack = 'jab' | 'power' | 'kick';
+/** Rakibin hazırladığı hamle: ayakta jab/power/kick/td; yerde (üstte) gnp/gsub, (altta) escape/gsub */
+export type OAttack = 'jab' | 'power' | 'kick' | 'td' | 'gnp' | 'gsub' | 'escape';
 
 export interface LiveSide {
   hp: number;
@@ -18,25 +20,33 @@ export interface LiveSide {
   thrown: number;
   dealt: number;
   kd: number;
+  /** Yerde üstte geçen süre (ms) */
+  ctrl: number;
 }
 
 export interface LiveEvent {
   t: number;
   kind:
-    | 'pAttack' // oyuncu vuruş attı (alt: jab/direkt/tekme)
+    | 'pAttack' // oyuncu vuruş attı (alt: jab/direkt/tekme/yumruk/dirsek)
     | 'pDodge'
     | 'pGuard'
     | 'oWindup'
     | 'oFeint'
     | 'oGuard'
-    | 'oAttack' // rakip vurdu (alt: jab/power/kick)
+    | 'oAttack' // rakip vurdu (alt: jab/power/kick/gnp)
     | 'hit' // side: darbeyi yiyen
     | 'blocked'
     | 'dodged'
     | 'interrupt'
     | 'counter'
-    | 'kd' // side: yere düşen / sarsılan
+    | 'kd' // side: sarsılan
     | 'tired'
+    | 'td' // side: deneyen, alt: ok/stuffed
+    | 'sprawl'
+    | 'ground' // side: üstteki
+    | 'stand'
+    | 'sub' // side: deneyen, alt: ok/fail
+    | 'held' // oyuncu rakibin hamlesini bastırdı (kontrol/kurtul)
     | 'end';
   side?: 'p' | 'o';
   alt?: string;
@@ -46,6 +56,8 @@ export interface LiveEvent {
 export interface LiveCfg {
   pPow: number;
   oPow: number;
+  pGnp: number;
+  oGnp: number;
   pRegen: number;
   oRegen: number;
   windup: number;
@@ -56,6 +68,7 @@ export interface LiveCfg {
   guardRate: number;
   jabRate: number;
   kickRate: number;
+  tdRate: number;
   edge: number;
   /** Rakibin, oyuncu vururken araya kontra sokma ihtimali */
   oCounter: number;
@@ -65,6 +78,9 @@ export interface LiveCfg {
   combo: number;
   /** Doğru zamanlanmış kaçışın yine de tutmama ihtimali (rakip daha hızlı/zekiyse yüksek) */
   dodgeFail: number;
+  /** Güreş farkı (oyuncu − rakip) ve yer dövüşü farkı */
+  wr: number;
+  gr: number;
 }
 
 export interface LiveSim {
@@ -75,24 +91,29 @@ export interface LiveSim {
   o: LiveSide & { state: OState; stateUntil: number; attack: OAttack; feint: boolean; comboNext?: boolean };
   /** Sarsılan taraf ve bitiş anı (o sırada saldıramaz, aldığı hasar artar) */
   rocked: { side: 'p' | 'o'; until: number } | null;
+  /** Yer dövüşü: üstteki taraf */
+  ground: { top: 'p' | 'o'; since: number; subFails: number } | null;
   cfg: LiveCfg;
   events: LiveEvent[];
-  over: { kazanan: 'p' | 'o'; yontem: 'KO' | 'TKO'; t: number } | null;
+  over: { kazanan: 'p' | 'o'; yontem: 'KO' | 'TKO' | 'SUB'; t: number } | null;
 }
 
 export const ROUND_MS = 30_000;
 const COUNTDOWN = 1200;
-const COST = { jab: 7, direkt: 18, tekme: 24, kac: 6, gard: 0 };
-const BASE = { jab: 0.65, direkt: 1.7, tekme: 2 };
-const O_BASE: Record<OAttack, number> = { jab: 1.3, power: 3.3, kick: 3.7 };
+const COST: Record<LiveInput, number> = { jab: 7, direkt: 18, tekme: 24, kac: 6, gard: 0, indir: 20, sub: 22, kalk: 4 };
+const BASE = { jab: 0.65, direkt: 1.7, tekme: 2, yumruk: 0.7, dirsek: 1.6 };
+const O_BASE: Record<OAttack, number> = { jab: 1.3, power: 3.3, kick: 3.7, td: 0, gnp: 1.5, gsub: 0, escape: 0 };
 
 /** İstatistik ve taktiklerden canlı ayarlar. */
 export function liveConfig(p: Stats, o: Stats, pt: Tactic, ot: Tactic): LiveCfg {
   const pow = (a: Stats, b: Stats) => clamp(1 + (a.vurus - b.cene) / 45 + (a.vurus - 55) / 120, 0.4, 2);
+  const gnp = (a: Stats, b: Stats) => clamp(1 + ((a.vurus + a.yer) / 2 - b.cene) / 50, 0.4, 1.9);
   const aggressive = ot === 'baski' || ot === 'takedown' || ot === 'clinch';
   return {
     pPow: pow(p, o),
     oPow: pow(o, p),
+    pGnp: gnp(p, o),
+    oGnp: gnp(o, p),
     pRegen: 0.0055 + p.kondisyon * 0.00009,
     oRegen: 0.0055 + o.kondisyon * 0.00009,
     windup: clamp(760 - (o.hiz - p.hiz) * 5 - o.iq * 1.6, 300, 820),
@@ -103,15 +124,18 @@ export function liveConfig(p: Stats, o: Stats, pt: Tactic, ot: Tactic): LiveCfg 
     guardRate: ot === 'kontra' ? 0.32 : ot === 'mesafe' ? 0.22 : 0.15,
     jabRate: ot === 'mesafe' ? 0.5 : ot === 'kontra' ? 0.3 : 0.28,
     kickRate: ot === 'mesafe' ? 0.12 : 0.18,
+    tdRate: clamp((ot === 'takedown' ? 0.32 : ot === 'clinch' ? 0.16 : 0.06) * (0.5 + o.gures / 90), 0.02, 0.45),
     edge: tacticEdge(pt, ot),
     oCounter: clamp(0.1 + o.iq / 600 + (ot === 'kontra' ? 0.15 : 0) + (o.iq - p.iq) / 400, 0.05, 0.45),
     miss: clamp(0.12 + (o.hiz - p.hiz) / 160, 0.04, 0.35),
     combo: clamp(0.18 + o.hiz / 400 + (ot === 'baski' ? 0.12 : 0), 0.1, 0.5),
     dodgeFail: clamp(0.08 + (o.hiz - p.hiz) / 80 + (o.iq - p.iq) / 200, 0.03, 0.45),
+    wr: p.gures - o.gures,
+    gr: p.yer - o.yer,
   };
 }
 
-const side = (hp: number): LiveSide => ({ hp, sta: 100, busyUntil: 0, landed: 0, thrown: 0, dealt: 0, kd: 0 });
+const side = (hp: number): LiveSide => ({ hp, sta: 100, busyUntil: 0, landed: 0, thrown: 0, dealt: 0, kd: 0, ctrl: 0 });
 
 export function liveCreate(fs: FightState, oStats: Stats, t0: number, dur = ROUND_MS): LiveSim {
   const cfg = liveConfig(fs.pStats, oStats, fs.taktik ?? 'mesafe', fs.rakipTaktik ?? 'mesafe');
@@ -122,6 +146,7 @@ export function liveCreate(fs: FightState, oStats: Stats, t0: number, dur = ROUN
     p: { ...side(100 - fs.pHasar), sta: fs.pKondisyon, dodgeUntil: 0, guardUntil: 0, counterUntil: 0 },
     o: { ...side(100 - fs.oHasar), sta: fs.oKondisyon, state: 'idle', stateUntil: t0 + COUNTDOWN + 700, attack: 'power', feint: false },
     rocked: null,
+    ground: null,
     cfg,
     events: [],
     over: null,
@@ -131,8 +156,24 @@ export function liveCreate(fs: FightState, oStats: Stats, t0: number, dur = ROUN
 const ev = (s: LiveSim, e: Omit<LiveEvent, 't'>) => s.events.push({ t: s.t, ...e });
 export const liveElapsed = (s: LiveSim) => clamp(s.t - s.start, 0, s.dur);
 export const liveRunning = (s: LiveSim) => !s.over && s.t >= s.start && s.t - s.start < s.dur;
+/** Oyuncunun konumu: düğmeler buna göre değişir. */
+export const livePos = (s: LiveSim): 'ayakta' | 'ustte' | 'altta' => (!s.ground ? 'ayakta' : s.ground.top === 'p' ? 'ustte' : 'altta');
 
-/** Darbe: yiyen tarafın canı düşer; düşük canda sert darbe yere düşürebilir, can biterse nakavt. */
+function setGround(s: LiveSim, top: 'p' | 'o' | null) {
+  if (top) {
+    s.ground = { top, since: s.t, subFails: 0 };
+    ev(s, { kind: 'ground', side: top });
+  } else {
+    s.ground = null;
+    ev(s, { kind: 'stand' });
+  }
+  s.rocked = null;
+  s.o.state = 'idle';
+  s.o.stateUntil = s.t + 500 + rand() * 300;
+  s.p.busyUntil = Math.max(s.p.busyUntil, s.t + 250);
+}
+
+/** Darbe: yiyen tarafın canı düşer; düşük canda sert darbe sarsabilir, can biterse nakavt. */
 function damage(s: LiveSim, victim: 'p' | 'o', dmg: number, heavy: boolean) {
   const v = victim === 'p' ? s.p : s.o;
   const a = victim === 'p' ? s.o : s.p;
@@ -163,11 +204,25 @@ function damage(s: LiveSim, victim: 'p' | 'o', dmg: number, heavy: boolean) {
   }
 }
 
+/** Submission denemesi: tutarsa maç biter. */
+function submit(s: LiveSim, who: 'p' | 'o', p: number) {
+  if (chance(p)) {
+    s.over = { kazanan: who, yontem: 'SUB', t: s.t };
+    ev(s, { kind: 'sub', side: who, alt: 'ok' });
+    ev(s, { kind: 'end', side: who === 'p' ? 'o' : 'p' });
+    return true;
+  }
+  ev(s, { kind: 'sub', side: who, alt: 'fail' });
+  return false;
+}
+
 /** Oyuncu girdisi. Meşgulken, sarsılmışken ya da raunt dışında yok sayılır. */
 export function liveInput(s: LiveSim, k: LiveInput) {
   const p = s.p;
   if (!liveRunning(s) || s.t < p.busyUntil) return;
   if (s.rocked?.side === 'p' && s.t < s.rocked.until && k !== 'kac' && k !== 'gard') return;
+  const pos = livePos(s);
+  if (pos !== 'ayakta') return groundInput(s, k, pos);
   if (k === 'kac') {
     p.busyUntil = s.t + 300;
     p.dodgeUntil = s.t + s.cfg.dodgeMs;
@@ -181,19 +236,37 @@ export function liveInput(s: LiveSim, k: LiveInput) {
     ev(s, { kind: 'pGuard' });
     return;
   }
+  if (k === 'sub' || k === 'kalk') return;
   if (p.sta < COST[k]) {
     ev(s, { kind: 'tired', side: 'p' });
     p.busyUntil = s.t + 250;
     return;
   }
   p.sta -= COST[k];
+  const o = s.o;
+  if (k === 'indir') {
+    p.busyUntil = s.t + 650;
+    p.guardUntil = 0;
+    const open = o.state === 'windup' || o.state === 'strike' ? 0.25 : o.state === 'rocked' ? 0.3 : o.state === 'guard' ? 0.08 : 0;
+    const ok = chance(clamp(0.3 + s.cfg.wr / 110 + open + s.cfg.edge, 0.08, 0.85));
+    ev(s, { kind: 'td', side: 'p', alt: ok ? 'ok' : 'stuffed' });
+    if (ok) setGround(s, 'p');
+    else {
+      p.busyUntil = s.t + 1000;
+      // Boşa dalış: dize ya da aparkata yakalanabilirsin
+      if (o.state !== 'rocked' && chance(0.45)) {
+        ev(s, { kind: 'oAttack', alt: 'power' });
+        damage(s, 'p', O_BASE.power * s.cfg.oPow * 0.8, true);
+      }
+    }
+    return;
+  }
   p.thrown++;
   const spam = p.lastAtk != null && s.t - p.lastAtk < 520;
   p.lastAtk = s.t;
   p.busyUntil = s.t + (k === 'jab' ? 260 : k === 'direkt' ? 460 : 620);
   p.guardUntil = 0;
   ev(s, { kind: 'pAttack', alt: k });
-  const o = s.o;
   const counter = s.t < p.counterUntil;
   const heavy = k !== 'jab';
   let dmg = BASE[k] * s.cfg.pPow * (1 + s.cfg.edge * 2) * (p.sta < 20 ? 0.6 : 1) * (counter ? 2 : 1);
@@ -202,7 +275,7 @@ export function liveInput(s: LiveSim, k: LiveInput) {
     return;
   }
   if (o.state === 'windup') {
-    if (heavy) {
+    if (heavy && o.attack !== 'td') {
       // Hazırlığı kestin
       o.state = 'hurt';
       o.stateUntil = s.t + 520;
@@ -215,7 +288,7 @@ export function liveInput(s: LiveSim, k: LiveInput) {
     dmg *= 0.22;
     ev(s, { kind: 'blocked', side: 'o' });
     o.sta = clamp(o.sta - (heavy ? 5 : 2), 0, 100);
-    s.o.hp = clamp(s.o.hp - dmg, 0, 100);
+    o.hp = clamp(o.hp - dmg, 0, 100);
     return;
   }
   // Hızlı rakip vuruşu boşa çıkarabilir
@@ -239,6 +312,80 @@ export function liveInput(s: LiveSim, k: LiveInput) {
   }
 }
 
+/** Yerdeki girdiler. Üstte: jab=yumruk, direkt=dirsek, sub, gard=kontrol, kalk. Altta: kac=kurtul, gard, sub. */
+function groundInput(s: LiveSim, k: LiveInput, pos: 'ustte' | 'altta') {
+  const p = s.p;
+  const o = s.o;
+  const cost = k === 'jab' ? 6 : k === 'direkt' ? 14 : k === 'kac' ? 15 : COST[k];
+  if (k !== 'gard' && p.sta < cost) {
+    ev(s, { kind: 'tired', side: 'p' });
+    p.busyUntil = s.t + 250;
+    return;
+  }
+  if (k === 'gard') {
+    p.busyUntil = s.t + 200;
+    p.guardUntil = s.t + 750;
+    ev(s, { kind: 'pGuard' });
+    // Üstte kontrol: rakibin hazırladığı kalkışı ya da submission'ı bastır
+    if (pos === 'ustte' && o.state === 'windup') {
+      o.state = 'idle';
+      o.stateUntil = s.t + 700 + rand() * 500;
+      ev(s, { kind: 'held', alt: o.attack });
+    }
+    return;
+  }
+  p.sta -= cost;
+  if (pos === 'ustte') {
+    if (k === 'kalk') {
+      setGround(s, null);
+      return;
+    }
+    if (k === 'sub') {
+      p.busyUntil = s.t + 900;
+      // Yıpranmamış rakibe submission zordur; aynı pozisyonda her başarısız deneme rakibi uyarır
+      const pr = clamp(0.04 + s.cfg.gr / 150 + (1 - o.hp / 100) * 0.35 + (o.sta < 30 ? 0.12 : 0) + (o.state === 'rocked' ? 0.15 : 0) - s.ground!.subFails * 0.05, 0.02, 0.6);
+      if (submit(s, 'p', pr)) return;
+      s.ground!.subFails++;
+      // Kaçırınca rakip kalkabilir
+      if (chance(0.4)) setGround(s, null);
+      return;
+    }
+    if (k === 'jab' || k === 'direkt') {
+      const heavy = k === 'direkt';
+      p.thrown++;
+      p.busyUntil = s.t + (heavy ? 520 : 300);
+      ev(s, { kind: 'pAttack', alt: heavy ? 'dirsek' : 'yumruk' });
+      let dmg = (heavy ? BASE.dirsek : BASE.yumruk) * s.cfg.pGnp * (p.sta < 20 ? 0.6 : 1);
+      if (o.state === 'guard' || chance(0.22)) {
+        dmg *= 0.3;
+        ev(s, { kind: 'blocked', side: 'o' });
+        o.hp = clamp(o.hp - dmg, 0, 100);
+        return;
+      }
+      damage(s, 'o', dmg, heavy);
+    }
+    return;
+  }
+  // Altta
+  if (k === 'kac') {
+    p.busyUntil = s.t + 700;
+    // Rakip hazırlanırken açıklık verir: o an kurtulmak daha kolay; submission hazırlığını da bozar
+    const timing = o.state === 'windup' ? 0.25 : 0;
+    if (o.state === 'windup' && o.attack === 'gsub') {
+      o.state = 'idle';
+      o.stateUntil = s.t + 600;
+      ev(s, { kind: 'held', alt: 'gsub' });
+    }
+    if (chance(clamp(0.26 + (s.cfg.wr + s.cfg.gr) / 260 + timing, 0.08, 0.8))) setGround(s, null);
+    else ev(s, { kind: 'blocked', side: 'p', alt: 'escape' });
+    return;
+  }
+  if (k === 'sub') {
+    p.busyUntil = s.t + 900;
+    if (!submit(s, 'p', clamp(0.03 + s.cfg.gr / 160 + (1 - o.hp / 100) * 0.25 - s.ground!.subFails * 0.05, 0.01, 0.4))) s.ground!.subFails++;
+  }
+}
+
 /** Zamanı ilerletir: nefes dolar, rakip yapay zekâsı karar verir, saldırılar çözülür. */
 export function liveStep(s: LiveSim, t: number) {
   const dt = Math.max(0, t - s.t);
@@ -250,9 +397,14 @@ export function liveStep(s: LiveSim, t: number) {
   }
   s.p.sta = clamp(s.p.sta + dt * s.cfg.pRegen, 0, 100);
   s.o.sta = clamp(s.o.sta + dt * s.cfg.oRegen, 0, 100);
+  if (s.ground) (s.ground.top === 'p' ? s.p : s.o).ctrl += dt;
   if (s.rocked && t >= s.rocked.until) s.rocked = null;
   const o = s.o;
   if (t < o.stateUntil) return;
+  if (s.ground) {
+    groundAI(s, t);
+    return;
+  }
   switch (o.state) {
     case 'idle':
     case 'hurt':
@@ -275,11 +427,12 @@ export function liveStep(s: LiveSim, t: number) {
         o.stateUntil = t + 600;
         return;
       }
+      const c = s.cfg;
       const r = rand();
-      o.attack = r < s.cfg.jabRate ? 'jab' : r < s.cfg.jabRate + s.cfg.kickRate ? 'kick' : 'power';
-      o.feint = o.attack !== 'jab' && chance(s.cfg.feint);
+      o.attack = r < c.tdRate ? 'td' : r < c.tdRate + c.jabRate ? 'jab' : r < c.tdRate + c.jabRate + c.kickRate ? 'kick' : 'power';
+      o.feint = o.attack !== 'jab' && o.attack !== 'td' && chance(c.feint);
       o.state = 'windup';
-      const w = o.attack === 'jab' ? s.cfg.windup * 0.42 : o.attack === 'kick' ? s.cfg.windup * 1.15 : s.cfg.windup;
+      const w = o.attack === 'jab' ? c.windup * 0.42 : o.attack === 'kick' ? c.windup * 1.15 : o.attack === 'td' ? c.windup * 1.1 : c.windup;
       o.stateUntil = t + w * (0.75 + rand() * 0.5);
       ev(s, { kind: 'oWindup', alt: o.attack });
       return;
@@ -291,12 +444,28 @@ export function liveStep(s: LiveSim, t: number) {
         ev(s, { kind: 'oFeint' });
         return;
       }
+      const p = s.p;
+      if (o.attack === 'td') {
+        o.sta = clamp(o.sta - 10, 0, 100);
+        o.state = 'strike';
+        o.stateUntil = t + 300;
+        // Sprawl: zamanında KAÇ
+        if (t < p.dodgeUntil && chance(clamp(0.66 + s.cfg.wr / 110, 0.3, 0.92))) {
+          ev(s, { kind: 'sprawl' });
+          ev(s, { kind: 'td', side: 'o', alt: 'stuffed' });
+          p.counterUntil = t + 800;
+          return;
+        }
+        const ok = chance(clamp(0.6 - s.cfg.wr / 110, 0.25, 0.85));
+        ev(s, { kind: 'td', side: 'o', alt: ok ? 'ok' : 'stuffed' });
+        if (ok) setGround(s, 'o');
+        return;
+      }
       o.state = 'strike';
       o.stateUntil = t + 260;
       o.thrown++;
       o.sta = clamp(o.sta - (o.attack === 'jab' ? 4 : o.attack === 'kick' ? 12 : 9), 0, 100);
       ev(s, { kind: 'oAttack', alt: o.attack });
-      const p = s.p;
       const dmg = O_BASE[o.attack] * s.cfg.oPow * (1 - s.cfg.edge * 2) * (o.sta < 15 ? 0.6 : 1);
       if (t < p.dodgeUntil && !chance(s.cfg.dodgeFail)) {
         p.counterUntil = t + 950;
@@ -314,7 +483,7 @@ export function liveStep(s: LiveSim, t: number) {
     }
     case 'strike':
       // Seri: sert vuruşun ardından kısa hazırlıklı ikinci vuruş
-      if (o.attack !== 'jab' && !o.comboNext && o.sta > 20 && chance(s.cfg.combo)) {
+      if ((o.attack === 'power' || o.attack === 'kick') && !o.comboNext && o.sta > 20 && chance(s.cfg.combo)) {
         o.comboNext = true;
         o.attack = 'power';
         o.feint = false;
@@ -330,6 +499,62 @@ export function liveStep(s: LiveSim, t: number) {
   }
 }
 
+/** Yerde rakip: üstteyse yumruk ve submission hazırlar; alttaysa kalkmaya ya da submission'a hazırlanır. */
+function groundAI(s: LiveSim, t: number) {
+  const o = s.o;
+  const p = s.p;
+  const top = s.ground!.top === 'o';
+  if (o.state === 'windup') {
+    o.state = 'idle';
+    o.stateUntil = t + 500 + rand() * 600;
+    if (o.attack === 'gnp') {
+      o.thrown++;
+      ev(s, { kind: 'oAttack', alt: 'gnp' });
+      const dmg = O_BASE.gnp * s.cfg.oGnp;
+      if (t < p.guardUntil) {
+        p.hp = clamp(p.hp - dmg * 0.3, 0, 100);
+        ev(s, { kind: 'blocked', side: 'p' });
+      } else damage(s, 'p', dmg, chance(0.35));
+      return;
+    }
+    if (o.attack === 'gsub') {
+      // Oyuncu zamanında bastıramadı / kurtulamadı
+      submit(s, 'o', clamp((top ? 0.14 : 0.08) - s.cfg.gr / 160 + (1 - p.hp / 100) * 0.25 + (p.sta < 25 ? 0.08 : 0), 0.04, 0.55));
+      return;
+    }
+    if (o.attack === 'escape') {
+      if (chance(clamp(0.45 - (s.cfg.wr + s.cfg.gr) / 200, 0.1, 0.85))) setGround(s, null);
+      else ev(s, { kind: 'held', alt: 'escape' });
+    }
+    return;
+  }
+  if (o.state !== 'idle') {
+    o.state = 'idle';
+    o.stateUntil = t + 300;
+    return;
+  }
+  // Uzun süre yerde: hakem ayağa kaldırır
+  if (t - s.ground!.since > 9000 && chance(0.5)) {
+    setGround(s, null);
+    return;
+  }
+  if (top) {
+    // Yerde zayıf kalan rakip ayağa kalkmayı tercih edebilir
+    if (s.cfg.gr > 10 && chance(0.2)) {
+      setGround(s, null);
+      return;
+    }
+    o.attack = chance(clamp(0.1 - s.cfg.gr / 250, 0.04, 0.22)) ? 'gsub' : 'gnp';
+    o.state = 'windup';
+    o.stateUntil = t + (o.attack === 'gsub' ? 900 : 380) * (0.8 + rand() * 0.4);
+  } else {
+    o.attack = chance(clamp(0.08 - s.cfg.gr / 250, 0.03, 0.18)) ? 'gsub' : 'escape';
+    o.state = 'windup';
+    o.stateUntil = t + (o.attack === 'gsub' ? 900 : 700) * (0.8 + rand() * 0.4);
+  }
+  ev(s, { kind: 'oWindup', alt: o.attack });
+}
+
 /** Raunt sonucu (FightState'e aktarılır). */
 export interface LiveRoundResult {
   pHp: number;
@@ -342,9 +567,12 @@ export interface LiveRoundResult {
   oDealt: number;
   pKd: number;
   oKd: number;
+  /** Yerde üstte geçen süre (sn) */
+  pCtrl: number;
+  oCtrl: number;
   /** Raundun geçen süresi (0-1) */
   oran: number;
-  bitis: { kazanan: 'p' | 'o'; yontem: 'KO' | 'TKO' } | null;
+  bitis: { kazanan: 'p' | 'o'; yontem: 'KO' | 'TKO' | 'SUB' } | null;
 }
 
 export function liveResult(s: LiveSim): LiveRoundResult {
@@ -359,8 +587,9 @@ export function liveResult(s: LiveSim): LiveRoundResult {
     oDealt: s.o.dealt,
     pKd: s.p.kd,
     oKd: s.o.kd,
+    pCtrl: s.p.ctrl / 1000,
+    oCtrl: s.o.ctrl / 1000,
     oran: liveElapsed(s) / s.dur,
     bitis: s.over ? { kazanan: s.over.kazanan, yontem: s.over.yontem } : null,
   };
 }
-

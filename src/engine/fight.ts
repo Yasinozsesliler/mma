@@ -820,17 +820,22 @@ export function applyLiveRound(prev: FightState, r: LiveRoundResult): FightState
   fs.oHasar = clamp(100 - r.oHp, 0, 100);
   fs.pKondisyon = clamp(r.pSta, 5, 100);
   fs.oKondisyon = clamp(r.oSta, 5, 100);
-  fs.pPuan = r.pLanded * 0.25 + r.pDealt * 0.18 + r.oKd * 3;
-  fs.oPuan = r.oLanded * 0.25 + r.oDealt * 0.18 + r.pKd * 3;
+  fs.pPuan = r.pLanded * 0.25 + r.pDealt * 0.18 + r.oKd * 3 + r.pCtrl * 0.12;
+  fs.oPuan = r.oLanded * 0.25 + r.oDealt * 0.18 + r.pKd * 3 + r.oCtrl * 0.12;
   fs.vurusSira = BEATS;
   fs.log.push(L("📊 İsabet: {0} – {1} · Verilen hasar: {2} – {3}", [r.pLanded, r.oLanded, Math.round(r.pDealt), Math.round(r.oDealt)]));
   if (r.oKd) fs.log.push(L("💥 {0} {1} kez yere gitti!", [fs.oAd, r.oKd]));
   if (r.pKd) fs.log.push(L("😵 {0} kez sarsıldın.", [r.pKd]));
+  if (r.pCtrl + r.oCtrl >= 3) fs.log.push(L("🤼 Yerde kontrol: {0} sn – {1} sn", [Math.round(r.pCtrl), Math.round(r.oCtrl)]));
   if (r.bitis) {
     const beat = Math.min(BEATS - 1, Math.floor(r.oran * BEATS));
     const kazanan = r.bitis.kazanan;
     const aciklama =
-      kazanan === 'p'
+      r.bitis.yontem === 'SUB'
+        ? kazanan === 'p'
+          ? L("🔒 TAP! {0} kilidin içinde tap attı. Submission!", [fs.oAd])
+          : L("🔒 Kilitten çıkamadın… tap attın.")
+        : kazanan === 'p'
         ? r.bitis.yontem === 'KO'
           ? L("💥 NAKAVT! {0} yere serildi, hakem saymaya bile gerek görmedi!", [fs.oAd])
           : L("🛑 Hakem araya girdi! {0} kendini savunamıyor. TKO!", [fs.oAd])
