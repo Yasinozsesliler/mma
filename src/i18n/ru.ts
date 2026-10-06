@@ -5255,4 +5255,7 @@ export const RU: Record<string, string> = {
   "Bas ya da basılı tut. DİREN! yanınca yeniden bas ve bırakma!": "Жми или держи. Когда загорится ДЕРЖИ!, нажми снова и не отпускай!",
   "Çubuk dolarsa tap atarsın! Bas ya da basılı tut, kurtul!": "Заполнится шкала — сдашься! Жми или держи, вырывайся!",
   "DİREN!": "ДЕРЖИ!",
+  "⚖️ Kilonu tartıdan önceki son 48 saatte kendin vereceksin. Bu organizasyonda hidrasyon testi var: kendini kurutma.": "⚖️ Последние 48 часов до взвешивания сгоняешь вес сам. В этой организации тест на гидратацию: не пересушись.",
+  "⚖️ Kilonu tartıdan önceki son 48 saatte kendin vereceksin. Su kesimini iyi yönetirsen kafese rakibinden iri çıkarsın.": "⚖️ Последние 48 часов до взвешивания сгоняешь вес сам. Грамотно сгонишь воду — выйдешь в клетку крупнее соперника.",
+  "Son 48 saat: kilonu ver": "Последние 48 часов: сгони вес",
 };

@@ -298,8 +298,7 @@ export function CampSummary({ s, act, choose }: { s: GameState; act: Act; choose
     <Screen
       footer={
         <>
-          <Button label={L("Tartıya çık")} icon="scale-bathroom" tone="gold" onPress={() => choose(0)} />
-          {s.stage !== 'amator' && !k.kisaHaber ? <Button label={L("Kilonu kendin yönet (son 48 saat)")} icon="scale-bathroom" tone="ghost" onPress={() => choose('kesim')} /> : null}
+          <Button label={L("Son 48 saat: kilonu ver")} icon="scale-bathroom" tone="gold" onPress={() => choose('kesim')} />
         </>
       }
     >

@@ -5216,4 +5216,7 @@ export const ES: Record<string, string> = {
   "Bas ya da basılı tut. DİREN! yanınca yeniden bas ve bırakma!": "Pulsa o mantén. Cuando aparezca ¡RESISTE!, vuelve a pulsar y no sueltes.",
   "Çubuk dolarsa tap atarsın! Bas ya da basılı tut, kurtul!": "¡Si la barra se llena, abandonas! Pulsa o mantén para escapar.",
   "DİREN!": "¡RESISTE!",
+  "⚖️ Kilonu tartıdan önceki son 48 saatte kendin vereceksin. Bu organizasyonda hidrasyon testi var: kendini kurutma.": "⚖️ Harás tu propio corte de peso en las últimas 48 horas antes del pesaje. Esta organización hace prueba de hidratación: no te deshidrates.",
+  "⚖️ Kilonu tartıdan önceki son 48 saatte kendin vereceksin. Su kesimini iyi yönetirsen kafese rakibinden iri çıkarsın.": "⚖️ Harás tu propio corte de peso en las últimas 48 horas antes del pesaje. Si manejas bien el corte de agua, entrarás más grande que tu rival.",
+  "Son 48 saat: kilonu ver": "Últimas 48 horas: da el peso",
 };

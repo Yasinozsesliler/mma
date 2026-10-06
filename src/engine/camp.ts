@@ -175,7 +175,7 @@ export function applyCampPlan(s: GameState, p: CampPlan) {
   k.focus = STAT_KEYS.includes(p.focus) ? p.focus : coachCampPlan(s).focus;
   k.plan = p.plan in PLANS ? p.plan : coachCampPlan(s).plan;
   k.intensity = p.intensity in INTENSITY ? p.intensity : 'orta';
-  k.kilo = p.kilo in WEIGHT_CUTS ? p.kilo : 'normal';
+  k.kilo = 'normal';
   if (hasPress(s)) k.basin = p.basin && p.basin in PRESS ? p.basin : 'saygili';
   s.sonKamp = { hafta: p.hafta, yer: k.yer, focus: k.focus, intensity: k.intensity, kilo: k.kilo, basin: k.basin };
   setCampLength(s, lengths.includes(p.hafta) ? p.hafta : lengths[lengths.length - 1]);
@@ -262,11 +262,12 @@ export function campChoose(s: GameState, value: string | number) {
       return;
     case 'plan':
       k.plan = value as PlanKey;
-      k.step = k.kisaHaber ? 'kilo' : 'intensity';
+      if (k.kisaHaber) afterPlan(s);
+      else k.step = 'intensity';
       return;
     case 'intensity':
       k.intensity = value as Intensity;
-      k.step = 'kilo';
+      afterPlan(s);
       return;
     case 'kilo':
       k.kilo = value as WeightCut;
@@ -286,8 +287,8 @@ export function campChoose(s: GameState, value: string | number) {
       }
       return;
     case 'ozet':
-      if (value === 'kesim') startManualCut(s);
-      else weighIn(s);
+      // Tartıdan önceki son 48 saati her zaman oyuncu yönetir
+      startManualCut(s);
       return;
     case 'kesim':
       if (value === 'tarti') {
@@ -458,12 +459,19 @@ function withdraw(s: GameState) {
   s.phase = 'hub';
 }
 
+/** Plan (ve yoğunluk) seçildi: basın toplantısı varsa ona, yoksa kampa. Kilo son 48 saatte elle verilir. */
+function afterPlan(s: GameState) {
+  if (hasPress(s)) s.pending.kamp!.step = 'basin';
+  else startCampWeeks(s);
+}
+
 function weighIn(s: GameState) {
   const k = s.pending.kamp!;
   const org = ORGS[currentOrg(s)];
   const lines: string[] = [L("⚖️ TARTI GÜNÜ")];
   const cut = k.kilo ?? 'normal';
   if (k.kesim) manualCutResult(s, lines, !!org.hidrasyon);
+  // Eski kayıtlar: elle kesim başlamadan tartıya gelindiyse hazır yöntemlerle sonuçlanır
   else if (cut === 'kademeli') {
     if (chance(0.97)) lines.push(L("Kilon tam. Taze ve güçlü hissediyorsun."));
     else {
@@ -514,7 +522,7 @@ function weighIn(s: GameState) {
   const kacirdi = k.ucretCeza > 0;
   k.pKilo = r1(k.kesim ? limit + k.kesim.fazla : kacirdi ? limit + (cut === 'sert' ? 1.5 : 1) : cut === 'sert' ? limit - rand() * 0.1 : limit - 0.1 - rand() * 0.5);
   k.oKilo = r1(k.rakipCeza ? limit + 1.2 : limit - rand() * 0.4);
-  k.kafesKilo = r1(k.pKilo * (cut === 'sert' ? 1.09 : cut === 'normal' ? 1.05 : 1.03));
+  k.kafesKilo = r1(k.pKilo * (k.kesim ? (k.kesim.suKesildi ? 1.08 : 1.04) : cut === 'sert' ? 1.09 : cut === 'normal' ? 1.05 : 1.03));
   k.tartiMetni = lines.join('\n');
   k.step = 'tarti';
 }

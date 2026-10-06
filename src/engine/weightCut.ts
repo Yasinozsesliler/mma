@@ -3,6 +3,7 @@
 import { L } from '../i18n';
 import { WEIGHT_CLASSES } from './data';
 import { rand } from './rng';
+import { cutBonus } from './shop';
 import type { GameState } from './types';
 
 export type CutAction = 'sauna' | 'su' | 'kosu' | 'banyo' | 'dinlen';
@@ -28,13 +29,13 @@ export const CUT_ACTIONS: Record<CutAction, { ad: () => string; icon: string; kg
 
 const r1 = (n: number) => Math.round(n * 10) / 10;
 
-/** Kesimi başlat: kamp planındaki kilo stratejisine göre başlangıç fazlası. */
+/** Kesimi başlat: başlangıç fazlası amatörde az, kısa haberde fazla; diyetisyen, ekipman ve perkler azaltır. */
 export function startManualCut(s: GameState) {
   const k = s.pending.kamp;
   if (!k || k.kesim) return;
-  const cut = k.kilo ?? 'normal';
-  const [a, b] = cut === 'kademeli' ? [0.9, 1.5] : cut === 'normal' ? [2.2, 3.2] : [3.6, 4.6];
-  k.kesim = { fazla: r1(a + rand() * (b - a)), enerji: 100, dilim: 0, log: [] };
+  const [a, b] = s.stage === 'amator' ? [1.2, 2] : [2.4, 3.5];
+  const fazla = a + rand() * (b - a) + (k.kisaHaber ? 1.2 : 0) - cutBonus(s) * 8;
+  k.kesim = { fazla: r1(Math.max(0.6, fazla)), enerji: 100, dilim: 0, log: [] };
   k.step = 'kesim';
 }
 
@@ -72,14 +73,15 @@ export function manualCutResult(s: GameState, lines: string[], hidrasyon: boolea
     add('kondisyon', -4);
     s.populerlik = Math.max(0, s.populerlik - 2);
   } else lines.push(L("✅ Tartıdasın: limitin {0} kilo altı. Kesimi kendin yönettin.", [Math.abs(c.fazla)]));
-  if (c.enerji >= 75) {
+  // Su kesimiyle limite tam inip (fazla kurumadan) enerjini korumak: rehidrasyon sonrası kafeste rakibinden iri
+  if (c.suKesildi && c.fazla <= 0 && c.fazla >= -0.5 && c.enerji >= 70) {
+    add('vurus', 3);
+    add('gures', 3);
     add('kondisyon', 2);
-    // Sert kesimle tartıyı geçip taze kalmak: kafeste rakibinden iri
-    if ((k.kilo ?? 'normal') === 'sert' && c.fazla <= 0) {
-      add('vurus', 3);
-      add('gures', 3);
-      lines.push(L("💪 Enerjin yerinde ve rehidrasyon sonrası rakibinden iri çıkacaksın (vuruş +3, güreş +3, kondisyon +2)."));
-    } else lines.push(L("🔋 Taze hissediyorsun (kondisyon +2)."));
+    lines.push(L("💪 Enerjin yerinde ve rehidrasyon sonrası rakibinden iri çıkacaksın (vuruş +3, güreş +3, kondisyon +2)."));
+  } else if (c.enerji >= 75) {
+    add('kondisyon', 2);
+    lines.push(L("🔋 Taze hissediyorsun (kondisyon +2)."));
   } else if (c.enerji >= 50) lines.push(L("Biraz yorgunsun ama idare eder."));
   else if (c.enerji >= 30) {
     add('kondisyon', -4);

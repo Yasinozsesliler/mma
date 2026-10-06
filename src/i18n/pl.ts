@@ -5188,4 +5188,7 @@ export const PL: Record<string, string> = {
   "Bas ya da basılı tut. DİREN! yanınca yeniden bas ve bırakma!": "Stukaj lub trzymaj. Gdy zaświeci TRZYMAJ!, naciśnij ponownie i nie puszczaj!",
   "Çubuk dolarsa tap atarsın! Bas ya da basılı tut, kurtul!": "Gdy pasek się zapełni, odklepiesz! Stukaj lub trzymaj, uciekaj!",
   "DİREN!": "TRZYMAJ!",
+  "⚖️ Kilonu tartıdan önceki son 48 saatte kendin vereceksin. Bu organizasyonda hidrasyon testi var: kendini kurutma.": "⚖️ Wagę zbijesz sam w ostatnich 48 godzinach przed ważeniem. Ta organizacja robi test nawodnienia: nie wysusz się.",
+  "⚖️ Kilonu tartıdan önceki son 48 saatte kendin vereceksin. Su kesimini iyi yönetirsen kafese rakibinden iri çıkarsın.": "⚖️ Wagę zbijesz sam w ostatnich 48 godzinach przed ważeniem. Dobrze poprowadzone odwodnienie sprawi, że wejdziesz do klatki większy od rywala.",
+  "Son 48 saat: kilonu ver": "Ostatnie 48 godzin: zrób wagę",
 };

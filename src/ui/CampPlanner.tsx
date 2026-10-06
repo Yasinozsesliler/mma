@@ -5,7 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useMemo, useState, type ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { CAMP_LENGTH_INFO, campLengthsFor } from '../engine/calendar';
-import { availableSites, campQuote, coachCampPlan, coachPlanFull, cutCost, defaultCampPlan, INTENSITY, PRESS, WEIGHT_CUTS, type CampPlan } from '../engine/camp';
+import { availableSites, campQuote, coachCampPlan, coachPlanFull, defaultCampPlan, INTENSITY, PRESS, type CampPlan } from '../engine/camp';
 import { money } from '../engine/career';
 import { currentOrg } from '../engine/character';
 import { ORGS } from '../engine/data';
@@ -14,7 +14,7 @@ import { CAMP_SITES } from '../engine/gyms';
 import { describeOpponent, weakest } from '../engine/opponents';
 import { claimScout } from '../engine/rewards';
 import { lookFor } from '../engine/tale';
-import type { GameState, Intensity, PlanKey, PressChoice, StatKey, WeightCut } from '../engine/types';
+import type { GameState, Intensity, PlanKey, PressChoice, StatKey } from '../engine/types';
 import { STAT_KEYS, STAT_LABELS } from '../engine/types';
 import { L } from '../i18n';
 import { AdOffer } from './AdOffer';
@@ -28,9 +28,6 @@ import { C, F, R } from './theme';
 const STAT_ICONS: Record<StatKey, IconName> = { vurus: 'boxing-glove', gures: 'arm-flex', yer: 'lock', kondisyon: 'lungs', cene: 'shield-check', hiz: 'flash', iq: 'brain' };
 const INT_ICONS: Record<Intensity, IconName> = { dusuk: 'meditation', orta: 'dumbbell', yuksek: 'weight-lifter' };
 const INT_COLORS: Record<Intensity, string> = { dusuk: C.green, orta: C.gold, yuksek: C.red };
-const CUT_ICONS: Record<WeightCut, IconName> = { kademeli: 'food-apple', normal: 'scale-bathroom', sert: 'alert-octagon' };
-const CUT_COLORS: Record<WeightCut, string> = { kademeli: C.green, normal: C.gold, sert: C.red };
-const CUT_SHORT: Record<WeightCut, string> = { kademeli: L("Kademeli"), normal: L("Normal"), sert: L("Sert") };
 const PRESS_ICONS: Record<PressChoice, IconName> = { saygili: 'handshake', trash: 'microphone-variant', sessiz: 'account-voice' };
 const PRESS_COLORS: Record<PressChoice, string> = { saygili: C.blue, trash: C.red, sessiz: C.dim };
 
@@ -109,8 +106,7 @@ export function CampPlanner({ s, act, choose, steps }: { s: GameState; act: Act;
   const open = availableSites(s);
   const site = CAMP_SITES.find((x) => x.id === p.yer) ?? CAMP_SITES[0];
   const q = campQuote(s, p.yer, p.hafta);
-  const cut = p.kilo === 'kademeli' ? cutCost(s) : 0;
-  const total = q.toplam + cut;
+  const total = q.toplam;
   const len = CAMP_LENGTH_INFO[p.hafta] ?? { carpan: p.hafta / 8, risk: 1, not: '' };
   const focusBonus = (p.focus === site.bonusStat ? 1.3 : 1) * (site.salonUcreti && p.focus === s.takim.uzmanlik ? 1.35 : 1);
   const growth = (INTENSITY[p.intensity].carpan * len.carpan * site.carpan * focusBonus) / 1.9;
@@ -235,14 +231,11 @@ export function CampPlanner({ s, act, choose, steps }: { s: GameState; act: Act;
           <Text style={cp.note}>{INTENSITY[p.intensity].aciklama}</Text>
         </Block>
 
-        <Block title={L("KİLO")} right={cut ? <Text style={cp.blockNote}>{money(cut)}</Text> : undefined}>
-          <Segments
-            items={(Object.keys(WEIGHT_CUTS) as WeightCut[]).map((x) => ({ key: x, label: CUT_SHORT[x], icon: CUT_ICONS[x], color: CUT_COLORS[x] }))}
-            value={p.kilo}
-            onChange={(v) => set({ kilo: v })}
-          />
-          <Text style={[cp.note, p.kilo === 'sert' && hidrasyon && { color: '#ff4d5e' }]}>
-            {p.kilo === 'sert' && hidrasyon ? L("⚠️ Bu organizasyonda hidrasyon testi var: sert kilo verme maçı iptal ettirebilir.") : WEIGHT_CUTS[p.kilo].aciklama}
+        <Block title={L("KİLO")}>
+          <Text style={cp.note}>
+            {hidrasyon
+              ? L("⚖️ Kilonu tartıdan önceki son 48 saatte kendin vereceksin. Bu organizasyonda hidrasyon testi var: kendini kurutma.")
+              : L("⚖️ Kilonu tartıdan önceki son 48 saatte kendin vereceksin. Su kesimini iyi yönetirsen kafese rakibinden iri çıkarsın.")}
           </Text>
         </Block>
 

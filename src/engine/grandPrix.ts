@@ -30,6 +30,9 @@ export function maybeGpInvite(s: GameState) {
   if (s.gpDavet && s.gpDavet.dovus === s.gecmis.length) return;
   s.gpDavet = undefined;
   if (!['bolgesel', 'buyuk'].includes(s.stage) || s.sampiyon || !s.contract) return;
+  // Profesyonelliğe yeni geçmiş dövüşçüye turnuva daveti gelmez: en az 6 profesyonel maç ve 4 galibiyet
+  const pro = s.gecmis.filter((h) => h.org !== 'amator' && h.org !== 'dwcs');
+  if (pro.length < 6 || pro.filter((h) => h.sonuc === 'G').length < 4) return;
   if (s.gecmis.length - (s.gpSon ?? -99) < 8 || !chance(0.18)) return;
   const org = currentOrg(s);
   const odul = Math.round((ORGS[org].ucret[1] * 3) / 1000) * 1000;

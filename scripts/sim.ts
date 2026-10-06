@@ -18,6 +18,7 @@ import { canSign, setSignature } from '../src/engine/signature';
 import { appeal } from '../src/engine/appeal';
 import { watchCountdown } from '../src/engine/hype';
 import { campChoose } from '../src/engine/camp';
+import { CUT_SLOTS, type ManualCut } from '../src/engine/weightCut';
 import {
   acceptOffer,
   afterPostFight,
@@ -40,6 +41,17 @@ import { STAT_KEYS } from '../src/engine/types';
 const krizStat: Record<string, number> = {};
 const podcastStat = { n: 0 };
 const hypeStat = { n: 0, top: 0 };
+const cutStat = { n: 0, kacti: 0, iri: 0 };
+const tartiSeen = new WeakSet<object>();
+/** Botun kilo verme kararı: önce su kesimi, sonra kalan fazlaya göre; fazla kalmadıysa dinlen. */
+function cutPick(c: ManualCut): string {
+  if (c.dilim >= CUT_SLOTS) return 'tarti';
+  const left = CUT_SLOTS - c.dilim;
+  if (c.fazla <= -0.3) return 'dinlen';
+  if (!c.suKesildi) return 'su';
+  const need = c.fazla / left;
+  return need > 0.9 ? 'sauna' : need > 0.55 ? 'kosu' : 'banyo';
+}
 const meydanStat: Record<string, number> = {};
 const startStreak: number[] = [];
 const itirazStat = { n: 0, kabul: 0 };
@@ -211,9 +223,17 @@ function playCareer() {
           duello: k.duello?.bitti ? 'devam' : 'oto',
           sakatlik: 0,
           ozet: 0,
+          // Elle kilo verme: önce su kesimi, sonra kalan fazlaya göre sauna/koşu/banyo; fazla yoksa dinlen
+          kesim: k.kesim ? cutPick(k.kesim) : 0,
           tarti: 0,
           yuzyuze: 'sakin',
         };
+        if (k.step === 'tarti' && k.tartiMetni && !tartiSeen.has(k)) {
+          tartiSeen.add(k);
+          cutStat.n++;
+          if (k.ucretCeza > 0) cutStat.kacti++;
+          if (/rakibinden iri/.test(k.tartiMetni)) cutStat.iri++;
+        }
         campChoose(s, vals[k.step]);
         break;
       }
@@ -358,6 +378,7 @@ console.log(`İmza hareketi: ${pct(imzaStat.n, N)} kariyerde, imza ile bitiriş 
 console.log(`İtiraz: kariyer başına ${(itirazStat.n / N).toFixed(2)}, kabul ${pct(itirazStat.kabul, itirazStat.n)}`);
 console.log('Pro başlangıç serisi dağılımı:', [0, 1, 2, 3, 5, 8, 10].map((n) => `≥${n}: ${pct(startStreak.filter((x) => x >= n).length, N)}`).join(' '));
 if (process.env.CH) console.log('Meydan okuma:', process.env.CH, JSON.stringify(meydanStat));
+console.log(`Tartı (elle kilo): ${cutStat.n} tartı · kaçırma ${pct(cutStat.kacti, cutStat.n)} · rakipten iri ${pct(cutStat.iri, cutStat.n)}`);
 console.log(`Büyük maç (hype): kariyer başına ${(hypeStat.n / N).toFixed(1)}, ort. başlangıç hype ${(hypeStat.top / Math.max(1, hypeStat.n)).toFixed(0)}`);
 console.log(`Podcast (kariyer başına): ${(podcastStat.n / N).toFixed(1)}`);
 console.log(`Kafes Evi: davet ${pct(keStat.davet, N)}, sonuçlar ${JSON.stringify(keStat)}, ort. ekran ${(keStat.ekran / Math.max(1, keStat.kabul)).toFixed(0)}`);
