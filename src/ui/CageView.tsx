@@ -519,7 +519,7 @@ export function CageView({
       <G key={a}>
         <Ellipse cx={X} cy={floorY + 4} rx={20 * k} ry={4 * k} fill="#000" opacity={0.25} />
         <G transform={tL("translate({0} {1}) scale({2} {3}) rotate({4})", [X, Y, f * k, k, ps.rot])}>
-          <Figure p={{ ...ps, rot: 0 }} look={look} kit={kit} />
+          <Figure p={{ ...ps, rot: 0 }} look={look} kit={kit} hasar={a === 'p' ? fs.pHasar : a === 'o' ? fs.oHasar : 0} />
         </G>
       </G>
     );

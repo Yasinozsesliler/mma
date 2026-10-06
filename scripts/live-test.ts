@@ -5,12 +5,12 @@ import { liveCreate, liveInput, livePos, liveResult, liveRunning, liveStep, SPEC
 import { rand, setSeed } from '../src/engine/rng';
 import { STAT_KEYS, type Background, type FightState, type Opponent, type Stats, type Tactic } from '../src/engine/types';
 
-type Bot = { ad: string; react: number; dodge: number; interrupt: number; timing: number; mash?: boolean };
+type Bot = { ad: string; react: number; dodge: number; interrupt: number; timing: number; mash?: boolean; tps: number };
 const BOTS: Bot[] = [
-  { ad: 'rastgele', react: 0, dodge: 0, interrupt: 0, timing: 0, mash: true },
-  { ad: 'sıradan', react: 420, dodge: 0.6, interrupt: 0.1, timing: 0.5 },
-  { ad: 'iyi', react: 300, dodge: 0.85, interrupt: 0.25, timing: 0.75 },
-  { ad: 'uzman', react: 220, dodge: 0.95, interrupt: 0.4, timing: 0.9 },
+  { ad: 'rastgele', react: 0, dodge: 0, interrupt: 0, timing: 0, mash: true, tps: 3 },
+  { ad: 'sıradan', react: 420, dodge: 0.6, interrupt: 0.1, timing: 0.5, tps: 5 },
+  { ad: 'iyi', react: 300, dodge: 0.85, interrupt: 0.25, timing: 0.75, tps: 7 },
+  { ad: 'uzman', react: 220, dodge: 0.95, interrupt: 0.4, timing: 0.9, tps: 9 },
 ];
 
 const statsAt = (lv: number): Stats => Object.fromEntries(STAT_KEYS.map((k) => [k, Math.round(lv + (rand() - 0.5) * 16)])) as Stats;
@@ -39,10 +39,19 @@ function playRound(sim: LiveSim, bot: Bot, wrestler: boolean) {
   let plan: { at: number; k: LiveInput } | null = null;
   let seen = -1;
   let nextAtk = t;
+  let nextTap = t;
   while (!sim.over && (t < sim.start || liveRunning(sim))) {
     t += 16;
     liveStep(sim, t);
     if (!liveRunning(sim)) continue;
+    // Kilit mücadelesi: botun basma hızıyla SIK ya da KURTUL
+    if (sim.kilit) {
+      if (t >= nextTap) {
+        liveInput(sim, sim.kilit.by === 'p' ? 'sub' : 'kac');
+        nextTap = t + (1000 / bot.tps) * (0.8 + rand() * 0.4);
+      }
+      continue;
+    }
     const pos = livePos(sim);
     if (bot.mash) {
       if (t >= nextAtk) {
@@ -129,11 +138,13 @@ function fight(bot: Bot, pLv: number, oLv: number, profile: 'denk' | 'gurescivsv
     fs = startLiveRound(fs, profile === 'gurescivsvurus' ? 'takedown' : TACS[Math.floor(rand() * TACS.length)]);
     const sim = liveCreate(fs, oppStatsOf(fs), 0, undefined, special ? { kind: special, imza: false } : undefined);
     playRound(sim, bot, profile === 'gurescivsvurus');
+    for (const e of sim.events) if (e.kind === 'kilit' || e.kind === 'pozisyon' || (e.kind === 'sub')) DIAG[`${e.kind}:${e.side ?? ''}:${e.alt && e.kind !== 'kilit' ? e.alt : ''}`] = (DIAG[`${e.kind}:${e.side ?? ''}:${e.alt && e.kind !== 'kilit' ? e.alt : ''}`] ?? 0) + 1;
     fs = applyLiveRound(fs, liveResult(sim));
   }
   return fs;
 }
 
+const DIAG: Record<string, number> = {};
 setSeed(12345);
 const N = 300;
 const DIFFS = [-15, -8, 0, 8, 15];
@@ -181,3 +192,5 @@ for (const k of [...new Set(Object.values(SPECIAL_FOR))]) {
   for (let i = 0; i < N; i++) if (fight(BOTS[2], 55, 55, 'denk', k).sonuc?.kazanan === 'p') w++;
   console.log(`${k.padEnd(15)} ${Math.round((w / N) * 100)}%`);
 }
+
+console.log('Kilit tanısı:', JSON.stringify(DIAG));

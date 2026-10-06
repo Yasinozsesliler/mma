@@ -5206,4 +5206,11 @@ export const RU: Record<string, string> = {
   "Üstte paran, sağlığın ve popülerliğin var. Hazır olduğunda “DÖVÜŞ AYARLA” ile rakibini seç. “İlk adımlar” sana yol gösterecek; maç yaptıkça yeni şeyler açılacak. Ama unutma, her şeyin bir bedeli var.": "Наверху твои деньги, здоровье и популярность. Когда будешь готов, выбери соперника через «НАЗНАЧИТЬ БОЙ». «Первые шаги» подскажут путь; с каждым боем будет открываться новое. Но помни: у всего есть цена.",
   "ANTRENMAN": "ТРЕНИРОВКИ",
   "MARKA": "БРЕНД",
+  "🔒 {0}! SIK!": "🔒 {0}! ДАВИ!",
+  "🔒 {0}! KURTUL!": "🔒 {0}! ВЫРЫВАЙСЯ!",
+  "ÖNCE POZİSYON AL": "СНАЧАЛА ЗАЙМИ ПОЗИЦИЮ",
+  "Çubuk dolana kadar hızlı bas, rakip kurtulmaya çalışıyor!": "Жми быстро, пока шкала не заполнится, он вырывается!",
+  "Çubuk dolarsa tap atarsın! Hızlı bas, kurtul!": "Заполнится шкала — сдашься! Жми быстро, вырывайся!",
+  "KURTUL!": "ВЫРЫВАЙСЯ!",
+  "POZİSYON": "ПОЗИЦИЯ",
 };

@@ -5151,4 +5151,11 @@ export const EN: Record<string, string> = {
   "Üstte paran, sağlığın ve popülerliğin var. Hazır olduğunda “DÖVÜŞ AYARLA” ile rakibini seç. “İlk adımlar” sana yol gösterecek; maç yaptıkça yeni şeyler açılacak. Ama unutma, her şeyin bir bedeli var.": "Up top are your money, health and popularity. When you're ready, pick your opponent with “SET UP FIGHT”. “First steps” will guide you; more unlocks as you fight. But remember, everything has a price.",
   "ANTRENMAN": "TRAINING",
   "MARKA": "BRAND",
+  "🔒 {0}! SIK!": "🔒 {0}! SQUEEZE!",
+  "🔒 {0}! KURTUL!": "🔒 {0}! ESCAPE!",
+  "ÖNCE POZİSYON AL": "SECURE POSITION FIRST",
+  "Çubuk dolana kadar hızlı bas, rakip kurtulmaya çalışıyor!": "Tap fast until the bar fills, he's trying to escape!",
+  "Çubuk dolarsa tap atarsın! Hızlı bas, kurtul!": "If the bar fills, you tap! Tap fast and escape!",
+  "KURTUL!": "ESCAPE!",
+  "POZİSYON": "POSITION",
 };

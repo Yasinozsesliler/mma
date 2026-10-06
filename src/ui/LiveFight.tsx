@@ -4,7 +4,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { memo, useEffect, useRef, useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
-import Svg, { Circle, Defs, Ellipse, G, Line, LinearGradient as SvgLinear, Polygon, RadialGradient, Rect, Stop } from 'react-native-svg';
+import Svg, { Circle, Defs, Ellipse, G, Line, LinearGradient as SvgLinear, Path, Pattern, Polygon, RadialGradient, Rect, Stop } from 'react-native-svg';
 import { sfx } from '../audio';
 import { playerKit } from '../cosmetics';
 import { oppStatsOf } from '../engine/fight';
@@ -19,7 +19,7 @@ import { Figure, HIP_H, lerpPose, POSES, type Pose, type PoseName } from './rig'
 import { C, F } from './theme';
 
 type Actor = 'p' | 'o';
-type Frame = { t: number; p: Pose; o: Pose; pHp: number; pSta: number; oHp: number; oSta: number; left: number; ring: { r: number; gold: boolean } | null; icon: string | null; pos: 'ayakta' | 'ustte' | 'altta'; special: { ready: boolean; pct: number } | null; guard: boolean; counter: boolean; fx: { x: number; y: number; t0: number; big: boolean }[]; sx: number };
+type Frame = { t: number; p: Pose; o: Pose; pHp: number; pSta: number; oHp: number; oSta: number; left: number; ring: { r: number; gold: boolean } | null; icon: string | null; pos: 'ayakta' | 'ustte' | 'altta'; special: { ready: boolean; pct: number } | null; kilit: { by: 'p' | 'o'; prog: number; left: number; ad: string } | null; gpos: number; guard: boolean; counter: boolean; fx: { x: number; y: number; t0: number; big: boolean }[]; sx: number; zoom: number; flash: number };
 const BLUE = { shorts: '#1f4fbf', trim: '#ffffff', glove: '#1740a8' };
 const P = (n: PoseName, ov: Partial<Pose> = {}): Pose => ({ ...POSES[n], ...ov });
 type Btn = [LiveInput, () => string, string];
@@ -52,43 +52,105 @@ const VIEW = '28 4 144 128';
 const ASPECT = 144 / 128;
 
 /** Sabit arka plan: tribün siluetleri, kafes, spot ve kanvas (her karede yeniden çizilmez). */
+/** Seyirci başları (sabit sözde-rastgele dizilim) ve yanan telefon ışıkları */
+const hash = (n: number) => {
+  const x = Math.sin(n * 127.1 + 311.7) * 43758.5453;
+  return x - Math.floor(x);
+};
+const FANS = Array.from({ length: 90 }, (_, i) => ({ row: i % 3, u: hash(i), s: 0.8 + hash(i + 40) * 0.4, c: ['#14151b', '#1a1c23', '#111217', '#1f2129'][i % 4], lit: hash(i + 99) < 0.07 }));
+
+/** Sabit arka plan: tribün, LED pano, kafes teli, yastıklı ray, dokulu kanvas, spotlar (her karede yeniden çizilmez). */
 const ArenaBg = memo(function ArenaBg() {
   return (
     <Svg width="100%" height="100%" viewBox={VIEW} preserveAspectRatio="xMidYMid meet" style={StyleSheet.absoluteFill}>
       <Defs>
-        <RadialGradient id="lfSpot" cx="50%" cy="80%" r="60%">
-          <Stop offset="0" stopColor="#ffffff" stopOpacity={0.22} />
+        <SvgLinear id="lfSky" x1="0" y1="0" x2="0" y2="1">
+          <Stop offset="0" stopColor="#0d0f16" />
+          <Stop offset="1" stopColor="#05060a" />
+        </SvgLinear>
+        <RadialGradient id="lfSpot" cx="50%" cy="45%" r="60%">
+          <Stop offset="0" stopColor="#ffffff" stopOpacity={0.3} />
+          <Stop offset="0.7" stopColor="#ffffff" stopOpacity={0.04} />
           <Stop offset="1" stopColor="#ffffff" stopOpacity={0} />
         </RadialGradient>
         <SvgLinear id="lfCone" x1="0" y1="0" x2="0" y2="1">
-          <Stop offset="0" stopColor="#fff3d6" stopOpacity={0.18} />
+          <Stop offset="0" stopColor="#fff3d6" stopOpacity={0.22} />
           <Stop offset="1" stopColor="#fff3d6" stopOpacity={0} />
         </SvgLinear>
+        <SvgLinear id="lfMat" x1="0" y1="0" x2="0" y2="1">
+          <Stop offset="0" stopColor="#c9c9ce" />
+          <Stop offset="1" stopColor="#e4e4e8" />
+        </SvgLinear>
+        <SvgLinear id="lfPad" x1="0" y1="0" x2="0" y2="1">
+          <Stop offset="0" stopColor="#2c2f38" />
+          <Stop offset="1" stopColor="#121318" />
+        </SvgLinear>
+        <SvgLinear id="lfLed" x1="0" y1="0" x2="1" y2="0">
+          <Stop offset="0" stopColor={C.red} stopOpacity={0.15} />
+          <Stop offset="0.5" stopColor={C.red} stopOpacity={0.55} />
+          <Stop offset="1" stopColor={C.red} stopOpacity={0.15} />
+        </SvgLinear>
+        {/* Kafes teli: baklava örgü */}
+        <Pattern id="lfMesh" patternUnits="userSpaceOnUse" width={3.2} height={3.2}>
+          <Path d="M0 1.6 L1.6 0 L3.2 1.6 L1.6 3.2 Z" fill="none" stroke="#8a8f99" strokeWidth={0.22} strokeOpacity={0.55} />
+        </Pattern>
+        {/* Kanvas dokusu: ince dokuma çizgileri */}
+        <Pattern id="lfWeave" patternUnits="userSpaceOnUse" width={2} height={2}>
+          <Line x1={0} y1={0.5} x2={2} y2={0.5} stroke="#000" strokeOpacity={0.05} strokeWidth={0.3} />
+          <Line x1={0.5} y1={0} x2={0.5} y2={2} stroke="#fff" strokeOpacity={0.06} strokeWidth={0.3} />
+        </Pattern>
+        <RadialGradient id="lfVig" cx="50%" cy="55%" r="70%">
+          <Stop offset="0.55" stopColor="#000" stopOpacity={0} />
+          <Stop offset="1" stopColor="#000" stopOpacity={0.6} />
+        </RadialGradient>
       </Defs>
-      <Rect x={0} y={0} width={VB_W} height={VB_H} fill="#07080b" />
-      {Array.from({ length: 40 }, (_, i) => {
-        const x = (i / 40) * VB_W + ((i * 37) % 7);
-        const y = 30 + (i % 3) * 6;
+      <Rect x={0} y={0} width={VB_W} height={VB_H} fill="url(#lfSky)" />
+      {/* LED pano ve tribün */}
+      <Rect x={20} y={12} width={160} height={5} fill="#07080b" />
+      <Rect x={20} y={12} width={160} height={5} fill="url(#lfLed)" />
+      {Array.from({ length: 40 }, (_, i) => (
+        <Rect key={`l${i}`} x={21 + i * 4} y={13.6} width={2.2} height={1.8} fill="#ffd7d9" opacity={0.18 + (i % 5) * 0.05} />
+      ))}
+      {FANS.map((f, i) => {
+        const y = 24 + f.row * 6.5;
+        const x = 6 + f.u * 188;
+        const r = (2.3 + f.row * 0.35) * f.s;
         return (
           <G key={i}>
-            <Ellipse cx={x} cy={y + 5} rx={4.6} ry={3.6} fill="#121319" />
-            <Circle cx={x} cy={y} r={2.6} fill="#15161d" />
+            <Ellipse cx={x} cy={y + r * 1.6} rx={r * 1.7} ry={r * 1.3} fill={f.c} />
+            <Circle cx={x} cy={y} r={r} fill={f.c} />
+            {f.lit ? <Rect x={x + r * 0.6} y={y - r * 0.2} width={1.1} height={1.7} rx={0.2} fill="#cfe6ff" opacity={0.85} /> : null}
           </G>
         );
       })}
-      <Polygon points="70,0 82,0 120,118 30,118" fill="url(#lfCone)" />
-      <Polygon points="118,0 130,0 170,118 80,118" fill="url(#lfCone)" />
-      <Polygon points="12,96 30,40 170,40 188,96" fill="none" stroke="#2b2e36" strokeWidth={0.8} />
-      {Array.from({ length: 13 }, (_, i) => (
-        <Line key={i} x1={30 + i * (140 / 12)} y1={40} x2={30 + i * (140 / 12)} y2={92} stroke="#1c1f26" strokeWidth={0.5} />
+      {/* Spot konileri ve sis */}
+      <Polygon points="66,0 80,0 122,118 26,118" fill="url(#lfCone)" />
+      <Polygon points="120,0 134,0 174,118 78,118" fill="url(#lfCone)" />
+      {/* Arka kafes: yastıklı ray, tel örgü, direkler */}
+      <Polygon points="14,98 30,44 170,44 186,98" fill="url(#lfMesh)" />
+      <Polygon points="14,98 30,44 170,44 186,98" fill="none" stroke="#2b2e36" strokeWidth={0.6} />
+      <Rect x={29} y={41.5} width={142} height={3.4} rx={1.6} fill="url(#lfPad)" />
+      {[30, 65, 100, 135, 170].map((x) => (
+        <G key={x}>
+          <Line x1={x} y1={44} x2={x + (x - 100) * 0.23} y2={96} stroke="#1a1c22" strokeWidth={1.4} />
+          <Rect x={x - 1.6} y={40.5} width={3.2} height={4.6} rx={0.8} fill={x === 30 ? C.red : x === 170 ? C.blue : '#2c2f38'} />
+        </G>
       ))}
-      <Ellipse cx={100} cy={FLOOR + 2} rx={98} ry={16} fill="#cfcfd3" />
+      {/* Kanvas: dokulu mat, kenar gölgesi, logo halkası ve çıkartmalar */}
+      <Ellipse cx={100} cy={FLOOR + 2} rx={98} ry={16} fill="url(#lfMat)" />
+      <Ellipse cx={100} cy={FLOOR + 2} rx={98} ry={16} fill="url(#lfWeave)" />
       <Ellipse cx={100} cy={FLOOR + 2} rx={98} ry={16} fill="url(#lfSpot)" />
-      <Ellipse cx={100} cy={FLOOR + 2} rx={26} ry={4.5} fill="none" stroke={C.red} strokeOpacity={0.5} strokeWidth={0.7} />
+      <Ellipse cx={100} cy={FLOOR + 2} rx={98} ry={16} fill="none" stroke="#000" strokeOpacity={0.25} strokeWidth={2.2} />
+      <Ellipse cx={100} cy={FLOOR + 2} rx={30} ry={5.2} fill="none" stroke={C.red} strokeOpacity={0.55} strokeWidth={0.9} />
+      <Ellipse cx={100} cy={FLOOR + 2} rx={26} ry={4.4} fill={C.red} opacity={0.08} />
+      <Polygon points={`52,${FLOOR + 6} 66,${FLOOR + 6} 63,${FLOOR + 10} 48,${FLOOR + 10}`} fill="#1d2a52" opacity={0.25} />
+      <Polygon points={`134,${FLOOR + 6} 148,${FLOOR + 6} 152,${FLOOR + 10} 137,${FLOOR + 10}`} fill="#52221d" opacity={0.25} />
+      {/* Ön direkler */}
       <Line x1={3} y1={10} x2={3} y2={VB_H} stroke="#3a3d45" strokeWidth={2} />
       <Line x1={197} y1={10} x2={197} y2={VB_H} stroke="#3a3d45" strokeWidth={2} />
       <Rect x={1.5} y={10} width={3} height={8} fill={C.red} />
       <Rect x={195.5} y={10} width={3} height={8} fill={C.blue} />
+      <Rect x={0} y={0} width={VB_W} height={VB_H} fill="url(#lfVig)" />
     </Svg>
   );
 });
@@ -130,7 +192,9 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel }: { fs: FightState; p
   });
   const fx = useRef<{ x: number; y: number; t0: number; big: boolean }[]>([]);
   const shake = useRef({ t0: 0, amp: 0 });
-  const [frame, setFrame] = useState<Frame>(() => ({ t: 0, p: P('stance'), o: P('stance'), pHp: 100 - fs.pHasar, pSta: fs.pKondisyon, oHp: 100 - fs.oHasar, oSta: fs.oKondisyon, left: 30000, ring: null, icon: null, pos: 'ayakta', special: null, guard: false, counter: false, fx: [], sx: 0 }));
+  const [frame, setFrame] = useState<Frame>(() => ({ t: 0, p: P('stance'), o: P('stance'), pHp: 100 - fs.pHasar, pSta: fs.pKondisyon, oHp: 100 - fs.oHasar, oSta: fs.oKondisyon, left: 30000, ring: null, icon: null, pos: 'ayakta', special: null, kilit: null, gpos: 0, guard: false, counter: false, fx: [], sx: 0, zoom: 1, flash: 0 }));
+  /** Kamera yakınlaşması ve beyaz flaş (sert darbe, sarsılma, nakavt) */
+  const punch = useRef({ t0: 0, zoom: 0, flash: 0 });
   const [banner, setBanner] = useState<string | null>(() => L("{0}. RAUNT", [fs.raunt]));
   // İlk canlı maçta kısa rehber; görüldükten sonra raunt hemen başlar
   const [started, setStarted] = useState(() => getPref(TUTORIAL_KEY) === '1');
@@ -156,6 +220,7 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel }: { fs: FightState; p
   const spark = (a: Actor, big: boolean) => {
     fx.current.push({ x: a === 'p' ? 72 : 128, y: FLOOR - HIP_H - 30, t0: now(), big });
     shake.current = { t0: now(), amp: big ? 3.2 : a === 'p' ? 1.6 : 0.8 };
+    if (big) punch.current = { t0: now(), zoom: 0.06, flash: 0 };
   };
 
   /** Yer dövüşünde kim üstte (pozlar buna göre) */
@@ -261,8 +326,37 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel }: { fs: FightState; p
         buzz('basari');
         return;
       case 'sub':
-        if (e.alt === 'fail') flash.show({ puan: 30, metin: e.side === 'p' ? L("KİLİT KAÇTI") : L("KURTULDUN!"), renk: e.side === 'p' ? C.dim : C.gold });
-        else sfx('lock');
+        if (e.alt === 'fail') {
+          flash.show({ puan: 30, metin: e.side === 'p' ? L("KİLİT KAÇTI") : L("KURTULDUN!"), renk: e.side === 'p' ? C.dim : C.gold });
+          if (ground.current) {
+            go('p', base('p'), 300);
+            go('o', base('o'), 300);
+          }
+        } else sfx('lock');
+        return;
+      case 'kilit': {
+        // Kilit pozları: armbar, triangle ya da guillotine (teknik adına göre)
+        const by = e.side as Actor;
+        const vic: Actor = by === 'p' ? 'o' : 'p';
+        const a = (e.alt ?? '').toLowerCase();
+        const kind = /triangle/.test(a) ? 'triangle' : /guillotine|d'arce/.test(a) ? 'guillotine' : 'armbar';
+        // Çift, iki dövüşçünün arasındaki mesafe korunarak sahnenin ortasına yerleşir
+        if (kind === 'triangle') {
+          go(by, P('triangle', { x: 36 }), 300);
+          go(vic, P('triangleVictim', { x: -10 }), 300);
+        } else if (kind === 'guillotine') {
+          go(by, P('guillotine', { x: 16 }), 300);
+          go(vic, P('guillotineVictim', { x: 10 }), 300);
+        } else {
+          go(by, P('armbar', { x: 46 }), 300);
+          go(vic, P('armbarVictim', { x: 24 }), 300);
+        }
+        sfx('lock');
+        buzz('orta');
+        return;
+      }
+      case 'pozisyon':
+        flash.show({ puan: 20, metin: L("ÖNCE POZİSYON AL"), renk: C.orange });
         return;
       case 'kd':
         if (e.side === 'o') {
@@ -276,6 +370,7 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel }: { fs: FightState; p
         }
         buzz('nakavt');
         shake.current = { t0: now(), amp: 5 };
+        punch.current = { t0: now(), zoom: 0.14, flash: 0.55 };
         setTimeout(() => setBanner(null), 1700);
         return;
       case 'tired':
@@ -296,6 +391,7 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel }: { fs: FightState; p
         }
         buzz('nakavt');
         shake.current = { t0: now(), amp: 6 };
+        punch.current = { t0: now(), zoom: 0.18, flash: 0.8 };
         return;
       }
     }
@@ -337,10 +433,15 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel }: { fs: FightState; p
           ring: rem >= 0 ? { r: 10 + Math.min(1, rem / 700) * 14, gold: rem < s.cfg.dodgeMs * 0.8 } : null,
           icon: rem >= 0 ? ICONS[o.attack] ?? '⚠️' : o.state === 'guard' ? '🛡️' : null,
           pos: livePos(s),
+          kilit: s.kilit ? { by: s.kilit.by, prog: s.kilit.prog, left: Math.max(0, s.kilit.until - t) / 4000, ad: s.kilit.ad } : null,
+          gpos: s.ground?.top === 'p' ? s.ground.pos : 0,
           guard: o.state === 'guard',
           counter: t < s.p.counterUntil,
           fx: fx.current.map((f) => ({ ...f })),
           sx: shk ? Math.sin(t / 15) * shk : 0,
+          // Yakınlaşma hızlı girer, yavaş çıkar; flaş kısa
+          zoom: 1 + punch.current.zoom * Math.max(0, 1 - (t - punch.current.t0) / 700) * Math.min(1, (t - punch.current.t0) / 80),
+          flash: punch.current.flash * Math.max(0, 1 - (t - punch.current.t0) / 260),
           special: s.special ? { ready: t >= s.special.readyAt && livePos(s) === 'ayakta', pct: Math.min(1, 1 - (s.special.readyAt - t) / SPECIAL_COOLDOWN) } : null,
         });
       }
@@ -395,7 +496,7 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel }: { fs: FightState; p
       <G key={a}>
         <Ellipse cx={X} cy={FLOOR + 3} rx={18} ry={3.5} fill="#000" opacity={0.3} />
         <G transform={`translate(${X} ${Y}) scale(${face} 1) rotate(${ps.rot})`}>
-          <Figure p={{ ...ps, rot: 0 }} look={(a === 'p' ? pLook : oLook) ?? DEFAULT_LOOK} kit={a === 'p' ? kit : BLUE} />
+          <Figure p={{ ...ps, rot: 0 }} look={(a === 'p' ? pLook : oLook) ?? DEFAULT_LOOK} kit={a === 'p' ? kit : BLUE} hasar={100 - (a === 'p' ? frame.pHp : frame.oHp)} />
         </G>
       </G>
     );
@@ -441,7 +542,7 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel }: { fs: FightState; p
         <View style={[lf.stage, { width: stageW, height: stageW / ASPECT }]} pointerEvents="none">
           <ArenaBg />
           <Svg width="100%" height="100%" viewBox={VIEW} preserveAspectRatio="xMidYMid meet" style={StyleSheet.absoluteFill}>
-            <G transform={sx ? `translate(${sx} 0)` : undefined}>
+            <G transform={sx || frame.zoom !== 1 ? `translate(${sx} 0) translate(100 92) scale(${frame.zoom}) translate(-100 -92)` : undefined}>
               {actor('o')}
               {actor('p')}
               {frame.fx.map((f, i) => {
@@ -467,6 +568,7 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel }: { fs: FightState; p
               ) : null}
             </G>
           </Svg>
+          {frame.flash > 0.01 ? <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: '#fff', opacity: frame.flash }]} /> : null}
           {frame.icon ? <Text style={lf.icon}>{frame.icon}</Text> : null}
           {counter ? <Text style={lf.counter}>{L("KONTRA PENCERESİ!")}</Text> : null}
         </View>
@@ -478,9 +580,44 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel }: { fs: FightState; p
           </View>
         ) : null}
 
+        {/* Kilit mücadelesi: sıkılık çubuğu ve kalan süre */}
+        {frame.kilit ? (
+          <View style={lf.kilit} pointerEvents="none">
+            <Text style={[lf.kilitTitle, { color: frame.kilit.by === 'p' ? C.gold : '#ff4d5e' }]}>
+              🔒 {frame.kilit.ad.toLocaleUpperCase(LOC)}
+            </Text>
+            <View style={lf.kilitBar}>
+              <View style={[lf.kilitFill, { width: `${Math.round(frame.kilit.prog * 100)}%`, backgroundColor: frame.kilit.by === 'p' ? C.gold : '#ff4d5e' }]} />
+              <Text style={lf.kilitTap}>TAP</Text>
+            </View>
+            <View style={lf.kilitTime}>
+              <View style={{ width: `${Math.round(frame.kilit.left * 100)}%`, height: '100%', backgroundColor: '#ffffff55' }} />
+            </View>
+            <Text style={lf.kilitHint}>{frame.kilit.by === 'p' ? L("Çubuk dolana kadar hızlı bas, rakip kurtulmaya çalışıyor!") : L("Çubuk dolarsa tap atarsın! Hızlı bas, kurtul!")}</Text>
+          </View>
+        ) : null}
+
         {/* Kontroller: konuma göre değişir */}
         <View style={lf.controls}>
-          {ozel && frame.pos === 'ayakta' ? (
+          {frame.kilit ? (
+            <Pressable
+              {...INSTANT}
+              onPressIn={() => press(frame.kilit!.by === 'p' ? 'sub' : 'kac')}
+              style={({ pressed }) => [lf.mash, { borderColor: frame.kilit!.by === 'p' ? C.gold : C.blue, backgroundColor: pressed ? (frame.kilit!.by === 'p' ? C.gold : C.blue) + '55' : '#0d0e12' }]}
+            >
+              <Text style={[lf.mashText, { color: frame.kilit.by === 'p' ? C.gold : C.blue }]}>{frame.kilit.by === 'p' ? L("SIK!") : L("KURTUL!")}</Text>
+            </Pressable>
+          ) : null}
+          {!frame.kilit && frame.pos === 'ustte' ? (
+            <View style={lf.posRow}>
+              <Text style={lf.posLabel}>{L("POZİSYON")}</Text>
+              <View style={lf.posBar}>
+                <View style={{ width: `${Math.round(frame.gpos * 100)}%`, height: '100%', backgroundColor: frame.gpos >= 0.45 ? '#b77dff' : '#6b5a85' }} />
+                <View style={lf.posMark} />
+              </View>
+            </View>
+          ) : null}
+          {!frame.kilit && ozel && frame.pos === 'ayakta' ? (
             <Pressable {...INSTANT} onPressIn={() => press('ozel')} style={[lf.special, frame.special?.ready && lf.specialOn]}>
               <View style={[lf.specialFill, { width: `${Math.round((frame.special?.pct ?? 0) * 100)}%` }]} />
               <Text style={[lf.specialText, frame.special?.ready && { color: '#1f1605' }]} numberOfLines={1}>
@@ -489,10 +626,10 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel }: { fs: FightState; p
               </Text>
             </Pressable>
           ) : null}
-          {BUTTONS[frame.pos].map((row, ri) => (
+          {frame.kilit ? null : BUTTONS[frame.pos].map((row, ri) => (
             <View key={`${frame.pos}${ri}`} style={lf.row}>
               {row.map(([k, label, col]) => (
-                <Pressable key={k} {...INSTANT} onPressIn={() => press(k)} style={({ pressed }) => [lf.btn, ri === 1 && lf.btnBig, { borderColor: col }, pressed && { backgroundColor: col + '40' }]}>
+                <Pressable key={k} {...INSTANT} onPressIn={() => press(k)} style={({ pressed }) => [lf.btn, ri === 1 && lf.btnBig, { borderColor: col }, pressed && { backgroundColor: col + '40' }, k === 'sub' && frame.pos === 'ustte' && frame.gpos < 0.45 && { opacity: 0.4 }]}>
                   <Text style={[lf.btnText, { color: col }, label().length > 8 && { fontSize: 13 }, label().length > 11 && { fontSize: 11 }]} numberOfLines={1}>
                     {label()}
                   </Text>
@@ -501,7 +638,9 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel }: { fs: FightState; p
             </View>
           ))}
           <Text style={lf.hint}>
-            {frame.pos === 'ustte'
+            {frame.kilit
+              ? ''
+              : frame.pos === 'ustte'
               ? L("🔒 ya da ⤴️ görünce KONTROL. Rakip yorulunca SUB dene.")
               : frame.pos === 'altta'
                 ? L("🔒 görünce hemen KURTUL. 👊 gelirken GARD al.")
@@ -572,6 +711,19 @@ const lf = StyleSheet.create({
   icon: { position: 'absolute', top: '4%', right: '22%', fontSize: 22 },
   counter: { position: 'absolute', top: '42%', alignSelf: 'center', color: '#111', backgroundColor: C.gold, fontFamily: F.display, fontSize: 16, paddingHorizontal: 12, paddingVertical: 4, borderRadius: 8, overflow: 'hidden' },
   banner: { position: 'absolute', top: '38%', left: 0, right: 0, alignItems: 'center' },
+  kilit: { position: 'absolute', top: '22%', left: 24, right: 24, backgroundColor: 'rgba(5,5,7,0.88)', borderRadius: 14, borderWidth: 1, borderColor: '#2a2d34', padding: 14, alignItems: 'center', gap: 8 },
+  kilitTitle: { fontFamily: F.display, fontSize: 22, letterSpacing: 1 },
+  kilitBar: { width: '100%', height: 22, borderRadius: 11, backgroundColor: '#ffffff12', overflow: 'hidden', justifyContent: 'center' },
+  kilitFill: { position: 'absolute', left: 0, top: 0, bottom: 0 },
+  kilitTap: { position: 'absolute', right: 10, color: '#ffffffaa', fontFamily: F.display, fontSize: 12, letterSpacing: 1 },
+  kilitTime: { width: '100%', height: 4, borderRadius: 2, backgroundColor: '#ffffff12', overflow: 'hidden' },
+  kilitHint: { color: C.dim, fontFamily: F.semi, fontSize: 12, textAlign: 'center' },
+  mash: { borderWidth: 3, borderRadius: 18, paddingVertical: 34, alignItems: 'center' },
+  mashText: { fontFamily: F.display, fontSize: 34, letterSpacing: 3 },
+  posRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  posLabel: { color: '#b77dff', fontFamily: F.display, fontSize: 11, letterSpacing: 1 },
+  posBar: { flex: 1, height: 8, borderRadius: 4, backgroundColor: '#ffffff12', overflow: 'hidden' },
+  posMark: { position: 'absolute', left: '45%', top: 0, bottom: 0, width: 2, backgroundColor: '#ffffff88' },
   bannerText: { color: '#fff', fontFamily: F.display, fontSize: 40, letterSpacing: 2, textShadowColor: '#000', textShadowRadius: 18, transform: [{ skewX: '-8deg' }], backgroundColor: 'rgba(0,0,0,0.55)', paddingHorizontal: 18, paddingVertical: 2 },
   controls: { gap: 10, paddingBottom: 22 },
   row: { flexDirection: 'row', gap: 10 },

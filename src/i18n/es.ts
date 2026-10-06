@@ -5166,4 +5166,11 @@ export const ES: Record<string, string> = {
   "Üstte paran, sağlığın ve popülerliğin var. Hazır olduğunda “DÖVÜŞ AYARLA” ile rakibini seç. “İlk adımlar” sana yol gösterecek; maç yaptıkça yeni şeyler açılacak. Ama unutma, her şeyin bir bedeli var.": "Arriba tienes tu dinero, salud y popularidad. Cuando estés listo, elige rival con “PREPARAR PELEA”. “Primeros pasos” te guiará; con cada pelea se desbloquearán cosas nuevas. Pero recuerda, todo tiene un precio.",
   "ANTRENMAN": "ENTRENAMIENTO",
   "MARKA": "MARCA",
+  "🔒 {0}! SIK!": "🔒 ¡{0}! ¡APRIETA!",
+  "🔒 {0}! KURTUL!": "🔒 ¡{0}! ¡ESCAPA!",
+  "ÖNCE POZİSYON AL": "PRIMERO ASEGURA LA POSICIÓN",
+  "Çubuk dolana kadar hızlı bas, rakip kurtulmaya çalışıyor!": "¡Pulsa rápido hasta llenar la barra, intenta escapar!",
+  "Çubuk dolarsa tap atarsın! Hızlı bas, kurtul!": "¡Si la barra se llena, te rindes! ¡Pulsa rápido y escapa!",
+  "KURTUL!": "¡ESCAPA!",
+  "POZİSYON": "POSICIÓN",
 };
