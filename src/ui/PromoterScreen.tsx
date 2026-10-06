@@ -11,7 +11,6 @@ import {
   expectedCrowd,
   foundCost,
   foundLeague,
-  isRetiredLig,
   ITIBAR_LABEL,
   leagueNames,
   MEKAN,
@@ -63,11 +62,11 @@ export function PromoterScreen({ s, act }: { s: GameState; act: Act }) {
   const [ad, setAd] = useState(() => leagueNames(s)[0]);
   const [msg, setMsg] = useState<string | null>(null);
   const lig = s.lig;
-  const exit = () => act((x) => (x.phase = isRetiredLig(x) ? 'emeklilik' : 'hub'));
-  const footer = <Button label={isRetiredLig(s) ? L("Emeklilik ekranına dön") : L("Kariyere dön")} icon="arrow-left" tone="ghost" onPress={exit} />;
+  const exit = () => act((x) => (x.phase = 'emeklilik'));
+  const footer = <Button label={L("Emeklilik ekranına dön")} icon="arrow-left" tone="ghost" onPress={exit} />;
 
   if (!lig) {
-    const cost = foundCost(s);
+    const cost = foundCost();
     return (
       <Screen footer={footer}>
         <Title kicker={L("PATRON SENSİN")} sub={L("Kendi dövüş organizasyonunu kur: dövüşçü imzala, gece düzenle, bilet sat, yayın anlaşması yap. Bu sefer afişi sen yazıyorsun.")}>
@@ -194,7 +193,6 @@ export function PromoterScreen({ s, act }: { s: GameState; act: Act }) {
           ) : (
             <Text style={ps.note}>{L("Gece düzenlemek için kontratı süren en az 4 dövüşçü gerekiyor. Keşif sekmesinden imzala.")}</Text>
           )}
-          {!isRetiredLig(s) && lig.sonDovus === s.gecmis.length ? <Text style={ps.note}>{L("Aktif kariyerde her maçından sonra bir gece düzenleyebilirsin.")}</Text> : null}
           <View style={{ marginTop: 12 }}>
             <Button
               label={L("Geceyi düzenle")}

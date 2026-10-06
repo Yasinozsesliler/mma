@@ -1,5 +1,5 @@
 // Kendi organizasyonun: dövüşçü imzala, gece düzenle (mekân, bilet fiyatı, kart), gelir-gider ve itibar.
-// Emeklilikte ana oyun olur (her gece 4 hafta sürer); aktif kariyerde yan iş olarak kendi maçın başına bir gece.
+// Yalnızca kariyer bittikten sonra (emeklilik ekranından) kurulur; her gece 4 hafta sürer.
 // Eski rakiplerin de keşif listesinde çıkabilir (canlı dünya).
 import { L, LOC } from '../i18n';
 import { NAME_POOLS, WEIGHT_CLASSES, femSurname } from './data';
@@ -61,8 +61,6 @@ export interface Lig {
   geceler: number;
   toplamKar: number;
   son?: LigNight;
-  /** Aktif kariyerde son gecenin dövüş sayısı (maç başına bir gece) */
-  sonDovus?: number;
 }
 
 export const MEKAN: Record<MekanId, { ad: () => string; kap: number; maliyet: number; itibar: number; ikon: string; mac: number }> = {
@@ -76,11 +74,8 @@ export const BILET: Record<Bilet, { ad: () => string; fiyat: number; talep: numb
   pahali: { ad: () => L("Pahalı"), fiyat: 75, talep: 0.62 },
 };
 
-export const foundCost = (s: GameState) => (isRetiredLig(s) ? 250_000 : 1_000_000);
-/** Emeklilikte mi yönetiliyor (pending.sonrakiFaz emeklilik) */
-export const isRetiredLig = (s: GameState) => s.pending.sonrakiFaz === 'emeklilik' || s.fighter.yas >= 45 || !!s.meydanBitti;
+export const foundCost = () => 250_000;
 export const tvLevel = (it: number) => (it >= 75 ? 3 : it >= 50 ? 2 : it >= 25 ? 1 : 0);
-export const canPromote = (s: GameState) => !!s.lig || s.para >= 1_000_000;
 
 function randomFighter(itibar: number, kadin: boolean): LigFighter {
   const p = pick(NAME_POOLS);
@@ -109,7 +104,7 @@ function scout(s: GameState): LigFighter[] {
 }
 
 export function foundLeague(s: GameState, ad: string): string {
-  const cost = foundCost(s);
+  const cost = foundCost();
   if (s.lig || s.para < cost) return '';
   s.para -= cost;
   s.lig = { ad, kurulus: s.hafta, itibar: 10, kadro: [], aday: [], geceler: 0, toplamKar: 0 };
@@ -172,7 +167,7 @@ export function buildCard(s: GameState, max = 5): [LigFighter, LigFighter][] {
   return pairs;
 }
 
-export const canRunNight = (s: GameState) => !!s.lig && buildCard(s).length >= 2 && (isRetiredLig(s) || s.lig.sonDovus !== s.gecmis.length);
+export const canRunNight = (s: GameState) => !!s.lig && buildCard(s).length >= 2;
 
 /** Tahmini seyirci (ekranda göstermek için, rastgelelik olmadan). */
 export function expectedCrowd(s: GameState, mekan: MekanId, bilet: Bilet) {
@@ -228,8 +223,7 @@ export function runNight(s: GameState, mekan: MekanId, bilet: Bilet): string {
   const perf = card.flat().find((f) => f.id === enIyi.id);
   lig.son = { no: lig.geceler, mekan, bilet, seyirci, kapasite: kap, bilet$, tv$, sponsor$, mekan$, ucret$, bonus$, kar, sonuclar, gecePerf: perf?.ad, itibarDelta: delta };
   lig.aday = scout(s);
-  if (isRetiredLig(s)) advanceWeeks(s, 4);
-  else lig.sonDovus = s.gecmis.length;
+  advanceWeeks(s, 4);
   s.haberler.unshift(L("🏢 {0} {1}: {2} seyirci, {3}", [lig.ad, lig.geceler, seyirci.toLocaleString(LOC), kar >= 0 ? L("kâr ${0}", [kar.toLocaleString(LOC)]) : L("zarar ${0}", [Math.abs(kar).toLocaleString(LOC)])]));
   return '';
 }
