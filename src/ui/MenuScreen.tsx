@@ -11,12 +11,17 @@ import { setLang } from '../i18n/boot';
 import { setSoundSettings, useSoundSettings } from '../audio';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useState, type ReactNode } from 'react';
-import { Linking, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Linking, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Svg, { Defs, Ellipse, LinearGradient as SvgLinear, Polygon, RadialGradient, Stop } from 'react-native-svg';
+import { useCompletedChallenges } from '../challengePrefs';
+import { CHALLENGES } from '../engine/challenges';
+import { dayNumber, liveStreak } from '../engine/daily';
+import { loadDaily } from './DailyScreen';
 import { STAGE_LABELS } from '../engine/career';
 import { WEIGHT_CLASSES } from '../engine/data';
 import { slotsFor, type Slot } from '../storage';
 import { PremiumCard } from './PremiumCard';
-import { DailyCard } from './DailyCard';
 import { adPrivacyRequired, showAdPrivacyOptions, usePremium } from '../monetization';
 import { disableNotifications, enableNotifications, NOTIFY, useNotifyState } from '../notify';
 import { privacyUrl } from '../appConfig';
@@ -161,6 +166,51 @@ function SlotCard({ n, save, active, onNew, onContinue, onDelete, onDynasty }: {
   );
 }
 
+type Sheet = 'ayarlar' | 'meydan' | 'rehber' | null;
+
+/** Alttan açılan pencere: ayarlar, meydan okumalar ve rehber ana ekranı kalabalıklaştırmasın. */
+function MenuSheet({ title, icon, onClose, children }: { title: string; icon: IconName; onClose: () => void; children: ReactNode }) {
+  const ins = useSafeAreaInsets();
+  return (
+    <Modal transparent animationType="slide" onRequestClose={onClose}>
+      <View style={ms.sheetWrap}>
+        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
+        <View style={[ms.sheet, { paddingBottom: 12 + ins.bottom }]}>
+          <View style={ms.sheetHandle} />
+          <View style={ms.sheetHead}>
+            <Icon name={icon} size={20} color={C.gold} />
+            <Text style={[ms.sheetTitle, SLANT]}>{title.toLocaleUpperCase(LOC)}</Text>
+            <Pressable onPress={onClose} hitSlop={10}>
+              <Icon name="close" size={22} color={C.dim} />
+            </Pressable>
+          </View>
+          <ScrollView contentContainerStyle={{ paddingBottom: 8 }}>{children}</ScrollView>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+/** Oyun modu kutucuğu (2×2 ızgara). */
+function ModeTile({ icon, title, sub, color, badge, onPress }: { icon: IconName; title: string; sub: string; color: string; badge?: string; onPress: () => void }) {
+  return (
+    <Pressable onPress={onPress} style={({ pressed }) => [ms.tile, { borderColor: pressed ? color : C.border }, pressed && { transform: [{ scale: 0.98 }] }]}>
+      <LinearGradient colors={[color + '22', '#0c0d10']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={ms.tileIn}>
+        <View style={ms.tileTop}>
+          <View style={[ms.tileIcon, { borderColor: color + '66', backgroundColor: color + '18' }]}>
+            <Icon name={icon} size={22} color={color} />
+          </View>
+          {badge ? <Text style={[ms.tileBadge, { color, borderColor: color + '66' }]}>{badge}</Text> : null}
+        </View>
+        <Text style={ms.tileTitle}>{title.toLocaleUpperCase(LOC)}</Text>
+        <Text style={ms.tileSub} numberOfLines={2}>
+          {sub}
+        </Text>
+      </LinearGradient>
+    </Pressable>
+  );
+}
+
 export function MenuScreen({
   saves,
   active,
@@ -186,6 +236,7 @@ export function MenuScreen({
 }) {
   const any = saves.some(Boolean);
   const [open, setOpen] = useState<number | null>(any ? null : 0);
+  const [sheet, setSheet] = useState<Sheet>(null);
   const off = useOfflineStatus();
   const cur = saves[active - 1];
   const canContinue = !!cur && cur.phase !== 'emeklilik';
@@ -199,6 +250,15 @@ export function MenuScreen({
   const canli = useLive();
   const bildirim = useNotifyState();
   const yeniKoz = useCosmetics().yeni.length;
+  const doneCh = useCompletedChallenges();
+  const chIds = Object.keys(CHALLENGES) as ChallengeId[];
+  const gun = dayNumber();
+  const daily = loadDaily();
+  const seri = liveStreak(daily, gun);
+  // Dolu yuvalar (son oynanan önde), boşlar küçük "yeni kariyer" düğmesi olarak
+  const filled = SLOTS.filter((x) => saves[x - 1]).sort((x, y) => (x === active ? -1 : y === active ? 1 : x - y));
+  const empty = SLOTS.filter((x) => !saves[x - 1]);
+  const busy = off && off.durum !== 'hazir';
   return (
     <Screen
       footer={
@@ -209,155 +269,230 @@ export function MenuScreen({
         ) : undefined
       }
     >
-      <LinearGradient colors={['#3b0d14', 'rgba(10,11,14,0)']} style={ms.hero}>
-        <Logo size={96} />
+      {/* Sahne: spot ışıkları altında logo; ayarlar sağ üstte */}
+      <View style={ms.hero}>
+        <LinearGradient colors={['#4a0d16', '#1a070b', '#0a0b0e']} style={StyleSheet.absoluteFill} />
+        <Svg style={StyleSheet.absoluteFill} width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none" pointerEvents="none">
+          <Defs>
+            <SvgLinear id="mnCone" x1="0" y1="0" x2="0" y2="1">
+              <Stop offset="0" stopColor="#fff1d0" stopOpacity={0.2} />
+              <Stop offset="1" stopColor="#fff1d0" stopOpacity={0} />
+            </SvgLinear>
+            <RadialGradient id="mnGlow" cx="50%" cy="50%" r="50%">
+              <Stop offset="0" stopColor={C.gold} stopOpacity={0.22} />
+              <Stop offset="1" stopColor={C.gold} stopOpacity={0} />
+            </RadialGradient>
+          </Defs>
+          <Polygon points="16,0 24,0 50,100 6,100" fill="url(#mnCone)" />
+          <Polygon points="76,0 84,0 94,100 50,100" fill="url(#mnCone)" />
+          <Ellipse cx={50} cy={38} rx={36} ry={32} fill="url(#mnGlow)" />
+        </Svg>
+        <View style={ms.heroLine} />
+        <Pressable onPress={() => setSheet('ayarlar')} style={({ pressed }) => [ms.gear, pressed && { borderColor: C.gold }]} hitSlop={8}>
+          <Icon name="cog" size={20} color={C.text} />
+        </Pressable>
+        {/* Sarmalayıcı: web'de mutlak konumlu ışık katmanının altında kalmasın */}
+        <View>
+          <Logo size={84} />
+        </View>
         <Text style={ms.brand}>{L("Y O L")}</Text>
-        <Text style={ms.heroTitle}>{L("KAFESTEN KEMERE")}</Text>
+        <Text style={[ms.heroTitle, SLANT]}>{L("KAFESTEN KEMERE")}</Text>
         <Text style={ms.heroSub}>{L("Sıfırdan UCC şampiyonluğuna. Her karar senin.")}</Text>
-        {off ? (
-          <View style={[ms.off, { borderColor: (off.durum === 'hazir' ? C.green : C.gold) + '66' }]}>
-            <Icon name={off.durum === 'hazir' ? 'cloud-check' : 'cloud-download'} size={14} color={off.durum === 'hazir' ? C.green : C.gold} />
-            <Text style={[ms.offText, { color: off.durum === 'hazir' ? C.green : C.gold }]}>
-              {off.durum === 'hazir'
-                ? L("Çevrimdışı oynamaya hazır · sürüm {0}", [off.surum])
-                : off.durum === 'guncelleniyor'
-                  ? L("Yeni sürüm indiriliyor… uygulamayı kapatma")
-                  : L("Çevrimdışı için indiriliyor{0}", [off.toplam ? ` (${off.toplam - (off.eksik ?? 0)}/${off.toplam})` : '…'])}
+        {busy ? (
+          <View style={[ms.off, { borderColor: C.gold + '66' }]}>
+            <Icon name="cloud-download" size={14} color={C.gold} />
+            <Text style={[ms.offText, { color: C.gold }]}>
+              {off!.durum === 'guncelleniyor'
+                ? L("Yeni sürüm indiriliyor… uygulamayı kapatma")
+                : L("Çevrimdışı için indiriliyor{0}", [off!.toplam ? ` (${off!.toplam - (off!.eksik ?? 0)}/${off!.toplam})` : '…'])}
             </Text>
           </View>
         ) : null}
-      </LinearGradient>
-
-      <View style={ms.langRow}>
-        {LANGS.map((l) => {
-          const on = l.id === LANG;
-          return (
-            <Pressable
-              key={l.id}
-              disabled={on || !l.hazir}
-              onPress={() => setLang(l.id)}
-              style={[ms.lang, on && ms.langOn, !l.hazir && { opacity: 0.4 }]}
-            >
-              <Text style={ms.langFlag}>{l.bayrak}</Text>
-              <Text style={[ms.langText, on && { color: C.gold }]}>{l.hazir ? l.ad : L("yakında")}</Text>
-            </Pressable>
-          );
-        })}
       </View>
 
-      <View style={ms.langRow}>
-        {(
-          [
-            ['muzik', 'music', L("Müzik")],
-            ['efekt', 'volume-high', L("Efektler")],
-          ] as const
-        ).map(([k, icon, ad]) => {
-          const on = ses[k];
-          return (
-            <Pressable key={k} onPress={() => setSoundSettings({ [k]: !on })} style={[ms.lang, on && ms.langOn]}>
-              <Icon name={on ? icon : k === 'muzik' ? 'music-off' : 'volume-off'} size={14} color={on ? C.gold : C.faint} />
-              <Text style={[ms.langText, on && { color: C.gold }]}>
-                {ad} · {on ? L("AÇIK") : L("KAPALI")}
-              </Text>
-            </Pressable>
-          );
-        })}
-        {(
-          [
-            ['spiker', spiker, 'microphone-variant', 'microphone-variant-off', L("Spiker"), () => setAnnouncer(!spiker)],
-            ['titresim', titresim, 'vibrate', 'vibrate-off', L("Titreşim"), () => setHaptics(!titresim)],
-            ['canli', canli, 'gamepad-variant', 'eye', L("Canlı dövüş"), () => setLive(!canli)],
-            ['qte', qteAcik, 'gesture-tap', 'gesture-tap-hold', L("Dövüşte elle oyna"), () => setQte(!qteAcik)],
-          ] as const
-        ).map(([k, on, icon, offIcon, ad, toggle]) => (
-          <Pressable key={k} onPress={toggle} style={[ms.lang, on && ms.langOn]}>
-            <Icon name={on ? icon : offIcon} size={14} color={on ? C.gold : C.faint} />
-            <Text style={[ms.langText, on && { color: C.gold }]}>
-              {ad} · {on ? L("AÇIK") : L("KAPALI")}
-            </Text>
-          </Pressable>
-        ))}
-        {NOTIFY ? (
-          <Pressable onPress={() => void (bildirim === 'acik' ? disableNotifications() : enableNotifications())} style={[ms.lang, bildirim === 'acik' && ms.langOn]}>
-            <Icon name={bildirim === 'acik' ? 'bell-ring' : 'bell-off'} size={14} color={bildirim === 'acik' ? C.gold : C.faint} />
-            <Text style={[ms.langText, bildirim === 'acik' && { color: C.gold }]}>
-              {L("Bildirimler")} · {bildirim === 'acik' ? L("AÇIK") : L("KAPALI")}
-            </Text>
-          </Pressable>
-        ) : null}
-      </View>
-
-      <DailyCard onPress={onDaily} />
-      <ChallengeList canStart={!!firstEmpty} onStart={(id) => firstEmpty && onChallenge(id, firstEmpty)} />
-
-      <Pressable onPress={onLocker} style={({ pressed }) => [ms.locker, pressed && { borderColor: C.gold }]}>
-        <Icon name="hanger" size={22} color={C.gold} />
-        <View style={{ flex: 1 }}>
-          <Text style={ms.lockerTitle}>{L("DOLAP")}</Text>
-          <Text style={ms.lockerSub}>{L("Şort, eldiven, çerçeve, kemer ve giriş müziği")}</Text>
-        </View>
-        {yeniKoz ? <Text style={ms.lockerNew}>{L("{0} YENİ", [yeniKoz])}</Text> : null}
-        <Icon name="chevron-right" size={20} color={C.faint} />
-      </Pressable>
-
-      <Section>{L("KARİYER YUVALARI")}</Section>
-      {SLOTS.map((x) => (
-        <SlotCard key={x} n={x} save={saves[x - 1]} active={x === active && !!saves[x - 1]} onNew={() => onNew(x)} onContinue={() => onContinue(x)} onDelete={() => onDelete(x)} onDynasty={() => onDynasty(x)} />
+      {/* Kariyerler */}
+      {filled.length ? <Section>{L("KARİYERLERİN")}</Section> : null}
+      {filled.map((x) => (
+        <SlotCard key={x} n={x} save={saves[x - 1]} active={x === active} onNew={() => onNew(x)} onContinue={() => onContinue(x)} onDelete={() => onDelete(x)} onDynasty={() => onDynasty(x)} />
       ))}
-      <ImportCard canImport={!!firstEmpty} onImport={(g) => firstEmpty && onImport(firstEmpty, g)} />
-      <FeedbackRow />
       {!any ? (
-        <Card>
+        <LinearGradient colors={['#15110a', '#0b0c0e']} style={ms.story}>
           <Text style={ms.intro}>{L("Saat gece 02:14. Şehrin kenarında, tabelasının yarısı yanmayan bir spor salonu var.")}</Text>
           <Text style={ms.intro}>{L("İçeride tek bir ampul yanıyor. Duvarda solmuş bir poster var: sekizgen bir kafes ve havaya kaldırılmış altın bir kemer.")}</Text>
           <Text style={[ms.intro, { color: C.gold, fontStyle: 'italic' }]}>{L("“Herkes kemeri ister. Pek azı yolu yürür.”")}</Text>
           <Text style={[ms.intro, { color: C.text, fontFamily: F.bold, marginBottom: 0 }]}>{L("Bu senin hikâyen. Her yumruk, her karar, her hata senin.")}</Text>
-        </Card>
+        </LinearGradient>
       ) : null}
+      {empty.length && any ? (
+        <View style={ms.newRow}>
+          {empty.map((x) => (
+            <Pressable key={x} onPress={() => onNew(x)} style={({ pressed }) => [ms.newChip, pressed && { borderColor: C.gold }]}>
+              <Icon name="plus" size={16} color={C.gold} />
+              <Text style={ms.newChipText}>{L("Yeni kariyer · Yuva {0}", [x])}</Text>
+            </Pressable>
+          ))}
+        </View>
+      ) : null}
+
+      {/* Modlar */}
+      <Section>{L("OYUN MODLARI")}</Section>
+      <View style={ms.grid}>
+        <ModeTile
+          icon="fire"
+          color={C.orange}
+          title={L("Günün Dövüşü")}
+          sub={daily.kayit[gun] ? L("Bugün oynandı · yarın yenisi") : L("Herkes aynı dövüşü oynuyor. Tek hakkın var.")}
+          badge={seri ? `🔥 ${seri}` : undefined}
+          onPress={onDaily}
+        />
+        <ModeTile
+          icon="sword-cross"
+          color={C.red}
+          title={L("Meydan Okumalar")}
+          sub={L("Özel kurallı kariyerler")}
+          badge={`${chIds.filter((i) => doneCh.includes(i)).length}/${chIds.length}`}
+          onPress={() => setSheet('meydan')}
+        />
+        <ModeTile icon="hanger" color={C.gold} title={L("Dolap")} sub={L("Şort, eldiven, çerçeve, kemer ve giriş müziği")} badge={yeniKoz ? L("{0} YENİ", [yeniKoz]) : undefined} onPress={onLocker} />
+        <ModeTile icon="book-open-variant" color={C.blue} title={L("Rehber")} sub={L("Nasıl oynanır, gelişim, branşlar")} onPress={() => setSheet('rehber')} />
+      </View>
 
       <PremiumCard />
 
-      <Section>{L("REHBER")}</Section>
-      {GUIDE.map((g, i) => (
-        <Collapsible key={g.baslik} baslik={g.baslik} icon={g.icon} open={open === i} onToggle={() => setOpen(open === i ? null : i)}>
-          {g.icerik.map((l, j) => (
-            <Text key={j} style={ms.guide}>
-              {l}
-            </Text>
-          ))}
-        </Collapsible>
-      ))}
-      <Collapsible baslik={L("Branşlar")} icon="karate" open={open === 99} onToggle={() => setOpen(open === 99 ? null : 99)}>
-        {(Object.keys(BACKGROUNDS) as Background[]).map((b) => {
-          const info = BACKGROUNDS[b];
-          const zc = info.zorluk === L("Kolay") ? C.green : info.zorluk === L("Orta") ? C.gold : C.red;
-          return (
-            <View key={b} style={ms.branch}>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Text style={ms.branchTitle}>
-                  {info.ikon} {info.ad}
-                </Text>
-                <Pill text={info.zorluk} color={zc} />
-              </View>
-              <Text style={ms.guide}>✅ {info.guclu}</Text>
-              <Text style={[ms.guide, { marginBottom: 0 }]}>❌ {info.zayif}</Text>
-            </View>
-          );
-        })}
-      </Collapsible>
+      {sheet === 'meydan' ? (
+        <MenuSheet title={L("Meydan Okumalar")} icon="sword-cross" onClose={() => setSheet(null)}>
+          <ChallengeList
+            canStart={!!firstEmpty}
+            onStart={(id) => {
+              setSheet(null);
+              if (firstEmpty) onChallenge(id, firstEmpty);
+            }}
+          />
+        </MenuSheet>
+      ) : null}
 
-      <View style={ms.legal}>
-        {privacyUrl(Platform.OS === 'web') ? (
-          <Pressable onPress={() => void Linking.openURL(privacyUrl(Platform.OS === 'web')!)} hitSlop={8}>
-            <Text style={ms.legalText}>{L("Gizlilik politikası")}</Text>
-          </Pressable>
-        ) : null}
-        {adPrivacyRequired() ? (
-          <Pressable onPress={() => void showAdPrivacyOptions()} hitSlop={8}>
-            <Text style={ms.legalText}>{L("Reklam gizlilik ayarları")}</Text>
-          </Pressable>
-        ) : null}
-      </View>
+      {sheet === 'rehber' ? (
+        <MenuSheet title={L("Rehber")} icon="book-open-variant" onClose={() => setSheet(null)}>
+          {GUIDE.map((g, i) => (
+            <Collapsible key={g.baslik} baslik={g.baslik} icon={g.icon} open={open === i} onToggle={() => setOpen(open === i ? null : i)}>
+              {g.icerik.map((l, j) => (
+                <Text key={j} style={ms.guide}>
+                  {l}
+                </Text>
+              ))}
+            </Collapsible>
+          ))}
+          <Collapsible baslik={L("Branşlar")} icon="karate" open={open === 99} onToggle={() => setOpen(open === 99 ? null : 99)}>
+            {(Object.keys(BACKGROUNDS) as Background[]).map((b) => {
+              const info = BACKGROUNDS[b];
+              const zc = info.zorluk === L("Kolay") ? C.green : info.zorluk === L("Orta") ? C.gold : C.red;
+              return (
+                <View key={b} style={ms.branch}>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Text style={ms.branchTitle}>
+                      {info.ikon} {info.ad}
+                    </Text>
+                    <Pill text={info.zorluk} color={zc} />
+                  </View>
+                  <Text style={ms.guide}>✅ {info.guclu}</Text>
+                  <Text style={[ms.guide, { marginBottom: 0 }]}>❌ {info.zayif}</Text>
+                </View>
+              );
+            })}
+          </Collapsible>
+        </MenuSheet>
+      ) : null}
+
+      {sheet === 'ayarlar' ? (
+        <MenuSheet title={L("Ayarlar")} icon="cog" onClose={() => setSheet(null)}>
+          <Text style={ms.sheetLabel}>{L("DİL")}</Text>
+          <View style={ms.langRow}>
+            {LANGS.map((l) => {
+              const on = l.id === LANG;
+              return (
+                <Pressable
+                  key={l.id}
+                  disabled={on || !l.hazir}
+                  onPress={() => setLang(l.id)}
+                  style={[ms.lang, on && ms.langOn, !l.hazir && { opacity: 0.4 }]}
+                >
+                  <Text style={ms.langFlag}>{l.bayrak}</Text>
+                  <Text style={[ms.langText, on && { color: C.gold }]}>{l.hazir ? l.ad : L("yakında")}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+
+          <View style={ms.langRow}>
+            {(
+              [
+                ['muzik', 'music', L("Müzik")],
+                ['efekt', 'volume-high', L("Efektler")],
+              ] as const
+            ).map(([k, icon, ad]) => {
+              const on = ses[k];
+              return (
+                <Pressable key={k} onPress={() => setSoundSettings({ [k]: !on })} style={[ms.lang, on && ms.langOn]}>
+                  <Icon name={on ? icon : k === 'muzik' ? 'music-off' : 'volume-off'} size={14} color={on ? C.gold : C.faint} />
+                  <Text style={[ms.langText, on && { color: C.gold }]}>
+                    {ad} · {on ? L("AÇIK") : L("KAPALI")}
+                  </Text>
+                </Pressable>
+              );
+            })}
+            {(
+              [
+                ['spiker', spiker, 'microphone-variant', 'microphone-variant-off', L("Spiker"), () => setAnnouncer(!spiker)],
+                ['titresim', titresim, 'vibrate', 'vibrate-off', L("Titreşim"), () => setHaptics(!titresim)],
+                ['canli', canli, 'gamepad-variant', 'eye', L("Canlı dövüş"), () => setLive(!canli)],
+                ['qte', qteAcik, 'gesture-tap', 'gesture-tap-hold', L("Dövüşte elle oyna"), () => setQte(!qteAcik)],
+              ] as const
+            ).map(([k, on, icon, offIcon, ad, toggle]) => (
+              <Pressable key={k} onPress={toggle} style={[ms.lang, on && ms.langOn]}>
+                <Icon name={on ? icon : offIcon} size={14} color={on ? C.gold : C.faint} />
+                <Text style={[ms.langText, on && { color: C.gold }]}>
+                  {ad} · {on ? L("AÇIK") : L("KAPALI")}
+                </Text>
+              </Pressable>
+            ))}
+            {NOTIFY ? (
+              <Pressable onPress={() => void (bildirim === 'acik' ? disableNotifications() : enableNotifications())} style={[ms.lang, bildirim === 'acik' && ms.langOn]}>
+                <Icon name={bildirim === 'acik' ? 'bell-ring' : 'bell-off'} size={14} color={bildirim === 'acik' ? C.gold : C.faint} />
+                <Text style={[ms.langText, bildirim === 'acik' && { color: C.gold }]}>
+                  {L("Bildirimler")} · {bildirim === 'acik' ? L("AÇIK") : L("KAPALI")}
+                </Text>
+              </Pressable>
+            ) : null}
+          </View>
+          <Text style={ms.sheetLabel}>{L("KARİYER AKTARMA VE GERİ BİLDİRİM")}</Text>
+          <ImportCard
+            canImport={!!firstEmpty}
+            onImport={(g) => {
+              setSheet(null);
+              if (firstEmpty) onImport(firstEmpty, g);
+            }}
+          />
+          <FeedbackRow />
+          {off?.durum === 'hazir' ? (
+            <View style={[ms.off, { borderColor: C.green + '66', alignSelf: 'center' }]}>
+              <Icon name="cloud-check" size={14} color={C.green} />
+              <Text style={[ms.offText, { color: C.green }]}>{L("Çevrimdışı oynamaya hazır · sürüm {0}", [off.surum])}</Text>
+            </View>
+          ) : null}
+          <View style={ms.legal}>
+            {privacyUrl(Platform.OS === 'web') ? (
+              <Pressable onPress={() => void Linking.openURL(privacyUrl(Platform.OS === 'web')!)} hitSlop={8}>
+                <Text style={ms.legalText}>{L("Gizlilik politikası")}</Text>
+              </Pressable>
+            ) : null}
+            {adPrivacyRequired() ? (
+              <Pressable onPress={() => void showAdPrivacyOptions()} hitSlop={8}>
+                <Text style={ms.legalText}>{L("Reklam gizlilik ayarları")}</Text>
+              </Pressable>
+            ) : null}
+          </View>
+        </MenuSheet>
+      ) : null}
     </Screen>
   );
 }
@@ -370,7 +505,27 @@ const ms = StyleSheet.create({
   langOn: { borderColor: C.gold },
   langFlag: { fontSize: 14 },
   langText: { color: C.dim, fontFamily: F.semi, fontSize: 12 },
-  hero: { alignItems: 'center', paddingTop: 28, paddingBottom: 20, marginHorizontal: -16, marginTop: -16, marginBottom: 8 },
+  hero: { alignItems: 'center', paddingTop: 30, paddingBottom: 22, paddingHorizontal: 16, marginHorizontal: -16, marginTop: -16, marginBottom: 8, overflow: 'hidden' },
+  heroLine: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 1, backgroundColor: C.gold + '55' },
+  gear: { position: 'absolute', top: 14, right: 16, width: 40, height: 40, borderRadius: 20, borderWidth: 1, borderColor: '#ffffff22', backgroundColor: '#00000055', alignItems: 'center', justifyContent: 'center' },
+  story: { borderRadius: 14, borderWidth: 1, borderColor: C.goldDeep, padding: 14, marginTop: 6, marginBottom: 6 },
+  newRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 6 },
+  newChip: { flexGrow: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderWidth: 1, borderStyle: 'dashed', borderColor: '#4a4d55', borderRadius: 12, paddingVertical: 12, paddingHorizontal: 12, backgroundColor: '#0a0b0d' },
+  newChipText: { color: C.text, fontFamily: F.display, fontSize: 13, letterSpacing: 0.8 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 12 },
+  tile: { width: '48%', flexGrow: 1, borderRadius: 14, borderWidth: 1, overflow: 'hidden' },
+  tileIn: { padding: 12, minHeight: 124, gap: 4 },
+  tileTop: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 6 },
+  tileIcon: { width: 42, height: 42, borderRadius: 12, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
+  tileBadge: { fontFamily: F.display, fontSize: 12, borderWidth: 1, borderRadius: 10, paddingHorizontal: 7, paddingVertical: 1, overflow: 'hidden' },
+  tileTitle: { color: C.text, fontFamily: F.display, fontSize: 15, letterSpacing: 0.6 },
+  tileSub: { color: C.dim, fontFamily: F.body, fontSize: 11, lineHeight: 15 },
+  sheetWrap: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.65)' },
+  sheet: { maxHeight: '86%', backgroundColor: '#0d0e12', borderTopLeftRadius: 20, borderTopRightRadius: 20, borderWidth: 1, borderColor: C.border, paddingHorizontal: 16, paddingTop: 8 },
+  sheetHandle: { alignSelf: 'center', width: 44, height: 4, borderRadius: 2, backgroundColor: '#ffffff33', marginBottom: 10 },
+  sheetHead: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 },
+  sheetTitle: { flex: 1, color: C.text, fontFamily: F.display, fontSize: 20, letterSpacing: 1 },
+  sheetLabel: { color: C.faint, fontFamily: F.display, fontSize: 11, letterSpacing: 1.5, marginTop: 8, marginBottom: 8 },
   brand: { color: C.red, fontFamily: F.display, fontSize: 14, letterSpacing: 6, marginTop: 14 },
   heroTitle: { color: C.text, fontFamily: F.display, fontSize: 42, letterSpacing: 1, lineHeight: 48, textAlign: 'center' },
   heroSub: { color: C.dim, fontFamily: F.body, fontSize: 14, marginTop: 4, textAlign: 'center' },
