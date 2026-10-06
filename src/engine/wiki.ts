@@ -1,5 +1,6 @@
 // Kafespedia: dövüşçünün kariyerinden otomatik yazılan ansiklopedi sayfası (bilgi kutusu, bölümler, dövüş kaydı).
 // Ekranda ve paylaşım kartında aynı içerik kullanılır.
+import { MEDIA_LABEL } from './media';
 import { L, LOC } from '../i18n';
 import { currentOrg } from './character';
 import { BACKGROUNDS, COUNTRIES, ORGS, WEIGHT_CLASSES } from './data';
@@ -127,6 +128,12 @@ export function wikiOf(s: GameState): WikiPage {
   if (eb) aile.push(L("Dövüşçü bir ailenin {0}. kuşağı. Ebeveyni {1} {2} de profesyonel dövüşçüydü ({3}-{4}-{5}, {6} kemer).", [s.nesil ?? 2, eb.ad, eb.soyad, eb.rekor.g, eb.rekor.m, eb.rekor.b, eb.kemer]));
   aile.push(L("{0} salonunda {1} ile çalışıyor.", [s.takim.salon, s.takim.antrenor]));
   bolumler.push({ baslik: L("Kişisel yaşamı"), metin: aile.join(' ') });
+  const medya = s.medya ?? [];
+  if (medya.length)
+    bolumler.push({
+      baslik: L("Medya ve filmografi"),
+      metin: medya.map((m) => L("{0} ({1} yaşında): {2}", [MEDIA_LABEL[m.tur](), m.yas, m.ad])).join('\n'),
+    });
 
   const skor = legacyScore(s);
   bolumler.push({

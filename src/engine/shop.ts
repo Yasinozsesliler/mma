@@ -6,6 +6,7 @@ import { clamp } from './rng';
 import { addStat, advanceWeeks } from './character';
 import { VACATIONS } from './gyms';
 import { vacationMemento } from './memories';
+import { rutinCut, rutinRest, scarRisk } from './body';
 import { bump } from './istat';
 import { lifestylePost, socialTick } from './social';
 import { staffCut, staffInjury, staffMotivation, staffRest } from './staff';
@@ -179,12 +180,12 @@ export const itemBonusTotal = (s: GameState) => Object.values(fightItemMods(s)).
 /** Popülerlik etkisi azalan verimli: zaten ünlüysen bir yat daha az ses getirir. */
 export const itemPopGain = (s: GameState, it: ShopItem) => Math.max(it.populerlik ? 1 : 0, Math.round((it.populerlik ?? 0) * (1 - s.populerlik / 130)));
 
-export const restMultiplier = (s: GameState) => 1 + activeItems(s).reduce((a, it) => a + (it.dinlenme ?? 0), 0) + staffRest(s) + perkRest(s);
-export const injuryMultiplier = (s: GameState) => activeItems(s).reduce((a, it) => a * (it.sakatlikRiski ?? 1), 1) * staffInjury(s) * perkInjury(s) * diffOf(s).sakatlik;
+export const restMultiplier = (s: GameState) => 1 + activeItems(s).reduce((a, it) => a + (it.dinlenme ?? 0), 0) + staffRest(s) + perkRest(s) + rutinRest(s);
+export const injuryMultiplier = (s: GameState) => activeItems(s).reduce((a, it) => a * (it.sakatlikRiski ?? 1), 1) * staffInjury(s) * perkInjury(s) * diffOf(s).sakatlik * scarRisk(s);
 /** Kamp motivasyonu: eşyalar + kadro (psikolog) + evcil hayvan + sevgili. */
 export const campMotivation = (s: GameState) =>
   activeItems(s).reduce((a, it) => a + (it.motivasyon ?? 0), 0) + staffMotivation(s) + petMotivation(s) + partnerMotivation(s);
-export const cutBonus = (s: GameState) => activeItems(s).reduce((a, it) => a + (it.kilo ?? 0), 0) + staffCut(s) + perkCut(s);
+export const cutBonus = (s: GameState) => activeItems(s).reduce((a, it) => a + (it.kilo ?? 0), 0) + staffCut(s) + perkCut(s) + rutinCut(s);
 export const merchIncome = (s: GameState) =>
   activeItems(s).reduce((a, it) => a + (it.merch ?? 0), 0) * s.populerlik + activeItems(s).reduce((a, it) => a + (it.gelir ?? 0), 0);
 

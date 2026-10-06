@@ -65,6 +65,7 @@ export function ProfilePanel({ s, act }: { s: GameState; act: Act }) {
         </View>
         <View style={pf.quicks}>
           <WikiButton s={s} render={(open) => <Quick icon="book-open-page-variant" label={L("Kafespedia")} onPress={open} />} />
+          <Quick icon="movie-open-star" label={L("Belgesel")} onPress={() => act((x) => ((x.pending.sonrakiFaz = 'hub'), (x.phase = 'belgesel')))} />
           <Quick icon="content-cut" label={L("Stil")} onPress={() => act((x) => (x.phase = 'stil'))} />
           <ShareButton data={careerCard(s)} render={(open) => <Quick icon="share-variant" label={L("Paylaş")} onPress={open} />} />
         </View>

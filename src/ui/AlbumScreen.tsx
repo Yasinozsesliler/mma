@@ -5,6 +5,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { ALBUM_MILESTONES, ALBUM_SETS, claimMilestone, claimSet, milestoneReward, RARITY, setReward, type FighterCard, type Rarity } from '../engine/cards';
 import { money } from '../engine/career';
 import { ORGS } from '../engine/data';
+import { WORLD_COLOR, WORLD_LABEL, type WorldEntry } from '../engine/worldLife';
 import { lookFor } from '../engine/tale';
 import type { GameState } from '../engine/types';
 import { buzz } from '../haptics';
@@ -20,7 +21,7 @@ const OZEL: Record<NonNullable<FighterCard['ozel']>, () => string> = {
   kanka: () => L("ESKİ ORTAK"),
 };
 
-function Card({ c }: { c: FighterCard }) {
+function Card({ c, w }: { c: FighterCard; w?: WorldEntry }) {
   const r = RARITY[c.nadir];
   return (
     <LinearGradient colors={c.parlak ? ['#7fdbff', '#c86bff', '#f2c14e', '#39ff14'] : [r.renk, '#0b0c0f']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={st.cardBorder}>
@@ -36,10 +37,15 @@ function Card({ c }: { c: FighterCard }) {
         <Text style={st.surname} numberOfLines={1}>
           {c.soyad.toLocaleUpperCase(LOC)}
         </Text>
-        {c.ozel ? <Text style={[st.special, { backgroundColor: r.renk }]}>{OZEL[c.ozel]()}</Text> : <Text style={st.org}>{ORGS[c.org]?.kisa ?? c.org}</Text>}
+        {c.sonradan && !c.ozel ? <Text style={[st.special, { backgroundColor: C.gold }]}>{L("SONRADAN ŞAMPİYON")}</Text> : c.ozel ? <Text style={[st.special, { backgroundColor: r.renk }]}>{OZEL[c.ozel]()}</Text> : <Text style={st.org}>{ORGS[c.org]?.kisa ?? c.org}</Text>}
         <Text style={st.method} numberOfLines={1}>
           {c.yontem} · {c.yas}
         </Text>
+        {w ? (
+          <Text style={[st.world, { color: WORLD_COLOR[w.d] }]} numberOfLines={1}>
+            {WORLD_LABEL[w.d](ORGS[w.org]?.kisa ?? w.org)}
+          </Text>
+        ) : null}
       </View>
     </LinearGradient>
   );
@@ -131,7 +137,7 @@ export function AlbumScreen({ s, act }: { s: GameState; act: Act }) {
       {shown.length ? (
         <View style={st.grid}>
           {shown.map((c) => (
-            <Card key={c.id} c={c} />
+            <Card key={c.id} c={c} w={s.dunya?.[c.id]} />
           ))}
         </View>
       ) : (
@@ -165,6 +171,7 @@ const st = StyleSheet.create({
   org: { color: C.blue, fontFamily: F.display, fontSize: 9, letterSpacing: 1 },
   special: { color: '#0b0b0e', fontFamily: F.display, fontSize: 8, letterSpacing: 0.5, paddingHorizontal: 5, paddingVertical: 1, borderRadius: 4, overflow: 'hidden' },
   method: { color: C.faint, fontFamily: F.body, fontSize: 9 },
+  world: { fontFamily: F.semi, fontSize: 9 },
   set: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: C.card, borderWidth: 1, borderColor: C.border, borderRadius: 10, padding: 10 },
   setName: { color: C.text, fontFamily: F.bold, fontSize: 13 },
   setDesc: { color: C.faint, fontFamily: F.body, fontSize: 11 },

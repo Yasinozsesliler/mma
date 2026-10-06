@@ -11,6 +11,7 @@ import { STAT_LABELS } from '../engine/types';
 import { Button, Card, OctIcon, P, Pill, Screen, Section, SLANT, Title } from './components';
 import type { Act } from './GameScreens';
 import { StaffPanel } from './StaffPanel';
+import { bondColor, bondLabel } from '../engine/coachBond';
 import { C, F, R } from './theme';
 
 function Stars({ n }: { n: number }) {
@@ -27,6 +28,7 @@ export function TeamScreen({ s, act }: { s: GameState; act: Act }) {
   const [tab, setTab] = useState<'salon' | 'menajer' | 'sponsor' | 'kadro'>((s.sponsorTeklif ?? []).length ? 'sponsor' : 'kadro');
   const [msg, setMsg] = useState<string | null>(null);
   const gyms = availableGyms(s);
+  const bond = s.hoca && s.hoca.ad === s.takim.antrenor ? s.hoca : { bag: 55 };
   return (
     <Screen footer={<Button label={L("Kariyere dön")} icon="arrow-left" tone="ghost" onPress={() => act((x) => (x.phase = 'hub'))} />}>
       <Title kicker={L("KÖŞENDEKİLER")} sub={L("Antrenörün kampta ne kadar gelişeceğini, menajerin ne kadar kazanacağını belirler.")}>
@@ -40,6 +42,14 @@ export function TeamScreen({ s, act }: { s: GameState; act: Act }) {
           {s.takim.antrenor} {L("· Uzmanlık:")}{' '}{s.takim.uzmanlik ? STAT_LABELS[s.takim.uzmanlik] : '—'}
         </Text>
         <Stars n={s.takim.antrenorKalite} />
+        <View style={tm.bondRow}>
+          <Text style={tm.bondL}>{L("GÜVEN")}</Text>
+          <View style={tm.bondTrack}>
+            <View style={[tm.bondFill, { width: `${bond.bag}%`, backgroundColor: bondColor(bond.bag) }]} />
+          </View>
+          <Text style={[tm.bondT, { color: bondColor(bond.bag) }]}>{bondLabel(bond.bag)}</Text>
+        </View>
+        <Text style={tm.bondHint}>{L("Kazandıkça ve onun planına uydukça güven artar. Çok yüksek güven köşede IQ +1 verir; çok düşükse köşe soğur.")}</Text>
         <Text style={[tm.label, { marginTop: 12 }]}>{L("MENAJER")}</Text>
         <Text style={[tm.big, SLANT, { fontSize: 18 }]}>{s.takim.menajer ?? L('YOK')}</Text>
         {s.takim.menajer ? (
@@ -232,4 +242,10 @@ const tm = StyleSheet.create({
   price: { color: C.gold, fontFamily: F.display, fontSize: 15 },
   btn: { backgroundColor: C.red, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 3, transform: [{ skewX: '-10deg' }] },
   btnText: { color: '#fff', fontFamily: F.display, fontSize: 13, letterSpacing: 1 },
+  bondRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 10 },
+  bondL: { color: C.faint, fontFamily: F.display, fontSize: 10, letterSpacing: 1.5 },
+  bondTrack: { flex: 1, height: 6, borderRadius: 3, backgroundColor: '#1f2228', overflow: 'hidden' },
+  bondFill: { height: 6, borderRadius: 3 },
+  bondT: { fontFamily: F.semi, fontSize: 12 },
+  bondHint: { color: C.faint, fontFamily: F.body, fontSize: 11, lineHeight: 16, marginTop: 4 },
 });

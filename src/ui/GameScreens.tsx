@@ -5,6 +5,8 @@ import { StoryChapter } from './StoryChapter';
 import { houseLevel } from './HomeScreen';
 import { MUSEUM } from '../engine/memories';
 import { luxTotal } from '../engine/luxury';
+import { MEDIA_ICON, type MediaKind } from '../engine/media';
+import { ageStage } from '../engine/body';
 import { unclaimedSets } from '../engine/cards';
 import { claimScout } from '../engine/rewards';
 import { RewardCard } from './RewardCard';
@@ -311,6 +313,7 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
                   />
                 ),
               },
+              { cat: 'antrenman', show: true, badge: null, node: <ActionTile key="vucut" icon="human" label={L("Vücudum")} sub={`${ageStage(s.fighter.yas).ad}${(s.izler ?? []).length ? ` · ${L("{0} iz", [(s.izler ?? []).length])}` : ''}`} accent="#ff8a5c" onPress={() => act((x) => (x.phase = 'vucut'))} /> },
               { cat: 'antrenman', show: s.stage !== 'amator', badge: null, node: <ActionTile key="siklet" icon="scale-balance" label={L("Sıklet")} sub={s.sampiyon ? L("Çift kemere git") : WEIGHT_CLASSES[s.fighter.siklet].ad} accent={C.orange} selected={weightOpen} onPress={() => { setWeightOpen(!weightOpen); setResting(false); }} /> },
               { cat: 'yasam', show: true, badge: null, node: <ActionTile key="magaza" icon="shopping" label={L("Mağaza")} sub={weeklyBusinessIncome(s) ? `+${money(weeklyBusinessIncome(s))}/hafta` : L("Ekipman · yaşam · tatil")} accent={C.gold} onPress={() => act((x) => (x.phase = 'magaza'))} /> },
               { cat: 'yasam', show: true, badge: null, node: <ActionTile key="evim" icon="home-heart" label={L("Evim")} sub={houseLevel(s) ? L("Kupalar, fotoğraflar, odalar") : L("Henüz evin yok")} accent="#f4a261" onPress={() => act((x) => (x.phase = 'evim'))} /> },
@@ -435,6 +438,8 @@ export function EventScreen({ s, act }: { s: GameState; act: Act }) {
   const ev = s.pending.olay!;
   if (ev.id.startsWith('hikaye:')) return <StoryChapter s={s} act={act} />;
   const aile = ev.id.startsWith('aile:');
+  const hoca = ev.id.startsWith('hoca:');
+  const medya = ev.id.startsWith('medya:') ? (ev.id.split(':')[1] as MediaKind) : null;
   return (
     <Screen footer={ev.sonuc ? <Button label={L("Devam")} icon="arrow-right" onPress={() => act(closeEvent)} /> : undefined}>
       {ev.id.startsWith('patron_') && OWNERS[s.contract?.org ?? 'ufc'] ? (
@@ -443,10 +448,10 @@ export function EventScreen({ s, act }: { s: GameState; act: Act }) {
         </View>
       ) : (
         <View style={gs.eventIcon}>
-          <Icon name={aile ? 'baby-face-outline' : (EVENT_ICONS[ev.id] ?? 'star-four-points')} size={34} color={aile ? '#ff5c8a' : C.gold} />
+          <Icon name={aile ? 'baby-face-outline' : hoca ? 'whistle' : medya ? (MEDIA_ICON[medya] as IconName) : (EVENT_ICONS[ev.id] ?? 'star-four-points')} size={34} color={aile ? '#ff5c8a' : C.gold} />
         </View>
       )}
-      <Title kicker={aile ? L("AİLE ANI") : L("DÖVÜŞ DIŞI")}>{ev.baslik.replace(/^\S+\s/, '')}</Title>
+      <Title kicker={aile ? L("AİLE ANI") : hoca ? L("ANTRENÖRÜN") : medya ? L("ÜNLÜLÜK") : L("DÖVÜŞ DIŞI")}>{ev.baslik.replace(/^\S+\s/, '')}</Title>
       <Card>
         <P style={{ marginBottom: 0 }}>{ev.metin}</P>
       </Card>
@@ -905,7 +910,7 @@ export function OffersScreen({ s, act }: { s: GameState; act: Act }) {
 
 // ---------- Emeklilik ----------
 
-export function RetireScreen({ s, onNew, onDynasty, onComeback }: { s: GameState; onNew: () => void; onDynasty?: () => void; onComeback?: () => void }) {
+export function RetireScreen({ s, onNew, onDynasty, onComeback, onDoc }: { s: GameState; onNew: () => void; onDynasty?: () => void; onComeback?: () => void; onDoc?: () => void }) {
   const r = s.rekor;
   const donus = comebackOffer(s);
   const ufcChamp = s.unvanlar.some((u) => u.startsWith('UCC'));
@@ -913,6 +918,7 @@ export function RetireScreen({ s, onNew, onDynasty, onComeback }: { s: GameState
     <Screen
       footer={
         <View style={{ gap: 8 }}>
+          {onDoc ? <Button label={L("Kariyer belgeselini izle")} icon="movie-open-star" tone="gold" onPress={onDoc} /> : null}
           {onDynasty ? <Button label={L("Yeni nesil: çocuğunla devam et")} icon="account-child" tone="gold" onPress={onDynasty} /> : null}
           <ShareButton data={careerCard(s)} label={L("Kariyer kartını paylaş")} />
           <Button label={L("Kariyer yuvalarına dön")} icon="folder-account" tone="ghost" onPress={onNew} />

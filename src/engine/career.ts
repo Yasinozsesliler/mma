@@ -44,6 +44,9 @@ import { merchIncome, restMultiplier } from './shop';
 import { chance, clamp, pick, rand, randInt, uid } from './rng';
 import { performanceRace } from './fightNight';
 import { fightMementos, stampCity } from './memories';
+import { worldTick } from './worldLife';
+import { rutinAfterFight } from './body';
+import { bondAfterFight } from './coachBond';
 import { storyRival } from './stories';
 import { generateOpponent } from './opponents';
 import type { GameState, Offer, Opponent, OrgId, StatKey, WeightClass } from './types';
@@ -466,6 +469,9 @@ export function finishFight(s: GameState) {
       savunma: won && wasChampion ? ((s.kemerler ?? []).find((b) => b.aktif && b.org === org)?.savunma ?? 0) : 0,
     }),
   );
+  lines.push(...worldTick(s, opp.id));
+  lines.push(...rutinAfterFight(s));
+  bondAfterFight(s, { won, finish: finishMethod, koLoss: !won && !draw && (r.yontem === 'KO' || r.yontem === 'TKO'), planUyum: !!kamp.planUyum });
   const karneSon = pro ? s.rekor : s.amator;
   s.pending.sonrasi = {
     satirlar: lines,

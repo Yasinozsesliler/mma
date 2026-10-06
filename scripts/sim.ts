@@ -112,6 +112,10 @@ const stats = {
   hikaye: {} as Record<string, number>,
   hikayeSayi: [] as number[],
   muze: [] as number[],
+  hocaBag: [] as number[],
+  medya: [] as number[],
+  dunya: [] as number[],
+  izler: [] as number[],
   aile: [] as number[],
   setler: [] as number[],
   parlak: [] as number[],
@@ -350,6 +354,10 @@ function playCareer() {
     if (s.unvanlar.some((u) => /^U[FC]C/.test(u))) stats.ufcChamp++;
     (s.hikayeler ?? []).forEach((h) => (stats.hikaye[h] = (stats.hikaye[h] ?? 0) + 1));
     stats.hikayeSayi.push((s.hikayeler ?? []).length);
+    stats.hocaBag.push(s.hoca?.bag ?? 0);
+    stats.medya.push((s.medya ?? []).length);
+    stats.dunya.push(Object.keys(s.dunya ?? {}).length);
+    stats.izler.push((s.izler ?? []).length);
     stats.muze.push((s.hatiralar ?? []).filter((h) => h.kat === 'muze').length);
     stats.aile.push((s.hatiralar ?? []).filter((h) => h.kat === 'aile').length);
     stats.setler.push(ALBUM_SETS.filter((d) => d.say(s.kartlar ?? []) >= d.hedef).length);
@@ -409,5 +417,6 @@ console.log('Geçmişe göre galibiyet:', Object.entries(stats.byBg).map(([k, v]
 console.log('Aşama başına ortalama dövüş:', Object.entries(stats.stageFights).map(([k, v]) => `${k} ${(v / (stats.stageCareers[k] ?? N)).toFixed(1)}`).join(', '));
 console.log(`Tekrar rakip: ${pct(stats.repeatFights, stats.fights)} dövüş, aynı rakiple en fazla: ${stats.maxSame}, farklı kişi ama aynı isim: ${pct(stats.sameName, stats.fights)}`);
 console.log(`Ezeli rakip: ${pct(stats.nem, N)} kariyerde (${pct(stats.nemYenilgi, stats.nem)} ilk yenilgiden), karşılaşma ort. ${mean(stats.nemMac)} (maks ${Math.max(0, ...stats.nemMac)}), rekabeti bitiren ${pct(stats.nemBitti, stats.nem)}`);
+console.log(`Hoca bağı (kariyer sonu) ort. ${mean(stats.hocaBag)}, 80+ ${pct(stats.hocaBag.filter((b) => b >= 80).length, N)} · medya projesi ${mean(stats.medya)} · canlı dünyada takip edilen rakip ${mean(stats.dunya)} · kronik iz ${mean(stats.izler)}`);
 console.log(`Hatıralar (kariyer başına): müze ${mean(stats.muze)}/15, aile ${mean(stats.aile)} · albüm setleri ${mean(stats.setler)}/11, parlak kart ${mean(stats.parlak)}`);
 console.log(`Hikâyeler: kariyer başına ort. ${mean(stats.hikayeSayi)} · ${Object.entries(stats.hikaye).map(([k, v]) => `${k} ${pct(v, N)}`).join(', ')}`);

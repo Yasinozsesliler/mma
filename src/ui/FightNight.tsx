@@ -7,6 +7,7 @@ import Svg, { Defs, Ellipse, Polygon, RadialGradient, LinearGradient as SvgLinea
 import { sfx } from '../audio';
 import { ORGS, WEIGHT_CLASSES } from '../engine/data';
 import { SLOT_LABEL } from '../engine/fightNight';
+import { coachLine } from '../engine/coachBond';
 import { methodLabel } from '../engine/fight';
 import type { FightNight, GameState, NightBout } from '../engine/types';
 import { L, LOC } from '../i18n';
@@ -86,7 +87,7 @@ export function FightNightIntro({ s, onDone }: { s: GameState; onDone: () => voi
   }
   const kulis = [
     L("Eller sarıldı, eldivenler hakemin imzasıyla mühürlendi."),
-    L("{0}: “Planına sadık kal. Gerisi kendiliğinden gelir.”", [s.takim.antrenor || L("Antrenörün")]),
+    coachLine(s),
     L("Koridordan bir görevli sesleniyor: “Hazırlan, sıradaki sizsiniz!”"),
   ];
   return (

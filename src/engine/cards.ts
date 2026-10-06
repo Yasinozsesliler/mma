@@ -24,6 +24,8 @@ export interface FighterCard {
   ozel?: 'sampiyon' | 'ezeli' | 'kanka';
   /** Parlak (hologram) kart: yeni kartların küçük bir kısmı */
   parlak?: boolean;
+  /** Sen yendikten sonra şampiyon oldu (worldLife.ts) */
+  sonradan?: boolean;
 }
 
 export const RARITY: Record<Rarity, { ad: () => string; renk: string; sira: number }> = {

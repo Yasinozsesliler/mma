@@ -1,4 +1,5 @@
 import { L } from '../i18n';
+import { scarOnHeal } from './body';
 import { BACKGROUNDS, COUNTRIES, WEIGHT_CLASSES, WEIGHT_MODS, baseStatsFor } from './data';
 import { clamp, fill, noise, pick } from './rng';
 import { economyTick } from './economy';
@@ -169,7 +170,7 @@ export function advanceWeeks(s: GameState, weeks: number): string[] {
   s.sakatliklar = s.sakatliklar
     .map((i) => ({ ...i, hafta: i.hafta - weeks }))
     .filter((i) => {
-      if (i.hafta <= 0) notes.push(L("🩹 {0} iyileşti.", [i.ad]));
+      if (i.hafta <= 0) notes.push(scarOnHeal(s, i) ?? L("🩹 {0} iyileşti.", [i.ad]));
       return i.hafta > 0;
     });
   notes.push(...econ);

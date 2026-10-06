@@ -54,6 +54,8 @@ import { HomeScreen } from './src/ui/HomeScreen';
 import { MuseumScreen } from './src/ui/MuseumScreen';
 import { PassportScreen } from './src/ui/PassportScreen';
 import { LuxuryScreen } from './src/ui/LuxuryScreen';
+import { BodyScreen } from './src/ui/BodyScreen';
+import { DocumentaryScreen } from './src/ui/DocumentaryScreen';
 import { KafesEviScreen } from './src/ui/KafesEviScreen';
 import { FanClubScreen } from './src/ui/FanClubScreen';
 import { FadeIn } from './src/ui/anim';
@@ -112,6 +114,9 @@ const PHASE_LABELS: Record<Phase, string> = {
   pasaport: L("Pasaport"),
   luks: L("Lüks Koleksiyon"),
   tatil: L("Tatil"),
+  vucut: L("Vücudum"),
+  belgesel: L("Kariyer Belgeseli"),
+  lig: L("Organizasyonum"),
 };
 
 type View_ = 'loading' | 'menu' | 'create' | 'game' | 'daily' | 'locker';
@@ -405,6 +410,12 @@ export default function App() {
       case 'luks':
         content = <LuxuryScreen {...props} />;
         break;
+      case 'belgesel':
+        content = <DocumentaryScreen {...props} />;
+        break;
+      case 'vucut':
+        content = <BodyScreen {...props} />;
+        break;
       case 'tatil':
         content = <ShopScreen {...props} start="tatil" />;
         break;
@@ -417,6 +428,7 @@ export default function App() {
             s={game}
             onNew={() => setView('menu')}
             onComeback={() => act(acceptComeback)}
+            onDoc={() => act((x) => ((x.pending.sonrakiFaz = 'emeklilik'), (x.phase = 'belgesel')))}
             onDynasty={() => {
               setHeritage(heritageOf(game));
               setCreateSlot(slotRef.current);

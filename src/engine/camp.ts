@@ -26,6 +26,8 @@ import { chance, clamp, pick, rand, randInt } from './rng';
 import { drillBonus, recordDrill } from './drills';
 import { bump } from './istat';
 import { buildNight } from './fightNight';
+import { coachMods } from './coachBond';
+import { mediaFatigue } from './media';
 import { answerDuel, autoAnswer, createDuel, duelOutcome, type DuelAnswer } from './trashTalk';
 import type {
   GameState,
@@ -336,6 +338,8 @@ function runCamp(s: GameState) {
 
   // Gelişim
   const drill = drillBonus(s);
+  const medya = mediaFatigue(s);
+  if (medya < 1) k.ozet.push(L("🎬 Medya işleri kampı böldü: gelişim %{0} azaldı.", [Math.round((1 - medya) * 100)]));
   let artis = 0;
   if (k.focus) {
     const g =
@@ -351,7 +355,8 @@ function runCamp(s: GameState) {
       (1 + (s.motivasyon + campMotivation(s)) * 0.1) *
       (k.kisaHaber ? 1 : len.carpan) *
       drill.gelisim *
-      perkCamp(s);
+      perkCamp(s) *
+      medya;
     // Kamp odak alanı en kötü +2 gelişir; iyi koşullarda +5'e kadar.
     const d = addStat(f.stats, k.focus, clamp(Math.round(g), 2, 5), 2);
     artis = d;
@@ -578,6 +583,7 @@ function beginFight(s: GameState) {
   applyWalkout(s, mods, k.oppMods);
   hometownMods(s, opp, mods);
   familyMods(s, mods);
+  coachMods(s, mods);
   perkFightMods(s, mods);
   brainMods(s, mods);
   Object.entries(fightItemMods(s)).forEach(([st, v]) => (mods[st as StatKey] = (mods[st as StatKey] ?? 0) + (v ?? 0)));

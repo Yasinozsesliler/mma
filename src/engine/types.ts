@@ -506,7 +506,10 @@ export type Phase =
   | 'muze'
   | 'pasaport'
   | 'luks'
-  | 'tatil';
+  | 'tatil'
+  | 'vucut'
+  | 'belgesel'
+  | 'lig';
 
 export interface Istat {
   enIyiSeri: number;
@@ -627,6 +630,18 @@ export interface GameState {
   aileAn?: string[];
   /** Kontrat bitmeden gelen son erken teklif (maç sayısı) */
   erkenTeklif?: number;
+  /** Eski rakiplerin kariyerleri (worldLife.ts) */
+  dunya?: Record<string, import('./worldLife').WorldEntry>;
+  /** Antrenörle bağ (coachBond.ts) */
+  hoca?: import('./coachBond').CoachBond;
+  /** Medya projeleri (media.ts) */
+  medya?: import('./media').MediaWork[];
+  medyaSon?: number;
+  /** Sonraki kampta gelişim cezası (medya yorgunluğu) */
+  medyaYorgun?: number;
+  /** Haftalık rutin ve kronik izler (body.ts) */
+  rutin?: import('./body').Rutin;
+  izler?: import('./body').Iz[];
   /** Hikâye bölümlerinde yapılan seçimler (profilde günlük olarak) */
   hikayeKayit?: Record<string, { bolumler: { baslik: string; secim: string; sonuc: string }[]; bitti?: boolean }>;
   hikayeSon?: number;
