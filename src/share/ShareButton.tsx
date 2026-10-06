@@ -1,5 +1,5 @@
 // "Paylaş" düğmesi + önizleme penceresi. Kartın çizimi ve paylaşımı platforma göre CardPreview'dedir.
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { sfx } from '../audio';
 import { L } from '../i18n';
@@ -8,12 +8,12 @@ import { C, F } from '../ui/theme';
 import { CardPreview } from './CardPreview';
 import type { CardHandle, ShareCardData } from './types';
 
-export function ShareButton({ data, label, tone = 'ghost' }: { data: ShareCardData | null; label?: string; tone?: 'red' | 'gold' | 'ghost' }) {
+export function ShareButton({ data, label, tone = 'ghost', render }: { data: ShareCardData | null; label?: string; tone?: 'red' | 'gold' | 'ghost'; /** Özel görünüm (ör. profil kutucuğu) */ render?: (open: () => void) => ReactNode }) {
   const [open, setOpen] = useState(false);
   if (!data) return null;
   return (
     <>
-      <Button label={label ?? L("Paylaş")} icon="share-variant" tone={tone} onPress={() => setOpen(true)} />
+      {render ? render(() => setOpen(true)) : <Button label={label ?? L("Paylaş")} icon="share-variant" tone={tone} onPress={() => setOpen(true)} />}
       {open ? <ShareModal data={data} onClose={() => setOpen(false)} /> : null}
     </>
   );

@@ -1,5 +1,5 @@
 // Kafespedia: dövüşçünün otomatik yazılan ansiklopedi sayfası (tam ekran). Paylaşım kartı da buradan açılır.
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ORGS } from '../engine/data';
@@ -17,11 +17,11 @@ import { F } from './theme';
 const SONUC = { G: { t: () => L("Galibiyet"), c: '#d5fdd5' }, M: { t: () => L("Mağlubiyet"), c: '#fdd5d5' }, B: { t: () => L("Beraberlik"), c: '#eaecf0' } };
 
 /** Profilde ve emeklilikte: "Kafespedia sayfan" düğmesi ve tam ekran sayfa. */
-export function WikiButton({ s }: { s: GameState }) {
+export function WikiButton({ s, render }: { s: GameState; /** Özel görünüm (ör. profil kutucuğu) */ render?: (open: () => void) => ReactNode }) {
   const [open, setOpen] = useState(false);
   return (
     <>
-      <Button label={L("Kafespedia sayfan")} icon="book-open-page-variant" tone="ghost" onPress={() => setOpen(true)} />
+      {render ? render(() => setOpen(true)) : <Button label={L("Kafespedia sayfan")} icon="book-open-page-variant" tone="ghost" onPress={() => setOpen(true)} />}
       {open ? <WikiModal s={s} onClose={() => setOpen(false)} /> : null}
     </>
   );

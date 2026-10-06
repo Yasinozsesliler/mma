@@ -5203,4 +5203,7 @@ export const PT: Record<string, string> = {
   "Kafes Evi realite şovu şampiyonu": "Campeão do reality Casa da Jaula",
   "Turnuvalar ve özel zaferler": "Torneios e vitórias especiais",
   "Şampiyonluklar ve başarılar": "Títulos e conquistas",
+  "Stil": "Estilo",
+  "{0}/{1} başarım": "{0}/{1} conquistas",
+  "Kart": "Ficha",
 };

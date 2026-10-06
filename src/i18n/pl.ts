@@ -165,7 +165,7 @@ export const PL: Record<string, string> = {
   "Haftada 20.000$ işletme geliri.": "20 000 $ tygodniowego dochodu z biznesu.",
   "Borsa Kurdu": "Wilk z Wall Street",
   "Yatırımlarının değeri 1 milyon doları geçsin.": "Pomnóż inwestycje powyżej miliona dolarów.",
-  "Vitrin": "Wizytówka",
+  "Vitrin": "Gablota",
   "Aynı anda 3 sponsor.": "3 sponsorów jednocześnie.",
   "Kasa Her Zaman Kazanmaz": "Kasyno nie zawsze wygrywa",
   "Kumarhaneden net 100.000$ kârla çık.": "Wyjdź z kasyna z zyskiem netto 100 000 $.",
@@ -5176,4 +5176,7 @@ export const PL: Record<string, string> = {
   "Kafes Evi realite şovu şampiyonu": "Mistrz reality show Dom Klatki",
   "Turnuvalar ve özel zaferler": "Turnieje i wyjątkowe zwycięstwa",
   "Şampiyonluklar ve başarılar": "Tytuły i osiągnięcia",
+  "Stil": "Styl",
+  "{0}/{1} başarım": "{0}/{1} osiągnięć",
+  "Kart": "Karta",
 };

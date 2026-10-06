@@ -5243,4 +5243,7 @@ export const RU: Record<string, string> = {
   "Kafes Evi realite şovu şampiyonu": "Чемпион реалити-шоу «Дом клетки»",
   "Turnuvalar ve özel zaferler": "Турниры и особые победы",
   "Şampiyonluklar ve başarılar": "Титулы и достижения",
+  "Stil": "Стиль",
+  "{0}/{1} başarım": "{0}/{1} достижений",
+  "Kart": "Карта",
 };

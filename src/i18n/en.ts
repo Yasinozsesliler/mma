@@ -5189,4 +5189,7 @@ export const EN: Record<string, string> = {
   "Kafes Evi realite şovu şampiyonu": "Cage House reality show champion",
   "Turnuvalar ve özel zaferler": "Tournaments and special wins",
   "Şampiyonluklar ve başarılar": "Championships and accomplishments",
+  "Stil": "Style",
+  "{0}/{1} başarım": "{0}/{1} achievements",
+  "Kart": "Card",
 };

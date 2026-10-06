@@ -82,7 +82,6 @@ import { CampPlanner } from './CampPlanner';
 import { TechniquePanel } from './TechniquePanel';
 import { FaceOffStage } from './FaceOffStage';
 import { RankingsTab } from './P4PPanel';
-import { FightHistoryPanel } from './FightHistoryPanel';
 import { PlanPicker } from './PlanPicker';
 import { coachIntro } from '../engine/coach';
 import { Compare } from './Compare';
@@ -396,9 +395,7 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
         <RankingsTab s={s} act={act} />
       ) : (
         <>
-          <StatusPanel s={s} />
           <ProfilePanel s={s} act={act} />
-          <History s={s} />
         </>
       )}
     </Screen>
@@ -406,19 +403,6 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
 }
 
 
-function History({ s }: { s: GameState }) {
-  return (
-    <>
-      <Section>{L("HİKÂYE")}</Section>
-      <Card>
-        <P dim style={{ fontStyle: 'italic', marginBottom: 0 }}>
-          {s.fighter.hikaye || '—'}
-        </P>
-      </Card>
-      <FightHistoryPanel s={s} />
-    </>
-  );
-}
 
 // ---------- Olay ----------
 
