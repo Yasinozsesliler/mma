@@ -5207,4 +5207,5 @@ export const ES: Record<string, string> = {
   "Stil": "Estilo",
   "{0}/{1} başarım": "{0}/{1} logros",
   "Kart": "Ficha",
+  "Geçmiş": "Historial",
 };

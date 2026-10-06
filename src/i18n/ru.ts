@@ -5246,4 +5246,5 @@ export const RU: Record<string, string> = {
   "Stil": "Стиль",
   "{0}/{1} başarım": "{0}/{1} достижений",
   "Kart": "Карта",
+  "Geçmiş": "История",
 };

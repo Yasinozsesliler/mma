@@ -47,7 +47,7 @@ export function ProfilePanel({ s, act }: { s: GameState; act: Act }) {
   const TABS: { key: Tab; label: string; icon: IconName; badge?: number }[] = [
     { key: 'kart', label: L("Kart"), icon: 'card-account-details' },
     { key: 'vitrin', label: L("Vitrin"), icon: 'trophy-variant', badge: kupa || undefined },
-    { key: 'kariyer', label: L("Kariyer"), icon: 'timeline-text' },
+    { key: 'kariyer', label: L("Geçmiş"), icon: 'timeline-text' },
     { key: 'yasam', label: L("Yaşam"), icon: 'home-heart' },
   ];
 

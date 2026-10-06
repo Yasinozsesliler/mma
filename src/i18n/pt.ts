@@ -5206,4 +5206,5 @@ export const PT: Record<string, string> = {
   "Stil": "Estilo",
   "{0}/{1} başarım": "{0}/{1} conquistas",
   "Kart": "Ficha",
+  "Geçmiş": "Histórico",
 };
