@@ -1,5 +1,6 @@
 import { L } from '../i18n';
 import { WalkoutScene } from './WalkoutScene';
+import { FightNightIntro } from './FightNight';
 import { CoachTip } from './CoachTip';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
@@ -246,6 +247,7 @@ export function FightScreen({ s, act }: { s: GameState; act: Act }) {
   const fresh = fs.raunt === 1 && fs.log.length === 0;
   // Dövüşün başında (bir kez): kafese yürüyüş ve ring anonsu.
   const [intro, setIntro] = useState(fresh);
+  const [kulis, setKulis] = useState(fresh && !!s.pending.gece);
   const org = ORGS[currentOrg(s)].kisa + (fs.unvanMaci ? L(" · ÜNVAN") : fs.anaMac ? L(" · ANA MAÇ") : '');
 
   // Olaylar tek tek akar; kullanıcı hız seçebilir ya da atlayabilir.
@@ -295,7 +297,8 @@ export function FightScreen({ s, act }: { s: GameState; act: Act }) {
           {fs.durum !== 'bitti' && shown <= 1 ? <RoundBanner key={fs.raunt} raunt={fs.raunt} max={fs.maxRaunt} /> : null}
         </View>
       )}
-      {intro ? <WalkoutScene s={s} onDone={() => setIntro(false)} /> : null}
+      {intro && kulis ? <FightNightIntro s={s} onDone={() => setKulis(false)} /> : null}
+      {intro && !kulis ? <WalkoutScene s={s} onDone={() => setIntro(false)} /> : null}
       {fresh ? <CoachTip s={s} act={act} id="dovus" /> : null}
       {!fresh ? <Momentum fs={view} shown={shown} logLen={fs.log.length} /> : null}
 

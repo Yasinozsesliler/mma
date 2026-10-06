@@ -1,6 +1,6 @@
 // Kafespedia: dövüşçünün otomatik yazılan ansiklopedi sayfası (tam ekran). Paylaşım kartı da buradan açılır.
-import { useState, type ReactNode } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useRef, useState, type ReactNode } from 'react';
+import { Modal, Pressable, ScrollView, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ORGS } from '../engine/data';
 import type { GameState } from '../engine/types';
@@ -30,6 +30,14 @@ export function WikiButton({ s, render }: { s: GameState; /** Özel görünüm (
 function WikiModal({ s, onClose }: { s: GameState; onClose: () => void }) {
   const w = wikiOf(s);
   const ins = useSafeAreaInsets();
+  // İçindekiler bağlantıları: başlıkların konumu ölçülür, dokununca o bölüme kaydırılır.
+  const scroll = useRef<ScrollView>(null);
+  const pos = useRef<Record<string, number>>({});
+  const mark = (k: string, e: LayoutChangeEvent) => (pos.current[k] = e.nativeEvent.layout.y);
+  const go = (k: string) => {
+    const y = pos.current[k];
+    if (y != null) scroll.current?.scrollTo({ y: Math.max(0, y - 8), animated: true });
+  };
   return (
     <Modal animationType="slide" onRequestClose={onClose}>
       <View style={[st.page, { paddingTop: ins.top }]}>
@@ -45,7 +53,7 @@ function WikiModal({ s, onClose }: { s: GameState; onClose: () => void }) {
             <Icon name="close" size={24} color={WIKI.text} />
           </Pressable>
         </View>
-        <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 24 + ins.bottom }}>
+        <ScrollView ref={scroll} contentContainerStyle={{ padding: 16, paddingBottom: 24 + ins.bottom }}>
           <Text style={st.title}>{w.baslik}</Text>
           <View style={st.rule} />
           <Text style={st.from}>{L("Kafespedia, özgür dövüş ansiklopedisi")}</Text>
@@ -68,14 +76,14 @@ function WikiModal({ s, onClose }: { s: GameState; onClose: () => void }) {
           <View style={st.toc}>
             <Text style={st.tocTitle}>{L("İçindekiler")}</Text>
             {[...w.bolumler.map((b) => b.baslik), ...(w.basarilar.length ? [L("Şampiyonluklar ve başarılar")] : []), ...(w.kayit.length ? [L("Dövüş kaydı")] : [])].map((b, i) => (
-              <Text key={b} style={st.tocItem}>
+              <Text key={b} style={st.tocItem} onPress={() => go(b)} suppressHighlighting={false}>
                 {i + 1} {b}
               </Text>
             ))}
           </View>
 
           {w.bolumler.map((b) => (
-            <View key={b.baslik}>
+            <View key={b.baslik} onLayout={(e) => mark(b.baslik, e)}>
               <Text style={st.h2}>{b.baslik}</Text>
               {b.metin.split('\n').map((p, i) => (
                 <Text key={i} style={st.p}>
@@ -87,7 +95,9 @@ function WikiModal({ s, onClose }: { s: GameState; onClose: () => void }) {
 
           {w.basarilar.length ? (
             <>
-              <Text style={st.h2}>{L("Şampiyonluklar ve başarılar")}</Text>
+              <Text style={st.h2} onLayout={(e) => mark(L("Şampiyonluklar ve başarılar"), e)}>
+                {L("Şampiyonluklar ve başarılar")}
+              </Text>
               {w.basarilar.map((g) => (
                 <View key={g.baslik} style={{ marginBottom: 6 }}>
                   <Text style={st.h3}>{g.baslik}</Text>
@@ -104,7 +114,9 @@ function WikiModal({ s, onClose }: { s: GameState; onClose: () => void }) {
 
           {w.kayit.length ? (
             <>
-              <Text style={st.h2}>{L("Dövüş kaydı")}</Text>
+              <Text style={st.h2} onLayout={(e) => mark(L("Dövüş kaydı"), e)}>
+                {L("Dövüş kaydı")}
+              </Text>
               <View style={st.table}>
                 <View style={[st.tr, { backgroundColor: '#eaecf0' }]}>
                   <Text style={[st.th, { flex: 1.1 }]}>{L("Sonuç")}</Text>

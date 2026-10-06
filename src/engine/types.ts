@@ -185,6 +185,32 @@ export interface Team {
   menajerPay: number; // 0-0.2
 }
 
+// ---------- Dövüş gecesi ----------
+export interface NightBout {
+  a: string;
+  b: string;
+  ua: string;
+  ub: string;
+  siklet: WeightClass;
+  kazanan: 0 | 1;
+  yontem: Method;
+  raunt: number;
+  sure: string;
+  /** Gecenin Performansı için puan */
+  puan: number;
+}
+export interface FightNight {
+  ad: string;
+  sehir?: string;
+  konum: 'acilis' | 'onEleme' | 'anaKart' | 'coMain' | 'anaMac';
+  /** Oyuncudan önceki maçlar (kulis ekranında sonuçlanır) */
+  once: NightBout[];
+  /** Oyuncudan sonraki maçlar (maç sonu ekranında) */
+  sonra: NightBout[];
+  seyirci: number;
+  yaris?: { aday: string; adayYontem: string; adayPuan: number; benim: number; kazandi: boolean };
+}
+
 export interface FightHistory {
   rakip: string;
   rakipId?: string;
@@ -570,6 +596,8 @@ export interface GameState {
   /** Süren kariyer hikâyesi ve bitenler (stories.ts). */
   hikaye?: { id: string; adim: number; zaman: number; veri: Record<string, string | number> } | null;
   hikayeler?: string[];
+  /** Hikâye bölümlerinde yapılan seçimler (profilde günlük olarak) */
+  hikayeKayit?: Record<string, { bolumler: { baslik: string; secim: string; sonuc: string }[]; bitti?: boolean }>;
   hikayeSon?: number;
   hanedan?: import('./dynasty').Ancestor[];
   /** Son kampta seçilenler (bir sonraki kamp planının varsayılanı) */
@@ -683,5 +711,7 @@ export interface GameState {
     teklifMetni?: string;
     olay?: GameEventState;
     sonrakiFaz?: Phase;
+    /** Kariyer maçının dövüş gecesi (fightNight.ts) */
+    gece?: FightNight;
   };
 }

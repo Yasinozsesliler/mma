@@ -25,6 +25,7 @@ import { campMotivation, cutBonus, fightItemMods, injuryMultiplier, owns, restMu
 import { chance, clamp, pick, rand, randInt } from './rng';
 import { drillBonus, recordDrill } from './drills';
 import { bump } from './istat';
+import { buildNight } from './fightNight';
 import { answerDuel, autoAnswer, createDuel, duelOutcome, type DuelAnswer } from './trashTalk';
 import type {
   GameState,
@@ -599,6 +600,7 @@ function beginFight(s: GameState) {
     unvanMaci: unvan,
     anaMac,
   });
+  buildNight(s);
   s.phase = 'dovus';
 }
 

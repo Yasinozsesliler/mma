@@ -4,6 +4,7 @@ import { L } from '../i18n';
 import { TrophyCabinet } from './TrophyCabinet';
 import { DynastySection } from './DynastyPanel';
 import { NemesisCard } from './NemesisCard';
+import { StoryJournal } from './StoryChapter';
 import { TimelinePanel } from './TimelinePanel';
 import { WikiButton } from './WikiPage';
 import { careerCard } from '../share/build';
@@ -119,6 +120,7 @@ function CareerTab({ s }: { s: GameState }) {
   return (
     <>
       <NemesisCard s={s} />
+      <StoryJournal s={s} />
       <TimelinePanel s={s} />
       <FightHistoryPanel s={s} />
     </>

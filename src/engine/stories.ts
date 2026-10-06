@@ -70,17 +70,50 @@ const HIKAYELER: Record<string, Hikaye> = {
       },
       {
         kur: (s, v) => ({
-          baslik: L("📱 Bir Özür Mesajı"),
-          metin: L("{0} yazdı: “Hata yaptım. O kampta anlatılanların hepsi boş çıktı. Geri dönebilir miyim?”", [v.ad]),
-          secenekler: [L("Affet, geri al"), L("Kapıyı kapat")],
+          baslik: L("🎤 Meydan Okuma"),
+          metin: L("{0} bir röportajda adını andı: “Onun bütün sırlarını biliyorum. Kafeste karşılaşsak iki raunt dayanamaz.” Telefonun susmuyor.", [v.ad]),
+          secenekler: [L("Kafeste hesaplaşalım"), L("Cevap verme")],
         }),
-        uygula: (s, i, v) => {
-          if (i === 0) {
-            addStat(s.fighter.stats, 'kondisyon', 1);
-            return L("{0} geri döndü ve eskisinden sıkı çalışıyor. Kondisyon +1.", [v.ad]);
+        uygula: (s, i, v, ileri) => {
+          if (i === 1) {
+            mot(s, 1);
+            return L("Sustun. Bazen en sert cevap sessizliktir. Motivasyon +1.");
           }
-          pop(s, 1);
-          return L("“Sadakat her şeydir.” Cevabın kısa ve netti. Popülerlik +1.");
+          v.dovus = 1;
+          ileri(0);
+          pop(s, 2);
+          return L("“Kafes kapısında görüşürüz.” Bir sonraki rakip seçiminde {0} karşına çıkacak. Popülerlik +2.", [v.ad]);
+        },
+      },
+      {
+        kur: (s, v) =>
+          v.sonuc === 'G'
+            ? { baslik: L("🏁 Hesap Kapandı"), metin: L("{0} yerde, sen ayaktasın. Soyunma odasının kapısında seni bekliyordu: “Haklıydın. Sırlar değil, emek kazanıyor.”", [v.ad]), secenekler: [L("Elini sık"), L("Arkanı dön")] }
+            : v.sonuc === 'M' || v.sonuc === 'B'
+              ? { baslik: L("🩸 Acı Gece"), metin: L("{0} bu gece güldü. Eski salonunun önünden geçerken duvarda senin posterinin üstüne yazı yazılmış: “Öğrenci hocayı geçti.”", [v.ad]), secenekler: [L("Rövanş yemini et"), L("Ders olarak al")] }
+              : { baslik: L("📰 Sahipsiz Kavga"), metin: L("Maç bir türlü yapılmadı. {0} her yerde “benden kaçtı” diyor. Taraftarların bir kısmı ona inanıyor.", [v.ad]), secenekler: [L("Umursama")] },
+        uygula: (s, i, v) => {
+          if (v.sonuc === 'G') {
+            if (i === 0) {
+              pop(s, 4);
+              addStat(s.fighter.stats, 'iq', 1);
+              return L("Kafeste rakip, kafes dışında centilmen. Herkes bu fotoğrafı paylaştı. Popülerlik +4, IQ +1.");
+            }
+            pop(s, 2);
+            mot(s, 1);
+            return L("Sözün bitti. Taraftar bu soğukluğa bayıldı. Popülerlik +2, motivasyon +1.");
+          }
+          if (v.sonuc === 'M' || v.sonuc === 'B') {
+            mot(s, 2);
+            if (i === 0) {
+              pop(s, 2);
+              return L("“Bir gün yine karşılaşacağız.” Bu öfke kampa yakıt oldu. Motivasyon +2, popülerlik +2.");
+            }
+            addStat(s.fighter.stats, 'iq', 1);
+            return L("Kaseti yüz kez izledin. Nerede hata yaptığını artık biliyorsun. Motivasyon +2, IQ +1.");
+          }
+          pop(s, -2);
+          return L("Bir süre konuşuldu, sonra unutuldu. Popülerlik -2.");
         },
       },
     ],
@@ -292,7 +325,169 @@ const HIKAYELER: Record<string, Hikaye> = {
       },
     ],
   },
+
+  // 5) Emekli efsanenin son öğrencisi
+  efsane: {
+    kosul: (s) => s.gecmis.length >= 6 && s.stage !== 'amator',
+    baslat: (s) => ({ ad: isim(s) }),
+    adimlar: [
+      {
+        kur: (s, v) => ({
+          baslik: L("👴 Salondaki Yaşlı Adam"),
+          metin: L("Bir haftadır her sabah salonun köşesinde biri seni izliyor. Sonunda öğreniyorsun: {0}, yıllar önce kemerini bırakmadan emekli olan efsane. Yanına gelip yalnızca “Ayakların yanlış.” diyor.", [v.ad]),
+          secenekler: [L("Ondan ders iste"), L("Teşekkür et, yoluna devam et")],
+        }),
+        uygula: (s, i, v, ileri) => {
+          if (i === 1) return L("{0} başını salladı ve bir daha gelmedi. Bazı kapılar bir kez açılır.", [v.ad]);
+          addStat(s.fighter.stats, 'iq', 1);
+          ileri(1);
+          return L("İlk ders bir saat sürdü, tek bir yumruk bile atmadın. Sadece ayak. IQ +1.");
+        },
+      },
+      {
+        kur: (s, v) => ({
+          baslik: L("⛰️ Dağ Kampı"),
+          metin: L("{0} seni bir haftalığına köyündeki eski ahıra götürüyor. Telefon yok, ayna yok. “Neyi düzeltmek istiyorsun?” diye soruyor.", [v.ad]),
+          secenekler: [L("Vuruşlarımı: odun ve kum torbası"), L("Güreşimi: köyün pehlivanlarıyla"), L("Kafamı: sessizlik ve nefes")],
+        }),
+        uygula: (s, i, v, ileri) => {
+          ileri(2);
+          const st: StatKey = (['vurus', 'gures', 'iq'] as const)[i];
+          addStat(s.fighter.stats, st, 2);
+          return [
+            L("Bir hafta boyunca balta salladın. Yumrukların artık başka ses çıkarıyor. Vuruş +2."),
+            L("Köyün pehlivanları seni her gün çimene gömdü. Sonra sen onları. Güreş +2."),
+            L("Gün doğumunda nefes, gün batımında sessizlik. Kafes artık o kadar gürültülü gelmiyor. IQ +2."),
+          ][i];
+        },
+      },
+      {
+        kur: (s, v) => ({
+          baslik: L("🏥 Hastane Koridoru"),
+          metin: L("{0} kalp krizi geçirdi. Durumu iyi ama yorgun. Elini tutup fısıldıyor: “Bir sonraki maçında köşende olmak istiyordum…”", [v.ad]),
+          secenekler: [L("Maçı ona ada"), L("Kampı bırak, yanında kal")],
+        }),
+        uygula: (s, i, v, ileri) => {
+          ileri(1);
+          if (i === 0) {
+            v.ada = 1;
+            mot(s, 2);
+            return L("Eldivenlerinin üstüne onun adını yazdırdın. Motivasyon +2.");
+          }
+          mot(s, 1);
+          addStat(s.fighter.stats, 'kondisyon', -1);
+          return L("Bir hafta hastane koridorunda uyudun. Antrenman aksadı ama içindeki bir şey yerine oturdu. Motivasyon +1, kondisyon -1.");
+        },
+      },
+      {
+        kur: (s, v) => ({
+          baslik: L("✉️ Son Ders"),
+          metin:
+            s.gecmis[0]?.sonuc === 'G'
+              ? L("O gece {0} hastane odasında maçını izlemiş. Hemşire, kazandığın anda yatağından doğrulduğunu anlatıyor. Sana bir zarf bırakmış.", [v.ad])
+              : L("{0} maçını hastane odasında izlemiş. Kaybettin ama ertesi sabah sana bir zarf göndermiş.", [v.ad]),
+          secenekler: [L("Zarfı aç")],
+        }),
+        uygula: (s, i, v) => {
+          const n = v.ada ? 4 : 2;
+          addStat(s.fighter.stats, 'iq', 1);
+          pop(s, n);
+          return s.gecmis[0]?.sonuc === 'G'
+            ? L("“Ayakların artık doğru. Gerisi senin.” Mektubu çerçeveletip salonun duvarına astın. IQ +1, popülerlik +{0}.", [n])
+            : L("“Kaybetmek, ayaklarını yeniden bulmaktır. Yarın sabah altıda salondayım.” Ve oradaydı. IQ +1, popülerlik +{0}.", [n]);
+        },
+      },
+    ],
+  },
+
+  // 6) Mahalleden bir çocuk
+  mahalle: {
+    kosul: (s) => s.gecmis.length >= 4 && s.populerlik >= 20,
+    // Metin bir oğlan çocuğunu anlatır: kadın kariyerinde de erkek adı.
+    baslat: (s) => ({ ad: pick(pick(NAME_POOLS.filter((x) => (s.fighter.uyruk === 'tr' ? x.ulke === L("Türkiye") : true))).ad) }),
+    adimlar: [
+      {
+        kur: (s, v) => ({
+          baslik: L("✏️ Bir Mektup"),
+          metin: L("Memleketinden on iki yaşında bir çocuk yazmış: “Adım {0}. Okulda bana vuruyorlar. Senin gibi olmak istiyorum. Bana bir şey öğretir misin?” Mektubun köşesinde senin bir çizimin var.", [v.ad]),
+          secenekler: [L("Mahalleye git ({0})", [$(olcek(s) * 0.2)]), L("İmzalı eldiven gönder")],
+        }),
+        uygula: (s, i, v, ileri) => {
+          if (i === 1) {
+            pop(s, 1);
+            return L("Eldiveni alınca annesi bir video gönderdi: {0} eldivenlerle uyuyor. Popülerlik +1.", [v.ad]);
+          }
+          s.para -= olcek(s) * 0.2;
+          mot(s, 1);
+          ileri(2);
+          return L("Mahalle sahasında yüz çocuk seni bekliyordu. {0} en öndeydi, elini hiç bırakmadı. Motivasyon +1.", [v.ad]);
+        },
+      },
+      {
+        kur: (s, v) => ({
+          baslik: L("🚨 Kötü Haber"),
+          metin: L("{0} adlı çocuğun annesi aradı. Oğlu mahalledeki bir çeteyle takılmaya başlamış, dün gece karakoldan almışlar. “Seni dinler” diyor.", [v.ad]),
+          secenekler: [L("Onu salona yazdır ({0})", [$(olcek(s) * 0.5)]), L("Telefonla konuş")],
+        }),
+        uygula: (s, i, v, ileri) => {
+          ileri(3);
+          if (i === 0) {
+            s.para -= olcek(s) * 0.5;
+            v.salon = 1;
+            pop(s, 2);
+            return L("Bir yıllık salon üyeliğini ödedin. Hocası “ilk hafta üç kez kustu ama bırakmadı” diyor. Popülerlik +2.");
+          }
+          return L("Bir saat konuştunuz. Sonunda “Tamam abi” dedi. Ne kadar sürer, bilinmez.");
+        },
+      },
+      {
+        kur: (s, v) =>
+          v.salon
+            ? { baslik: L("🥇 İlk Madalya"), metin: L("{0} bölge çocuk güreş turnuvasında finale çıktı. Maçtan önce sana bir ses kaydı gönderiyor: “Seni hep izledim, bugün sen beni izle.”", [v.ad]), secenekler: [L("Canlı izle, ekrana bağır")] }
+            : { baslik: L("📸 Bir Fotoğraf"), metin: L("{0} adlı çocuğun annesi bir fotoğraf gönderdi: Oğlu okul takımına girmiş. Arkasında senin posterin.", [v.ad]), secenekler: [L("Kısa bir video mesajı çek")] },
+        uygula: (s, i, v) => {
+          if (v.salon) {
+            pop(s, 4);
+            mot(s, 1);
+            s.haberler.unshift(L("📰 {0} adlı dövüşçünün desteklediği çocuk madalyayla döndü: “Abim gibi olacağım.”", [s.fighter.soyad]));
+            return L("{0} altın madalyayı boynunda sana gösterdi. Video milyonlarca izlendi. Popülerlik +4, motivasyon +1.", [v.ad]);
+          }
+          pop(s, 2);
+          return L("Videoyu bütün okul izlemiş. {0} artık “kafesteki abinin kardeşi”. Popülerlik +2.", [v.ad]);
+        },
+      },
+    ],
+  },
 };
+
+/** Bölüm ekranı için hikâye adı, simgesi ve rengi. */
+export const STORY_META: Record<string, { ad: string; ikon: string; renk: string }> = {
+  ihanet: { ad: L("İHANET"), ikon: 'knife', renk: '#e63946' },
+  sakatlik: { ad: L("DÖNÜŞ"), ikon: 'bandage', renk: '#3aa8ff' },
+  menajer: { ad: L("KİRLİ HESAPLAR"), ikon: 'briefcase-variant', renk: '#f4a261' },
+  baba: { ad: L("BABANIN HAYALİ"), ikon: 'account-heart', renk: '#c792ea' },
+  efsane: { ad: L("SON ÖĞRENCİ"), ikon: 'account-star', renk: '#f2c14e' },
+  mahalle: { ad: L("MAHALLEDEN BİR ÇOCUK"), ikon: 'human-child', renk: '#39d98a' },
+};
+
+export const storyLength = (id: string) => HIKAYELER[id]?.adimlar.length ?? 1;
+
+const storyOppId = (id: string) => `hikaye-${id}`;
+
+/** Hikâye maçı bekleniyorsa rakip bilgisi (career.findNextFight rakip listesine ekler). */
+export function storyRival(s: GameState): { id: string; ad: string; soyad: string; etiket: string; risk: string } | null {
+  const h = s.hikaye;
+  if (!h || h.veri.dovus !== 1) return null;
+  h.veri.teklif = Number(h.veri.teklif ?? 0) + 1;
+  const [ad, ...rest] = String(h.veri.ad).split(' ');
+  return {
+    id: storyOppId(h.id),
+    ad,
+    soyad: rest.join(' ') || ad,
+    etiket: L("📖 HİKÂYE MAÇI"),
+    risk: L("Bu maç bir hikâyenin parçası. Sonucu hikâyenin sonunu belirleyecek."),
+  };
+}
 
 /** Zamanı gelen hikâye adımı (ya da yeni başlayan bir hikâye) varsa olay olarak döndürür. */
 export function storyEvent(s: GameState): GameEventState | null {
@@ -310,6 +505,13 @@ export function storyEvent(s: GameState): GameEventState | null {
     h = s.hikaye = { id, adim: 0, zaman: fights(s), veri: def.baslat?.(s) ?? {} };
   }
   if (fights(s) < h.zaman) return null;
+  if (h.veri.dovus === 1) {
+    // Hikâye maçı: yapılana kadar (en fazla iki teklif) bekle; sonra sonuçla devam et.
+    const fought = s.gecmis[0]?.rakipId === storyOppId(h.id);
+    if (!fought && Number(h.veri.teklif ?? 0) < 2) return null;
+    h.veri.dovus = 2;
+    h.veri.sonuc = fought ? s.gecmis[0].sonuc : 'yok';
+  }
   const def = HIKAYELER[h.id];
   const step = def?.adimlar[h.adim];
   if (!step) {
@@ -325,11 +527,16 @@ export function chooseStory(s: GameState, secim: number): string {
   const step = HIKAYELER[h.id].adimlar[h.adim];
   let sonraki: number | null = null;
   const sonuc = step.uygula(s, secim, h.veri, (d) => (sonraki = d));
+  const kayit = (s.hikayeKayit ??= {});
+  const k = (kayit[h.id] ??= { bolumler: [] });
+  const ev = s.pending.olay;
+  k.bolumler.push({ baslik: ev?.baslik ?? '', secim: ev?.secenekler[secim] ?? '', sonuc });
   if (sonraki != null && h.adim + 1 < HIKAYELER[h.id].adimlar.length) {
     h.adim += 1;
     h.zaman = fights(s) + sonraki;
   } else {
     s.hikayeler = [...(s.hikayeler ?? []), h.id];
+    k.bitti = true;
     s.hikayeSon = fights(s);
     s.hikaye = null;
   }

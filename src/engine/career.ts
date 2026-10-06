@@ -42,6 +42,9 @@ import { OWNER_EVENTS, ownerReaction, ownerRel } from './owners';
 import { socialAfterFight, socialTick } from './social';
 import { merchIncome, restMultiplier } from './shop';
 import { chance, clamp, pick, rand, randInt, uid } from './rng';
+import { performanceRace } from './fightNight';
+import { storyRival } from './stories';
+import { generateOpponent } from './opponents';
 import type { GameState, Offer, Opponent, OrgId, StatKey, WeightClass } from './types';
 
 export const STAGE_LABELS = {
@@ -93,6 +96,17 @@ export function findNextFight(s: GameState) {
     s.pending.dayatma = true;
   }
   if (!gpOpp) maybeHometown(s, s.pending.secenekler);
+  // Hikâye maçı: bir hikâyenin kötü adamı rakip listesine girer (unvan maçının yerini almaz).
+  const hr = !gpOpp ? storyRival(s) : null;
+  if (hr) {
+    const list = s.pending.secenekler;
+    const slot = list.length > 1 ? 1 : 0;
+    if (!list[slot].champion) {
+      const o = generateOpponent(s, { zorluk: 0, rank: list[slot].rank, org: currentOrg(s) }, list);
+      Object.assign(o, { id: hr.id, ad: hr.ad, soyad: hr.soyad, etiket: hr.etiket, riskMetni: hr.risk });
+      list[slot] = o;
+    }
+  }
   if (isComebackFight(s)) s.pending.secenekler.forEach((o) => (o.etiket = tL("🔥 DÖNÜŞ MAÇI")));
   assignCities(s, s.pending.secenekler, currentOrg(s));
   s.pending.secenekler.forEach((o) => (o.macHafta = leadWeeks(s, o, s.kisaHaber)));
@@ -256,7 +270,9 @@ export function finishFight(s: GameState) {
   }
   const bonus = orgInfo.performansBonusu;
   let bonusSay = 0;
-  if (bonus && won && finishMethod && chance(r.raunt === 1 ? 0.5 : 0.35)) {
+  // Gecenin Performansı: kartın en iyi diğer bitirişiyle yarış (fightNight.ts); gece kurulmadıysa eski şans.
+  const yaris = s.pending.gece ? performanceRace(s) : won && finishMethod && chance(r.raunt === 1 ? 0.5 : 0.35);
+  if (bonus && won && finishMethod && yaris) {
     kazanc += bonus;
     bonusSay++;
     lines.push(tL("⭐ GECENİN PERFORMANSI! +{0}", [money(bonus)]));

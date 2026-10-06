@@ -4,6 +4,7 @@ import { maybeInterstitial } from '../monetization';
 import { adShootAmount, careerFights, claimAdShoot } from '../engine/rewards';
 import { AdOffer } from './AdOffer';
 import { FullVersionNudge } from './PremiumCard';
+import { NightResults } from './FightNight';
 import { CoachTip } from './CoachTip';
 import { winCard } from '../share/build';
 import { ShareButton } from '../share/ShareButton';
@@ -255,6 +256,8 @@ export function PostFightScreen({ s, act }: { s: GameState; act: Act }) {
         />
       ) : null}
       {ps.reklamCekimi ? <Text style={pf.shootDone}>{L("🎬 Reklam çekimi: +{0}", [money(ps.reklamCekimi)])}</Text> : null}
+
+      {ps.roportajSonucu ? <NightResults s={s} /> : null}
 
       {rows.length ? (
         <>

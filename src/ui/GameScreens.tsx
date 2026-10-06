@@ -1,6 +1,7 @@
 import { L, LOC } from '../i18n';
 import { AdOffer } from './AdOffer';
 import { ScoutReportCard } from './ScoutReportCard';
+import { StoryChapter } from './StoryChapter';
 import { claimScout } from '../engine/rewards';
 import { RewardCard } from './RewardCard';
 import { CoachTip, type TipId } from './CoachTip';
@@ -423,6 +424,7 @@ const EVENT_ICONS: Record<string, IconName> = {
 
 export function EventScreen({ s, act }: { s: GameState; act: Act }) {
   const ev = s.pending.olay!;
+  if (ev.id.startsWith('hikaye:')) return <StoryChapter s={s} act={act} />;
   return (
     <Screen footer={ev.sonuc ? <Button label={L("Devam")} icon="arrow-right" onPress={() => act(closeEvent)} /> : undefined}>
       {ev.id.startsWith('patron_') && OWNERS[s.contract?.org ?? 'ufc'] ? (
