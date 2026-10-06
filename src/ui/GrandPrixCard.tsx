@@ -28,9 +28,13 @@ export function GrandPrixCard({ s, act }: { s: GameState; act: (fn: (s: GameStat
       <LinearGradient colors={['#2e2206', '#0e0c07']} style={st.box}>
         <View style={st.head}>
           <Icon name="tournament" size={20} color={C.gold} />
-          <Text style={[st.title, SLANT]}>{L("{0} GRAND PRIX DAVETİ", [org.kisa])}</Text>
+          <Text style={[st.title, SLANT]}>{s.stage === 'amator' ? L("YÜKSELİŞ GRAND PRIX DAVETİ") : L("{0} GRAND PRIX DAVETİ", [org.kisa])}</Text>
         </View>
-        <Text style={st.text}>{L("8 dövüşçü, üç maç: çeyrek final, yarı final, final. Kaybeden elenir. Şampiyona {0} ve unvan.", [money(s.gpDavet.odul)])}</Text>
+        <Text style={st.text}>
+          {s.stage === 'amator'
+            ? L("Profesyonelliğe giden yolda vitrin: 8 amatör, üç maç (çeyrek final, yarı final, final). Kaybeden elenir. Şampiyon {0} ve kupayı alır; şampiyon da finalist de doğrudan profesyonel teklif alır. Davet yalnızca bir kez gelir.", [money(s.gpDavet.odul)])
+            : L("8 dövüşçü, üç maç: çeyrek final, yarı final, final. Kaybeden elenir. Şampiyona {0} ve unvan.", [money(s.gpDavet.odul)])}
+        </Text>
         <View style={{ flexDirection: 'row', gap: 8 }}>
           <View style={{ flex: 1 }}>
             <Button label={L("Katıl")} icon="check-bold" tone="gold" onPress={() => act(acceptGp)} />
@@ -51,7 +55,7 @@ export function GrandPrixCard({ s, act }: { s: GameState; act: (fn: (s: GameStat
     <LinearGradient colors={['#2e2206', '#0e0c07']} style={st.box}>
       <View style={st.head}>
         <Icon name="tournament" size={20} color={C.gold} />
-        <Text style={[st.title, SLANT]}>{L("{0} GRAND PRIX", [ORGS[gp.org].kisa])}</Text>
+        <Text style={[st.title, SLANT]}>{gp.yukselis ? L("YÜKSELİŞ GRAND PRIX") : L("{0} GRAND PRIX", [ORGS[gp.org].kisa])}</Text>
         <Text style={st.prize}>{money(gp.odul)}</Text>
       </View>
       <View style={st.bracket}>

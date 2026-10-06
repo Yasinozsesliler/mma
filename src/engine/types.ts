@@ -596,6 +596,8 @@ export interface GameState {
   gp?: import('./grandPrix').GrandPrix;
   gpDavet?: { dovus: number; odul: number };
   gpSon?: number;
+  /** Yükseliş Grand Prix'i daveti geldi (kariyerde bir kez) */
+  gpTeklif?: boolean;
   /** Son hayran buluşmasının dövüş sayısı (fanMeet.ts) */
   bulusmaSon?: number;
   /** Son memleket maçının dövüş sayısı */

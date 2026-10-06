@@ -15,7 +15,7 @@ import { comebackAfter, isComebackFight } from './comeback';
 import { fanClubAfterFight } from './fanClub';
 import { announceUnlocks } from './onboarding';
 import { continueKafesEvi, maybeKafesEviInvite } from './kafesEvi';
-import { gpAfterFight, gpCurrentOpponent, maybeGpInvite, withdrawGp } from './grandPrix';
+import { GP_PLAYER, gpAfterFight, gpCurrentOpponent, maybeGpInvite, withdrawGp } from './grandPrix';
 import { maybePodcast } from './podcast';
 import { addCard } from './cards';
 import { addStat, advanceWeeks, currentOrg, fullName, statAverage } from './character';
@@ -565,7 +565,20 @@ export function afterPostFight(s: GameState) {
     return;
   }
   if (org === 'amator') {
-    if (s.amator.g >= 3 && s.amator.g > s.amator.m) {
+    const gp = s.gp;
+    if (gp?.yukselis && !gp.bitti) {
+      // Yükseliş Grand Prix'i sürüyor: turnuva bitmeden profesyonel teklif açılmaz
+    } else if (gp?.yukselis && !gp.teklifVerildi && (gp.sampiyon === GP_PLAYER || gp.elendiTur === 2)) {
+      gp.teklifVerildi = true;
+      openOffers(
+        s,
+        'profesyonel',
+        gp.sampiyon === GP_PLAYER
+          ? tL("🏆 Yükseliş Grand Prix'ini kazandın! Organizasyonlar sıraya girdi: profesyonel kapı ardına kadar açık.")
+          : tL("🥈 Finalde kaybettin ama herkes seni izledi. Profesyonel organizasyonlar seni kadrosunda istiyor!"),
+      );
+      return;
+    } else if (s.amator.g >= 3 && s.amator.g > s.amator.m) {
       openOffers(s, 'profesyonel', tL("Amatörde adın duyuldu. İki bölgesel organizasyon seni profesyonel kadrosuna istiyor!"));
       return;
     }

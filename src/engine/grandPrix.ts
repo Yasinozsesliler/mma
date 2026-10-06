@@ -1,5 +1,6 @@
-// Grand Prix: 8 kişilik eleme turnuvası (çeyrek final, yarı final, final). Oyuncunun maçları normal dövüş akışında
-// oynanır; diğer eşleşmeler güç ortalamasına göre simüle edilir. Şampiyona büyük ödül ve unvan.
+// Yükseliş Grand Prix'i: amatörde 2. maçtan sonra (kariyerde bir kez) gelen 8 kişilik eleme turnuvası (çeyrek final,
+// yarı final, final). Profesyonelliğe giden yolda vitrin: şampiyon ve finalist doğrudan profesyonel teklif alır.
+// Oyuncunun maçları normal dövüş akışında oynanır; diğer eşleşmeler güç ortalamasına göre simüle edilir.
 import { L as tL, LOC } from '../i18n';
 import { currentOrg, statAverage } from './character';
 import { ORGS, WEIGHT_CLASSES } from './data';
@@ -20,24 +21,29 @@ export interface GrandPrix {
   bitti?: boolean;
   sampiyon?: string;
   odul: number;
+  /** Amatör Yükseliş Grand Prix'i (eski kayıtlarda profesyonel turnuvalar da olabilir) */
+  yukselis?: boolean;
+  /** Oyuncunun elendiği tur (0 çeyrek, 1 yarı, 2 final) */
+  elendiTur?: number;
+  /** Turnuva sonrası profesyonel teklifler açıldı */
+  teklifVerildi?: boolean;
 }
+
+/** Yükseliş Grand Prix'i ödülü (amatörde ücret yok; kupa parası sabit) */
+const YUKSELIS_ODUL = 5000;
 
 export const ROUND_NAME = () => [tL("ÇEYREK FİNAL"), tL("YARI FİNAL"), tL("FİNAL")];
 
-/** Dövüşten sonra davet gelebilir (bölgesel ve büyük organizasyonlarda, şampiyon değilken). */
+/** Dövüşten sonra: amatörde 2. maçtan sonra Yükseliş Grand Prix'i daveti (kariyerde bir kez; davet bir maç geçerli). */
 export function maybeGpInvite(s: GameState) {
   if (s.gp && !s.gp.bitti) return;
   if (s.gpDavet && s.gpDavet.dovus === s.gecmis.length) return;
   s.gpDavet = undefined;
-  if (!['bolgesel', 'buyuk'].includes(s.stage) || s.sampiyon || !s.contract) return;
-  // Profesyonelliğe yeni geçmiş dövüşçüye turnuva daveti gelmez: en az 6 profesyonel maç ve 4 galibiyet
-  const pro = s.gecmis.filter((h) => h.org !== 'amator' && h.org !== 'dwcs');
-  if (pro.length < 6 || pro.filter((h) => h.sonuc === 'G').length < 4) return;
-  if (s.gecmis.length - (s.gpSon ?? -99) < 8 || !chance(0.18)) return;
-  const org = currentOrg(s);
-  const odul = Math.round((ORGS[org].ucret[1] * 3) / 1000) * 1000;
-  s.gpDavet = { dovus: s.gecmis.length, odul };
-  s.haberler.unshift(tL("🏆 {0} Grand Prix daveti geldi! Ödül: ${1}", [ORGS[org].kisa, odul.toLocaleString(LOC)]));
+  if (s.stage !== 'amator' || s.gpTeklif || s.gpSon != null) return;
+  if (s.amator.g + s.amator.m + s.amator.b < 2) return;
+  s.gpTeklif = true;
+  s.gpDavet = { dovus: s.gecmis.length, odul: YUKSELIS_ODUL };
+  s.haberler.unshift(tL("🏆 Yükseliş Grand Prix'i daveti geldi! 8 amatör, tek kupa: şampiyon ve finalist profesyonel kapıyı açar."));
 }
 
 export function declineGp(s: GameState) {
@@ -59,9 +65,10 @@ export function acceptGp(s: GameState) {
     { id: GP_PLAYER, ad: s.fighter.ad, soyad: s.fighter.soyad, guc: statAverage(s.fighter.stats) },
     ...rakipler.map((o) => ({ id: o.id, ad: o.ad, soyad: o.soyad, guc: statAverage(o.stats) })),
   ];
-  s.gp = { org, kisiler, rakipler, turlar: [], odul: d.odul };
+  const yukselis = org === 'amator';
+  s.gp = { org, kisiler, rakipler, turlar: [], odul: d.odul, yukselis };
   s.gpSon = s.gecmis.length;
-  s.haberler.unshift(tL("🏆 Grand Prix'ye katıldın: 8 dövüşçü, tek kemer gibi tek kupa."));
+  s.haberler.unshift(yukselis ? tL("🏆 Yükseliş Grand Prix'ine katıldın: 8 amatör, üç maç. Profesyonel organizasyonlar izliyor.") : tL("🏆 Grand Prix'ye katıldın: 8 dövüşçü, tek kemer gibi tek kupa."));
 }
 
 /** Şu anki turda oyuncunun eşleşmesinin rakibi (sıra: tur başındaki listede yan yana olanlar). */
@@ -112,6 +119,7 @@ export function gpAfterFight(s: GameState, opp: Opponent, won: boolean): string[
   const lines: string[] = [];
   if (!won) {
     gp.elendi = true;
+    gp.elendiTur = tur;
     while (gp.turlar.length < 3) simulateRound(gp, null);
     gp.bitti = true;
     gp.sampiyon = gp.turlar[2][0];
@@ -124,7 +132,9 @@ export function gpAfterFight(s: GameState, opp: Opponent, won: boolean): string[
     gp.sampiyon = GP_PLAYER;
     s.para += gp.odul;
     s.populerlik = Math.min(100, s.populerlik + 8);
-    const title = tL("{0} {1} Grand Prix Şampiyonu", [ORGS[gp.org].kisa, WEIGHT_CLASSES[s.fighter.siklet].ad]);
+    const title = gp.yukselis
+      ? tL("Yükseliş Grand Prix'i Şampiyonu ({0})", [WEIGHT_CLASSES[s.fighter.siklet].ad])
+      : tL("{0} {1} Grand Prix Şampiyonu", [ORGS[gp.org].kisa, WEIGHT_CLASSES[s.fighter.siklet].ad]);
     s.unvanlar.push(title);
     s.haberler.unshift(tL("🏆 {0}, {1} oldu! Ödül: ${2}", [s.fighter.soyad, title, gp.odul.toLocaleString(LOC)]));
     lines.push(tL("🏆 GRAND PRIX ŞAMPİYONU! Ödül ${0}, popülerlik +8.", [gp.odul.toLocaleString(LOC)]));
