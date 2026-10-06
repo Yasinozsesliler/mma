@@ -5217,4 +5217,13 @@ export const RU: Record<string, string> = {
   "HIZLAN!": "БЫСТРЕЕ!",
   "ÇİFT GEÇİŞ!": "ДВОЙНЫЕ!",
   "İp ayağının altına geldiği anda dokun ve zıpla": "Жми и прыгай, когда скакалка у ног",
+  "{0}. yıl": "{0}-й год",
+  "{0} yaş": "{0} лет",
+  "Henüz yok": "Пока нет",
+  "Yıl sonu ödül törenlerinde kazandığın kupalar burada sergilenir. Bir yılda en az iki profesyonel maç yaparsan aday olabilirsin.": "Здесь выставлены трофеи с итоговых церемоний года. Проведи минимум два профессиональных боя за год, чтобы попасть в номинанты.",
+  "Popülerlik +{0}": "Популярность +{0}",
+  "Ödülünü paylaş": "Поделиться наградой",
+  "ÖDÜL": "НАГРАДЫ",
+  "Sezonun en iyileri arasında adı okundu.": "Назван среди лучших бойцов сезона.",
+  "KEMER VİTRİNİ": "ВИТРИНА ПОЯСОВ",
 };

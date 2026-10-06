@@ -50,7 +50,7 @@ const CONFETTI = Array.from({ length: 26 }, (_, i) => {
   return { x: (r(1) - 0.5) * 2, y: -0.4 - r(2) * 0.9, rot: r(3) * 720 - 360, c: [C.gold, '#ffffff', C.red, '#ffd98a'][i % 4], w: 5 + r(4) * 6, delay: r(5) * 160 };
 });
 
-function Confetti({ width }: { width: number }) {
+export function Confetti({ width }: { width: number }) {
   const [t] = useState(() => new Animated.Value(0));
   useEffect(() => {
     Animated.timing(t, { toValue: 1, duration: 1700, easing: Easing.out(Easing.quad), useNativeDriver: true }).start();

@@ -1,4 +1,5 @@
 import { L, LOC } from '../i18n';
+import { TrophyCabinet } from './TrophyCabinet';
 import { useFrame } from '../cosmetics';
 import { DynastySection } from './DynastyPanel';
 import { NemesisCard } from './NemesisCard';
@@ -52,6 +53,7 @@ export function ProfilePanel({ s, act }: { s: GameState; act: Act }) {
         <Button label={L("💈 Berber ve dövmeci")} icon="content-cut" tone="ghost" onPress={() => act((x) => (x.phase = 'stil'))} />
         <ShareButton data={careerCard(s)} label={L("Kariyer kartını paylaş")} />
       </View>
+      <TrophyCabinet s={s} />
       <NemesisCard s={s} />
       <DynastySection s={s} />
       <TimelinePanel s={s} />
@@ -135,7 +137,7 @@ export function ProfilePanel({ s, act }: { s: GameState; act: Act }) {
         </>
       ) : null}
 
-      <Section>{L("ÖDÜL VİTRİNİ")}</Section>
+      <Section>{L("KEMER VİTRİNİ")}</Section>
       <BeltShowcase s={s} />
 
       <Section>{L("BAŞARIMLAR · {0}/{1}", [earned.size, ACHIEVEMENTS.length])}</Section>

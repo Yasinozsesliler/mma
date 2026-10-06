@@ -91,7 +91,7 @@ export function openEnvelope(s: GameState) {
     const para = { amator: 500, bolgesel: 5_000, buyuk: 25_000, ufc: 75_000 }[s.stage] * (r.kat === 'dovuscu' ? 2 : 1);
     s.para += para;
     s.populerlik = clamp(s.populerlik + (r.kat === 'dovuscu' ? 4 : 2), 0, 100);
-    s.oduller = [...(s.oduller ?? []), { kat: r.kat, yas: t.yas }];
+    s.oduller = [...(s.oduller ?? []), { kat: r.kat, yas: t.yas, yil: t.yil, not: r.not, para }];
     s.haberler.unshift(L("🏅 {0} ödülünü {1} kazandı! Ödül: ${2}", [AWARD_NAMES[r.kat](), s.fighter.soyad, para.toLocaleString(LOC)]));
   }
 }

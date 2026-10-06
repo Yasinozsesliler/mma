@@ -9,6 +9,7 @@ import { upName } from '../ui/components';
 import type { ShareCardData } from './types';
 import { journeyLine, type Moment } from '../engine/timeline';
 import { cityPin } from '../engine/worldMap';
+import { AWARD_NAMES, type AwardCat } from '../engine/awards';
 import { lookFor } from '../engine/tale';
 import { hypeLabel, isBigFight } from '../engine/hype';
 import { isComebackFight } from '../engine/comeback';
@@ -136,6 +137,22 @@ export function posterCard(s: GameState): ShareCardData | null {
       hype: k.hype != null ? hypeLabel(k.hype) : '',
       altin: !!unvan || (k.hype ?? 0) >= 65,
     },
+  };
+}
+
+/** Yıl sonu ödülü paylaşım kartı. */
+export function awardCard(s: GameState, kat: AwardCat, yil: number, not?: string): ShareCardData {
+  return {
+    ...base(s),
+    tur: 'kariyer',
+    baslik: `🏆 ${AWARD_NAMES[kat]().toLocaleUpperCase(LOC)}`,
+    ust: up(L("{0}. YIL ÖDÜL TÖRENİ", [yil])),
+    kutular: [
+      [L("REKOR"), rec(s)],
+      [L("ÖDÜL"), String((s.oduller ?? []).length)],
+      [L("YAŞ"), String(s.fighter.yas)],
+    ],
+    alt: not ?? L("Sezonun en iyileri arasında adı okundu."),
   };
 }
 

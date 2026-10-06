@@ -5177,4 +5177,13 @@ export const PT: Record<string, string> = {
   "HIZLAN!": "ACELERA!",
   "ÇİFT GEÇİŞ!": "SALTO DUPLO!",
   "İp ayağının altına geldiği anda dokun ve zıpla": "Toque para pular quando a corda chegar aos pés",
+  "{0}. yıl": "Ano {0}",
+  "{0} yaş": "{0} anos",
+  "Henüz yok": "Ainda não",
+  "Yıl sonu ödül törenlerinde kazandığın kupalar burada sergilenir. Bir yılda en az iki profesyonel maç yaparsan aday olabilirsin.": "Os troféus que você ganhar nas premiações de fim de ano ficam expostos aqui. Faça ao menos duas lutas profissionais no ano para ser indicado.",
+  "Popülerlik +{0}": "Popularidade +{0}",
+  "Ödülünü paylaş": "Compartilhe seu prêmio",
+  "ÖDÜL": "PRÊMIOS",
+  "Sezonun en iyileri arasında adı okundu.": "Seu nome foi chamado entre os melhores da temporada.",
+  "KEMER VİTRİNİ": "ESTANTE DE CINTURÕES",
 };

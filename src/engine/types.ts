@@ -653,7 +653,7 @@ export interface GameState {
   /** Tedavi kararı bekleyen ciddi sakatlık (treatment.ts) */
   tedavi?: Injury;
   odulToren?: import('./awards').AwardShow;
-  oduller?: { kat: import('./awards').AwardCat; yas: number }[];
+  oduller?: { kat: import('./awards').AwardCat; yas: number; yil?: number; not?: string; para?: number }[];
   /** Ödüllü reklam teklifleri: alındıkları dövüş sayısı (her dövüş arasında birer kez). */
   odul?: { sakatlikMac?: number; profilHafta?: number };
   saglik: number;
