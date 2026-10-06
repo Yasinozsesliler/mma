@@ -56,6 +56,7 @@ import { PassportScreen } from './src/ui/PassportScreen';
 import { LuxuryScreen } from './src/ui/LuxuryScreen';
 import { BodyScreen } from './src/ui/BodyScreen';
 import { DocumentaryScreen } from './src/ui/DocumentaryScreen';
+import { PromoterScreen } from './src/ui/PromoterScreen';
 import { KafesEviScreen } from './src/ui/KafesEviScreen';
 import { FanClubScreen } from './src/ui/FanClubScreen';
 import { FadeIn } from './src/ui/anim';
@@ -410,6 +411,9 @@ export default function App() {
       case 'luks':
         content = <LuxuryScreen {...props} />;
         break;
+      case 'lig':
+        content = <PromoterScreen {...props} />;
+        break;
       case 'belgesel':
         content = <DocumentaryScreen {...props} />;
         break;
@@ -429,6 +433,7 @@ export default function App() {
             onNew={() => setView('menu')}
             onComeback={() => act(acceptComeback)}
             onDoc={() => act((x) => ((x.pending.sonrakiFaz = 'emeklilik'), (x.phase = 'belgesel')))}
+            onLeague={() => act((x) => ((x.pending.sonrakiFaz = 'emeklilik'), (x.phase = 'lig')))}
             onDynasty={() => {
               setHeritage(heritageOf(game));
               setCreateSlot(slotRef.current);

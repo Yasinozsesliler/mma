@@ -7,6 +7,7 @@ import { MUSEUM } from '../engine/memories';
 import { luxTotal } from '../engine/luxury';
 import { MEDIA_ICON, type MediaKind } from '../engine/media';
 import { ageStage } from '../engine/body';
+import { canPromote, canRunNight } from '../engine/promoter';
 import { unclaimedSets } from '../engine/cards';
 import { claimScout } from '../engine/rewards';
 import { RewardCard } from './RewardCard';
@@ -322,6 +323,7 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
               { cat: 'yasam', show: featureOpen(s, 'gece'), badge: isNewFeature(s, 'gece') || null, node: <ActionTile key="gece" icon="glass-cocktail" label={L("Gece hayatı")} sub={s.iliski ? `💞 ${s.iliski.ad}` : L("Randevu · kulüp · kumar")} accent="#fd267a" badge={isNewFeature(s, 'gece') ? L("YENİ") : null} onPress={() => act((x) => (seeFeature(x, 'gece'), (x.phase = 'gece')))} /> },
               { cat: 'marka', show: s.stage !== 'amator', badge: (s.kulup && canActivity(s)) || canFoundClub(s) || null, node: <ActionTile key="kulup" icon="flag-variant" label={L("Taraftar kulübü")} sub={s.kulup ? `${s.kulup.ad} · ${fmtFollowers(members(s))}` : canFoundClub(s) ? L("Kulübünü kur") : L("3B takipçi gerekli")} accent="#ff8fb1" badge={(s.kulup && canActivity(s)) || canFoundClub(s) ? '!' : null} onPress={() => act((x) => (x.phase = 'kulup'))} /> },
               { cat: 'marka', show: s.stage !== 'amator', badge: canFanMeet(s) || null, node: <ActionTile key="hayran" icon="draw-pen" label={L("Hayran buluşması")} sub={canFanMeet(s) ? L("İmza günü düzenle") : L("Sonraki maçtan sonra")} accent="#ff8fb1" badge={canFanMeet(s) ? '!' : null} onPress={() => canFanMeet(s) && setFanMeet(true)} /> },
+              { cat: 'marka', show: (s.stage === 'buyuk' || s.stage === 'ufc') && canPromote(s), badge: s.lig && canRunNight(s) ? '!' : null, node: <ActionTile key="lig" icon="office-building" label={L("Organizasyonum")} sub={s.lig ? `${s.lig.ad} · ${L("itibar {0}", [s.lig.itibar])}` : L("Kendi ligini kur")} accent={C.gold} badge={s.lig && canRunNight(s) ? '!' : null} onPress={() => act((x) => ((x.pending.sonrakiFaz = undefined), (x.phase = 'lig')))} /> },
               { cat: 'marka', show: s.stage !== 'amator', badge: null, node: <ActionTile key="marka" icon="tag-heart" label={L("Markam")} sub={s.marka ? `${s.marka.ad} · ${money(s.marka.toplam)}` : L("Kendi markanı kur")} accent={C.gold} onPress={() => act((x) => (x.phase = 'marka'))} /> },
               { cat: 'marka', show: s.stage !== 'amator', badge: canStream(s) || null, node: <ActionTile key="yayin" icon="broadcast" label={L("Canlı yayın")} sub={canStream(s) ? L("Yayına geç") : followers(s) < STREAM_MIN_FOLLOWERS ? L("5B takipçi gerekli") : L("Sonraki maçtan sonra")} accent="#9146ff" badge={canStream(s) ? '!' : null} onPress={() => canStream(s) && act(startStream)} /> },
               { cat: 'koleksiyon', show: featureOpen(s, 'basarim'), badge: isNewFeature(s, 'basarim') || null, node: <ActionTile key="basarim" icon="medal" label={L("Başarımlar")} sub={s.hof ? L("🏛 Hall of Fame") : `${(s.basarimlar ?? []).length}/${ACHIEVEMENTS.length}`} accent={C.gold} badge={isNewFeature(s, 'basarim') ? L("YENİ") : null} onPress={() => act((x) => (seeFeature(x, 'basarim'), (x.phase = 'basarimlar')))} /> },
@@ -910,7 +912,7 @@ export function OffersScreen({ s, act }: { s: GameState; act: Act }) {
 
 // ---------- Emeklilik ----------
 
-export function RetireScreen({ s, onNew, onDynasty, onComeback, onDoc }: { s: GameState; onNew: () => void; onDynasty?: () => void; onComeback?: () => void; onDoc?: () => void }) {
+export function RetireScreen({ s, onNew, onDynasty, onComeback, onDoc, onLeague }: { s: GameState; onNew: () => void; onDynasty?: () => void; onComeback?: () => void; onDoc?: () => void; onLeague?: () => void }) {
   const r = s.rekor;
   const donus = comebackOffer(s);
   const ufcChamp = s.unvanlar.some((u) => u.startsWith('UCC'));
@@ -918,7 +920,8 @@ export function RetireScreen({ s, onNew, onDynasty, onComeback, onDoc }: { s: Ga
     <Screen
       footer={
         <View style={{ gap: 8 }}>
-          {onDoc ? <Button label={L("Kariyer belgeselini izle")} icon="movie-open-star" tone="gold" onPress={onDoc} /> : null}
+          {onLeague ? <Button label={s.lig ? L("Organizasyonunu yönet: {0}", [s.lig.ad]) : L("Kendi organizasyonunu kur")} icon="office-building" tone="gold" onPress={onLeague} /> : null}
+          {onDoc ? <Button label={L("Kariyer belgeselini izle")} icon="movie-open-star" tone="ghost" onPress={onDoc} /> : null}
           {onDynasty ? <Button label={L("Yeni nesil: çocuğunla devam et")} icon="account-child" tone="gold" onPress={onDynasty} /> : null}
           <ShareButton data={careerCard(s)} label={L("Kariyer kartını paylaş")} />
           <Button label={L("Kariyer yuvalarına dön")} icon="folder-account" tone="ghost" onPress={onNew} />

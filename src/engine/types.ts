@@ -642,6 +642,8 @@ export interface GameState {
   /** Haftalık rutin ve kronik izler (body.ts) */
   rutin?: import('./body').Rutin;
   izler?: import('./body').Iz[];
+  /** Kendi organizasyonun (promoter.ts) */
+  lig?: import('./promoter').Lig;
   /** Hikâye bölümlerinde yapılan seçimler (profilde günlük olarak) */
   hikayeKayit?: Record<string, { bolumler: { baslik: string; secim: string; sonuc: string }[]; bitti?: boolean }>;
   hikayeSon?: number;
