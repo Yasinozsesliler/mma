@@ -18,7 +18,7 @@ import { TestIds } from 'react-native-google-mobile-ads';
 // Android ve iOS reklam birimleri AdMob'da ayrı oluşturulur (kimlikleri farklıdır).
 const REAL_BY_OS = {
   android: {
-    rewarded: '', // örn. 'ca-app-pub-1234567890123456/1111111111'
+    rewarded: 'ca-app-pub-6387108639379747/4985012523',
     interstitial: '', // örn. 'ca-app-pub-1234567890123456/2222222222'
   },
   ios: {
@@ -28,11 +28,10 @@ const REAL_BY_OS = {
 };
 const REAL = Platform.OS === 'ios' ? REAL_BY_OS.ios : REAL_BY_OS.android;
 
-const useTest = __DEV__ || !REAL.rewarded || !REAL.interstitial;
-
+// Her birim ayrı: kimliği girilmemiş birim (ve geliştirme sürümü) test reklamı gösterir.
 export const AD_IDS = {
-  rewarded: useTest ? TestIds.REWARDED : REAL.rewarded,
-  interstitial: useTest ? TestIds.INTERSTITIAL : REAL.interstitial,
+  rewarded: __DEV__ || !REAL.rewarded ? TestIds.REWARDED : REAL.rewarded,
+  interstitial: __DEV__ || !REAL.interstitial ? TestIds.INTERSTITIAL : REAL.interstitial,
 };
 
 export { PREMIUM_SKU } from './skus';
