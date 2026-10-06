@@ -8,10 +8,12 @@ import { AD_IDS } from './ids';
 import { grant, isAdFree, isPremium, owns } from './premium';
 import { ALL_SKUS, PREMIUM_SKU } from './skus';
 
+import { noteAdShown } from './upsell';
 export { isAdFree, isPremium, owns, useAdFree, useOwned, usePremium } from './premium';
 
 /** Bu platformda reklam ve satın alma var mı? */
 export const MONETIZATION = true;
+export { dismissUpsell, useUpsellDue } from './upsell';
 
 // ---------- Reklamlar ----------
 
@@ -117,11 +119,12 @@ export async function showAdPrivacyOptions() {
 let fightsSinceAd = 0;
 let lastAdAt = 0;
 
-/** Maç sonrası geçiş reklamı: en erken kariyerin 3. dövüşünden sonra, en az 3 dövüşte ve 3 dakikada bir. */
-export async function maybeInterstitial(careerFights: number): Promise<boolean> {
+/** Maç sonrası geçiş reklamı (oyuncuyu bunaltmadan): ilk 5 dövüş reklamsız, sonra en az 4 dövüşte ve 6 dakikada bir;
+ *  mağlubiyetten hemen sonra hiç gösterilmez (kötü anı reklamla bölmeyiz). */
+export async function maybeInterstitial(careerFights: number, afterLoss = false): Promise<boolean> {
   if (isAdFree() || !canAds) return false;
   fightsSinceAd++;
-  if (careerFights < 3 || fightsSinceAd < 3 || Date.now() - lastAdAt < 180_000) return false;
+  if (afterLoss || careerFights < 5 || fightsSinceAd < 4 || Date.now() - lastAdAt < 360_000) return false;
   const ad = interstitial;
   if (!ad || !interstitialReady) return false;
   await new Promise<void>((resolve) => {
@@ -138,6 +141,7 @@ export async function maybeInterstitial(careerFights: number): Promise<boolean> 
   });
   fightsSinceAd = 0;
   lastAdAt = Date.now();
+  noteAdShown();
   loadInterstitial();
   return true;
 }

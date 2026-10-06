@@ -6,7 +6,7 @@ import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } fr
 import Svg, { Defs, Ellipse, G, LinearGradient as SvgLinear, Polygon, Stop } from 'react-native-svg';
 import { playWalkout, pushScene, sfx, walkoutSeconds } from '../audio';
 import { clearNew, equip, useCosmetics, useUnlocked } from '../cosmetics';
-import { COSMETICS, PACKS, RARITY, rarityOf, type Cosmetic, type CosSlot, type FxKind, type Rarity } from '../engine/cosmetics';
+import { COSMETICS, packOwned, PACKS, RARITY, rarityOf, type Cosmetic, type CosSlot, type FxKind, type Rarity } from '../engine/cosmetics';
 import type { Appearance } from '../engine/types';
 import { L, LOC } from '../i18n';
 import { buy, MONETIZATION, restorePurchases, useOwned, usePrice } from '../monetization';
@@ -103,7 +103,7 @@ function Item({ x, look, on, open, prev, onPick }: { x: Cosmetic; look: Appearan
 /** Paket satın alma düğmesi (fiyat mağazadan). */
 function BuyButton({ sku, big }: { sku: string; big?: boolean }) {
   const owned = useOwned();
-  const has = owned.has(sku) || owned.has(BUNDLE_SKU);
+  const has = packOwned(owned, sku);
   const price = usePrice(sku);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
@@ -186,7 +186,7 @@ export function LockerScreen({ look = DEFAULT_LOOK, onExit }: { look?: Appearanc
 
   const total = COSMETICS.length;
   const have = COSMETICS.filter(unlocked).length;
-  const allPacks = PACKS.every((p) => owned.has(p.sku)) || owned.has(BUNDLE_SKU);
+  const allPacks = PACKS.every((p) => packOwned(owned, p.sku));
 
   const listen = (x: Cosmetic) => {
     if (!x.giris) return;

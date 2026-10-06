@@ -5311,4 +5311,11 @@ export const RU: Record<string, string> = {
   "Alev desenli şort, ateş eldiveni, Ejderha çerçevesi ve kemeri, kafese ATEŞ efektiyle giriş": "Шорты с пламенем, огненные перчатки, рамка и пояс «Дракон», выход с эффектом ОГНЯ",
   "Şimşek desenli buz şortu, buz eldiveni, Buz Kralı çerçevesi ve kemeri, kafese KAR FIRTINASI ile giriş": "Ледяные шорты с молниями, ледяные перчатки, рамка и пояс «Ледяной король», выход в МЕТЕЛЬ",
   "Yıldız desenli mor şort, mor neon eldiven, Gece Yarısı çerçevesi ve kemeri, ŞİMŞEK giriş efekti": "Фиолетовые шорты со звёздами, неоновые перчатки, рамка и пояс «Полночь», эффект выхода МОЛНИЯ",
+  "TAM SÜRÜM": "ПОЛНАЯ ВЕРСИЯ",
+  "Oyunun tamamı ücretsiz kalır. Tam sürüm tek seferlik alınır, abonelik yoktur.": "Вся игра остаётся бесплатной. Полная версия — разовая покупка, без подписки.",
+  "Altın Seri kozmetik paketi ve Şampiyon çerçevesi": "Набор «Золотая серия» и рамка чемпиона",
+  "Reklamsız oynamak ister misin?": "Хочешь играть без рекламы?",
+  "Tam Sürüm tek seferlik: reklamlar kalkar, ödüller anında gelir, 5 kariyer yuvası ve Altın Seri.": "Полная версия, разово: без рекламы, награды сразу, 5 слотов карьеры и «Золотая серия».",
+  "Tam Sürüm · {0}": "Полная версия · {0}",
+  "Tam Sürüm": "Полная версия",
 };

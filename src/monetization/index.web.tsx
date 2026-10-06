@@ -2,6 +2,7 @@
 export { isAdFree, isPremium, owns, useAdFree, useOwned, usePremium } from './premium';
 
 export const MONETIZATION = false;
+export { dismissUpsell, useUpsellDue } from './upsell';
 
 export async function initMonetization() {}
 export function showRewarded(): Promise<'odul' | 'iptal' | 'yok'> {
@@ -10,7 +11,7 @@ export function showRewarded(): Promise<'odul' | 'iptal' | 'yok'> {
 export const rewardedAvailable = () => false;
 export const adPrivacyRequired = () => false;
 export async function showAdPrivacyOptions() {}
-export async function maybeInterstitial(_careerFights: number): Promise<boolean> {
+export async function maybeInterstitial(_careerFights: number, _afterLoss = false): Promise<boolean> {
   return false;
 }
 export function usePrice(_sku: string): string | null {

@@ -160,6 +160,9 @@ export function isUnlocked(x: Cosmetic, earned: ReadonlySet<string>, owned: Read
   if (k.tur === 'hazir') return true;
   if (k.tur === 'basari') return earned.has(x.id);
   if (k.tur === 'sampiyon') return owned.has(PREMIUM_SKU);
-  // Efsane Koleksiyonu bütün paketleri açar
-  return owned.has(k.sku) || owned.has(BUNDLE_SKU);
+  return packOwned(owned, k.sku);
 }
+
+/** Paket sende mi? Efsane Koleksiyonu bütün paketleri, Tam Sürüm (Şampiyon Paketi) Altın Seri'yi de açar. */
+export const packOwned = (owned: ReadonlySet<string>, sku: string) =>
+  owned.has(sku) || owned.has(BUNDLE_SKU) || (sku === 'paket_altin' && owned.has(PREMIUM_SKU));

@@ -5257,4 +5257,11 @@ export const EN: Record<string, string> = {
   "Alev desenli şort, ateş eldiveni, Ejderha çerçevesi ve kemeri, kafese ATEŞ efektiyle giriş": "Flame-pattern shorts, fire gloves, Dragon frame and belt, walk out with a FIRE effect",
   "Şimşek desenli buz şortu, buz eldiveni, Buz Kralı çerçevesi ve kemeri, kafese KAR FIRTINASI ile giriş": "Lightning-pattern ice shorts, ice gloves, Ice King frame and belt, walk out in a BLIZZARD",
   "Yıldız desenli mor şort, mor neon eldiven, Gece Yarısı çerçevesi ve kemeri, ŞİMŞEK giriş efekti": "Star-pattern purple shorts, neon purple gloves, Midnight frame and belt, LIGHTNING entrance effect",
+  "TAM SÜRÜM": "FULL VERSION",
+  "Oyunun tamamı ücretsiz kalır. Tam sürüm tek seferlik alınır, abonelik yoktur.": "The whole game stays free. The full version is a one-time purchase, no subscription.",
+  "Altın Seri kozmetik paketi ve Şampiyon çerçevesi": "Gold Series cosmetic pack and Champion frame",
+  "Reklamsız oynamak ister misin?": "Want to play without ads?",
+  "Tam Sürüm tek seferlik: reklamlar kalkar, ödüller anında gelir, 5 kariyer yuvası ve Altın Seri.": "Full Version, one-time: no ads, instant rewards, 5 career slots and the Gold Series.",
+  "Tam Sürüm · {0}": "Full Version · {0}",
+  "Tam Sürüm": "Full Version",
 };

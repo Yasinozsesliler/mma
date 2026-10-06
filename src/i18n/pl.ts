@@ -5244,4 +5244,11 @@ export const PL: Record<string, string> = {
   "Alev desenli şort, ateş eldiveni, Ejderha çerçevesi ve kemeri, kafese ATEŞ efektiyle giriş": "Spodenki w płomienie, ogniste rękawice, ramka i pas Smoka, wejście z efektem OGNIA",
   "Şimşek desenli buz şortu, buz eldiveni, Buz Kralı çerçevesi ve kemeri, kafese KAR FIRTINASI ile giriş": "Lodowe spodenki w błyskawice, lodowe rękawice, ramka i pas Lodowego Króla, wejście w ZAMIECI",
   "Yıldız desenli mor şort, mor neon eldiven, Gece Yarısı çerçevesi ve kemeri, ŞİMŞEK giriş efekti": "Fioletowe spodenki w gwiazdy, neonowe rękawice, ramka i pas Północy, efekt wejścia BŁYSKAWICA",
+  "TAM SÜRÜM": "PEŁNA WERSJA",
+  "Oyunun tamamı ücretsiz kalır. Tam sürüm tek seferlik alınır, abonelik yoktur.": "Cała gra pozostaje darmowa. Pełna wersja to jednorazowy zakup, bez subskrypcji.",
+  "Altın Seri kozmetik paketi ve Şampiyon çerçevesi": "Pakiet kosmetyczny Złota Seria i ramka Mistrza",
+  "Reklamsız oynamak ister misin?": "Chcesz grać bez reklam?",
+  "Tam Sürüm tek seferlik: reklamlar kalkar, ödüller anında gelir, 5 kariyer yuvası ve Altın Seri.": "Pełna Wersja, jednorazowo: bez reklam, nagrody od razu, 5 slotów kariery i Złota Seria.",
+  "Tam Sürüm · {0}": "Pełna Wersja · {0}",
+  "Tam Sürüm": "Pełna Wersja",
 };
