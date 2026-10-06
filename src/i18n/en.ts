@@ -5194,4 +5194,11 @@ export const EN: Record<string, string> = {
   "Kart": "Card",
   "Geçmiş": "History",
   "ÇOK YAKLAŞTIN!": "SO CLOSE!",
+  "DİRENDİN!": "HELD IT!",
+  "KIVRANDI!": "HE SQUIRMED!",
+  "Rakip uyanık ×{0}": "Opponent alert ×{0}",
+  "DİREN! Bas ve basılı tut": "RESIST! Press and hold",
+  "Bas ya da basılı tut. DİREN! yanınca yeniden bas ve bırakma!": "Tap or hold. When RESIST! lights up, press again and don't let go!",
+  "Çubuk dolarsa tap atarsın! Bas ya da basılı tut, kurtul!": "If the bar fills, you tap! Tap or hold to escape!",
+  "DİREN!": "RESIST!",
 };

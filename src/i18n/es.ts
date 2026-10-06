@@ -5209,4 +5209,11 @@ export const ES: Record<string, string> = {
   "Kart": "Ficha",
   "Geçmiş": "Historial",
   "ÇOK YAKLAŞTIN!": "¡CASI!",
+  "DİRENDİN!": "¡AGUANTASTE!",
+  "KIVRANDI!": "¡SE RETORCIÓ!",
+  "Rakip uyanık ×{0}": "Rival alerta ×{0}",
+  "DİREN! Bas ve basılı tut": "¡RESISTE! Pulsa y mantén",
+  "Bas ya da basılı tut. DİREN! yanınca yeniden bas ve bırakma!": "Pulsa o mantén. Cuando aparezca ¡RESISTE!, vuelve a pulsar y no sueltes.",
+  "Çubuk dolarsa tap atarsın! Bas ya da basılı tut, kurtul!": "¡Si la barra se llena, abandonas! Pulsa o mantén para escapar.",
+  "DİREN!": "¡RESISTE!",
 };

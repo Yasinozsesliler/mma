@@ -63,6 +63,7 @@ export interface LiveEvent {
     | 'held' // oyuncu rakibin hamlesini bastırdı (kontrol/kurtul)
     | 'kilit' // submission mücadelesi başladı (side: kilitleyen, alt: teknik adı)
     | 'pozisyon' // üstte pozisyon yetersiz, kilide girilemedi
+    | 'kivran' // rakip kilitte kıvrandı (alt: blok = oyuncu direndi, sert = büyük patlama, hafif)
     | 'end';
   side?: 'p' | 'o';
   alt?: string;
@@ -110,7 +111,22 @@ export interface LiveSim {
   /** Yer dövüşü: üstteki taraf */
   ground: { top: 'p' | 'o'; since: number; /** Üstteki tarafın pozisyon hâkimiyeti 0-1 */ pos: number } | null;
   /** Submission mücadelesi: kilitleyen taraf, kilidin sıkılığı (0 kaçtı … 1 tap), bitiş anı */
-  kilit: { by: 'p' | 'o'; prog: number; until: number; ad: string; lastTap?: number; /** Rakibin bir sonraki kıvranma anı */ nextJolt?: number; /** Ulaşılan en yüksek sıkılık */ max?: number; /** İmza hareketiyle girildi */ imza?: boolean } | null;
+  kilit: {
+    by: 'p' | 'o';
+    prog: number;
+    until: number;
+    ad: string;
+    lastTap?: number;
+    /** Rakibin bir sonraki kıvranma anı; ondan WARN_MS önce "DİREN!" uyarısı yanar */
+    nextJolt?: number;
+    /** Ulaşılan en yüksek sıkılık */
+    max?: number;
+    /** İmza hareketiyle girildi */
+    imza?: boolean;
+    /** Düğme basılı mı ve en son ne zaman basıldı */
+    down?: boolean;
+    pressAt?: number;
+  } | null;
   /** Oyuncunun maç boyunca kaçırdığı kilitler: rakip her seferinde daha uyanık */
   subFails: number;
   cfg: LiveCfg;
@@ -231,7 +247,13 @@ function damage(s: LiveSim, victim: 'p' | 'o', dmg: number, heavy: boolean) {
 
 const SUBS = ['Armbar', 'Rear-naked choke', 'Guillotine', 'Triangle', 'Kimura', "D'Arce"];
 const KILIT_MS = 4000;
-const RATE_BASE = 0.12;
+const RATE_BASE = 0.15;
+/** Kıvranmadan önce uyarı süresi */
+export const WARN_MS = 550;
+/** Basılı tutmanın saniyedeki basış karşılığı */
+const HOLD_TPS = 6;
+/** Başarılı direnmede kıvranmanın kalan etkisi */
+const DIREN_KALAN = 0.4;
 const JOLT_MIN = 0.03;
 const JOLT_VAR = 0.05;
 const BIG_P = 0.42;
@@ -262,12 +284,23 @@ function stepKilit(s: LiveSim, dt: number) {
   const r = kilitRate(s);
   // Oyuncu kilitliyorsa rakip gevşetir (prog düşer); rakip kilitliyorsa sıkar (prog artar)
   k.prog = clamp(k.prog + (k.by === 'p' ? -r : r) * (dt / 1000), 0, 1);
+  // Basılı tutmak da sıkar/kurtulur (saniyede ~6 basış kadar): isteyen basar, isteyen basılı tutar
+  if (k.down && s.t - (k.pressAt ?? s.t) > 150 && dt > 0) {
+    const g = tapGain(s) * HOLD_TPS * (dt / 1000);
+    k.prog = clamp(k.prog + (k.by === 'p' ? g : -g), 0, 1);
+    s.p.sta = clamp(s.p.sta - 3 * (dt / 1000), 0, 100);
+  }
   // Rakip ara ara kıvranır: çoğu küçük, bazen sert bir patlama. Taze ve nefesi yerinde rakip daha sık patlar;
   // kaçırılan her kilit onu uyandırır
   if (k.by === 'p' && k.nextJolt != null && s.t >= k.nextJolt) {
     const big = chance(clamp(BIG_P * (0.15 + 0.85 * (s.o.hp / 100)) * (0.8 + s.o.sta / 250) * (1 + s.subFails * 0.4) * (k.imza ? 0.75 : 1), 0, 0.85));
+    // DİREN: uyarıdan sonra basıp kıvranma anına kadar basılı tutan (kısa dokunuş sayılmaz) kıvranmanın çoğunu karşılar
+    const pa = k.pressAt ?? -1e9;
+    const blok = !!k.down && pa >= k.nextJolt - WARN_MS && pa <= k.nextJolt - 120;
+    const size = big ? 0.26 + rand() * 0.18 : JOLT_MIN + rand() * JOLT_VAR;
     // Kıvranma kilidi tek başına açamaz (en az 0.05 kalır): oyuncunun basarak toparlama şansı hep vardır
-    k.prog = Math.max(Math.min(k.prog, 0.05), k.prog - (big ? 0.26 + rand() * 0.18 : JOLT_MIN + rand() * JOLT_VAR));
+    k.prog = Math.max(Math.min(k.prog, 0.05), k.prog - size * (blok ? DIREN_KALAN : 1));
+    ev(s, { kind: 'kivran', alt: blok ? 'blok' : big ? 'sert' : 'hafif' });
     k.nextJolt = s.t + 750 + rand() * 900;
   }
   k.max = Math.max(k.max ?? 0, k.prog);
@@ -291,15 +324,27 @@ function stepKilit(s: LiveSim, dt: number) {
   }
 }
 
+/** Basış başına etki: yer dövüşü (ve kurtulurken güreş) ile güçlenir; nefes biterse zayıflar. */
+function tapGain(s: LiveSim) {
+  const c = s.cfg;
+  return (s.kilit!.by === 'p' ? clamp(0.069 + c.gr / 2500, 0.05, 0.095) : clamp(0.07 + (c.gr + c.wr) / 3000, 0.05, 0.1)) * (s.p.sta < 15 ? 0.6 : 1);
+}
+
+/** Kilitte düğme basıldı/bırakıldı (DİREN ve basılı tutma modu için). */
+export function liveHold(s: LiveSim, down: boolean) {
+  const k = s.kilit;
+  if (!k) return;
+  k.down = down;
+  if (down) k.pressAt = s.t;
+}
+
 /** Oyuncunun mücadele sırasındaki basışı: kilitliyorsa sıkar, kilitteyse kurtulmaya zorlar. */
 function kilitTap(s: LiveSim) {
   const k = s.kilit!;
-  const c = s.cfg;
-  // Basış başına etki: yer dövüşü (ve kurtulurken güreş) ile güçlenir; nefes biterse zayıflar
-  // Saniyede ~8 basıştan hızlısı ek güç vermez: kilidi parmak hızı değil, pozisyon ve yıpratma kazandırır
-  const pace = k.lastTap == null ? 1 : clamp((s.t - k.lastTap) / 140, 0, 1);
+  // Saniyede ~6 basıştan hızlısı ek güç vermez: kilidi parmak hızı değil, ritim, pozisyon ve yıpratma kazandırır
+  const pace = k.lastTap == null ? 1 : clamp((s.t - k.lastTap) / 150, 0, 1);
   k.lastTap = s.t;
-  const g = (k.by === 'p' ? clamp(0.059 + c.gr / 2500, 0.04, 0.082) : clamp(0.06 + (c.gr + c.wr) / 3000, 0.04, 0.09)) * (s.p.sta < 15 ? 0.6 : 1) * pace;
+  const g = tapGain(s) * pace;
   s.p.sta = clamp(s.p.sta - 0.6, 0, 100);
   k.prog = clamp(k.prog + (k.by === 'p' ? g : -g), 0, 1);
   // Basış kilidi tamamlarsa hemen tap; kurtulma basışı kilidi açarsa hemen kaçış

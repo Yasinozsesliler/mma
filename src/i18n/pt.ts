@@ -5208,4 +5208,11 @@ export const PT: Record<string, string> = {
   "Kart": "Ficha",
   "Geçmiş": "Histórico",
   "ÇOK YAKLAŞTIN!": "QUASE!",
+  "DİRENDİN!": "SEGUROU!",
+  "KIVRANDI!": "ELE SE CONTORCEU!",
+  "Rakip uyanık ×{0}": "Rival alerta ×{0}",
+  "DİREN! Bas ve basılı tut": "RESISTA! Toque e segure",
+  "Bas ya da basılı tut. DİREN! yanınca yeniden bas ve bırakma!": "Toque ou segure. Quando aparecer RESISTA!, toque de novo e não solte!",
+  "Çubuk dolarsa tap atarsın! Bas ya da basılı tut, kurtul!": "Se a barra encher, você bate! Toque ou segure para escapar!",
+  "DİREN!": "RESISTA!",
 };

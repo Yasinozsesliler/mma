@@ -5248,4 +5248,11 @@ export const RU: Record<string, string> = {
   "Kart": "Карта",
   "Geçmiş": "История",
   "ÇOK YAKLAŞTIN!": "ПОЧТИ!",
+  "DİRENDİN!": "УДЕРЖАЛ!",
+  "KIVRANDI!": "ВЫВЕРНУЛСЯ!",
+  "Rakip uyanık ×{0}": "Соперник начеку ×{0}",
+  "DİREN! Bas ve basılı tut": "ДЕРЖИ! Нажми и удерживай",
+  "Bas ya da basılı tut. DİREN! yanınca yeniden bas ve bırakma!": "Жми или держи. Когда загорится ДЕРЖИ!, нажми снова и не отпускай!",
+  "Çubuk dolarsa tap atarsın! Bas ya da basılı tut, kurtul!": "Заполнится шкала — сдашься! Жми или держи, вырывайся!",
+  "DİREN!": "ДЕРЖИ!",
 };
