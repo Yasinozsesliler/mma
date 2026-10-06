@@ -5241,4 +5241,5 @@ export const ES: Record<string, string> = {
   "Ayarlar": "Ajustes",
   "DİL": "IDIOMA",
   "KARİYER AKTARMA VE GERİ BİLDİRİM": "TRANSFERIR CARRERA Y COMENTARIOS",
+  "Bas ya da basılı tut. Çubuğun kenarı turuncu yanarsa bırakıp yeniden bas.": "Pulsa o mantén. Si el borde de la barra brilla en naranja, suelta y vuelve a pulsar.",
 };

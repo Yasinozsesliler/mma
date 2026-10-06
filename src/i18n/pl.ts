@@ -5213,4 +5213,5 @@ export const PL: Record<string, string> = {
   "Ayarlar": "Ustawienia",
   "DİL": "JĘZYK",
   "KARİYER AKTARMA VE GERİ BİLDİRİM": "PRZENIESIENIE KARIERY I OPINIE",
+  "Bas ya da basılı tut. Çubuğun kenarı turuncu yanarsa bırakıp yeniden bas.": "Stukaj lub trzymaj. Gdy krawędź paska zaświeci na pomarańczowo, puść i naciśnij ponownie.",
 };

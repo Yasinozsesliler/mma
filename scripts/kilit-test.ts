@@ -82,16 +82,17 @@ function trial(oHp: number, bot: Bot, fails: number, yerFark: number, guard = fa
 
 setSeed(7);
 const N = 400;
+// Ölçüt sıradan oyuncu: saniyede 6 basar, uyarıyı önemsemez
 const COLS: [string, Bot, number, number, boolean?][] = [
   ['5/sn', { tps: 5, diren: 0 }, 0, 0],
   ['6/sn', { tps: 6, diren: 0 }, 0, 0],
-  ['10/sn', { tps: 10, diren: 0 }, 0, 0],
-  ['6/sn+diren', { tps: 6, diren: 0.85 }, 0, 0],
-  ['1 kaçmış', { tps: 6, diren: 0.85 }, 1, 0],
-  ['+15 yer', { tps: 6, diren: 0.85 }, 0, 15],
-  ['tut+diren', { tps: 0, diren: 0.85, hold: true }, 0, 0],
   ['tut', { tps: 0, diren: 0, hold: true }, 0, 0],
-  ['imza guard', { tps: 6, diren: 0.85 }, 0, 0, true],
+  ['+15 yer', { tps: 6, diren: 0 }, 0, 15],
+  ['+30 yer', { tps: 6, diren: 0 }, 0, 30],
+  ['-15 yer', { tps: 6, diren: 0 }, 0, -15],
+  ['1 kaçmış', { tps: 6, diren: 0 }, 1, 0],
+  ['6/sn+diren', { tps: 6, diren: 0.85 }, 0, 0],
+  ['imza guard', { tps: 6, diren: 0 }, 0, 0, true],
 ];
 console.log('Kilit başarısı % (pozisyon 0.6, eşit yer becerisi; "diren" = uyarıyı %85 karşılayan oyuncu)');
 console.log('rakip canı'.padEnd(12) + COLS.map((c) => c[0].padStart(12)).join(''));

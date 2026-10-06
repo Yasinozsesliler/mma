@@ -335,15 +335,8 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel }: { fs: FightState; p
         } else sfx('lock');
         return;
       case 'kivran':
-        if (e.alt === 'blok') {
-          flash.show({ puan: 100, metin: L("DİRENDİN!"), renk: C.gold });
-          buzz('basari');
-          sfx('tap');
-        } else if (e.alt === 'sert') {
-          flash.show({ puan: 0, metin: L("KIVRANDI!"), renk: '#ff4d5e' });
-          shake.current = { t0: now(), amp: 3 };
-          buzz('hata');
-        } else buzz('hafif');
+        // Sakin geri bildirim: yazı ya da sarsıntı yok, yalnızca titreşim
+        buzz(e.alt === 'blok' ? 'basari' : e.alt === 'sert' ? 'orta' : 'hafif');
         return;
       case 'kilit': {
         // Kilit pozları: armbar, triangle ya da guillotine (teknik adına göre)
@@ -602,7 +595,7 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel }: { fs: FightState; p
 
         {/* Kilit mücadelesi: sıkılık çubuğu ve kalan süre */}
         {frame.kilit ? (
-          <View style={[lf.kilit, frame.kilit.uyari && lf.kilitWarn]} pointerEvents="none">
+          <View style={lf.kilit} pointerEvents="none">
             <View style={lf.kilitHead}>
               <Text style={[lf.kilitTitle, { color: frame.kilit.by === 'p' ? C.gold : '#ff4d5e' }]}>
                 🔒 {frame.kilit.ad.toLocaleUpperCase(LOC)}
@@ -611,20 +604,16 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel }: { fs: FightState; p
                 <Text style={lf.uyanik}>{L("Rakip uyanık ×{0}", [frame.kilit.uyanik])}</Text>
               ) : null}
             </View>
-            <View style={lf.kilitBar}>
+            <View style={[lf.kilitBar, frame.kilit.uyari && lf.kilitBarWarn]}>
               <View style={[lf.kilitFill, { width: `${Math.round(frame.kilit.prog * 100)}%`, backgroundColor: frame.kilit.by === 'p' ? C.gold : '#ff4d5e' }]} />
               <Text style={lf.kilitTap}>TAP</Text>
             </View>
             <View style={lf.kilitTime}>
               <View style={{ width: `${Math.round(frame.kilit.left * 100)}%`, height: '100%', backgroundColor: '#ffffff55' }} />
             </View>
-            {frame.kilit.uyari ? (
-              <Text style={lf.diren}>{L("DİREN! Bas ve basılı tut")}</Text>
-            ) : (
-              <Text style={lf.kilitHint}>
-                {frame.kilit.by === 'p' ? L("Bas ya da basılı tut. DİREN! yanınca yeniden bas ve bırakma!") : L("Çubuk dolarsa tap atarsın! Bas ya da basılı tut, kurtul!")}
-              </Text>
-            )}
+            <Text style={lf.kilitHint}>
+              {frame.kilit.by === 'p' ? L("Bas ya da basılı tut. Çubuğun kenarı turuncu yanarsa bırakıp yeniden bas.") : L("Çubuk dolarsa tap atarsın! Bas ya da basılı tut, kurtul!")}
+            </Text>
           </View>
         ) : null}
 
@@ -641,13 +630,11 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel }: { fs: FightState; p
                 if (sim.current) liveHold(sim.current, false);
               }}
               style={({ pressed }) => {
-                const col = frame.kilit!.uyari ? C.orange : frame.kilit!.by === 'p' ? C.gold : C.blue;
-                return [lf.mash, { borderColor: col, backgroundColor: pressed ? col + '55' : '#0d0e12' }, frame.kilit!.uyari && lf.mashWarn];
+                const col = frame.kilit!.by === 'p' ? C.gold : C.blue;
+                return [lf.mash, { borderColor: col, backgroundColor: pressed ? col + '55' : '#0d0e12' }];
               }}
             >
-              <Text style={[lf.mashText, { color: frame.kilit.uyari ? C.orange : frame.kilit.by === 'p' ? C.gold : C.blue }]}>
-                {frame.kilit.uyari ? L("DİREN!") : frame.kilit.by === 'p' ? L("SIK!") : L("KURTUL!")}
-              </Text>
+              <Text style={[lf.mashText, { color: frame.kilit.by === 'p' ? C.gold : C.blue }]}>{frame.kilit.by === 'p' ? L("SIK!") : L("KURTUL!")}</Text>
             </Pressable>
           ) : null}
           {!frame.kilit && frame.pos === 'ustte' ? (
@@ -756,10 +743,8 @@ const lf = StyleSheet.create({
   kilit: { position: 'absolute', top: '22%', left: 24, right: 24, backgroundColor: 'rgba(5,5,7,0.88)', borderRadius: 14, borderWidth: 1, borderColor: '#2a2d34', padding: 14, alignItems: 'center', gap: 8 },
   kilitTitle: { fontFamily: F.display, fontSize: 22, letterSpacing: 1 },
   kilitHead: { alignItems: 'center', gap: 2 },
-  kilitWarn: { borderColor: C.orange, borderWidth: 2, backgroundColor: 'rgba(40,18,4,0.92)' },
+  kilitBarWarn: { borderWidth: 2, borderColor: C.orange },
   uyanik: { color: '#ff8a5c', fontFamily: F.display, fontSize: 11, letterSpacing: 1, borderWidth: 1, borderColor: '#ff8a5c66', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 1, overflow: 'hidden' },
-  diren: { color: C.orange, fontFamily: F.display, fontSize: 16, letterSpacing: 1.5, textAlign: 'center' },
-  mashWarn: { transform: [{ scale: 1.04 }] },
   kilitBar: { width: '100%', height: 22, borderRadius: 11, backgroundColor: '#ffffff12', overflow: 'hidden', justifyContent: 'center' },
   kilitFill: { position: 'absolute', left: 0, top: 0, bottom: 0 },
   kilitTap: { position: 'absolute', right: 10, color: '#ffffffaa', fontFamily: F.display, fontSize: 12, letterSpacing: 1 },

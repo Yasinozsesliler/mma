@@ -5226,4 +5226,5 @@ export const EN: Record<string, string> = {
   "Ayarlar": "Settings",
   "DİL": "LANGUAGE",
   "KARİYER AKTARMA VE GERİ BİLDİRİM": "CAREER TRANSFER & FEEDBACK",
+  "Bas ya da basılı tut. Çubuğun kenarı turuncu yanarsa bırakıp yeniden bas.": "Tap or hold. If the bar's edge glows orange, release and press again.",
 };

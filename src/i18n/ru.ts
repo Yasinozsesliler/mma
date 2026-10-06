@@ -5280,4 +5280,5 @@ export const RU: Record<string, string> = {
   "Ayarlar": "Настройки",
   "DİL": "ЯЗЫК",
   "KARİYER AKTARMA VE GERİ BİLDİRİM": "ПЕРЕНОС КАРЬЕРЫ И ОТЗЫВ",
+  "Bas ya da basılı tut. Çubuğun kenarı turuncu yanarsa bırakıp yeniden bas.": "Жми или держи. Если край шкалы загорится оранжевым, отпусти и нажми снова.",
 };

@@ -247,7 +247,7 @@ function damage(s: LiveSim, victim: 'p' | 'o', dmg: number, heavy: boolean) {
 
 const SUBS = ['Armbar', 'Rear-naked choke', 'Guillotine', 'Triangle', 'Kimura', "D'Arce"];
 const KILIT_MS = 4000;
-const RATE_BASE = 0.15;
+const RATE_BASE = 0.19;
 /** Kıvranmadan önce uyarı süresi */
 export const WARN_MS = 550;
 /** Basılı tutmanın saniyedeki basış karşılığı */
@@ -261,7 +261,7 @@ const BIG_P = 0.42;
 /** Kilit mücadelesini başlatır: tap için kilitleyen sıkar, savunan kurtulmaya çalışır. */
 function startKilit(s: LiveSim, by: 'p' | 'o', prog: number, imza = false) {
   // İlk kıvranma kilit oturduktan sonra gelir: oyuncu basmaya başlamadan kilit çözülmez
-  s.kilit = { by, prog: clamp(prog, 0.1, 0.7), until: s.t + KILIT_MS, ad: SUBS[Math.floor(rand() * SUBS.length)], nextJolt: s.t + 1100 + rand() * 500, max: prog, imza };
+  s.kilit = { by, prog: clamp(prog, 0.1, 0.7), until: s.t + KILIT_MS, ad: SUBS[Math.floor(rand() * SUBS.length)], nextJolt: s.t + 1400 + rand() * 500, max: prog, imza };
   s.o.state = 'idle';
   s.o.stateUntil = s.t + KILIT_MS;
   ev(s, { kind: 'kilit', side: by, alt: s.kilit.ad });
@@ -273,7 +273,7 @@ function kilitRate(s: LiveSim) {
   const c = s.cfg;
   if (k.by === 'p') {
     // Sürekli gevşetme: taze, yer dövüşünde iyi ve nefesi yerinde rakip daha hızlı; asıl kurtulma kıvranmalarla gelir
-    return clamp(RATE_BASE - c.gr / 350 - c.wr / 1000 + (s.o.sta - 60) / 600 - (1 - s.o.hp / 100) * 0.12 + s.subFails * 0.03, 0.04, 0.4);
+    return clamp(RATE_BASE - c.gr / 500 - c.wr / 1000 + (s.o.sta - 60) / 600 - (1 - s.o.hp / 100) * 0.12 + s.subFails * 0.02, 0.03, 0.4);
   }
   return clamp(0.18 - c.gr / 300 + (1 - s.p.hp / 100) * 0.25 + (s.p.sta < 25 ? 0.08 : 0), 0.08, 0.5);
 }
@@ -293,7 +293,7 @@ function stepKilit(s: LiveSim, dt: number) {
   // Rakip ara ara kıvranır: çoğu küçük, bazen sert bir patlama. Taze ve nefesi yerinde rakip daha sık patlar;
   // kaçırılan her kilit onu uyandırır
   if (k.by === 'p' && k.nextJolt != null && s.t >= k.nextJolt) {
-    const big = chance(clamp(BIG_P * (0.15 + 0.85 * (s.o.hp / 100)) * (0.8 + s.o.sta / 250) * (1 + s.subFails * 0.4) * (k.imza ? 0.75 : 1), 0, 0.85));
+    const big = chance(clamp(BIG_P * (0.15 + 0.85 * (s.o.hp / 100)) * (0.8 + s.o.sta / 250) * clamp(1 - s.cfg.gr / 70, 0.5, 1.4) * (1 + s.subFails * 0.3) * (k.imza ? 0.75 : 1), 0, 0.85));
     // DİREN: uyarıdan sonra basıp kıvranma anına kadar basılı tutan (kısa dokunuş sayılmaz) kıvranmanın çoğunu karşılar
     const pa = k.pressAt ?? -1e9;
     const blok = !!k.down && pa >= k.nextJolt - WARN_MS && pa <= k.nextJolt - 120;
@@ -301,10 +301,12 @@ function stepKilit(s: LiveSim, dt: number) {
     // Kıvranma kilidi tek başına açamaz (en az 0.05 kalır): oyuncunun basarak toparlama şansı hep vardır
     k.prog = Math.max(Math.min(k.prog, 0.05), k.prog - size * (blok ? DIREN_KALAN : 1));
     ev(s, { kind: 'kivran', alt: blok ? 'blok' : big ? 'sert' : 'hafif' });
-    k.nextJolt = s.t + 750 + rand() * 900;
+    k.nextJolt = s.t + 1700 + rand() * 800;
   }
   k.max = Math.max(k.max ?? 0, k.prog);
-  if (k.prog >= 1) {
+  // Süre dolduğunda oyuncunun kilidi sıkılığı oranında tutar: çubuk ne kadar doluysa tap ihtimali o kadar yüksek
+  const timeoutTap = k.by === 'p' && s.t >= k.until && k.prog > 0.3 && chance(Math.pow((k.prog - 0.3) / 0.7, 1.2));
+  if (k.prog >= 1 || timeoutTap) {
     s.kilit = null;
     submit(s, k.by, 1);
     return;
@@ -327,7 +329,7 @@ function stepKilit(s: LiveSim, dt: number) {
 /** Basış başına etki: yer dövüşü (ve kurtulurken güreş) ile güçlenir; nefes biterse zayıflar. */
 function tapGain(s: LiveSim) {
   const c = s.cfg;
-  return (s.kilit!.by === 'p' ? clamp(0.069 + c.gr / 2500, 0.05, 0.095) : clamp(0.07 + (c.gr + c.wr) / 3000, 0.05, 0.1)) * (s.p.sta < 15 ? 0.6 : 1);
+  return (s.kilit!.by === 'p' ? clamp(0.069 + c.gr / 2600, 0.05, 0.09) : clamp(0.07 + (c.gr + c.wr) / 3000, 0.05, 0.1)) * (s.p.sta < 15 ? 0.6 : 1);
 }
 
 /** Kilitte düğme basıldı/bırakıldı (DİREN ve basılı tutma modu için). */
@@ -576,7 +578,7 @@ function groundInput(s: LiveSim, k: LiveInput, pos: 'ustte' | 'altta') {
         return;
       }
       // Kilidin başlangıç sıkılığı: pozisyon ve rakibin yıpranmışlığı; her başarısız deneme rakibi uyarır
-      startKilit(s, 'p', 0.22 + g.pos * 0.2 + (1 - o.hp / 100) * 0.15 + (o.state === 'rocked' ? 0.12 : 0) - s.subFails * 0.08);
+      startKilit(s, 'p', 0.22 + g.pos * 0.2 + (1 - o.hp / 100) * 0.15 + (o.state === 'rocked' ? 0.12 : 0) - s.subFails * 0.05);
       return;
     }
     if (k === 'jab' || k === 'direkt') {
@@ -612,7 +614,7 @@ function groundInput(s: LiveSim, k: LiveInput, pos: 'ustte' | 'altta') {
   }
   if (k === 'sub') {
     // Alttan kilit: rakip üstte vururken açık verir; aksi hâlde zayıf başlar
-    startKilit(s, 'p', 0.16 + (o.state === 'windup' ? 0.12 : 0) + (1 - o.hp / 100) * 0.15 - s.subFails * 0.08);
+    startKilit(s, 'p', 0.16 + (o.state === 'windup' ? 0.12 : 0) + (1 - o.hp / 100) * 0.15 - s.subFails * 0.05);
   }
 }
 

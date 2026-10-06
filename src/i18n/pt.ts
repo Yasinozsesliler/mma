@@ -5240,4 +5240,5 @@ export const PT: Record<string, string> = {
   "Ayarlar": "Configurações",
   "DİL": "IDIOMA",
   "KARİYER AKTARMA VE GERİ BİLDİRİM": "TRANSFERIR CARREIRA E FEEDBACK",
+  "Bas ya da basılı tut. Çubuğun kenarı turuncu yanarsa bırakıp yeniden bas.": "Toque ou segure. Se a borda da barra brilhar laranja, solte e toque de novo.",
 };
