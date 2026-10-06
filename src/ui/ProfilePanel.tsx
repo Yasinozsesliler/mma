@@ -1,5 +1,5 @@
 // Profil sekmesi: efsane şeridi ve hızlı işlemler, ardından dört alt sekme
-// (Kart: dövüşçü kartı ve istatistikler · Vitrin: kemerler, ödüller, başarımlar · Kariyer: yolculuk, ezeli rakip, dövüş geçmişi · Yaşam: hakkında, aile, koleksiyon, hanedan).
+// (Kart: dövüşçü kartı ve istatistikler · Vitrin: kemerler, ödüller, başarımlar · Geçmiş: yolculuk, ezeli rakip, dövüş geçmişi · Yaşam: hakkında, aile, koleksiyon, hanedan).
 import { L } from '../i18n';
 import { TrophyCabinet } from './TrophyCabinet';
 import { DynastySection } from './DynastyPanel';
