@@ -7,7 +7,8 @@ import { HAIR_COLORS, SKIN_TONES } from './FighterAvatar';
 import { add, down, joints, LEN, shade, type Pose } from './rigMath';
 export { HIP_H, joints, lerpPose, POSES, type Pose, type PoseName } from './rigMath';
 
-export type Kit = { shorts: string; trim: string; glove: string; ref?: boolean };
+/** bare: eldivensiz (ör. ip atlama); ref: hakem */
+export type Kit = { shorts: string; trim: string; glove: string; ref?: boolean; bare?: boolean };
 
 /** Uzuv: koyu dış hat, ortada kas şişkinliği, üstten gelen ışık ve spot kenar parlaması. */
 function Limb({ a, b, w, color, muscle = 1.12 }: { a: { x: number; y: number }; b: { x: number; y: number }; w: number; color: string; muscle?: number }) {
@@ -138,7 +139,7 @@ export function Figure({ p, look, kit, hasar = 0 }: { p: Pose; look: Appearance;
       <Ellipse cx={j.anR.x + 2.5} cy={j.anR.y + 1} rx={5} ry={2.4} fill={ref ? '#111' : skinD} />
       <Limb a={j.shR} b={j.elR} w={7.5} color={shade(armC, -26)} />
       <Limb a={j.elR} b={j.wrR} w={6.5} color={shade(armC, -26)} />
-      <Glove at={j.wrR} dir={p.aR1 + p.aR2} color={shade(kit.glove, -25)} bare={ref} skin={skinD} />
+      <Glove at={j.wrR} dir={p.aR1 + p.aR2} color={shade(kit.glove, -25)} bare={ref || kit.bare} skin={skinD} />
 
       {/* Gövde */}
       <Path d={torsoPath} fill={shade(ref ? '#15161a' : skin, -70)} opacity={0.5} transform="translate(0.6 0.6)" />
@@ -197,7 +198,7 @@ export function Figure({ p, look, kit, hasar = 0 }: { p: Pose; look: Appearance;
         <Line x1={j.shL.x + (j.elL.x - j.shL.x) * 0.2} y1={j.shL.y + (j.elL.y - j.shL.y) * 0.2} x2={j.shL.x + (j.elL.x - j.shL.x) * 0.85} y2={j.shL.y + (j.elL.y - j.shL.y) * 0.85} stroke="#1d1d1d" strokeWidth={2.6} strokeDasharray="2 1.5" opacity={0.5} />
       ) : null}
       <Limb a={j.elL} b={j.wrL} w={6.8} color={armC} />
-      <Glove at={j.wrL} dir={p.aL1 + p.aL2} color={kit.glove} bare={ref} skin={skin} />
+      <Glove at={j.wrL} dir={p.aL1 + p.aL2} color={kit.glove} bare={ref || kit.bare} skin={skin} />
     </G>
   );
 }

@@ -5158,4 +5158,8 @@ export const EN: Record<string, string> = {
   "Çubuk dolarsa tap atarsın! Hızlı bas, kurtul!": "If the bar fills, you tap! Tap fast and escape!",
   "KURTUL!": "ESCAPE!",
   "POZİSYON": "POSITION",
+  "TAKILDIN": "TRIPPED",
+  "HIZLAN!": "SPEED UP!",
+  "ÇİFT GEÇİŞ!": "DOUBLE-UNDERS!",
+  "İp ayağının altına geldiği anda dokun ve zıpla": "Tap to jump just as the rope reaches your feet",
 };

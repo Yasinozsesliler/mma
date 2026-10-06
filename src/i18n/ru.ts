@@ -5213,4 +5213,8 @@ export const RU: Record<string, string> = {
   "Çubuk dolarsa tap atarsın! Hızlı bas, kurtul!": "Заполнится шкала — сдашься! Жми быстро, вырывайся!",
   "KURTUL!": "ВЫРЫВАЙСЯ!",
   "POZİSYON": "ПОЗИЦИЯ",
+  "TAKILDIN": "ЗАПНУЛСЯ",
+  "HIZLAN!": "БЫСТРЕЕ!",
+  "ÇİFT GEÇİŞ!": "ДВОЙНЫЕ!",
+  "İp ayağının altına geldiği anda dokun ve zıpla": "Жми и прыгай, когда скакалка у ног",
 };

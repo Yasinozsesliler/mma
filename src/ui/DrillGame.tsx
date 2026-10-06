@@ -1,108 +1,18 @@
 // Antrenman mini oyunları: pad çalışması (kombinasyon), takedown savunması (okuma + sprawl), ip atlama (ritim).
 // Her kamp haftası rastgele biri gelir; sonuç 0–100 puan olarak kampa yazılır.
-import { useEffect, useRef, useState } from 'react';
-import { Animated, Easing, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { sfx } from '../audio';
 import { DRILLS, drillGrade, type DrillId } from '../engine/drills';
 import type { Appearance } from '../engine/types';
 import { buzz } from '../haptics';
 import { L, LOC } from '../i18n';
 import { Button, Icon, SLANT, type IconName } from './components';
-import { avg, cm, INSTANT, judge, ND, now, Progress, useFlash } from './drills/common';
 import { PadMitts } from './drills/PadMitts';
 import { TakedownGame } from './drills/TakedownGame';
 import { SparGame } from './drills/SparGame';
+import { RopeGame } from './drills/RopeGame';
 import { C, F } from './theme';
-
-// ---------- İp atlama: ip yere değdiği anda dokun ----------
-
-const BEATS = 16;
-const INTERVAL = 560;
-
-function RhythmGame({ onEnd }: { onEnd: (p: number) => void }) {
-  const [bounce] = useState(() => new Animated.Value(0));
-  const [count, setCount] = useState(0);
-  const start = useRef(0);
-  const judged = useRef<(number | null)[]>(Array(BEATS).fill(null));
-  const stray = useRef(0);
-  const ended = useRef(false);
-  const flash = useFlash();
-
-  useEffect(() => {
-    start.current = now() + 600;
-    const anim = Animated.loop(Animated.timing(bounce, { toValue: 1, duration: INTERVAL, easing: Easing.linear, useNativeDriver: ND }), { iterations: BEATS + 1 });
-    const t0 = setTimeout(() => anim.start(), 600);
-    const tick = setInterval(() => {
-      const t = now();
-      for (let b = 0; b < BEATS; b++) {
-        const at = start.current + (b + 1) * INTERVAL;
-        if (judged.current[b] == null && t > at + 210) {
-          judged.current[b] = 0;
-          flash.show({ puan: 0, metin: L("KAÇTI"), renk: C.red });
-          sfx('whoosh');
-        }
-      }
-      setCount(judged.current.filter((x) => x != null).length);
-      if (!ended.current && judged.current.every((x) => x != null)) {
-        ended.current = true;
-        const base = avg(judged.current as number[]);
-        setTimeout(() => onEnd(Math.max(0, base - stray.current * 4)), 400);
-      }
-    }, 50);
-    return () => {
-      clearTimeout(t0);
-      clearInterval(tick);
-      anim.stop();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const tap = () => {
-    if (ended.current) return;
-    const t = now();
-    let best = -1;
-    let bestD = 1e9;
-    for (let b = 0; b < BEATS; b++) {
-      if (judged.current[b] != null) continue;
-      const d = Math.abs(t - (start.current + (b + 1) * INTERVAL));
-      if (d < bestD) {
-        bestD = d;
-        best = b;
-      }
-    }
-    if (best < 0 || bestD > 210) {
-      stray.current++;
-      flash.show({ puan: 0, metin: L("TEMPO DIŞI"), renk: C.orange });
-      buzz('hata');
-      return;
-    }
-    const j = judge(bestD, [80, 140, 210]);
-    judged.current[best] = j.puan;
-    flash.show(j);
-    if (j.puan > 0) {
-      sfx('tap');
-      buzz('hafif');
-    }
-  };
-
-  // İp tepede (faz 0.5) en yüksekte, faz 0/1'de yerde: vuruş anı.
-  const lift = bounce.interpolate({ inputRange: [0, 0.25, 0.5, 0.75, 1], outputRange: [0, -70, -100, -70, 0] });
-  return (
-    <Pressable testID="drill-area" {...INSTANT} onPressIn={tap} style={cm.area}>
-      <Progress done={count} total={BEATS} />
-      <View style={g.center}>
-        <View style={g.ropeBox}>
-          <Animated.View testID="drill-ball" style={[g.ball, { transform: [{ translateY: lift }] }]}>
-            <Icon name="jump-rope" size={40} color={C.gold} />
-          </Animated.View>
-          <View style={g.ground} />
-        </View>
-      </View>
-      {flash.node}
-      <Text style={cm.hint}>{L("İp yere değdiği anda dokun")}</Text>
-    </Pressable>
-  );
-}
 
 // ---------- Kabuk: tanıtım → geri sayım → oyun → sonuç ----------
 
@@ -165,7 +75,7 @@ export function DrillGame({ oyun, onDone, onClose, pLook, oLook }: { oyun: Drill
           ) : oyun === 'spar' ? (
             <SparGame onEnd={end} pLook={pLook} oLook={oLook} />
           ) : (
-            <RhythmGame onEnd={end} />
+            <RopeGame onEnd={end} pLook={pLook} />
           )
         ) : (
           <View style={g.intro}>

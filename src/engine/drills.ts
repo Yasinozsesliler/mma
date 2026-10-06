@@ -16,15 +16,35 @@ export const DRILLS: Record<DrillId, { ad: string; aciklama: string; ikon: strin
 
 const DRILL_IDS: DrillId[] = ['pad', 'refleks', 'ritim', 'spar'];
 
-/** Bu kamp haftasının oyunu: her hafta rastgele, ama aynı hafta hep aynı (yeniden açınca değişmez); art arda aynısı gelmez. */
-export function drillOfWeek(s: GameState): DrillId {
+const hashStr = (t: string) => {
+  let h = [...t].reduce((a, c) => Math.imul(a ^ c.charCodeAt(0), 16777619) >>> 0, 2166136261);
+  // Son karıştırma: küçük farklar bütün bitlere yayılsın
+  h ^= h >>> 16;
+  h = Math.imul(h, 0x85ebca6b) >>> 0;
+  h ^= h >>> 13;
+  return h >>> 0;
+};
+
+/** Kampın oyun sırası: her kamp kendi karışık sırasıyla başlar (rakip ve kamp başı haftası tohum). */
+function campOrder(s: GameState): DrillId[] {
   const k = s.pending.kamp;
-  const idx = k?.kampIdx ?? 0;
-  const seed = (s.hafta * 7919 + idx * 104729 + (s.fighter.ad.length + s.fighter.soyad.length) * 31) >>> 0;
-  let id = DRILL_IDS[seed % DRILL_IDS.length];
-  const prev = k?.idman?.find((x) => x.idx === idx - 1)?.oyun;
-  if (prev === id) id = DRILL_IDS[(DRILL_IDS.indexOf(id) + 1 + (seed % 2)) % DRILL_IDS.length];
-  return id;
+  let seed = hashStr(`${s.pending.rakip?.id ?? ''}|${s.gecmis.length}|${k?.hafta ?? 0}|${s.fighter.soyad}`);
+  const order = [...DRILL_IDS];
+  for (let i = order.length - 1; i > 0; i--) {
+    seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+    const j = (seed >>> 16) % (i + 1);
+    [order[i], order[j]] = [order[j], order[i]];
+  }
+  return order;
+}
+
+/** Bu kamp haftasının oyunu: kampın karışık sırasından; 4 haftada her oyun bir kez gelir, yeniden açınca değişmez. */
+export function drillOfWeek(s: GameState): DrillId {
+  const idx = s.pending.kamp?.kampIdx ?? 0;
+  const order = campOrder(s);
+  // Dört haftadan uzun kamplarda sıra her turda kayar (art arda aynı oyun gelmez)
+  const round = Math.floor(idx / order.length);
+  return order[(idx + round) % order.length];
 }
 
 /** Bu kamp haftasının seansı oynandı mı? */
