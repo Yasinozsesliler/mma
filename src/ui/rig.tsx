@@ -8,7 +8,46 @@ import { add, down, joints, LEN, shade, type Pose } from './rigMath';
 export { HIP_H, joints, lerpPose, POSES, type Pose, type PoseName } from './rigMath';
 
 /** bare: eldivensiz (ör. ip atlama); ref: hakem */
-export type Kit = { shorts: string; trim: string; glove: string; ref?: boolean; bare?: boolean };
+export type ShortsPattern = 'alev' | 'simsek' | 'kaplan' | 'yildiz';
+export type Kit = { shorts: string; trim: string; glove: string; ref?: boolean; bare?: boolean; /** Şort deseni ve rengi */ desen?: ShortsPattern; desenRenk?: string };
+
+type P2 = { x: number; y: number };
+/** Şort bacağı (kalça a → uyluk ortası b) üzerine desen. */
+function Pattern({ a, b, kind, color, op = 1 }: { a: P2; b: P2; kind: ShortsPattern; color: string; op?: number }) {
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  const len = Math.hypot(dx, dy) || 1;
+  const d = { x: dx / len, y: dy / len };
+  const n = { x: -d.y, y: d.x };
+  // Bacak boyunca t (0 kalça, 1 paça) ve enine k noktası
+  const at = (t: number, k: number) => ({ x: a.x + dx * t + n.x * k, y: a.y + dy * t + n.y * k });
+  const P = (pts: P2[]) => pts.map((q, i) => `${i ? 'L' : 'M'}${q.x.toFixed(2)} ${q.y.toFixed(2)}`).join(' ');
+  if (kind === 'alev') {
+    // Paçadan yukarı yükselen üç alev dili
+    const tongues = [-4.6, 0, 4.6].map((k, i) => P([at(1.05, k - 2.4), at(0.45 - (i === 1 ? 0.18 : 0), k + 1.2), at(0.72, k + 0.4), at(0.6, k + 2.6), at(1.05, k + 2.4)]) + ' Z');
+    return <Path d={tongues.join(' ')} fill={color} opacity={0.92 * op} />;
+  }
+  if (kind === 'simsek') return <Path d={P([at(0.15, 3.5), at(0.5, -2.5), at(0.55, 2), at(0.95, -3.5)])} stroke={color} strokeWidth={1.8} fill="none" strokeLinejoin="round" opacity={0.95 * op} />;
+  if (kind === 'kaplan')
+    return (
+      <Path
+        d={[0.3, 0.52, 0.74].map((t) => P([at(t - 0.06, -6.2), at(t + 0.05, -1.5), at(t + 0.02, 1)])).join(' ') + ' ' + [0.4, 0.64].map((t) => P([at(t + 0.06, 6.2), at(t - 0.04, 2)])).join(' ')}
+        stroke={color}
+        strokeWidth={1.7}
+        strokeLinecap="round"
+        fill="none"
+        opacity={0.9 * op}
+      />
+    );
+  // Yıldız
+  const c = at(0.6, 0);
+  const pts = Array.from({ length: 10 }, (_, i) => {
+    const r = i % 2 ? 1.6 : 3.8;
+    const ang = (Math.PI / 5) * i - Math.PI / 2;
+    return { x: c.x + Math.cos(ang) * r, y: c.y + Math.sin(ang) * r };
+  });
+  return <Path d={P(pts) + ' Z'} fill={color} opacity={0.95 * op} />;
+}
 
 /** Uzuv: koyu dış hat, ortada kas şişkinliği, üstten gelen ışık ve spot kenar parlaması. */
 function Limb({ a, b, w, color, muscle = 1.12 }: { a: { x: number; y: number }; b: { x: number; y: number }; w: number; color: string; muscle?: number }) {
@@ -173,6 +212,7 @@ export function Figure({ p, look, kit, hasar = 0 }: { p: Pose; look: Appearance;
       {!ref ? (
         <G>
           <Line x1={j.hipR.x} y1={j.hipR.y} x2={thighMidR.x} y2={thighMidR.y} stroke={shade(kit.shorts, -30)} strokeWidth={13} strokeLinecap="round" />
+          {kit.desen ? <Pattern a={j.hipR} b={thighMidR} kind={kit.desen} color={shade(kit.desenRenk ?? kit.trim, -25)} op={0.7} /> : null}
           <Line x1={pt(shortsTop, 9).x} y1={pt(shortsTop, 9).y} x2={pt(shortsTop, -9).x} y2={pt(shortsTop, -9).y} stroke={`url(#${gS})`} strokeWidth={9} strokeLinecap="round" />
           <Line x1={pt(shortsTop, 9).x} y1={pt(shortsTop, 9).y - 3} x2={pt(shortsTop, -9).x} y2={pt(shortsTop, -9).y - 3} stroke={shade(kit.shorts, -45)} strokeWidth={2.2} strokeLinecap="round" />
         </G>
@@ -189,6 +229,7 @@ export function Figure({ p, look, kit, hasar = 0 }: { p: Pose; look: Appearance;
         <>
           <Line x1={j.hipL.x} y1={j.hipL.y} x2={thighMidL.x} y2={thighMidL.y} stroke={shade(kit.shorts, -55)} strokeOpacity={0.6} strokeWidth={14.8} strokeLinecap="round" />
           <Line x1={j.hipL.x} y1={j.hipL.y} x2={thighMidL.x} y2={thighMidL.y} stroke={`url(#${gS})`} strokeWidth={13.5} strokeLinecap="round" />
+          {kit.desen ? <Pattern a={j.hipL} b={thighMidL} kind={kit.desen} color={kit.desenRenk ?? kit.trim} /> : null}
           <Line x1={j.hipL.x + 1.2} y1={j.hipL.y - 1.2} x2={thighMidL.x + 1.2} y2={thighMidL.y - 1.2} stroke="#ffffff" strokeOpacity={0.13} strokeWidth={3.5} strokeLinecap="round" />
           <Line x1={pt(shortsTop, 9).x} y1={pt(shortsTop, 9).y + 3} x2={pt(shortsTop, -9).x} y2={pt(shortsTop, -9).y + 3} stroke={kit.trim} strokeWidth={1.2} opacity={0.8} />
         </>

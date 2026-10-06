@@ -1,15 +1,26 @@
-// Kozmetikler: yalnızca görünüm (şort, eldiven, avatar çerçevesi, kemer kaplaması, kafese giriş müziği). Oyun gücü vermez.
+// Kozmetikler: yalnızca görünüm (şort, eldiven, avatar çerçevesi, kemer kaplaması, kafese giriş müziği ve efekti). Oyun gücü vermez.
 // Bir kısmı oynayarak açılır, bir kısmı paketlerle satın alınır. Açılanlar tüm kariyerlerde geçerlidir.
 import { L } from '../i18n';
 import type { Walkout } from '../audio/types';
 import type { CosmeticSku } from '../monetization/skus';
-import { PREMIUM_SKU } from '../monetization/skus';
+import { BUNDLE_SKU, PREMIUM_SKU } from '../monetization/skus';
 import type { DailyStore } from './daily';
 import { nemesisBeaten } from './nemesis';
 import type { GameState } from './types';
 
-export type CosSlot = 'sort' | 'eldiven' | 'cerceve' | 'kemer' | 'giris';
-export const COS_SLOTS: CosSlot[] = ['sort', 'eldiven', 'cerceve', 'kemer', 'giris'];
+export type CosSlot = 'sort' | 'eldiven' | 'cerceve' | 'kemer' | 'giris' | 'efekt';
+export const COS_SLOTS: CosSlot[] = ['sort', 'eldiven', 'cerceve', 'kemer', 'giris', 'efekt'];
+
+/** Nadirlik: dolapta çerçeve rengi ve sıralama */
+export type Rarity = 'siradan' | 'nadir' | 'epik' | 'efsane';
+export const RARITY: Record<Rarity, { ad: () => string; renk: string; sira: number }> = {
+  siradan: { ad: () => L("Sıradan"), renk: '#9aa3b2', sira: 0 },
+  nadir: { ad: () => L("Nadir"), renk: '#3aa8ff', sira: 1 },
+  epik: { ad: () => L("Epik"), renk: '#b388ff', sira: 2 },
+  efsane: { ad: () => L("Efsanevi"), renk: '#f2c14e', sira: 3 },
+};
+export type Pattern = 'alev' | 'simsek' | 'kaplan' | 'yildiz';
+export type FxKind = 'ates' | 'duman' | 'konfeti' | 'simsek' | 'kar';
 
 /** Açılma koşullarının okunduğu özet: bütün kariyerlerin ve günlük dövüşün en iyileri. */
 export type UnlockCtx = { galibiyet: number; ko: number; sub: number; kemer: number; savunma: number; hof: boolean; nesil: number; gunlukSeri: number; intikam: boolean; ozel: string[] };
@@ -23,8 +34,17 @@ export type Cosmetic = {
   /** sort: [şort, şerit] · eldiven: [eldiven] · cerceve: [halka] · kemer: [metal açık, metal koyu, kayış, taş] */
   renk: string[];
   giris?: Walkout;
+  /** Şort deseni ve rengi */
+  desen?: Pattern;
+  desenRenk?: string;
+  /** Kafese giriş efekti */
+  fx?: FxKind;
+  /** Belirtilmezse kaynağa göre: hazır sıradan, başarı nadir, paket epik */
+  nadir?: Rarity;
   kaynak: Source;
 };
+
+export const rarityOf = (x: Cosmetic): Rarity => x.nadir ?? (x.kaynak.tur === 'hazir' ? 'siradan' : x.kaynak.tur === 'basari' ? 'nadir' : 'epik');
 
 const hazir: Source = { tur: 'hazir' };
 const paket = (sku: CosmeticSku): Source => ({ tur: 'paket', sku });
@@ -35,7 +55,11 @@ export const COSMETICS: Cosmetic[] = [
   { id: 'sort_klasik', slot: 'sort', ad: L("Kırmızı Köşe"), renk: ['#c1121f', '#ffffff'], kaynak: hazir },
   { id: 'sort_gece', slot: 'sort', ad: L("Gece"), renk: ['#15161a', '#e63946'], kaynak: basari(L("Profesyonel kariyerde 5 galibiyet"), (c) => c.galibiyet >= 5) },
   { id: 'sort_seri', slot: 'sort', ad: L("Seri Ustası"), renk: ['#f77f00', '#15161a'], kaynak: basari(L("Günün Dövüşü'nde 7 günlük seri"), (c) => c.gunlukSeri >= 7) },
-  { id: 'sort_kaplan', slot: 'sort', ad: L("Beyaz Kaplan"), renk: ['#eeeeee', '#c1121f'], kaynak: basari(L("Onur Listesi'ne (Hall of Fame) gir"), (c) => c.hof) },
+  { id: 'sort_kaplan', slot: 'sort', ad: L("Beyaz Kaplan"), renk: ['#eeeeee', '#c1121f'], desen: 'kaplan', desenRenk: '#15161a', nadir: 'efsane', kaynak: basari(L("Onur Listesi'ne (Hall of Fame) gir"), (c) => c.hof) },
+  { id: 'sort_yildirim', slot: 'sort', ad: L("Yıldırım"), renk: ['#1b1e24', '#f2c14e'], desen: 'simsek', desenRenk: '#f2c14e', nadir: 'epik', kaynak: basari(L("Profesyonel kariyerde 10 nakavt"), (c) => c.ko >= 10) },
+  { id: 'sort_gece2', slot: 'sort', ad: L("Gece Yarısı"), renk: ['#2a0b4a', '#39ff14'], desen: 'yildiz', desenRenk: '#e0b0ff', kaynak: paket('paket_gece') },
+  { id: 'sort_ejder', slot: 'sort', ad: L("Ejderha"), renk: ['#140404', '#ff4500'], desen: 'alev', desenRenk: '#ff7b00', nadir: 'efsane', kaynak: paket('paket_ejder') },
+  { id: 'sort_buz', slot: 'sort', ad: L("Buz Kralı"), renk: ['#bfe6ff', '#1d4ed8'], desen: 'simsek', desenRenk: '#1d4ed8', nadir: 'efsane', kaynak: paket('paket_buz') },
   { id: 'sort_altin', slot: 'sort', ad: L("Altın"), renk: ['#d4a017', '#15161a'], kaynak: paket('paket_altin') },
   { id: 'sort_sokak', slot: 'sort', ad: L("Kamuflaj"), renk: ['#4b5320', '#c2b280'], kaynak: paket('paket_sokak') },
   { id: 'sort_sultan', slot: 'sort', ad: L("Sultan"), renk: ['#7b1e2b', '#f2c14e'], kaynak: paket('paket_sultan') },
@@ -48,6 +72,10 @@ export const COSMETICS: Cosmetic[] = [
   { id: 'eld_altin', slot: 'eldiven', ad: L("Altın"), renk: ['#f2c14e'], kaynak: paket('paket_altin') },
   { id: 'eld_neon', slot: 'eldiven', ad: L("Neon"), renk: ['#39ff14'], kaynak: paket('paket_sokak') },
   { id: 'eld_sultan', slot: 'eldiven', ad: L("Bordo"), renk: ['#7b1e2b'], kaynak: paket('paket_sultan') },
+  { id: 'eld_mavi', slot: 'eldiven', ad: L("Mavi"), renk: ['#1d4ed8'], kaynak: basari(L("Profesyonel kariyerde 3 galibiyet"), (c) => c.galibiyet >= 3) },
+  { id: 'eld_gece', slot: 'eldiven', ad: L("Mor Neon"), renk: ['#8b5cf6'], kaynak: paket('paket_gece') },
+  { id: 'eld_ejder', slot: 'eldiven', ad: L("Ateş"), renk: ['#ff4500'], nadir: 'efsane', kaynak: paket('paket_ejder') },
+  { id: 'eld_buz', slot: 'eldiven', ad: L("Buz"), renk: ['#9ad9ff'], nadir: 'efsane', kaynak: paket('paket_buz') },
   { id: 'eld_kalp', slot: 'eldiven', ad: L("Kalp"), renk: ['#ff5c8a'], kaynak: basari(L("Sevgililer Günü etkinliği (sınırlı süre)"), (c) => c.ozel.includes('eld_kalp')) },
   // Avatar çerçevesi (klasik: kemer varsa altın, yoksa kırmızı)
   { id: 'cer_klasik', slot: 'cerceve', ad: L("Klasik"), renk: [], kaynak: hazir },
@@ -58,6 +86,9 @@ export const COSMETICS: Cosmetic[] = [
   { id: 'cer_altin', slot: 'cerceve', ad: L("Altın"), renk: ['#d4a017'], kaynak: paket('paket_altin') },
   { id: 'cer_neon', slot: 'cerceve', ad: L("Neon"), renk: ['#39ff14'], kaynak: paket('paket_sokak') },
   { id: 'cer_sultan', slot: 'cerceve', ad: L("Sultan"), renk: ['#9b2335'], kaynak: paket('paket_sultan') },
+  { id: 'cer_gece', slot: 'cerceve', ad: L("Gece Yarısı"), renk: ['#b388ff'], kaynak: paket('paket_gece') },
+  { id: 'cer_ejder', slot: 'cerceve', ad: L("Ejderha"), renk: ['#ff3d00'], nadir: 'efsane', kaynak: paket('paket_ejder') },
+  { id: 'cer_buz', slot: 'cerceve', ad: L("Buz Kralı"), renk: ['#7fdbff'], nadir: 'efsane', kaynak: paket('paket_buz') },
   { id: 'cer_gunes', slot: 'cerceve', ad: L("Güneş"), renk: ['#ffb703'], kaynak: basari(L("Yaz Festivali etkinliği (sınırlı süre)"), (c) => c.ozel.includes('cer_gunes')) },
   // Kemer kaplaması (klasik: organizasyonun kendi renkleri)
   { id: 'kem_klasik', slot: 'kemer', ad: L("Organizasyon rengi"), renk: [], kaynak: hazir },
@@ -65,6 +96,9 @@ export const COSMETICS: Cosmetic[] = [
   { id: 'kem_altin', slot: 'kemer', ad: L("Kraliyet"), renk: ['#fff3b0', '#c9a227', '#3b0a45', '#e0b0ff'], kaynak: paket('paket_altin') },
   { id: 'kem_sokak', slot: 'kemer', ad: L("Karbon"), renk: ['#d0d4da', '#50565f', '#1a1d22', '#39ff14'], kaynak: paket('paket_sokak') },
   { id: 'kem_sultan', slot: 'kemer', ad: L("Sultan"), renk: ['#ffe39a', '#c18f2a', '#5a0f16', '#2ec4b6'], kaynak: paket('paket_sultan') },
+  { id: 'kem_gece', slot: 'kemer', ad: L("Gece Yarısı"), renk: ['#e9d5ff', '#6d28d9', '#12051f', '#39ff14'], kaynak: paket('paket_gece') },
+  { id: 'kem_ejder', slot: 'kemer', ad: L("Ejderha"), renk: ['#ffd166', '#b5121b', '#1a0303', '#ff7b00'], nadir: 'efsane', kaynak: paket('paket_ejder') },
+  { id: 'kem_buz', slot: 'kemer', ad: L("Buz Kralı"), renk: ['#f0faff', '#7fb8d8', '#0b2540', '#bfe6ff'], nadir: 'efsane', kaynak: paket('paket_buz') },
   { id: 'kem_bayram', slot: 'kemer', ad: L("Bayram"), renk: ['#e9f5db', '#2d6a4f', '#081c15', '#f2c14e'], kaynak: basari(L("Bayram etkinliği (sınırlı süre)"), (c) => c.ozel.includes('kem_bayram')) },
   // Kafese giriş müziği
   { id: 'gir_yok', slot: 'giris', ad: L("Seyirci uğultusu"), renk: [], kaynak: hazir },
@@ -72,14 +106,24 @@ export const COSMETICS: Cosmetic[] = [
   { id: 'gir_epik', slot: 'giris', ad: L("Epik"), renk: [], giris: 'epik', kaynak: paket('paket_altin') },
   { id: 'gir_trap', slot: 'giris', ad: L("Trap"), renk: [], giris: 'trap', kaynak: paket('paket_sokak') },
   { id: 'gir_mehter', slot: 'giris', ad: L("Mehter"), renk: [], giris: 'mehter', kaynak: paket('paket_sultan') },
+  // Kafese giriş efekti
+  { id: 'ef_yok', slot: 'efekt', ad: L("Efektsiz"), renk: [], kaynak: hazir },
+  { id: 'ef_duman', slot: 'efekt', ad: L("Duman"), renk: [], fx: 'duman', kaynak: basari(L("Profesyonel kariyerde 3 galibiyet"), (c) => c.galibiyet >= 3) },
+  { id: 'ef_konfeti', slot: 'efekt', ad: L("Konfeti"), renk: [], fx: 'konfeti', nadir: 'epik', kaynak: basari(L("Bir kemeri savun"), (c) => c.savunma >= 1) },
+  { id: 'ef_simsek', slot: 'efekt', ad: L("Şimşek"), renk: [], fx: 'simsek', kaynak: paket('paket_gece') },
+  { id: 'ef_ates', slot: 'efekt', ad: L("Ateş"), renk: [], fx: 'ates', nadir: 'efsane', kaynak: paket('paket_ejder') },
+  { id: 'ef_kar', slot: 'efekt', ad: L("Kar Fırtınası"), renk: [], fx: 'kar', nadir: 'efsane', kaynak: paket('paket_buz') },
 ];
 
-export const DEFAULT_EQUIP: Record<CosSlot, string> = { sort: 'sort_klasik', eldiven: 'eld_klasik', cerceve: 'cer_klasik', kemer: 'kem_klasik', giris: 'gir_yok' };
+export const DEFAULT_EQUIP: Record<CosSlot, string> = { sort: 'sort_klasik', eldiven: 'eld_klasik', cerceve: 'cer_klasik', kemer: 'kem_klasik', giris: 'gir_yok', efekt: 'ef_yok' };
 
-export const PACKS: { sku: CosmeticSku; ad: string; aciklama: string; renk: string }[] = [
-  { sku: 'paket_altin', ad: L("Altın Seri"), aciklama: L("Altın şort ve eldiven, altın çerçeve, Kraliyet kemeri ve Epik giriş müziği"), renk: '#d4a017' },
-  { sku: 'paket_sokak', ad: L("Sokak Dövüşçüsü"), aciklama: L("Kamuflaj şort, neon eldiven ve çerçeve, Karbon kemer ve Trap giriş müziği"), renk: '#39ff14' },
-  { sku: 'paket_sultan', ad: L("Sultan"), aciklama: L("Bordo-altın şort, bordo eldiven, Sultan çerçevesi ve kemeri, Mehter giriş müziği"), renk: '#9b2335' },
+export const PACKS: { sku: CosmeticSku; ad: string; aciklama: string; renk: string; nadir: Rarity }[] = [
+  { sku: 'paket_ejder', ad: L("Ejderha"), aciklama: L("Alev desenli şort, ateş eldiveni, Ejderha çerçevesi ve kemeri, kafese ATEŞ efektiyle giriş"), renk: '#ff4500', nadir: 'efsane' },
+  { sku: 'paket_buz', ad: L("Buz Kralı"), aciklama: L("Şimşek desenli buz şortu, buz eldiveni, Buz Kralı çerçevesi ve kemeri, kafese KAR FIRTINASI ile giriş"), renk: '#7fdbff', nadir: 'efsane' },
+  { sku: 'paket_gece', ad: L("Gece Yarısı"), aciklama: L("Yıldız desenli mor şort, mor neon eldiven, Gece Yarısı çerçevesi ve kemeri, ŞİMŞEK giriş efekti"), renk: '#b388ff', nadir: 'epik' },
+  { sku: 'paket_altin', ad: L("Altın Seri"), aciklama: L("Altın şort ve eldiven, altın çerçeve, Kraliyet kemeri ve Epik giriş müziği"), renk: '#d4a017', nadir: 'epik' },
+  { sku: 'paket_sokak', ad: L("Sokak Dövüşçüsü"), aciklama: L("Kamuflaj şort, neon eldiven ve çerçeve, Karbon kemer ve Trap giriş müziği"), renk: '#39ff14', nadir: 'epik' },
+  { sku: 'paket_sultan', ad: L("Sultan"), aciklama: L("Bordo-altın şort, bordo eldiven, Sultan çerçevesi ve kemeri, Mehter giriş müziği"), renk: '#9b2335', nadir: 'epik' },
 ];
 
 export const cosmeticById = (id: string) => COSMETICS.find((x) => x.id === id);
@@ -116,5 +160,6 @@ export function isUnlocked(x: Cosmetic, earned: ReadonlySet<string>, owned: Read
   if (k.tur === 'hazir') return true;
   if (k.tur === 'basari') return earned.has(x.id);
   if (k.tur === 'sampiyon') return owned.has(PREMIUM_SKU);
-  return owned.has(k.sku);
+  // Efsane Koleksiyonu bütün paketleri açar
+  return owned.has(k.sku) || owned.has(BUNDLE_SKU);
 }

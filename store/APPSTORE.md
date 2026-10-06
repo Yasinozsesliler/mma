@@ -34,6 +34,9 @@ App Store Connect → uygulama → **Para Kazanma → Uygulama İçi Satın Alma
 | `sampiyon_paketi` | Reklamsız + 5 kariyer yuvası + Şampiyon çerçevesi | 2,99 $ |
 | `reklamsiz` | Yalnızca geçiş reklamlarını kaldırır | 1,49 $ |
 | `paket_altin`, `paket_sokak`, `paket_sultan` | Kozmetik paketler (güç vermez) | 0,99–1,49 $ |
+| `paket_gece` | Kozmetik paket, epik (güç vermez) | 1,49 $ |
+| `paket_ejder`, `paket_buz` | Kozmetik paketler, efsanevi (güç vermez) | 2,49 $ |
+| `paket_efsane` | Efsane Koleksiyonu: bütün kozmetik paketleri | 5,99 $ |
 
 Her ürüne bir ekran görüntüsü (Dolap ekranı yeterli) ve kısa açıklama eklenir. Ürünler ilk sürümle birlikte incelemeye gönderilir.
 

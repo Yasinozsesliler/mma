@@ -68,8 +68,13 @@ export function useUnlocked() {
 /** Kafesteki dövüşçünün kıyafeti. */
 export function playerKit() {
   const o = ownedSet();
-  const s = equipped('sort', o).renk;
-  return { shorts: s[0], trim: s[1], glove: equipped('eldiven', o).renk[0] };
+  const s = equipped('sort', o);
+  return { shorts: s.renk[0], trim: s.renk[1], glove: equipped('eldiven', o).renk[0], desen: s.desen, desenRenk: s.desenRenk };
+}
+
+/** Kafese giriş efekti (yoksa null). */
+export function walkoutFxNow() {
+  return equipped('efekt', ownedSet()).fx ?? null;
 }
 
 /** Oyuncunun avatar çerçevesi (klasik için null: ekran kendi rengini kullanır). */

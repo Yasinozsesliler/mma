@@ -70,6 +70,10 @@ Para kazanma › Ürünler › **Uygulama içi ürünler** → her satır için 
 | `paket_altin` | Altın Seri | Altın şort, eldiven, çerçeve, Kraliyet kemeri, Epik giriş müziği | 0,99 $ |
 | `paket_sokak` | Sokak Dövüşçüsü | Kamuflaj şort, neon eldiven ve çerçeve, Karbon kemer, Trap giriş müziği | 0,99 $ |
 | `paket_sultan` | Sultan | Bordo-altın şort, bordo eldiven, Sultan çerçevesi ve kemeri, Mehter giriş müziği | 1,49 $ |
+| `paket_gece` | Gece Yarısı (epik) | Yıldız desenli mor şort, mor neon eldiven, Gece Yarısı çerçevesi ve kemeri, Şimşek giriş efekti | 1,49 $ |
+| `paket_ejder` | Ejderha (efsanevi) | Alev desenli şort, ateş eldiveni, Ejderha çerçevesi ve kemeri, Ateş giriş efekti | 2,49 $ |
+| `paket_buz` | Buz Kralı (efsanevi) | Şimşek desenli buz şortu, buz eldiveni, Buz Kralı çerçevesi ve kemeri, Kar Fırtınası giriş efekti | 2,49 $ |
+| `paket_efsane` | Efsane Koleksiyonu | Bütün kozmetik paketleri (6 paket) tek alımda | 5,99 $ |
 
 Hepsi tek seferlik (tüketilmeyen) ürün. Play ülkelere göre yerel fiyat önerir → her birini **Etkinleştir**.
 Kozmetikler yalnızca görünümdür; oyun gücü vermez (Play'in "kazanmak için öde" algısından da uzak durur).

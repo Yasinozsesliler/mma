@@ -8,7 +8,8 @@ import { Animated, Easing, Modal, Pressable, StyleSheet, Text, useWindowDimensio
 import Svg, { Circle, Defs, Ellipse, G, LinearGradient as SvgLinear, Polygon, RadialGradient, Rect, Stop } from 'react-native-svg';
 import { announce, stopAnnounce } from '../announcer';
 import { playWalkout, sfx, walkoutSeconds } from '../audio';
-import { playerKit, walkoutNow } from '../cosmetics';
+import { playerKit, walkoutFxNow, walkoutNow } from '../cosmetics';
+import { WalkoutFx } from './WalkoutFx';
 import { currentOrg } from '../engine/character';
 import { COUNTRIES, ORGS, WEIGHT_CLASSES } from '../engine/data';
 import { oppRecord } from '../engine/opponents';
@@ -259,6 +260,7 @@ export function WalkoutScene({ s, onDone: finish }: { s: GameState; onDone: () =
   const [slam] = useState(() => new Animated.Value(0));
   const [arrived, setArrived] = useState(-1);
   const [pKit] = useState(playerKit);
+  const [fx] = useState(walkoutFxNow);
   const card = cards[i];
   const walking = !!card.side && arrived !== i;
 
@@ -314,6 +316,8 @@ export function WalkoutScene({ s, onDone: finish }: { s: GameState; onDone: () =
         <Spot x={W * 0.25} h={Hh * 0.8} color={card.side === 'o' ? '#9ec5ff' : '#fff1d6'} delay={0} wide={W * 0.5} />
         <Spot x={W * 0.75} h={Hh * 0.8} color={card.side === 'p' ? '#ffb3b8' : '#fff1d6'} delay={1300} wide={W * 0.5} />
         <Flashes w={W} h={Hh} />
+        {/* Oyuncunun kozmetik giriş efekti (yürürken) */}
+        {card.side === 'p' && fx ? <WalkoutFx kind={fx} w={W} h={Hh} /> : null}
         <Text style={[st.led, { top: Hh * 0.36 - Hh * 0.16 + 4, color }]} numberOfLines={1}>
           {org.kisa.toLocaleUpperCase(LOC)}
         </Text>
