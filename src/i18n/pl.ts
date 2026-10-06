@@ -5180,4 +5180,5 @@ export const PL: Record<string, string> = {
   "{0}/{1} başarım": "{0}/{1} osiągnięć",
   "Kart": "Karta",
   "Geçmiş": "Historia",
+  "ÇOK YAKLAŞTIN!": "TAK BLISKO!",
 };

@@ -110,7 +110,7 @@ export interface LiveSim {
   /** Yer dövüşü: üstteki taraf */
   ground: { top: 'p' | 'o'; since: number; /** Üstteki tarafın pozisyon hâkimiyeti 0-1 */ pos: number } | null;
   /** Submission mücadelesi: kilitleyen taraf, kilidin sıkılığı (0 kaçtı … 1 tap), bitiş anı */
-  kilit: { by: 'p' | 'o'; prog: number; until: number; ad: string; lastTap?: number; /** Rakibin bir sonraki kıvranma anı */ nextJolt?: number } | null;
+  kilit: { by: 'p' | 'o'; prog: number; until: number; ad: string; lastTap?: number; /** Rakibin bir sonraki kıvranma anı */ nextJolt?: number; /** Ulaşılan en yüksek sıkılık */ max?: number; /** İmza hareketiyle girildi */ imza?: boolean } | null;
   /** Oyuncunun maç boyunca kaçırdığı kilitler: rakip her seferinde daha uyanık */
   subFails: number;
   cfg: LiveCfg;
@@ -231,14 +231,15 @@ function damage(s: LiveSim, victim: 'p' | 'o', dmg: number, heavy: boolean) {
 
 const SUBS = ['Armbar', 'Rear-naked choke', 'Guillotine', 'Triangle', 'Kimura', "D'Arce"];
 const KILIT_MS = 4000;
-const RATE_BASE = 0.07;
+const RATE_BASE = 0.12;
 const JOLT_MIN = 0.03;
 const JOLT_VAR = 0.05;
 const BIG_P = 0.42;
 
 /** Kilit mücadelesini başlatır: tap için kilitleyen sıkar, savunan kurtulmaya çalışır. */
-function startKilit(s: LiveSim, by: 'p' | 'o', prog: number) {
-  s.kilit = { by, prog: clamp(prog, 0.1, 0.7), until: s.t + KILIT_MS, ad: SUBS[Math.floor(rand() * SUBS.length)], nextJolt: s.t + 500 + rand() * 500 };
+function startKilit(s: LiveSim, by: 'p' | 'o', prog: number, imza = false) {
+  // İlk kıvranma kilit oturduktan sonra gelir: oyuncu basmaya başlamadan kilit çözülmez
+  s.kilit = { by, prog: clamp(prog, 0.1, 0.7), until: s.t + KILIT_MS, ad: SUBS[Math.floor(rand() * SUBS.length)], nextJolt: s.t + 1100 + rand() * 500, max: prog, imza };
   s.o.state = 'idle';
   s.o.stateUntil = s.t + KILIT_MS;
   ev(s, { kind: 'kilit', side: by, alt: s.kilit.ad });
@@ -264,10 +265,12 @@ function stepKilit(s: LiveSim, dt: number) {
   // Rakip ara ara kıvranır: çoğu küçük, bazen sert bir patlama. Taze ve nefesi yerinde rakip daha sık patlar;
   // kaçırılan her kilit onu uyandırır
   if (k.by === 'p' && k.nextJolt != null && s.t >= k.nextJolt) {
-    const big = chance(clamp(BIG_P * (0.15 + 0.85 * (s.o.hp / 100)) * (0.8 + s.o.sta / 250) * (1 + s.subFails * 0.4), 0, 0.85));
-    k.prog = clamp(k.prog - (big ? 0.3 + rand() * 0.2 : JOLT_MIN + rand() * JOLT_VAR), 0, 1);
+    const big = chance(clamp(BIG_P * (0.15 + 0.85 * (s.o.hp / 100)) * (0.8 + s.o.sta / 250) * (1 + s.subFails * 0.4) * (k.imza ? 0.75 : 1), 0, 0.85));
+    // Kıvranma kilidi tek başına açamaz (en az 0.05 kalır): oyuncunun basarak toparlama şansı hep vardır
+    k.prog = Math.max(Math.min(k.prog, 0.05), k.prog - (big ? 0.26 + rand() * 0.18 : JOLT_MIN + rand() * JOLT_VAR));
     k.nextJolt = s.t + 750 + rand() * 900;
   }
+  k.max = Math.max(k.max ?? 0, k.prog);
   if (k.prog >= 1) {
     s.kilit = null;
     submit(s, k.by, 1);
@@ -275,11 +278,12 @@ function stepKilit(s: LiveSim, dt: number) {
   }
   if (k.prog <= 0 || s.t >= k.until) {
     s.kilit = null;
-    ev(s, { kind: 'sub', side: k.by, alt: 'fail' });
+    // Tap'e çok yaklaşıldıysa oyuncuya bildirilir
+    ev(s, { kind: 'sub', side: k.by, alt: k.by === 'p' && (k.max ?? 0) >= 0.75 ? 'yakin' : 'fail' });
     if (k.by === 'p') s.subFails++;
-    if (s.ground) s.ground.pos = 0;
-    // Kaçan taraf çoğu zaman ayağa kalkar
-    if (chance(0.55)) setGround(s, null);
+    // Pozisyonun bir kısmı korunur; kaçan taraf bazen ayağa kalkar
+    if (s.ground) s.ground.pos *= 0.35;
+    if (chance(0.4)) setGround(s, null);
     else {
       s.o.state = 'idle';
       s.o.stateUntil = s.t + 500;
@@ -479,7 +483,7 @@ function special(s: LiveSim) {
     case 'guardCek': {
       // Rakibi guard'a çek ve hemen submission dene; tutmazsa altta kalırsın
       setGround(s, 'o');
-      startKilit(s, 'p', 0.3 + (sp.imza ? 0.06 : 0) + (rocked ? 0.12 : 0) + (1 - o.hp / 100) * 0.15);
+      startKilit(s, 'p', 0.32 + (sp.imza ? 0.1 : 0) + (rocked ? 0.12 : 0) + (1 - o.hp / 100) * 0.15 - s.subFails * 0.05, sp.imza);
       break;
     }
   }

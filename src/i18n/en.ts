@@ -5193,4 +5193,5 @@ export const EN: Record<string, string> = {
   "{0}/{1} başarım": "{0}/{1} achievements",
   "Kart": "Card",
   "Geçmiş": "History",
+  "ÇOK YAKLAŞTIN!": "SO CLOSE!",
 };

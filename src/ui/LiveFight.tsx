@@ -326,8 +326,8 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel }: { fs: FightState; p
         buzz('basari');
         return;
       case 'sub':
-        if (e.alt === 'fail') {
-          flash.show({ puan: 30, metin: e.side === 'p' ? L("KİLİT KAÇTI") : L("KURTULDUN!"), renk: e.side === 'p' ? C.dim : C.gold });
+        if (e.alt === 'fail' || e.alt === 'yakin') {
+          flash.show({ puan: 30, metin: e.side === 'p' ? (e.alt === 'yakin' ? L("ÇOK YAKLAŞTIN!") : L("KİLİT KAÇTI")) : L("KURTULDUN!"), renk: e.side === 'p' ? (e.alt === 'yakin' ? C.orange : C.dim) : C.gold });
           if (ground.current) {
             go('p', base('p'), 300);
             go('o', base('o'), 300);

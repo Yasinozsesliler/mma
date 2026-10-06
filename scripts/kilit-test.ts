@@ -7,7 +7,7 @@ import { STAT_KEYS, type Opponent, type Stats } from '../src/engine/types';
 
 const flat = (v: number) => Object.fromEntries(STAT_KEYS.map((k) => [k, v])) as Stats;
 
-function trial(oHp: number, tps: number, fails: number, yerFark: number): boolean {
+function trial(oHp: number, tps: number, fails: number, yerFark: number, guard = false): boolean {
   const ps = flat(55);
   ps.yer += yerFark;
   const op = { id: 'x', ad: 'R', soyad: 'T', lakap: 'T', uyruk: 'ABD', stil: 'boks', kisilik: '', stats: flat(55), rekor: { g: 1, m: 1, b: 0 }, rank: null, champion: false, rivalry: 0 } as unknown as Opponent;
@@ -16,12 +16,18 @@ function trial(oHp: number, tps: number, fails: number, yerFark: number): boolea
   fs.oHasar = 100 - oHp;
   fs.oKondisyon = 40 + oHp * 0.5;
   fs.pSubFail = fails;
-  const s: LiveSim = liveCreate(fs, oppStatsOf(fs), 0);
+  const s: LiveSim = liveCreate(fs, oppStatsOf(fs), 0, undefined, guard ? { kind: 'guardCek', imza: true } : undefined);
   let t = s.start + 10;
   liveStep(s, t);
-  s.ground = { top: 'p', since: t, pos: 0.6 };
   s.p.busyUntil = 0;
-  liveInput(s, 'sub');
+  if (guard) {
+    // İmza hareketi: guard çek ve hemen kilit
+    s.special!.readyAt = 0;
+    liveInput(s, 'ozel');
+  } else {
+    s.ground = { top: 'p', since: t, pos: 0.6 };
+    liveInput(s, 'sub');
+  }
   if (!s.kilit) return false;
   let next = t;
   while (s.kilit && !s.over && t < s.start + 20000) {
@@ -38,7 +44,7 @@ function trial(oHp: number, tps: number, fails: number, yerFark: number): boolea
 setSeed(7);
 const N = 400;
 console.log('Kilit başarısı % (pozisyon 0.6, eşit yer becerisi)');
-console.log('rakip canı'.padEnd(14) + ['6/sn', '8/sn', '12/sn', '8/sn 1 kaçmış', '8/sn 2 kaçmış', '8/sn +15 yer'].map((x) => x.padStart(15)).join(''));
+console.log('rakip canı'.padEnd(14) + ['6/sn', '8/sn', '12/sn', '8/sn 1 kaçmış', '8/sn 2 kaçmış', '8/sn +15 yer', 'imza guard 7/sn'].map((x) => x.padStart(15)).join(''));
 for (const hp of [100, 75, 50, 30]) {
   const cells = [
     [6, 0, 0],
@@ -47,9 +53,10 @@ for (const hp of [100, 75, 50, 30]) {
     [8, 1, 0],
     [8, 2, 0],
     [8, 0, 15],
-  ].map(([tps, f, y]) => {
+    [7, 0, 0, 1],
+  ].map(([tps, f, y, g]) => {
     let w = 0;
-    for (let i = 0; i < N; i++) if (trial(hp, tps, f, y)) w++;
+    for (let i = 0; i < N; i++) if (trial(hp, tps, f, y, !!g)) w++;
     return `${Math.round((w / N) * 100)}%`.padStart(15);
   });
   console.log(String(hp).padEnd(14) + cells.join(''));
