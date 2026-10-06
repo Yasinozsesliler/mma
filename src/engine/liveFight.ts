@@ -108,9 +108,11 @@ export interface LiveSim {
   /** Sarsılan taraf ve bitiş anı (o sırada saldıramaz, aldığı hasar artar) */
   rocked: { side: 'p' | 'o'; until: number } | null;
   /** Yer dövüşü: üstteki taraf */
-  ground: { top: 'p' | 'o'; since: number; subFails: number; /** Üstteki tarafın pozisyon hâkimiyeti 0-1 */ pos: number } | null;
+  ground: { top: 'p' | 'o'; since: number; /** Üstteki tarafın pozisyon hâkimiyeti 0-1 */ pos: number } | null;
   /** Submission mücadelesi: kilitleyen taraf, kilidin sıkılığı (0 kaçtı … 1 tap), bitiş anı */
-  kilit: { by: 'p' | 'o'; prog: number; until: number; ad: string } | null;
+  kilit: { by: 'p' | 'o'; prog: number; until: number; ad: string; lastTap?: number } | null;
+  /** Oyuncunun maç boyunca kaçırdığı kilitler: rakip her seferinde daha uyanık */
+  subFails: number;
   cfg: LiveCfg;
   events: LiveEvent[];
   over: { kazanan: 'p' | 'o'; yontem: 'KO' | 'TKO' | 'SUB'; t: number } | null;
@@ -171,6 +173,7 @@ export function liveCreate(fs: FightState, oStats: Stats, t0: number, dur = ROUN
     events: [],
     over: null,
     kilit: null,
+    subFails: fs.pSubFail ?? 0,
     special: special ? { ...special, readyAt: t0 + COUNTDOWN + 3000 } : null,
   };
 }
@@ -183,7 +186,7 @@ export const livePos = (s: LiveSim): 'ayakta' | 'ustte' | 'altta' => (!s.ground 
 
 function setGround(s: LiveSim, top: 'p' | 'o' | null) {
   if (top) {
-    s.ground = { top, since: s.t, subFails: 0, pos: 0 };
+    s.ground = { top, since: s.t, pos: 0 };
     ev(s, { kind: 'ground', side: top });
   } else {
     s.ground = null;
@@ -243,7 +246,8 @@ function kilitRate(s: LiveSim) {
   const c = s.cfg;
   if (k.by === 'p') {
     // Taze, yer dövüşünde iyi ve nefesi yerinde rakip hızla kurtulur; yıpranmış rakip zorlanır
-    return clamp(0.2 - c.gr / 250 - c.wr / 600 + (s.o.sta - 60) / 500 - (1 - s.o.hp / 100) * 0.35, 0.06, 0.55);
+    // Kaçırılan her kilit rakibi uyarır: bir sonrakinden daha hızlı kurtulur
+    return clamp(0.28 - c.gr / 300 - c.wr / 900 + (s.o.sta - 60) / 450 - (1 - s.o.hp / 100) * 0.25 + s.subFails * 0.06, 0.15, 0.6);
   }
   return clamp(0.18 - c.gr / 300 + (1 - s.p.hp / 100) * 0.25 + (s.p.sta < 25 ? 0.08 : 0), 0.08, 0.5);
 }
@@ -262,10 +266,8 @@ function stepKilit(s: LiveSim, dt: number) {
   if (k.prog <= 0 || s.t >= k.until) {
     s.kilit = null;
     ev(s, { kind: 'sub', side: k.by, alt: 'fail' });
-    if (s.ground) {
-      s.ground.subFails++;
-      s.ground.pos = 0;
-    }
+    if (k.by === 'p') s.subFails++;
+    if (s.ground) s.ground.pos = 0;
     // Kaçan taraf çoğu zaman ayağa kalkar
     if (chance(0.55)) setGround(s, null);
     else {
@@ -280,7 +282,10 @@ function kilitTap(s: LiveSim) {
   const k = s.kilit!;
   const c = s.cfg;
   // Basış başına etki: yer dövüşü (ve kurtulurken güreş) ile güçlenir; nefes biterse zayıflar
-  const g = (k.by === 'p' ? clamp(0.055 + c.gr / 1000, 0.03, 0.095) : clamp(0.06 + (c.gr + c.wr) / 3000, 0.04, 0.09)) * (s.p.sta < 15 ? 0.6 : 1);
+  // Saniyede ~8 basıştan hızlısı ek güç vermez: kilidi parmak hızı değil, pozisyon ve yıpratma kazandırır
+  const pace = k.lastTap == null ? 1 : clamp((s.t - k.lastTap) / 125, 0, 1);
+  k.lastTap = s.t;
+  const g = (k.by === 'p' ? clamp(0.042 + c.gr / 1400, 0.03, 0.065) : clamp(0.06 + (c.gr + c.wr) / 3000, 0.04, 0.09)) * (s.p.sta < 15 ? 0.6 : 1) * pace;
   s.p.sta = clamp(s.p.sta - 1.2, 0, 100);
   k.prog = clamp(k.prog + (k.by === 'p' ? g : -g), 0, 1);
   // Basış kilidi tamamlarsa hemen tap; kurtulma basışı kilidi açarsa hemen kaçış
@@ -512,7 +517,7 @@ function groundInput(s: LiveSim, k: LiveInput, pos: 'ustte' | 'altta') {
         return;
       }
       // Kilidin başlangıç sıkılığı: pozisyon ve rakibin yıpranmışlığı; her başarısız deneme rakibi uyarır
-      startKilit(s, 'p', 0.22 + g.pos * 0.2 + (1 - o.hp / 100) * 0.15 + (o.state === 'rocked' ? 0.12 : 0) - g.subFails * 0.06);
+      startKilit(s, 'p', 0.22 + g.pos * 0.2 + (1 - o.hp / 100) * 0.15 + (o.state === 'rocked' ? 0.12 : 0) - s.subFails * 0.08);
       return;
     }
     if (k === 'jab' || k === 'direkt') {
@@ -548,7 +553,7 @@ function groundInput(s: LiveSim, k: LiveInput, pos: 'ustte' | 'altta') {
   }
   if (k === 'sub') {
     // Alttan kilit: rakip üstte vururken açık verir; aksi hâlde zayıf başlar
-    startKilit(s, 'p', 0.16 + (o.state === 'windup' ? 0.12 : 0) + (1 - o.hp / 100) * 0.15 - s.ground!.subFails * 0.06);
+    startKilit(s, 'p', 0.16 + (o.state === 'windup' ? 0.12 : 0) + (1 - o.hp / 100) * 0.15 - s.subFails * 0.08);
   }
 }
 
@@ -762,6 +767,8 @@ export interface LiveRoundResult {
   /** Raundun geçen süresi (0-1) */
   oran: number;
   bitis: { kazanan: 'p' | 'o'; yontem: 'KO' | 'TKO' | 'SUB' } | null;
+  /** Maç boyunca kaçırılan kilitler (sonraki raunda taşınır) */
+  subFails: number;
 }
 
 export function liveResult(s: LiveSim): LiveRoundResult {
@@ -780,5 +787,6 @@ export function liveResult(s: LiveSim): LiveRoundResult {
     oCtrl: s.o.ctrl / 1000,
     oran: liveElapsed(s) / s.dur,
     bitis: s.over ? { kazanan: s.over.kazanan, yontem: s.over.yontem } : null,
+    subFails: s.subFails,
   };
 }

@@ -5226,4 +5226,13 @@ export const RU: Record<string, string> = {
   "ÖDÜL": "НАГРАДЫ",
   "Sezonun en iyileri arasında adı okundu.": "Назван среди лучших бойцов сезона.",
   "KEMER VİTRİNİ": "ВИТРИНА ПОЯСОВ",
+  "NO CONTEST": "БЕЗ РЕЗУЛЬТАТА",
+  "R{0} · {1}": "Р{0} · {1}",
+  "puan": "очков",
+  "Temiz": "Чисто",
+  "GECENİN ÖZETİ": "ИТОГИ ВЕЧЕРА",
+  "Daha az göster": "Свернуть",
+  "Tümünü göster (+{0})": "Показать всё (+{0})",
+  "{0} gelişim puanın var": "У тебя {0} очков развития",
+  "DAĞIT": "РАСПРЕДЕЛИТЬ",
 };

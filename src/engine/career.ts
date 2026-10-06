@@ -581,6 +581,9 @@ export function afterPostFight(s: GameState) {
       );
     }
     return;
+  } else if (s.gp && !s.gp.bitti) {
+    // Süren Grand Prix: turnuva bitene kadar teklif, zam, fesih ya da davet gelmez; kontrat turnuva boyunca uzar
+    if (s.contract && s.contract.kalan <= 0) s.contract.kalan = 1;
   } else {
     const cut =
       ((org === 'ufc' && s.seri <= -2 && s.rank == null && !s.sampiyon) || (s.seri <= -3 && !s.sampiyon)) && ownerRel(s) < 25;

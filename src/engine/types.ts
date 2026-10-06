@@ -337,6 +337,8 @@ export interface FightState {
   pHasar: number;
   oHasar: number;
   pKondisyon: number;
+  /** Canlı modda oyuncunun kaçırdığı kilit sayısı (raundlar arası taşınır) */
+  pSubFail?: number;
   oKondisyon: number;
   pPuan: number;
   oPuan: number;

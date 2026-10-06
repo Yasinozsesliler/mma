@@ -820,6 +820,7 @@ export function applyLiveRound(prev: FightState, r: LiveRoundResult): FightState
   fs.oHasar = clamp(100 - r.oHp, 0, 100);
   fs.pKondisyon = clamp(r.pSta, 5, 100);
   fs.oKondisyon = clamp(r.oSta, 5, 100);
+  fs.pSubFail = r.subFails;
   fs.pPuan = r.pLanded * 0.25 + r.pDealt * 0.18 + r.oKd * 3 + r.pCtrl * 0.12;
   fs.oPuan = r.oLanded * 0.25 + r.oDealt * 0.18 + r.pKd * 3 + r.oCtrl * 0.12;
   fs.vurusSira = BEATS;

@@ -12,6 +12,8 @@ const BOTS: Bot[] = [
   { ad: 'iyi', react: 300, dodge: 0.85, interrupt: 0.25, timing: 0.75, tps: 7 },
   { ad: 'uzman', react: 220, dodge: 0.95, interrupt: 0.4, timing: 0.9, tps: 9 },
 ];
+// Telefonda çok hızlı basan oyuncu (hız sınırı testi)
+const HIZLI: Bot = { ...BOTS[2], ad: 'hızlıParmak', tps: 15 };
 
 const statsAt = (lv: number): Stats => Object.fromEntries(STAT_KEYS.map((k) => [k, Math.round(lv + (rand() - 0.5) * 16)])) as Stats;
 const TACS: Tactic[] = ['baski', 'kontra', 'mesafe', 'clinch', 'takedown'];
@@ -194,3 +196,9 @@ for (const k of [...new Set(Object.values(SPECIAL_FOR))]) {
 }
 
 console.log('Kilit tanısı:', JSON.stringify(DIAG));
+for (const [b, prof] of [[BOTS[2], 'denk'], [BOTS[2], 'gurescivsvurus'], [HIZLI, 'gurescivsvurus']] as const) {
+  for (const k of Object.keys(DIAG)) delete DIAG[k];
+  let sub = 0;
+  for (let i = 0; i < N; i++) if (fight(b, 55, 55, prof).sonuc?.yontem === 'SUB') sub++;
+  console.log(`${b.ad} (${b.tps}/sn) ${prof}: SUB ${Math.round((sub / N) * 100)}% · kilit başarısı ${DIAG['sub:p:ok'] ?? 0}/${DIAG['kilit:p:'] ?? 0}`);
+}

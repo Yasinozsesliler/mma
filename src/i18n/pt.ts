@@ -5186,4 +5186,13 @@ export const PT: Record<string, string> = {
   "ÖDÜL": "PRÊMIOS",
   "Sezonun en iyileri arasında adı okundu.": "Seu nome foi chamado entre os melhores da temporada.",
   "KEMER VİTRİNİ": "ESTANTE DE CINTURÕES",
+  "NO CONTEST": "SEM RESULTADO",
+  "R{0} · {1}": "R{0} · {1}",
+  "puan": "pontos",
+  "Temiz": "Ileso",
+  "GECENİN ÖZETİ": "RESUMO DA NOITE",
+  "Daha az göster": "Mostrar menos",
+  "Tümünü göster (+{0})": "Ver tudo (+{0})",
+  "{0} gelişim puanın var": "Você tem {0} pontos de evolução",
+  "DAĞIT": "DISTRIBUIR",
 };
