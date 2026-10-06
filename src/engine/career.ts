@@ -20,7 +20,7 @@ import { maybePodcast } from './podcast';
 import { addCard } from './cards';
 import { addStat, advanceWeeks, currentOrg, fullName, statAverage } from './character';
 import { nemesisAfterFight } from './nemesis';
-import { dwcsReady, uccMilestones } from './uccRoad';
+import { dwcsReady, uccMilestones, unbeatenRun } from './uccRoad';
 import { campCost, randomInjury, startCamp } from './camp';
 import { ORGS, WEIGHT_CLASSES, WEIGHT_MODS } from './data';
 import { methodLabel } from './fight';
@@ -43,6 +43,7 @@ import { socialAfterFight, socialTick } from './social';
 import { merchIncome, restMultiplier } from './shop';
 import { chance, clamp, pick, rand, randInt, uid } from './rng';
 import { performanceRace } from './fightNight';
+import { fightMementos, stampCity } from './memories';
 import { storyRival } from './stories';
 import { generateOpponent } from './opponents';
 import type { GameState, Offer, Opponent, OrgId, StatKey, WeightClass } from './types';
@@ -226,6 +227,7 @@ export function finishFight(s: GameState) {
     sehir,
   });
   lines.push(...visitCity(s, sehir));
+  stampCity(s, sehir);
   offerAppeal(s, r.yontem, won && !caught, draw, `${opp.ad} ${opp.soyad}`, opp.id);
   if (won && !caught) {
     const kart = addCard(s, opp, org, methodLabel(r.yontem));
@@ -446,6 +448,24 @@ export function finishFight(s: GameState) {
     ...interviewTargets(s, won),
   };
   const roportaj = buildInterview(s, ctx);
+  // Müze hatıraları: büyük anlardan kalan eşyalar
+  lines.push(
+    ...fightMementos(s, {
+      won: won && !caught,
+      yontem: r.yontem,
+      rakip: `${opp.ad} ${opp.soyad}`,
+      org,
+      pro,
+      bonus: bonusSay,
+      geriDonus: !!ctx.geriDonus,
+      surpriz: !!ctx.surpriz,
+      savas: !!ctx.savas,
+      ezeli: s.ezeli?.id === opp.id,
+      hikaye: opp.id.startsWith('hikaye-'),
+      unvan: won && opp.champion,
+      savunma: won && wasChampion ? ((s.kemerler ?? []).find((b) => b.aktif && b.org === org)?.savunma ?? 0) : 0,
+    }),
+  );
   const karneSon = pro ? s.rekor : s.amator;
   s.pending.sonrasi = {
     satirlar: lines,
@@ -632,8 +652,15 @@ export function afterPostFight(s: GameState) {
       openOffers(s, 'yenileme', tL("📜 {0} kontratın bitti. Menajerinin telefonu susmuyor.", [ORGS[org].ad]));
       return;
     }
-    // Dean Wyatt iyi bir galibiyetten sonra arayabilir (kontrat ortasında da).
-    if (s.stage === 'buyuk' && won && dwcsReady(s) && s.contract && chance(0.35)) {
+    // Bölgeselde yenilmez seri: büyük organizasyonlar kontratı beklemeden kapıya gelir (4 maçta bir en fazla).
+    if (s.stage === 'bolgesel' && won && s.seri >= 5 && s.contract && s.contract.kalan > 0 && s.gecmis.length - (s.erkenTeklif ?? -99) >= 4) {
+      s.erkenTeklif = s.gecmis.length;
+      openOffers(s, 'yenileme', tL("📞 {0} maçtır yenilmiyorsun. Büyük organizasyonlar kontratını satın almaya hazır!", [s.seri]));
+      return;
+    }
+    // Dean Wyatt iyi bir galibiyetten sonra arayabilir (kontrat ortasında da); yenilmez seride kesin arar.
+    if (s.stage === 'buyuk' && won && dwcsReady(s) && s.contract && (unbeatenRun(s) || chance(0.35)) && s.gecmis.length - (s.erkenTeklif ?? -99) >= 3) {
+      s.erkenTeklif = s.gecmis.length;
       openOffers(s, 'dwcsDavet', tL("📞 Telefon çaldı. Arayan: Dean Wyatt. “Seni izliyorum evlat. Challenger Series’e gel, kendini göster.”"));
       return;
     }
@@ -744,7 +771,7 @@ export function openOffers(s: GameState, kind: OfferKind, metin: string) {
     }
   } else if (kind === 'yenileme') {
     if (s.stage === 'bolgesel') {
-      if (s.sampiyon || (s.rank != null && s.rank <= 3) || (winsInOrg >= 3 && s.populerlik >= 18)) {
+      if (s.sampiyon || (s.rank != null && s.rank <= 3) || (winsInOrg >= 3 && s.populerlik >= 18) || s.seri >= 5) {
         pickN(bigOrgs, 2).forEach((o) => offers.push(makeOffer(s, o, 4)));
         metin += tL(" Büyük organizasyonlar kapıda!");
       }

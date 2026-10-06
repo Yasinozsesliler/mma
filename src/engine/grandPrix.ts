@@ -8,6 +8,7 @@ import { ensureDivision } from './division';
 import { generateOpponent } from './opponents';
 import { chance, shuffle } from './rng';
 import type { GameState, Opponent, OrgId } from './types';
+import { gpMemento } from './memories';
 
 export const GP_PLAYER = 'oyuncu';
 
@@ -136,6 +137,7 @@ export function gpAfterFight(s: GameState, opp: Opponent, won: boolean): string[
       ? tL("Yükseliş Grand Prix'i Şampiyonu ({0})", [WEIGHT_CLASSES[s.fighter.siklet].ad])
       : tL("{0} {1} Grand Prix Şampiyonu", [ORGS[gp.org].kisa, WEIGHT_CLASSES[s.fighter.siklet].ad]);
     s.unvanlar.push(title);
+    gpMemento(s, title);
     s.haberler.unshift(tL("🏆 {0}, {1} oldu! Ödül: ${2}", [s.fighter.soyad, title, gp.odul.toLocaleString(LOC)]));
     lines.push(tL("🏆 GRAND PRIX ŞAMPİYONU! Ödül ${0}, popülerlik +8.", [gp.odul.toLocaleString(LOC)]));
   } else lines.push(tL("🏆 Grand Prix: {0} kazanıldı! Sıradaki: {1}.", [ROUND_NAME()[tur].toLocaleLowerCase(LOC), ROUND_NAME()[tur + 1].toLocaleLowerCase(LOC)]));

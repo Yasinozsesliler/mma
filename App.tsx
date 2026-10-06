@@ -50,6 +50,10 @@ import { CrossoverScreen } from './src/ui/CrossoverScreen';
 import { StreamScreen } from './src/ui/StreamScreen';
 import { StyleScreen } from './src/ui/StyleScreen';
 import { WorldMapScreen } from './src/ui/WorldMapScreen';
+import { HomeScreen } from './src/ui/HomeScreen';
+import { MuseumScreen } from './src/ui/MuseumScreen';
+import { PassportScreen } from './src/ui/PassportScreen';
+import { LuxuryScreen } from './src/ui/LuxuryScreen';
 import { KafesEviScreen } from './src/ui/KafesEviScreen';
 import { FanClubScreen } from './src/ui/FanClubScreen';
 import { FadeIn } from './src/ui/anim';
@@ -103,6 +107,11 @@ const PHASE_LABELS: Record<Phase, string> = {
   kafesEvi: L("Kafes Evi"),
   kulup: L("Taraftar Kulübü"),
   emeklilik: L("Emeklilik"),
+  evim: L("Evim"),
+  muze: L("Hatıralar"),
+  pasaport: L("Pasaport"),
+  luks: L("Lüks Koleksiyon"),
+  tatil: L("Tatil"),
 };
 
 type View_ = 'loading' | 'menu' | 'create' | 'game' | 'daily' | 'locker';
@@ -383,6 +392,21 @@ export default function App() {
         break;
       case 'harita':
         content = <WorldMapScreen {...props} />;
+        break;
+      case 'evim':
+        content = <HomeScreen {...props} />;
+        break;
+      case 'muze':
+        content = <MuseumScreen {...props} />;
+        break;
+      case 'pasaport':
+        content = <PassportScreen {...props} />;
+        break;
+      case 'luks':
+        content = <LuxuryScreen {...props} />;
+        break;
+      case 'tatil':
+        content = <ShopScreen {...props} start="tatil" />;
         break;
       case 'kutlama':
         content = game.kutlama ? <CelebrationScreen {...props} /> : <HubScreen {...props} />;

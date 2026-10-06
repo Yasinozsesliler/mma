@@ -6,6 +6,7 @@ import { gymsFor } from './gyms';
 import { applyGym } from './team';
 import { OWNER_EVENTS } from './owners';
 import { chooseStory, storyEvent } from './stories';
+import { chooseFamily, familyMoment } from './family';
 import { banned, dopingActive, dopingCost, DOPING_FIGHTS, takeDoping } from './doping';
 import { chance, clamp, fill, pick, rand, weighted } from './rng';
 import type { GameState } from './types';
@@ -388,6 +389,13 @@ export function maybeEvent(s: GameState) {
     s.phase = 'event';
     return;
   }
+  // Aile anı (çocuğun ilk adımı, okulun ilk günü…)
+  const fm = familyMoment(s);
+  if (fm) {
+    s.pending.olay = fm;
+    s.phase = 'event';
+    return;
+  }
   if (!chance(0.65)) {
     s.phase = 'hub';
     return;
@@ -406,7 +414,7 @@ export function maybeEvent(s: GameState) {
 
 export function chooseEvent(s: GameState, idx: number) {
   const ev = s.pending.olay!;
-  ev.sonuc = ev.id.startsWith('hikaye:') ? chooseStory(s, idx) : EVENTS[ev.id].uygula(s, idx, ev.params);
+  ev.sonuc = ev.id.startsWith('hikaye:') ? chooseStory(s, idx) : ev.id.startsWith('aile:') ? chooseFamily(s, idx) : EVENTS[ev.id].uygula(s, idx, ev.params);
   s.haberler.unshift(`${ev.baslik}: ${ev.sonuc}`);
 }
 

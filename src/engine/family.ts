@@ -4,7 +4,8 @@ import { L, LOC } from '../i18n';
 import { COUNTRIES, NAME_POOLS } from './data';
 import { addFollowers, followers } from './fame';
 import { chance, clamp, pick } from './rng';
-import type { GameState, Stats } from './types';
+import { addMemento } from './memories';
+import type { GameEventState, GameState, Stats } from './types';
 
 export interface Child {
   ad: string;
@@ -35,6 +36,7 @@ export function propose(s: GameState, buyuk: boolean): string {
   r.durum = 'evli';
   r.hafta = s.hafta;
   s.motivasyon = 2;
+  addMemento(s, { id: 'dugun', tur: 'aile', ad: L("{0} ile düğün günü", [r.ad]), metin: buyuk ? L("Bütün şehrin geldiği görkemli düğün") : L("Sade, sıcak bir nikâh"), nadir: 'efsane', kat: 'aile' });
   if (buyuk) {
     s.populerlik = clamp(s.populerlik + 3, 0, 100);
     addFollowers(s, followers(s) * 0.05);
@@ -76,6 +78,7 @@ export function familyTick(s: GameState, weeks: number) {
   const kiz = chance(0.5);
   const ad = childName(s, kiz);
   s.cocuklar = [...kids, { ad, kiz, hafta: s.hafta }];
+  addMemento(s, { id: `aile_dogum_${kids.length}`, tur: 'aile', ad: kiz ? L("Kızın {0} dünyaya geldi", [ad]) : L("Oğlun {0} dünyaya geldi", [ad]), metin: L("Hayatının en güzel günü"), nadir: 'efsane', kat: 'aile' });
   s.motivasyon = 2;
   s.haberler.unshift(kiz ? L("👶 Kızın {0} dünyaya geldi! Hayatının en güzel günü.", [ad]) : L("👶 Oğlun {0} dünyaya geldi! Hayatının en güzel günü.", [ad]));
 }
@@ -99,3 +102,125 @@ export function familyCosts(s: GameState): string[] {
 
 /** Hanedan: büyük çocuğun adı yeni kariyere önerilir. */
 export const heirName = (s: GameState) => (s.cocuklar ?? [])[0]?.ad;
+
+// ---------- Aile anları ----------
+// Çocuklar büyüdükçe kısa sahneler: ilk adım, ilk kelime, tribünde ilk maç, okulun ilk günü, ilk kuşak.
+// Her an bir kez gelir ve aile albümüne fotoğraf olarak düşer.
+type An = {
+  id: string;
+  /** Çocuğun en az kaç haftalık olması gerektiği */
+  yas: number;
+  baslik: () => string;
+  metin: (ad: string, s: GameState) => string;
+  secenekler: () => string[];
+  uygula: (s: GameState, i: number, ad: string) => string;
+  foto: (ad: string) => string;
+};
+
+const mot = (s: GameState, d: number) => (s.motivasyon = clamp(s.motivasyon + d, -2, 2));
+const pop = (s: GameState, d: number) => (s.populerlik = clamp(s.populerlik + d, 0, 100));
+
+const ANLAR: An[] = [
+  {
+    id: 'adim',
+    yas: 52,
+    baslik: () => L("👣 İlk Adım"),
+    metin: (ad) => L("{0} salonun ortasında, kanepeden sana doğru üç adım attı ve kucağına düştü. Telefon kayıttaydı.", [ad]),
+    secenekler: () => [L("Videoyu paylaş"), L("Aile arasında kalsın")],
+    uygula: (s, i) => {
+      if (i === 0) {
+        const d = addFollowers(s, Math.max(300, followers(s) * 0.02));
+        pop(s, 1);
+        return L("Video bir gecede milyonlara ulaştı. Popülerlik +1, +{0} takipçi.", [Math.round(d).toLocaleString(LOC)]);
+      }
+      mot(s, 1);
+      return L("Bu an yalnızca sizin. Videoyu her antrenmandan önce izliyorsun. Motivasyon +1.");
+    },
+    foto: (ad) => L("{0} ilk adımlarını atıyor", [ad]),
+  },
+  {
+    id: 'kelime',
+    yas: 78,
+    baslik: () => L("🗣️ İlk Kelime"),
+    metin: (ad, s) => L("Herkes “{0}” demesini bekliyordu. {1} televizyonda maçını görünce bağırdı: “Kafes!”", [s.fighter.kadin ? L("anne") : L("baba"), ad]),
+    secenekler: () => [L("Gülmekten yerlere yat"), L("Bir de “kemer” demeyi öğret")],
+    uygula: (s, i) => {
+      mot(s, 1);
+      return i === 0 ? L("Bütün aile gözyaşları içinde güldü. Motivasyon +1.") : L("İkinci kelime de geldi: “Kemer!” Motivasyon +1.");
+    },
+    foto: (ad) => L("{0} ve ilk kelimesi: “Kafes!”", [ad]),
+  },
+  {
+    id: 'tribun',
+    yas: 156,
+    baslik: () => L("🏟️ Tribünde İlk Kez"),
+    metin: (ad) => L("{0} artık üç yaşında ve bir sonraki maçını tribünden izlemek istiyor. Kulaklığı ve minik formasını şimdiden hazırlamış.", [ad]),
+    secenekler: () => [L("Ön sıraya bilet al"), L("Daha küçük, evden izlesin")],
+    uygula: (s, i, ad) => {
+      if (i === 0) {
+        mot(s, 2);
+        pop(s, 1);
+        return L("Kafese yürürken onu ön sırada gördün. Kulaklıkları kafasından büyüktü. Motivasyon +2, popülerlik +1.");
+      }
+      mot(s, 1);
+      return L("{0} maçı evden izledi ve televizyonun önünde senin hareketlerini taklit etti. Motivasyon +1.", [ad]);
+    },
+    foto: (ad) => L("Tribündeki en küçük taraftar: {0}", [ad]),
+  },
+  {
+    id: 'okul',
+    yas: 312,
+    baslik: () => L("🎒 Okulun İlk Günü"),
+    metin: (ad) => L("{0} bugün okula başlıyor. Aynı sabah sponsorunun basın toplantısı var.", [ad]),
+    secenekler: () => [L("Okula sen götür"), L("Basın toplantısına git")],
+    uygula: (s, i, ad) => {
+      if (i === 0) {
+        mot(s, 2);
+        return L("Kapıda elini bırakmak istemedi. Sonra arkasına bakmadan koştu. Motivasyon +2.");
+      }
+      pop(s, 2);
+      mot(s, -1);
+      return L("Toplantı iyi geçti ama akşam {0} sana bütün günü tek tek anlattı ve sen orada değildin. Popülerlik +2, motivasyon -1.", [ad]);
+    },
+    foto: (ad) => L("{0} okulun ilk gününde", [ad]),
+  },
+  {
+    id: 'kusak',
+    yas: 416,
+    baslik: () => L("🥋 İlk Kuşak"),
+    metin: (ad) => L("{0} çocuk judo kursunda ilk kuşağını aldı. Törende hocasına değil, tribündeki sana dönüp eğildi.", [ad]),
+    secenekler: () => [L("Kuşağını sen bağla"), L("Kenardan alkışla")],
+    uygula: (s, i) => {
+      mot(s, 2);
+      return i === 0 ? L("Kuşağı bağlarken ellerin titredi. Hiçbir kemer böyle hissettirmemişti. Motivasyon +2.") : L("Salonun en yüksek alkışı seninkiydi. Motivasyon +2.");
+    },
+    foto: (ad) => L("{0} ilk kuşağıyla", [ad]),
+  },
+];
+
+/** Zamanı gelen bir aile anı varsa olay olarak döndürür. */
+export function familyMoment(s: GameState): GameEventState | null {
+  const kids = s.cocuklar ?? [];
+  const done = new Set(s.aileAn ?? []);
+  for (let i = 0; i < kids.length; i++) {
+    const age = s.hafta - kids[i].hafta;
+    // Zamanı çoktan geçmiş anlar (eski kayıtlar, uzun aralar) sessizce atlanır: 4 yaşındaki çocuğa "ilk adım" gelmesin.
+    const gecmis = ANLAR.filter((a) => age > a.yas + 60 && !done.has(`${i}:${a.id}`));
+    if (gecmis.length) s.aileAn = [...(s.aileAn ?? []), ...gecmis.map((a) => `${i}:${a.id}`)];
+    const an = ANLAR.find((a) => age >= a.yas && age <= a.yas + 60 && !done.has(`${i}:${a.id}`));
+    if (an) return { id: `aile:${i}:${an.id}`, baslik: an.baslik(), metin: an.metin(kids[i].ad, s), secenekler: an.secenekler(), params: {} };
+  }
+  return null;
+}
+
+/** Aile anında seçim: etkiler, albüme fotoğraf. */
+export function chooseFamily(s: GameState, idx: number): string {
+  const [, iStr, anId] = s.pending.olay!.id.split(':');
+  const i = Number(iStr);
+  const kid = (s.cocuklar ?? [])[i];
+  const an = ANLAR.find((a) => a.id === anId);
+  s.aileAn = [...(s.aileAn ?? []), `${i}:${anId}`];
+  if (!kid || !an) return '';
+  addMemento(s, { id: `aile_${i}_${anId}`, tur: 'aile', ad: an.foto(kid.ad), metin: an.baslik().replace(/^\S+\s/, ''), nadir: 'ozel', kat: 'aile' });
+  return an.uygula(s, idx, kid.ad);
+}

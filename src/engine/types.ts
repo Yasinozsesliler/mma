@@ -185,6 +185,20 @@ export interface Team {
   menajerPay: number; // 0-0.2
 }
 
+// ---------- Hatıralar ----------
+export type HatiraTur = 'eldiven' | 'sort' | 'foto' | 'poster' | 'cek' | 'bandaj' | 'kemer' | 'kupa' | 'madalya' | 'kartpostal' | 'aile' | 'hediye';
+export interface Hatira {
+  id: string;
+  tur: HatiraTur;
+  ad: string;
+  metin: string;
+  nadir: 'siradan' | 'ozel' | 'efsane';
+  /** Müze (maç), tatil kartpostalı ya da aile albümü */
+  kat: 'muze' | 'tatil' | 'aile';
+  hafta: number;
+  yas: number;
+}
+
 // ---------- Dövüş gecesi ----------
 export interface NightBout {
   a: string;
@@ -487,7 +501,12 @@ export type Phase =
   | 'harita'
   | 'kafesEvi'
   | 'kulup'
-  | 'emeklilik';
+  | 'emeklilik'
+  | 'evim'
+  | 'muze'
+  | 'pasaport'
+  | 'luks'
+  | 'tatil';
 
 export interface Istat {
   enIyiSeri: number;
@@ -596,6 +615,18 @@ export interface GameState {
   /** Süren kariyer hikâyesi ve bitenler (stories.ts). */
   hikaye?: { id: string; adim: number; zaman: number; veri: Record<string, string | number> } | null;
   hikayeler?: string[];
+  /** Müze hatıraları, tatil kartpostalları ve aile fotoğrafları (memories.ts) */
+  hatiralar?: Hatira[];
+  /** Pasaport damgaları: şehir (ya da tatil_*) → ilk ziyaret */
+  damgalar?: Record<string, { hafta: number; sonuc?: 'G' | 'M' | 'B'; tatil?: boolean }>;
+  /** Lüks koleksiyon (luxury.ts): alış fiyatı ve haftası */
+  luks?: { id: string; alis: number; hafta: number }[];
+  /** Ödülü alınmış albüm setleri */
+  albumSet?: string[];
+  /** Görülmüş aile anları (family.ts) */
+  aileAn?: string[];
+  /** Kontrat bitmeden gelen son erken teklif (maç sayısı) */
+  erkenTeklif?: number;
   /** Hikâye bölümlerinde yapılan seçimler (profilde günlük olarak) */
   hikayeKayit?: Record<string, { bolumler: { baslik: string; secim: string; sonuc: string }[]; bitti?: boolean }>;
   hikayeSon?: number;

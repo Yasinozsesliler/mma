@@ -84,8 +84,8 @@ function ItemCard({ s, it, act, onMsg }: { s: GameState; it: ShopItem; act: Act;
   );
 }
 
-export function ShopScreen({ s, act }: { s: GameState; act: Act }) {
-  const [tab, setTab] = useState<Tab>('ekipman');
+export function ShopScreen({ s, act, start = 'ekipman' }: { s: GameState; act: Act; start?: Tab }) {
+  const [tab, setTab] = useState<Tab>(start);
   const [alt, setAlt] = useState<NonNullable<ShopItem['alt']>>('ev');
   const [msg, setMsg] = useState<string | null>(null);
   const items = SHOP.filter((i) => i.kategori === tab && (tab !== 'yasam' || (i.alt ?? 'diger') === alt)).sort((a, b) => a.fiyat - b.fiyat);

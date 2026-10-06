@@ -63,6 +63,7 @@ export const COSMETICS: Cosmetic[] = [
   { id: 'sort_altin', slot: 'sort', ad: L("Altın"), renk: ['#d4a017', '#15161a'], kaynak: paket('paket_altin') },
   { id: 'sort_sokak', slot: 'sort', ad: L("Kamuflaj"), renk: ['#4b5320', '#c2b280'], kaynak: paket('paket_sokak') },
   { id: 'sort_sultan', slot: 'sort', ad: L("Sultan"), renk: ['#7b1e2b', '#f2c14e'], kaynak: paket('paket_sultan') },
+  { id: 'sort_parlak', slot: 'sort', ad: L("Hologram"), renk: ['#7fdbff', '#c86bff'], desen: 'yildiz', desenRenk: '#ffffff', nadir: 'efsane', kaynak: basari(L("Kart Albümü: Parlak Kartlar setini tamamla"), (c) => c.ozel.includes('sort_parlak')) },
   { id: 'sort_kar', slot: 'sort', ad: L("Kar Beyazı"), renk: ['#f4f8ff', '#c1121f'], kaynak: basari(L("Yılbaşı Kupası etkinliği (sınırlı süre)"), (c) => c.ozel.includes('sort_kar')) },
   { id: 'sort_balkabagi', slot: 'sort', ad: L("Balkabağı"), renk: ['#f77f00', '#111111'], kaynak: basari(L("Korku Gecesi etkinliği (sınırlı süre)"), (c) => c.ozel.includes('sort_balkabagi')) },
   // Eldiven
@@ -76,6 +77,7 @@ export const COSMETICS: Cosmetic[] = [
   { id: 'eld_gece', slot: 'eldiven', ad: L("Mor Neon"), renk: ['#8b5cf6'], kaynak: paket('paket_gece') },
   { id: 'eld_ejder', slot: 'eldiven', ad: L("Ateş"), renk: ['#ff4500'], nadir: 'efsane', kaynak: paket('paket_ejder') },
   { id: 'eld_buz', slot: 'eldiven', ad: L("Buz"), renk: ['#9ad9ff'], nadir: 'efsane', kaynak: paket('paket_buz') },
+  { id: 'eld_avci', slot: 'eldiven', ad: L("Şampiyon Avcısı"), renk: ['#d4a017'], nadir: 'epik', kaynak: basari(L("Kart Albümü: Şampiyon Avcısı setini tamamla"), (c) => c.ozel.includes('eld_avci')) },
   { id: 'eld_kalp', slot: 'eldiven', ad: L("Kalp"), renk: ['#ff5c8a'], kaynak: basari(L("Sevgililer Günü etkinliği (sınırlı süre)"), (c) => c.ozel.includes('eld_kalp')) },
   // Avatar çerçevesi (klasik: kemer varsa altın, yoksa kırmızı)
   { id: 'cer_klasik', slot: 'cerceve', ad: L("Klasik"), renk: [], kaynak: hazir },
@@ -89,6 +91,7 @@ export const COSMETICS: Cosmetic[] = [
   { id: 'cer_gece', slot: 'cerceve', ad: L("Gece Yarısı"), renk: ['#b388ff'], kaynak: paket('paket_gece') },
   { id: 'cer_ejder', slot: 'cerceve', ad: L("Ejderha"), renk: ['#ff3d00'], nadir: 'efsane', kaynak: paket('paket_ejder') },
   { id: 'cer_buz', slot: 'cerceve', ad: L("Buz Kralı"), renk: ['#7fdbff'], nadir: 'efsane', kaynak: paket('paket_buz') },
+  { id: 'cer_koleksiyoncu', slot: 'cerceve', ad: L("Koleksiyoncu"), renk: ['#c86bff'], nadir: 'epik', kaynak: basari(L("Kart Albümü'nde 3 set tamamla"), (c) => c.ozel.includes('cer_koleksiyoncu')) },
   { id: 'cer_gunes', slot: 'cerceve', ad: L("Güneş"), renk: ['#ffb703'], kaynak: basari(L("Yaz Festivali etkinliği (sınırlı süre)"), (c) => c.ozel.includes('cer_gunes')) },
   // Kemer kaplaması (klasik: organizasyonun kendi renkleri)
   { id: 'kem_klasik', slot: 'kemer', ad: L("Organizasyon rengi"), renk: [], kaynak: hazir },

@@ -5,6 +5,7 @@ import { L, LOC } from '../i18n';
 import { clamp } from './rng';
 import { addStat, advanceWeeks } from './character';
 import { VACATIONS } from './gyms';
+import { vacationMemento } from './memories';
 import { bump } from './istat';
 import { lifestylePost, socialTick } from './social';
 import { staffCut, staffInjury, staffMotivation, staffRest } from './staff';
@@ -220,6 +221,7 @@ export function takeVacation(s: GameState, id: string): string {
     if (got) kayip.push(`${got} ${({ kondisyon: L("Kondisyon"), hiz: L("Hız"), iq: 'IQ' } as Record<string, string>)[k] ?? k}`);
   });
   s.populerlik = clamp(s.populerlik + v.populerlik, 0, 100);
+  vacationMemento(s, v.id, v.ad);
   s.haberler.unshift(L("🛍️ {0}: {1} hafta tatil. Sağlık {2}/100.{3} {4}", [v.ad, v.hafta, s.saglik, v.populerlik ? L(" Popülerlik +{0}.", [v.populerlik]) : '', notes.join(' ')]).trim());
   const mot = v.motivasyon ? L(", motivasyon {0}{1}", [v.motivasyon > 0 ? '+' : '', v.motivasyon]) : '';
   return L("{0} bitti. Sağlık +{1}{2}{3}.{4}", [v.ad, gain, mot, v.populerlik ? L(", popülerlik +{0}", [v.populerlik]) : '', kayip.length ? L("\n⚠️ Disiplin bozuldu, form kaybı: {0}.", [kayip.join(', ')]) : '']);
