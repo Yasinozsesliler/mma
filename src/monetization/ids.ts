@@ -19,7 +19,7 @@ import { TestIds } from 'react-native-google-mobile-ads';
 const REAL_BY_OS = {
   android: {
     rewarded: 'ca-app-pub-6387108639379747/4985012523',
-    interstitial: '', // örn. 'ca-app-pub-1234567890123456/2222222222'
+    interstitial: 'ca-app-pub-6387108639379747/8893212804',
   },
   ios: {
     rewarded: '', // AdMob › iOS uygulaması › Ödüllü birim
