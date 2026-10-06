@@ -110,7 +110,7 @@ export interface LiveSim {
   /** Yer dövüşü: üstteki taraf */
   ground: { top: 'p' | 'o'; since: number; /** Üstteki tarafın pozisyon hâkimiyeti 0-1 */ pos: number } | null;
   /** Submission mücadelesi: kilitleyen taraf, kilidin sıkılığı (0 kaçtı … 1 tap), bitiş anı */
-  kilit: { by: 'p' | 'o'; prog: number; until: number; ad: string; lastTap?: number } | null;
+  kilit: { by: 'p' | 'o'; prog: number; until: number; ad: string; lastTap?: number; /** Rakibin bir sonraki kıvranma anı */ nextJolt?: number } | null;
   /** Oyuncunun maç boyunca kaçırdığı kilitler: rakip her seferinde daha uyanık */
   subFails: number;
   cfg: LiveCfg;
@@ -231,10 +231,14 @@ function damage(s: LiveSim, victim: 'p' | 'o', dmg: number, heavy: boolean) {
 
 const SUBS = ['Armbar', 'Rear-naked choke', 'Guillotine', 'Triangle', 'Kimura', "D'Arce"];
 const KILIT_MS = 4000;
+const RATE_BASE = 0.07;
+const JOLT_MIN = 0.03;
+const JOLT_VAR = 0.05;
+const BIG_P = 0.42;
 
 /** Kilit mücadelesini başlatır: tap için kilitleyen sıkar, savunan kurtulmaya çalışır. */
 function startKilit(s: LiveSim, by: 'p' | 'o', prog: number) {
-  s.kilit = { by, prog: clamp(prog, 0.1, 0.7), until: s.t + KILIT_MS, ad: SUBS[Math.floor(rand() * SUBS.length)] };
+  s.kilit = { by, prog: clamp(prog, 0.1, 0.7), until: s.t + KILIT_MS, ad: SUBS[Math.floor(rand() * SUBS.length)], nextJolt: s.t + 500 + rand() * 500 };
   s.o.state = 'idle';
   s.o.stateUntil = s.t + KILIT_MS;
   ev(s, { kind: 'kilit', side: by, alt: s.kilit.ad });
@@ -245,9 +249,8 @@ function kilitRate(s: LiveSim) {
   const k = s.kilit!;
   const c = s.cfg;
   if (k.by === 'p') {
-    // Taze, yer dövüşünde iyi ve nefesi yerinde rakip hızla kurtulur; yıpranmış rakip zorlanır
-    // Kaçırılan her kilit rakibi uyarır: bir sonrakinden daha hızlı kurtulur
-    return clamp(0.28 - c.gr / 300 - c.wr / 900 + (s.o.sta - 60) / 450 - (1 - s.o.hp / 100) * 0.25 + s.subFails * 0.06, 0.15, 0.6);
+    // Sürekli gevşetme: taze, yer dövüşünde iyi ve nefesi yerinde rakip daha hızlı; asıl kurtulma kıvranmalarla gelir
+    return clamp(RATE_BASE - c.gr / 350 - c.wr / 1000 + (s.o.sta - 60) / 600 - (1 - s.o.hp / 100) * 0.12 + s.subFails * 0.03, 0.04, 0.4);
   }
   return clamp(0.18 - c.gr / 300 + (1 - s.p.hp / 100) * 0.25 + (s.p.sta < 25 ? 0.08 : 0), 0.08, 0.5);
 }
@@ -258,6 +261,13 @@ function stepKilit(s: LiveSim, dt: number) {
   const r = kilitRate(s);
   // Oyuncu kilitliyorsa rakip gevşetir (prog düşer); rakip kilitliyorsa sıkar (prog artar)
   k.prog = clamp(k.prog + (k.by === 'p' ? -r : r) * (dt / 1000), 0, 1);
+  // Rakip ara ara kıvranır: çoğu küçük, bazen sert bir patlama. Taze ve nefesi yerinde rakip daha sık patlar;
+  // kaçırılan her kilit onu uyandırır
+  if (k.by === 'p' && k.nextJolt != null && s.t >= k.nextJolt) {
+    const big = chance(clamp(BIG_P * (0.15 + 0.85 * (s.o.hp / 100)) * (0.8 + s.o.sta / 250) * (1 + s.subFails * 0.4), 0, 0.85));
+    k.prog = clamp(k.prog - (big ? 0.3 + rand() * 0.2 : JOLT_MIN + rand() * JOLT_VAR), 0, 1);
+    k.nextJolt = s.t + 750 + rand() * 900;
+  }
   if (k.prog >= 1) {
     s.kilit = null;
     submit(s, k.by, 1);
@@ -283,10 +293,10 @@ function kilitTap(s: LiveSim) {
   const c = s.cfg;
   // Basış başına etki: yer dövüşü (ve kurtulurken güreş) ile güçlenir; nefes biterse zayıflar
   // Saniyede ~8 basıştan hızlısı ek güç vermez: kilidi parmak hızı değil, pozisyon ve yıpratma kazandırır
-  const pace = k.lastTap == null ? 1 : clamp((s.t - k.lastTap) / 125, 0, 1);
+  const pace = k.lastTap == null ? 1 : clamp((s.t - k.lastTap) / 140, 0, 1);
   k.lastTap = s.t;
-  const g = (k.by === 'p' ? clamp(0.042 + c.gr / 1400, 0.03, 0.065) : clamp(0.06 + (c.gr + c.wr) / 3000, 0.04, 0.09)) * (s.p.sta < 15 ? 0.6 : 1) * pace;
-  s.p.sta = clamp(s.p.sta - 1.2, 0, 100);
+  const g = (k.by === 'p' ? clamp(0.059 + c.gr / 2500, 0.04, 0.082) : clamp(0.06 + (c.gr + c.wr) / 3000, 0.04, 0.09)) * (s.p.sta < 15 ? 0.6 : 1) * pace;
+  s.p.sta = clamp(s.p.sta - 0.6, 0, 100);
   k.prog = clamp(k.prog + (k.by === 'p' ? g : -g), 0, 1);
   // Basış kilidi tamamlarsa hemen tap; kurtulma basışı kilidi açarsa hemen kaçış
   if (k.prog >= 1 || k.prog <= 0) stepKilit(s, 0);

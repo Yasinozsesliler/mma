@@ -3,6 +3,7 @@
 import { L, LOC } from '../i18n';
 import { currentOrg } from './character';
 import { BACKGROUNDS, COUNTRIES, ORGS, WEIGHT_CLASSES } from './data';
+import { AWARD_NAMES } from './awards';
 import { legacyScore, legacyTier } from './legacy';
 import { nemesisScore } from './nemesis';
 import type { FightHistory, GameState, OrgId } from './types';
@@ -13,6 +14,8 @@ export type WikiPage = {
   ozet: string;
   bilgi: [string, string][];
   bolumler: { baslik: string; metin: string }[];
+  /** Şampiyonluklar ve başarılar: alt başlık ve madde listesi */
+  basarilar: { baslik: string; maddeler: string[] }[];
   kayit: FightHistory[];
 };
 
@@ -74,6 +77,7 @@ export function wikiOf(s: GameState): WikiPage {
     [L("Amatör rekor"), `${s.amator.g}-${s.amator.m}-${s.amator.b}`],
     ...(!emekli && s.stage !== 'amator' ? ([[L("Organizasyon"), org === 'amator' ? L("Serbest oyuncu") : ORGS[org].ad]] as [string, string][]) : []),
     ...(kemerler.length ? ([[L("Unvanlar"), String(kemerler.length)]] as [string, string][]) : []),
+    ...((s.oduller ?? []).length ? ([[L("Yıl sonu ödülleri"), String((s.oduller ?? []).length)]] as [string, string][]) : []),
     [L("Durum"), emekli ? L("Emekli") : L("Aktif")],
   ];
 
@@ -130,5 +134,28 @@ export function wikiOf(s: GameState): WikiPage {
     metin: L("Uzmanlar onu “{0}” olarak değerlendiriyor. Efsane puanı {1}; {2} başarım kazandı.", [legacyTier(skor).ad.toLocaleLowerCase(LOC), skor, (s.basarimlar ?? []).length]),
   });
 
-  return { baslik: ad, lakap: f.lakap, ozet, bilgi, bolumler, kayit: s.gecmis.filter((h) => h.org !== 'amator').slice(0, 15) };
+  // Şampiyonluklar ve başarılar
+  const basarilar: { baslik: string; maddeler: string[] }[] = [];
+  const kemerAdi = (b: (typeof kemerler)[number]) => L("{0} {1} Sıklet Şampiyonu", [ORGS[b.org].ad, WEIGHT_CLASSES[b.siklet].ad]);
+  if (kemerler.length) {
+    basarilar.push({
+      baslik: L("Şampiyonluk kemerleri"),
+      maddeler: kemerler.map((b) =>
+        [kemerAdi(b), L("{0} yaşında", [b.yas]), b.savunma ? L("{0} savunma", [b.savunma]) : '', b.aktif ? L("halen elinde") : ''].filter(Boolean).join(' · '),
+      ),
+    });
+  }
+  // Kemer ünvanları yukarıda; buraya yalnızca Grand Prix ve crossover zaferleri (her dilde bu kelimeler geçer)
+  const turnuva = (s.unvanlar ?? []).filter((u) => /grand prix|гран-при|crossover|кроссовер/i.test(u));
+  if (s.kafesEvi?.sonuc === 'sampiyon') turnuva.unshift(L("Kafes Evi realite şovu şampiyonu"));
+  if (turnuva.length) basarilar.push({ baslik: L("Turnuvalar ve özel zaferler"), maddeler: turnuva });
+  const od = s.oduller ?? [];
+  if (od.length) {
+    basarilar.push({
+      baslik: L("Yıl sonu ödülleri"),
+      maddeler: od.map((o) => `${AWARD_NAMES[o.kat]()} · ${o.yil != null ? L("{0}. yıl", [o.yil]) : L("{0} yaş", [o.yas])}${o.not ? ` (${o.not})` : ''}`),
+    });
+  }
+
+  return { baslik: ad, lakap: f.lakap, ozet, bilgi, bolumler, basarilar, kayit: s.gecmis.filter((h) => h.org !== 'amator').slice(0, 15) };
 }

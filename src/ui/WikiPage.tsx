@@ -67,7 +67,7 @@ function WikiModal({ s, onClose }: { s: GameState; onClose: () => void }) {
 
           <View style={st.toc}>
             <Text style={st.tocTitle}>{L("İçindekiler")}</Text>
-            {[...w.bolumler.map((b) => b.baslik), ...(w.kayit.length ? [L("Dövüş kaydı")] : [])].map((b, i) => (
+            {[...w.bolumler.map((b) => b.baslik), ...(w.basarilar.length ? [L("Şampiyonluklar ve başarılar")] : []), ...(w.kayit.length ? [L("Dövüş kaydı")] : [])].map((b, i) => (
               <Text key={b} style={st.tocItem}>
                 {i + 1} {b}
               </Text>
@@ -84,6 +84,23 @@ function WikiModal({ s, onClose }: { s: GameState; onClose: () => void }) {
               ))}
             </View>
           ))}
+
+          {w.basarilar.length ? (
+            <>
+              <Text style={st.h2}>{L("Şampiyonluklar ve başarılar")}</Text>
+              {w.basarilar.map((g) => (
+                <View key={g.baslik} style={{ marginBottom: 6 }}>
+                  <Text style={st.h3}>{g.baslik}</Text>
+                  {g.maddeler.map((m, i) => (
+                    <View key={i} style={st.li}>
+                      <Text style={st.bullet}>•</Text>
+                      <Text style={[st.p, { flex: 1, marginBottom: 2 }]}>{m}</Text>
+                    </View>
+                  ))}
+                </View>
+              ))}
+            </>
+          ) : null}
 
           {w.kayit.length ? (
             <>
@@ -145,6 +162,9 @@ const st = StyleSheet.create({
   tocTitle: { fontFamily: F.bold, fontSize: 13, color: WIKI.text, textAlign: 'center', marginBottom: 4 },
   tocItem: { fontFamily: F.body, fontSize: 13, color: WIKI.link, lineHeight: 20 },
   h2: { fontFamily: SERIF, fontSize: 22, color: WIKI.text, borderBottomWidth: 1, borderBottomColor: WIKI.line, paddingBottom: 2, marginTop: 14, marginBottom: 8 },
+  h3: { fontFamily: F.bold, fontSize: 15, color: WIKI.text, marginBottom: 4 },
+  li: { flexDirection: 'row', gap: 6, paddingLeft: 6 },
+  bullet: { fontFamily: SERIF, fontSize: 15, lineHeight: 23, color: WIKI.text },
   table: { borderWidth: 1, borderColor: WIKI.line },
   tr: { flexDirection: 'row', borderTopWidth: 1, borderTopColor: WIKI.line },
   th: { fontFamily: F.bold, fontSize: 11, color: WIKI.text, padding: 4 },

@@ -5235,4 +5235,12 @@ export const RU: Record<string, string> = {
   "Tümünü göster (+{0})": "Показать всё (+{0})",
   "{0} gelişim puanın var": "У тебя {0} очков развития",
   "DAĞIT": "РАСПРЕДЕЛИТЬ",
+  "Yıl sonu ödülleri": "Награды по итогам года",
+  "Şampiyonluk kemerleri": "Чемпионские пояса",
+  "{0} yaşında": "в {0} лет",
+  "{0} savunma": "защит: {0}",
+  "halen elinde": "действующий чемпион",
+  "Kafes Evi realite şovu şampiyonu": "Чемпион реалити-шоу «Дом клетки»",
+  "Turnuvalar ve özel zaferler": "Турниры и особые победы",
+  "Şampiyonluklar ve başarılar": "Титулы и достижения",
 };

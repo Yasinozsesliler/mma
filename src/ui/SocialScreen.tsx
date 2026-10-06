@@ -1,4 +1,5 @@
 import { L, LOC } from '../i18n';
+import { closeCrisis } from '../engine/crisis';
 import { CrisisCard } from './CrisisCard';
 import { fmtFollowers, followerBoard, followers } from '../engine/fame';
 import { useState } from 'react';
@@ -141,7 +142,11 @@ export function SocialScreen({ s, act }: { s: GameState; act: Act }) {
     setText('');
   };
   return (
-    <Screen footer={<Button label={L("Kariyere dön")} icon="arrow-left" tone="ghost" onPress={() => act((x) => (x.phase = 'hub'))} />}>
+    <Screen footer={<Button label={L("Kariyere dön")} icon="arrow-left" tone="ghost" onPress={() => act((x) => {
+            // Sonuçlanmış kriz bu ekranda görüldü: çıkarken kapanır, ana sayfada tekrar çıkmaz
+            closeCrisis(x);
+            x.phase = 'hub';
+          })} />}>
       <Title kicker={L("KAFES · SOSYAL")} sub={L("Rakiplerin burada konuşur. Sen de konuş ama sözlerinin bedeli var.")}>
         
         {L("Sosyal Medya")}

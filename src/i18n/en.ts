@@ -5181,4 +5181,12 @@ export const EN: Record<string, string> = {
   "Tümünü göster (+{0})": "Show all (+{0})",
   "{0} gelişim puanın var": "You have {0} skill points",
   "DAĞIT": "SPEND",
+  "Yıl sonu ödülleri": "Year-end awards",
+  "Şampiyonluk kemerleri": "Championship belts",
+  "{0} yaşında": "at age {0}",
+  "{0} savunma": "{0} defenses",
+  "halen elinde": "current holder",
+  "Kafes Evi realite şovu şampiyonu": "Cage House reality show champion",
+  "Turnuvalar ve özel zaferler": "Tournaments and special wins",
+  "Şampiyonluklar ve başarılar": "Championships and accomplishments",
 };

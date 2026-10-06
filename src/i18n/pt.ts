@@ -5195,4 +5195,12 @@ export const PT: Record<string, string> = {
   "Tümünü göster (+{0})": "Ver tudo (+{0})",
   "{0} gelişim puanın var": "Você tem {0} pontos de evolução",
   "DAĞIT": "DISTRIBUIR",
+  "Yıl sonu ödülleri": "Prêmios de fim de ano",
+  "Şampiyonluk kemerleri": "Cinturões de campeão",
+  "{0} yaşında": "aos {0} anos",
+  "{0} savunma": "{0} defesas",
+  "halen elinde": "atual detentor",
+  "Kafes Evi realite şovu şampiyonu": "Campeão do reality Casa da Jaula",
+  "Turnuvalar ve özel zaferler": "Torneios e vitórias especiais",
+  "Şampiyonluklar ve başarılar": "Títulos e conquistas",
 };
