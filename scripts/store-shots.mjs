@@ -107,8 +107,9 @@ const edit = async (fn) => {
   await sleep(700);
 };
 await edit("s.ipuclari = ['hub','gelisim','rakip','kamp','plan','yuzyuze','dovus','macSonrasi'];");
-const PRI = ['DÖVÜŞ AYARLA', 'Bu rakibi seç', 'Hocanın planıyla başla', 'Tüm kampı simüle et', 'Tartıya çık', 'Yüz yüze gel', 'Soğukkanlı bak', 'Dövüş gecesi'];
-for (let i = 0; i < 40; i++) {
+// Kamp kendiliğinden akar; karar kartlarında ilk seçenek seçilir, kulisten kafese yürünür
+const PRI = ['DÖVÜŞ AYARLA', 'Bu rakibi seç', 'Hocanın planıyla başla', 'Atla, kamp aksın', 'Hızlandır', 'Birkaç gün dinlen', 'Ekstra seansı ekle', 'Diyete şimdi başla', 'Ertesi gün sen de sert gir', 'Birlikte koş', 'Ter kıyafetiyle koşu', 'Dinle', 'Kapı orada', 'Kardeşim benim 🤝', 'Devam', 'Son 48 saat: kilonu ver', 'Tartıya çık', 'Yüz yüze gel', 'Soğukkanlı bak', 'Dövüş gecesi', 'KAFESE YÜRÜ'];
+for (let i = 0; i < 120; i++) {
   if ((await body()).includes(t('BAYANLAR VE BAYLAR…'))) break;
   // Dövüş gecesinden hemen önce: anonsta görünecek amatör rekor
   if ((await buttons()).some((b) => up(b).includes(up(t('Dövüş gecesi'))))) await edit('s.amator = { g: 9, m: 1, b: 0 }; Object.keys(s.fighter.stats).forEach((k) => (s.fighter.stats[k] = 88));');
