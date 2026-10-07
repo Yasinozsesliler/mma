@@ -5897,4 +5897,13 @@ export const EN: Record<string, string> = {
   "Kendi ligini kur": "Found your own league",
   "Organizasyonunu yönet: {0}": "Run your promotion: {0}",
   "Kendi organizasyonunu kur": "Found your own promotion",
+  "Dövüşçü keşfet ve imzala; eski rakiplerin de kapını çalar": "Scout and sign fighters; your old rivals come knocking too",
+  "Mekânı ve bilet fiyatını seç: salondan stadyuma": "Pick the venue and ticket price: from gym hall to stadium",
+  "İtibarını büyüt, yayın anlaşmaları kap": "Grow your prestige and land TV deals",
+  "Her gecenin gelir-gider raporu ve Gecenin Performansı": "A profit report for every event, plus Performance of the Night",
+  "KARİYER SONRASI": "AFTER YOUR CAREER",
+  "Eldivenlerini astığında hikâyen bitmiyor: kendi dövüş organizasyonunu kurup bu sefer afişi sen yazacaksın.": "Your story doesn't end when you hang up the gloves: found your own promotion and write the poster yourself.",
+  "Emekli olunca açılır": "Unlocks when you retire",
+  "Kariyerin bittiğinde emeklilik ekranında “Kendi organizasyonunu kur” düğmesi çıkar. Kuruluş: {0}.": "When your career ends, the retirement screen shows a “Found your own promotion” button. Cost: {0}.",
+  "SENİ NELER BEKLİYOR": "WHAT AWAITS YOU",
 };

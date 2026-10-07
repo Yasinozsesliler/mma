@@ -5884,4 +5884,13 @@ export const PL: Record<string, string> = {
   "Kendi ligini kur": "Załóż własną ligę",
   "Organizasyonunu yönet: {0}": "Zarządzaj federacją: {0}",
   "Kendi organizasyonunu kur": "Załóż własną federację",
+  "Dövüşçü keşfet ve imzala; eski rakiplerin de kapını çalar": "Wyszukuj i podpisuj zawodników; dawni rywale też zapukają",
+  "Mekânı ve bilet fiyatını seç: salondan stadyuma": "Wybierz obiekt i cenę biletu: od hali po stadion",
+  "İtibarını büyüt, yayın anlaşmaları kap": "Buduj prestiż i zdobywaj umowy telewizyjne",
+  "Her gecenin gelir-gider raporu ve Gecenin Performansı": "Raport z każdej gali i Występ Wieczoru",
+  "KARİYER SONRASI": "PO KARIERZE",
+  "Eldivenlerini astığında hikâyen bitmiyor: kendi dövüş organizasyonunu kurup bu sefer afişi sen yazacaksın.": "Twoja historia nie kończy się, gdy odwiesisz rękawice: załóż własną federację i sam pisz plakaty.",
+  "Emekli olunca açılır": "Odblokuje się po zakończeniu kariery",
+  "Kariyerin bittiğinde emeklilik ekranında “Kendi organizasyonunu kur” düğmesi çıkar. Kuruluş: {0}.": "Po zakończeniu kariery na ekranie emerytury pojawi się przycisk „Załóż własną federację”. Koszt: {0}.",
+  "SENİ NELER BEKLİYOR": "CO CIĘ CZEKA",
 };

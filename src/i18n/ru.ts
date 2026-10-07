@@ -5946,4 +5946,13 @@ export const RU: Record<string, string> = {
   "Kendi ligini kur": "Создай свою лигу",
   "Organizasyonunu yönet: {0}": "Управлять лигой: {0}",
   "Kendi organizasyonunu kur": "Создай свою лигу",
+  "Dövüşçü keşfet ve imzala; eski rakiplerin de kapını çalar": "Ищи и подписывай бойцов; бывшие соперники тоже постучатся",
+  "Mekânı ve bilet fiyatını seç: salondan stadyuma": "Выбирай площадку и цену билета: от спортзала до стадиона",
+  "İtibarını büyüt, yayın anlaşmaları kap": "Растите репутацию и получайте ТВ-контракты",
+  "Her gecenin gelir-gider raporu ve Gecenin Performansı": "Отчёт по каждому вечеру и «Выступление вечера»",
+  "KARİYER SONRASI": "ПОСЛЕ КАРЬЕРЫ",
+  "Eldivenlerini astığında hikâyen bitmiyor: kendi dövüş organizasyonunu kurup bu sefer afişi sen yazacaksın.": "История не заканчивается, когда ты вешаешь перчатки: создай свою лигу и сам пиши афиши.",
+  "Emekli olunca açılır": "Откроется после завершения карьеры",
+  "Kariyerin bittiğinde emeklilik ekranında “Kendi organizasyonunu kur” düğmesi çıkar. Kuruluş: {0}.": "Когда карьера закончится, на экране завершения появится кнопка «Создай свою лигу». Стоимость: {0}.",
+  "SENİ NELER BEKLİYOR": "ЧТО ТЕБЯ ЖДЁТ",
 };

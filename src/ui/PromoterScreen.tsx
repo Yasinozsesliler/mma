@@ -62,8 +62,40 @@ export function PromoterScreen({ s, act }: { s: GameState; act: Act }) {
   const [ad, setAd] = useState(() => leagueNames(s)[0]);
   const [msg, setMsg] = useState<string | null>(null);
   const lig = s.lig;
-  const exit = () => act((x) => (x.phase = 'emeklilik'));
-  const footer = <Button label={L("Emeklilik ekranına dön")} icon="arrow-left" tone="ghost" onPress={exit} />;
+  // Kariyer sürerken yalnızca tanıtım: organizasyon emeklilikte kurulur.
+  const emekli = s.pending.sonrakiFaz === 'emeklilik';
+  const exit = () => act((x) => (x.phase = emekli ? 'emeklilik' : 'hub'));
+  const footer = <Button label={emekli ? L("Emeklilik ekranına dön") : L("Kariyere dön")} icon="arrow-left" tone="ghost" onPress={exit} />;
+
+  if (!emekli) {
+    const ozellik: [IconName, string][] = [
+      ['account-search', L("Dövüşçü keşfet ve imzala; eski rakiplerin de kapını çalar")],
+      ['stadium-variant', L("Mekânı ve bilet fiyatını seç: salondan stadyuma")],
+      ['television-classic', L("İtibarını büyüt, yayın anlaşmaları kap")],
+      ['chart-box', L("Her gecenin gelir-gider raporu ve Gecenin Performansı")],
+    ];
+    return (
+      <Screen footer={footer}>
+        <Title kicker={L("KARİYER SONRASI")} sub={L("Eldivenlerini astığında hikâyen bitmiyor: kendi dövüş organizasyonunu kurup bu sefer afişi sen yazacaksın.")}>
+          {L("Organizasyonum")}
+        </Title>
+        <LinearGradient colors={['#2a1a08', '#0b0c0f']} style={ps.locked}>
+          <Icon name="lock-clock" size={30} color={C.gold} />
+          <Text style={ps.lockedT}>{L("Emekli olunca açılır")}</Text>
+          <Text style={ps.lockedS}>{L("Kariyerin bittiğinde emeklilik ekranında “Kendi organizasyonunu kur” düğmesi çıkar. Kuruluş: {0}.", [money(foundCost())])}</Text>
+        </LinearGradient>
+        <Section>{L("SENİ NELER BEKLİYOR")}</Section>
+        <View style={{ gap: 6 }}>
+          {ozellik.map(([ikon, t]) => (
+            <View key={t} style={ps.pick}>
+              <Icon name={ikon} size={20} color={C.gold} />
+              <Text style={[ps.pickT, { flex: 1, color: C.text, fontFamily: F.semi }]}>{t}</Text>
+            </View>
+          ))}
+        </View>
+      </Screen>
+    );
+  }
 
   if (!lig) {
     const cost = foundCost();
@@ -330,6 +362,9 @@ const ps = StyleSheet.create({
   pick: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: C.card, borderRadius: R, borderWidth: 1, borderColor: C.border, padding: 12 },
   pickOn: { borderColor: C.gold, backgroundColor: '#1d1708' },
   pickT: { color: C.dim, fontFamily: F.bold, fontSize: 14 },
+  locked: { borderRadius: R, borderWidth: 1, borderColor: C.goldDeep, padding: 16, alignItems: 'center', gap: 6, marginBottom: 6 },
+  lockedT: { color: C.gold, fontFamily: F.display, fontSize: 18, letterSpacing: 1 },
+  lockedS: { color: C.dim, fontFamily: F.body, fontSize: 13, lineHeight: 19, textAlign: 'center' },
   warn: { color: C.orange, fontFamily: F.semi, fontSize: 12, textAlign: 'center', marginVertical: 6 },
   meta: { color: C.faint, fontFamily: F.body, fontSize: 11, marginTop: 1 },
   biletRow: { flexDirection: 'row', gap: 6 },
