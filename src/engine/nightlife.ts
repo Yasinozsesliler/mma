@@ -1,4 +1,4 @@
-// Gece hayatı: striptiz kulübü ve randevular. Eğlencenin bedeli: para, disiplin, skandal ve sağlık riski.
+// Gece hayatı: gece kulübü ve randevular. Eğlencenin bedeli: para, disiplin, skandal ve sağlık riski (uykusuzluk, hastalık).
 import { divorce } from './family';
 import { L, LOC } from '../i18n';
 import { addStat } from './character';
@@ -17,11 +17,11 @@ const pop = (s: GameState, d: number) => {
 };
 const disease = (ad: string | null) => (ad ? L("\n\n⚠️ Birkaç gün sonra kendini iyi hissetmiyorsun… Doktor: {0}. Tedavi olman gerekiyor.", [ad]) : '');
 
-// ---------- Striptiz kulübü ----------
+// ---------- Gece kulübü ----------
 
 export const STRIP_OPTIONS = [
-  { ad: L("Sadece izle"), aciklama: L("Bir içki, birkaç saat. Az masraf, az risk."), ikon: 'glass-cocktail', fiyat: [300, 800, 2000, 4000] },
-  { ad: L("VIP özel oda"), aciklama: L("Kapalı kapılar ardında. Yüksek sağlık riski."), ikon: 'door-closed-lock', fiyat: [1500, 4000, 10000, 20000] },
+  { ad: L("Bir iki saat takıl"), aciklama: L("Bir içki, biraz müzik. Az masraf, az risk."), ikon: 'glass-cocktail', fiyat: [300, 800, 2000, 4000] },
+  { ad: L("VIP loca, sabaha kadar"), aciklama: L("Gece uzar, uyku kısalır. Hastalanma riski yüksek."), ikon: 'sofa-single', fiyat: [1500, 4000, 10000, 20000] },
   { ad: L("Şampanya gecesi"), aciklama: L("Para yağmuru, ünlüler, kameralar. Popülerlik ya da skandal."), ikon: 'bottle-wine', fiyat: [3000, 10000, 30000, 60000] },
 ] as const;
 
@@ -37,15 +37,15 @@ export function visitStripClub(s: GameState, i: number): string {
   let ad: string | null;
   if (i === 0) {
     ad = riskyAct(s, 0.3);
-    msg = pick([L("Loş ışıklar, yüksek müzik. Kafanı dağıttın."), L("Birkaç saat stres attın. Sabah kalkmak zor oldu.")]);
+    msg = pick([L("Yüksek müzik, kalabalık. Kafanı dağıttın."), L("Birkaç saat stres attın. Sabah kalkmak zor oldu.")]);
   } else if (i === 1) {
     ad = riskyAct(s, 1.2);
-    msg = pick([L("VIP odada gece uzadı… Sabah salona geç kaldın."), L("Özel odada saatler geçti. Pahalı ve riskli bir geceydi.")]);
+    msg = pick([L("VIP locada gece uzadı… Sabah salona geç kaldın."), L("Sabaha kadar dans ettin. Pahalı ve yorucu bir geceydi.")]);
   } else {
     ad = riskyAct(s, 1);
     if (chance(0.45)) {
       const v = pop(s, -3);
-      lifestylePost(s, L("striptiz kulübünde para saçarken"));
+      lifestylePost(s, L("gece kulübünde para saçarken"));
       msg = L("Havaya para saçtın, kameralar her yerde. Magazin seni yerden yere vurdu. (Popülerlik {0})", [v]);
     } else {
       const v = pop(s, 2);
@@ -266,10 +266,10 @@ export function spendNight(s: GameState, id: string): string {
   const c = matches(s).find((x) => x.id === id);
   if (!c || c.seviye < 30) return '';
   const partner = s.iliski?.id === c.id;
-  const ad = riskyAct(s, partner ? 0.15 : 1.5);
+  const ad = riskyAct(s, partner ? 0.15 : 0.8);
   c.seviye = clamp(c.seviye + 8, 0, 100);
   s.motivasyon = Math.min(2, s.motivasyon + 1);
-  return L("{0} ile geceyi birlikte geçirdiniz.{1}", [c.ad, partner ? '' : L(" Tek gecelik bir kaçamak mıydı, yoksa bir başlangıç mı?")]) + cheatCheck(s, c) + disease(ad);
+  return L("{0} ile sabaha kadar şehri gezdiniz.{1}", [c.ad, partner ? '' : L(" Sadece bir gece miydi, yoksa bir başlangıç mı?")]) + cheatCheck(s, c) + disease(ad);
 }
 
 export function makePartner(s: GameState, id: string): string {

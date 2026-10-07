@@ -170,7 +170,7 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
           {untreated(s) ? (
             <Notice color={C.red} icon="alert">
               
-              {L("Tedavi edilmemiş enfeksiyon (")}{s.hastalik!.ad}{L("). Sağlığın her hafta düşüyor. Gece hayatı ekranından tedavi ol.")}
+              {L("Tedavi edilmemiş hastalık (")}{s.hastalik!.ad}{L("). Sağlığın her hafta düşüyor. Gece hayatı ekranından tedavi ol.")}
             </Notice>
           ) : null}
           {(s.hayvanlar ?? []).some((p) => p.hasta || p.mutluluk < 30) ? (

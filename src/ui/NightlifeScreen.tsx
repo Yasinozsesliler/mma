@@ -34,7 +34,7 @@ function Strip({ s, act, onMsg }: { s: GameState; act: Act; onMsg: (m: string) =
     <>
       <LinearGradient colors={['#3a0630', '#0b0209']} style={nl.hero}>
         <Text style={[nl.heroTitle, SLANT]}>{L("NEON CLUB")}</Text>
-        <Text style={nl.heroSub}>{L("Kırmızı ışıklar, yüksek müzik, pahalı içkiler. Kafanı dağıtır… ama bedeli var.")}</Text>
+        <Text style={nl.heroSub}>{L("Neon ışıklar, yüksek müzik, pahalı içkiler. Kafanı dağıtır… ama bedeli var.")}</Text>
       </LinearGradient>
       {STRIP_OPTIONS.map((o, i) => (
         <Choice
@@ -148,7 +148,7 @@ function MatchCard({ s, act, onMsg, c }: { s: GameState; act: Act; onMsg: (m: st
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
         {c.seviye >= 30 ? (
           <Pressable onPress={() => act((x) => onMsg(spendNight(x, c.id)))} style={[nl.small, { flex: 1 }]}>
-            <Text style={nl.smallText}>{L("GECEYİ BİRLİKTE GEÇİR")}</Text>
+            <Text style={nl.smallText}>{L("ŞEHİRDE GECE GEZMESİ")}</Text>
           </Pressable>
         ) : null}
         {partner ? <BreakUpButton act={act} onMsg={onMsg} ad={c.ad} flex /> : null}
@@ -245,7 +245,7 @@ export function NightlifeScreen({ s, act }: { s: GameState; act: Act }) {
       <View style={nl.riskBox}>
         <Text style={nl.label}>{L("SAĞLIK RİSKİ")}</Text>
         <Bar value={(risk / 12) * 100} color={risk > 6 ? C.red : risk > 3 ? C.orange : C.green} label={L("Seviye")} right={risk > 6 ? L("YÜKSEK") : risk > 3 ? L('ORTA') : L("DÜŞÜK")} />
-        <Text style={nl.meta}>{L("Riskli davranışlar birikir, haftalar geçtikçe azalır. Çok sık gidersen enfeksiyon kapma ihtimalin artar.")}</Text>
+        <Text style={nl.meta}>{L("Uykusuz geceler birikir, haftalar geçtikçe azalır. Çok sık çıkarsan hastalanma ihtimalin artar.")}</Text>
       </View>
       {msg ? (
         <Card accent={C.gold}>
@@ -256,7 +256,7 @@ export function NightlifeScreen({ s, act }: { s: GameState; act: Act }) {
         {(
           [
             ['date', L("RANDEVU"), 'heart-multiple'],
-            ['strip', L("STRİPTİZ KULÜBÜ"), 'glass-cocktail'],
+            ['strip', L("GECE KULÜBÜ"), 'glass-cocktail'],
           ] as const
         ).map(([k, l, ic]) => (
           <Pressable key={k} onPress={() => setTab(k)} style={[nl.tab, tab === k && nl.tabOn]}>

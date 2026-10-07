@@ -94,10 +94,10 @@ Büyüme › Mağazada görünüm › **Ana mağaza girişi**:
 - **Gizlilik politikası:** `WEB_URL/gizlilik.html`
 - **Reklamlar:** Evet, uygulama reklam içerir.
 - **Uygulama erişimi:** Tüm işlevler kısıtlama olmadan kullanılabilir.
-- **Hedef kitle:** **16-17 ve 18 ve üzeri** seç. Oyunda gece hayatı ve cinsel sağlık temaları var; çocuklara yönelik değil (Aileler politikasının dışında kalır). Kumarhane kaldırıldı; yerine bahissiz Oyun Salonu (dart, yumruk makinesi) var.
+- **Hedef kitle:** **16-17 ve 18 ve üzeri** seç. Oyunda gece hayatı (gece kulübü, alkol, randevu) teması var; çocuklara yönelik değil (Aileler politikasının dışında kalır). Kumarhane kaldırıldı; yerine bahissiz Oyun Salonu (dart, yumruk makinesi) var.
 - **İçerik derecelendirmesi (IARC anketi)** — dürüst yanıtlar:
   - Şiddet: gerçekçi olmayan (çizgi/animasyon) dövüş sporu şiddeti, kan az.
-  - Cinsellik: cinsel temalara/mekânlara yazılı atıflar (striptiz kulübü, randevu, cinsel yolla bulaşan hastalık) — açık cinsel içerik yok.
+  - Cinsellik: yok (randevu ve sevgili/evlilik ilişkileri var, cinsel içerik yok). Alkol: gece kulübünde alkol kullanımına atıf var.
   - Kumar: **yok.** (Eski kumarhane kaldırıldı; Oyun Salonu'nda bahis ve para yok, "simüle kumar" sorusuna Hayır.)
   - Uyuşturucu: doping (performans artırıcı) teması var.
   - Kullanıcı etkileşimi / sohbet: yok. Konum paylaşımı: yok. Dijital satın alma: var.

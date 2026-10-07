@@ -10,11 +10,12 @@ export interface Disease {
 }
 
 export const DISEASES: Disease[] = [
-  { ad: L("Klamidya"), tedaviHafta: 2, maliyet: 400 },
-  { ad: L("Bel soğukluğu (gonore)"), tedaviHafta: 2, maliyet: 500 },
-  { ad: L("Frengi (sifiliz)"), tedaviHafta: 4, maliyet: 900 },
-  { ad: L("Genital uçuk (HSV)"), tedaviHafta: 3, maliyet: 700 },
-  { ad: L("Trikomonas"), tedaviHafta: 2, maliyet: 350 },
+  // Uykusuzluk ve kalabalık mekânlardan kapılan rahatsızlıklar
+  { ad: L("Ağır grip"), tedaviHafta: 2, maliyet: 400 },
+  { ad: L("Bronşit"), tedaviHafta: 3, maliyet: 600 },
+  { ad: L("Bademcik iltihabı"), tedaviHafta: 2, maliyet: 350 },
+  { ad: L("Mide enfeksiyonu"), tedaviHafta: 2, maliyet: 450 },
+  { ad: L("Sinüzit"), tedaviHafta: 3, maliyet: 500 },
 ];
 
 export const infected = (s: GameState) => !!s.hastalik;
@@ -43,6 +44,8 @@ export function nightTick(s: GameState, weeks: number): string[] {
   const notes: string[] = [];
   // Risk her hafta %20 azalır: düzenli ziyaretlerde bir dengeye oturur, sık ziyaretlerde yükselir.
   if (s.gece) s.gece.risk = s.gece.risk * Math.pow(0.8, weeks);
+  // Eski kayıtlar: listede olmayan eski hastalık adları yeni listeden birine çevrilir
+  if (s.hastalik && !DISEASES.some((d) => d.ad === s.hastalik!.ad)) s.hastalik.ad = DISEASES[0].ad;
   if (s.hastalik) {
     if (s.hastalik.tedaviBitis && s.hafta >= s.hastalik.tedaviBitis) {
       notes.push(L("💊 {0} tedavisi tamamlandı. Temizsin.", [s.hastalik.ad]));
