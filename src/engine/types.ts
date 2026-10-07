@@ -663,6 +663,8 @@ export interface GameState {
   mektuplar?: string[];
   /** Memleket kartı (homeland.ts) */
   memleketKart?: import('./homeland').Homeland;
+  /** Oyun salonu rekorları (arcade.ts) */
+  oyunSalonu?: import('./arcade').ArcadeState;
   /** Hikâye bölümlerinde yapılan seçimler (profilde günlük olarak) */
   hikayeKayit?: Record<string, { bolumler: { baslik: string; secim: string; sonuc: string }[]; bitti?: boolean }>;
   hikayeSon?: number;

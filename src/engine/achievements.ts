@@ -167,8 +167,8 @@ export const ACHIEVEMENTS: Achievement[] = [
   a({ id: 'patron', ad: L("Patron"), aciklama: L("Haftada 20.000$ işletme geliri."), ikon: 'store', kat: 'servet', tier: 'altin', get: weeklyBusinessIncome, hedef: 20_000 }),
   a({ id: 'borsa', ad: L("Borsa Kurdu"), aciklama: L("Yatırımlarının değeri 1 milyon doları geçsin."), ikon: 'finance', kat: 'servet', tier: 'altin', get: invest, hedef: 1_000_000 }),
   a({ id: 'sponsor3', ad: L("Vitrin"), aciklama: L("Aynı anda 3 sponsor."), ikon: 'handshake', kat: 'servet', tier: 'gumus', get: (s) => (s.sponsorlar ?? []).length, hedef: 3 }),
-  a({ id: 'kasa', ad: L("Kasa Her Zaman Kazanmaz"), aciklama: L("Kumarhaneden net 100.000$ kârla çık."), ikon: 'slot-machine', kat: 'servet', tier: 'gumus', gizli: true, check: (s) => (s.kumar?.net ?? 0) >= 100_000 }),
-  a({ id: 'kumarbaz', ad: L("Kumarbaz"), aciklama: L("Kumarhanede net 250.000$ kaybet."), ikon: 'cards-playing', kat: 'servet', tier: 'bronz', gizli: true, check: (s) => (s.kumar?.net ?? 0) <= -250_000 }),
+  a({ id: 'dart180', ad: L("Tam Orta"), aciklama: L("Oyun salonunda dartta 150 puan ve üstü yap."), ikon: 'bullseye-arrow', kat: 'servet', tier: 'gumus', gizli: true, check: (s) => (s.oyunSalonu?.rekor.dart ?? 0) >= 150 }),
+  a({ id: 'yumruk900', ad: L("Makine Kırıcı"), aciklama: L("Yumruk makinesinde 900 ve üstü vur."), ikon: 'boxing-glove', kat: 'servet', tier: 'bronz', gizli: true, check: (s) => (s.oyunSalonu?.rekor.yumruk ?? 0) >= 900 }),
 
   // ---------------- YAŞAM (13) ----------------
   a({ id: 'ev1', ad: L("Kendi Evim"), aciklama: L("Bir ev satın al."), ikon: 'home', kat: 'yasam', tier: 'bronz', get: (s) => owned(s, HOUSE), hedef: 1 }),

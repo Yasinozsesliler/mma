@@ -32,7 +32,7 @@ import {
 import { MenuScreen } from './src/ui/MenuScreen';
 import { DailyScreen } from './src/ui/DailyScreen';
 import { ShopScreen } from './src/ui/ShopScreen';
-import { CasinoScreen } from './src/ui/CasinoScreen';
+import { ArcadeScreen } from './src/ui/ArcadeScreen';
 import { SocialScreen } from './src/ui/SocialScreen';
 import { TeamScreen } from './src/ui/TeamScreen';
 import { CelebrationScreen } from './src/ui/CelebrationScreen';
@@ -94,7 +94,7 @@ const PHASE_LABELS: Record<Phase, string> = {
   teklifler: L("Kontrat Teklifleri"),
   magaza: L("Mağaza"),
   takim: L("Takım ve Sponsorlar"),
-  kumarhane: L("Kumarhane"),
+  kumarhane: L("Oyun Salonu"),
   sosyal: L("Sosyal Medya"),
   kutlama: L("Şampiyonluk"),
   gece: L("Gece Hayatı"),
@@ -357,7 +357,7 @@ export default function App() {
         content = <TeamScreen {...props} />;
         break;
       case 'kumarhane':
-        content = <CasinoScreen {...props} />;
+        content = <ArcadeScreen {...props} />;
         break;
       case 'sosyal':
         content = <SocialScreen {...props} />;

@@ -4,7 +4,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { money } from '../engine/career';
-import { enterCasino } from '../engine/casino';
 import { breakUp, deck, DATE_TIERS, goOnDate, makePartner, matches, spendNight, STRIP_OPTIONS, stripPrice, treatDisease, unmatch, visitStripClub, yatVar, type Candidate } from '../engine/nightlife';
 import { treatmentCost } from '../engine/nightlifeCore';
 import type { GameState } from '../engine/types';
@@ -265,9 +264,9 @@ export function NightlifeScreen({ s, act }: { s: GameState; act: Act }) {
             <Text style={[nl.tabText, tab === k && { color: '#fff' }]}>{l}</Text>
           </Pressable>
         ))}
-        <Pressable onPress={() => act((x) => { x.phase = 'kumarhane'; enterCasino(x); })} style={nl.tab}>
-          <Icon name="cards-playing" size={14} color={C.dim} />
-          <Text style={nl.tabText}>{L("KUMARHANE")}</Text>
+        <Pressable onPress={() => act((x) => (x.phase = 'kumarhane'))} style={nl.tab}>
+          <Icon name="bullseye-arrow" size={14} color={C.dim} />
+          <Text style={nl.tabText}>{L("OYUN SALONU")}</Text>
         </Pressable>
       </View>
       {tab === 'strip' ? <Strip s={s} act={act} onMsg={setMsg} /> : <Dates s={s} act={act} onMsg={setMsg} />}
