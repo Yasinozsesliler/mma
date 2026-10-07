@@ -1,7 +1,7 @@
 // Google Play uygulama içi ürün kimlikleri (hepsi tek seferlik, tüketilmeyen ürün). Play Console'da aynı kimliklerle oluşturulur.
 // Platformdan bağımsızdır: kozmetik tanımları ve web sürümü de buradan okur.
 
-/** Şampiyon Paketi: reklamsız oyun + ödüller reklamsız + 5 kariyer yuvası + Şampiyon çerçevesi. Önerilen ≈ 2,99 $ */
+/** Şampiyon Paketi: reklamsız oyun + ödüller reklamsız + 5 kariyer yuvası + Şampiyon çerçevesi. Play fiyatı 3,99 $ */
 export const PREMIUM_SKU = 'sampiyon_paketi';
 /** Yalnızca geçiş reklamlarını kaldırır (ödüllü reklamlar isteğe bağlı kalır). Önerilen ≈ 1,49 $ */
 export const ADFREE_SKU = 'reklamsiz';

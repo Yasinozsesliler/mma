@@ -65,7 +65,7 @@ Para kazanma › Ürünler › **Uygulama içi ürünler** → her satır için 
 
 | Ürün kimliği | Ad | Açıklama | Öneri fiyat |
 |---|---|---|---|
-| `sampiyon_paketi` | Şampiyon Paketi | Reklamsız oyun, anında ödüller, 5 kariyer yuvası, Şampiyon çerçevesi | 2,99 $ |
+| `sampiyon_paketi` | Şampiyon Paketi | Reklamsız oyun, anında ödüller, 5 kariyer yuvası, Şampiyon çerçevesi | 3,99 $ |
 | `reklamsiz` | Reklamsız Paket | Geçiş reklamlarını kaldırır | 1,49 $ |
 | `paket_altin` | Altın Seri | Altın şort, eldiven, çerçeve, Kraliyet kemeri, Epik giriş müziği | 0,99 $ |
 | `paket_sokak` | Sokak Dövüşçüsü | Kamuflaj şort, neon eldiven ve çerçeve, Karbon kemer, Trap giriş müziği | 0,99 $ |
