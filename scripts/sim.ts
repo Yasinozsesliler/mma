@@ -223,7 +223,7 @@ function playCareer() {
           planla: 'plan:' + JSON.stringify({ hafta: Math.min(8, k.macHafta ?? 8), yer: s.para > 20000 ? 'irtifa' : 'salon', focus, plan: PLAN_FOR[weakest(s.pending.rakip!)], intensity: 'orta', kilo: 'normal', basin }),
           sure: Math.min(8, k.macHafta ?? 8),
           takvim: 'hizli',
-          haftalik: k.kankaAn ? (k.kankaAn.sonuc ? 'kankaKapat' : `kanka:${randInt(0, k.kankaAn.secenekler.length - 1)}`) : k.rakipHaber && !k.rakipHaber.kapandi ? (k.rakipHaber.sonuc ? 'rakipKapat' : `rakip:${randInt(0, 1)}`) : 'hepsi',
+          haftalik: k.kankaAn ? (k.kankaAn.sonuc ? 'kankaKapat' : `kanka:${randInt(0, k.kankaAn.secenekler.length - 1)}`) : k.rakipHaber && !k.rakipHaber.kapandi ? (k.rakipHaber.sonuc ? 'rakipKapat' : `rakip:${randInt(0, 1)}`) : k.kampAn && !k.kampAn.kapandi ? (k.kampAn.sonuc ? 'anKapat' : `an:${randInt(0, 1)}`) : 'hepsi',
           yer: s.para > 20000 ? 'irtifa' : 'salon',
           focus,
           plan: PLAN_FOR[weakest(s.pending.rakip!)],

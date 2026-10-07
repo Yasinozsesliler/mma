@@ -73,7 +73,8 @@ export function drillBonus(s: GameState) {
   const k = s.pending.kamp;
   const list = k?.idman ?? [];
   if (!k || !list.length) return { gelisim: 1, risk: 1, ort: 0 };
-  const pay = list.reduce((a, x) => a + clamp((x.puan - 40) / 60, 0, 1), 0) / Math.max(1, k.hafta);
+  // Kampta bir seans oynanır: en iyi seansın puanı kampın verimine yansır
+  const pay = Math.max(...list.map((x) => clamp((x.puan - 40) / 60, 0, 1)));
   const ort = Math.round(list.reduce((a, x) => a + x.puan, 0) / list.length);
   return { gelisim: 1 + clamp(pay, 0, 1) * 0.3, risk: 1 - clamp(pay, 0, 1) * 0.2, ort };
 }

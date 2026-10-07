@@ -8,7 +8,7 @@ import { duelOutcome, DUEL_TIP, JAB_LABEL, REPLY_LABEL, type Reply } from '../en
 import type { GameState } from '../engine/types';
 import { buzz } from '../haptics';
 import { L, LOC } from '../i18n';
-import { Button, Icon, Screen, SLANT, type IconName } from './components';
+import { Button, Icon, Screen, SLANT, upName, type IconName } from './components';
 import { INSTANT } from './drills/common';
 import { FighterAvatar } from './FighterAvatar';
 import { C, F, R } from './theme';
@@ -109,7 +109,7 @@ export function TrashTalkDuel({ s, header, choose }: { s: GameState; header: Rea
         <View style={st.row}>
           <View style={st.side}>
             <FighterAvatar look={s.fighter.gorunum} size={78} ring={C.red} />
-            <Text style={st.name} numberOfLines={1}>{s.fighter.soyad.toLocaleUpperCase(LOC)}</Text>
+            <Text style={st.name} numberOfLines={1}>{upName(s.fighter.soyad, s.fighter.uyruk)}</Text>
           </View>
           <View style={st.mid}>
             <Text style={st.vs}>🎤</Text>
@@ -122,7 +122,7 @@ export function TrashTalkDuel({ s, header, choose }: { s: GameState; header: Rea
           </View>
           <View style={st.side}>
             <FighterAvatar look={lookFor(o)} size={78} ring={C.blue} />
-            <Text style={st.name} numberOfLines={1}>{o.soyad.toLocaleUpperCase(LOC)}</Text>
+            <Text style={st.name} numberOfLines={1}>{upName(o.soyad, o.uyruk)}</Text>
           </View>
         </View>
         {/* Salonun havası */}
@@ -142,7 +142,7 @@ export function TrashTalkDuel({ s, header, choose }: { s: GameState; header: Rea
       {phase === 'lafi' || phase === 'cevap' ? (
         <View style={st.bubble}>
           <View style={st.bubbleHead}>
-            <Text style={st.who}>{o.soyad.toLocaleUpperCase(LOC)}</Text>
+            <Text style={st.who}>{upName(o.soyad, o.uyruk)}</Text>
             {phase === 'cevap' ? <Text style={st.chip}>{JAB_LABEL[lafi.tip]()}</Text> : null}
           </View>
           <Text style={st.jab}>“{lafi.metin.slice(0, chars)}{chars < lafi.metin.length ? '▌' : ''}”</Text>

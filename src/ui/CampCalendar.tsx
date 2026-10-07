@@ -65,7 +65,7 @@ export function Timeline({ s }: { s: GameState }) {
   );
 }
 
-function FightDateHero({ s, children }: { s: GameState; children?: ReactNode }) {
+export function FightDateHero({ s, children }: { s: GameState; children?: ReactNode }) {
   const k = s.pending.kamp!;
   const o = s.pending.rakip!;
   const left = (k.macHafta ?? k.hafta) - (k.takvimIdx ?? 0) - (k.kampIdx ?? 0);

@@ -250,6 +250,11 @@ export interface CampState {
   afis?: boolean;
   /** Rakip kampından haber (rivalCamp.ts) */
   rakipHaber?: import('./rivalCamp').RivalNews;
+  /** Kamp anı kararı ve kamp sonucuna etkisi (campMoments.ts) */
+  kampAn?: import('./campMoments').CampMoment;
+  anEtki?: import('./campMoments').CampEffect;
+  /** Kamp seansı (mini oyun) oynandı ya da atlandı */
+  seansKarar?: boolean;
   /** Basın toplantısı sahnesi (pressConf.ts) ve iddialı söz sayısı */
   basinSahne?: import('./pressConf').PressScene;
   iddia?: number;

@@ -1,6 +1,7 @@
 // Takvim: maç tarihi, kamp süresi, kamp öncesi serbest haftalar (etkinlikler) ve kampın hafta hafta akışı.
 import { maybePartnerMoment, partnerSparName } from './partner';
 import { maybeRivalNews } from './rivalCamp';
+import { maybeCampMoment } from './campMoments';
 import { L, LOC } from '../i18n';
 import { addStat, advanceWeeks } from './character';
 import { chance, clamp, pick, randInt } from './rng';
@@ -159,7 +160,7 @@ function planEvents(s: GameState, serbest: number): CalEvent[] {
   const used = new Set<string>();
   const p = s.stage === 'amator' ? 0.22 : 0.4;
   for (let i = 0; i < serbest; i++) {
-    if (!chance(p)) continue;
+    if (out.length >= 1 || !chance(p)) continue;
     const pool = EVENTS.filter((e) => !used.has(e.id) && (!e.proOnly || s.stage !== 'amator'));
     if (!pool.length) break;
     const e = pick(pool);
@@ -285,6 +286,17 @@ export function freeWeek(s: GameState, act: string): string {
 }
 
 /** Kampa kadar kalan serbest haftaları otomatik oynar (etkinliklerde ilk seçenek). */
+/** Tek bir serbest haftayı kendiliğinden geçirir (olay varsa oyuncunun kararını bekler). */
+export function autoFreeWeek(s: GameState) {
+  const k = s.pending.kamp!;
+  if ((k.serbest ?? 0) <= 0 || currentEvent(s)) return;
+  if (s.saglik < 80) freeWeek(s, 'dinlen');
+  else {
+    const t = randomKnown(s);
+    freeWeek(s, t && chance(0.6) ? `teknik:${t.id}` : 'spar');
+  }
+}
+
 export function autoFreeWeeks(s: GameState) {
   const k = s.pending.kamp!;
   let guard = 0;
@@ -326,8 +338,10 @@ export function campWeek(s: GameState): string {
   const notes = advanceWeeks(s, 1);
   socialTick(s, 1);
   if (i > 1 && !son) maybePartnerMoment(s);
-  // Kampın ortasında rakibin kampından haber
+  // Kampın ortasında rakibin kampından haber; başlarda bir kamp anı kararı
   if (i === Math.max(1, Math.floor(k.hafta / 2)) && !son) maybeRivalNews(s);
+  // Kamp başına en fazla iki hikâye kararı: ortak anı ya da rakip haberi varsa kamp anı gelmez
+  if (i >= Math.min(2, k.hafta - 1) && !son && !k.rakipHaber && !k.kankaAn && s.kanka?.son !== s.gecmis.length) maybeCampMoment(s);
   k.kampIdx = i;
   k.haftaLog = [...(k.haftaLog ?? []), L("{0}. hafta · {1}{2}", [i, msg, notes.length ? ` ${notes.join(' ')}` : ''])];
   return msg;

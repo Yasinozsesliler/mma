@@ -85,7 +85,8 @@ import { TrashTalkDuel } from './TrashTalkDuel';
 import { PressConference } from './PressConference';
 import { WeightCutStep } from './WeightCutStep';
 import { WikiButton } from './WikiPage';
-import { CampLengthStep, CampSummary, CampWeeksStep, FreeWeeksStep } from './CampCalendar';
+import { CampLengthStep, CampSummary } from './CampCalendar';
+import { CampRun } from './CampRun';
 import { CampPlanner } from './CampPlanner';
 import { TechniquePanel } from './TechniquePanel';
 import { FaceOffStage } from './FaceOffStage';
@@ -569,8 +570,7 @@ export function OpponentScreen({ s, act }: { s: GameState; act: Act }) {
 // Kamp akışı 4 aşama: plan (tek ekran ya da kısa haberde adım adım), serbest haftalar, kamp, tartı.
 const CAMP_STEPS: { key: CampState['step'][]; label: string }[] = [
   { key: ['hoca', 'planla', 'sure', 'yer', 'focus', 'plan', 'intensity', 'kilo', 'basin'], label: L("Plan") },
-  { key: ['takvim'], label: L("Takvim") },
-  { key: ['haftalik', 'basinsahne', 'duello', 'sakatlik', 'ozet'], label: L("Kamp") },
+  { key: ['takvim', 'haftalik', 'basinsahne', 'duello', 'sakatlik', 'ozet'], label: L("Kamp") },
   { key: ['kesim', 'tarti', 'yuzyuze'], label: L("Tartı") },
 ];
 
@@ -675,8 +675,8 @@ export function CampScreen({ s, act }: { s: GameState; act: Act }) {
       />
     );
   if (k.step === 'sure') return <CampLengthStep s={s} header={header} choose={choose} />;
-  if (k.step === 'takvim') return <FreeWeeksStep s={s} header={header} choose={choose} />;
-  if (k.step === 'haftalik') return <CampWeeksStep s={s} header={header} choose={choose} />;
+  // Serbest haftalar ve kamp haftaları tek ekranda kendiliğinden akar; yalnızca kararlarda durur
+  if (k.step === 'takvim' || k.step === 'haftalik') return <CampRun key="kamp-akisi" s={s} header={header} choose={choose} />;
   if (k.step === 'duello') return <TrashTalkDuel key={o.id} s={s} header={header} choose={choose} />;
   if (k.step === 'basinsahne') return <PressConference s={s} header={header} choose={choose} />;
   if (k.step === 'ozet') return <CampSummary s={s} act={act} choose={choose} />;

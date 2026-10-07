@@ -12,7 +12,7 @@ import { lookFor } from '../engine/tale';
 import type { GameState } from '../engine/types';
 import { buzz } from '../haptics';
 import { L, LOC } from '../i18n';
-import { Button, Icon, Screen, SLANT, type IconName } from './components';
+import { Button, Icon, Screen, SLANT, upName, type IconName } from './components';
 import { FighterAvatar } from './FighterAvatar';
 import { C, F, R } from './theme';
 
@@ -96,13 +96,13 @@ export function PressConference({ s, header, choose }: { s: GameState; header: R
           <View style={st.side}>
             <FighterAvatar look={s.fighter.gorunum} size={70} ring={C.red} />
             <Text style={st.name} numberOfLines={1}>
-              {s.fighter.soyad.toLocaleUpperCase(LOC)}
+              {upName(s.fighter.soyad, s.fighter.uyruk)}
             </Text>
           </View>
           <View style={st.side}>
             <FighterAvatar look={lookFor(o)} size={70} ring={C.blue} />
             <Text style={st.name} numberOfLines={1}>
-              {o.soyad.toLocaleUpperCase(LOC)}
+              {upName(o.soyad, o.uyruk)}
             </Text>
           </View>
         </View>

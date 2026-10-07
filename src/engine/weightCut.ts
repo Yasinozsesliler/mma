@@ -34,7 +34,7 @@ export function startManualCut(s: GameState) {
   const k = s.pending.kamp;
   if (!k || k.kesim) return;
   const [a, b] = s.stage === 'amator' ? [1.2, 2] : [2.4, 3.5];
-  const fazla = a + rand() * (b - a) + (k.kisaHaber ? 1.2 : 0) - cutBonus(s) * 8;
+  const fazla = a + rand() * (b - a) + (k.kisaHaber ? 1.2 : 0) - cutBonus(s) * 8 - (k.anEtki?.diyet ? 0.6 : 0);
   k.kesim = { fazla: r1(Math.max(0.6, fazla)), enerji: 100, dilim: 0, log: [] };
   k.step = 'kesim';
 }

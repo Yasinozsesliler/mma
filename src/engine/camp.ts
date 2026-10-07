@@ -12,7 +12,7 @@ import { PLANS, startFight } from './fight';
 import { weakest } from './opponents';
 import { siteById, CAMP_SITES, type CampSite } from './gyms';
 import { campPoints } from './progression';
-import { autoFreeWeeks, campLengthsFor, campWeek, CAMP_LENGTH_INFO, freeWeek, setCampLength } from './calendar';
+import { autoFreeWeek, autoFreeWeeks, campLengthsFor, campWeek, CAMP_LENGTH_INFO, freeWeek, setCampLength } from './calendar';
 import { techLevels } from './techniques';
 import { addFollowers, fmtDelta, followers, trashTalkFollowers } from './fame';
 import { socialCampStart } from './social';
@@ -27,6 +27,7 @@ import { drillBonus, recordDrill } from './drills';
 import { bump } from './istat';
 import { buildNight } from './fightNight';
 import { coachMods } from './coachBond';
+import { campMomentOpen, chooseCampMoment, closeCampMoment } from './campMoments';
 import { answerPress, pressDone, startPress, type PressStyle } from './pressConf';
 import { chooseRivalNews, closeRivalNews, rivalNewsMods, rivalNewsOpen } from './rivalCamp';
 import { mediaFatigue } from './media';
@@ -230,6 +231,7 @@ export function campChoose(s: GameState, value: string | number) {
       return;
     case 'takvim':
       if (value === 'hizli') autoFreeWeeks(s);
+      else if (value === 'oto1') autoFreeWeek(s);
       else freeWeek(s, String(value));
       return;
     case 'haftalik':
@@ -238,11 +240,14 @@ export function campChoose(s: GameState, value: string | number) {
       if (value === 'kankaKapat') return closePartnerMoment(s);
       if (typeof value === 'string' && value.startsWith('rakip:')) return chooseRivalNews(s, Number(value.slice(6)));
       if (value === 'rakipKapat') return closeRivalNews(s);
-      // Antrenman ortağıyla ya da rakip kampı haberiyle karar anı bekliyorsa hafta ilerlemez
-      if (k.kankaAn || rivalNewsOpen(s)) return;
-      if (value === 'hepsi') while ((k.kampIdx ?? 0) < k.hafta && !k.kankaAn && !rivalNewsOpen(s)) campWeek(s);
+      if (typeof value === 'string' && value.startsWith('an:')) return chooseCampMoment(s, Number(value.slice(3)));
+      if (value === 'anKapat') return closeCampMoment(s);
+      if (value === 'seansAtla') return void (k.seansKarar = true);
+      // Bir karar anı bekliyorsa (ortak, rakip kampı, kamp anı) hafta ilerlemez
+      if (campPaused(s)) return;
+      if (value === 'hepsi') while ((k.kampIdx ?? 0) < k.hafta && !campPaused(s)) campWeek(s);
       else campWeek(s);
-      if (k.kankaAn || rivalNewsOpen(s)) return;
+      if (campPaused(s)) return;
       if ((k.kampIdx ?? 0) >= k.hafta) {
         // Profesyonelde kamp basın toplantısı sahnesiyle biter
         if (hasPress(s) && !k.basinSahne) {
@@ -323,6 +328,9 @@ export function campChoose(s: GameState, value: string | number) {
   }
 }
 
+/** Kamp akışı bir karar bekliyor mu */
+export const campPaused = (s: GameState) => !!s.pending.kamp?.kankaAn || rivalNewsOpen(s) || campMomentOpen(s);
+
 /** Basın toplantısından sonra: trash talk seçildiyse düello, yoksa kamp sonucu. */
 function afterPress(s: GameState) {
   const k = s.pending.kamp!;
@@ -373,7 +381,8 @@ function runCamp(s: GameState) {
       (k.kisaHaber ? 1 : len.carpan) *
       drill.gelisim *
       perkCamp(s) *
-      medya;
+      medya *
+      (1 + (k.anEtki?.gelisim ?? 0));
     // Kamp odak alanı en kötü +2 gelişir; iyi koşullarda +5'e kadar.
     const d = addStat(f.stats, k.focus, clamp(Math.round(g), 2, 5), 2);
     artis = d;
@@ -463,7 +472,7 @@ function runCamp(s: GameState) {
   k.ozet.push(...notes);
 
   // Sakatlık zarı
-  const risk = intensity.risk * (1.3 - s.saglik / 200) * (k.kisaHaber ? 0.5 : len.risk) * injuryMultiplier(s) * site.risk * drill.risk;
+  const risk = intensity.risk * (1.3 - s.saglik / 200) * (k.kisaHaber ? 0.5 : len.risk) * injuryMultiplier(s) * site.risk * drill.risk * (1 + (k.anEtki?.risk ?? 0));
   if (chance(risk)) {
     const inj = randomInjury(3, 8);
     s.sakatliklar.push(inj);
