@@ -27,6 +27,8 @@ import { drillBonus, recordDrill } from './drills';
 import { bump } from './istat';
 import { buildNight } from './fightNight';
 import { coachMods } from './coachBond';
+import { answerPress, pressDone, startPress, type PressStyle } from './pressConf';
+import { chooseRivalNews, closeRivalNews, rivalNewsMods, rivalNewsOpen } from './rivalCamp';
 import { mediaFatigue } from './media';
 import { answerDuel, autoAnswer, createDuel, duelOutcome, type DuelAnswer } from './trashTalk';
 import type {
@@ -234,18 +236,24 @@ export function campChoose(s: GameState, value: string | number) {
       if (typeof value === 'string' && value.startsWith('idman:')) return recordDrill(s, Number(value.slice(6)));
       if (typeof value === 'string' && value.startsWith('kanka:')) return choosePartner(s, Number(value.slice(6)));
       if (value === 'kankaKapat') return closePartnerMoment(s);
-      // Antrenman ortağıyla karar anı bekliyorsa hafta ilerlemez
-      if (k.kankaAn) return;
-      if (value === 'hepsi') while ((k.kampIdx ?? 0) < k.hafta && !k.kankaAn) campWeek(s);
+      if (typeof value === 'string' && value.startsWith('rakip:')) return chooseRivalNews(s, Number(value.slice(6)));
+      if (value === 'rakipKapat') return closeRivalNews(s);
+      // Antrenman ortağıyla ya da rakip kampı haberiyle karar anı bekliyorsa hafta ilerlemez
+      if (k.kankaAn || rivalNewsOpen(s)) return;
+      if (value === 'hepsi') while ((k.kampIdx ?? 0) < k.hafta && !k.kankaAn && !rivalNewsOpen(s)) campWeek(s);
       else campWeek(s);
-      if (k.kankaAn) return;
+      if (k.kankaAn || rivalNewsOpen(s)) return;
       if ((k.kampIdx ?? 0) >= k.hafta) {
-        // Trash talk seçildiyse basın toplantısı elle oynanan bir düelloya döner
-        if (k.basin === 'trash' && !k.duello) {
-          k.duello = createDuel(s);
-          k.step = 'duello';
-        } else runCamp(s);
+        // Profesyonelde kamp basın toplantısı sahnesiyle biter
+        if (hasPress(s) && !k.basinSahne) {
+          startPress(s);
+          k.step = 'basinsahne';
+        } else afterPress(s);
       }
+      return;
+    case 'basinsahne':
+      if (typeof value === 'string' && value.startsWith('cevap:')) answerPress(s, value.slice(6) as PressStyle);
+      else if (value === 'devam' && pressDone(s)) afterPress(s);
       return;
     case 'duello': {
       const d = k.duello!;
@@ -313,6 +321,15 @@ export function campChoose(s: GameState, value: string | number) {
       else beginFight(s);
       return;
   }
+}
+
+/** Basın toplantısından sonra: trash talk seçildiyse düello, yoksa kamp sonucu. */
+function afterPress(s: GameState) {
+  const k = s.pending.kamp!;
+  if (k.basin === 'trash' && !k.duello) {
+    k.duello = createDuel(s);
+    k.step = 'duello';
+  } else runCamp(s);
 }
 
 /** Ayarlar bitti: kamp hafta hafta oynanır. */
@@ -584,6 +601,7 @@ function beginFight(s: GameState) {
   hometownMods(s, opp, mods);
   familyMods(s, mods);
   coachMods(s, mods);
+  rivalNewsMods(s, mods, k.oppMods);
   perkFightMods(s, mods);
   brainMods(s, mods);
   Object.entries(fightItemMods(s)).forEach(([st, v]) => (mods[st as StatKey] = (mods[st as StatKey] ?? 0) + (v ?? 0)));

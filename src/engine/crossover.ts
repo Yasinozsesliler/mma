@@ -55,8 +55,9 @@ const PURSE: Record<GameState['stage'], number> = { amator: 0, bolgesel: 0, buyu
 /** Dövüşten sonra teklif gelebilir: kariyerde bir kez. */
 export function maybeCrossover(s: GameState) {
   if (s.boksYapildi || s.boksTeklif || s.boks) return;
-  if (!['buyuk', 'ufc'].includes(s.stage) || s.populerlik < 55 || followers(s) < 500_000) return;
-  if (!chance(0.1)) return;
+  if (!['buyuk', 'ufc'].includes(s.stage)) return;
+  // "Boks macerası" dönemi seçildiyse kapı aralık: şart aranmaz, teklif çabuk gelir
+  if (s.boksKapi ? !chance(0.5) : s.populerlik < 55 || followers(s) < 500_000 || !chance(0.1)) return;
   const b = boxerFor(s);
   s.boksTeklif = { boksor: b, ucret: PURSE[s.stage] };
   s.haberler.unshift(L("🥊 Bomba teklif: Boks efsanesi {0} seninle süper maç istiyor! Ücret ${1}.", [b.ad, PURSE[s.stage].toLocaleString(LOC)]));

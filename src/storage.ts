@@ -8,6 +8,7 @@ import { startingTechniques } from './engine/techniques';
 import { playerPhysique } from './engine/tale';
 import { initialFollowers } from './engine/fame';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { AppState } from 'react-native';
 import { ensureDivision } from './engine/division';
 import { gymsFor } from './engine/gyms';
 import { ORGS, WEIGHT_CLASSES } from './engine/data';
@@ -167,7 +168,32 @@ export function parseSave(raw: string): GameState | null {
 
 const lastBackup: Partial<Record<Slot, number>> = {};
 
+// Yazma birleştirme: hızlı art arda dokunuşlarda diske yalnızca sonuncusu yazılır (250 ms). Uygulama arka plana
+// geçerken ya da sayfa kapanırken bekleyen kayıt hemen yazılır.
+let pending: { s: GameState; slot: Slot } | null = null;
+let timer: ReturnType<typeof setTimeout> | null = null;
+export function flushSave(): Promise<void> {
+  if (timer) clearTimeout(timer);
+  timer = null;
+  const p = pending;
+  pending = null;
+  return p ? writeGame(p.s, p.slot) : Promise.resolve();
+}
+AppState.addEventListener('change', (st) => {
+  if (st !== 'active') void flushSave();
+});
+if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') window.addEventListener('pagehide', () => void flushSave());
+
 export async function saveGame(s: GameState, slot: Slot = 1) {
+  // Önemli anlar (kariyer ekranı, maç sonu) hemen yazılır; ara adımlar birleştirilir.
+  if (pending && pending.slot !== slot) await flushSave();
+  pending = { s, slot };
+  if (s.phase === 'hub' || s.phase === 'dovusSonrasi' || s.phase === 'emeklilik') return flushSave();
+  if (timer) clearTimeout(timer);
+  timer = setTimeout(() => void flushSave(), 250);
+}
+
+async function writeGame(s: GameState, slot: Slot) {
   try {
     const json = JSON.stringify(s);
     await AsyncStorage.setItem(keyOf(slot), json);

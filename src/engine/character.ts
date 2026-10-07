@@ -149,8 +149,8 @@ export function addStat(stats: Stats, k: StatKey, amount: number, min = 0): numb
 export function advanceWeeks(s: GameState, weeks: number): string[] {
   const notes: string[] = [];
   s.hafta += weeks;
-  // Haber akışı sınırsız büyümesin (kayıt her dokunuşta kopyalanıp yazılıyor): son 150 haber yeter.
-  if (s.haberler.length > 150) s.haberler.length = 150;
+  // Haber akışı sınırsız büyümesin (kayıt her dokunuşta kopyalanıp yazılıyor): ekran en fazla 12 gösterir, 60 yeter.
+  if (s.haberler.length > 60) s.haberler.length = 60;
   // Haftalık tik (gelir, giderler, tedavi süresi) hafta ilerledikten sonra çalışır.
   const econ = economyTick(s, weeks);
   const yeniYas = s.fighter.baslangicYasi + Math.floor(s.hafta / 52);

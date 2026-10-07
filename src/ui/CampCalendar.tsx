@@ -1,4 +1,5 @@
 // Takvim ekranları: kamp süresi, serbest haftalar, hafta hafta kamp ve premium kamp sonu.
+import { RivalNewsCard } from './RivalNewsCard';
 import { PartnerMomentCard } from './PartnerMomentCard';
 import { L, LOC } from '../i18n';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -213,7 +214,7 @@ export function CampWeeksStep({ s, header, choose }: { s: GameState; header: Rea
   return (
     <Screen
       footer={
-        k.kankaAn ? undefined : (
+        k.kankaAn || (k.rakipHaber && !k.rakipHaber.kapandi) ? undefined : (
           <>
             <Button label={done + 1 >= k.hafta ? L("Fight week’i oyna") : L("{0}. kamp haftasını oyna", [done + 1])} icon="play" onPress={() => choose('hafta')} />
             <Button label={L("Tüm kampı simüle et")} icon="fast-forward" tone="ghost" onPress={() => choose('hepsi')} />
@@ -224,6 +225,7 @@ export function CampWeeksStep({ s, header, choose }: { s: GameState; header: Rea
       {header}
       <FightDateHero s={s} />
       <PartnerMomentCard s={s} choose={choose} />
+      <RivalNewsCard s={s} choose={choose} />
       <Text style={cc.title}>{L('Antrenman kampı · {0}/{1} hafta', [done, k.hafta])}</Text>
       <Pressable
         disabled={played}

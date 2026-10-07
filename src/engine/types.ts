@@ -248,7 +248,12 @@ export interface CampState {
   kesif?: boolean;
   /** Maç afişi oyun içinde paylaşıldı (bir kez) */
   afis?: boolean;
-  step: 'hoca' | 'planla' | 'sure' | 'takvim' | 'yer' | 'focus' | 'plan' | 'intensity' | 'kilo' | 'basin' | 'haftalik' | 'sakatlik' | 'ozet' | 'tarti' | 'yuzyuze' | 'duello' | 'kesim';
+  /** Rakip kampından haber (rivalCamp.ts) */
+  rakipHaber?: import('./rivalCamp').RivalNews;
+  /** Basın toplantısı sahnesi (pressConf.ts) ve iddialı söz sayısı */
+  basinSahne?: import('./pressConf').PressScene;
+  iddia?: number;
+  step: 'basinsahne' | 'hoca' | 'planla' | 'sure' | 'takvim' | 'yer' | 'focus' | 'plan' | 'intensity' | 'kilo' | 'basin' | 'haftalik' | 'sakatlik' | 'ozet' | 'tarti' | 'yuzyuze' | 'duello' | 'kesim';
   pKilo?: number;
   oKilo?: number;
   kafesKilo?: number;
@@ -509,7 +514,8 @@ export type Phase =
   | 'tatil'
   | 'vucut'
   | 'belgesel'
-  | 'lig';
+  | 'lig'
+  | 'memleket';
 
 export interface Istat {
   enIyiSeri: number;
@@ -644,6 +650,14 @@ export interface GameState {
   izler?: import('./body').Iz[];
   /** Kendi organizasyonun (promoter.ts) */
   lig?: import('./promoter').Lig;
+  /** Kariyer dönemleri (eras.ts) */
+  donemler?: import('./eras').Era[];
+  donemSon?: number;
+  boksKapi?: boolean;
+  /** Okunan taraftar mektupları (letters.ts) */
+  mektuplar?: string[];
+  /** Memleket kartı (homeland.ts) */
+  memleketKart?: import('./homeland').Homeland;
   /** Hikâye bölümlerinde yapılan seçimler (profilde günlük olarak) */
   hikayeKayit?: Record<string, { bolumler: { baslik: string; secim: string; sonuc: string }[]; bitti?: boolean }>;
   hikayeSon?: number;

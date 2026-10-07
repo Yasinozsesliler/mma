@@ -61,6 +61,7 @@ const markaStat = { n: 0, toplam: 0, maxPara: 0 };
 const odulStat: Record<string, number> = {};
 const gpStat = { katilim: 0, sampiyon: 0, tur: {} as Record<number, number> };
 const kankaStat = { kanka: 0, rakip: 0 };
+const kayit = { boyut: [] as number[], alan: {} as Record<string, number> };
 const kartStat: Record<string, number> = { toplam: 0 };
 const mapStat = { sehir: 0, kita: 0, odul: 0 };
 const cbStat = { n: 0, g: 0 };
@@ -222,7 +223,7 @@ function playCareer() {
           planla: 'plan:' + JSON.stringify({ hafta: Math.min(8, k.macHafta ?? 8), yer: s.para > 20000 ? 'irtifa' : 'salon', focus, plan: PLAN_FOR[weakest(s.pending.rakip!)], intensity: 'orta', kilo: 'normal', basin }),
           sure: Math.min(8, k.macHafta ?? 8),
           takvim: 'hizli',
-          haftalik: k.kankaAn ? (k.kankaAn.sonuc ? 'kankaKapat' : `kanka:${randInt(0, k.kankaAn.secenekler.length - 1)}`) : 'hepsi',
+          haftalik: k.kankaAn ? (k.kankaAn.sonuc ? 'kankaKapat' : `kanka:${randInt(0, k.kankaAn.secenekler.length - 1)}`) : k.rakipHaber && !k.rakipHaber.kapandi ? (k.rakipHaber.sonuc ? 'rakipKapat' : `rakip:${randInt(0, 1)}`) : 'hepsi',
           yer: s.para > 20000 ? 'irtifa' : 'salon',
           focus,
           plan: PLAN_FOR[weakest(s.pending.rakip!)],
@@ -230,6 +231,7 @@ function playCareer() {
           kilo: 'normal',
           basin,
           duello: k.duello?.bitti ? 'devam' : 'oto',
+          basinsahne: k.basinSahne && k.basinSahne.secimler.length >= k.basinSahne.sorular.length ? 'devam' : `cevap:${['mutevazi', 'iddiali', 'espri'][randInt(0, 2)]}`,
           sakatlik: 0,
           ozet: 0,
           // Elle kilo verme: önce su kesimi, sonra kalan fazlaya göre sauna/koşu/banyo; fazla yoksa dinlen
@@ -354,6 +356,11 @@ function playCareer() {
     if (s.unvanlar.some((u) => /^U[FC]C/.test(u))) stats.ufcChamp++;
     (s.hikayeler ?? []).forEach((h) => (stats.hikaye[h] = (stats.hikaye[h] ?? 0) + 1));
     stats.hikayeSayi.push((s.hikayeler ?? []).length);
+    {
+      const j = JSON.stringify(s);
+      kayit.boyut.push(j.length);
+      for (const [k, v] of Object.entries(s)) kayit.alan[k] = (kayit.alan[k] ?? 0) + JSON.stringify(v ?? null).length;
+    }
     stats.hocaBag.push(s.hoca?.bag ?? 0);
     stats.medya.push((s.medya ?? []).length);
     stats.dunya.push(Object.keys(s.dunya ?? {}).length);
@@ -417,6 +424,7 @@ console.log('Geçmişe göre galibiyet:', Object.entries(stats.byBg).map(([k, v]
 console.log('Aşama başına ortalama dövüş:', Object.entries(stats.stageFights).map(([k, v]) => `${k} ${(v / (stats.stageCareers[k] ?? N)).toFixed(1)}`).join(', '));
 console.log(`Tekrar rakip: ${pct(stats.repeatFights, stats.fights)} dövüş, aynı rakiple en fazla: ${stats.maxSame}, farklı kişi ama aynı isim: ${pct(stats.sameName, stats.fights)}`);
 console.log(`Ezeli rakip: ${pct(stats.nem, N)} kariyerde (${pct(stats.nemYenilgi, stats.nem)} ilk yenilgiden), karşılaşma ort. ${mean(stats.nemMac)} (maks ${Math.max(0, ...stats.nemMac)}), rekabeti bitiren ${pct(stats.nemBitti, stats.nem)}`);
+console.log(`Kayıt boyutu (kariyer sonu): ort. ${Math.round(kayit.boyut.reduce((a, b) => a + b, 0) / kayit.boyut.length / 1024)} KB, maks ${Math.round(Math.max(...kayit.boyut) / 1024)} KB · en büyük alanlar: ${Object.entries(kayit.alan).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([k, v]) => `${k} ${Math.round(v / N / 1024)}KB`).join(', ')}`);
 console.log(`Hoca bağı (kariyer sonu) ort. ${mean(stats.hocaBag)}, 80+ ${pct(stats.hocaBag.filter((b) => b >= 80).length, N)} · medya projesi ${mean(stats.medya)} · canlı dünyada takip edilen rakip ${mean(stats.dunya)} · kronik iz ${mean(stats.izler)}`);
 console.log(`Hatıralar (kariyer başına): müze ${mean(stats.muze)}/15, aile ${mean(stats.aile)} · albüm setleri ${mean(stats.setler)}/11, parlak kart ${mean(stats.parlak)}`);
 console.log(`Hikâyeler: kariyer başına ort. ${mean(stats.hikayeSayi)} · ${Object.entries(stats.hikaye).map(([k, v]) => `${k} ${pct(v, N)}`).join(', ')}`);

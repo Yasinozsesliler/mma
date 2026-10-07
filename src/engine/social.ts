@@ -10,7 +10,7 @@ import { chance, clamp, fill, pick, randInt, uid } from './rng';
 import type { GameState, Opponent, Post } from './types';
 import { followers, npcFollowers } from './fame';
 
-const MAX_POSTS = 60;
+const MAX_POSTS = 40;
 
 const slug = (t: string) =>
   t

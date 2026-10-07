@@ -33,6 +33,7 @@ export function buildScenes(s: GameState): Scene[] {
   (s.hatiralar ?? [])
     .filter((h) => h.kat === 'aile' || h.nadir === 'efsane')
     .forEach((h) => out.push({ yas: h.yas, sira: 9999, kicker: L("{0} YAŞINDA", [h.yas]), baslik: h.ad, alt: h.metin.split('\n')[0], ikon: HATIRA_ICON[h.tur], renk: h.kat === 'aile' ? '#ff5c8a' : '#f2c14e' }));
+  (s.donemler ?? []).forEach((d) => out.push({ yas: d.yas, sira: 9997, kicker: L("{0} YAŞINDA", [d.yas]), baslik: d.ad, alt: L("Kariyerinde yeni bir dönem başladı"), ikon: 'compass', renk: '#2ec4b6' }));
   (s.medya ?? []).forEach((m) => out.push({ yas: m.yas, sira: 9998, kicker: L("{0} YAŞINDA", [m.yas]), baslik: `${MEDIA_LABEL[m.tur]()}: ${m.ad}`, alt: L("Kafesin dışında da bir yıldız"), ikon: MEDIA_ICON[m.tur], renk: '#c86bff' }));
   out.sort((a, b) => (a.yas ?? 0) - (b.yas ?? 0) || a.sira - b.sira);
   const story = (f.hikaye || '').split(/(?<=\.)\s/)[0];

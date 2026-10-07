@@ -5,10 +5,10 @@ import { L, LOC } from '../i18n';
 import { addFollowers, fmtDelta, followers } from './fame';
 import type { GameState } from './types';
 
-export type Feature = 'hedef' | 'etkinlik' | 'album' | 'harita' | 'basarim' | 'gece' | 'salon';
+export type Feature = 'hedef' | 'etkinlik' | 'album' | 'harita' | 'basarim' | 'gece' | 'salon' | 'vucut' | 'evim' | 'memleket' | 'muze' | 'tatil';
 
 /** Özelliğin açıldığı toplam maç sayısı */
-const AT: Record<Feature, number> = { hedef: 1, etkinlik: 1, album: 1, harita: 2, basarim: 2, gece: 3, salon: 4 };
+const AT: Record<Feature, number> = { hedef: 1, etkinlik: 1, album: 1, harita: 2, basarim: 2, gece: 3, salon: 4, vucut: 2, evim: 2, memleket: 3, muze: 3, tatil: 4 };
 const NAMES: Record<Feature, () => string> = {
   hedef: () => L("Kariyer hedefleri"),
   etkinlik: () => L("Haftalık etkinlik"),
@@ -17,6 +17,11 @@ const NAMES: Record<Feature, () => string> = {
   basarim: () => L("Başarımlar"),
   gece: () => L("Gece hayatı"),
   salon: () => L("Salonum"),
+  vucut: () => L("Vücudum"),
+  evim: () => L("Evim"),
+  memleket: () => L("Memleketim"),
+  muze: () => L("Hatıralar"),
+  tatil: () => L("Tatil"),
 };
 /** Bu maç sayısından sonra rozet gösterilmez (eski kariyerler) */
 const EARLY = 12;

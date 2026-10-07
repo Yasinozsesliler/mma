@@ -1,5 +1,6 @@
 // Memlekette ana maç: ara sıra sıradaki maç oyuncunun şehrinde düzenlenir. Tribün desteği (küçük bonus) ve
 // %50 fazla ücret; ama kazanınca kahraman, kaybedince kendi seyircisi önünde yıkım.
+import { homelandWin } from './homeland';
 import { L as tL, LOC } from '../i18n';
 import { addFollowers, fmtDelta, followers } from './fame';
 import { chance, clamp } from './rng';
@@ -33,6 +34,7 @@ export function hometownAfter(s: GameState, opp: Opponent, won: boolean, purse: 
     lines.push(tL("🏠 Memleket primi: +${0}", [Math.round(purse * 0.5).toLocaleString(LOC)]));
   }
   if (won) {
+    homelandWin(s);
     s.populerlik = clamp(s.populerlik + 6, 0, 100);
     const d = addFollowers(s, followers(s) * 0.08);
     lines.push(tL("🏠 {0} sokaklara döküldü! Şehrin kahramanısın. Popülerlik +6, {1} takipçi.", [s.fighter.memleket, fmtDelta(d)]));

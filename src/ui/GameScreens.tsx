@@ -82,6 +82,7 @@ import { unclaimedMilestones } from '../engine/cards';
 import { crisisTitle } from '../engine/crisis';
 import { EventCard } from './EventCard';
 import { TrashTalkDuel } from './TrashTalkDuel';
+import { PressConference } from './PressConference';
 import { WeightCutStep } from './WeightCutStep';
 import { WikiButton } from './WikiPage';
 import { CampLengthStep, CampSummary, CampWeeksStep, FreeWeeksStep } from './CampCalendar';
@@ -313,11 +314,12 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
                   />
                 ),
               },
-              { cat: 'antrenman', show: true, badge: null, node: <ActionTile key="vucut" icon="human" label={L("Vücudum")} sub={`${ageStage(s.fighter.yas).ad}${(s.izler ?? []).length ? ` · ${L("{0} iz", [(s.izler ?? []).length])}` : ''}`} accent="#ff8a5c" onPress={() => act((x) => (x.phase = 'vucut'))} /> },
+              { cat: 'antrenman', show: (true) && featureOpen(s, 'vucut'), badge: isNewFeature(s, 'vucut') || null, node: <ActionTile key="vucut" icon="human" label={L("Vücudum")} sub={`${ageStage(s.fighter.yas).ad}${(s.izler ?? []).length ? ` · ${L("{0} iz", [(s.izler ?? []).length])}` : ''}`} accent="#ff8a5c" badge={isNewFeature(s, 'vucut') ? L("YENİ") : null} onPress={() => act((x) => (seeFeature(x, 'vucut'), (x.phase = 'vucut')))} /> },
               { cat: 'antrenman', show: s.stage !== 'amator', badge: null, node: <ActionTile key="siklet" icon="scale-balance" label={L("Sıklet")} sub={s.sampiyon ? L("Çift kemere git") : WEIGHT_CLASSES[s.fighter.siklet].ad} accent={C.orange} selected={weightOpen} onPress={() => { setWeightOpen(!weightOpen); setResting(false); }} /> },
               { cat: 'yasam', show: true, badge: null, node: <ActionTile key="magaza" icon="shopping" label={L("Mağaza")} sub={weeklyBusinessIncome(s) ? `+${money(weeklyBusinessIncome(s))}/hafta` : L("Ekipman · yaşam · tatil")} accent={C.gold} onPress={() => act((x) => (x.phase = 'magaza'))} /> },
-              { cat: 'yasam', show: true, badge: null, node: <ActionTile key="evim" icon="home-heart" label={L("Evim")} sub={houseLevel(s) ? L("Kupalar, fotoğraflar, odalar") : L("Henüz evin yok")} accent="#f4a261" onPress={() => act((x) => (x.phase = 'evim'))} /> },
-              { cat: 'yasam', show: true, badge: null, node: <ActionTile key="tatil" icon="beach" label={L("Tatil")} sub={L("{0} kartpostal", [(s.hatiralar ?? []).filter((h) => h.kat === 'tatil').length])} accent="#2ec4b6" onPress={() => act((x) => (x.phase = 'tatil'))} /> },
+              { cat: 'yasam', show: (true) && featureOpen(s, 'evim'), badge: isNewFeature(s, 'evim') || null, node: <ActionTile key="evim" icon="home-heart" label={L("Evim")} sub={houseLevel(s) ? L("Kupalar, fotoğraflar, odalar") : L("Henüz evin yok")} accent="#f4a261" badge={isNewFeature(s, 'evim') ? L("YENİ") : null} onPress={() => act((x) => (seeFeature(x, 'evim'), (x.phase = 'evim')))} /> },
+              { cat: 'yasam', show: (!!s.fighter.memleket) && featureOpen(s, 'memleket'), badge: isNewFeature(s, 'memleket') || null, node: <ActionTile key="memleket" icon="home-city" label={L("Memleketim")} sub={L("{0} · {1}/5 aşama", [s.fighter.memleket, (s.memleketKart?.asamalar ?? []).length])} accent="#f08a5d" badge={isNewFeature(s, 'memleket') ? L("YENİ") : null} onPress={() => act((x) => (seeFeature(x, 'memleket'), (x.phase = 'memleket')))} /> },
+              { cat: 'yasam', show: (true) && featureOpen(s, 'tatil'), badge: isNewFeature(s, 'tatil') || null, node: <ActionTile key="tatil" icon="beach" label={L("Tatil")} sub={L("{0} kartpostal", [(s.hatiralar ?? []).filter((h) => h.kat === 'tatil').length])} accent="#2ec4b6" badge={isNewFeature(s, 'tatil') ? L("YENİ") : null} onPress={() => act((x) => (seeFeature(x, 'tatil'), (x.phase = 'tatil')))} /> },
               { cat: 'yasam', show: true, badge: null, node: <ActionTile key="sosyal" icon="cellphone-message" label={L("Sosyal medya")} sub={L("{0} paylaşım", [(s.sosyal ?? []).length])} accent="#3aa8ff" onPress={() => act((x) => (x.phase = 'sosyal'))} /> },
               { cat: 'yasam', show: featureOpen(s, 'gece'), badge: isNewFeature(s, 'gece') || null, node: <ActionTile key="gece" icon="glass-cocktail" label={L("Gece hayatı")} sub={s.iliski ? `💞 ${s.iliski.ad}` : L("Randevu · kulüp · kumar")} accent="#fd267a" badge={isNewFeature(s, 'gece') ? L("YENİ") : null} onPress={() => act((x) => (seeFeature(x, 'gece'), (x.phase = 'gece')))} /> },
               { cat: 'marka', show: s.stage !== 'amator', badge: (s.kulup && canActivity(s)) || canFoundClub(s) || null, node: <ActionTile key="kulup" icon="flag-variant" label={L("Taraftar kulübü")} sub={s.kulup ? `${s.kulup.ad} · ${fmtFollowers(members(s))}` : canFoundClub(s) ? L("Kulübünü kur") : L("3B takipçi gerekli")} accent="#ff8fb1" badge={(s.kulup && canActivity(s)) || canFoundClub(s) ? '!' : null} onPress={() => act((x) => (x.phase = 'kulup'))} /> },
@@ -327,7 +329,7 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
               { cat: 'marka', show: s.stage !== 'amator', badge: canStream(s) || null, node: <ActionTile key="yayin" icon="broadcast" label={L("Canlı yayın")} sub={canStream(s) ? L("Yayına geç") : followers(s) < STREAM_MIN_FOLLOWERS ? L("5B takipçi gerekli") : L("Sonraki maçtan sonra")} accent="#9146ff" badge={canStream(s) ? '!' : null} onPress={() => canStream(s) && act(startStream)} /> },
               { cat: 'koleksiyon', show: featureOpen(s, 'basarim'), badge: isNewFeature(s, 'basarim') || null, node: <ActionTile key="basarim" icon="medal" label={L("Başarımlar")} sub={s.hof ? L("🏛 Hall of Fame") : `${(s.basarimlar ?? []).length}/${ACHIEVEMENTS.length}`} accent={C.gold} badge={isNewFeature(s, 'basarim') ? L("YENİ") : null} onPress={() => act((x) => (seeFeature(x, 'basarim'), (x.phase = 'basarimlar')))} /> },
               { cat: 'koleksiyon', show: featureOpen(s, 'album'), badge: isNewFeature(s, 'album') || unclaimedMilestones(s) + unclaimedSets(s) || null, node: <ActionTile key="album" icon="cards" label={L("Kart Albümü")} sub={L("{0} kart", [(s.kartlar ?? []).length])} accent="#c86bff" badge={isNewFeature(s, 'album') ? L("YENİ") : unclaimedMilestones(s) + unclaimedSets(s) || null} onPress={() => act((x) => (seeFeature(x, 'album'), (x.phase = 'album')))} /> },
-              { cat: 'koleksiyon', show: true, badge: null, node: <ActionTile key="muze" icon="bank" label={L("Hatıralar")} sub={L("{0}/{1} vitrin · {2} anı", [(s.hatiralar ?? []).filter((h) => h.kat === 'muze').length, MUSEUM.length, (s.hatiralar ?? []).length])} accent={C.gold} onPress={() => act((x) => (x.phase = 'muze'))} /> },
+              { cat: 'koleksiyon', show: (true) && featureOpen(s, 'muze'), badge: isNewFeature(s, 'muze') || null, node: <ActionTile key="muze" icon="bank" label={L("Hatıralar")} sub={L("{0}/{1} vitrin · {2} anı", [(s.hatiralar ?? []).filter((h) => h.kat === 'muze').length, MUSEUM.length, (s.hatiralar ?? []).length])} accent={C.gold} badge={isNewFeature(s, 'muze') ? L("YENİ") : null} onPress={() => act((x) => (seeFeature(x, 'muze'), (x.phase = 'muze')))} /> },
               { cat: 'koleksiyon', show: featureOpen(s, 'harita'), badge: null, node: <ActionTile key="pasaport" icon="passport" label={L("Pasaport")} sub={L("{0} damga", [Object.keys(s.damgalar ?? {}).length || visitedCount(s)])} accent="#b23a48" onPress={() => act((x) => (x.phase = 'pasaport'))} /> },
               { cat: 'koleksiyon', show: s.stage !== 'amator', badge: null, node: <ActionTile key="luks" icon="diamond-stone" label={L("Lüks koleksiyon")} sub={(s.luks ?? []).length ? money(luxTotal(s)) : L("Müzayede açık")} accent="#c86bff" onPress={() => act((x) => (x.phase = 'luks'))} /> },
               { cat: 'koleksiyon', show: featureOpen(s, 'harita'), badge: isNewFeature(s, 'harita') || null, node: <ActionTile key="harita" icon="earth" label={L("Dünya turu")} sub={L("{0} şehir · {1} kıta", [visitedCount(s), visitedKitalar(s).length])} accent="#4cc9f0" badge={isNewFeature(s, 'harita') ? L("YENİ") : null} onPress={() => act((x) => (seeFeature(x, 'harita'), (x.phase = 'harita')))} /> },
@@ -441,6 +443,8 @@ export function EventScreen({ s, act }: { s: GameState; act: Act }) {
   const aile = ev.id.startsWith('aile:');
   const hoca = ev.id.startsWith('hoca:');
   const medya = ev.id.startsWith('medya:') ? (ev.id.split(':')[1] as MediaKind) : null;
+  const donem = ev.id.startsWith('donem:');
+  const mektup = ev.id.startsWith('mektup:');
   return (
     <Screen footer={ev.sonuc ? <Button label={L("Devam")} icon="arrow-right" onPress={() => act(closeEvent)} /> : undefined}>
       {ev.id.startsWith('patron_') && OWNERS[s.contract?.org ?? 'ufc'] ? (
@@ -449,10 +453,10 @@ export function EventScreen({ s, act }: { s: GameState; act: Act }) {
         </View>
       ) : (
         <View style={gs.eventIcon}>
-          <Icon name={aile ? 'baby-face-outline' : hoca ? 'whistle' : medya ? (MEDIA_ICON[medya] as IconName) : (EVENT_ICONS[ev.id] ?? 'star-four-points')} size={34} color={aile ? '#ff5c8a' : C.gold} />
+          <Icon name={aile ? 'baby-face-outline' : hoca ? 'whistle' : donem ? 'compass' : mektup ? 'email-heart-outline' : medya ? (MEDIA_ICON[medya] as IconName) : (EVENT_ICONS[ev.id] ?? 'star-four-points')} size={34} color={aile ? '#ff5c8a' : C.gold} />
         </View>
       )}
-      <Title kicker={aile ? L("AİLE ANI") : hoca ? L("ANTRENÖRÜN") : medya ? L("ÜNLÜLÜK") : L("DÖVÜŞ DIŞI")}>{ev.baslik.replace(/^\S+\s/, '')}</Title>
+      <Title kicker={aile ? L("AİLE ANI") : hoca ? L("ANTRENÖRÜN") : donem ? L("KARİYER KARARI") : mektup ? L("TARAFTAR MEKTUBU") : medya ? L("ÜNLÜLÜK") : L("DÖVÜŞ DIŞI")}>{ev.baslik.replace(/^\S+\s/, '')}</Title>
       <Card>
         <P style={{ marginBottom: 0 }}>{ev.metin}</P>
       </Card>
@@ -566,7 +570,7 @@ export function OpponentScreen({ s, act }: { s: GameState; act: Act }) {
 const CAMP_STEPS: { key: CampState['step'][]; label: string }[] = [
   { key: ['hoca', 'planla', 'sure', 'yer', 'focus', 'plan', 'intensity', 'kilo', 'basin'], label: L("Plan") },
   { key: ['takvim'], label: L("Takvim") },
-  { key: ['haftalik', 'duello', 'sakatlik', 'ozet'], label: L("Kamp") },
+  { key: ['haftalik', 'basinsahne', 'duello', 'sakatlik', 'ozet'], label: L("Kamp") },
   { key: ['kesim', 'tarti', 'yuzyuze'], label: L("Tartı") },
 ];
 
@@ -674,6 +678,7 @@ export function CampScreen({ s, act }: { s: GameState; act: Act }) {
   if (k.step === 'takvim') return <FreeWeeksStep s={s} header={header} choose={choose} />;
   if (k.step === 'haftalik') return <CampWeeksStep s={s} header={header} choose={choose} />;
   if (k.step === 'duello') return <TrashTalkDuel key={o.id} s={s} header={header} choose={choose} />;
+  if (k.step === 'basinsahne') return <PressConference s={s} header={header} choose={choose} />;
   if (k.step === 'ozet') return <CampSummary s={s} act={act} choose={choose} />;
   if (k.step === 'kesim') return <WeightCutStep s={s} header={header} choose={choose} />;
 

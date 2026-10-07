@@ -85,6 +85,25 @@ export function CreateScreen({
       };
     });
   /** Hızlı başla: kalan adımlar mantıklı/rastgele seçimlerle doldurulur ve kariyer hemen başlar. */
+  const HOMETOWNS: Record<string, string[]> = {
+    tr: [L("Erzurum"), L("Trabzon"), L("Adana"), L("Diyarbakır"), L("Samsun"), L("Konya"), L("İzmir")],
+    us: ['Detroit', 'Philadelphia', 'Albuquerque', 'Sacramento'],
+    br: ['Curitiba', 'Recife', 'Manaus', 'Salvador'],
+    ru: [L("Mahaçkale"), L("Grozni"), L("Kazan"), L("Omsk")],
+    gb: ['Liverpool', 'Glasgow', 'Leeds'],
+    ie: ['Cork', 'Galway', 'Limerick'],
+    fr: ['Marseille', 'Lyon', 'Lille'],
+    de: ['Köln', 'Hamburg', 'Dortmund'],
+    pl: ['Kraków', 'Gdańsk', 'Wrocław'],
+    cz: ['Brno', 'Ostrava'],
+    ge: [L("Tiflis"), L("Batum"), L("Kutaisi")],
+    kz: [L("Almatı"), L("Şımkent"), L("Karaganda")],
+    mx: ['Tijuana', 'Guadalajara', 'Monterrey'],
+    jp: ['Osaka', 'Sapporo', 'Fukuoka'],
+    ng: ['Lagos', 'Ibadan', 'Kano'],
+    au: ['Brisbane', 'Melbourne', 'Adelaide'],
+    az: [L("Gence"), L("Sumgayıt"), L("Şeki")],
+  };
   const quickStart = () => {
     const name = randomName(inp.uyruk, !!inp.kadin);
     const siklet = rnd<WeightClass>(inp.kadin ? WOMEN_WEIGHTS : ['tuy', 'hafif', 'welter', 'orta']);
@@ -93,6 +112,8 @@ export function CreateScreen({
       ad: inp.ad.trim() || name.ad,
       soyad: inp.soyad.trim() || name.soyad,
       lakap: inp.lakap.trim() || (inp.ad.trim() ? '' : name.lakap),
+      // Memleket boşsa ülkeye uygun bir şehir: memleket kartı ve memleket maçları açılsın
+      memleket: inp.memleket.trim() || rnd(HOMETOWNS[inp.uyruk] ?? HOMETOWNS.tr),
       yas: 22,
       siklet,
       boy: BASE_BOY[siklet],

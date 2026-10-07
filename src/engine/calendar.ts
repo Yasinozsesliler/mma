@@ -1,5 +1,6 @@
 // Takvim: maç tarihi, kamp süresi, kamp öncesi serbest haftalar (etkinlikler) ve kampın hafta hafta akışı.
 import { maybePartnerMoment, partnerSparName } from './partner';
+import { maybeRivalNews } from './rivalCamp';
 import { L, LOC } from '../i18n';
 import { addStat, advanceWeeks } from './character';
 import { chance, clamp, pick, randInt } from './rng';
@@ -325,6 +326,8 @@ export function campWeek(s: GameState): string {
   const notes = advanceWeeks(s, 1);
   socialTick(s, 1);
   if (i > 1 && !son) maybePartnerMoment(s);
+  // Kampın ortasında rakibin kampından haber
+  if (i === Math.max(1, Math.floor(k.hafta / 2)) && !son) maybeRivalNews(s);
   k.kampIdx = i;
   k.haftaLog = [...(k.haftaLog ?? []), L("{0}. hafta · {1}{2}", [i, msg, notes.length ? ` ${notes.join(' ')}` : ''])];
   return msg;

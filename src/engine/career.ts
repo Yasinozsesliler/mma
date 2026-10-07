@@ -46,6 +46,8 @@ import { performanceRace } from './fightNight';
 import { fightMementos, stampCity } from './memories';
 import { worldTick } from './worldLife';
 import { rutinAfterFight } from './body';
+import { pressAfterFight } from './pressConf';
+import { homelandTick } from './homeland';
 import { bondAfterFight } from './coachBond';
 import { storyRival } from './stories';
 import { generateOpponent } from './opponents';
@@ -471,6 +473,8 @@ export function finishFight(s: GameState) {
   );
   lines.push(...worldTick(s, opp.id));
   lines.push(...rutinAfterFight(s));
+  lines.push(...pressAfterFight(s, won && !caught));
+  lines.push(...homelandTick(s));
   bondAfterFight(s, { won, finish: finishMethod, koLoss: !won && !draw && (r.yontem === 'KO' || r.yontem === 'TKO'), planUyum: !!kamp.planUyum });
   const karneSon = pro ? s.rekor : s.amator;
   s.pending.sonrasi = {

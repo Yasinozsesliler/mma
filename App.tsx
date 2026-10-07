@@ -57,6 +57,7 @@ import { LuxuryScreen } from './src/ui/LuxuryScreen';
 import { BodyScreen } from './src/ui/BodyScreen';
 import { DocumentaryScreen } from './src/ui/DocumentaryScreen';
 import { PromoterScreen } from './src/ui/PromoterScreen';
+import { HomelandScreen } from './src/ui/HomelandScreen';
 import { KafesEviScreen } from './src/ui/KafesEviScreen';
 import { FanClubScreen } from './src/ui/FanClubScreen';
 import { FadeIn } from './src/ui/anim';
@@ -118,6 +119,7 @@ const PHASE_LABELS: Record<Phase, string> = {
   vucut: L("Vücudum"),
   belgesel: L("Kariyer Belgeseli"),
   lig: L("Organizasyonum"),
+  memleket: L("Memleketim"),
 };
 
 type View_ = 'loading' | 'menu' | 'create' | 'game' | 'daily' | 'locker';
@@ -410,6 +412,9 @@ export default function App() {
         break;
       case 'luks':
         content = <LuxuryScreen {...props} />;
+        break;
+      case 'memleket':
+        content = <HomelandScreen {...props} />;
         break;
       case 'lig':
         content = <PromoterScreen {...props} />;

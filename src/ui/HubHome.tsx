@@ -137,7 +137,7 @@ export function ActionTile({
       <View style={[hh.tileIcon, { backgroundColor: accent + '1c', borderColor: accent + '55' }]}>
         <Icon name={icon} size={19} color={accent} />
       </View>
-      <View style={{ flex: 1 }}>
+      <View style={{ flex: 1, paddingRight: badge ? (String(badge).length > 2 ? 46 : 26) : 0 }}>
         <Text style={hh.tileLabel} numberOfLines={1}>
           {label}
         </Text>
