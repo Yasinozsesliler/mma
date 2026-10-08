@@ -16,6 +16,7 @@ import { createGame } from './src/engine/character';
 import type { GameState } from './src/engine/types';
 import { deleteGame, getActiveSlot, loadAllSlots, restoreBackup, saveGame, setActiveSlot, type Slot } from './src/storage';
 import { ErrorBoundary } from './src/ui/ErrorBoundary';
+import { installErrorLog } from './src/errorLog';
 import { GymScreen } from './src/ui/GymScreen';
 import { warmAnnouncer } from './src/announcer';
 import { CreateScreen } from './src/ui/CreateScreen';
@@ -123,6 +124,8 @@ const PHASE_LABELS: Record<Phase, string> = {
 };
 
 type View_ = 'loading' | 'menu' | 'create' | 'game' | 'daily' | 'locker';
+
+installErrorLog();
 
 export default function App() {
   const [view, setView] = useState<View_>('loading');

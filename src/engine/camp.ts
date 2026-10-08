@@ -303,7 +303,13 @@ export function campChoose(s: GameState, value: string | number) {
       }
       return;
     case 'ozet':
-      // Tartıdan önceki son 48 saati her zaman oyuncu yönetir
+      // İlk maçta kiloyu hoca halleder (yeni oyuncu ilk dövüşe hızlı ulaşsın); sonrasında son 48 saati oyuncu yönetir
+      if (!s.gecmis.length && !k.kesim) {
+        k.kilo = 'kademeli';
+        weighIn(s);
+        k.tartiMetni = `${k.tartiMetni}\n${L("İlk maçın olduğu için kiloyu hocan yönetti. Bir sonraki maçta son 48 saat senin elinde.")}`;
+        return;
+      }
       startManualCut(s);
       return;
     case 'kesim':

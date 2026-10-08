@@ -6251,4 +6251,9 @@ export const RU: Record<string, string> = {
   "Mide enfeksiyonu": "Желудочная инфекция",
   "Sinüzit": "Синусит",
   "Tedavi edilmemiş hastalık (": "Нелеченая болезнь (",
+  "YOL hata raporu": "Отчёт об ошибке YOL",
+  "Hata olmadan hemen önce ne yapıyordun?": "Что ты делал прямо перед ошибкой?",
+  "Son hatalar:": "Последние ошибки:",
+  "Hatayı bize bildir": "Сообщить об ошибке",
+  "İlk maçın olduğu için kiloyu hocan yönetti. Bir sonraki maçta son 48 saat senin elinde.": "Это твой первый бой, поэтому вес сгонял тренер. Со следующего боя последние 48 часов в твоих руках.",
 };

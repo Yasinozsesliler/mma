@@ -41,6 +41,7 @@
     },
     "android": {
       "package": "com.yolmma.game",
+      "allowBackup": true,
       "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#0d0e11",

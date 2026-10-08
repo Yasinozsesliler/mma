@@ -1,6 +1,8 @@
 // Ekran çizilirken hata olursa oyun beyaz ekranda kalmaz: açıklama, menüye dönüş ve son sağlam kayda dönüş sunulur.
 import { Component, type ReactNode } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { logError } from '../errorLog';
+import { sendFeedback } from '../feedback';
 import { L } from '../i18n';
 import { Button, Icon } from './components';
 import { C, F } from './theme';
@@ -15,8 +17,10 @@ export class ErrorBoundary extends Component<Props, State> {
     return { error };
   }
 
-  componentDidCatch(error: Error) {
+  componentDidCatch(error: Error, info: { componentStack?: string | null }) {
     console.warn('Ekran hatası:', error);
+    const yer = info.componentStack?.trim().split('\n')[0]?.trim().slice(0, 60);
+    logError(error, yer ? `ekran ${yer}` : 'ekran');
   }
 
   reset = (fn: () => void) => {
@@ -35,6 +39,7 @@ export class ErrorBoundary extends Component<Props, State> {
         <View style={{ gap: 10, alignSelf: 'stretch' }}>
           <Button label={L("Menüye dön")} icon="home" tone="gold" onPress={() => this.reset(this.props.onMenu)} />
           {this.props.onRestore ? <Button label={L("Son sağlam kayda dön")} icon="backup-restore" tone="ghost" onPress={() => this.reset(this.props.onRestore!)} /> : null}
+          <Button label={L("Hatayı bize bildir")} icon="email-outline" tone="ghost" onPress={() => void sendFeedback(true)} />
         </View>
         <Text style={st.detail} selectable>
           {String(error.message ?? error).slice(0, 300)}
