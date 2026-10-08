@@ -631,10 +631,13 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel }: { fs: FightState; p
               }}
               style={({ pressed }) => {
                 const col = frame.kilit!.by === 'p' ? C.gold : C.blue;
-                return [lf.mash, { borderColor: col, backgroundColor: pressed ? col + '55' : '#0d0e12' }];
+                // Basılıyken düz renk dolgu + koyu yazı: yarı saydam dolgu telefonda koyu ve okunmaz görünüyordu
+                return [lf.mash, { borderColor: col, backgroundColor: pressed ? col : '#0d0e12' }];
               }}
             >
-              <Text style={[lf.mashText, { color: frame.kilit.by === 'p' ? C.gold : C.blue }]}>{frame.kilit.by === 'p' ? L("SIK!") : L("KURTUL!")}</Text>
+              {({ pressed }) => (
+                <Text style={[lf.mashText, { color: pressed ? '#111' : frame.kilit!.by === 'p' ? C.gold : C.blue }]}>{frame.kilit!.by === 'p' ? L("SIK!") : L("KURTUL!")}</Text>
+              )}
             </Pressable>
           ) : null}
           {!frame.kilit && frame.pos === 'ustte' ? (
@@ -743,9 +746,10 @@ const lf = StyleSheet.create({
   kilit: { position: 'absolute', top: '22%', left: 24, right: 24, backgroundColor: 'rgba(5,5,7,0.88)', borderRadius: 14, borderWidth: 1, borderColor: '#2a2d34', padding: 14, alignItems: 'center', gap: 8 },
   kilitTitle: { fontFamily: F.display, fontSize: 22, letterSpacing: 1 },
   kilitHead: { alignItems: 'center', gap: 2 },
-  kilitBarWarn: { borderWidth: 2, borderColor: C.orange },
+  kilitBarWarn: { borderColor: C.orange },
   uyanik: { color: '#ff8a5c', fontFamily: F.display, fontSize: 11, letterSpacing: 1, borderWidth: 1, borderColor: '#ff8a5c66', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 1, overflow: 'hidden' },
-  kilitBar: { width: '100%', height: 22, borderRadius: 11, backgroundColor: '#ffffff12', overflow: 'hidden', justifyContent: 'center' },
+  // Kenar hep 2px (uyarıda yalnızca rengi değişir): Android'de kalınlığın değişmesi kırpılan dolguyu bozabiliyor
+  kilitBar: { width: '100%', height: 22, borderRadius: 11, borderWidth: 2, borderColor: 'transparent', backgroundColor: '#1d1f25', overflow: 'hidden', justifyContent: 'center' },
   kilitFill: { position: 'absolute', left: 0, top: 0, bottom: 0 },
   kilitTap: { position: 'absolute', right: 10, color: '#ffffffaa', fontFamily: F.display, fontSize: 12, letterSpacing: 1 },
   kilitTime: { width: '100%', height: 4, borderRadius: 2, backgroundColor: '#ffffff12', overflow: 'hidden' },
