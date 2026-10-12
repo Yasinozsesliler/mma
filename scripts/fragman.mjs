@@ -6,6 +6,7 @@
 // Çıktı: store/video/fragman-yakinda.mp4 (ya da fragman-yayinda.mp4)
 import { execFileSync, spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { Buffer } from 'node:buffer';
 import { fileURLToPath } from 'node:url';
 import puppeteer from 'puppeteer-core';
 
