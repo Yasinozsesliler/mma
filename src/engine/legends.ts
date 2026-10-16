@@ -19,11 +19,11 @@ export interface Legend {
 }
 
 export const LEGENDS: Legend[] = [
-  { id: 'fyodor', ad: 'Fyodor Emelyanov', lakap: L("Son İmparator"), uyruk: L("Rusya"), teknik: 'kimura', stat: 'gures', minPop: 30, carpan: 1.3, soz: () => L("“Sakin ol. Sakin olan kazanır.”") },
-  { id: 'anderson', ad: 'Anderson Silvo', lakap: L("Örümcek"), uyruk: L("Brezilya"), teknik: 'ucandiz', stat: 'hiz', minPop: 25, carpan: 1.2, soz: () => L("“Rakibin vurmaya çalışırken sen dans et.”") },
-  { id: 'gsp', ad: 'Georges St-Pierr', lakap: 'Rush', uyruk: L("Kanada"), teknik: 'suplex', stat: 'gures', minPop: 35, carpan: 1.4, soz: () => L("“Disiplin, yetenekten daha uzun yaşar.”") },
-  { id: 'royce', ad: 'Royce Gracey', lakap: L("Ustaların Ustası"), uyruk: L("Brezilya"), teknik: 'ucgen', stat: 'yer', minPop: 20, carpan: 1.1, soz: () => L("“Küçük adam büyük adamı yenebilir. Kaldıraç her şeydir.”") },
-  { id: 'mirko', ad: 'Mirko Kroković', lakap: 'Cro Cop', uyruk: L("Hırvatistan"), teknik: 'headkick', stat: 'vurus', minPop: 30, carpan: 1.3, soz: () => L("“Sağ bacak hastane, sol bacak mezarlık.”") },
+  { id: 'fyodor', ad: 'Viktor Zaytsev', lakap: L("Sessiz Dev"), uyruk: L("Rusya"), teknik: 'kimura', stat: 'gures', minPop: 30, carpan: 1.3, soz: () => L("“Sakin ol. Sakin olan kazanır.”") },
+  { id: 'anderson', ad: 'Rodrigo Valente', lakap: L("Gölge"), uyruk: L("Brezilya"), teknik: 'ucandiz', stat: 'hiz', minPop: 25, carpan: 1.2, soz: () => L("“Rakibin vurmaya çalışırken sen dans et.”") },
+  { id: 'gsp', ad: 'Étienne Laroche', lakap: L("Profesör"), uyruk: L("Kanada"), teknik: 'suplex', stat: 'gures', minPop: 35, carpan: 1.4, soz: () => L("“Disiplin, yetenekten daha uzun yaşar.”") },
+  { id: 'royce', ad: 'Caio Mendonça', lakap: L("Ustaların Ustası"), uyruk: L("Brezilya"), teknik: 'ucgen', stat: 'yer', minPop: 20, carpan: 1.1, soz: () => L("“Küçük adam büyük adamı yenebilir. Kaldıraç her şeydir.”") },
+  { id: 'mirko', ad: 'Dragan Petrović', lakap: L("Balyoz Bacak"), uyruk: L("Hırvatistan"), teknik: 'headkick', stat: 'vurus', minPop: 30, carpan: 1.3, soz: () => L("“Tekmeyi görmezsin; yalnızca sonrasını hatırlarsın.”") },
 ];
 
 const BASE: Record<GameState['stage'], number> = { amator: 3_000, bolgesel: 12_000, buyuk: 40_000, ufc: 120_000 };

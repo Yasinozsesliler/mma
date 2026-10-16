@@ -36,11 +36,11 @@ export interface BoxFight {
 export const BOX_ROUNDS = 6;
 export const HINT_ACC = 0.6;
 
-const BOXERS_LIGHT: Boxer[] = [{ ad: 'Floyd Mayweaver', lakap: L("Para"), rekor: '50-0', guc: 94 }];
-const BOXERS_MID: Boxer[] = [{ ad: 'Canelo Alvares', lakap: L("Kızıl"), rekor: '61-2-2', guc: 92 }];
+const BOXERS_LIGHT: Boxer[] = [{ ad: 'Marcus Bell', lakap: L("Kusursuz"), rekor: '47-0', guc: 94 }];
+const BOXERS_MID: Boxer[] = [{ ad: 'Rafael Durán', lakap: L("Kartal"), rekor: '58-3-2', guc: 92 }];
 const BOXERS_HEAVY: Boxer[] = [
-  { ad: 'Tyson Furey', lakap: L("Çingene Kral"), rekor: '34-0-1', guc: 91 },
-  { ad: 'Anthony Joshwa', lakap: 'AJ', rekor: '28-3', guc: 89 },
+  { ad: 'Liam Hollister', lakap: L("Kuzey Devi"), rekor: '33-0-1', guc: 91 },
+  { ad: 'Darius Okafor', lakap: L("Kule"), rekor: '27-3', guc: 89 },
 ];
 
 function boxerFor(s: GameState): Boxer {

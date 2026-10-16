@@ -1,5 +1,5 @@
 ﻿APP STORE CONNECT · en-US
-Gizlilik politikası: WEB_URL/gizlilik.html
+Gizlilik politikası: https://mma-five-psi.vercel.app/gizlilik.html · Destek: https://mma-five-psi.vercel.app
 
 === AD (Name) (27/30) ===
 YOL: MMA Fighter Career Sim
@@ -13,36 +13,44 @@ New: play every round in real time! Jab, cross, kick, takedowns and submissions.
 === ANAHTAR KELİMELER (Keywords) (94/100) ===
 mma,fighting,boxing,career,simulator,cage,wrestling,kickboxing,muay thai,champion,knockout,bjj
 
-=== AÇIKLAMA (Description) (2384/4000) ===
-Start from nothing, fight your way to the belt. YOL: From Cage to Belt is an MMA fighter game where you fight in the cage with your own hands and every decision outside it shapes your career.
+=== AÇIKLAMA (Description) (2888/4000) ===
+Start from nothing, reach for the belt. YOL: From the Cage to the Belt is an MMA fighter game where you fight with your own hands in the cage and every choice outside it shapes your career.
 
 🥊 LIVE FIGHTS
-Play every round in real time: jab, cross, kick, slip and guard. Read your opponent's wind-up, slip at the right moment and counter. Shoot for the takedown or sprawl; on the ground, strike from the top, hunt the submission or escape from the bottom. Use your style's special move and your signature technique. Not into reflex games? Switch to "Watch tactics", pick your plan and watch the fight unfold.
+Play rounds in real time: jab, cross, kick, slip and guard. Read your opponent's attack, slip at the right moment and counter. Shoot for takedowns or sprawl; strike from the top, lock in submissions or escape from the bottom. Not into reflex games? Pick your plan in "Watch tactics" mode and watch the fight.
 
 🎬 FIGHT NIGHT
-Walk down the ramp under the spotlights while the announcer screams your name. Go face to face, hear the bell and watch your knockout again in slow motion.
+Step backstage, see your spot on the card and walk to the cage under the spotlights when it's your turn. Speak up at the press conference, go face to face, watch knockouts in slow motion and chase the Performance of the Night bonus.
 
-🏋️ CREATE YOUR FIGHTER, RUN YOUR CAMP
-Pick your nationality, weight class and background: boxing, muay thai, wrestling, BJJ, sambo, judo, kyokushin, kickboxing or street. Set your camp length, location and game plan; cut weight, talk trash at the press conference and learn techniques from legendary masters.
+🏋️ RUN YOUR CAMP
+Choose your nationality, weight class and background: boxing, muay thai, wrestling, BJJ, sambo, judo, kyokushin, kickboxing or street. Build your camp plan; the weeks roll on their own and you decide at the key moments. Believe or doubt the rumors from your rival's camp, and cut your own weight in the final 48 hours.
 
 🏆 FROM AMATEUR TO WORLD CHAMPION
-From the amateur league to regional promotions to the biggest stage in the world. Climb the rankings, win belts, defend your title, enter Grand Prix tournaments, fight in new cities on your world tour and enter the Hall of Fame.
+Turn pro through the Rising Grand Prix, climb from regional promotions to the biggest stage in the world. Rise in the rankings, win belts, defend your title and enter the Hall of Fame. The fighters you beat keep going too: one of them may become a champion one day.
 
-📺 LIFE OUTSIDE THE CAGE
-The Cage House reality show, your fan club, your own brand, live streams, podcasts, sponsor haggling, social media crises, family life, nightlife and your own gym. But remember: everything has a price. Protect your brain health and stay sharp in retirement.
+📖 STORIES AND CHOICES
+A traitorous training partner, a legendary coach, a kid from your block… Chapter-based stories, a bond of trust with your coach, movie and ad offers, fan letters and big crossroads that divide your career into eras.
 
-⚔️ CHALLENGE YOURSELF
-Start on Easy, Normal or Legend difficulty and test yourself in challenge modes like Last Chance, Streets to the Top and Iron Man. Share your score in the Daily Fight, the same for everyone every day.
+🏠 LIFE OUTSIDE THE CAGE
+Get a home and hang your belts on the wall. Get married, see your child's first steps, have your hometown name a street after you. Take vacations, look after your body, manage social media and sponsors.
+
+🏛️ COLLECTION
+A museum filled with fight keepsakes, a card album and sets of the fighters you beat, a passport full of city stamps, a luxury collection whose value changes every week, and 111 achievements.
+
+🏢 AFTER RETIREMENT
+When you hang up the gloves, found your own promotion: sign fighters, run events, sell tickets, grow your prestige. Relive your career in a scene-by-scene documentary.
+
+⚔️ CHALLENGES
+Start on Easy, Normal or Legend difficulty and test yourself with challenge modes. Share your score in the daily "Fight of the Day", the same for everyone.
 
 ✨ FEATURES
 • Real-time live fights or tactics mode
-• Cinematic walkouts, round transitions and KO replays
-• Perk tree, signature moves and legendary masters
-• Nemesis rivals, dynasty mode and comebacks from retirement
+• Cinematic fight night, backstage and knockout replays
+• Story chapters and lasting decisions
+• Arch-rival, dynasty mode and comebacks from retirement
 • Shareable fight posters and career cards
-• Card album, world map and 111 achievements
-• Locker: shorts, gloves, belts and walkout music. No pay-to-win
-• 3 career slots, playable offline
+• Locker: shorts, gloves, belts, walkout music and effects. No pay to win
+• Playable offline
 • Türkçe, English, Español, Português, Русский, Polski
 
 All promotions, people and brands in the game are fictional.

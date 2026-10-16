@@ -6256,4 +6256,10 @@ export const RU: Record<string, string> = {
   "Son hatalar:": "Последние ошибки:",
   "Hatayı bize bildir": "Сообщить об ошибке",
   "İlk maçın olduğu için kiloyu hocan yönetti. Bir sonraki maçta son 48 saat senin elinde.": "Это твой первый бой, поэтому вес сгонял тренер. Со следующего боя последние 48 часов в твоих руках.",
+  "Sessiz Dev": "Тихий гигант",
+  "Balyoz Bacak": "Нога-кувалда",
+  "“Tekmeyi görmezsin; yalnızca sonrasını hatırlarsın.”": "«Удар ногой ты не увидишь — запомнишь только то, что было после».",
+  "Kuzey Devi": "Северный гигант",
+  "Kule": "Башня",
+  "App Store’da ücretsiz": "Бесплатно в App Store",
 };

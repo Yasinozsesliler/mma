@@ -2,6 +2,7 @@
 // oyun içi önizleme olarak kullanılır; web'deki tuval çizimi (render.web.ts) aynı yerleşimi izler.
 import { LinearGradient } from 'expo-linear-gradient';
 import { StyleSheet, Text, View } from 'react-native';
+import { storeLine } from './storeLine';
 import Svg, { Polygon } from 'react-native-svg';
 import { L, LOC } from '../i18n';
 import { FighterAvatar } from '../ui/FighterAvatar';
@@ -64,7 +65,7 @@ export function PosterView({ data, store = true }: { data: ShareCardData; store?
 
       <View style={[st.foot, { borderTopColor: accent }]}>
         <Text style={st.invite}>{up(data.mesaj.split('·').slice(1).join('·').trim() || data.mesaj)}</Text>
-        {store ? <Text style={st.store}>{L("Google Play’de ücretsiz")}</Text> : null}
+        {store ? <Text style={st.store}>{storeLine()}</Text> : null}
       </View>
     </View>
   );

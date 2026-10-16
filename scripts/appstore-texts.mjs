@@ -18,7 +18,7 @@ for (const [k, x] of Object.entries(as)) {
   const sec = (t, key) => [`=== ${t} (${len(f[key])}/${LIM[key]}) ===`, f[key], ''];
   const txt = [
     `APP STORE CONNECT · ${k}`,
-    'Gizlilik politikası: WEB_URL/gizlilik.html',
+    'Gizlilik politikası: https://mma-five-psi.vercel.app/gizlilik.html · Destek: https://mma-five-psi.vercel.app',
     '',
     ...sec('AD (Name)', 'name'),
     ...sec('ALT BAŞLIK (Subtitle)', 'subtitle'),

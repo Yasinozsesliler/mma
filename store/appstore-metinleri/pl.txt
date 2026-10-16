@@ -1,5 +1,5 @@
 ﻿APP STORE CONNECT · pl
-Gizlilik politikası: WEB_URL/gizlilik.html
+Gizlilik politikası: https://mma-five-psi.vercel.app/gizlilik.html · Destek: https://mma-five-psi.vercel.app
 
 === AD (Name) (26/30) ===
 YOL: Kariera Zawodnika MMA
@@ -13,36 +13,44 @@ Nowość: graj każdą rundę w czasie rzeczywistym! Jab, prosty, kopnięcia, sp
 === ANAHTAR KELİMELER (Keywords) (97/100) ===
 mma,walka,boks,kariera,symulator,klatka,zapasy,kickboxing,muay thai,mistrz,nokaut,jiu jitsu,sport
 
-=== AÇIKLAMA (Description) (2301/4000) ===
-Zacznij od zera i wywalcz pas. YOL: Z klatki do pasa to gra o MMA, w której walczysz w klatce własnymi rękami, a każda decyzja poza nią zmienia twoją karierę.
+=== AÇIKLAMA (Description) (2827/4000) ===
+Zacznij od zera i sięgnij po pas. YOL: Z klatki po pas to gra o zawodniku MMA, w której walczysz w klatce własnymi rękami, a każda decyzja poza nią zmienia twoją karierę.
 
 🥊 WALKI NA ŻYWO
-Graj każdą rundę w czasie rzeczywistym: jab, prosty, kopnięcie, unik i garda. Czytaj zamach rywala, unikaj w odpowiedniej chwili i kontruj. Próbuj sprowadzeń albo broń się sprawlem; w parterze bij z góry, szukaj poddania lub uciekaj z dołu. Używaj specjalnego ciosu swojego stylu i firmowej techniki. Nie lubisz gier na refleks? Wybierz "Oglądaj taktykę", ustal plan i oglądaj walkę.
+Rozgrywaj rundy w czasie rzeczywistym: jab, prosty, kopnięcie, unik i garda. Czytaj atak rywala, schodź w porę i kontruj. Idź po obalenie albo rób sprawl; bij z góry, zakładaj dźwignie i duszenia lub uciekaj z dołu. Nie lubisz gier na refleks? Wybierz plan w trybie „Oglądaj taktykę” i patrz na walkę.
 
 🎬 GALA
-Zejdź rampą w świetle reflektorów, gdy spiker wykrzykuje twoje imię. Twarzą w twarz, gong i powtórka nokautu w zwolnionym tempie.
+Wejdź za kulisy, zobacz swoje miejsce w karcie walk i wyjdź do klatki w świetle reflektorów, gdy przyjdzie twoja kolej. Zabierz głos na konferencji, stań twarzą w twarz, oglądaj nokauty w zwolnionym tempie i walcz o bonus za Występ Wieczoru.
 
-🏋️ STWÓRZ ZAWODNIKA, PROWADŹ OBÓZ
-Wybierz narodowość, kategorię wagową i styl: boks, muay thai, zapasy, BJJ, sambo, judo, kyokushin, kickboxing albo ulica. Ustal długość, miejsce i plan obozu; zbijaj wagę, prowokuj na konferencji i ucz się technik od legendarnych mistrzów.
+🏋️ PROWADŹ OBÓZ
+Wybierz narodowość, kategorię wagową i styl: boks, muay thai, zapasy, BJJ, sambo, judo, kyokushin, kickboxing lub ulica. Ułóż plan; tygodnie lecą same, a ty decydujesz w kluczowych chwilach. Uwierz albo nie plotkom z obozu rywala i sam zbijaj wagę w ostatnich 48 godzinach.
 
 🏆 OD AMATORA DO MISTRZA ŚWIATA
-Od ligi amatorskiej przez federacje regionalne po największą scenę świata. Wspinaj się w rankingu, zdobywaj pasy, broń tytułu, startuj w turniejach Grand Prix, walcz w nowych miastach w trasie światowej i trafiaj do Galerii Sław.
+Przejdź na zawodowstwo przez Grand Prix Awansu i wejdź z regionalnych federacji na największą scenę świata. Pnij się w rankingu, zdobywaj pasy, broń tytułu i trafiaj do Galerii Sław. Pokonani przez ciebie zawodnicy też walczą dalej: któryś z nich może kiedyś zostać mistrzem.
 
-📺 ŻYCIE POZA KLATKĄ
-Reality show Dom w Klatce, fanklub, własna marka, transmisje na żywo, podcasty, negocjacje ze sponsorami, kryzysy w mediach społecznościowych, rodzina, nocne życie i własna sala. Ale pamiętaj: wszystko ma swoją cenę. Dbaj o zdrowie mózgu, by zachować jasny umysł na emeryturze.
+📖 HISTORIE I DECYZJE
+Zdradziecki partner treningowy, legendarny trener, dzieciak z osiedla… Historie w rozdziałach, zaufanie do trenera, oferty filmowe i reklamowe, listy od fanów i wielkie rozdroża dzielące karierę na ery.
 
-⚔️ RZUĆ WYZWANIE
-Zacznij na poziomie Łatwy, Normalny lub Legenda i sprawdź się w trybach wyzwań, takich jak Ostatnia Szansa, Z Ulicy na Szczyt i Żelazny Człowiek. Dziel się wynikiem w Walce Dnia, takiej samej dla wszystkich.
+🏠 ŻYCIE POZA KLATKĄ
+Kup dom i powieś pasy na ścianie. Weź ślub, zobacz pierwsze kroki dziecka, niech rodzinne miasto nazwie twoim imieniem ulicę. Wyjeżdżaj na wakacje, dbaj o ciało, zarządzaj mediami społecznościowymi i sponsorami.
 
-✨ CECHY
+🏛️ KOLEKCJA
+Muzeum pełne pamiątek z walk, album kart pokonanych zawodników z zestawami, paszport z pieczątkami miast, kolekcja luksusowa, której wartość zmienia się co tydzień, i 111 osiągnięć.
+
+🏢 PO KARIERZE
+Gdy odwiesisz rękawice, załóż własną federację: podpisuj zawodników, organizuj gale, sprzedawaj bilety, buduj prestiż. Przeżyj karierę ponownie w dokumencie scena po scenie.
+
+⚔️ WYZWANIA
+Zacznij na poziomie Łatwym, Normalnym lub Legendy i sprawdź się w trybach wyzwań. Dziel się wynikiem w codziennej „Walce Dnia”, takiej samej dla wszystkich.
+
+✨ FUNKCJE
 • Walki na żywo w czasie rzeczywistym lub tryb taktyczny
-• Filmowe wejścia, przejścia między rundami i powtórki nokautów
-• Drzewko umiejętności, firmowe ciosy i legendarni mistrzowie
-• Arcyrywal, tryb dynastii i powrót z emerytury
+• Filmowa gala, kulisy i powtórki nokautów
+• Rozdziały fabularne i decyzje z konsekwencjami
+• Odwieczny rywal, tryb dynastii i powroty z emerytury
 • Plakaty walk i karty kariery do udostępniania
-• Album kart, mapa świata i 111 osiągnięć
-• Szafka: spodenki, rękawice, pasy i muzyka wejściowa. Bez pay-to-win
-• 3 sloty kariery, gra offline
+• Szatnia: spodenki, rękawice, pasy, muzyka i efekty wejścia. Bez płacenia za zwycięstwo
+• Gra offline
 • Türkçe, English, Español, Português, Русский, Polski
 
 Wszystkie federacje, osoby i marki w grze są fikcyjne.

@@ -1,5 +1,5 @@
 ﻿APP STORE CONNECT · pt-BR
-Gizlilik politikası: WEB_URL/gizlilik.html
+Gizlilik politikası: https://mma-five-psi.vercel.app/gizlilik.html · Destek: https://mma-five-psi.vercel.app
 
 === AD (Name) (28/30) ===
 YOL: Carreira de Lutador MMA
@@ -13,36 +13,44 @@ Novo: jogue cada round em tempo real! Jab, direto, chute, quedas e finalizaçõe
 === ANAHTAR KELİMELER (Keywords) (96/100) ===
 mma,luta,boxe,carreira,simulador,octógono,jiu jitsu,muay thai,campeão,nocaute,kickboxing,esporte
 
-=== AÇIKLAMA (Description) (2335/4000) ===
-Comece do zero e conquiste o cinturão. YOL: Do Octógono ao Cinturão é um jogo de MMA em que você luta na jaula com as próprias mãos e cada decisão fora dela muda sua carreira.
+=== AÇIKLAMA (Description) (2915/4000) ===
+Comece do zero e chegue ao cinturão. YOL: Do Octógono ao Cinturão é um jogo de lutador de MMA em que você luta com as próprias mãos no octógono e cada decisão fora dele muda sua carreira.
 
 🥊 LUTAS AO VIVO
-Jogue cada round em tempo real: jab, direto, chute, esquiva e guarda. Leia a preparação do adversário, esquive na hora certa e contra-ataque. Tente a queda ou faça o sprawl; no chão, bata por cima, busque a finalização ou escape por baixo. Use o golpe especial do seu estilo e sua técnica assinatura. Não curte reflexo? Escolha "Assistir tática", defina o plano e assista à luta.
+Jogue os rounds em tempo real: jab, direto, chute, esquiva e guarda. Leia o ataque do rival, esquive na hora certa e contra-ataque. Vá para a queda ou faça o sprawl; bata por cima, encaixe finalizações ou escape por baixo. Não curte jogos de reflexo? Escolha seu plano no modo "Assistir tática" e acompanhe a luta.
 
 🎬 NOITE DE LUTAS
-Desça a rampa sob os holofotes enquanto o locutor grita seu nome. Encare o rival, ouça o gongo e reveja seu nocaute em câmera lenta.
+Entre nos bastidores, veja seu lugar no card e caminhe até o octógono sob os holofotes quando chegar sua vez. Fale na coletiva, encare o rival, veja nocautes em câmera lenta e corra atrás do bônus de Performance da Noite.
 
-🏋️ CRIE SEU LUTADOR, COMANDE O CAMP
-Escolha nacionalidade, categoria e estilo: boxe, muay thai, wrestling, BJJ, sambo, judô, kyokushin, kickboxing ou rua. Defina duração, local e plano do camp; bata o peso, provoque na coletiva e aprenda técnicas com mestres lendários.
+🏋️ COMANDE SEU CAMP
+Escolha nacionalidade, categoria e estilo: boxe, muay thai, wrestling, BJJ, sambo, judô, kyokushin, kickboxing ou rua. Monte seu plano; as semanas passam sozinhas e você decide nos momentos-chave. Acredite ou desconfie dos boatos do camp rival e bata o peso você mesmo nas últimas 48 horas.
 
 🏆 DE AMADOR A CAMPEÃO MUNDIAL
-Da liga amadora às organizações regionais e ao maior palco do mundo. Suba no ranking, conquiste cinturões, defenda seu título, entre em torneios Grand Prix, lute em novas cidades na turnê mundial e entre para o Hall da Fama.
+Vire profissional no Grand Prix Ascensão e suba das organizações regionais para o maior palco do mundo. Suba no ranking, conquiste cinturões, defenda o título e entre no Hall da Fama. Os rivais que você vence seguem carreira: um deles pode virar campeão.
 
-📺 VIDA FORA DA JAULA
-O reality Casa da Jaula, seu fã-clube, sua própria marca, lives, podcasts, negociação com patrocinadores, crises nas redes, vida em família, vida noturna e sua própria academia. Mas lembre: tudo tem um preço. Cuide da saúde cerebral e chegue lúcido à aposentadoria.
+📖 HISTÓRIAS E DECISÕES
+Um parceiro de treino traidor, um técnico lendário, um garoto do bairro… Histórias em capítulos, um laço de confiança com o treinador, propostas de filme e publicidade, cartas de fãs e grandes encruzilhadas que dividem sua carreira em fases.
 
-⚔️ DESAFIE-SE
-Comece no Fácil, Normal ou Lenda e se teste em modos de desafio como Última Chance, Das Ruas ao Topo e Homem de Ferro. Compartilhe sua pontuação na Luta do Dia, igual para todos todos os dias.
+🏠 A VIDA FORA DO OCTÓGONO
+Tenha sua casa e pendure os cinturões na parede. Case-se, veja os primeiros passos do seu filho e ganhe uma rua com seu nome na cidade natal. Tire férias, cuide do corpo, gerencie redes sociais e patrocinadores.
+
+🏛️ COLEÇÃO
+Um museu cheio de lembranças das lutas, um álbum de cartas com coleções, um passaporte com carimbos de cidades, uma coleção de luxo que muda de valor toda semana e 111 conquistas.
+
+🏢 DEPOIS DA APOSENTADORIA
+Quando pendurar as luvas, funde sua própria organização: contrate lutadores, faça eventos, venda ingressos e aumente seu prestígio. Reviva sua carreira num documentário cena a cena.
+
+⚔️ DESAFIOS
+Comece no Fácil, Normal ou Lenda e se teste nos modos de desafio. Compartilhe sua pontuação na "Luta do Dia", igual para todos.
 
 ✨ RECURSOS
 • Lutas ao vivo em tempo real ou modo tático
-• Entradas cinematográficas, transições de round e replays de nocaute
-• Árvore de habilidades, golpes assinatura e mestres lendários
+• Noite de lutas cinematográfica, bastidores e replays de nocautes
+• Capítulos de história e decisões duradouras
 • Arquirrival, modo dinastia e volta da aposentadoria
 • Pôsteres de luta e cartões de carreira para compartilhar
-• Álbum de cartas, mapa-múndi e 111 conquistas
-• Vestiário: shorts, luvas, cinturões e música de entrada. Sem pagar para ganhar
-• 3 espaços de carreira, jogue offline
+• Vestiário: calções, luvas, cinturões, música e efeitos de entrada. Sem pagar para vencer
+• Jogável offline
 • Türkçe, English, Español, Português, Русский, Polski
 
 Todas as organizações, pessoas e marcas do jogo são fictícias.

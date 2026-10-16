@@ -6216,4 +6216,10 @@ export const PT: Record<string, string> = {
   "Son hatalar:": "Erros recentes:",
   "Hatayı bize bildir": "Informar o erro",
   "İlk maçın olduğu için kiloyu hocan yönetti. Bir sonraki maçta son 48 saat senin elinde.": "Como é sua primeira luta, seu treinador cuidou do corte de peso. A partir da próxima luta, as últimas 48 horas estão nas suas mãos.",
+  "Sessiz Dev": "O Gigante Silencioso",
+  "Balyoz Bacak": "Perna de Marreta",
+  "“Tekmeyi görmezsin; yalnızca sonrasını hatırlarsın.”": "“Você nunca vê o chute; só lembra do que vem depois.”",
+  "Kuzey Devi": "O Gigante do Norte",
+  "Kule": "A Torre",
+  "App Store’da ücretsiz": "Grátis na App Store",
 };

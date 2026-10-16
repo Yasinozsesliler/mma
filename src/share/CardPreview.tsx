@@ -4,6 +4,7 @@ import * as Sharing from 'expo-sharing';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useRef } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { storeLine } from './storeLine';
 import Svg, { Polygon } from 'react-native-svg';
 import { captureRef } from 'react-native-view-shot';
 import { L, LOC } from '../i18n';
@@ -52,7 +53,7 @@ export function CardPreview({ data, onReady }: { data: ShareCardData; onReady: (
         </View>
       ) : data.tur === 'wiki' ? (
         <View ref={ref} collapsable={false}>
-          <WikiCardBody data={data} store={L("Google Play’de ücretsiz")} />
+          <WikiCardBody data={data} store={storeLine()} />
         </View>
       ) : (
       <View ref={ref} collapsable={false} style={st.card}>
@@ -104,7 +105,7 @@ export function CardPreview({ data, onReady }: { data: ShareCardData; onReady: (
 
         <View style={st.foot}>
           <Text style={st.invite}>{up(davet || data.mesaj)}</Text>
-          <Text style={st.store}>{L("Google Play’de ücretsiz")}</Text>
+          <Text style={st.store}>{storeLine()}</Text>
         </View>
       </View>
       )}

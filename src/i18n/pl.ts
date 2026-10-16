@@ -6194,4 +6194,10 @@ export const PL: Record<string, string> = {
   "Son hatalar:": "Ostatnie błędy:",
   "Hatayı bize bildir": "Zgłoś błąd",
   "İlk maçın olduğu için kiloyu hocan yönetti. Bir sonraki maçta son 48 saat senin elinde.": "To twoja pierwsza walka, więc wagę zbijał trener. Od następnej walki ostatnie 48 godzin jest w twoich rękach.",
+  "Sessiz Dev": "Cichy Olbrzym",
+  "Balyoz Bacak": "Noga Młot",
+  "“Tekmeyi görmezsin; yalnızca sonrasını hatırlarsın.”": "„Kopnięcia nie zobaczysz; zapamiętasz tylko to, co było potem.”",
+  "Kuzey Devi": "Olbrzym z Północy",
+  "Kule": "Wieża",
+  "App Store’da ücretsiz": "Za darmo w App Store",
 };
