@@ -23,7 +23,7 @@ const REAL_BY_OS = {
   },
   ios: {
     rewarded: 'ca-app-pub-6387108639379747/5010528290',
-    interstitial: '', // AdMob › iOS uygulaması › Geçiş birimi
+    interstitial: 'ca-app-pub-6387108639379747/2084237195',
   },
 };
 const REAL = Platform.OS === 'ios' ? REAL_BY_OS.ios : REAL_BY_OS.android;
