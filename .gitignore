@@ -44,3 +44,7 @@ yarn-error.*
 store/video/
 # Mağaza görsellerinin çerçevesiz ham halleri
 store/graphics/*/ham/
+
+# Apple / EAS kimlik bilgileri (asla depoya girmez)
+credentials/
+credentials.json
