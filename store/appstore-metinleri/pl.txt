@@ -13,37 +13,37 @@ Nowość: graj każdą rundę w czasie rzeczywistym! Jab, prosty, kopnięcia, sp
 === ANAHTAR KELİMELER (Keywords) (97/100) ===
 mma,walka,boks,kariera,symulator,klatka,zapasy,kickboxing,muay thai,mistrz,nokaut,jiu jitsu,sport
 
-=== AÇIKLAMA (Description) (2827/4000) ===
+=== AÇIKLAMA (Description) (2804/4000) ===
 Zacznij od zera i sięgnij po pas. YOL: Z klatki po pas to gra o zawodniku MMA, w której walczysz w klatce własnymi rękami, a każda decyzja poza nią zmienia twoją karierę.
 
-🥊 WALKI NA ŻYWO
+WALKI NA ŻYWO
 Rozgrywaj rundy w czasie rzeczywistym: jab, prosty, kopnięcie, unik i garda. Czytaj atak rywala, schodź w porę i kontruj. Idź po obalenie albo rób sprawl; bij z góry, zakładaj dźwignie i duszenia lub uciekaj z dołu. Nie lubisz gier na refleks? Wybierz plan w trybie „Oglądaj taktykę” i patrz na walkę.
 
-🎬 GALA
+GALA
 Wejdź za kulisy, zobacz swoje miejsce w karcie walk i wyjdź do klatki w świetle reflektorów, gdy przyjdzie twoja kolej. Zabierz głos na konferencji, stań twarzą w twarz, oglądaj nokauty w zwolnionym tempie i walcz o bonus za Występ Wieczoru.
 
-🏋️ PROWADŹ OBÓZ
+PROWADŹ OBÓZ
 Wybierz narodowość, kategorię wagową i styl: boks, muay thai, zapasy, BJJ, sambo, judo, kyokushin, kickboxing lub ulica. Ułóż plan; tygodnie lecą same, a ty decydujesz w kluczowych chwilach. Uwierz albo nie plotkom z obozu rywala i sam zbijaj wagę w ostatnich 48 godzinach.
 
-🏆 OD AMATORA DO MISTRZA ŚWIATA
+OD AMATORA DO MISTRZA ŚWIATA
 Przejdź na zawodowstwo przez Grand Prix Awansu i wejdź z regionalnych federacji na największą scenę świata. Pnij się w rankingu, zdobywaj pasy, broń tytułu i trafiaj do Galerii Sław. Pokonani przez ciebie zawodnicy też walczą dalej: któryś z nich może kiedyś zostać mistrzem.
 
-📖 HISTORIE I DECYZJE
+HISTORIE I DECYZJE
 Zdradziecki partner treningowy, legendarny trener, dzieciak z osiedla… Historie w rozdziałach, zaufanie do trenera, oferty filmowe i reklamowe, listy od fanów i wielkie rozdroża dzielące karierę na ery.
 
-🏠 ŻYCIE POZA KLATKĄ
+ŻYCIE POZA KLATKĄ
 Kup dom i powieś pasy na ścianie. Weź ślub, zobacz pierwsze kroki dziecka, niech rodzinne miasto nazwie twoim imieniem ulicę. Wyjeżdżaj na wakacje, dbaj o ciało, zarządzaj mediami społecznościowymi i sponsorami.
 
-🏛️ KOLEKCJA
+KOLEKCJA
 Muzeum pełne pamiątek z walk, album kart pokonanych zawodników z zestawami, paszport z pieczątkami miast, kolekcja luksusowa, której wartość zmienia się co tydzień, i 111 osiągnięć.
 
-🏢 PO KARIERZE
+PO KARIERZE
 Gdy odwiesisz rękawice, załóż własną federację: podpisuj zawodników, organizuj gale, sprzedawaj bilety, buduj prestiż. Przeżyj karierę ponownie w dokumencie scena po scenie.
 
-⚔️ WYZWANIA
+WYZWANIA
 Zacznij na poziomie Łatwym, Normalnym lub Legendy i sprawdź się w trybach wyzwań. Dziel się wynikiem w codziennej „Walce Dnia”, takiej samej dla wszystkich.
 
-✨ FUNKCJE
+FUNKCJE
 • Walki na żywo w czasie rzeczywistym lub tryb taktyczny
 • Filmowa gala, kulisy i powtórki nokautów
 • Rozdziały fabularne i decyzje z konsekwencjami

@@ -13,37 +13,37 @@ Yeni: rauntları gerçek zamanlı oyna! Jab, direkt, tekme, takedown ve submissi
 === ANAHTAR KELİMELER (Keywords) (95/100) ===
 mma,dövüş,boks,kariyer,simülasyon,kafes,güreş,kickboks,muay thai,şampiyon,nakavt,jiu jitsu,spor
 
-=== AÇIKLAMA (Description) (2705/4000) ===
+=== AÇIKLAMA (Description) (2682/4000) ===
 Sıfırdan başla, kemere uzan. YOL: Kafesten Kemere, kafeste kendi elinle dövüştüğün, kafes dışında her kararın kariyerini değiştirdiği bir MMA dövüşçü oyunu.
 
-🥊 CANLI DÖVÜŞ
+CANLI DÖVÜŞ
 Rauntları gerçek zamanlı oyna: jab, direkt, tekme, kaç ve gard. Rakibin saldırısını oku, tam zamanında sıyrıl ve kontra vur. Takedown'a dal ya da sprawl yap; yerde üstten vur, submission'a yat ya da alttan kurtul. Refleks oyunlarını sevmiyorsan "Taktik izle" modunda planını seç, dövüşü izle.
 
-🎬 DÖVÜŞ GECESİ
+DÖVÜŞ GECESİ
 Kulise gir, afişteki yerini gör, sıra sana gelince spotların altında kafese yürü. Basın toplantısında sözünü söyle, yüz yüze gel, nakavtı ağır çekimde izle ve Gecenin Performansı bonusunu kovala.
 
-🏋️ KAMPINI YÖNET
+KAMPINI YÖNET
 Uyruk, siklet ve dövüş geçmişini seç: boks, muay thai, güreş, BJJ, sambo, judo, kyokushin, kickboks ya da sokak. Kamp planını kur; haftalar kendiliğinden aksın, kritik anlarda karar ver. Rakibin kampından gelen söylentilere inan ya da şüphelen, son 48 saatte kilonu kendin ver.
 
-🏆 AMATÖRDEN DÜNYA ŞAMPİYONLUĞUNA
+AMATÖRDEN DÜNYA ŞAMPİYONLUĞUNA
 Yükseliş Grand Prix'iyle profesyonelliğe adım at, bölgesel organizasyonlardan dünyanın en büyük sahnesine çık. Sıralamada yüksel, kemer kazan, unvanını savun ve Hall of Fame'e adını yazdır. Yendiğin rakipler de kariyerlerine devam eder: biri gün gelir şampiyon olur.
 
-📖 HİKÂYELER VE KARARLAR
+HİKÂYELER VE KARARLAR
 Hain bir antrenman ortağı, efsane bir hoca, mahalleden bir çocuk… Bölüm bölüm ilerleyen hikâyeler, hocanla güven bağı, film ve reklam teklifleri, taraftar mektupları ve kariyerini dönemlere ayıran büyük yol ayrımları.
 
-🏠 KAFES DIŞINDA HAYAT
+KAFES DIŞINDA HAYAT
 Evini kur, duvarına kemerlerini as. Evlen, çocuğunun ilk adımlarını gör, memleketinde sokağına adın verilsin. Tatile çık, vücuduna iyi bak, sosyal medyayı ve sponsorlarını yönet.
 
-🏛️ KOLEKSİYON
+KOLEKSİYON
 Maç hatıralarıyla dolan müze, yendiğin dövüşçülerin kart albümü ve setleri, şehir damgalarıyla pasaport, değeri haftadan haftaya değişen lüks koleksiyon ve 111 başarım.
 
-🏢 EMEKLİLİKTEN SONRA
+EMEKLİLİKTEN SONRA
 Eldivenleri astığında kendi organizasyonunu kur: dövüşçü imzala, gece düzenle, bilet sat, itibarını büyüt. Kariyerini sahne sahne akan bir belgeselle izle.
 
-⚔️ MEYDAN OKU
+MEYDAN OKU
 Kolay, Normal ya da Efsane zorlukta başla; meydan okuma modlarıyla kendini sına. Her gün herkes için aynı "Günün Dövüşü"nde skorunu paylaş.
 
-✨ ÖZELLİKLER
+ÖZELLİKLER
 • Gerçek zamanlı canlı dövüş ya da taktik modu
 • Sinematik dövüş gecesi, kulis ve nakavt tekrarları
 • Hikâye bölümleri ve kalıcı kararlar

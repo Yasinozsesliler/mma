@@ -13,7 +13,9 @@ mkdirSync(`${root}/store/appstore-metinleri`, { recursive: true });
 let bad = 0;
 for (const [k, x] of Object.entries(as)) {
   const p = play[x.listing];
-  const f = { name: x.name, subtitle: x.subtitle, promo: x.promo, keywords: x.keywords, description: p.full, whatsNew: p.releaseNotes };
+  // Apple açıklamada emoji kabul etmez (Play eder): bölüm başlıklarındaki emojiler çıkarılır
+  const noEmoji = (t) => t.replace(/[\p{Extended_Pictographic}️‍]/gu, '').split('\n').map((l) => l.trim()).join('\n');
+  const f = { name: x.name, subtitle: x.subtitle, promo: x.promo, keywords: x.keywords, description: noEmoji(p.full), whatsNew: p.releaseNotes };
   for (const [key, v] of Object.entries(f)) if (len(v) > LIM[key]) (bad++, console.log(`⚠️ ${k} ${key}: ${len(v)}/${LIM[key]}`));
   const sec = (t, key) => [`=== ${t} (${len(f[key])}/${LIM[key]}) ===`, f[key], ''];
   const txt = [

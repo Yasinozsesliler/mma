@@ -13,37 +13,37 @@ New: play every round in real time! Jab, cross, kick, takedowns and submissions.
 === ANAHTAR KELİMELER (Keywords) (94/100) ===
 mma,fighting,boxing,career,simulator,cage,wrestling,kickboxing,muay thai,champion,knockout,bjj
 
-=== AÇIKLAMA (Description) (2888/4000) ===
+=== AÇIKLAMA (Description) (2865/4000) ===
 Start from nothing, reach for the belt. YOL: From the Cage to the Belt is an MMA fighter game where you fight with your own hands in the cage and every choice outside it shapes your career.
 
-🥊 LIVE FIGHTS
+LIVE FIGHTS
 Play rounds in real time: jab, cross, kick, slip and guard. Read your opponent's attack, slip at the right moment and counter. Shoot for takedowns or sprawl; strike from the top, lock in submissions or escape from the bottom. Not into reflex games? Pick your plan in "Watch tactics" mode and watch the fight.
 
-🎬 FIGHT NIGHT
+FIGHT NIGHT
 Step backstage, see your spot on the card and walk to the cage under the spotlights when it's your turn. Speak up at the press conference, go face to face, watch knockouts in slow motion and chase the Performance of the Night bonus.
 
-🏋️ RUN YOUR CAMP
+RUN YOUR CAMP
 Choose your nationality, weight class and background: boxing, muay thai, wrestling, BJJ, sambo, judo, kyokushin, kickboxing or street. Build your camp plan; the weeks roll on their own and you decide at the key moments. Believe or doubt the rumors from your rival's camp, and cut your own weight in the final 48 hours.
 
-🏆 FROM AMATEUR TO WORLD CHAMPION
+FROM AMATEUR TO WORLD CHAMPION
 Turn pro through the Rising Grand Prix, climb from regional promotions to the biggest stage in the world. Rise in the rankings, win belts, defend your title and enter the Hall of Fame. The fighters you beat keep going too: one of them may become a champion one day.
 
-📖 STORIES AND CHOICES
+STORIES AND CHOICES
 A traitorous training partner, a legendary coach, a kid from your block… Chapter-based stories, a bond of trust with your coach, movie and ad offers, fan letters and big crossroads that divide your career into eras.
 
-🏠 LIFE OUTSIDE THE CAGE
+LIFE OUTSIDE THE CAGE
 Get a home and hang your belts on the wall. Get married, see your child's first steps, have your hometown name a street after you. Take vacations, look after your body, manage social media and sponsors.
 
-🏛️ COLLECTION
+COLLECTION
 A museum filled with fight keepsakes, a card album and sets of the fighters you beat, a passport full of city stamps, a luxury collection whose value changes every week, and 111 achievements.
 
-🏢 AFTER RETIREMENT
+AFTER RETIREMENT
 When you hang up the gloves, found your own promotion: sign fighters, run events, sell tickets, grow your prestige. Relive your career in a scene-by-scene documentary.
 
-⚔️ CHALLENGES
+CHALLENGES
 Start on Easy, Normal or Legend difficulty and test yourself with challenge modes. Share your score in the daily "Fight of the Day", the same for everyone.
 
-✨ FEATURES
+FEATURES
 • Real-time live fights or tactics mode
 • Cinematic fight night, backstage and knockout replays
 • Story chapters and lasting decisions

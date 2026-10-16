@@ -13,37 +13,37 @@ Nuevo: ¡juega cada asalto en tiempo real! Jab, recto, patada, derribos y sumisi
 === ANAHTAR KELİMELER (Keywords) (93/100) ===
 mma,lucha,boxeo,carrera,simulador,jaula,kickboxing,muay thai,campeón,nocaut,jiu jitsu,deporte
 
-=== AÇIKLAMA (Description) (3082/4000) ===
+=== AÇIKLAMA (Description) (3059/4000) ===
 Empieza desde cero y alcanza el cinturón. YOL: De la Jaula al Cinturón es un juego de luchador de MMA en el que peleas con tus propias manos en la jaula y cada decisión fuera de ella cambia tu carrera.
 
-🥊 PELEAS EN VIVO
+PELEAS EN VIVO
 Juega los asaltos en tiempo real: jab, directo, patada, esquiva y guardia. Lee el ataque de tu rival, esquiva en el momento justo y contraataca. Busca el derribo o haz sprawl; golpea desde arriba, aplica sumisiones o escapa desde abajo. ¿No te van los juegos de reflejos? Elige tu plan en el modo "Ver táctica" y mira la pelea.
 
-🎬 NOCHE DE PELEAS
+NOCHE DE PELEAS
 Entra al vestuario, mira tu lugar en la cartelera y camina a la jaula bajo los focos cuando te toque. Habla en la rueda de prensa, cara a cara con tu rival, mira los nocauts a cámara lenta y busca el bono de Actuación de la Noche.
 
-🏋️ GESTIONA TU CAMPAMENTO
+GESTIONA TU CAMPAMENTO
 Elige nacionalidad, categoría y estilo: boxeo, muay thai, lucha, BJJ, sambo, judo, kyokushin, kickboxing o callejero. Prepara tu plan; las semanas avanzan solas y tú decides en los momentos clave. Cree o duda de los rumores del campamento rival y da el peso tú mismo en las últimas 48 horas.
 
-🏆 DE AMATEUR A CAMPEÓN DEL MUNDO
+DE AMATEUR A CAMPEÓN DEL MUNDO
 Hazte profesional con el Grand Prix Ascenso y sube de las promotoras regionales al escenario más grande del mundo. Escala en el ranking, gana cinturones, defiende tu título y entra en el Salón de la Fama. Los rivales que vences siguen su carrera: alguno puede acabar siendo campeón.
 
-📖 HISTORIAS Y DECISIONES
+HISTORIAS Y DECISIONES
 Un compañero de entrenamiento traidor, un entrenador legendario, un chico del barrio… Historias por capítulos, un vínculo de confianza con tu entrenador, ofertas de cine y publicidad, cartas de fans y grandes encrucijadas que dividen tu carrera en etapas.
 
-🏠 LA VIDA FUERA DE LA JAULA
+LA VIDA FUERA DE LA JAULA
 Consigue una casa y cuelga tus cinturones en la pared. Cásate, ve los primeros pasos de tu hijo y deja que tu ciudad ponga tu nombre a una calle. Vete de vacaciones, cuida tu cuerpo, gestiona redes sociales y patrocinadores.
 
-🏛️ COLECCIÓN
+COLECCIÓN
 Un museo lleno de recuerdos de tus peleas, un álbum de cartas con colecciones, un pasaporte con sellos de ciudades, una colección de lujo cuyo valor cambia cada semana y 111 logros.
 
-🏢 DESPUÉS DEL RETIRO
+DESPUÉS DEL RETIRO
 Cuando cuelgues los guantes, funda tu propia promotora: ficha luchadores, organiza veladas, vende entradas y haz crecer tu prestigio. Revive tu carrera en un documental escena a escena.
 
-⚔️ DESAFÍOS
+DESAFÍOS
 Empieza en dificultad Fácil, Normal o Leyenda y ponte a prueba con modos de desafío. Comparte tu puntuación en la "Pelea del Día", igual para todos.
 
-✨ CARACTERÍSTICAS
+CARACTERÍSTICAS
 • Peleas en vivo en tiempo real o modo táctico
 • Noche de peleas cinematográfica, vestuario y repeticiones de nocauts
 • Capítulos de historia y decisiones con consecuencias
