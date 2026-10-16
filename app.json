@@ -90,7 +90,7 @@
         "react-native-google-mobile-ads",
         {
           "androidAppId": "ca-app-pub-6387108639379747~8058643285",
-          "iosAppId": "ca-app-pub-3940256099942544~1458002511",
+          "iosAppId": "ca-app-pub-6387108639379747~8406847821",
           "delayAppMeasurementInit": true,
           "userTrackingUsageDescription": "Your data is used to show you more relevant ads. Ads keep the game free; they never give power.",
           "skAdNetworkItems": [
@@ -124,6 +124,7 @@
     }
   },
   "react-native-google-mobile-ads": {
-    "android_app_id": "ca-app-pub-6387108639379747~8058643285"
+    "android_app_id": "ca-app-pub-6387108639379747~8058643285",
+    "ios_app_id": "ca-app-pub-6387108639379747~8406847821"
   }
 }

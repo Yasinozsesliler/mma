@@ -22,7 +22,7 @@ const REAL_BY_OS = {
     interstitial: 'ca-app-pub-6387108639379747/8893212804',
   },
   ios: {
-    rewarded: '', // AdMob › iOS uygulaması › Ödüllü birim
+    rewarded: 'ca-app-pub-6387108639379747/5010528290',
     interstitial: '', // AdMob › iOS uygulaması › Geçiş birimi
   },
 };
