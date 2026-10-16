@@ -112,7 +112,7 @@ const PRI = ['DÖVÜŞ AYARLA', 'Bu rakibi seç', 'Hocanın planıyla başla', '
 for (let i = 0; i < 120; i++) {
   if ((await body()).includes(t('BAYANLAR VE BAYLAR…'))) break;
   // Dövüş gecesinden hemen önce: anonsta görünecek amatör rekor
-  if ((await buttons()).some((b) => up(b).includes(up(t('Dövüş gecesi'))))) await edit('s.amator = { g: 9, m: 1, b: 0 }; Object.keys(s.fighter.stats).forEach((k) => (s.fighter.stats[k] = 88));');
+  if ((await buttons()).some((b) => up(b).includes(up(t('Dövüş gecesi'))))) await edit('s.amator = { g: 9, m: 1, b: 0 }; Object.keys(s.fighter.stats).forEach((k) => (s.fighter.stats[k] = 88)); const r = s.pending.rakip; if (r) Object.keys(r.stats).forEach((k) => (r.stats[k] = 35));'); // maç sonu görseli hep zafer olsun
   let ok = false;
   for (const p of PRI) if (await click(p)) { ok = true; break; }
   if (!ok) await sleep(400);
