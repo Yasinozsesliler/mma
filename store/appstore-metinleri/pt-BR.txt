@@ -2,10 +2,10 @@
 Gizlilik politikası: https://mma-five-psi.vercel.app/gizlilik.html · Destek: https://mma-five-psi.vercel.app
 
 === AD (Name) (28/30) ===
-YOL: Carreira de Lutador MMA
+YOL: Do Octógono ao Cinturão
 
-=== ALT BAŞLIK (Subtitle) (30/30) ===
-Lute ao vivo, ganhe o cinturão
+=== ALT BAŞLIK (Subtitle) (25/30) ===
+Simulador de carreira MMA
 
 === TANITIM METNİ (Promotional Text) (139/170) ===
 Novo: jogue cada round em tempo real! Jab, direto, chute, quedas e finalizações. Lute na jaula com as próprias mãos e vire campeão mundial.

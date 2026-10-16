@@ -1,11 +1,11 @@
 ﻿APP STORE CONNECT · en-US
 Gizlilik politikası: https://mma-five-psi.vercel.app/gizlilik.html · Destek: https://mma-five-psi.vercel.app
 
-=== AD (Name) (27/30) ===
-YOL: MMA Fighter Career Sim
+=== AD (Name) (17/30) ===
+YOL: Cage to Belt
 
-=== ALT BAŞLIK (Subtitle) (25/30) ===
-Fight live. Win the belt.
+=== ALT BAŞLIK (Subtitle) (22/30) ===
+MMA Fighter Career Sim
 
 === TANITIM METNİ (Promotional Text) (163/170) ===
 New: play every round in real time! Jab, cross, kick, takedowns and submissions. Fight in the cage with your own hands and rise from the streets to world champion.

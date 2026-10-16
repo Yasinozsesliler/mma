@@ -2,10 +2,10 @@
 Gizlilik politikası: https://mma-five-psi.vercel.app/gizlilik.html · Destek: https://mma-five-psi.vercel.app
 
 === AD (Name) (22/30) ===
-YOL: Карьера бойца ММА
+YOL: Из клетки к поясу
 
-=== ALT BAŞLIK (Subtitle) (25/30) ===
-Живые бои и пояс чемпиона
+=== ALT BAŞLIK (Subtitle) (27/30) ===
+Симулятор карьеры бойца MMA
 
 === TANITIM METNİ (Promotional Text) (146/170) ===
 Новое: играй каждый раунд в реальном времени! Джеб, прямой, удары ногами, проходы и болевые. Дерись в клетке своими руками и стань чемпионом мира.

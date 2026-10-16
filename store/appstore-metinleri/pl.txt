@@ -1,11 +1,11 @@
 ﻿APP STORE CONNECT · pl
 Gizlilik politikası: https://mma-five-psi.vercel.app/gizlilik.html · Destek: https://mma-five-psi.vercel.app
 
-=== AD (Name) (26/30) ===
-YOL: Kariera Zawodnika MMA
+=== AD (Name) (21/30) ===
+YOL: Z klatki do pasa
 
-=== ALT BAŞLIK (Subtitle) (26/30) ===
-Walcz na żywo, zdobądź pas
+=== ALT BAŞLIK (Subtitle) (21/30) ===
+Symulator kariery MMA
 
 === TANITIM METNİ (Promotional Text) (153/170) ===
 Nowość: graj każdą rundę w czasie rzeczywistym! Jab, prosty, kopnięcia, sprowadzenia i poddania. Walcz w klatce własnymi rękami i zostań mistrzem świata.
