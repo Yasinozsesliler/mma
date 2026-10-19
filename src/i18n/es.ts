@@ -6225,4 +6225,5 @@ export const ES: Record<string, string> = {
   "Kuzey Devi": "El Gigante del Norte",
   "Kule": "La Torre",
   "App Store’da ücretsiz": "Gratis en el App Store",
+  "Hafif görüntü": "Gráficos ligeros",
 };

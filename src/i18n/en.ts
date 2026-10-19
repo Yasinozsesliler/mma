@@ -6213,4 +6213,5 @@ export const EN: Record<string, string> = {
   "Kuzey Devi": "Giant of the North",
   "Kule": "The Tower",
   "App Store’da ücretsiz": "Free on the App Store",
+  "Hafif görüntü": "Lite graphics",
 };

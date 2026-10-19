@@ -3,10 +3,11 @@ import { L as tL, LOC } from '../i18n';
 import { announce } from '../announcer';
 import { sfx, type Sfx } from '../audio';
 import { buzz } from '../haptics';
+import { lowPerf, paintMs } from '../perfPref';
 import { playerKit } from '../cosmetics';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useEffect, useRef, useState } from 'react';
-import { Modal, Platform, Pressable, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
+import { memo, useEffect, useRef, useState } from 'react';
+import { Modal, Pressable, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
 import Svg, { Circle, Defs, Ellipse, G, Line, LinearGradient as SvgLinear, Polygon, RadialGradient, Rect, Stop, Text as SvgText } from 'react-native-svg';
 import type { Appearance, FightState } from '../engine/types';
 import { DEFAULT_LOOK } from './FighterAvatar';
@@ -71,6 +72,68 @@ function classify(line: string, fs: FightState): Ev {
   if (/yumruk|jab|kroşe|aparkat|overhand|kombinasyon|isabet|vurdu|vuruş|sağ el|sol el|kontra|dirsek|💥|🎯|punch|hook|uppercut|cross|combo|combination|lands|right hand|left hand|counter|elbow|strike|landed|golpe|gancho|recto|combinación|conecta|derecha|izquierda|contragolpe|codazo|soco|direto|combinação|acerta|direita|esquerda|contra-ataque|cotovel|удар|хук|прямой|двойк|серия|попада|правый|левый|контратак|джеб|локт/.test(t)) return E('strike', strike);
   return E('move');
 }
+
+// ---------- Sahne: sabit katmanlar (her karede yeniden çizilmez) ----------
+
+const CROWD_TOP = H * 0.05;
+
+/** Tribün ışıkları ve seyirci arkasındaki ışıltı */
+const Stands = memo(function Stands({ w }: { w: number }) {
+  return (
+    <>
+      {Array.from({ length: 18 }, (_, i) => (
+        <Circle key={i} cx={(w / 18) * i + 8} cy={H * 0.03 + (i % 3) * 4} r={1.2} fill="#ffffff" opacity={0.15 + (i % 4) * 0.08} />
+      ))}
+      <Rect x={0} y={CROWD_TOP + 4} width={w} height={H * 0.16} fill="url(#crowdGlow)" />
+    </>
+  );
+});
+
+/** Seyirci: büyük anlarda ayağa kalkar, foto flaşları patlar. hp 0 iken (ve hafif modda) sabit kalır, yeniden çizilmez. */
+const Crowd = memo(function Crowd({ w, hp, t }: { w: number; hp: number; t: number }) {
+  return (
+    <>
+      {CROWD.map((p, i) => {
+        const bounce = hp ? Math.abs(Math.sin(t / 110 + p.ph)) * 5 * hp * p.s : 0;
+        const x = w * (0.02 + p.u * 0.96);
+        const y = CROWD_TOP + 18 + p.row * 13 - bounce;
+        return (
+          <G key={`c${i}`}>
+            <Ellipse cx={x} cy={y + 9 * p.s} rx={8 * p.s} ry={6 * p.s} fill={p.c} />
+            <Circle cx={x} cy={y} r={4.2 * p.s} fill={p.c} />
+            {hp > 0.25 && hash(i * 13 + Math.floor(t / 90)) < 0.05 * hp ? <Circle cx={x + 2} cy={y - 1} r={3} fill="#ffffff" opacity={0.9} /> : null}
+            {hp > 0.4 && p.row === 1 && i % 3 === 0 ? <Line x1={x + 5 * p.s} y1={y + 6} x2={x + 7 * p.s} y2={y - 6 - bounce * 0.6} stroke={p.c} strokeWidth={2.4 * p.s} strokeLinecap="round" /> : null}
+          </G>
+        );
+      })}
+    </>
+  );
+});
+
+/** Tavan spotları, arka kafes ve kanvas */
+const CageBack = memo(function CageBack({ w }: { w: number }) {
+  const cx = w / 2;
+  return (
+    <>
+      <Polygon points={`${w * 0.36},0 ${w * 0.44},0 ${w * 0.62},${H * 0.86} ${w * 0.18},${H * 0.86}`} fill="url(#cone)" />
+      <Polygon points={`${w * 0.56},0 ${w * 0.64},0 ${w * 0.82},${H * 0.86} ${w * 0.38},${H * 0.86}`} fill="url(#cone)" />
+      <Polygon points={`${w * 0.08},${H * 0.72} ${w * 0.18},${H * 0.18} ${w * 0.82},${H * 0.18} ${w * 0.92},${H * 0.72}`} fill="none" stroke="#2c2f37" strokeWidth={2} />
+      {Array.from({ length: 15 }, (_, i) => {
+        const x = w * 0.18 + (w * 0.64 * i) / 14;
+        return <Line key={i} x1={x} y1={H * 0.18} x2={x} y2={H * 0.68} stroke="#1d2027" strokeWidth={1} />;
+      })}
+      {Array.from({ length: 7 }, (_, i) => (
+        <Line key={`h${i}`} x1={w * 0.16} y1={H * 0.22 + i * 15} x2={w * 0.84} y2={H * 0.22 + i * 15} stroke="#1a1c22" strokeWidth={1} />
+      ))}
+      <Ellipse cx={cx} cy={H * 0.8} rx={w * 0.49} ry={H * 0.17} fill="#d6d6d9" />
+      <Ellipse cx={cx} cy={H * 0.8} rx={w * 0.49} ry={H * 0.17} fill="url(#cspot)" />
+      <Ellipse cx={cx} cy={H * 0.8} rx={w * 0.13} ry={H * 0.045} fill="none" stroke={C.red} strokeWidth={2} opacity={0.6} />
+      <SvgText x={cx} y={H * 0.81 + 3} fill={C.red} opacity={0.35} fontSize={9} fontWeight="bold" textAnchor="middle" letterSpacing={3}>
+        YOL
+      </SvgText>
+    </>
+  );
+});
 
 // ---------- Sahne ----------
 
@@ -146,7 +209,8 @@ export function CageView({
     });
     fx.current = fx.current.filter((f) => t - f.t0 < LIFE(f));
     if (fx.current.length || pulseAt(shake.current, t) || pulseAt(flash.current, t) || pulseAt(hype.current, t) || pulseAt(zoom.current, t)) active = true;
-    if (Platform.OS === 'web' || t - lastPaint.current >= 32 || !active) {
+    const pm = paintMs();
+    if (!pm || t - lastPaint.current >= pm || !active) {
       lastPaint.current = t;
       setTick((n) => (n + 1) % 1e6);
     }
@@ -507,7 +571,7 @@ export function CageView({
   const hp = pulseAt(hype.current, tNow);
   const zm = pulseAt(zoom.current, tNow);
   const zoomS = 1 + (zm ? Math.sin(Math.min(1, (tNow - zoom.current!.t0) / 260) * (Math.PI / 2)) * zm : 0);
-  const crowdTop = H * 0.05;
+  const low = lowPerf();
   const actor = (a: Actor) => {
     const ps = cur.current[a];
     const f = face.current[a];
@@ -551,44 +615,10 @@ export function CageView({
               </RadialGradient>
             </Defs>
             <G transform={sx || sy ? `translate(${sx} ${sy})` : undefined}>
-            {/* Tribün ışıkları */}
-            {Array.from({ length: 18 }, (_, i) => (
-              <Circle key={i} cx={(w / 18) * i + 8} cy={H * 0.03 + (i % 3) * 4} r={1.2} fill="#ffffff" opacity={0.15 + (i % 4) * 0.08} />
-            ))}
-            <Rect x={0} y={crowdTop + 4} width={w} height={H * 0.16} fill="url(#crowdGlow)" />
-            {/* Seyirci: büyük anlarda ayağa kalkar, foto flaşları patlar */}
-            {CROWD.map((p, i) => {
-              const bounce = hp ? Math.abs(Math.sin(tNow / 110 + p.ph)) * 5 * hp * p.s : 0;
-              const x = w * (0.02 + p.u * 0.96);
-              const y = crowdTop + 18 + p.row * 13 - bounce;
-              return (
-                <G key={`c${i}`}>
-                  <Ellipse cx={x} cy={y + 9 * p.s} rx={8 * p.s} ry={6 * p.s} fill={p.c} />
-                  <Circle cx={x} cy={y} r={4.2 * p.s} fill={p.c} />
-                  {hp > 0.25 && hash(i * 13 + Math.floor(tNow / 90)) < 0.05 * hp ? <Circle cx={x + 2} cy={y - 1} r={3} fill="#ffffff" opacity={0.9} /> : null}
-                  {hp > 0.4 && p.row === 1 && i % 3 === 0 ? <Line x1={x + 5 * p.s} y1={y + 6} x2={x + 7 * p.s} y2={y - 6 - bounce * 0.6} stroke={p.c} strokeWidth={2.4 * p.s} strokeLinecap="round" /> : null}
-                </G>
-              );
-            })}
-            {/* Tavan spotları */}
-            <Polygon points={`${w * 0.36},0 ${w * 0.44},0 ${w * 0.62},${H * 0.86} ${w * 0.18},${H * 0.86}`} fill="url(#cone)" />
-            <Polygon points={`${w * 0.56},0 ${w * 0.64},0 ${w * 0.82},${H * 0.86} ${w * 0.38},${H * 0.86}`} fill="url(#cone)" />
-            {/* Arka kafes */}
-            <Polygon points={`${w * 0.08},${H * 0.72} ${w * 0.18},${H * 0.18} ${w * 0.82},${H * 0.18} ${w * 0.92},${H * 0.72}`} fill="none" stroke="#2c2f37" strokeWidth={2} />
-            {Array.from({ length: 15 }, (_, i) => {
-              const x = w * 0.18 + (w * 0.64 * i) / 14;
-              return <Line key={i} x1={x} y1={H * 0.18} x2={x} y2={H * 0.68} stroke="#1d2027" strokeWidth={1} />;
-            })}
-            {Array.from({ length: 7 }, (_, i) => (
-              <Line key={`h${i}`} x1={w * 0.16} y1={H * 0.22 + i * 15} x2={w * 0.84} y2={H * 0.22 + i * 15} stroke="#1a1c22" strokeWidth={1} />
-            ))}
-            {/* Kanvas */}
-            <Ellipse cx={cx} cy={H * 0.8} rx={w * 0.49} ry={H * 0.17} fill="#d6d6d9" />
-            <Ellipse cx={cx} cy={H * 0.8} rx={w * 0.49} ry={H * 0.17} fill="url(#cspot)" />
-            <Ellipse cx={cx} cy={H * 0.8} rx={w * 0.13} ry={H * 0.045} fill="none" stroke={C.red} strokeWidth={2} opacity={0.6} />
-            <SvgText x={cx} y={H * 0.81 + 3} fill={C.red} opacity={0.35} fontSize={9} fontWeight="bold" textAnchor="middle" letterSpacing={3}>
-              YOL
-            </SvgText>
+            {/* Sabit katmanlar yalnızca genişlik değişince yeniden çizilir; seyirci yalnızca coşku anlarında hareket eder */}
+            <Stands w={w} />
+            <Crowd w={w} hp={low ? 0 : hp} t={!low && hp ? tNow : 0} />
+            <CageBack w={w} />
             {stains.current.map((s2, i) => (
               <Ellipse key={`s${i}`} cx={s2.x} cy={s2.y} rx={s2.r * 1.4} ry={s2.r * 0.5} fill="#7a0d12" opacity={s2.o} />
             ))}

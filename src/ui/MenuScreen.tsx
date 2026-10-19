@@ -7,6 +7,7 @@ import { setAnnouncer, useAnnouncer } from '../announcer';
 import { setHaptics, useHaptics } from '../haptics';
 import { setQte, useQte } from '../qtePref';
 import { setLive, useLive } from '../livePref';
+import { setLowPerf, useLowPerf } from '../perfPref';
 import { setLang } from '../i18n/boot';
 import { setSoundSettings, useSoundSettings } from '../audio';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -248,6 +249,7 @@ export function MenuScreen({
   const titresim = useHaptics();
   const qteAcik = useQte();
   const canli = useLive();
+  const hafif = useLowPerf();
   const bildirim = useNotifyState();
   const yeniKoz = useCosmetics().yeni.length;
   const doneCh = useCompletedChallenges();
@@ -446,6 +448,8 @@ export function MenuScreen({
                 ['titresim', titresim, 'vibrate', 'vibrate-off', L("Titreşim"), () => setHaptics(!titresim)],
                 ['canli', canli, 'gamepad-variant', 'eye', L("Canlı dövüş"), () => setLive(!canli)],
                 ['qte', qteAcik, 'gesture-tap', 'gesture-tap-hold', L("Dövüşte elle oyna"), () => setQte(!qteAcik)],
+                // Düşük donanımlı telefonlar için: dövüş sahnesi daha seyrek çizilir, efektler sadeleşir (web'de gerekmez)
+                ...(Platform.OS === 'web' ? [] : [['hafif', hafif, 'speedometer-slow', 'speedometer', L("Hafif görüntü"), () => setLowPerf(!hafif)] as const]),
               ] as const
             ).map(([k, on, icon, offIcon, ad, toggle]) => (
               <Pressable key={k} onPress={toggle} style={[ms.lang, on && ms.langOn]}>

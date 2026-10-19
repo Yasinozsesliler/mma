@@ -12,8 +12,9 @@ import { liveCreate, liveElapsed, liveHold, liveInput, livePos, liveResult, live
 import type { Appearance, FightState } from '../engine/types';
 import { buzz } from '../haptics';
 import { L, LOC } from '../i18n';
-import { INSTANT, ND, useFlash } from './drills/common';
+import { INSTANT, useFlash } from './drills/common';
 import { getPref, setPref } from '../prefs';
+import { frameMeter, lowPerf, paintMs } from '../perfPref';
 import { DEFAULT_LOOK } from './FighterAvatar';
 import { Figure, HIP_H, lerpPose, POSES, type Pose, type PoseName } from './rig';
 import { C, F } from './theme';
@@ -410,8 +411,10 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel }: { fs: FightState; p
     const t2 = setTimeout(() => setBanner((b) => (b === L("DÖVÜŞ!") ? null : b)), 1400);
     let raf = 0;
     let last = 0;
+    const meter = frameMeter();
     const loop = () => {
       const t = now();
+      meter(t);
       if (pausedAt.current != null) {
         raf = requestAnimationFrame(loop);
         return;
@@ -419,7 +422,8 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel }: { fs: FightState; p
       liveStep(s, t);
       while (seen.current < s.events.length) onEvent(s.events[seen.current++]);
       fx.current = fx.current.filter((f) => t - f.t0 < 400);
-      if (!ND || t - last > 32) {
+      const pm = paintMs();
+      if (!pm || t - last > pm) {
         last = t;
         const o = s.o;
         const rem = o.state === 'windup' ? Math.max(0, o.stateUntil - t) : -1;
@@ -515,6 +519,8 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel }: { fs: FightState; p
     );
   };
   // Sahne, düğmelerden sonra kalan gerçek alana sığar (uzun çevirilerde düğmeler büyüse de skor tablosuna binmez)
+  // Hafif modda isabet kıvılcımı daha az çizgiyle çizilir
+  const sparks = lowPerf() ? 4 : 8;
   const stageW = Math.max(120, Math.min(W - 24, (mid.h || H - 330) * ASPECT, mid.w || W - 24));
 
   return (
@@ -563,8 +569,8 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel }: { fs: FightState; p
                 const r = (f.big ? 9 : 5) * (0.5 + age);
                 return (
                   <G key={i} opacity={1 - age}>
-                    {Array.from({ length: 8 }, (_, q) => {
-                      const a = (q / 8) * Math.PI * 2;
+                    {Array.from({ length: sparks }, (_, q) => {
+                      const a = (q / sparks) * Math.PI * 2;
                       return <Line key={q} x1={f.x + Math.cos(a) * r * 0.4} y1={f.y + Math.sin(a) * r * 0.4} x2={f.x + Math.cos(a) * r} y2={f.y + Math.sin(a) * r} stroke={f.big ? '#ffd23f' : '#fff'} strokeWidth={0.9} />;
                     })}
                     <Circle cx={f.x} cy={f.y} r={r * 0.3} fill={f.big ? '#ff5a2a' : '#fff'} />
