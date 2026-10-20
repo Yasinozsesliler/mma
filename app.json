@@ -101,6 +101,13 @@
       "expo-iap",
       "expo-asset",
       [
+        "expo-navigation-bar",
+        {
+          "hidden": true,
+          "enforceContrast": false
+        }
+      ],
+      [
         "expo-notifications",
         {
           "icon": "./assets/notification-icon.png",
