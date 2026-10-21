@@ -1,18 +1,11 @@
-import { L, LANG, LANGS, LOC } from '../i18n';
+import { L, LOC } from '../i18n';
 import { ChallengeList } from './ChallengeList';
 import type { ChallengeId } from '../engine/challenges';
 import { useCosmetics, useFrame } from '../cosmetics';
-import { ExportButton, FeedbackRow, ImportCard } from './CareerTransfer';
-import { setAnnouncer, useAnnouncer } from '../announcer';
-import { setHaptics, useHaptics } from '../haptics';
-import { setQte, useQte } from '../qtePref';
-import { setLive, useLive } from '../livePref';
-import { setLowPerf, useLowPerf } from '../perfPref';
-import { setLang } from '../i18n/boot';
-import { setSoundSettings, useSoundSettings } from '../audio';
+import { ExportButton } from './CareerTransfer';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useState, type ReactNode } from 'react';
-import { Linking, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Defs, Ellipse, LinearGradient as SvgLinear, Polygon, RadialGradient, Stop } from 'react-native-svg';
 import { useCompletedChallenges } from '../challengePrefs';
@@ -23,9 +16,8 @@ import { STAGE_LABELS } from '../engine/career';
 import { WEIGHT_CLASSES } from '../engine/data';
 import { slotsFor, type Slot } from '../storage';
 import { PremiumCard } from './PremiumCard';
-import { adPrivacyRequired, showAdPrivacyOptions, usePremium } from '../monetization';
-import { disableNotifications, enableNotifications, NOTIFY, useNotifyState } from '../notify';
-import { privacyUrl } from '../appConfig';
+import { SettingsSheet } from './SettingsSheet';
+import { usePremium } from '../monetization';
 import { FighterAvatar } from './FighterAvatar';
 import { BACKGROUNDS } from '../engine/data';
 import type { Background, GameState } from '../engine/types';
@@ -244,13 +236,6 @@ export function MenuScreen({
   const premium = usePremium();
   const SLOTS = slotsFor(premium);
   const firstEmpty = SLOTS.find((x) => !saves[x - 1]);
-  const ses = useSoundSettings();
-  const spiker = useAnnouncer();
-  const titresim = useHaptics();
-  const qteAcik = useQte();
-  const canli = useLive();
-  const hafif = useLowPerf();
-  const bildirim = useNotifyState();
   const yeniKoz = useCosmetics().yeni.length;
   const doneCh = useCompletedChallenges();
   const chIds = Object.keys(CHALLENGES) as ChallengeId[];
@@ -406,96 +391,14 @@ export function MenuScreen({
       ) : null}
 
       {sheet === 'ayarlar' ? (
-        <MenuSheet title={L("Ayarlar")} icon="cog" onClose={() => setSheet(null)}>
-          <Text style={ms.sheetLabel}>{L("DİL")}</Text>
-          <View style={ms.langRow}>
-            {LANGS.map((l) => {
-              const on = l.id === LANG;
-              return (
-                <Pressable
-                  key={l.id}
-                  disabled={on || !l.hazir}
-                  onPress={() => setLang(l.id)}
-                  style={[ms.lang, on && ms.langOn, !l.hazir && { opacity: 0.4 }]}
-                >
-                  <Text style={ms.langFlag}>{l.bayrak}</Text>
-                  <Text style={[ms.langText, on && { color: C.gold }]}>{l.hazir ? l.ad : L("yakında")}</Text>
-                </Pressable>
-              );
-            })}
-          </View>
-
-          <View style={ms.langRow}>
-            {(
-              [
-                ['muzik', 'music', L("Müzik")],
-                ['efekt', 'volume-high', L("Efektler")],
-              ] as const
-            ).map(([k, icon, ad]) => {
-              const on = ses[k];
-              return (
-                <Pressable key={k} onPress={() => setSoundSettings({ [k]: !on })} style={[ms.lang, on && ms.langOn]}>
-                  <Icon name={on ? icon : k === 'muzik' ? 'music-off' : 'volume-off'} size={14} color={on ? C.gold : C.faint} />
-                  <Text style={[ms.langText, on && { color: C.gold }]}>
-                    {ad} · {on ? L("AÇIK") : L("KAPALI")}
-                  </Text>
-                </Pressable>
-              );
-            })}
-            {(
-              [
-                ['spiker', spiker, 'microphone-variant', 'microphone-variant-off', L("Spiker"), () => setAnnouncer(!spiker)],
-                ['titresim', titresim, 'vibrate', 'vibrate-off', L("Titreşim"), () => setHaptics(!titresim)],
-                ['canli', canli, 'gamepad-variant', 'eye', L("Canlı dövüş"), () => setLive(!canli)],
-                ['qte', qteAcik, 'gesture-tap', 'gesture-tap-hold', L("Dövüşte elle oyna"), () => setQte(!qteAcik)],
-                // Düşük donanımlı telefonlar için: dövüş sahnesi daha seyrek çizilir, efektler sadeleşir (web'de gerekmez)
-                ...(Platform.OS === 'web' ? [] : [['hafif', hafif, 'speedometer-slow', 'speedometer', L("Hafif görüntü"), () => setLowPerf(!hafif)] as const]),
-              ] as const
-            ).map(([k, on, icon, offIcon, ad, toggle]) => (
-              <Pressable key={k} onPress={toggle} style={[ms.lang, on && ms.langOn]}>
-                <Icon name={on ? icon : offIcon} size={14} color={on ? C.gold : C.faint} />
-                <Text style={[ms.langText, on && { color: C.gold }]}>
-                  {ad} · {on ? L("AÇIK") : L("KAPALI")}
-                </Text>
-              </Pressable>
-            ))}
-            {NOTIFY ? (
-              <Pressable onPress={() => void (bildirim === 'acik' ? disableNotifications() : enableNotifications())} style={[ms.lang, bildirim === 'acik' && ms.langOn]}>
-                <Icon name={bildirim === 'acik' ? 'bell-ring' : 'bell-off'} size={14} color={bildirim === 'acik' ? C.gold : C.faint} />
-                <Text style={[ms.langText, bildirim === 'acik' && { color: C.gold }]}>
-                  {L("Bildirimler")} · {bildirim === 'acik' ? L("AÇIK") : L("KAPALI")}
-                </Text>
-              </Pressable>
-            ) : null}
-          </View>
-          <Text style={ms.sheetLabel}>{L("KARİYER AKTARMA VE GERİ BİLDİRİM")}</Text>
-          <ImportCard
-            canImport={!!firstEmpty}
-            onImport={(g) => {
-              setSheet(null);
-              if (firstEmpty) onImport(firstEmpty, g);
-            }}
-          />
-          <FeedbackRow />
-          {off?.durum === 'hazir' ? (
-            <View style={[ms.off, { borderColor: C.green + '66', alignSelf: 'center' }]}>
-              <Icon name="cloud-check" size={14} color={C.green} />
-              <Text style={[ms.offText, { color: C.green }]}>{L("Çevrimdışı oynamaya hazır · sürüm {0}", [off.surum])}</Text>
-            </View>
-          ) : null}
-          <View style={ms.legal}>
-            {privacyUrl(Platform.OS === 'web') ? (
-              <Pressable onPress={() => void Linking.openURL(privacyUrl(Platform.OS === 'web')!)} hitSlop={8}>
-                <Text style={ms.legalText}>{L("Gizlilik politikası")}</Text>
-              </Pressable>
-            ) : null}
-            {adPrivacyRequired() ? (
-              <Pressable onPress={() => void showAdPrivacyOptions()} hitSlop={8}>
-                <Text style={ms.legalText}>{L("Reklam gizlilik ayarları")}</Text>
-              </Pressable>
-            ) : null}
-          </View>
-        </MenuSheet>
+        <SettingsSheet
+          onClose={() => setSheet(null)}
+          canImport={!!firstEmpty}
+          onImport={(g) => {
+            setSheet(null);
+            if (firstEmpty) onImport(firstEmpty, g);
+          }}
+        />
       ) : null}
     </Screen>
   );
