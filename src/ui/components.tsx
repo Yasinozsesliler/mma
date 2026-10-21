@@ -90,18 +90,19 @@ export function TopBar({ label, onMenu }: { label: string; onMenu: () => void })
   return (
     <SafeAreaView edges={['top']} style={{ backgroundColor: '#020203' }}>
       <View style={st.topbar}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+        {/* Sol taraf daralabilir (uzun başlıklar kısalır); sağdaki düğmeler hep tam görünür */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1, minWidth: 0, marginRight: 8 }}>
           <Logo size={30} />
-          <View>
-            <Text style={st.topBrand}>{L("YOL · KAFESTEN KEMERE")}</Text>
-            <Text style={[st.topLabel, SLANT]}>{label.toLocaleUpperCase(LOC)}</Text>
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Text style={st.topBrand} numberOfLines={1}>{L("YOL · KAFESTEN KEMERE")}</Text>
+            <Text style={[st.topLabel, SLANT]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>{label.toLocaleUpperCase(LOC)}</Text>
           </View>
         </View>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 0 }}>
           <MuteButton />
           <Pressable onPress={onMenu} style={({ pressed }) => [st.topBtn, { opacity: pressed ? 0.6 : 1 }]}>
             <Icon name="menu" size={16} color={C.text} />
-            <Text style={st.topBtnText}>{L("ANA MENÜ")}</Text>
+            <Text style={[st.topBtnText, L("ANA MENÜ").length > 10 && { fontSize: 10.5, letterSpacing: 0.4 }]} numberOfLines={1}>{L("ANA MENÜ")}</Text>
           </Pressable>
         </View>
       </View>
@@ -307,7 +308,7 @@ export const st = StyleSheet.create({
   topbar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 10 },
   topBrand: { color: C.red, fontSize: 9, fontFamily: F.display, letterSpacing: 2 },
   topLabel: { color: C.text, fontSize: 17, fontFamily: F.display, letterSpacing: 0.5 },
-  topBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1, borderColor: C.border, backgroundColor: C.card, borderRadius: 4, paddingHorizontal: 12, paddingVertical: 7 },
+  topBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1, borderColor: C.border, backgroundColor: C.card, borderRadius: 4, paddingHorizontal: 10, paddingVertical: 7 },
   topBtnText: { color: C.text, fontSize: 12, fontFamily: F.display, letterSpacing: 1 },
   kickerBox: { alignSelf: 'flex-start', backgroundColor: C.red, paddingHorizontal: 8, paddingVertical: 2, marginBottom: 6, transform: [{ skewX: '-12deg' }] },
   kicker: { color: '#fff', fontSize: 11, fontFamily: F.display, letterSpacing: 1.5 },

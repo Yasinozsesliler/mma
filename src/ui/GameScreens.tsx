@@ -119,9 +119,12 @@ function Tabs<T extends string>({ value, onChange, items }: { value: T; onChange
         const on = it.key === value;
         return (
           <Pressable key={it.key} onPress={() => onChange(it.key)} style={[gs.tab, on && gs.tabOn]}>
-            <Text style={[gs.tabText, on && { color: '#fff' }]}>{it.label}</Text>
+            {/* Uzun çeviriler (DEVELOPMENT, РАЗВИТИЕ) tek satıra sığsın: küçülür, komşu sekmeye taşmaz */}
+            <Text style={[gs.tabText, it.label.length > 8 && { fontSize: 10.5, letterSpacing: 0.2 }, on && { color: '#fff' }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>
+              {it.label}
+            </Text>
             {it.badge ? (
-              <View style={gs.badge}>
+              <View style={gs.tabBadge} pointerEvents="none">
                 <Text style={gs.badgeText}>{it.badge}</Text>
               </View>
             ) : null}
@@ -973,9 +976,11 @@ const gs = StyleSheet.create({
   date: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 10, backgroundColor: '#1a1407', borderRadius: 8, borderWidth: 1, borderColor: '#4a3810', paddingHorizontal: 10, paddingVertical: 8 },
   dateText: { color: C.gold, fontFamily: F.semi, fontSize: 13 },
   tabs: { flexDirection: 'row', backgroundColor: C.card, borderRadius: R, borderWidth: 1, borderColor: C.border, padding: 4, marginBottom: 4 },
-  tab: { flex: 1, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 6, paddingVertical: 10, borderRadius: R - 4 },
+  tab: { flex: 1, minWidth: 0, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', paddingVertical: 10, paddingHorizontal: 4, borderRadius: R - 4 },
   tabOn: { backgroundColor: C.red, transform: [{ skewX: '-8deg' }] },
-  tabText: { color: C.dim, fontFamily: F.display, fontSize: 12, letterSpacing: 0.8 },
+  tabText: { color: C.dim, fontFamily: F.display, fontSize: 12, letterSpacing: 0.8, flexShrink: 1, textAlign: 'center' },
+  /** Sekme sayacı köşede durur, yazıdan yer çalmaz */
+  tabBadge: { position: 'absolute', top: -6, right: -2, backgroundColor: C.gold, borderRadius: 999, minWidth: 18, paddingHorizontal: 4, height: 18, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: C.card, zIndex: 2 },
   badge: { backgroundColor: C.gold, borderRadius: 999, minWidth: 20, paddingHorizontal: 5, height: 20, alignItems: 'center', justifyContent: 'center' },
   badgeText: { color: '#1f1605', fontFamily: F.black, fontSize: 11 },
   news: { flexDirection: 'row', gap: 10, paddingVertical: 9 },

@@ -6,6 +6,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { money } from '../engine/career';
+import { fmtFollowers as compact } from '../engine/fame';
 import { fmtFollowers, followers } from '../engine/fame';
 import { currentOrg, statAverage } from '../engine/character';
 import { ORGS, WEIGHT_CLASSES } from '../engine/data';
@@ -15,6 +16,9 @@ import { FighterAvatar } from './FighterAvatar';
 import { OvrBadge } from './StatusPanel';
 import { CountText } from './anim';
 import { C, F, R } from './theme';
+
+/** Dar sütun için kısa para: 100 bine kadar tam ($48.250), üstü kısaltılmış ($1,8M · $40M). */
+const shortMoney = (n: number) => (Math.abs(n) < 100_000 ? money(n) : `${n < 0 ? '-' : ''}$${compact(Math.abs(n))}`);
 
 function Meter({ label, value, color, sub, count }: { label: string; value: string; color?: string; sub?: number; count?: { n: number; fmt: (n: number) => string; delta: (d: number) => string } }) {
   return (
@@ -82,7 +86,7 @@ export function HubHero({ s }: { s: GameState }) {
       </View>
       <View style={hh.meters}>
         <Meter label={amator ? L("AMATÖR") : L("KARNE")} value={`${r.g}-${r.m}-${r.b}`} />
-        <Meter label="PARA" value={money(s.para)} color={s.para < 0 ? '#ff4d5e' : C.green} count={{ n: s.para, fmt: money, delta: (d) => `${d > 0 ? '+' : '-'}${money(Math.abs(d))}` }} />
+        <Meter label={L("PARA")} value={shortMoney(s.para)} color={s.para < 0 ? '#ff4d5e' : C.green} count={{ n: s.para, fmt: shortMoney, delta: (d) => `${d > 0 ? '+' : '-'}${shortMoney(Math.abs(d))}` }} />
         <Meter label={L("SAĞLIK")} value={`${s.saglik}`} color={health} sub={s.saglik} />
         <Meter label={L("TAKİPÇİ")} value={fmtFollowers(followers(s))} color={C.gold} count={{ n: followers(s), fmt: fmtFollowers, delta: (d) => `${d > 0 ? '+' : '-'}${fmtFollowers(Math.abs(d))}` }} />
       </View>

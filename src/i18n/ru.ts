@@ -6263,4 +6263,5 @@ export const RU: Record<string, string> = {
   "Kule": "Башня",
   "App Store’da ücretsiz": "Бесплатно в App Store",
   "Hafif görüntü": "Облегчённая графика",
+  "PARA": "ДЕНЬГИ",
 };

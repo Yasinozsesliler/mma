@@ -70,7 +70,7 @@ export function CountText({
     return () => clearTimeout(t);
   }, [value, delta, a]);
   return (
-    <View>
+    <View style={{ alignSelf: 'stretch', alignItems: 'center' }}>
       <Text style={style} numberOfLines={numberOfLines} adjustsFontSizeToFit={!!numberOfLines}>
         {format(Math.round(shown))}
       </Text>

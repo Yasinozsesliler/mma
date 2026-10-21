@@ -9,6 +9,12 @@ import { Button, Icon, Section, type IconName } from './components';
 import type { Act } from './GameScreens';
 import { C, F } from './theme';
 
+/** Dar kutuda uzun tek kelimeler (Хладнокровный, Wytrzymałości) bölünmeden sığsın: en uzun kelimeye göre yazı küçülür. */
+const nodeFont = (ad: string) => {
+  const w = Math.max(...ad.split(/\s+/).map((x) => [...x].length));
+  return w >= 13 ? 7 : w >= 11 ? 7.5 : w >= 9 ? 8 : w >= 8 ? 9 : 10;
+};
+
 export function PerkTree({ s, act }: { s: GameState; act: Act }) {
   const [sel, setSel] = useState<PerkId | null>(null);
   const free = perkPointsFree(s);
@@ -34,13 +40,13 @@ export function PerkTree({ s, act }: { s: GameState; act: Act }) {
                 const owned = hasPerk(s, p);
                 const can = canTakePerk(s, p);
                 return (
-                  <View key={p} style={{ alignItems: 'center' }}>
+                  <View key={p} style={{ alignItems: 'center', alignSelf: 'stretch' }}>
                     {i > 0 ? <View style={[st.link, { backgroundColor: owned ? br.renk : C.border }]} /> : null}
                     <Pressable
                       onPress={() => setSel(sel === p ? null : p)}
                       style={[st.node, { borderColor: owned ? br.renk : can ? C.gold : C.border, backgroundColor: owned ? br.renk + '33' : C.card }, sel === p && { transform: [{ scale: 1.08 }] }]}
                     >
-                      <Text style={[st.nodeText, { color: owned ? C.text : can ? C.gold : C.faint }]} numberOfLines={2}>
+                      <Text style={[st.nodeText, { fontSize: nodeFont(PERKS[p].ad()) }, { color: owned ? C.text : can ? C.gold : C.faint }]} numberOfLines={3} adjustsFontSizeToFit minimumFontScale={0.7}>
                         {PERKS[p].ad()}
                       </Text>
                     </Pressable>
@@ -83,7 +89,7 @@ const st = StyleSheet.create({
   branch: { fontFamily: F.display, fontSize: 11, marginBottom: 4 },
   link: { width: 2, height: 10 },
   node: { width: '100%', minHeight: 50, borderWidth: 1.5, borderRadius: 10, padding: 4, alignItems: 'center', justifyContent: 'center' },
-  nodeText: { fontFamily: F.semi, fontSize: 10, textAlign: 'center' },
+  nodeText: { fontFamily: F.semi, fontSize: 10, textAlign: 'center', alignSelf: 'stretch' },
   detail: { backgroundColor: C.card, borderWidth: 1, borderColor: C.border, borderRadius: 12, padding: 12, gap: 8, marginBottom: 12 },
   detailTitle: { color: C.text, fontFamily: F.display, fontSize: 15 },
   detailText: { color: C.dim, fontFamily: F.body, fontSize: 13 },
