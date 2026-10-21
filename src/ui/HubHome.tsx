@@ -6,7 +6,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { money } from '../engine/career';
-import { fmtFollowers as compact } from '../engine/fame';
 import { fmtFollowers, followers } from '../engine/fame';
 import { currentOrg, statAverage } from '../engine/character';
 import { ORGS, WEIGHT_CLASSES } from '../engine/data';
@@ -18,7 +17,7 @@ import { CountText } from './anim';
 import { C, F, R } from './theme';
 
 /** Dar sütun için kısa para: 100 bine kadar tam ($48.250), üstü kısaltılmış ($1,8M · $40M). */
-const shortMoney = (n: number) => (Math.abs(n) < 100_000 ? money(n) : `${n < 0 ? '-' : ''}$${compact(Math.abs(n))}`);
+const shortMoney = (n: number) => (Math.abs(n) < 100_000 ? money(n) : `${n < 0 ? '-' : ''}$${fmtFollowers(Math.abs(n))}`);
 
 function Meter({ label, value, color, sub, count }: { label: string; value: string; color?: string; sub?: number; count?: { n: number; fmt: (n: number) => string; delta: (d: number) => string } }) {
   return (
