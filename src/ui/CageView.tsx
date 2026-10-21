@@ -488,7 +488,13 @@ export function CageView({
       if (fs.raunt === 1) play({ tur: 'round', alt: '', kim: 'p', miss: false, escape: false, tap: false }, false);
       return;
     }
-    play(classify(last, fs), done);
+    const ev = classify(last, fs);
+    // Maçı bitiren nakavt/tap anında vuran taraf satırdaki isim sırasından değil, maç sonucundan alınır
+    // ("Moriyama yere yığıldı, Yılan kazandı" gibi kaybedenin önce yazıldığı satırlarda yanlış taraf düşüyordu).
+    const kz = fs.durum === 'bitti' ? fs.sonuc?.kazanan : undefined;
+    const bitirici = (ev.tur === 'ko' && (fs.sonuc?.yontem === 'KO' || fs.sonuc?.yontem === 'TKO')) || (ev.tur === 'sub' && (ev.tap || done) && fs.sonuc?.yontem === 'SUB');
+    if (bitirici && (kz === 'p' || kz === 'o')) ev.kim = kz;
+    play(ev, done);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shown, fs.raunt]);
 

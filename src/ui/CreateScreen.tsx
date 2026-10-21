@@ -62,9 +62,10 @@ export function CreateScreen({
     lakap: '',
     uyruk: startCountry,
     memleket: heritage?.memleket ?? '',
-    yas: 22,
+    // Meydan okuma yaşı ya da branşı belirliyorsa baştan o değerle başlanır (o adım sorulmaz)
+    yas: ch?.yas ?? 22,
     siklet: 'hafif',
-    gecmis: heritage?.gecmis ?? 'boks',
+    gecmis: ch?.gecmis ?? heritage?.gecmis ?? 'boks',
     hikaye: '',
     salonId: gymsFor(startCountry)[0].id,
     gorunum: { ...DEFAULT_LOOK },
@@ -114,7 +115,7 @@ export function CreateScreen({
       lakap: inp.lakap.trim() || (inp.ad.trim() ? '' : name.lakap),
       // Memleket boşsa ülkeye uygun bir şehir: memleket kartı ve memleket maçları açılsın
       memleket: inp.memleket.trim() || rnd(HOMETOWNS[inp.uyruk] ?? HOMETOWNS.tr),
-      yas: 22,
+      yas: ch?.yas ?? 22,
       siklet,
       boy: BASE_BOY[siklet],
       gecmis: heritage?.gecmis ?? rnd(Object.keys(BACKGROUNDS) as Background[]),
@@ -128,11 +129,20 @@ export function CreateScreen({
   const [bonusRolls, setBonusRolls] = useState(0);
   const premium = usePremium();
   const set = (p: Partial<NewFighterInput>) => setInp((x) => ({ ...x, ...p }));
+  /** Meydan okumanın belirlediği adımlar atlanır: yaş (4) ve dövüş geçmişi (6). */
+  const skip = (n: number) => (n === 4 && !!ch?.yas) || (n === 6 && !!ch?.gecmis);
   const next = () => {
-    if (step === 8) setStats(rollStartingStats(inp));
-    setStep(step + 1);
+    let n = step + 1;
+    while (skip(n)) n++;
+    if (n === 9) setStats(rollStartingStats(inp));
+    setStep(n);
   };
-  const back = () => (step === 1 ? onBack() : setStep(step - 1));
+  const back = () => {
+    if (step === 1) return onBack();
+    let n = step - 1;
+    while (n > 1 && skip(n)) n--;
+    setStep(n);
+  };
 
   const canNext = step !== 1 || (inp.ad.trim().length > 0 && inp.soyad.trim().length > 0);
 
