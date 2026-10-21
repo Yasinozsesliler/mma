@@ -241,7 +241,7 @@ export function finishFight(s: GameState) {
   lines.push(...gpAfterFight(s, opp, won && !caught));
   lines.push(...comebackAfter(s, won && !caught));
   lines.push(...fanClubAfterFight(s, won && !caught, finishMethod, !won && !draw && (r.yontem === 'KO' || r.yontem === 'TKO'), !!opp.memleket));
-  lines.push(...challengeCheck(s, won && !caught, !won && !draw && (r.yontem === 'KO' || r.yontem === 'TKO')));
+  lines.push(...challengeCheck(s, won && !caught, !won && !draw && (r.yontem === 'KO' || r.yontem === 'TKO'), r.yontem));
   // Bitiren hareket ustalık kazanır (maçı hangi teknikle bitirdiysen).
   let teknikNot: string | undefined;
   if (won && !caught && finishMethod && r.teknik) {

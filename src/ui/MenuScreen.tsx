@@ -323,6 +323,30 @@ export function MenuScreen({
 
       {/* Modlar */}
       <Section>{L("OYUN MODLARI")}</Section>
+      {/* Meydan okumalar: geniş afiş, ilerleme çubuğu ve son kategoriler */}
+      <Pressable onPress={() => setSheet('meydan')} style={({ pressed }) => [ms.chBanner, pressed && { transform: [{ scale: 0.99 }], borderColor: C.red }]}>
+        <LinearGradient colors={['#3a0b14', '#160a0d', '#0c0d10']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={ms.chIn}>
+          <View style={ms.chIcon}>
+            <Icon name="sword-cross" size={28} color={C.red} />
+          </View>
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Text style={[ms.chTitle, SLANT]}>{L("Meydan Okumalar").toLocaleUpperCase(LOC)}</Text>
+            <Text style={ms.chSub} numberOfLines={1}>
+              {L("{0} özel kurallı kariyer · Son Şans, Nakavt Kralı, Hükümdar…", [chIds.length])}
+            </Text>
+            <View style={ms.chBar}>
+              <View style={[ms.chFill, { width: `${Math.round((chIds.filter((i) => doneCh.includes(i)).length / chIds.length) * 100)}%` }]} />
+            </View>
+          </View>
+          <View style={{ alignItems: 'flex-end' }}>
+            <Text style={ms.chCount}>
+              {chIds.filter((i) => doneCh.includes(i)).length}
+              <Text style={ms.chCountAll}>/{chIds.length}</Text>
+            </Text>
+            <Icon name="chevron-right" size={20} color={C.faint} />
+          </View>
+        </LinearGradient>
+      </Pressable>
       <View style={ms.grid}>
         <ModeTile
           icon="fire"
@@ -331,14 +355,6 @@ export function MenuScreen({
           sub={daily.kayit[gun] ? L("Bugün oynandı · yarın yenisi") : L("Herkes aynı dövüşü oynuyor. Tek hakkın var.")}
           badge={seri ? `🔥 ${seri}` : undefined}
           onPress={onDaily}
-        />
-        <ModeTile
-          icon="sword-cross"
-          color={C.red}
-          title={L("Meydan Okumalar")}
-          sub={L("Özel kurallı kariyerler")}
-          badge={`${chIds.filter((i) => doneCh.includes(i)).length}/${chIds.length}`}
-          onPress={() => setSheet('meydan')}
         />
         <ModeTile icon="hanger" color={C.gold} title={L("Dolap")} sub={L("Şort, eldiven, çerçeve, kemer ve giriş müziği")} badge={yeniKoz ? L("{0} YENİ", [yeniKoz]) : undefined} onPress={onLocker} />
         <ModeTile icon="book-open-variant" color={C.blue} title={L("Rehber")} sub={L("Nasıl oynanır, gelişim, branşlar")} onPress={() => setSheet('rehber')} />
@@ -420,6 +436,15 @@ const ms = StyleSheet.create({
   newChip: { flexGrow: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderWidth: 1, borderStyle: 'dashed', borderColor: '#4a4d55', borderRadius: 12, paddingVertical: 12, paddingHorizontal: 12, backgroundColor: '#0a0b0d' },
   newChipText: { color: C.text, fontFamily: F.display, fontSize: 13, letterSpacing: 0.8 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 12 },
+  chBanner: { borderRadius: 16, borderWidth: 1, borderColor: '#4a1a22', overflow: 'hidden', marginBottom: 10 },
+  chIn: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14 },
+  chIcon: { width: 52, height: 52, borderRadius: 14, backgroundColor: C.red + '1c', borderWidth: 1, borderColor: C.red + '66', alignItems: 'center', justifyContent: 'center' },
+  chTitle: { color: C.text, fontFamily: F.display, fontSize: 18, letterSpacing: 0.6 },
+  chSub: { color: C.dim, fontFamily: F.body, fontSize: 11, marginTop: 1 },
+  chBar: { height: 5, borderRadius: 3, backgroundColor: '#ffffff12', overflow: 'hidden', marginTop: 8 },
+  chFill: { height: '100%', backgroundColor: C.gold, borderRadius: 3 },
+  chCount: { color: C.gold, fontFamily: F.display, fontSize: 22 },
+  chCountAll: { color: C.faint, fontSize: 13 },
   tile: { width: '48%', flexGrow: 1, borderRadius: 14, borderWidth: 1, overflow: 'hidden' },
   tileIn: { padding: 12, minHeight: 124, gap: 4 },
   tileTop: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 6 },

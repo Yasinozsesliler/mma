@@ -1,5 +1,5 @@
 import { L, LANG, LOC } from '../i18n';
-import { CHALLENGES, DIFFICULTIES, type ChallengeId, type Difficulty } from '../engine/challenges';
+import { challengeWeight, CHALLENGES, DIFFICULTIES, type ChallengeId, type Difficulty } from '../engine/challenges';
 import { HeritageBanner } from './DynastyPanel';
 import type { Heritage } from '../engine/dynasty';
 import { MONETIZATION, showRewarded, usePremium } from '../monetization';
@@ -46,13 +46,19 @@ export function CreateScreen({
   challenge?: ChallengeId | null;
 }) {
   const ch = challenge ? CHALLENGES[challenge] : null;
-  const [zorluk, setZorluk] = useState<Difficulty>('normal');
+  const [zorluk, setZorluk] = useState<Difficulty>(ch?.zorluk ?? 'normal');
   /** Meydan okuma kuralları (yaş, branş) ve zorluk karakter bitince uygulanır; değişen alan olursa istatistik yeniden atılır. */
   const onDone = (input: NewFighterInput, stats: Stats) => {
     const x: NewFighterInput = { ...input, zorluk, meydan: challenge ?? undefined };
     if (ch?.yas) x.yas = ch.yas;
     if (ch?.gecmis) x.gecmis = ch.gecmis;
-    onDoneRaw(x, x.yas !== input.yas || x.gecmis !== input.gecmis ? rollStartingStats(x) : stats);
+    if (ch?.zorluk) x.zorluk = ch.zorluk;
+    const w = challengeWeight(challenge, input.kadin);
+    if (w) {
+      x.siklet = w;
+      x.boy = BASE_BOY[w];
+    }
+    onDoneRaw(x, x.yas !== input.yas || x.gecmis !== input.gecmis || x.siklet !== input.siklet ? rollStartingStats(x) : stats);
   };
   const [step, setStep] = useState(1);
   const startCountry = heritage?.uyruk ?? (COUNTRIES[LANG_COUNTRY[LANG]] ? LANG_COUNTRY[LANG] : 'tr');
@@ -64,7 +70,7 @@ export function CreateScreen({
     memleket: heritage?.memleket ?? '',
     // Meydan okuma yaşı ya da branşı belirliyorsa baştan o değerle başlanır (o adım sorulmaz)
     yas: ch?.yas ?? 22,
-    siklet: 'hafif',
+    siklet: challengeWeight(challenge) ?? 'hafif',
     gecmis: ch?.gecmis ?? heritage?.gecmis ?? 'boks',
     hikaye: '',
     salonId: gymsFor(startCountry)[0].id,
@@ -73,7 +79,7 @@ export function CreateScreen({
   /** Cinsiyet: kadın kariyerinde rakipler de kadın, sıkletler sinek-horoz-tüy; görünüm uyarlanır. */
   const setGender = (kadin: boolean) =>
     setInp((x) => {
-      const siklet = kadin && !WOMEN_WEIGHTS.includes(x.siklet) ? 'horoz' : x.siklet;
+      const siklet = challengeWeight(challenge, kadin) ?? (kadin && !WOMEN_WEIGHTS.includes(x.siklet) ? 'horoz' : x.siklet);
       const g = x.gorunum ?? DEFAULT_LOOK;
       return {
         ...x,
@@ -107,7 +113,7 @@ export function CreateScreen({
   };
   const quickStart = () => {
     const name = randomName(inp.uyruk, !!inp.kadin);
-    const siklet = rnd<WeightClass>(inp.kadin ? WOMEN_WEIGHTS : ['tuy', 'hafif', 'welter', 'orta']);
+    const siklet = challengeWeight(challenge, inp.kadin) ?? rnd<WeightClass>(inp.kadin ? WOMEN_WEIGHTS : ['tuy', 'hafif', 'welter', 'orta']);
     const x: NewFighterInput = {
       ...inp,
       ad: inp.ad.trim() || name.ad,
@@ -129,8 +135,8 @@ export function CreateScreen({
   const [bonusRolls, setBonusRolls] = useState(0);
   const premium = usePremium();
   const set = (p: Partial<NewFighterInput>) => setInp((x) => ({ ...x, ...p }));
-  /** Meydan okumanın belirlediği adımlar atlanır: yaş (4) ve dövüş geçmişi (6). */
-  const skip = (n: number) => (n === 4 && !!ch?.yas) || (n === 6 && !!ch?.gecmis);
+  /** Meydan okumanın belirlediği adımlar atlanır: yaş (4), sıklet (5) ve dövüş geçmişi (6). */
+  const skip = (n: number) => (n === 4 && !!ch?.yas) || (n === 5 && !!ch?.siklet) || (n === 6 && !!ch?.gecmis);
   const next = () => {
     let n = step + 1;
     while (skip(n)) n++;
@@ -180,7 +186,7 @@ export function CreateScreen({
             </View>
           ) : null}
           <Text style={cs.label}>{L("Zorluk")}</Text>
-          <View style={cs.genderRow}>
+          <View style={[cs.genderRow, ch?.zorluk && { opacity: 0.5 }]} pointerEvents={ch?.zorluk ? 'none' : 'auto'}>
             {(Object.keys(DIFFICULTIES) as Difficulty[]).map((d) => {
               const on = zorluk === d;
               return (
