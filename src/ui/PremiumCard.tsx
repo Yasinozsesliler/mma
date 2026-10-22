@@ -51,11 +51,12 @@ export function PremiumCard() {
           <Text style={st.item}>{t}</Text>
         </View>
       ))}
-      <Button label={price ? L("Satın al · {0}", [price]) : L("Satın al")} icon="crown" tone="gold" disabled={busy || !price} onPress={() => purchase(buyPremium)} />
+      {/* Fiyat henüz gelmediyse de basılabilir: satın alma ürünleri önce yeniden ister */}
+      <Button label={price ? L("Satın al · {0}", [price]) : L("Satın al")} icon="crown" tone="gold" disabled={busy} onPress={() => purchase(buyPremium)} />
       {adFree ? (
         <Text style={st.adFree}>{L("Reklamsız Paket aktif")}</Text>
       ) : (
-        <Pressable disabled={busy || !adPrice} onPress={() => purchase(() => buy(ADFREE_SKU))} style={[st.adBtn, (busy || !adPrice) && { opacity: 0.5 }]}>
+        <Pressable disabled={busy} onPress={() => purchase(() => buy(ADFREE_SKU))} style={[st.adBtn, busy && { opacity: 0.5 }]}>
           <Icon name="cancel" size={14} color={C.dim} />
           <Text style={st.adText}>{adPrice ? L("Yalnızca reklamları kaldır · {0}", [adPrice]) : L("Yalnızca reklamları kaldır")}</Text>
         </Pressable>
@@ -108,14 +109,14 @@ export function FullVersionNudge() {
         <Text style={st.nudgeSub}>{L("Tam Sürüm tek seferlik: reklamlar kalkar, ödüller anında gelir, 5 kariyer yuvası ve Altın Seri.")}</Text>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, marginTop: 4 }}>
           <Pressable
-            disabled={busy || !price}
+            disabled={busy}
             onPress={async () => {
               setBusy(true);
               const r = await buyPremium();
               setBusy(false);
               if (r === 'ok') sfx('fanfare');
             }}
-            style={({ pressed }) => [st.adBtn, { flex: 1, borderColor: C.gold, paddingVertical: 8 }, pressed && { opacity: 0.8 }, (busy || !price) && { opacity: 0.5 }]}
+            style={({ pressed }) => [st.adBtn, { flex: 1, borderColor: C.gold, paddingVertical: 8 }, pressed && { opacity: 0.8 }, busy && { opacity: 0.5 }]}
           >
             <Text style={[st.adText, { color: C.gold }]}>{price ? L("Tam Sürüm · {0}", [price]) : L("Tam Sürüm")}</Text>
           </Pressable>

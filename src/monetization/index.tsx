@@ -2,6 +2,7 @@
 // Web sürümü reklamsızdır (index.web.tsx).
 import { isUserCancelledError, useIAP } from 'expo-iap';
 import { useEffect, useSyncExternalStore } from 'react';
+import { AppState } from 'react-native';
 import mobileAds, { AdEventType, AdsConsent, InterstitialAd, RewardedAd, RewardedAdEventType } from 'react-native-google-mobile-ads';
 import { pushScene } from '../audio/engine';
 import { AD_IDS } from './ids';
@@ -152,6 +153,7 @@ type BuyResult = 'ok' | 'iptal' | 'hata';
 let prices: Record<string, string> = {};
 const priceSubs = new Set<() => void>();
 let buyFn: ((sku: string) => Promise<unknown>) | null = null;
+let fetchFn: (() => Promise<unknown>) | null = null;
 let restoreFn: (() => Promise<unknown>) | null = null;
 let pending: { sku: string; resolve: (r: BuyResult) => void } | null = null;
 
@@ -178,7 +180,9 @@ export function buy(sku: string): Promise<BuyResult> {
   settle('iptal');
   return new Promise((resolve) => {
     pending = { sku, resolve };
-    buyFn!(sku).catch(() => settle('hata'));
+    // Ürün listesi henüz gelmediyse önce yeniden istenir (mağaza ilk açılışta geç cevap verebiliyor)
+    const go = prices[sku] ? Promise.resolve() : (fetchFn?.() ?? Promise.resolve()).catch(() => undefined);
+    void go.then(() => buyFn!(sku)).catch(() => settle('hata'));
   });
 }
 export const buyPremium = () => buy(PREMIUM_SKU);
@@ -206,11 +210,29 @@ export function PremiumManager() {
     onPurchaseError: (error) => settle(isUserCancelledError(error) ? 'iptal' : 'hata'),
   });
 
+  // Ürünler gelene kadar artan aralıklarla yeniden istenir; uygulama öne gelince de tekrar denenir.
+  // (Tek istek boş dönerse fiyatlar hiç görünmüyor, satın alma düğmeleri çalışmıyordu.)
+  const loaded = products.length > 0;
   useEffect(() => {
     if (!connected) return;
-    void fetchProducts({ skus: ALL_SKUS, type: 'in-app' }).catch(() => undefined);
     void getAvailablePurchases().catch(() => undefined);
-  }, [connected, fetchProducts, getAvailablePurchases]);
+  }, [connected, getAvailablePurchases]);
+  useEffect(() => {
+    if (!connected || loaded) return;
+    let n = 0;
+    let t: ReturnType<typeof setTimeout> | undefined;
+    const tryFetch = () => {
+      void fetchProducts({ skus: ALL_SKUS, type: 'in-app' }).catch(() => undefined);
+      n++;
+      if (n < 8) t = setTimeout(tryFetch, Math.min(30_000, 2_000 * 2 ** n));
+    };
+    tryFetch();
+    const sub = AppState.addEventListener('change', (st) => st === 'active' && void fetchProducts({ skus: ALL_SKUS, type: 'in-app' }).catch(() => undefined));
+    return () => {
+      if (t) clearTimeout(t);
+      sub.remove();
+    };
+  }, [connected, loaded, fetchProducts]);
 
   // Daha önce (bu ya da başka bir cihazda) satın alınanları geri ver.
   useEffect(() => {
@@ -233,7 +255,8 @@ export function PremiumManager() {
   useEffect(() => {
     buyFn = connected ? (sku) => requestPurchase({ request: { google: { skus: [sku] }, apple: { sku } }, type: 'in-app' }) : null;
     restoreFn = connected ? () => getAvailablePurchases() : null;
-  }, [connected, requestPurchase, getAvailablePurchases]);
+    fetchFn = connected ? () => fetchProducts({ skus: ALL_SKUS, type: 'in-app' }) : null;
+  }, [connected, requestPurchase, getAvailablePurchases, fetchProducts]);
 
   return null;
 }

@@ -115,7 +115,7 @@ function BuyButton({ sku, big }: { sku: string; big?: boolean }) {
         label={price ? L("Satın al · {0}", [price]) : L("Satın al")}
         icon="cart"
         tone="gold"
-        disabled={busy || !price}
+        disabled={busy}
         onPress={async () => {
           setBusy(true);
           setMsg('');
