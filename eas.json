@@ -26,7 +26,10 @@
     "production": {
       "android": { "track": "internal", "releaseStatus": "draft" },
       "ios": {
-        "ascAppId": "6823537918"
+        "ascAppId": "6823537918",
+        "ascApiKeyPath": "credentials/AuthKey_CU53MY4ZXC.p8",
+        "ascApiKeyIssuerId": "8d89245c-7ab7-4025-a288-8b1f9a59c683",
+        "ascApiKeyId": "CU53MY4ZXC"
       }
     }
   }
