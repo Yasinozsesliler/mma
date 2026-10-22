@@ -9,7 +9,7 @@ import { clearNew, equip, useCosmetics, useUnlocked } from '../cosmetics';
 import { COSMETICS, packOwned, PACKS, RARITY, rarityOf, type Cosmetic, type CosSlot, type FxKind, type Rarity } from '../engine/cosmetics';
 import type { Appearance } from '../engine/types';
 import { L, LOC } from '../i18n';
-import { buy, MONETIZATION, restorePurchases, useOwned, usePrice } from '../monetization';
+import { buy, MONETIZATION, PURCHASES, restorePurchases, useOwned, usePrice } from '../monetization';
 import { BUNDLE_SKU } from '../monetization/skus';
 import { Belt } from './Belt';
 import { Button, Icon, Screen, Section, SLANT, Title, type IconName } from './components';
@@ -184,8 +184,9 @@ export function LockerScreen({ look = DEFAULT_LOOK, onExit }: { look?: Appearanc
   const gir = show('giris');
   const fx = show('efekt').fx;
 
-  const total = COSMETICS.length;
-  const have = COSMETICS.filter(unlocked).length;
+  const sayilan = COSMETICS.filter((x) => PURCHASES || (x.kaynak.tur !== 'paket' && x.kaynak.tur !== 'sampiyon') || unlocked(x));
+  const total = sayilan.length;
+  const have = sayilan.filter(unlocked).length;
   const allPacks = PACKS.every((p) => packOwned(owned, p.sku));
 
   const listen = (x: Cosmetic) => {
@@ -217,11 +218,12 @@ export function LockerScreen({ look = DEFAULT_LOOK, onExit }: { look?: Appearanc
   };
 
   const heroW = W - 32;
-  const items = COSMETICS.filter((x) => x.slot === tab).sort((a, b) => RARITY[rarityOf(a)].sira - RARITY[rarityOf(b)].sira);
+  // Satın alma kapalıyken (iPhone ilk sürüm) yalnızca oynayarak açılan parçalar listelenir
+  const items = COSMETICS.filter((x) => x.slot === tab && (PURCHASES || (x.kaynak.tur !== 'paket' && x.kaynak.tur !== 'sampiyon') || unlocked(x))).sort((a, b) => RARITY[rarityOf(a)].sira - RARITY[rarityOf(b)].sira);
 
   return (
     <Screen footer={<Button label={L("Ana menü")} icon="arrow-left" tone="ghost" onPress={onExit} />}>
-      <Title kicker={L("YALNIZCA GÖRÜNÜM · OYUN GÜCÜ VERMEZ")} sub={L("Oynayarak yenilerini aç ya da paketlerle koleksiyonunu büyüt.")}>
+      <Title kicker={L("YALNIZCA GÖRÜNÜM · OYUN GÜCÜ VERMEZ")} sub={PURCHASES ? L("Oynayarak yenilerini aç ya da paketlerle koleksiyonunu büyüt.") : L("Oynayarak yenilerini aç.")}>
         {L("Dolap")}
       </Title>
 
@@ -299,8 +301,8 @@ export function LockerScreen({ look = DEFAULT_LOOK, onExit }: { look?: Appearanc
         ))}
       </View>
 
-      <Section>{L("MAĞAZA")}</Section>
-      {!allPacks ? (
+      {PURCHASES ? <Section>{L("MAĞAZA")}</Section> : null}
+      {PURCHASES && !allPacks ? (
         <LinearGradient colors={['#3a2a07', '#140f04', '#0c0d10']} style={[ls.pack, ls.bundle]}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
             <Icon name="crown" size={22} color={C.gold} />
@@ -311,10 +313,10 @@ export function LockerScreen({ look = DEFAULT_LOOK, onExit }: { look?: Appearanc
           <BuyButton sku={BUNDLE_SKU} big />
         </LinearGradient>
       ) : null}
-      {PACKS.map((p) => (
-        <PackCard key={p.sku} p={p} look={look} onTry={() => tryPack(p)} />
-      ))}
-      {MONETIZATION ? (
+      {PURCHASES
+        ? PACKS.map((p) => <PackCard key={p.sku} p={p} look={look} onTry={() => tryPack(p)} />)
+        : null}
+      {MONETIZATION && PURCHASES ? (
         <Pressable
           onPress={async () => setRestoreMsg((await restorePurchases()) ? L("Satın alımların geri yüklendi.") : L("Bu hesapta satın alma bulunamadı."))}
           hitSlop={8}

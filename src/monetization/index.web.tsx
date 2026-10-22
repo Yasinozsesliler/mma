@@ -2,6 +2,7 @@
 export { isAdFree, isPremium, owns, useAdFree, useOwned, usePremium } from './premium';
 
 export const MONETIZATION = false;
+export const PURCHASES = false;
 export { dismissUpsell, useUpsellDue } from './upsell';
 
 export async function initMonetization() {}

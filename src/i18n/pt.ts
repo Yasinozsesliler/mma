@@ -6279,4 +6279,5 @@ export const PT: Record<string, string> = {
   "8 nakavt galibiyetine ulaş. Hakem kararıyla 3 kez kazanırsan biter.": "Chegue a 8 vitórias por nocaute. Vença 3 vezes por decisão e acabou.",
   "30 profesyonel maç içinde 5 submission galibiyeti al.": "Conquiste 5 vitórias por finalização em 30 lutas profissionais.",
   "İki farklı organizasyonun kemerini kazan.": "Ganhe cinturões de duas organizações diferentes.",
+  "Oynayarak yenilerini aç.": "Desbloqueie novos jogando.",
 };

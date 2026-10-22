@@ -6319,4 +6319,5 @@ export const RU: Record<string, string> = {
   "8 nakavt galibiyetine ulaş. Hakem kararıyla 3 kez kazanırsan biter.": "Набери 8 побед нокаутом. Три победы решением судей — и всё кончено.",
   "30 profesyonel maç içinde 5 submission galibiyeti al.": "Одержи 5 побед болевыми или удушающими за 30 профессиональных боёв.",
   "İki farklı organizasyonun kemerini kazan.": "Выиграй пояса двух разных организаций.",
+  "Oynayarak yenilerini aç.": "Открывай новые, играя.",
 };

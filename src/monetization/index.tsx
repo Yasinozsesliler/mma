@@ -15,6 +15,8 @@ export { isAdFree, isPremium, owns, useAdFree, useOwned, usePremium } from './pr
 
 /** Bu platformda reklam ve satın alma var mı? */
 export const MONETIZATION = true;
+/** Uygulama içi satın almalar. iPhone'da ilk yayın için geçici olarak kapalı (yalnızca reklamlar); Android'de açık. */
+export const PURCHASES = Platform.OS !== 'ios';
 export { dismissUpsell, useUpsellDue } from './upsell';
 
 // ---------- Reklamlar ----------
@@ -203,6 +205,10 @@ export const restorePremium = restorePurchases;
 
 /** Uygulama kökünde bir kez bulunur: mağaza bağlantısını, ürünleri ve önceki satın alımları yönetir. */
 export function PremiumManager() {
+  return PURCHASES ? <StoreManager /> : null;
+}
+
+function StoreManager() {
   const { connected, products, availablePurchases, fetchProducts, requestPurchase, finishTransaction, getAvailablePurchases } = useIAP({
     onPurchaseSuccess: async (purchase) => {
       if (!ALL_SKUS.includes(purchase.productId)) return;

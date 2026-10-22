@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { sfx } from '../audio';
 import { L } from '../i18n';
-import { buy, buyPremium, dismissUpsell, MONETIZATION, restorePremium, useAdFree, usePremium, usePremiumPrice, usePrice, useUpsellDue } from '../monetization';
+import { buy, buyPremium, dismissUpsell, MONETIZATION, PURCHASES, restorePremium, useAdFree, usePremium, usePremiumPrice, usePrice, useUpsellDue } from '../monetization';
 import { ADFREE_SKU } from '../monetization/skus';
 import { Button, Icon } from './components';
 import { C, F } from './theme';
@@ -16,7 +16,7 @@ export function PremiumCard() {
   const adPrice = usePrice(ADFREE_SKU);
   const [msg, setMsg] = useState('');
   const [busy, setBusy] = useState(false);
-  if (!MONETIZATION) return null;
+  if (!MONETIZATION || !PURCHASES) return null;
 
   if (premium)
     return (
@@ -100,7 +100,7 @@ export function FullVersionNudge() {
   const due = useUpsellDue();
   const price = usePremiumPrice();
   const [busy, setBusy] = useState(false);
-  if (!MONETIZATION || premium || !due) return null;
+  if (!MONETIZATION || !PURCHASES || premium || !due) return null;
   return (
     <LinearGradient colors={['#1d1606', '#0c0d10']} style={st.nudge}>
       <Icon name="crown" size={22} color={C.gold} />
