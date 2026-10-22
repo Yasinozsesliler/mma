@@ -244,6 +244,8 @@ export type WeightCut = 'kademeli' | 'normal' | 'sert';
 export type PressChoice = 'saygili' | 'trash' | 'sessiz';
 
 export interface CampState {
+  /** Kampa girerkenki yorgunluk (fatigue.ts) */
+  yorgunBas?: number;
   /** Ödüllü detaylı keşif raporu açıldı mı */
   kesif?: boolean;
   /** Maç afişi oyun içinde paylaşıldı (bir kez) */
@@ -757,6 +759,10 @@ export interface GameState {
   oduller?: { kat: import('./awards').AwardCat; yas: number; yil?: number; not?: string; para?: number }[];
   /** Ödüllü reklam teklifleri: alındıkları dövüş sayısı (her dövüş arasında birer kez). */
   odul?: { sakatlikMac?: number; profilHafta?: number };
+  /** Yorgunluk 0-100 (fatigue.ts): maçlardan sonra birikir, kamp gelişimini biraz düşürür */
+  yorgunluk?: number;
+  /** Bu maçtan sonra kullanılan toparlanma hizmetleri ve reklam */
+  toparlanma?: { mac?: number; kullanilan?: import('./fatigue').Recovery[]; reklamMac?: number };
   saglik: number;
   sakatliklar: Injury[];
   takim: Team;

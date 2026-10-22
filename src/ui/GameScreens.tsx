@@ -60,6 +60,7 @@ import { appeal, appealChance, appealFee, appealFeeText, dismissAppeal } from '.
 import { acceptCrossover, declineCrossover } from '../engine/crossover';
 import { LegendPanel } from './LegendPanel';
 import { PerkTree } from './PerkTree';
+import { FatigueCard } from './FatigueCard';
 import { perkPointsFree } from '../engine/perks';
 import { SpecialEventCard } from './SpecialEventCard';
 import { chooseTreatment, treatmentCostText, treatmentOptions } from '../engine/treatment';
@@ -165,6 +166,7 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
         <>
           <CoachTip s={s} act={act} id="hub" />
           <RewardCard s={s} act={act} />
+          <FatigueCard s={s} act={act} />
           {banned(s) ? (
             <Notice color={C.red} icon="cancel" action={<Button label={L("Cezanı çek (zamanı ilerlet)")} icon="timer-sand" tone="ghost" onPress={() => act((x) => { x.haberler.unshift(serveBan(x)); })} />}>
               {s.ceza?.sebep}{L(". Men cezan sürüyor:")}{' '}{banWeeksLeft(s)} {L("hafta kaldı.")}

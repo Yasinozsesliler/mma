@@ -31,6 +31,7 @@ import { campMomentOpen, chooseCampMoment, closeCampMoment } from './campMoments
 import { answerPress, pressDone, startPress, type PressStyle } from './pressConf';
 import { chooseRivalNews, closeRivalNews, rivalNewsMods, rivalNewsOpen } from './rivalCamp';
 import { mediaFatigue } from './media';
+import { fatigue, growthAt } from './fatigue';
 import { answerDuel, autoAnswer, createDuel, duelOutcome, type DuelAnswer } from './trashTalk';
 import type {
   GameState,
@@ -194,6 +195,8 @@ export function startCamp(s: GameState) {
   const mac = s.pending.rakip?.macHafta ?? (kisa ? 3 : s.stage === 'amator' ? 6 : 9);
   const hafta = kisa ? mac : Math.min(8, mac);
   s.pending.kamp = {
+    // Kampa girerkenki yorgunluk sabitlenir (kamp haftaları boyunca toparlanma gelişimi kurtarmaz)
+    yorgunBas: fatigue(s),
     step: kisa ? 'plan' : isFirstCamp(s) ? 'hoca' : 'planla',
     yer: kisa ? 'salon' : undefined,
     hafta,
@@ -371,6 +374,9 @@ function runCamp(s: GameState) {
   const drill = drillBonus(s);
   const medya = mediaFatigue(s);
   if (medya < 1) k.ozet.push(L("🎬 Medya işleri kampı böldü: gelişim %{0} azaldı.", [Math.round((1 - medya) * 100)]));
+  const yb = k.yorgunBas ?? 0;
+  const yorgun = growthAt(yb);
+  if (yb >= 20) k.ozet.push(L("🥱 Kampa yorgun girdin: gelişim %{0} azaldı.", [Math.round((1 - yorgun) * 100)]));
   let artis = 0;
   if (k.focus) {
     const g =
@@ -388,6 +394,7 @@ function runCamp(s: GameState) {
       drill.gelisim *
       perkCamp(s) *
       medya *
+      yorgun *
       (1 + (k.anEtki?.gelisim ?? 0));
     // Kamp odak alanı en kötü +2 gelişir; iyi koşullarda +5'e kadar.
     const d = addStat(f.stats, k.focus, clamp(Math.round(g), 2, 5), 2);

@@ -1,4 +1,5 @@
 import { L } from '../i18n';
+import { fatigueTick } from './fatigue';
 import { scarOnHeal } from './body';
 import { BACKGROUNDS, COUNTRIES, WEIGHT_CLASSES, WEIGHT_MODS, baseStatsFor } from './data';
 import { clamp, fill, noise, pick } from './rng';
@@ -153,6 +154,7 @@ export function advanceWeeks(s: GameState, weeks: number): string[] {
   if (s.haberler.length > 60) s.haberler.length = 60;
   // Haftalık tik (gelir, giderler, tedavi süresi) hafta ilerledikten sonra çalışır.
   const econ = economyTick(s, weeks);
+  fatigueTick(s, weeks);
   const yeniYas = s.fighter.baslangicYasi + Math.floor(s.hafta / 52);
   while (s.fighter.yas < yeniYas) {
     s.fighter.yas++;

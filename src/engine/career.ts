@@ -1,4 +1,5 @@
 import { L as tL, LOC } from '../i18n';
+import { fatigue, fatigueAfterFight } from './fatigue';
 import { ppvPayout } from './hype';
 import { challengeCheck, challengeOnRetire, diffOf } from './challenges';
 import { offerAppeal } from './appeal';
@@ -308,6 +309,8 @@ export function finishFight(s: GameState) {
     lines.push(tL("👕 Merch ve işletme gelirleri: +{0}", [money(merch)]));
   }
   s.para += kazanc;
+  const yEk = fatigueAfterFight(s, r.raunt, fs.pHasar);
+  if (fatigue(s) >= 45) lines.push(tL("🥱 Yorgunluk +{0} ({1}/100). Dinlen ya da toparlan, yoksa sonraki kampta gelişimin düşer.", [yEk, fatigue(s)]));
 
   // Popülerlik
   const exposure = { amator: 0.6, bolgesel: 1, buyuk: 1.3, ufc: 1.6 }[s.stage];
