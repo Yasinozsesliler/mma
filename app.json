@@ -113,7 +113,8 @@
           "icon": "./assets/notification-icon.png",
           "color": "#e63946"
         }
-      ]
+      ],
+      ["expo-tracking-transparency", { "userTrackingPermission": "Your data is used to show you more relevant ads. Ads keep the game free; they never give power." }]
     ],
     "extra": {
       "eas": {

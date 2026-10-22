@@ -2,7 +2,8 @@
 // Web sürümü reklamsızdır (index.web.tsx).
 import { isUserCancelledError, useIAP } from 'expo-iap';
 import { useEffect, useSyncExternalStore } from 'react';
-import { AppState } from 'react-native';
+import { AppState, Platform } from 'react-native';
+import { requestTrackingPermissionsAsync } from 'expo-tracking-transparency';
 import mobileAds, { AdEventType, AdsConsent, InterstitialAd, RewardedAd, RewardedAdEventType } from 'react-native-google-mobile-ads';
 import { pushScene } from '../audio/engine';
 import { AD_IDS } from './ids';
@@ -42,6 +43,9 @@ export async function initMonetization() {
     }
   }
   if (!canAds) return;
+  // iPhone: reklam kimliği yalnızca Apple'ın izin penceresiyle (ATT). AdMob'daki açıklama mesajı pencereyi zaten
+  // açtıysa bu çağrı yalnızca durumu döndürür; açmadıysa pencere burada, reklamlar istenmeden önce çıkar.
+  if (Platform.OS === 'ios') await requestTrackingPermissionsAsync().catch(() => undefined);
   await mobileAds()
     .initialize()
     .catch(() => undefined);
