@@ -297,7 +297,7 @@ export function finishFight(s: GameState) {
     kazanc -= pay;
     lines.push(tL("🤝 Menajer payı ({0}): -{1}", [s.takim.menajer, money(pay)]));
   }
-  const sponsor = Math.round(s.populerlik * s.populerlik * { amator: 0, bolgesel: 0.6, buyuk: 2.5, ufc: 12 }[s.stage]);
+  const sponsor = Math.round(s.populerlik * s.populerlik * { amator: 0, bolgesel: 0.3, buyuk: 1, ufc: 12 }[s.stage]);
   if (sponsor > 0) {
     kazanc += sponsor;
     lines.push(tL("🤝 Sponsor gelirleri{0}: +{1}", [s.stage === 'ufc' ? tL(" (UCC vitrini)") : '', money(sponsor)]));
@@ -725,7 +725,9 @@ const CLAUSES: Partial<Record<OrgId, string[]>> = {
 
 function makeOffer(s: GameState, org: OrgId, dovus: number, raise = 1, not = '', ozel?: string): Offer {
   const [lo, hi] = ORGS[org].ucret;
-  const base = randInt(lo, hi) * (1 + s.populerlik / 150) * (1 + s.rekor.g * 0.015) * raise;
+  // UCC öncesinde popülerlik ve galibiyet çarpanları daha ılımlı: büyük organizasyon maaşları gerçekçi kalsın
+  const ucc = org === 'ufc';
+  const base = randInt(lo, hi) * (1 + s.populerlik / (ucc ? 150 : 300)) * (1 + s.rekor.g * (ucc ? 0.015 : 0.008)) * raise;
   const ucret = Math.round(base / 100) * 100;
   return {
     id: uid(),
@@ -733,7 +735,8 @@ function makeOffer(s: GameState, org: OrgId, dovus: number, raise = 1, not = '',
     dovus,
     kalan: dovus,
     ucret,
-    bonus: org === 'mvp' ? Math.round(ucret * 0.25 / 100) * 100 : org === 'dwcs' ? 0 : ucret,
+    // Galibiyet bonusu: UCC'de ücret kadar, öncesinde yarısı (VIP'de dörtte biri)
+    bonus: org === 'mvp' ? Math.round(ucret * 0.25 / 100) * 100 : org === 'dwcs' ? 0 : ucc ? ucret : Math.round(ucret * 0.5 / 100) * 100,
     munhasir: org !== 'mvp',
     ozel: ozel ?? (CLAUSES[org] ? pick(CLAUSES[org]!) : undefined),
     not: not || ORGS[org].not,

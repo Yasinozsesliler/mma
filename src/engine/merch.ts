@@ -77,6 +77,8 @@ export function merchForecast(s: GameState) {
   return sell(s, true, false).kazanc;
 }
 
+const STAGE_SALES: Record<GameState['stage'], number> = { amator: 0.3, bolgesel: 0.3, buyuk: 0.5, ufc: 1 };
+
 function sell(s: GameState, won: boolean, real: boolean) {
   const m = s.marka!;
   const F = followers(s);
@@ -98,7 +100,8 @@ export function merchSales(s: GameState, won: boolean): string[] {
   const m = s.marka;
   if (!m || !Object.keys(m.urunler).length) return [];
   const r = sell(s, won, true);
-  r.kazanc = Math.round(r.kazanc * perkIncome(s));
+  // UCC vitrini olmadan marka daha küçük bir kitleye satar
+  r.kazanc = Math.round(r.kazanc * perkIncome(s) * STAGE_SALES[s.stage]);
   s.para += r.kazanc;
   m.toplam += r.kazanc;
   m.gecmis = [{ kazanc: r.kazanc, adet: r.adet }, ...m.gecmis].slice(0, 8);
