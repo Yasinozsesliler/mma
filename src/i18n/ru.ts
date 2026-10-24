@@ -3825,6 +3825,8 @@ export const RU: Record<string, string> = {
   "Ve yeni… {0} sıklet şampiyonu… {1}!": "И новый… чемпион… {0}… {1}!",
   "Spiker": "Диктор",
   "Titreşim": "Вибрация",
+  "Kullanım istatistikleri": "Статистика использования",
+  "Oyunu geliştirmemize yardımcı olan anonim kullanım verisi": "Анонимные данные об использовании, которые помогают улучшать игру",
   "Hakemler kararını verdi… Berabere!": "Судьи приняли решение… ничья!",
   "Tap attı! Bitti! Kazanan… {0}!": "Сдача! Всё кончено! Победитель… {0}!",
   "Ve bitti! Nakavt! Kazanan… {0}!": "Всё кончено! Нокаут! Победитель… {0}!",

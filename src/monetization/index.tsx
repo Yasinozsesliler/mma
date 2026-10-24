@@ -5,6 +5,7 @@ import { useEffect, useSyncExternalStore } from 'react';
 import { AppState, Platform } from 'react-native';
 import { requestTrackingPermissionsAsync } from 'expo-tracking-transparency';
 import mobileAds, { AdEventType, AdsConsent, InterstitialAd, RewardedAd, RewardedAdEventType } from 'react-native-google-mobile-ads';
+import { track } from '../analytics';
 import { pushScene } from '../audio/engine';
 import { AD_IDS } from './ids';
 import { grant, isAdFree, isPremium, owns } from './premium';
@@ -92,6 +93,7 @@ export function showRewarded(): Promise<'odul' | 'iptal' | 'yok'> {
   const ad = rewarded;
   if (!ad || !rewardedReady) {
     if (started && canAds && !rewardedReady) loadRewarded();
+    track('rewarded_ad', { sonuc: 'yok' });
     return Promise.resolve('yok');
   }
   return new Promise((resolve) => {
@@ -103,6 +105,7 @@ export function showRewarded(): Promise<'odul' | 'iptal' | 'yok'> {
       unmute();
       rewardedReady = false;
       loadRewarded();
+      track('rewarded_ad', { sonuc: r });
       resolve(r);
     };
     offs.push(ad.addAdEventListener(RewardedAdEventType.EARNED_REWARD, () => (earned = true)));
@@ -149,6 +152,7 @@ export async function maybeInterstitial(careerFights: number, afterLoss = false)
   fightsSinceAd = 0;
   lastAdAt = Date.now();
   noteAdShown();
+  track('interstitial_shown', { mac_no: careerFights });
   loadInterstitial();
   return true;
 }
@@ -164,6 +168,7 @@ let restoreFn: (() => Promise<unknown>) | null = null;
 let pending: { sku: string; resolve: (r: BuyResult) => void } | null = null;
 
 const settle = (r: BuyResult) => {
+  if (pending) track(r === 'ok' ? 'iap_success' : 'iap_fail', { sku: pending.sku, sonuc: r });
   pending?.resolve(r);
   pending = null;
 };
@@ -184,6 +189,7 @@ export const usePremiumPrice = () => usePrice(PREMIUM_SKU);
 export function buy(sku: string): Promise<BuyResult> {
   if (!buyFn) return Promise.resolve('hata');
   settle('iptal');
+  track('iap_start', { sku });
   return new Promise((resolve) => {
     pending = { sku, resolve };
     // Ürün listesi henüz gelmediyse önce yeniden istenir (mağaza ilk açılışta geç cevap verebiliyor)

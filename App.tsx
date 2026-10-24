@@ -1,5 +1,5 @@
 // Fontlar tek tek içe aktarılır: paket girişinden almak kullanılmayan tüm varyantları da pakete sokar (çevrimdışı indirme boyutu şişer).
-import { L } from './src/i18n';
+import { L, LANG } from './src/i18n';
 import { Inter_400Regular } from '@expo-google-fonts/inter/400Regular';
 import { Inter_500Medium } from '@expo-google-fonts/inter/500Medium';
 import { Inter_600SemiBold } from '@expo-google-fonts/inter/600SemiBold';
@@ -77,6 +77,7 @@ import { refreshUnlocks } from './src/cosmetics';
 import { LockerScreen } from './src/ui/LockerScreen';
 import { challengeFor, readChallengeFromUrl } from './src/challenge';
 import { dayNumber } from './src/engine/daily';
+import { initAnalytics, track, trackScreen } from './src/analytics';
 
 readChallengeFromUrl();
 import { onNotificationOpen, rescheduleNotifications } from './src/notify';
@@ -128,6 +129,29 @@ type View_ = 'loading' | 'menu' | 'create' | 'game' | 'daily' | 'locker';
 
 installErrorLog();
 installImmersive();
+
+/** Oyun akışındaki önemli anlar Firebase'e olay olarak yazılır (kariyer başlangıcı ayrıca kaydedilir). */
+function logTransition(cur: GameState, next: GameState, achievements: number) {
+  if (achievements) track('achievement_unlock', { adet: achievements });
+  if (cur.phase === next.phase) return;
+  const r = next.rekor;
+  if (cur.phase === 'dovus' && next.phase === 'dovusSonrasi') {
+    const p = next.pending.sonrasi;
+    const o = p?.ozet;
+    track('fight_end', {
+      sonuc: p?.berabere ? 'berabere' : p?.kazandi ? 'galibiyet' : 'maglubiyet',
+      yontem: o?.kod,
+      raunt: o?.raunt,
+      amator: o?.amator,
+      unvan: o?.unvan,
+      kazanc: o?.kazanc,
+      mac_no: r.g + r.m + r.b,
+      galibiyet: r.g,
+    });
+  } else if (next.phase === 'kutlama') track('title_won', { mac_no: r.g + r.m + r.b, galibiyet: r.g });
+  else if (next.phase === 'emeklilik') track('career_end', { mac: r.g + r.m + r.b, galibiyet: r.g, maglubiyet: r.m, yas: next.fighter.yas });
+  else if (next.phase === 'kamp' && cur.phase === 'rakipSecimi') track('camp_start', { mac_no: r.g + r.m + r.b + 1 });
+}
 
 export default function App() {
   const [view, setView] = useState<View_>('loading');
@@ -205,6 +229,7 @@ export default function App() {
       ensureSpecial(next);
     }
     if (yeni.length) setToast(yeni);
+    logTransition(cur, next, yeni.length);
     setGame(next);
     saveGame(next, slotRef.current);
     putSave(slotRef.current, next);
@@ -250,6 +275,7 @@ export default function App() {
   );
   // Mağaza sürümü: reklam izni ve reklam SDK'sı açılışta bir kez.
   useEffect(() => {
+    initAnalytics(LANG);
     void initMonetization();
   }, []);
   // Android geri tuşu: oyundan ve karakter oluşturmadan menüye döner; menüdeyse uygulamadan çıkar.
@@ -265,6 +291,10 @@ export default function App() {
   }, [view]);
 
   const phase = view === 'game' && game ? game.phase : null;
+  // Firebase: hangi ekranda ne kadar kalındığı (oyun içinde faz adı ekran adı olur).
+  useEffect(() => {
+    if (view !== 'loading') trackScreen(phase ?? view);
+  }, [view, phase]);
   const scene: Scene = !phase || phase === 'emeklilik' ? 'menu' : phase === 'dovus' || (phase === 'kafesEvi' && game?.kafesEvi?.adim === 'dovus') ? 'fight' : phase === 'kutlama' ? 'celebrate' : 'hub';
   useSoundScene(scene);
 
@@ -284,7 +314,10 @@ export default function App() {
         onChallenge={(id, x) => newCareer(x, id)}
         onContinue={continueSlot}
         onDelete={removeSlot}
-        onDaily={() => setView('daily')}
+        onDaily={() => {
+          track('daily_fight_open');
+          setView('daily');
+        }}
         onLocker={() => setView('locker')}
         onImport={(x, g) => {
           void deleteGame(x).then(() => saveGame(g, x));
@@ -322,6 +355,7 @@ export default function App() {
           socialWelcome(s);
           ensureGoals(s);
           ensureEvent(s);
+          track('career_start', { zorluk: s.zorluk, meydan: input.meydan, hanedan: !!heritage, yuva: createSlot });
           setSlot(createSlot);
           setGame(s);
           // Yuvanın eski kaydı ve yedeği silinir; yeni kariyer temiz başlar.

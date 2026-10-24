@@ -4,6 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Animated, Linking, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { setAnalyticsEnabled, useAnalyticsEnabled } from '../analytics';
 import { setAnnouncer, useAnnouncer } from '../announcer';
 import { privacyUrl } from '../appConfig';
 import { setSoundSettings, useSoundSettings } from '../audio';
@@ -72,6 +73,7 @@ export function SettingsSheet({ onClose, canImport, onImport }: { onClose: () =>
   const ses = useSoundSettings();
   const spiker = useAnnouncer();
   const titresim = useHaptics();
+  const istatistik = useAnalyticsEnabled();
   const canli = useLive();
   const qte = useQte();
   const hafif = useLowPerf();
@@ -154,8 +156,9 @@ export function SettingsSheet({ onClose, canImport, onImport }: { onClose: () =>
               </View>
             </Group>
 
-            {adPrivacyRequired() || privacyUrl(web) ? (
+            {adPrivacyRequired() || privacyUrl(web) || !web ? (
               <Group title={L("GİZLİLİK")}>
+                {!web ? <Row icon="chart-line" color={C.blue} title={L("Kullanım istatistikleri")} sub={L("Oyunu geliştirmemize yardımcı olan anonim kullanım verisi")} on={istatistik} onPress={() => setAnalyticsEnabled(!istatistik)} last={!privacyUrl(web) && !adPrivacyRequired()} /> : null}
                 {privacyUrl(web) ? <Row icon="shield-lock-outline" color={C.dim} title={L("Gizlilik politikası")} sub={L("Hangi verilerin nasıl kullanıldığı")} onPress={() => void Linking.openURL(privacyUrl(web)!)} last={!adPrivacyRequired()} /> : null}
                 {adPrivacyRequired() ? <Row icon="account-cog-outline" color={C.dim} title={L("Reklam gizlilik ayarları")} sub={L("Kişiselleştirilmiş reklam iznini değiştir")} onPress={() => void showAdPrivacyOptions()} last /> : null}
               </Group>

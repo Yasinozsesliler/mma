@@ -3770,6 +3770,8 @@ export const EN: Record<string, string> = {
   "Ve yeni… {0} sıklet şampiyonu… {1}!": "And the new… {0} champion… {1}!",
   "Spiker": "Announcer",
   "Titreşim": "Vibration",
+  "Kullanım istatistikleri": "Usage statistics",
+  "Oyunu geliştirmemize yardımcı olan anonim kullanım verisi": "Anonymous usage data that helps us improve the game",
   "Hakemler kararını verdi… Berabere!": "The judges have decided… it's a draw!",
   "Tap attı! Bitti! Kazanan… {0}!": "Tapped out! It's over! Your winner… {0}!",
   "Ve bitti! Nakavt! Kazanan… {0}!": "It's all over! Knockout! Your winner… {0}!",

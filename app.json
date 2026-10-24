@@ -114,7 +114,13 @@
           "color": "#e63946"
         }
       ],
-      ["expo-tracking-transparency", { "userTrackingPermission": "Your data is used to show you more relevant ads. Ads keep the game free; they never give power." }]
+      [
+        "expo-tracking-transparency",
+        {
+          "userTrackingPermission": "Your data is used to show you more relevant ads. Ads keep the game free; they never give power."
+        }
+      ],
+      "expo-build-properties"
     ],
     "extra": {
       "eas": {
