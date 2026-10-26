@@ -1,0 +1,39 @@
+# Android üretim derlemesi GitHub'ın sunucusunda (EAS yerel derleme): Expo'nun aylık bulut derleme hakkını kullanmaz.
+# Çalıştırma: GitHub › Actions › "Android derlemesi" › Run workflow. Bitince AAB dosyası "Artifacts" bölümünden indirilir.
+# Gerekli gizli anahtar: EXPO_TOKEN (expo.dev › Account settings › Access tokens). İmza anahtarı Expo hesabından otomatik iner.
+name: Android derlemesi
+
+on:
+  workflow_dispatch:
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Bağımlılıklar
+        run: npm ci
+
+      - name: Derle (AAB)
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          EAS_BUILD_NO_EXPO_GO_WARNING: 'true'
+        run: npx --yes eas-cli@latest build -p android --profile production --local --non-interactive --output ./YOL-android.aab
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: YOL-android-aab
+          path: YOL-android.aab
+          retention-days: 14
