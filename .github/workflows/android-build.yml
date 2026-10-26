@@ -13,7 +13,7 @@ jobs:
     timeout-minutes: 90
     env:
       # Gradle'a daha fazla bellek; derleme sırasında bellek yetersizliği olmasın
-      GRADLE_OPTS: -Dorg.gradle.jvmargs="-Xmx6g -XX:MaxMetaspaceSize=1g" -Dorg.gradle.daemon=false
+      GRADLE_OPTS: -Xmx6g -XX:MaxMetaspaceSize=1g -Dorg.gradle.daemon=false
     steps:
       - uses: actions/checkout@v4
 
