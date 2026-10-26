@@ -3,6 +3,7 @@
 // derlemeye girmez; bu durumda her çağrı sessizce hiçbir şey yapmaz, oyun etkilenmez.
 // Oyuncu Ayarlar › Gizlilik'ten istatistik paylaşımını kapatabilir.
 import { useSyncExternalStore } from 'react';
+import { NativeModules, TurboModuleRegistry } from 'react-native';
 import { getPref, setPref } from './prefs';
 
 type Params = Record<string, string | number | boolean | undefined>;
@@ -12,9 +13,19 @@ let mod: FA | null = null;
 let inst: ReturnType<FA['getAnalytics']> | null = null;
 let triedLoad = false;
 
+/** Firebase'in yerel modülü uygulamaya bağlı mı? Bağlı değilse JS paketine hiç dokunulmaz (yüklemek açılışta çöktürebiliyor). */
+function nativeLinked() {
+  try {
+    return !!(NativeModules?.RNFBAppModule || TurboModuleRegistry?.get?.('RNFBAppModule'));
+  } catch {
+    return false;
+  }
+}
+
 function fa() {
   if (!triedLoad) {
     triedLoad = true;
+    if (!nativeLinked()) return null;
     try {
       mod = require('@react-native-firebase/analytics') as FA;
       inst = mod.getAnalytics();
