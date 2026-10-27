@@ -53,6 +53,13 @@ export function fightFollowers(s: GameState, o: { won: boolean; draw: boolean; f
   return addFollowers(s, d * (0.85 + rand() * 0.3) * (o.won ? perkFollowers(s) : 1));
 }
 
+/** Fotoğraf paylaşımı: çekicilik (1 = sıradan) kadar büyür; negatif çekicilik takipçi kaybettirir. */
+export function photoFollowers(s: GameState, appeal: number) {
+  const F = followers(s);
+  if (appeal < 0) return addFollowers(s, F * appeal * 0.02 * (0.8 + rand() * 0.4));
+  return addFollowers(s, (F * 0.004 * appeal * damp(s, F) + STAGE_BASE[s.stage] * 0.8 * appeal) * (0.8 + rand() * 0.4));
+}
+
 /**
  * Trash talk: çoğu zaman kazandırır ama bazen dengeyi kaçırırsın.
  * Dönen metin ekrana yazılır, yüzde değişim takipçiye uygulanır.

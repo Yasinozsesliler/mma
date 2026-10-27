@@ -1,7 +1,7 @@
 // Kampta maç afişi: küçük önizleme, oyun içinde paylaşma (takipçi + hype) ve görsel olarak gerçek paylaşım.
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { postPoster } from '../engine/hype';
+import { sharePhoto } from '../engine/gram';
 import type { GameState } from '../engine/types';
 import { L } from '../i18n';
 import { posterCard } from '../share/build';
@@ -35,7 +35,7 @@ export function PosterCard({ s, act }: { s: GameState; act: Act }) {
             </View>
           </View>
           {msg ? <Text style={st.msg}>{msg}</Text> : null}
-          {!done ? <Button label={L("Oyunda paylaş")} icon="cellphone-message" tone="gold" onPress={() => act((x) => setMsg(postPoster(x)))} /> : null}
+          {!done ? <Button label={L("Oyunda paylaş")} icon="cellphone-message" tone="gold" onPress={() => act((x) => setMsg(sharePhoto(x, 'afis')))} /> : null}
           <ShareButton data={data} label={L("Görsel olarak paylaş")} />
         </View>
       ) : null}

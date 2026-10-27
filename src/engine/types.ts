@@ -136,6 +136,8 @@ export interface Post {
   hedefId?: string; // ilgili dövüşçü (yanıt verilebilir)
   yanitlandi?: boolean;
   yanitlar?: { yazar: string; metin: string }[];
+  /** Fotoğraflı paylaşım (gram.ts) */
+  foto?: import('./gram').PhotoPost;
 }
 
 export interface Division {
@@ -611,6 +613,10 @@ export interface GameState {
   kutlama?: { tur: 'kemer' | 'cift' | 'savunma'; org: OrgId; siklet: WeightClass; sayi?: number };
   kumar?: { oynanan: number; net: number; sonHafta?: number; uyari?: string };
   sosyal?: Post[];
+  /** Fotoğraf paylaşımları ve profil ızgarası (gram.ts) */
+  foto?: import('./gram').PhotoState;
+  /** Son maçın haftası */
+  sonMacHafta?: number;
   /** Organizasyonun sıklet sıralaması (oyuncu hariç). */
   bolum: Division | null;
   /** Röportajda meydan okunan dövüşçünün id'si */

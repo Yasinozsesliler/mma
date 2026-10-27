@@ -1,14 +1,14 @@
 import { L, LOC } from '../i18n';
 import { closeCrisis } from '../engine/crisis';
 import { CrisisCard } from './CrisisCard';
-import { fmtFollowers, followerBoard, followers } from '../engine/fame';
+import { fmtFollowers, followerBoard, followers, followerTier } from '../engine/fame';
+import { PhotoCard, PhotoComposer, ProfileGrid, ProfileHeader } from './SocialPhoto';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { IDEA_KATS, postIdeas, type IdeaKat } from '../engine/postIdeas';
-import { fullName } from '../engine/character';
-import { playerHandle, playerPost, REPLY_TONES, replyToPost } from '../engine/social';
+import { playerPost, REPLY_TONES, replyToPost } from '../engine/social';
 import type { GameState, Post } from '../engine/types';
-import { Button, Card, Icon, P, Screen, SLANT, Title, type IconName } from './components';
+import { Button, Card, Icon, P, Screen, Title, type IconName } from './components';
 import type { Act } from './GameScreens';
 import { FighterAvatar } from './FighterAvatar';
 import { C, F, R } from './theme';
@@ -45,6 +45,7 @@ function PostCard({ s, p, act, onMsg }: { s: GameState; p: Post; act: Act; onMsg
   const color = p.renk ?? t.renk;
   const story = p.tur === 'hikaye';
   const canReply = p.tur === 'dovuscu' && !!p.hedefId && !p.yanitlandi;
+  if (p.foto) return <PhotoCard s={s} p={p} foto={p.foto} />;
   return (
     <View style={[so.post, story && so.story]}>
       <View style={{ flexDirection: 'row', gap: 10 }}>
@@ -130,7 +131,8 @@ function FollowerBoard({ s }: { s: GameState }) {
 export function SocialScreen({ s, act }: { s: GameState; act: Act }) {
   const [text, setText] = useState('');
   const [msg, setMsg] = useState<string | null>(null);
-  const [filter, setFilter] = useState<'hepsi' | 'dovuscu' | 'hikaye' | 'takipci'>('hepsi');
+  const [filter, setFilter] = useState<'hepsi' | 'profil' | 'dovuscu' | 'takipci'>('hepsi');
+  const [mode, setMode] = useState<'foto' | 'yazi'>('foto');
   const [kat, setKat] = useState<IdeaKat>(s.pending.rakip ? 'trash' : s.gecmis.length ? 'sonuc' : 'kamp');
   const [tur, setTur] = useState(0);
   const ideas = postIdeas(s, kat, tur);
@@ -152,20 +154,26 @@ export function SocialScreen({ s, act }: { s: GameState; act: Act }) {
         {L("Sosyal Medya")}
       </Title>
       <CrisisCard s={s} act={act} />
-      <View style={so.profile}>
-        <FighterAvatar look={s.fighter.gorunum} size={52} />
-        <View style={{ flex: 1 }}>
-          <Text style={[so.author, SLANT]}>{fullName(s.fighter)}</Text>
-          <Text style={so.handle}>{playerHandle(s)}</Text>
-          {s.fighter.hakkinda ? <Text style={[so.replyText, { marginTop: 4 }]} numberOfLines={3}>{s.fighter.hakkinda}</Text> : null}
-        </View>
-        <View style={{ alignItems: 'flex-end' }}>
-          <Text style={[so.follow, SLANT]}>{fmtFollowers(takipci)}</Text>
-          <Text style={so.handle}>{L("takipçi")}</Text>
-        </View>
-      </View>
+      <ProfileHeader s={s} takipci={takipci} tier={followerTier(takipci)} />
 
       <View style={so.compose}>
+        <View style={so.modes}>
+          {(
+            [
+              ['foto', 'camera', L("FOTOĞRAF")],
+              ['yazi', 'pencil', L("YAZI")],
+            ] as const
+          ).map(([k, ikon, l]) => (
+            <Pressable key={k} onPress={() => setMode(k)} style={[so.mode, mode === k && so.modeOn]}>
+              <Icon name={ikon} size={14} color={mode === k ? '#fff' : C.dim} />
+              <Text style={[so.filterText, mode === k && { color: '#fff' }]}>{l}</Text>
+            </Pressable>
+          ))}
+        </View>
+        {mode === 'foto' ? (
+          <PhotoComposer s={s} act={act} onMsg={setMsg} />
+        ) : (
+          <>
         <TextInput
           style={so.input}
           value={text}
@@ -203,6 +211,8 @@ export function SocialScreen({ s, act }: { s: GameState; act: Act }) {
             <Text style={so.sendText}>{L("PAYLAŞ")}</Text>
           </Pressable>
         </View>
+          </>
+        )}
       </View>
       {msg ? (
         <Card accent={C.gold}>
@@ -214,8 +224,8 @@ export function SocialScreen({ s, act }: { s: GameState; act: Act }) {
         {(
           [
             ['hepsi', L("AKIŞ")],
+            ['profil', L("PROFİL")],
             ['dovuscu', L("DÖVÜŞÇÜLER")],
-            ['hikaye', L("HİKÂYELER")],
             ['takipci', L("TAKİPÇİ")],
           ] as const
         ).map(([k, l]) => (
@@ -226,6 +236,8 @@ export function SocialScreen({ s, act }: { s: GameState; act: Act }) {
       </View>
       {filter === 'takipci' ? (
         <FollowerBoard s={s} />
+      ) : filter === 'profil' ? (
+        <ProfileGrid s={s} />
       ) : (
         <>
           {posts.length === 0 ? <P dim>{L("Henüz paylaşım yok. İlk dövüşünden sonra ortalık hareketlenecek.")}</P> : null}
@@ -257,6 +269,9 @@ const so = StyleSheet.create({
   shuffleText: { color: C.gold, fontFamily: F.display, fontSize: 11, letterSpacing: 1 },
   profile: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: C.card, borderRadius: R, borderWidth: 1, borderColor: C.border, padding: 12, marginBottom: 10 },
   follow: { color: C.text, fontFamily: F.display, fontSize: 22 },
+  modes: { flexDirection: 'row', gap: 6 },
+  mode: { flex: 1, flexDirection: 'row', gap: 6, alignItems: 'center', justifyContent: 'center', paddingVertical: 8, borderRadius: 3, borderWidth: 1, borderColor: C.border, backgroundColor: C.cardAlt },
+  modeOn: { backgroundColor: C.red, borderColor: C.red },
   compose: { backgroundColor: C.card, borderRadius: R, borderWidth: 1, borderColor: C.red + '66', padding: 12, marginBottom: 12, gap: 10 },
   input: { color: C.text, fontFamily: F.body, fontSize: 15, minHeight: 70, textAlignVertical: 'top', backgroundColor: '#060607', borderRadius: 6, padding: 10, borderWidth: 1, borderColor: C.border },
   tpls: { gap: 6, marginBottom: 6 },

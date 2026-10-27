@@ -2,10 +2,9 @@
 // hype'ı yükseltir; dövüşten sonra hype ve takipçiye göre PPV satışı hesaplanır, oyuncu pay alır.
 import { isComebackFight } from './comeback';
 import { L, LOC } from '../i18n';
-import { currentOrg, fullName } from './character';
+import { currentOrg } from './character';
 import { diffOf } from './challenges';
-import { addFollowers, fmtDelta, followers } from './fame';
-import { addPost } from './social';
+import { followers } from './fame';
 import type { GameState, Opponent } from './types';
 
 /** Büyük maç mı? (unvan, UCC ilk 5, memleket, rekabet/ezeli rakip, Grand Prix finali) */
@@ -43,18 +42,6 @@ export function ppvPayout(s: GameState, opp: Opponent, hype: number | undefined)
   const pay = Math.round((buys * price * share) / 100) * 100;
   s.para += pay;
   return [L("📺 PPV: {0} satış (hype {1}). Payın: ${2}", [buys.toLocaleString(LOC), hype, pay.toLocaleString(LOC)])];
-}
-
-/** Maç afişini sosyal medyada paylaş: takipçi, büyük maçta hype +4 (bir kez). */
-export function postPoster(s: GameState): string {
-  const k = s.pending.kamp;
-  const o = s.pending.rakip;
-  if (!k || !o || k.afis) return '';
-  k.afis = true;
-  const d = addFollowers(s, Math.max(30, followers(s) * 0.01));
-  addPost(s, { yazar: fullName(s.fighter), kullanici: `@${s.fighter.soyad.toLocaleLowerCase(LOC).replace(/\s+/g, '')}`, tur: 'oyuncu', metin: L("🖼️ Afiş hazır. {0} ile kafeste buluşuyoruz. Kaçırmayın! 🔥", [`${o.ad} ${o.soyad}`]) });
-  addHype(s, 4, L("Maç afişi"));
-  return L("🖼️ Afişi paylaştın: {0} takipçi.", [fmtDelta(d)]);
 }
 
 /** Maç öncesi belgesel izlendi: hype +10 (bir kez). */

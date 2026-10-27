@@ -84,7 +84,7 @@ function SlotCard({ n, save, active, onNew, onContinue, onDelete, onDynasty }: {
   if (!save)
     return (
       <Pressable onPress={onNew} style={({ pressed }) => [ms.slotEmpty, pressed && { borderColor: C.red }]}>
-        <Text style={ms.slotNo}>YUVA {n}</Text>
+        <Text style={ms.slotNo}>{L("YUVA {0}", [n])}</Text>
         <Icon name="plus-circle-outline" size={30} color={C.faint} />
         <Text style={ms.emptyTitle}>{L("BOŞ YUVA")}</Text>
         <Text style={ms.emptySub}>{L("Yeni bir kariyere başla")}</Text>
@@ -98,7 +98,7 @@ function SlotCard({ n, save, active, onNew, onContinue, onDelete, onDynasty }: {
   return (
     <LinearGradient colors={active ? ['#2a0a10', '#0e0f12'] : ['#121317', '#0b0c0e']} style={[ms.slot, active && { borderColor: C.red }]}>
       <View style={ms.slotHead}>
-        <Text style={ms.slotNo}>YUVA {n}{active ? L(" · SON OYNANAN") : ''}</Text>
+        <Text style={ms.slotNo}>{L("YUVA {0}", [n])}{active ? L(" · SON OYNANAN") : ''}</Text>
         {retired ? <Pill text={L("EMEKLİ")} icon="flag-checkered" color={C.faint} /> : null}
       </View>
       <View style={ms.slotBody}>

@@ -192,6 +192,7 @@ export function finishFight(s: GameState) {
   const finishMethod = r.yontem === 'KO' || r.yontem === 'TKO' || r.yontem === 'SUB';
   const lines: string[] = [];
   const pro = org !== 'amator';
+  s.sonMacHafta = s.hafta;
 
   lines.push(
     draw
