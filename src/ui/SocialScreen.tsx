@@ -2,13 +2,14 @@ import { L, LOC } from '../i18n';
 import { closeCrisis } from '../engine/crisis';
 import { CrisisCard } from './CrisisCard';
 import { fmtFollowers, followerBoard, followers, followerTier } from '../engine/fame';
-import { PhotoCard, PhotoComposer, ProfileGrid, ProfileHeader } from './SocialPhoto';
+import { BioEditor, Highlights, IgTopBar, PhotoCard, PhotoComposer, ProfileGrid, ProfileHeader } from './SocialPhoto';
+import type { PhotoKind } from '../engine/gram';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { IDEA_KATS, postIdeas, type IdeaKat } from '../engine/postIdeas';
 import { playerPost, REPLY_TONES, replyToPost } from '../engine/social';
 import type { GameState, Post } from '../engine/types';
-import { Button, Card, Icon, P, Screen, Title, type IconName } from './components';
+import { Button, Icon, P, Screen, type IconName } from './components';
 import type { Act } from './GameScreens';
 import { FighterAvatar } from './FighterAvatar';
 import { C, F, R } from './theme';
@@ -128,124 +129,167 @@ function FollowerBoard({ s }: { s: GameState }) {
   );
 }
 
-export function SocialScreen({ s, act }: { s: GameState; act: Act }) {
+/** Yazılı paylaşım (eski sosyal medya): rakibi etiketle, trash talk ya da saygı. */
+function TextComposer({ s, act, onMsg }: { s: GameState; act: Act; onMsg: (m: string) => void }) {
   const [text, setText] = useState('');
-  const [msg, setMsg] = useState<string | null>(null);
-  const [filter, setFilter] = useState<'hepsi' | 'profil' | 'dovuscu' | 'takipci'>('hepsi');
-  const [mode, setMode] = useState<'foto' | 'yazi'>('foto');
   const [kat, setKat] = useState<IdeaKat>(s.pending.rakip ? 'trash' : s.gecmis.length ? 'sonuc' : 'kamp');
   const [tur, setTur] = useState(0);
   const ideas = postIdeas(s, kat, tur);
-  const posts = (s.sosyal ?? []).filter((p) => filter === 'hepsi' || p.tur === filter || (filter === 'dovuscu' && p.tur === 'oyuncu'));
-  const takipci = followers(s);
   const send = () => {
     if (!text.trim()) return;
-    act((x) => setMsg(playerPost(x, text)));
+    act((x) => onMsg(playerPost(x, text)));
     setText('');
   };
   return (
-    <Screen footer={<Button label={L("Kariyere dön")} icon="arrow-left" tone="ghost" onPress={() => act((x) => {
-            // Sonuçlanmış kriz bu ekranda görüldü: çıkarken kapanır, ana sayfada tekrar çıkmaz
-            closeCrisis(x);
-            x.phase = 'hub';
-          })} />}>
-      <Title kicker={L("KAFES · SOSYAL")} sub={L("Rakiplerin burada konuşur. Sen de konuş ama sözlerinin bedeli var.")}>
-        
-        {L("Sosyal Medya")}
-      </Title>
-      <CrisisCard s={s} act={act} />
-      <ProfileHeader s={s} takipci={takipci} tier={followerTier(takipci)} />
-
-      <View style={so.compose}>
-        <View style={so.modes}>
-          {(
-            [
-              ['foto', 'camera', L("FOTOĞRAF")],
-              ['yazi', 'pencil', L("YAZI")],
-            ] as const
-          ).map(([k, ikon, l]) => (
-            <Pressable key={k} onPress={() => setMode(k)} style={[so.mode, mode === k && so.modeOn]}>
-              <Icon name={ikon} size={14} color={mode === k ? '#fff' : C.dim} />
-              <Text style={[so.filterText, mode === k && { color: '#fff' }]}>{l}</Text>
-            </Pressable>
-          ))}
-        </View>
-        {mode === 'foto' ? (
-          <PhotoComposer s={s} act={act} onMsg={setMsg} />
-        ) : (
-          <>
-        <TextInput
-          style={so.input}
-          value={text}
-          onChangeText={setText}
-          placeholder={L("Ne düşünüyorsun? Bir rakibi etiketle (@isim ya da soyadı)…")}
-          placeholderTextColor={C.faint}
-          multiline
-          maxLength={280}
-        />
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={so.kats}>
-          {IDEA_KATS.map((k) => (
-            <Pressable key={k.id} onPress={() => { setKat(k.id); setTur(0); }} style={[so.kat, kat === k.id && so.katOn]}>
-              <Icon name={k.ikon as IconName} size={12} color={kat === k.id ? '#fff' : C.dim} />
-              <Text style={[so.katText, kat === k.id && { color: '#fff' }]}>{k.ad}</Text>
-            </Pressable>
-          ))}
-        </ScrollView>
-        <View style={so.tpls}>
-          {ideas.map((t) => (
-            <Pressable key={t} onPress={() => setText(t)} style={({ pressed }) => [so.tpl, pressed && { borderColor: C.red }]}>
-              <Text style={so.tplText} numberOfLines={2}>
-                {t}
-              </Text>
-            </Pressable>
-          ))}
-          <Pressable onPress={() => setTur(tur + 1)} style={so.shuffle}>
-            <Icon name="shuffle-variant" size={14} color={C.gold} />
-            <Text style={so.shuffleText}>{L("BAŞKA ÖNERİLER")}</Text>
+    <View style={{ gap: 10 }}>
+      <TextInput
+        style={so.input}
+        value={text}
+        onChangeText={setText}
+        placeholder={L("Ne düşünüyorsun? Bir rakibi etiketle (@isim ya da soyadı)…")}
+        placeholderTextColor={C.faint}
+        multiline
+        maxLength={280}
+      />
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={so.kats}>
+        {IDEA_KATS.map((k) => (
+          <Pressable key={k.id} onPress={() => { setKat(k.id); setTur(0); }} style={[so.kat, kat === k.id && so.katOn]}>
+            <Icon name={k.ikon as IconName} size={12} color={kat === k.id ? '#fff' : C.dim} />
+            <Text style={[so.katText, kat === k.id && { color: '#fff' }]}>{k.ad}</Text>
           </Pressable>
-        </View>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Text style={so.handle}>{text.length}/280</Text>
-          <Pressable onPress={send} disabled={!text.trim()} style={({ pressed }) => [so.send, { opacity: !text.trim() ? 0.35 : pressed ? 0.7 : 1 }]}>
-            <Icon name="send" size={14} color="#fff" />
-            <Text style={so.sendText}>{L("PAYLAŞ")}</Text>
+        ))}
+      </ScrollView>
+      <View style={so.tpls}>
+        {ideas.map((t) => (
+          <Pressable key={t} onPress={() => setText(t)} style={({ pressed }) => [so.tpl, pressed && { borderColor: C.red }]}>
+            <Text style={so.tplText} numberOfLines={2}>
+              {t}
+            </Text>
           </Pressable>
-        </View>
-          </>
-        )}
+        ))}
+        <Pressable onPress={() => setTur(tur + 1)} style={so.shuffle}>
+          <Icon name="shuffle-variant" size={14} color={C.gold} />
+          <Text style={so.shuffleText}>{L("BAŞKA ÖNERİLER")}</Text>
+        </Pressable>
       </View>
-      {msg ? (
-        <Card accent={C.gold}>
-          <P style={{ marginBottom: 0 }}>{msg}</P>
-        </Card>
-      ) : null}
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Text style={so.handle}>{text.length}/280</Text>
+        <Pressable onPress={send} disabled={!text.trim()} style={({ pressed }) => [so.send, { opacity: !text.trim() ? 0.35 : pressed ? 0.7 : 1 }]}>
+          <Icon name="send" size={14} color="#fff" />
+          <Text style={so.sendText}>{L("PAYLAŞ")}</Text>
+        </Pressable>
+      </View>
+    </View>
+  );
+}
 
-      <View style={so.filters}>
+type Tab = 'grid' | 'akis' | 'etiket' | 'takipci';
+
+export function SocialScreen({ s, act }: { s: GameState; act: Act }) {
+  const [msg, setMsg] = useState<string | null>(null);
+  const [tab, setTab] = useState<Tab>('grid');
+  const [compose, setCompose] = useState<null | 'foto' | 'yazi'>(null);
+  const [edit, setEdit] = useState(false);
+  const [hl, setHl] = useState<PhotoKind | null>(null);
+  const takipci = followers(s);
+  const done = (m: string) => {
+    setMsg(m);
+    setCompose(null);
+    setTab('grid');
+    setHl(null);
+  };
+  const posts = (s.sosyal ?? []).filter((p) => (tab === 'etiket' ? p.tur !== 'oyuncu' : true));
+  return (
+    <Screen
+      footer={
+        <Button
+          label={L("Kariyere dön")}
+          icon="arrow-left"
+          tone="ghost"
+          onPress={() =>
+            act((x) => {
+              // Sonuçlanmış kriz bu ekranda görüldü: çıkarken kapanır, ana sayfada tekrar çıkmaz
+              closeCrisis(x);
+              x.phase = 'hub';
+            })
+          }
+        />
+      }
+    >
+      <CrisisCard s={s} act={act} />
+      <IgTopBar s={s} takipci={takipci} onNew={() => setCompose('foto')} onBoard={() => setTab('takipci')} />
+      <ProfileHeader s={s} takipci={takipci} tier={followerTier(takipci)} onEdit={() => setEdit(!edit)} onNew={() => setCompose('foto')} editing={edit} />
+      {edit ? <BioEditor s={s} act={act} onDone={() => setEdit(false)} /> : null}
+      <Highlights
+        s={s}
+        selected={hl}
+        onSelect={(k) => {
+          setHl(hl === k ? null : k);
+          setTab('grid');
+        }}
+        onNew={() => setCompose('foto')}
+      />
+      {msg ? (
+        <Pressable onPress={() => setMsg(null)} style={so.toast}>
+          <Icon name="check-circle" size={16} color={C.gold} />
+          <Text style={so.toastText}>{msg}</Text>
+        </Pressable>
+      ) : null}
+      <View style={so.igTabs}>
         {(
           [
-            ['hepsi', L("AKIŞ")],
-            ['profil', L("PROFİL")],
-            ['dovuscu', L("DÖVÜŞÇÜLER")],
-            ['takipci', L("TAKİPÇİ")],
+            ['grid', 'grid'],
+            ['akis', 'play-box-multiple-outline'],
+            ['etiket', 'account-box-outline'],
+            ['takipci', 'trophy-outline'],
           ] as const
-        ).map(([k, l]) => (
-          <Pressable key={k} onPress={() => setFilter(k)} style={[so.filter, filter === k && so.filterOn]}>
-            <Text style={[so.filterText, filter === k && { color: '#fff' }]}>{l}</Text>
+        ).map(([k, ikon]) => (
+          <Pressable key={k} onPress={() => setTab(k)} style={[so.igTab, tab === k && so.igTabOn]}>
+            <Icon name={ikon} size={24} color={tab === k ? C.text : C.faint} />
           </Pressable>
         ))}
       </View>
-      {filter === 'takipci' ? (
+      {tab === 'grid' ? (
+        <ProfileGrid s={s} filter={hl} onNew={() => setCompose('foto')} />
+      ) : tab === 'takipci' ? (
         <FollowerBoard s={s} />
-      ) : filter === 'profil' ? (
-        <ProfileGrid s={s} />
       ) : (
-        <>
+        <View style={{ marginTop: 10 }}>
           {posts.length === 0 ? <P dim>{L("Henüz paylaşım yok. İlk dövüşünden sonra ortalık hareketlenecek.")}</P> : null}
           {posts.map((p) => (
             <PostCard key={p.id} s={s} p={p} act={act} onMsg={setMsg} />
           ))}
-        </>
+        </View>
       )}
+      <Modal visible={!!compose} transparent animationType="slide" onRequestClose={() => setCompose(null)}>
+        <View style={so.sheetBack}>
+          <View style={so.sheet}>
+            <View style={so.sheetHead}>
+              <Pressable onPress={() => setCompose(null)} hitSlop={10}>
+                <Icon name="close" size={24} color={C.text} />
+              </Pressable>
+              <Text style={so.sheetTitle}>{L("Yeni gönderi")}</Text>
+              <View style={{ width: 24 }} />
+            </View>
+            <View style={so.modes}>
+              {(
+                [
+                  ['foto', 'camera', L("FOTOĞRAF")],
+                  ['yazi', 'pencil', L("YAZI")],
+                ] as const
+              ).map(([k, ikon, l]) => (
+                <Pressable key={k} onPress={() => setCompose(k)} style={[so.mode, compose === k && so.modeOn]}>
+                  <Icon name={ikon} size={14} color={compose === k ? '#fff' : C.dim} />
+                  <Text style={[so.filterText, compose === k && { color: '#fff' }]}>{l}</Text>
+                </Pressable>
+              ))}
+            </View>
+            <ScrollView contentContainerStyle={{ paddingVertical: 12 }} keyboardShouldPersistTaps="handled">
+              {compose === 'yazi' ? <TextComposer s={s} act={act} onMsg={done} /> : <PhotoComposer s={s} act={act} onMsg={done} />}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </Screen>
   );
 }
@@ -272,6 +316,15 @@ const so = StyleSheet.create({
   modes: { flexDirection: 'row', gap: 6 },
   mode: { flex: 1, flexDirection: 'row', gap: 6, alignItems: 'center', justifyContent: 'center', paddingVertical: 8, borderRadius: 3, borderWidth: 1, borderColor: C.border, backgroundColor: C.cardAlt },
   modeOn: { backgroundColor: C.red, borderColor: C.red },
+  toast: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#1a1408', borderWidth: 1, borderColor: C.goldDeep, borderRadius: 8, padding: 10, marginTop: 10 },
+  toastText: { flex: 1, color: C.text, fontFamily: F.semi, fontSize: 13, lineHeight: 18 },
+  igTabs: { flexDirection: 'row', borderTopWidth: 1, borderTopColor: C.border, marginTop: 12, marginHorizontal: -16 },
+  igTab: { flex: 1, alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1.5, borderBottomColor: 'transparent' },
+  igTabOn: { borderBottomColor: C.text },
+  sheetBack: { flex: 1, backgroundColor: '#000000aa', justifyContent: 'flex-end' },
+  sheet: { maxHeight: '92%', width: '100%', maxWidth: 560, alignSelf: 'center', backgroundColor: C.bg, borderTopLeftRadius: 16, borderTopRightRadius: 16, borderWidth: 1, borderColor: C.border, paddingHorizontal: 16, paddingTop: 12 },
+  sheetHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
+  sheetTitle: { color: C.text, fontFamily: F.bold, fontSize: 16 },
   compose: { backgroundColor: C.card, borderRadius: R, borderWidth: 1, borderColor: C.red + '66', padding: 12, marginBottom: 12, gap: 10 },
   input: { color: C.text, fontFamily: F.body, fontSize: 15, minHeight: 70, textAlignVertical: 'top', backgroundColor: '#060607', borderRadius: 6, padding: 10, borderWidth: 1, borderColor: C.border },
   tpls: { gap: 6, marginBottom: 6 },
