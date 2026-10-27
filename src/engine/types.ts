@@ -379,6 +379,16 @@ export interface FightSnap {
   dk: number;
 }
 
+export interface FightMoment {
+  r: number;
+  ikon: string;
+  metin: string;
+  /** Önem puanı: bitiriş 10, yere gönderme 6… */
+  puan: number;
+  /** Oyuncu lehine mi */
+  biz: boolean;
+}
+
 export interface FightState {
   opp: Opponent;
   pStats: Stats;
@@ -408,6 +418,8 @@ export interface FightState {
   okunma?: number;
   taktikBasari: Partial<Record<Tactic, number>>;
   log: string[];
+  /** Maçın öne çıkan anları (bütün rauntlar; maç sonu "en iyi 3 an") */
+  oneCikan?: FightMoment[];
   kritik: CriticalKind | null;
   kritikMetni: string;
   subAdi: string;
@@ -486,6 +498,8 @@ export interface PostFight {
     teknikNot?: string;
     takipci?: number;
     takipciDelta?: number;
+    /** Maçın en iyi 3 anı */
+    anlar?: FightMoment[];
   };
 }
 
@@ -737,6 +751,8 @@ export interface GameState {
   kulup?: import('./fanClub').FanClub;
   /** İlk 10 dakika (onboarding.ts): görülen yeni özellikler, duyurulanlar, alınan ilk adım ödülleri, harcanan gelişim puanı */
   acilanlar?: string[];
+  /** Mesaj kutusu (dm.ts) */
+  dm?: import('./dm').DmState;
   duyurulan?: string[];
   ilkAdim?: string[];
   harcanan?: number;

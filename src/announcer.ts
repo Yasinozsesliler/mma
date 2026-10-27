@@ -59,7 +59,7 @@ export function warmAnnouncer() {
  * Anons eder; konuşma bitince (ya da en geç `maxMs` sonra) çözülür.
  * Kapalıysa ya da ses yoksa hemen çözülür.
  */
-export async function announce(text: string, maxMs = 7000): Promise<void> {
+export async function announce(text: string, maxMs = 7000, voice: { pitch: number; rate: number } = { pitch: 0.8, rate: 0.95 }): Promise<void> {
   if (!on || !text) return;
   // Ses kontrolü henüz bitmediyse bu cümle atlanır: sahne spiker yüzünden beklemez.
   const ok = await Promise.race([hasVoice(), new Promise<boolean>((r) => setTimeout(() => r(false), 300))]);
@@ -71,8 +71,20 @@ export async function announce(text: string, maxMs = 7000): Promise<void> {
       clearTimeout(t);
       resolve();
     };
-    Speech.speak(text, { language: LOC, rate: 0.95, pitch: 0.8, onDone: done, onStopped: done, onError: done });
+    Speech.speak(text, { language: LOC, rate: voice.rate, pitch: voice.pitch, onDone: done, onStopped: done, onError: done });
   });
+}
+
+/** Raunt arası hocanın sesi: spikerden farklı tonda, emojisiz ve kısa (ilk iki cümle). */
+export function speakCoach(text: string) {
+  const clean = text
+    .replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{FE0F}➤•]/gu, '')
+    .split('\n')
+    .map((l) => l.trim())
+    .filter(Boolean)
+    .slice(0, 2)
+    .join('. ');
+  void announce(clean, 12000, { pitch: 1.05, rate: 1.05 });
 }
 
 export function stopAnnounce() {

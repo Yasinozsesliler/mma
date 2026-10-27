@@ -205,6 +205,23 @@ export function PostFightScreen({ s, act }: { s: GameState; act: Act }) {
         </LinearGradient>
       ) : null}
 
+      {o?.anlar?.length ? (
+        <View style={pf.moments}>
+          <Text style={pf.momentsTitle}>{L("MAÇIN EN İYİ ANLARI")}</Text>
+          {o.anlar.map((m, i) => (
+            <PopIn key={i} delay={500 + i * 280}>
+              <View style={[pf.moment, { borderLeftColor: m.biz ? t.ana : '#5a5f6a' }]}>
+                <Text style={pf.momentIcon}>{m.ikon}</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={pf.momentRound}>{L("RAUNT {0}", [m.r])}</Text>
+                  <Text style={pf.momentText}>{m.metin}</Text>
+                </View>
+              </View>
+            </PopIn>
+          ))}
+        </View>
+      ) : null}
+
       {/* Röportaj: gecenin tek kararı, hemen sonucun altında */}
       {ps.roportajSonucu ? (
         <LinearGradient colors={['#1a1509', '#0d0d10']} style={pf.micDone}>
@@ -286,6 +303,12 @@ export function PostFightScreen({ s, act }: { s: GameState; act: Act }) {
 }
 
 const pf = StyleSheet.create({
+  moments: { backgroundColor: '#111216', borderRadius: R, borderWidth: 1, borderColor: C.border, padding: 12, gap: 8, marginBottom: 12 },
+  momentsTitle: { color: C.dim, fontFamily: F.display, fontSize: 11, letterSpacing: 2 },
+  moment: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#17181d', borderRadius: 8, borderLeftWidth: 3, paddingVertical: 8, paddingHorizontal: 10 },
+  momentIcon: { fontSize: 20 },
+  momentRound: { color: C.faint, fontFamily: F.display, fontSize: 10, letterSpacing: 1.5 },
+  momentText: { color: C.text, fontFamily: F.semi, fontSize: 13, lineHeight: 18 },
   shootDone: { color: C.green, fontFamily: F.bold, fontSize: 13, textAlign: 'center', marginVertical: 8 },
   hero: { marginHorizontal: -16, marginTop: -16, paddingTop: 20, paddingHorizontal: 16, paddingBottom: 16, alignItems: 'center', marginBottom: 12, overflow: 'hidden' },
   glowLine: { position: 'absolute', top: 0, left: 0, right: 0, height: 2, opacity: 0.9 },

@@ -9,6 +9,7 @@ import { currentOrg } from './character';
 import { chance, clamp, fill, pick, randInt, uid } from './rng';
 import type { GameState, Opponent, Post } from './types';
 import { followers, npcFollowers } from './fame';
+import { dmCampStart, dmTick } from './dm';
 
 const MAX_POSTS = 40;
 
@@ -131,6 +132,7 @@ function storyFor(s: GameState, o: Opponent): string {
 export function socialCampStart(s: GameState) {
   const o = s.pending.rakip;
   if (!o) return;
+  dmCampStart(s);
   const vars = { p: s.fighter.soyad, ph: playerHandle(s), org: ORGS[currentOrg(s)].kisa, hafta: s.pending.kamp?.hafta ?? 8 };
   addPost(s, { yazar: pick(JOURNALISTS).split(' (')[0], kullanici: '@kafespostasi', tur: 'hikaye', metin: storyFor(s, o), begeni: likes(s, 0.8) });
   const trashy = [L("Trash talk ustası"), L("Kibirli"), L("Öfkeli"), L("Şovmen")].includes(o.kisilik);
@@ -461,6 +463,7 @@ function handleName(o: Opponent) {
 /** Zaman geçtikçe akış canlanır: 1-3 yeni paylaşım. */
 export function socialTick(s: GameState, weeks = 1) {
   crisisTick(s, weeks);
+  dmTick(s, weeks);
   maybeCrisis(s, weeks);
   familyTick(s, weeks);
   if (s.stage === 'amator' && chance(0.5)) return;

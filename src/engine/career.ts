@@ -1,5 +1,6 @@
 import { L as tL, LOC } from '../i18n';
 import { fatigue, fatigueAfterFight } from './fatigue';
+import { dmAfterFight } from './dm';
 import { ppvPayout } from './hype';
 import { challengeCheck, challengeOnRetire, diffOf } from './challenges';
 import { offerAppeal } from './appeal';
@@ -24,7 +25,7 @@ import { nemesisAfterFight } from './nemesis';
 import { dwcsReady, uccMilestones, unbeatenRun } from './uccRoad';
 import { campCost, randomInjury, startCamp } from './camp';
 import { ORGS, WEIGHT_CLASSES, WEIGHT_MODS } from './data';
-import { methodLabel } from './fight';
+import { methodLabel, topMoments } from './fight';
 import { maybeEvent } from './events';
 import { ensureDivision, syncDivision } from './division';
 import { imposedOpponent, opponentChoices } from './matchmaking';
@@ -374,6 +375,7 @@ export function finishFight(s: GameState) {
   divNotes.forEach((n) => s.haberler.unshift(n));
   if (!caught) lines.push(...uccMilestones(s));
   socialAfterFight(s, opp, won, draw, methodLabel(r.yontem), divNotes);
+  dmAfterFight(s, { o: opp, won, draw, finish: finishMethod, title: won && opp.champion });
   if (s.seri >= 3) lines.push(tL("🔥 {0} maçlık galibiyet serisi!", [s.seri]));
   if (s.seri <= -2 && oldSeri <= -1) lines.push(tL("📉 {0} maçlık mağlubiyet serisi. Baskı artıyor.", [-s.seri]));
 
@@ -496,6 +498,7 @@ export function finishFight(s: GameState) {
       rakipLakap: opp.lakap,
       rakipUyruk: opp.uyruk,
       rakipRekor: `${opp.rekor.g}-${opp.rekor.m}-${opp.rekor.b}`,
+      anlar: topMoments(fs),
       rekor: `${karneSon.g}-${karneSon.m}-${karneSon.b}`,
       amator: !pro,
       kazanc: Math.round(kazanc),

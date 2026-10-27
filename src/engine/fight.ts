@@ -197,7 +197,20 @@ function addDmg(fs: FightState, victim: Side, d0: number) {
   if (victim === 'p' && !fs.kesik && fs.pHasar > 35 && chance(0.06 * (1 - (fs.mods.cutman ?? 0) * 0.2))) {
     fs.kesik = true;
     fs.log.push(L("🩸 Kaşının üstünde kesik açıldı! Kan gözüne akıyor."));
+    moment(fs, '🩸', L("Kaşın açıldı, gözüne akan kanla dövüşmeye devam ettin."), 3, false);
   }
+}
+
+/** Maç sonu özeti için öne çıkan an. */
+function moment(fs: FightState, ikon: string, metin: string, puan: number, biz: boolean) {
+  fs.oneCikan = [...(fs.oneCikan ?? []), { r: fs.raunt, ikon, metin, puan, biz }].slice(-24);
+}
+
+/** En önemli 3 an, maçtaki sırasıyla. */
+export function topMoments(fs: FightState) {
+  const all = fs.oneCikan ?? [];
+  const best = all.map((m, i) => ({ m, i })).sort((a, b) => b.m.puan - a.m.puan || a.i - b.i).slice(0, 3);
+  return best.sort((a, b) => a.i - b.i).map((x) => x.m);
 }
 
 function addPts(fs: FightState, s: Side, v0: number) {
@@ -234,6 +247,7 @@ function finish(fs: FightState, kazanan: Side, yontem: Method, aciklama: string,
   fs.durum = 'bitti';
   fs.kritik = null;
   fs.log.push(aciklama);
+  moment(fs, kazanan === 'p' ? '🏆' : '💔', aciklama, 10, kazanan === 'p');
   // Oyuncunun bitirişi: hangi hareketle bitirdiğini kaydet (o hareket ustalık kazanır).
   if (kazanan === 'p' && (yontem === 'KO' || yontem === 'TKO' || yontem === 'SUB')) {
     const t =
@@ -271,6 +285,8 @@ function rockCheck(fs: FightState, victim: Side, dmg: number, beat: number): boo
   if (kd) {
     if (att === 'p') fs.oKnockdown++;
     else fs.pKnockdown++;
+    if (att === 'p') moment(fs, '💥', L("{0} yediği yumrukla yere gitti!", [fs.oAd]), 6, true);
+    else moment(fs, '😵', L("{0} seni yere gönderdi.", [fs.oAd]), 5, false);
     addPts(fs, att, 2);
   }
   // Ani nakavt: çok hasar almış dövüşçü bazen hiç kalkamaz.
@@ -827,6 +843,9 @@ export function applyLiveRound(prev: FightState, r: LiveRoundResult): FightState
   fs.log.push(L("📊 İsabet: {0} – {1} · Verilen hasar: {2} – {3}", [r.pLanded, r.oLanded, Math.round(r.pDealt), Math.round(r.oDealt)]));
   if (r.oKd) fs.log.push(L("💥 {0} {1} kez yere gitti!", [fs.oAd, r.oKd]));
   if (r.pKd) fs.log.push(L("😵 {0} kez sarsıldın.", [r.pKd]));
+  if (r.oKd) moment(fs, '💥', r.oKd > 1 ? L("{0} bu raunt {1} kez yere gitti!", [fs.oAd, r.oKd]) : L("{0} yediği yumrukla yere gitti!", [fs.oAd]), 5 + r.oKd, true);
+  if (r.pKd && !r.bitis) moment(fs, '💪', L("Sarsıldın ama ayakta kalıp raundu bitirdin."), 4, true);
+  if (r.pLanded >= 18 && r.pLanded >= r.oLanded * 2) moment(fs, '🎯', L("{0} isabetli vuruşla raundu domine ettin.", [r.pLanded]), 3, true);
   if (r.pCtrl + r.oCtrl >= 3) fs.log.push(L("🤼 Yerde kontrol: {0} sn – {1} sn", [Math.round(r.pCtrl), Math.round(r.oCtrl)]));
   if (r.bitis) {
     const beat = Math.min(BEATS - 1, Math.floor(r.oran * BEATS));
@@ -883,6 +902,7 @@ export function resolveCritical(prev: FightState, choice: number, q = 0.5): Figh
       }
       if (chance((0.25 + O.power / 400) * down)) {
         fs.log.push(L("😱 {0} umutsuz bir kontra savurdu ve TAM İSABET! Durum tersine döndü!", [fs.oAd]));
+        moment(fs, '😱', L("Bitirmek üzereyken {0} umutsuz bir kontrayla seni yakaladı.", [fs.oAd]), 5, false);
         addDmg(fs, 'p', 12);
         if (rockCheck(fs, 'p', 14, b)) return fs;
       } else {
@@ -926,9 +946,11 @@ export function resolveCritical(prev: FightState, choice: number, q = 0.5): Figh
     else survive = 0.4;
     if (choice === 2 && chance(0.3 + (P.power - O.power) / 250 + add * 0.7)) {
       fs.log.push(L("🔥 İnanılmaz! Sarsılmışken savurduğun sağ el {0} dövüşçüsünü de sarstı!", [fs.oAd]));
+      moment(fs, '🔥', L("Sarsılmışken savurduğun sağ el {0} dövüşçüsünü de sarstı!", [fs.oAd]), 7, true);
       addDmg(fs, 'o', 13);
       if (rockCheck(fs, 'o', 16, b)) return fs;
     } else if (chance(clamp(survive + add, 0.12, 0.93))) {
+      moment(fs, '💪', L("Ağır sarsıldın ama dişini sıkıp raundu kurtardın."), 4, true);
       fs.log.push(
         choice === 0
           ? L("Rakibine sarıldın, kafanı yasladın. Saniyeler geçiyor… toparlanıyorsun.")
@@ -960,6 +982,7 @@ export function resolveCritical(prev: FightState, choice: number, q = 0.5): Figh
         return fs;
       }
       fs.log.push(L("{0} son anda {1} kilidinden sıyrıldı ve ayağa kalktı!", [fs.oAd, fs.subAdi]));
+      moment(fs, '🔓', L("{0} kilidini sonuna kadar sıktın, {1} son anda kurtuldu.", [fs.subAdi, fs.oAd]), 3, true);
       addPts(fs, 'p', 1);
     } else {
       fs.log.push(L("{0} riske girmiyor, üstte kalıp dirsek ve yumrukla puan topluyor.", [fs.pAd]));

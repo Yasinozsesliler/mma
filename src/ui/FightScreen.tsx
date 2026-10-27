@@ -19,6 +19,7 @@ const specialOf = (s: GameState): Special => {
   return { kind, imza: !!s.imza, ad: s.imza?.ad ?? SPECIAL_NAMES[kind]() };
 };
 import { CornerMoment } from './CornerMoment';
+import { speakCoach, stopAnnounce } from '../announcer';
 import { CRITICAL_OPTIONS, TACTICS } from '../engine/narration';
 import { oppRecord } from '../engine/opponents';
 import type { CriticalKind, FightState, GameState, Tactic } from '../engine/types';
@@ -275,6 +276,13 @@ export function FightScreen({ s, act }: { s: GameState; act: Act }) {
     return () => clearTimeout(t);
   }, [shown, fs.log.length, speed]);
   const flowing = shown < fs.log.length;
+  // Raunt arası: hoca köşede konuşur (spiker sesi açıksa), plan seçilince susar
+  const koseSes = !flowing && fs.durum === 'rauntSonu' && fs.kose ? `${fs.raunt}:${fs.kose}` : null;
+  useEffect(() => {
+    if (!koseSes) return;
+    speakCoach(koseSes.slice(koseSes.indexOf(':') + 1));
+    return () => stopAnnounce();
+  }, [koseSes]);
   const view = viewAt(fs, shown);
 
   const live = useLive();

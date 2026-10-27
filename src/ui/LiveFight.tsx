@@ -3,7 +3,7 @@
 // GARD ile hasarı azalt. Raunt bitince sonuç dövüşe işlenir.
 import { LinearGradient } from 'expo-linear-gradient';
 import { memo, useEffect, useRef, useState } from 'react';
-import { Modal, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { Animated, Easing, Modal, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import Svg, { Circle, Defs, Ellipse, G, Line, LinearGradient as SvgLinear, Path, Pattern, Polygon, RadialGradient, Rect, Stop } from 'react-native-svg';
 import { sfx } from '../audio';
 import { playerKit } from '../cosmetics';
@@ -156,6 +156,21 @@ const ArenaBg = memo(function ArenaBg() {
   );
 });
 
+/** Bitiriş anında yukarıdan ve aşağıdan kayan siyah sinema bantları. */
+function Letterbox() {
+  const [a] = useState(() => new Animated.Value(0));
+  useEffect(() => {
+    Animated.timing(a, { toValue: 1, duration: 450, easing: Easing.out(Easing.cubic), useNativeDriver: false }).start();
+  }, [a]);
+  const h = a.interpolate({ inputRange: [0, 1], outputRange: ['0%', '11%'] });
+  return (
+    <>
+      <Animated.View pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, top: 0, height: h, backgroundColor: '#000' }} />
+      <Animated.View pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: h, backgroundColor: '#000' }} />
+    </>
+  );
+}
+
 function Bar({ v, color, right }: { v: number; color: string; right?: boolean }) {
   return (
     <View style={[lf.bar, right && { transform: [{ scaleX: -1 }] }]}>
@@ -195,7 +210,9 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel }: { fs: FightState; p
   const shake = useRef({ t0: 0, amp: 0 });
   const [frame, setFrame] = useState<Frame>(() => ({ t: 0, p: P('stance'), o: P('stance'), pHp: 100 - fs.pHasar, pSta: fs.pKondisyon, oHp: 100 - fs.oHasar, oSta: fs.oKondisyon, left: 30000, ring: null, icon: null, pos: 'ayakta', special: null, kilit: null, gpos: 0, guard: false, counter: false, fx: [], sx: 0, zoom: 1, flash: 0 }));
   /** Kamera yakınlaşması ve beyaz flaş (sert darbe, sarsılma, nakavt) */
-  const punch = useRef({ t0: 0, zoom: 0, flash: 0 });
+  const punch = useRef({ t0: 0, zoom: 0, flash: 0, ms: 700 });
+  /** Bitiriş anı: ağır çekim ve sinema bantları */
+  const [cine, setCine] = useState(false);
   const [banner, setBanner] = useState<string | null>(() => L("{0}. RAUNT", [fs.raunt]));
   // İlk canlı maçta kısa rehber; görüldükten sonra raunt hemen başlar
   const [started, setStarted] = useState(() => getPref(TUTORIAL_KEY) === '1');
@@ -221,7 +238,7 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel }: { fs: FightState; p
   const spark = (a: Actor, big: boolean) => {
     fx.current.push({ x: a === 'p' ? 72 : 128, y: FLOOR - HIP_H - 30, t0: now(), big });
     shake.current = { t0: now(), amp: big ? 3.2 : a === 'p' ? 1.6 : 0.8 };
-    if (big) punch.current = { t0: now(), zoom: 0.06, flash: 0 };
+    if (big) punch.current = { t0: now(), zoom: 0.06, flash: 0, ms: 700 };
   };
 
   /** Yer dövüşünde kim üstte (pozlar buna göre) */
@@ -375,7 +392,7 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel }: { fs: FightState; p
         }
         buzz('nakavt');
         shake.current = { t0: now(), amp: 5 };
-        punch.current = { t0: now(), zoom: 0.14, flash: 0.55 };
+        punch.current = { t0: now(), zoom: 0.14, flash: 0.55, ms: 700 };
         setTimeout(() => setBanner(null), 1700);
         return;
       case 'tired':
@@ -389,14 +406,16 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel }: { fs: FightState; p
           sfx('tap');
         } else {
           ground.current = null;
-          seq(loser, [[P('reel', { x: -8 }), 150], [P('knockedOut', { x: -16 }), 450]]);
-          seq(loser === 'p' ? 'o' : 'p', [[P('stance'), 400], [P('win', { x: 0 }), 500]]);
+          // Ağır çekim: düşüş ve zafer pozu normalin üç katı sürede oynar
+          seq(loser, [[P('reel', { x: -8 }), 450], [P('knockedOut', { x: -16 }), 1400]]);
+          seq(loser === 'p' ? 'o' : 'p', [[P('stance'), 1200], [P('win', { x: 0 }), 1100]]);
           setBanner(loser === 'o' ? L("NAKAVT!") : L("NAKAVT OLDUN"));
           sfx('roar');
         }
         buzz('nakavt');
         shake.current = { t0: now(), amp: 6 };
-        punch.current = { t0: now(), zoom: 0.18, flash: 0.8 };
+        punch.current = sub ? { t0: now(), zoom: 0.18, flash: 0.5, ms: 1400 } : { t0: now(), zoom: 0.3, flash: 0.85, ms: 2600 };
+        setCine(true);
         return;
       }
     }
@@ -457,7 +476,7 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel }: { fs: FightState; p
           fx: fx.current.map((f) => ({ ...f })),
           sx: shk ? Math.sin(t / 15) * shk : 0,
           // Yakınlaşma hızlı girer, yavaş çıkar; flaş kısa
-          zoom: 1 + punch.current.zoom * Math.max(0, 1 - (t - punch.current.t0) / 700) * Math.min(1, (t - punch.current.t0) / 80),
+          zoom: 1 + punch.current.zoom * Math.max(0, 1 - (t - punch.current.t0) / punch.current.ms) * Math.min(1, (t - punch.current.t0) / 80),
           flash: punch.current.flash * Math.max(0, 1 - (t - punch.current.t0) / 260),
           special: s.special ? { ready: t >= s.special.readyAt && livePos(s) === 'ayakta', pct: Math.min(1, 1 - (s.special.readyAt - t) / SPECIAL_COOLDOWN) } : null,
         });
@@ -469,7 +488,7 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel }: { fs: FightState; p
           setBanner(L("RAUNT BİTTİ"));
           sfx('bell2');
         }
-        setTimeout(() => onEnd(liveResult(s)), s.over ? 2200 : 1300);
+        setTimeout(() => onEnd(liveResult(s)), s.over ? (s.over.yontem === 'SUB' ? 2400 : 3200) : 1300);
       }
       raf = requestAnimationFrame(loop);
     };
@@ -588,6 +607,7 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel }: { fs: FightState; p
             </G>
           </Svg>
           {frame.flash > 0.01 ? <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: '#fff', opacity: frame.flash }]} /> : null}
+          {cine ? <Letterbox /> : null}
           {frame.icon ? <Text style={lf.icon}>{frame.icon}</Text> : null}
           {counter ? <Text style={lf.counter}>{L("KONTRA PENCERESİ!")}</Text> : null}
         </View>

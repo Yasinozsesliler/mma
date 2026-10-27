@@ -34,6 +34,9 @@ export function bondLabel(b: number) {
 }
 export const bondColor = (b: number) => (b >= 65 ? '#3ecf7a' : b >= 40 ? '#f2c14e' : b >= 25 ? '#ff8a5c' : '#ff4d5e');
 
+/** Diğer sistemlerden (DM vb.) bağ değişimi */
+export const bondAdd = (s: GameState, d: number) => add(s, d);
+
 const add = (s: GameState, d: number) => {
   const h = ensureCoach(s);
   h.bag = clamp(Math.round(h.bag + d), 0, 100);

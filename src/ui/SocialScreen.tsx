@@ -4,6 +4,8 @@ import { CrisisCard } from './CrisisCard';
 import { fmtFollowers, followerBoard, followers, followerTier } from '../engine/fame';
 import { BioEditor, Highlights, IgTopBar, PhotoCard, PhotoComposer, ProfileGrid, ProfileHeader } from './SocialPhoto';
 import type { PhotoKind } from '../engine/gram';
+import { dmUnread } from '../engine/dm';
+import { DmChat, DmInbox, markRead } from './SocialDm';
 import { useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { IDEA_KATS, postIdeas, type IdeaKat } from '../engine/postIdeas';
@@ -191,6 +193,7 @@ export function SocialScreen({ s, act }: { s: GameState; act: Act }) {
   const [compose, setCompose] = useState<null | 'foto' | 'yazi'>(null);
   const [edit, setEdit] = useState(false);
   const [hl, setHl] = useState<PhotoKind | null>(null);
+  const [dm, setDm] = useState<null | 'list' | string>(null);
   const takipci = followers(s);
   const done = (m: string) => {
     setMsg(m);
@@ -216,50 +219,65 @@ export function SocialScreen({ s, act }: { s: GameState; act: Act }) {
         />
       }
     >
-      <CrisisCard s={s} act={act} />
-      <IgTopBar s={s} takipci={takipci} onNew={() => setCompose('foto')} onBoard={() => setTab('takipci')} />
-      <ProfileHeader s={s} takipci={takipci} tier={followerTier(takipci)} onEdit={() => setEdit(!edit)} onNew={() => setCompose('foto')} editing={edit} />
-      {edit ? <BioEditor s={s} act={act} onDone={() => setEdit(false)} /> : null}
-      <Highlights
-        s={s}
-        selected={hl}
-        onSelect={(k) => {
-          setHl(hl === k ? null : k);
-          setTab('grid');
-        }}
-        onNew={() => setCompose('foto')}
-      />
-      {msg ? (
-        <Pressable onPress={() => setMsg(null)} style={so.toast}>
-          <Icon name="check-circle" size={16} color={C.gold} />
-          <Text style={so.toastText}>{msg}</Text>
-        </Pressable>
-      ) : null}
-      <View style={so.igTabs}>
-        {(
-          [
-            ['grid', 'grid'],
-            ['akis', 'play-box-multiple-outline'],
-            ['etiket', 'account-box-outline'],
-            ['takipci', 'trophy-outline'],
-          ] as const
-        ).map(([k, ikon]) => (
-          <Pressable key={k} onPress={() => setTab(k)} style={[so.igTab, tab === k && so.igTabOn]}>
-            <Icon name={ikon} size={24} color={tab === k ? C.text : C.faint} />
-          </Pressable>
-        ))}
-      </View>
-      {tab === 'grid' ? (
-        <ProfileGrid s={s} filter={hl} onNew={() => setCompose('foto')} />
-      ) : tab === 'takipci' ? (
-        <FollowerBoard s={s} />
+      {dm === 'list' ? (
+        <DmInbox
+          s={s}
+          onBack={() => setDm(null)}
+          onOpen={(id) => {
+            setDm(id);
+            markRead(act, id);
+          }}
+        />
+      ) : dm ? (
+        <DmChat s={s} act={act} id={dm} onBack={() => setDm('list')} />
       ) : (
-        <View style={{ marginTop: 10 }}>
-          {posts.length === 0 ? <P dim>{L("Henüz paylaşım yok. İlk dövüşünden sonra ortalık hareketlenecek.")}</P> : null}
-          {posts.map((p) => (
-            <PostCard key={p.id} s={s} p={p} act={act} onMsg={setMsg} />
-          ))}
-        </View>
+        <>
+          <CrisisCard s={s} act={act} />
+          <IgTopBar s={s} takipci={takipci} onNew={() => setCompose('foto')} onBoard={() => setTab('takipci')} onDm={() => setDm('list')} unread={dmUnread(s)} />
+          <ProfileHeader s={s} takipci={takipci} tier={followerTier(takipci)} onEdit={() => setEdit(!edit)} onNew={() => setCompose('foto')} editing={edit} />
+          {edit ? <BioEditor s={s} act={act} onDone={() => setEdit(false)} /> : null}
+          <Highlights
+            s={s}
+            selected={hl}
+            onSelect={(k) => {
+              setHl(hl === k ? null : k);
+              setTab('grid');
+            }}
+            onNew={() => setCompose('foto')}
+          />
+          {msg ? (
+            <Pressable onPress={() => setMsg(null)} style={so.toast}>
+              <Icon name="check-circle" size={16} color={C.gold} />
+              <Text style={so.toastText}>{msg}</Text>
+            </Pressable>
+          ) : null}
+          <View style={so.igTabs}>
+            {(
+              [
+                ['grid', 'grid'],
+                ['akis', 'play-box-multiple-outline'],
+                ['etiket', 'account-box-outline'],
+                ['takipci', 'trophy-outline'],
+              ] as const
+            ).map(([k, ikon]) => (
+              <Pressable key={k} onPress={() => setTab(k)} style={[so.igTab, tab === k && so.igTabOn]}>
+                <Icon name={ikon} size={24} color={tab === k ? C.text : C.faint} />
+              </Pressable>
+            ))}
+          </View>
+          {tab === 'grid' ? (
+            <ProfileGrid s={s} filter={hl} onNew={() => setCompose('foto')} />
+          ) : tab === 'takipci' ? (
+            <FollowerBoard s={s} />
+          ) : (
+            <View style={{ marginTop: 10 }}>
+              {posts.length === 0 ? <P dim>{L("Henüz paylaşım yok. İlk dövüşünden sonra ortalık hareketlenecek.")}</P> : null}
+              {posts.map((p) => (
+                <PostCard key={p.id} s={s} p={p} act={act} onMsg={setMsg} />
+              ))}
+            </View>
+          )}
+        </>
       )}
       <Modal visible={!!compose} transparent animationType="slide" onRequestClose={() => setCompose(null)}>
         <View style={so.sheetBack}>

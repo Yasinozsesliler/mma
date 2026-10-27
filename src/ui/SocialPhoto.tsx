@@ -203,7 +203,7 @@ const VERIFIED = 100_000;
 const BLUE_TICK = '#3897f0';
 
 /** Instagram üst çubuğu: kullanıcı adı, mavi tik (100B takipçiden sonra), yeni gönderi ve sıralama. */
-export function IgTopBar({ s, takipci, onNew, onBoard }: { s: GameState; takipci: number; onNew: () => void; onBoard: () => void }) {
+export function IgTopBar({ s, takipci, onNew, onBoard, onDm, unread }: { s: GameState; takipci: number; onNew: () => void; onBoard: () => void; onDm: () => void; unread: number }) {
   return (
     <View style={st.top}>
       <Icon name="lock-outline" size={16} color={C.text} />
@@ -215,6 +215,14 @@ export function IgTopBar({ s, takipci, onNew, onBoard }: { s: GameState; takipci
       <View style={{ flex: 1 }} />
       <Pressable onPress={onNew} hitSlop={8}>
         <Icon name="plus-box-outline" size={26} color={C.text} />
+      </Pressable>
+      <Pressable onPress={onDm} hitSlop={8}>
+        <Icon name="send-outline" size={25} color={C.text} />
+        {unread ? (
+          <View style={st.dmBadge}>
+            <Text style={st.dmBadgeText}>{unread > 9 ? '9+' : unread}</Text>
+          </View>
+        ) : null}
       </Pressable>
       <Pressable onPress={onBoard} hitSlop={8}>
         <Icon name="menu" size={26} color={C.text} />
@@ -393,6 +401,8 @@ export function ProfileGrid({ s, filter, onNew }: { s: GameState; filter: PhotoK
 }
 
 const st = StyleSheet.create({
+  dmBadge: { position: 'absolute', top: -5, right: -7, minWidth: 18, height: 18, borderRadius: 9, backgroundColor: '#ff3040', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4, borderWidth: 2, borderColor: C.bg },
+  dmBadgeText: { color: '#fff', fontFamily: F.bold, fontSize: 10 },
   post: { backgroundColor: C.card, borderRadius: R, borderWidth: 1, borderColor: C.border, marginBottom: 10, overflow: 'hidden' },
   head: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 10 },
   author: { color: C.text, fontFamily: F.bold, fontSize: 14, flexShrink: 1 },
