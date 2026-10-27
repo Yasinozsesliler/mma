@@ -6568,4 +6568,11 @@ export const PL: Record<string, string> = {
   "{0} kilidini sonuna kadar sıktın, {1} son anda kurtuldu.": "Dociskałeś {0} do granic, {1} uciekł w ostatniej chwili.",
   "MAÇIN EN İYİ ANLARI": "NAJLEPSZE MOMENTY",
   "{0} yeni mesaj": "Nowe wiadomości: {0}",
+  "Yıllar ağır basıyor: hız, çene ve kondisyon belirgin şekilde düştü. Veda maçını düşünme zamanı olabilir.": "Lata dają się we znaki: szybkość, szczęka i kondycja wyraźnie spadły. Może czas pomyśleć o walce pożegnalnej.",
+  "Vücut eskisi gibi toparlanmıyor: hız, çene, kondisyon ve vuruş düştü, ama tecrübe arttı.": "Ciało nie regeneruje się jak dawniej: szybkość, szczęka, kondycja i stójka spadły, ale doświadczenie wzrosło.",
+  "Puan kazanmak için kamp yap ve dövüş. Galibiyet ve bitiriş daha çok kazandırır. Maliyet: 60’a kadar 1, 78’e kadar 2, 90’a kadar 3, sonrası 4 puan.": "Punkty zdobywasz na obozach i w walkach. Wygrane i skończenia dają więcej. Koszt: 1 pkt do 60, 2 do 78, 3 do 90, potem 4.",
+  "Yaş sınırı: 33’ten sonra hız, çene ve kondisyon; 35’ten sonra vuruş, güreş ve yer her yıl biraz daha aşağıda tavan yapar. IQ yaşlanmaz.": "Limit wieku: po 33. roku życia szybkość, szczęka i kondycja, a po 35. stójka, zapasy i parter co rok mają nieco niższy pułap. IQ się nie starzeje.",
+  "DWCS'ye hazır ol: şampiyon ol, ya da ilk 3'te popülerlik 20+, ya da ilk 5'te 2 maçlık seri, ya da ilk 8'de 3 maçlık seri, ya da 4 maç yenilmeden git": "Bądź gotów na DWCS: zostań mistrzem, albo top 3 z popularnością 20+, albo top 5 z serią 2 wygranych, albo top 8 z serią 3, albo 4 walki bez porażki",
+  "Kazandın ama Dean tam ikna olmadı: \"Bir galibiyet daha getir, kapı açık.\" Bir sonraki galibiyetin UCC kontratını getirecek.": "Wygrałeś, ale Dean nie jest w pełni przekonany: „Przynieś jeszcze jedno zwycięstwo, drzwi są otwarte.” Następna wygrana przyniesie kontrakt z UCC.",
+  "🎟️ Dean Wyatt sözünü tuttu: \"{0}, istediğim galibiyeti getirdin. UCC’ye hoş geldin!\"": "🎟️ Dean Wyatt dotrzymał słowa: „{0}, przyniosłeś zwycięstwo, którego chciałem. Witaj w UCC!”",
 };

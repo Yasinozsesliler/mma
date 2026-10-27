@@ -1,3 +1,4 @@
+import { ORGS } from '../src/engine/data';
 import { canActivity, canFoundClub, doActivity, fanLevel, foundClub } from '../src/engine/fanClub';
 import { ALBUM_SETS } from '../src/engine/cards';
 import { acceptComeback, comebackOffer } from '../src/engine/comeback';
@@ -66,6 +67,7 @@ const kartStat: Record<string, number> = { toplam: 0 };
 const mapStat = { sehir: 0, kita: 0, odul: 0 };
 const cbStat = { n: 0, g: 0 };
 const fanStat: Record<string, number> = { kurulan: 0, sadakat: 0 };
+const dwStat = { kariyer: 0, ulasan: 0, dwcs: 0, dwcsG: 0, buyuk: 0, ilkDwcs: 0 };
 const brainStat: Record<string, number> = { toplam: 0, emekli: 0 };
 const keStat: Record<string, number> = { davet: 0, kabul: 0, ekran: 0 };
 const goalStat = { n: 0, para: 0, puan: 0, tur: {} as Record<string, number> };
@@ -98,6 +100,7 @@ const stats = {
   stageWins: {} as Record<string, [number, number]>,
   followers: [] as number[],
   retireAge: [] as number[],
+  ageWins: {} as Record<string, [number, number]>,
   hof: 0,
   ach: [] as number[],
   legacy: [] as number[],
@@ -302,6 +305,8 @@ function playCareer() {
           const key = o.champion ? `${s.stage}-şampiyon` : s.stage;
           (stats.gap[key] ??= []).push(oa - pa);
           (stats.stageWins[key] ??= [0, 0])[r.kazanan === 'p' ? 0 : 1]++;
+          const yb = s.fighter.yas < 30 ? '<30' : s.fighter.yas < 34 ? '30-33' : s.fighter.yas < 37 ? '34-36' : s.fighter.yas < 40 ? '37-39' : '40+';
+          (stats.ageWins[yb] ??= [0, 0])[r.kazanan === 'p' ? 0 : 1]++;
         }
         const hafta0 = s.hafta;
         finishFight(s);
@@ -352,6 +357,16 @@ function playCareer() {
     stats.legacy.push(legacyScore(s));
     stats.totalFights.push(fights);
     stats.retireAge.push(s.fighter.yas);
+    {
+      const kr = [...s.gecmis].reverse();
+      const firstUfc = kr.findIndex((h) => h.org === 'ufc');
+      const before = firstUfc < 0 ? kr : kr.slice(0, firstUfc);
+      const dw = before.filter((h) => h.org === 'dwcs');
+      dwStat.kariyer++;
+      dwStat.dwcs += dw.length;
+      dwStat.dwcsG += dw.filter((h) => h.sonuc === 'G').length;
+      if (firstUfc >= 0) { dwStat.ulasan++; dwStat.buyuk += before.filter((h) => ORGS[h.org]?.stage === 'buyuk').length; dwStat.ilkDwcs += Math.max(0, before.findIndex((h) => h.org === 'dwcs') - before.findIndex((h) => ORGS[h.org]?.stage === 'buyuk')); }
+    }
     stats.followers.push(s.takipci ?? 0);
     if (s.unvanlar.some((u) => /^U[FC]C/.test(u))) stats.ufcChamp++;
     (s.hikayeler ?? []).forEach((h) => (stats.hikaye[h] = (stats.hikaye[h] ?? 0) + 1));
@@ -391,6 +406,8 @@ const pct = (a: number, b: number) => `${((a / Math.max(1, b)) * 100).toFixed(1)
 const mean = (a: number[]) => (a.reduce((x, y) => x + y, 0) / Math.max(1, a.length)).toFixed(1);
 console.log(`18-20 yaşında başlayanlar, 25 yaşında: toplam dövüş ort. ${mean(stats.fights25)}, pro karne örnekleri: ${stats.rec25.slice(0, 12).join(', ')}`);
 console.log(`Maçlar arası gün ort. ${mean(stats.gaps)} (min ${Math.min(...stats.gaps)}, maks ${Math.max(...stats.gaps)}) · Kariyer sonu takipçi ort. ${Math.round(Number(mean(stats.followers))).toLocaleString('tr-TR')}, maks ${Math.max(...stats.followers).toLocaleString('tr-TR')}`);
+console.log(`UCC yolu: büyük org'da UCC öncesi maç ort. ${(dwStat.buyuk / Math.max(1, dwStat.ulasan)).toFixed(1)}, ilk DWCS'ye kadar ${(dwStat.ilkDwcs / Math.max(1, dwStat.ulasan)).toFixed(1)}, kariyer başına DWCS ${(dwStat.dwcs / dwStat.kariyer).toFixed(2)} (galibiyet %${Math.round((dwStat.dwcsG / Math.max(1, dwStat.dwcs)) * 100)})`);
+console.log('Yaşa göre galibiyet:', Object.entries(stats.ageWins).map(([k, [w, l]]) => `${k} %${Math.round((w / (w + l)) * 100)} (${w + l})`).join(' · '));
 console.log('Rakip − oyuncu güç farkı / galibiyet oranı:', Object.entries(stats.gap).map(([k, v]) => `${k} ${mean(v)} (%${Math.round((stats.stageWins[k][0] / (stats.stageWins[k][0] + stats.stageWins[k][1])) * 100)})`).join(' · '));
 console.log(`Kariyer boyu dövüş ort. ${mean(stats.totalFights)}, bitiş yaşı ort. ${mean(stats.retireAge)}`);
 console.log(`Başarım ort. ${mean(stats.ach)}, maks ${Math.max(...stats.ach)} · Efsane puanı ort. ${mean(stats.legacy)}, maks ${Math.max(...stats.legacy)} · Hall of Fame: ${((stats.hof / N) * 100).toFixed(1)}%`);

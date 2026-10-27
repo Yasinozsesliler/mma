@@ -4,9 +4,9 @@ import { L as tL } from '../i18n';
 import { currentOrg } from './character';
 import { ORGS } from './data';
 import { statAverage } from './character';
-import { generateOpponent } from './opponents';
+import { generateOpponent, targetLevel } from './opponents';
 import { STAT_KEYS } from './types';
-import { chance, randInt } from './rng';
+import { chance, noise, randInt } from './rng';
 import type { GameState, Opponent } from './types';
 
 export function ensureDivision(s: GameState) {
@@ -117,6 +117,16 @@ export function syncDivision(s: GameState, opp: Opponent, won: boolean, draw: bo
       c.rekor.m++;
     }
   }
+  // Sıralamadakiler de kamp yapıyor: güçleri bulundukları sıranın seviyesine doğru yavaşça ilerler
+  // (oyuncu yıllarca gelişirken liste yerinde saymasın).
+  const train = (o: Opponent, rank: number | null, champ: boolean) => {
+    const gap = targetLevel(s, b.org, 0, rank, champ) + (champ ? 2.5 : 0) - statAverage(o.stats);
+    const step = Math.max(-1, Math.min(2, gap * 0.35));
+    if (Math.abs(step) < 0.3) return;
+    STAT_KEYS.forEach((k) => (o.stats[k] = Math.round(Math.max(12, Math.min(97, o.stats[k] + step + noise(0.6))))));
+  };
+  b.liste.forEach((o, i) => train(o, i + 1, false));
+  if (b.sampiyon) train(b.sampiyon, null, true);
   // Yeni bir isim sıralamaya girer.
   if (chance(0.2)) {
     const giden = b.liste.pop()!;

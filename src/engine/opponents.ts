@@ -4,7 +4,7 @@ import { pickStar } from './uccRoster';
 import { BACKGROUNDS, NAME_POOLS, NICKNAMES, ORGS, PERSONALITIES, baseStatsFor, femSurname } from './data';
 import { currentOrg, statAverage } from './character';
 import { chance, clamp, noise, pick, randInt, uid, weighted } from './rng';
-import type { Background, GameState, Opponent, OrgId, StatKey } from './types';
+import type { Background, GameState, Opponent, OrgId, Stage, StatKey } from './types';
 import { STAT_KEYS, STAT_LABELS } from './types';
 
 const TIER_BASE: Record<OrgId, number> = {
@@ -30,14 +30,36 @@ const STYLE_WEIGHTS: [Background, number][] = [
   ['sokak', 1],
 ];
 
-function levelFor(s: GameState, org: OrgId, zorluk: number, rank: number | null, champion: boolean) {
+// Rakip gücünde oyuncunun payı: üst basamaklarda rakipler oyuncuya daha yakın (zirvede kolay maç olmaz).
+const PLAYER_W: Record<Stage, number> = { amator: 0.45, bolgesel: 0.45, buyuk: 0.5, ufc: 0.62 };
+// Şampiyonun fazladan gücü: bölgesel kemer ulaşılabilir bir sınav, UCC kemeri en zoru.
+const CHAMP_BONUS: Record<Stage, number> = { amator: 12, bolgesel: 11, buyuk: 16, ufc: 19 };
+
+/** Oyuncunun referans gücü: kariyerindeki en yüksek güç. Yaşlanan oyuncuya göre rakipler zayıflamaz. */
+export function refPower(s: GameState) {
+  const pa = statAverage(s.fighter.stats);
+  if (pa > (s.zirveGuc ?? 0)) s.zirveGuc = pa;
+  return Math.max(pa, s.zirveGuc ?? 0);
+}
+
+/** Bu basamaktaki rakibin hedef gücü (rastgelelik olmadan). Sıralamadaki dövüşçüler de buna doğru gelişir. */
+export function targetLevel(s: GameState, org: OrgId, zorluk: number, rank: number | null, champion: boolean) {
+  const stage = ORGS[org].stage;
   let tb = TIER_BASE[org];
   const L = ORGS[org].merdiven;
   if (rank != null && L > 0) tb += ((L - rank) / L) * 14;
-  if (champion) tb += 20;
-  const pa = statAverage(s.fighter.stats);
+  if (champion) tb += CHAMP_BONUS[stage];
+  const w = PLAYER_W[stage];
+  const ref = refPower(s);
   // Oyuncu güçlendikçe rakipler de güçlenir: rekabet hep canlı kalır.
-  return tb * 0.55 + pa * 0.45 - 2.5 + zorluk * 5 + noise(2) + diffOf(s).rakip;
+  let lvl = tb * (1 - w) + ref * w;
+  // UCC dünyanın zirvesi: oyuncu ne kadar güçlenirse güçlensin sıralamanın üstü ve şampiyon ona denk kalır.
+  if (stage === 'ufc') lvl = Math.max(lvl, champion ? ref + 5.5 : rank != null && L > 0 ? ref - 1.5 + ((L - rank) / L) * 3 : ref - 3);
+  return lvl - 2.5 + zorluk * 5 + diffOf(s).rakip;
+}
+
+function levelFor(s: GameState, org: OrgId, zorluk: number, rank: number | null, champion: boolean) {
+  return targetLevel(s, org, zorluk, rank, champion) + noise(2);
 }
 
 function recordFor(org: OrgId, rank: number | null, champion: boolean) {

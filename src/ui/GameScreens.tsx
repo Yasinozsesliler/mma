@@ -379,7 +379,8 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
               })}
             </Card>
           ) : null}
-          {!confirmRetire ? (
+          {/* Yeni başlayana emeklilik düğmesi gösterilmez: 30 yaş ya da 10 maçtan sonra çıkar. */}
+          {s.fighter.yas < 30 && s.gecmis.length < 10 ? null : !confirmRetire ? (
             <Pressable onPress={() => setConfirmRetire(true)} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 8 }}>
               <Icon name="flag-checkered" size={14} color={C.faint} />
               <Text style={{ color: C.faint, fontFamily: F.display, fontSize: 12, letterSpacing: 1 }}>{L("EMEKLİ OL")}</Text>

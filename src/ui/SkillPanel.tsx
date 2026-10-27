@@ -1,5 +1,6 @@
 import { L } from '../i18n';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { ageCap } from '../engine/character';
 import { canSpend, spendPoint, statCost } from '../engine/progression';
 import type { GameState, StatKey } from '../engine/types';
 import { STAT_KEYS, STAT_LABELS } from '../engine/types';
@@ -58,14 +59,15 @@ export function SkillPanel({ s, act, title = L("GELİŞİM") }: { s: GameState; 
               style={({ pressed }) => [sp.plus, { opacity: !ok ? 0.3 : pressed ? 0.6 : 1 }]}
             >
               <Text style={sp.plusText}>+1</Text>
-              <Text style={sp.cost}>{v >= 99 ? 'MAX' : `${statCost(v)} puan`}</Text>
+              <Text style={sp.cost}>{v >= 99 ? 'MAX' : v >= ageCap(s.fighter.yas, k) ? L("YAŞ") : L('{0} puan', [statCost(v)])}</Text>
             </Pressable>
           </View>
         );
       })}
       <Text style={sp.foot}>
         
-        {L("Puan kazanmak için kamp yap ve dövüş. Galibiyet ve bitiriş daha çok kazandırır. Maliyet: 50’ye kadar 1, 70’e kadar 2, 85’e kadar 3, sonrası 4 puan.")}
+        {L("Puan kazanmak için kamp yap ve dövüş. Galibiyet ve bitiriş daha çok kazandırır. Maliyet: 60’a kadar 1, 78’e kadar 2, 90’a kadar 3, sonrası 4 puan.")}
+        {s.fighter.yas > 33 ? '\n' + L("Yaş sınırı: 33’ten sonra hız, çene ve kondisyon; 35’ten sonra vuruş, güreş ve yer her yıl biraz daha aşağıda tavan yapar. IQ yaşlanmaz.") : ''}
       </Text>
     </Card>
   );

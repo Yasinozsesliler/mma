@@ -6630,4 +6630,11 @@ export const RU: Record<string, string> = {
   "{0} kilidini sonuna kadar sıktın, {1} son anda kurtuldu.": "Ты дожимал {0} до предела, {1} вырвался в последний момент.",
   "MAÇIN EN İYİ ANLARI": "ЛУЧШИЕ МОМЕНТЫ БОЯ",
   "{0} yeni mesaj": "Новых сообщений: {0}",
+  "Yıllar ağır basıyor: hız, çene ve kondisyon belirgin şekilde düştü. Veda maçını düşünme zamanı olabilir.": "Годы берут своё: скорость, подбородок и выносливость заметно упали. Возможно, пора задуматься о прощальном бое.",
+  "Vücut eskisi gibi toparlanmıyor: hız, çene, kondisyon ve vuruş düştü, ama tecrübe arttı.": "Тело восстанавливается уже не так: скорость, подбородок, выносливость и ударка упали, зато опыт вырос.",
+  "Puan kazanmak için kamp yap ve dövüş. Galibiyet ve bitiriş daha çok kazandırır. Maliyet: 60’a kadar 1, 78’e kadar 2, 90’a kadar 3, sonrası 4 puan.": "Очки дают сборы и бои. Победы и досрочные победы приносят больше. Цена: 1 очко до 60, 2 до 78, 3 до 90, дальше 4.",
+  "Yaş sınırı: 33’ten sonra hız, çene ve kondisyon; 35’ten sonra vuruş, güreş ve yer her yıl biraz daha aşağıda tavan yapar. IQ yaşlanmaz.": "Возрастной предел: после 33 скорость, подбородок и выносливость, после 35 ударка, борьба и партер с каждым годом упираются в чуть более низкий потолок. IQ не стареет.",
+  "DWCS'ye hazır ol: şampiyon ol, ya da ilk 3'te popülerlik 20+, ya da ilk 5'te 2 maçlık seri, ya da ilk 8'de 3 maçlık seri, ya da 4 maç yenilmeden git": "Готовность к DWCS: стать чемпионом, или топ-3 с популярностью 20+, или топ-5 с серией из 2 побед, или топ-8 с серией из 3, или 4 боя без поражений",
+  "Kazandın ama Dean tam ikna olmadı: \"Bir galibiyet daha getir, kapı açık.\" Bir sonraki galibiyetin UCC kontratını getirecek.": "Ты победил, но Дин не до конца убеждён: «Принеси ещё одну победу, дверь открыта». Следующая победа принесёт контракт с UCC.",
+  "🎟️ Dean Wyatt sözünü tuttu: \"{0}, istediğim galibiyeti getirdin. UCC’ye hoş geldin!\"": "🎟️ Дин Уайатт сдержал слово: «{0}, ты принёс победу, которую я ждал. Добро пожаловать в UCC!»",
 };

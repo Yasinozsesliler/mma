@@ -1,5 +1,5 @@
 // Gelişim puanı: kamp ve dövüşlerden kazanılır, istatistik yükseltmeye harcanır.
-import { growthMultiplier } from './character';
+import { ageCap, growthMultiplier } from './character';
 import { clamp } from './rng';
 import type { GameState, Intensity, StatKey } from './types';
 
@@ -15,7 +15,7 @@ export function statCost(v: number) {
 
 export function canSpend(s: GameState, k: StatKey) {
   const v = s.fighter.stats[k];
-  return v < 99 && s.puan >= statCost(v);
+  return v < Math.min(99, ageCap(s.fighter.yas, k)) && s.puan >= statCost(v);
 }
 
 export function spendPoint(s: GameState, k: StatKey) {

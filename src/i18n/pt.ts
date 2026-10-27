@@ -6590,4 +6590,11 @@ export const PT: Record<string, string> = {
   "{0} kilidini sonuna kadar sıktın, {1} son anda kurtuldu.": "Você apertou o {0} até o limite, {1} escapou no último segundo.",
   "MAÇIN EN İYİ ANLARI": "MELHORES MOMENTOS",
   "{0} yeni mesaj": "{0} mensagens novas",
+  "Yıllar ağır basıyor: hız, çene ve kondisyon belirgin şekilde düştü. Veda maçını düşünme zamanı olabilir.": "Os anos pesam: velocidade, queixo e cardio caíram bastante. Talvez seja hora de pensar na luta de despedida.",
+  "Vücut eskisi gibi toparlanmıyor: hız, çene, kondisyon ve vuruş düştü, ama tecrübe arttı.": "O corpo não se recupera como antes: velocidade, queixo, cardio e trocação caíram, mas a experiência aumentou.",
+  "Puan kazanmak için kamp yap ve dövüş. Galibiyet ve bitiriş daha çok kazandırır. Maliyet: 60’a kadar 1, 78’e kadar 2, 90’a kadar 3, sonrası 4 puan.": "Ganhe pontos fazendo camps e lutando. Vitórias e finalizações rendem mais. Custo: 1 ponto até 60, 2 até 78, 3 até 90, depois 4.",
+  "Yaş sınırı: 33’ten sonra hız, çene ve kondisyon; 35’ten sonra vuruş, güreş ve yer her yıl biraz daha aşağıda tavan yapar. IQ yaşlanmaz.": "Limite de idade: depois dos 33, velocidade, queixo e cardio; depois dos 35, trocação, wrestling e chão têm um teto um pouco menor a cada ano. O QI não envelhece.",
+  "DWCS'ye hazır ol: şampiyon ol, ya da ilk 3'te popülerlik 20+, ya da ilk 5'te 2 maçlık seri, ya da ilk 8'de 3 maçlık seri, ya da 4 maç yenilmeden git": "Fique pronto para o DWCS: seja campeão, ou top 3 com 20+ de popularidade, ou top 5 com 2 vitórias seguidas, ou top 8 com 3 seguidas, ou 4 lutas invicto",
+  "Kazandın ama Dean tam ikna olmadı: \"Bir galibiyet daha getir, kapı açık.\" Bir sonraki galibiyetin UCC kontratını getirecek.": "Você venceu, mas Dean não se convenceu totalmente: \"Me traga mais uma vitória, a porta está aberta.\" Sua próxima vitória trará o contrato do UCC.",
+  "🎟️ Dean Wyatt sözünü tuttu: \"{0}, istediğim galibiyeti getirdin. UCC’ye hoş geldin!\"": "🎟️ Dean Wyatt cumpriu a palavra: \"{0}, você trouxe a vitória que eu queria. Bem-vindo ao UCC!\"",
 };

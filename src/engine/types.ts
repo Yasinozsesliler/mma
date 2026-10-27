@@ -663,6 +663,8 @@ export interface GameState {
   aileAn?: string[];
   /** Kontrat bitmeden gelen son erken teklif (maç sayısı) */
   erkenTeklif?: number;
+  /** DWCS'yi kazandı ama Dean ikna olmadı: büyük organizasyondaki bir sonraki galibiyet UCC kontratını getirir. */
+  dwcsSoz?: boolean;
   /** Eski rakiplerin kariyerleri (worldLife.ts) */
   dunya?: Record<string, import('./worldLife').WorldEntry>;
   /** Antrenörle bağ (coachBond.ts) */
@@ -751,6 +753,8 @@ export interface GameState {
   kulup?: import('./fanClub').FanClub;
   /** İlk 10 dakika (onboarding.ts): görülen yeni özellikler, duyurulanlar, alınan ilk adım ödülleri, harcanan gelişim puanı */
   acilanlar?: string[];
+  /** Kariyerdeki en yüksek ortalama güç: rakipler buna göre seçilir, yaşlanınca rakipler de zayıflamaz. */
+  zirveGuc?: number;
   /** Mesaj kutusu (dm.ts) */
   dm?: import('./dm').DmState;
   duyurulan?: string[];

@@ -6,11 +6,11 @@ import { ORGS } from './data';
 import { addPost } from './social';
 import type { GameState } from './types';
 
-/** Büyük organizasyonda yenilmezlik: en az 5 maçlık seri ve bu organizasyonda 3 galibiyet. */
-export const unbeatenRun = (s: GameState) => s.seri >= 5 && s.gecmis.filter((h) => h.org === s.contract?.org && h.sonuc === 'G').length >= 3;
+/** Büyük organizasyonda yenilmezlik: en az 4 maçlık seri ve bu organizasyonda 3 galibiyet. */
+export const unbeatenRun = (s: GameState) => s.seri >= 4 && s.gecmis.filter((h) => h.org === s.contract?.org && h.sonuc === 'G').length >= 3;
 
-/** DWCS davetine hazır mı: şampiyonluk, ya da ilk 3'te popülerlik 25+, ya da ilk 5'te 3 maçlık seri, ya da yenilmez seri. */
-export const dwcsReady = (s: GameState) => s.sampiyon || unbeatenRun(s) || (s.rank != null && ((s.rank <= 3 && s.populerlik >= 25) || (s.rank <= 5 && s.seri >= 3)));
+/** DWCS davetine hazır mı: şampiyonluk, ya da ilk 3'te popülerlik 20+, ya da ilk 5'te 2 maçlık seri, ya da ilk 8'de 3 maçlık seri, ya da yenilmez seri. */
+export const dwcsReady = (s: GameState) => s.sampiyon || unbeatenRun(s) || (s.rank != null && ((s.rank <= 3 && s.populerlik >= 20) || (s.rank <= 5 && s.seri >= 2) || (s.rank <= 8 && s.seri >= 3)));
 
 type Step = { id: string; ad: (s: GameState) => string; tamam: (s: GameState) => boolean; haber: (s: GameState) => string; yazar: string };
 
@@ -31,7 +31,7 @@ export const UCC_STEPS: Step[] = [
   },
   {
     id: 'kapida',
-    ad: () => L("DWCS'ye hazır ol: şampiyon ol, ya da ilk 3'te popülerlik 25+, ya da ilk 5'te 3 maçlık seri, ya da 5 maç yenilmeden git"),
+    ad: () => L("DWCS'ye hazır ol: şampiyon ol, ya da ilk 3'te popülerlik 20+, ya da ilk 5'te 2 maçlık seri, ya da ilk 8'de 3 maçlık seri, ya da 4 maç yenilmeden git"),
     tamam: dwcsReady,
     haber: () => L("📞 Menajerin aradı: \"UCC ile görüşüyoruz. Sözleşme kapıda; bir iyi performans daha!\""),
     yazar: L("MMA Kulis"),

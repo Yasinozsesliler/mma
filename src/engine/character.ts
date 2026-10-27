@@ -127,6 +127,13 @@ export function statAverage(st: Stats) {
 }
 
 /** Yaşa göre gelişim çarpanı: gençler hızlı gelişir, 33 sonrası zor. */
+/** Yaşın getirdiği tavan: 33'ten sonra hız/çene/kondisyon, 35'ten sonra vuruş/güreş/yer her yıl biraz daha aşağıda. IQ yaşlanmaz. */
+export function ageCap(yas: number, k: StatKey) {
+  if (k === 'iq') return 99;
+  if (k === 'hiz' || k === 'cene' || k === 'kondisyon') return yas <= 33 ? 99 : Math.max(40, 99 - 4 * (yas - 33));
+  return yas <= 35 ? 99 : Math.max(45, 99 - 2 * (yas - 35));
+}
+
 export function growthMultiplier(yas: number) {
   if (yas <= 22) return 1.3;
   if (yas <= 26) return 1.15;
@@ -160,15 +167,27 @@ export function advanceWeeks(s: GameState, weeks: number): string[] {
     s.fighter.yas++;
     notes.push(L("🎂 {0} yaşına girdin.", [s.fighter.yas]));
     if (s.fighter.yas >= 34) {
+      // Yaş: 34-35 hafif, 36-38 belirgin, 39+ sert düşüş. Rakipler zirve gücüne göre seçildiği için hissedilir.
       const st = s.fighter.stats;
-      const d = s.fighter.yas >= 38 ? 2 : 1;
+      const y = s.fighter.yas;
+      const d = y >= 39 ? 3 : y >= 36 ? 2 : 1;
       addStat(st, 'hiz', -d);
       addStat(st, 'cene', -d);
-      addStat(st, 'kondisyon', -Math.ceil(d / 2));
+      addStat(st, 'kondisyon', -d);
+      if (y >= 36) addStat(st, 'vurus', -(d - 1));
+      if (y >= 39) addStat(st, 'gures', -1);
       addStat(st, 'iq', 1);
-      notes.push(L("Yıllar hissettiriyor: hız ve çene biraz düştü, ama tecrübe arttı."));
+      notes.push(
+        y >= 39
+          ? L("Yıllar ağır basıyor: hız, çene ve kondisyon belirgin şekilde düştü. Veda maçını düşünme zamanı olabilir.")
+          : y >= 36
+            ? L("Vücut eskisi gibi toparlanmıyor: hız, çene, kondisyon ve vuruş düştü, ama tecrübe arttı.")
+            : L("Yıllar hissettiriyor: hız ve çene biraz düştü, ama tecrübe arttı."),
+      );
     }
   }
+  // Kamp ve olaylar istatistiği yaş tavanının üstüne çıkaramaz.
+  STAT_KEYS.forEach((k) => (s.fighter.stats[k] = Math.min(s.fighter.stats[k], ageCap(s.fighter.yas, k))));
   s.sakatliklar = s.sakatliklar
     .map((i) => ({ ...i, hafta: i.hafta - weeks }))
     .filter((i) => {

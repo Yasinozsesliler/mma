@@ -6593,4 +6593,11 @@ export const ES: Record<string, string> = {
   "{0} kilidini sonuna kadar sıktın, {1} son anda kurtuldu.": "Apretaste la {0} al máximo, {1} escapó en el último segundo.",
   "MAÇIN EN İYİ ANLARI": "MEJORES MOMENTOS",
   "{0} yeni mesaj": "{0} mensajes nuevos",
+  "Yıllar ağır basıyor: hız, çene ve kondisyon belirgin şekilde düştü. Veda maçını düşünme zamanı olabilir.": "Los años pesan: velocidad, mentón y cardio bajaron notablemente. Quizá sea hora de pensar en la pelea de despedida.",
+  "Vücut eskisi gibi toparlanmıyor: hız, çene, kondisyon ve vuruş düştü, ama tecrübe arttı.": "El cuerpo ya no se recupera como antes: bajaron velocidad, mentón, cardio y golpeo, pero creció la experiencia.",
+  "Puan kazanmak için kamp yap ve dövüş. Galibiyet ve bitiriş daha çok kazandırır. Maliyet: 60’a kadar 1, 78’e kadar 2, 90’a kadar 3, sonrası 4 puan.": "Gana puntos haciendo campamentos y peleando. Las victorias y finalizaciones dan más. Coste: 1 punto hasta 60, 2 hasta 78, 3 hasta 90 y luego 4.",
+  "Yaş sınırı: 33’ten sonra hız, çene ve kondisyon; 35’ten sonra vuruş, güreş ve yer her yıl biraz daha aşağıda tavan yapar. IQ yaşlanmaz.": "Límite de edad: desde los 33, velocidad, mentón y cardio; desde los 35, golpeo, lucha y suelo tienen un tope algo más bajo cada año. El IQ no envejece.",
+  "DWCS'ye hazır ol: şampiyon ol, ya da ilk 3'te popülerlik 20+, ya da ilk 5'te 2 maçlık seri, ya da ilk 8'de 3 maçlık seri, ya da 4 maç yenilmeden git": "Prepárate para el DWCS: sé campeón, o top 3 con 20+ de popularidad, o top 5 con racha de 2, o top 8 con racha de 3, o 4 peleas invicto",
+  "Kazandın ama Dean tam ikna olmadı: \"Bir galibiyet daha getir, kapı açık.\" Bir sonraki galibiyetin UCC kontratını getirecek.": "Ganaste, pero Dean no está del todo convencido: \"Tráeme una victoria más, la puerta está abierta.\" Tu próxima victoria traerá el contrato de UCC.",
+  "🎟️ Dean Wyatt sözünü tuttu: \"{0}, istediğim galibiyeti getirdin. UCC’ye hoş geldin!\"": "🎟️ Dean Wyatt cumplió su palabra: \"{0}, me trajiste la victoria que quería. ¡Bienvenido a UCC!\"",
 };

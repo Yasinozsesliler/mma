@@ -637,14 +637,16 @@ export function afterPostFight(s: GameState) {
     }
   } else if (org === 'dwcs') {
     s.contract = null;
-    if (won && chance(finishMethod ? 0.85 : dwcsIkna ? 0.6 : 0.4)) {
+    if (won && chance(finishMethod ? 0.85 : dwcsIkna ? 0.7 : 0.55)) {
+      s.dwcsSoz = undefined;
       openOffers(s, 'ufcGiris', tL("🎟️ Dean Wyatt ayağa kalktı: \"{0}, UCC’ye hoş geldin!\"", [s.fighter.soyad]));
     } else {
       openOffers(
         s,
         'serbest',
-        won ? tL("Kazandın ama Dean etkilenmedi: \"Biraz daha gelişsin.\" Diğer kapılar açık.") : tL("DWCS kötü geçti. UCC kapısı şimdilik kapandı."),
+        won ? tL("Kazandın ama Dean tam ikna olmadı: \"Bir galibiyet daha getir, kapı açık.\" Bir sonraki galibiyetin UCC kontratını getirecek.") : tL("DWCS kötü geçti. UCC kapısı şimdilik kapandı."),
       );
+      if (won) s.dwcsSoz = true;
     }
     return;
   } else if (s.gp && !s.gp.bitti) {
@@ -675,8 +677,14 @@ export function afterPostFight(s: GameState) {
       openOffers(s, 'yenileme', tL("📞 {0} maçtır yenilmiyorsun. Büyük organizasyonlar kontratını satın almaya hazır!", [s.seri]));
       return;
     }
+    // DWCS'de söz verildiyse büyük organizasyondaki ilk galibiyet UCC kapısını açar.
+    if (s.stage === 'buyuk' && won && s.dwcsSoz) {
+      s.dwcsSoz = undefined;
+      openOffers(s, 'ufcGiris', tL("🎟️ Dean Wyatt sözünü tuttu: \"{0}, istediğim galibiyeti getirdin. UCC’ye hoş geldin!\"", [s.fighter.soyad]));
+      return;
+    }
     // Dean Wyatt iyi bir galibiyetten sonra arayabilir (kontrat ortasında da); yenilmez seride kesin arar.
-    if (s.stage === 'buyuk' && won && dwcsReady(s) && s.contract && (unbeatenRun(s) || chance(0.35)) && s.gecmis.length - (s.erkenTeklif ?? -99) >= 3) {
+    if (s.stage === 'buyuk' && won && dwcsReady(s) && s.contract && (unbeatenRun(s) || chance(0.55)) && s.gecmis.length - (s.erkenTeklif ?? -99) >= 3) {
       s.erkenTeklif = s.gecmis.length;
       openOffers(s, 'dwcsDavet', tL("📞 Telefon çaldı. Arayan: Dean Wyatt. “Seni izliyorum evlat. Challenger Series’e gel, kendini göster.”"));
       return;

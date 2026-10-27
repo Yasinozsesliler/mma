@@ -6581,4 +6581,11 @@ export const EN: Record<string, string> = {
   "{0} kilidini sonuna kadar sıktın, {1} son anda kurtuldu.": "You squeezed the {0} to the limit, {1} escaped at the last second.",
   "MAÇIN EN İYİ ANLARI": "FIGHT HIGHLIGHTS",
   "{0} yeni mesaj": "{0} new messages",
+  "Yıllar ağır basıyor: hız, çene ve kondisyon belirgin şekilde düştü. Veda maçını düşünme zamanı olabilir.": "The years weigh heavy: speed, chin and cardio dropped noticeably. Maybe it's time to think about a farewell fight.",
+  "Vücut eskisi gibi toparlanmıyor: hız, çene, kondisyon ve vuruş düştü, ama tecrübe arttı.": "The body doesn't recover like it used to: speed, chin, cardio and striking dropped, but experience grew.",
+  "Puan kazanmak için kamp yap ve dövüş. Galibiyet ve bitiriş daha çok kazandırır. Maliyet: 60’a kadar 1, 78’e kadar 2, 90’a kadar 3, sonrası 4 puan.": "Earn points by doing camps and fighting. Wins and finishes earn more. Cost: 1 point up to 60, 2 up to 78, 3 up to 90, then 4.",
+  "Yaş sınırı: 33’ten sonra hız, çene ve kondisyon; 35’ten sonra vuruş, güreş ve yer her yıl biraz daha aşağıda tavan yapar. IQ yaşlanmaz.": "Age limit: after 33, speed, chin and cardio; after 35, striking, wrestling and ground cap a little lower every year. IQ doesn't age.",
+  "DWCS'ye hazır ol: şampiyon ol, ya da ilk 3'te popülerlik 20+, ya da ilk 5'te 2 maçlık seri, ya da ilk 8'de 3 maçlık seri, ya da 4 maç yenilmeden git": "Get DWCS-ready: be champion, or top 3 with 20+ popularity, or top 5 on a 2-fight streak, or top 8 on a 3-fight streak, or go 4 fights unbeaten",
+  "Kazandın ama Dean tam ikna olmadı: \"Bir galibiyet daha getir, kapı açık.\" Bir sonraki galibiyetin UCC kontratını getirecek.": "You won, but Dean isn't fully convinced: \"Bring me one more win, the door is open.\" Your next win will bring the UCC contract.",
+  "🎟️ Dean Wyatt sözünü tuttu: \"{0}, istediğim galibiyeti getirdin. UCC’ye hoş geldin!\"": "🎟️ Dean Wyatt kept his word: \"{0}, you brought me the win I wanted. Welcome to the UCC!\"",
 };

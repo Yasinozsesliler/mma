@@ -127,6 +127,8 @@ export function CreateScreen({
       gecmis: heritage?.gecmis ?? rnd(Object.keys(BACKGROUNDS) as Background[]),
       gorunum: lookFor({ id: `oyuncu-${Date.now()}`, uyruk: COUNTRIES[inp.uyruk]?.ad ?? inp.uyruk, kadin: !!inp.kadin }),
     };
+    // Genç karaktere rastgele gri saç verilmez (son renk gri); oyuncu isterse elle seçebilir.
+    if (x.gorunum && x.gorunum.sacRenk >= HAIR_COLORS.length - 1) x.gorunum.sacRenk = x.gorunum.sacRenk % (HAIR_COLORS.length - 1);
     x.hikaye = generateBackstory(x);
     onDone(x, rollStartingStats(x));
   };
@@ -582,7 +584,7 @@ function LookPicker({ look, onChange }: { look: Appearance; onChange: (g: Appear
             onChange({
               ten: Math.floor(Math.random() * SKIN_TONES.length),
               sac: rnd(HAIR_STYLES).key,
-              sacRenk: Math.floor(Math.random() * HAIR_COLORS.length),
+              sacRenk: Math.floor(Math.random() * (HAIR_COLORS.length - 1)),
               goz: Math.floor(Math.random() * EYE_COLORS.length),
               sakal: rnd(BEARDS).key,
               yara: Math.random() < 0.25,
