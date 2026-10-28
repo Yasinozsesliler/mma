@@ -27,6 +27,8 @@ export interface PhotoExtra {
   emoji?: string;
   ad?: string;
   marka?: string;
+  /** Karşıdaki dövüşçü oyuncunun kendisi (başka bir dövüşçünün afiş ya da zafer fotoğrafında) */
+  rakipOyuncu?: boolean;
 }
 
 export interface PhotoPost {
@@ -43,6 +45,8 @@ export interface PhotoPost {
   delta: number;
   look?: Appearance;
   ek?: PhotoExtra;
+  /** Başka bir dövüşçünün paylaşımıysa onun kimliği (şort rengi buna göre) */
+  sahip?: string;
 }
 
 export interface PhotoState {
@@ -158,7 +162,7 @@ export function photoPreview(s: GameState, k: PhotoKind, pro: boolean, caption: 
 
 const repeats = (s: GameState, k: PhotoKind) => k !== 'afis' && (s.foto?.liste ?? []).slice(0, 3).some((p) => p.tur === k);
 
-const COMMENTS: Record<PhotoKind, string[]> = {
+export const COMMENTS: Record<PhotoKind, string[]> = {
   antrenman: [L("Bu tempo korkutucu 🔥"), L("Kampın en iyi hâli bu"), L("Rakip bunu görünce uyuyamaz 😅"), L("Disiplin 💯"), L("Hangi saatte çalışıyorsun, ben de geleyim!")],
   zafer: [L("Şampiyon gibi dövüştün 👑"), L("Bu gece senindi!"), L("Tekrar tekrar izledim o anı 🔁"), L("Gurur duyuyoruz ❤️"), L("Sıradaki kim? 👀")],
   kemer: [L("O kemer sana çok yakışıyor 🏆"), L("Kral kim? Belli 👑"), L("Kimse elinden alamaz"), L("Tarih yazıyorsun"), L("Kemeri memlekete getir!")],
@@ -169,7 +173,7 @@ const COMMENTS: Record<PhotoKind, string[]> = {
   taraftar: [L("Ben de oradaydım! 🙌"), L("Çok samimisin, bu yüzden seviyoruz"), L("Bir gün benimle de fotoğraf çektir 🙏"), L("Taraftarını unutmayan dövüşçü ❤️"), L("Gelecek maçta tribündeyiz")],
   sponsor: [L("Reklam ama tamam 😄"), L("Bu üründen ben de aldım"), L("Para kazanmak da sporun parçası"), L("İndirim kodu var mı?"), L("Sponsorlar sırada bekliyor 👀")],
 };
-const FAN_NAMES = [L("Kafes Aşığı"), L("MMA Ultras"), L("Tribün Kaplanı"), L("Nakavt Avcısı"), L("Yer Oyunu Sever"), L("Sabah Koşucusu"), L("Kemer Peşinde")];
+export const FAN_NAMES = [L("Kafes Aşığı"), L("MMA Ultras"), L("Tribün Kaplanı"), L("Nakavt Avcısı"), L("Yer Oyunu Sever"), L("Sabah Koşucusu"), L("Kemer Peşinde")];
 const RIVAL_LINES = [L("Kafeste görüşürüz 👊"), L("Afişte güzel çıkmışsın, maç gecesi çıkamayacaksın 😏"), L("Hazırım."), L("Saygılar, ama bu gece benim.")];
 
 /** Fotoğrafın sahne bilgisi (önizlemede evcil hayvan sabit, paylaşımda rastgele). */

@@ -13,9 +13,20 @@ import { C, F } from './theme';
 import { CarArt, HouseArt } from './VisualArt';
 import { Icon, type IconName } from './components';
 
-type Props = { p: Pick<PhotoPost, 'tur' | 'filtre' | 'look' | 'ek' | 'viral'> & { id?: string }; size: number };
+type Props = { p: Pick<PhotoPost, 'tur' | 'filtre' | 'look' | 'ek' | 'viral' | 'sahip'> & { id?: string }; size: number };
 
 const BLUE: Kit = { shorts: '#1f4fbf', trim: '#ffffff', glove: '#1740a8' };
+/** Başka dövüşçülerin fotoğraflarında kimliğe bağlı sabit şort rengi (oyuncunun kırmızısı hariç). */
+const NPC_KITS: Kit[] = [
+  BLUE,
+  { shorts: '#1d1f24', trim: '#f2c14e', glove: '#2a2d33' },
+  { shorts: '#0f7a4a', trim: '#ffffff', glove: '#0b5c38' },
+  { shorts: '#6b2fb3', trim: '#ffffff', glove: '#4e2185' },
+  { shorts: '#e8e8e8', trim: '#1d1f24', glove: '#cfcfcf' },
+  { shorts: '#c77d12', trim: '#1d1f24', glove: '#9a600c' },
+  { shorts: '#0d8a8a', trim: '#ffffff', glove: '#0a6a6a' },
+];
+const npcKit = (id: string) => NPC_KITS[[...id].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7) % NPC_KITS.length];
 const VB_H = 125;
 
 /** Dövüşçüyü sahneye koyar: x merkez, ayak hizası yerde (y=116), ölçek. */
@@ -49,7 +60,10 @@ function Crowd({ y, rows = 3, seed = 1, tint = '#000' }: { y: number; rows?: num
 function Scene({ p }: { p: Props['p'] }) {
   const uid = useId().replace(/[^a-zA-Z0-9]/g, '');
   const id = (n: string) => `${n}${uid}`;
-  const kit = useMemo(() => playerKit() as Kit, []);
+  const sahip = p.sahip;
+  const kit = useMemo(() => (sahip ? npcKit(sahip) : (playerKit() as Kit)), [sahip]);
+  // Afişte karşı taraf: oyuncu ise kendi şortu, değilse mavi
+  const rakipKit = useMemo(() => (p.ek?.rakipOyuncu ? (playerKit() as Kit) : sahip && npcKit(sahip) === BLUE ? NPC_KITS[1] : BLUE), [p.ek?.rakipOyuncu, sahip]);
   const ek = p.ek ?? {};
   const look = p.look;
   const spot = (cx: number, color = '#ffffff') => <Polygon points={`${cx - 3},0 ${cx + 3},0 ${cx + 22},${VB_H} ${cx - 22},${VB_H}`} fill={color} opacity={0.07} />;
@@ -190,7 +204,7 @@ function Scene({ p }: { p: Props['p'] }) {
           {spot(75)}
           <Rect x={0} y={106} width={100} height={19} fill="#000" opacity={0.5} />
           <Fighter pose={POSES.stance} x={27} s={0.66} look={look} kit={kit} />
-          <Fighter pose={POSES.stance} x={73} s={0.66} look={ek.rakipLook} kit={BLUE} flip />
+          <Fighter pose={POSES.stance} x={73} s={0.66} look={ek.rakipLook} kit={rakipKit} flip />
         </Svg>
       );
     }

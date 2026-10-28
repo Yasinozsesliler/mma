@@ -10,6 +10,7 @@ import { chance, clamp, fill, pick, randInt, uid } from './rng';
 import type { GameState, Opponent, Post } from './types';
 import { followers, npcFollowers } from './fame';
 import { dmCampStart, dmTick } from './dm';
+import { npcPhoto, npcPhotoPost, vsPlayer } from './feed';
 
 const MAX_POSTS = 40;
 
@@ -136,14 +137,18 @@ export function socialCampStart(s: GameState) {
   const vars = { p: s.fighter.soyad, ph: playerHandle(s), org: ORGS[currentOrg(s)].kisa, hafta: s.pending.kamp?.hafta ?? 8 };
   addPost(s, { yazar: pick(JOURNALISTS).split(' (')[0], kullanici: '@kafespostasi', tur: 'hikaye', metin: storyFor(s, o), begeni: likes(s, 0.8) });
   const trashy = [L("Trash talk ustası"), L("Kibirli"), L("Öfkeli"), L("Şovmen")].includes(o.kisilik);
+  const metin = fill(pick(trashy ? TRASH_PRE : RESPECT_PRE), vars);
+  // Rakip maç afişini paylaşır: sen ve o, aynı karede.
+  const foto = npcPhotoPost(s, o, 'afis', metin, vsPlayer(s));
   addPost(s, {
     yazar: `${o.ad} ${o.soyad}`,
     kullanici: oppHandle(o),
     tur: 'dovuscu',
-    metin: fill(pick(trashy ? TRASH_PRE : RESPECT_PRE), vars),
+    metin,
     hedefId: o.id,
     renk: trashy ? '#e63946' : '#3a86ff',
-    begeni: likes(s, trashy ? 0.7 : 0.3),
+    begeni: foto.begeni,
+    foto,
   });
 }
 
@@ -153,14 +158,18 @@ export function socialAfterFight(s: GameState, o: Opponent, won: boolean, draw: 
   const sonuc = draw ? L("berabere kaldı") : won ? L("{0} ile kazandı", [yontem]) : L("{0} ile kaybetti", [yontem]);
   addPost(s, { yazar: L("MMA Türkiye"), kullanici: '@mmaturkiye', tur: 'medya', metin: L("SON DAKİKA: {0}, {1} {2} karşısında {3}.", [fullName(s.fighter), o.ad, o.soyad, sonuc]), begeni: likes(s, 0.6) });
   const kotu = [L("Trash talk ustası"), L("Kibirli"), L("Öfkeli")].includes(o.kisilik);
-  addPost(s, {
-    yazar: `${o.ad} ${o.soyad}`,
-    kullanici: oppHandle(o),
-    tur: 'dovuscu',
-    metin: fill(pick(won ? (kotu ? OPP_LOST_BAD : OPP_LOST_GOOD) : OPP_WON), vars),
-    hedefId: o.id,
-    renk: won && kotu ? '#e63946' : '#3a86ff',
-  });
+  const metin = fill(pick(won ? (kotu ? OPP_LOST_BAD : OPP_LOST_GOOD) : OPP_WON), vars);
+  // Seni yenen rakip zafer fotoğrafını paylaşır.
+  if (!won && !draw) npcPhoto(s, o, 'zafer', metin, vsPlayer(s, { yontem }));
+  else
+    addPost(s, {
+      yazar: `${o.ad} ${o.soyad}`,
+      kullanici: oppHandle(o),
+      tur: 'dovuscu',
+      metin,
+      hedefId: o.id,
+      renk: won && kotu ? '#e63946' : '#3a86ff',
+    });
   for (let i = randInt(1, 2); i > 0; i--)
     addPost(s, { yazar: pick([L("Kafes Aşığı"), L("Nakavt Nuri"), L("MMA Ultras"), L("Tribün Kaplanı"), L("Octagon Oğuz"), L("Ringside Rüya")]), kullanici: `@taraftar${randInt(10, 999)}`, tur: 'taraftar', metin: fill(pick(won ? FAN_WIN : FAN_LOSS), vars) });
   divNotes.forEach((n) => addPost(s, { yazar: L("{0} Resmi", [ORGS[currentOrg(s)].kisa]), kullanici: `@${slug(ORGS[currentOrg(s)].kisa)}`, tur: 'organizasyon', metin: n.replace(/^\S+\s/, '') }));
@@ -419,16 +428,6 @@ const COACH = [
   L("{hoca}: “{p}’ın en büyük silahı kafası. Gerisi detay.”"),
   L("{hoca}: “Bu salondan bir şampiyon çıkacak. Yazın bir kenara.”"),
 ];
-const FIGHTER_LIFE = [
-  L("Memleketime döndüm, mahalledeki çocuklarla antrenman yaptık. ❤️"),
-  L("Yeni köpeğimle tanışın: adı Nakavt. 🐶"),
-  L("Bugün annemin yemekleri. Diyet yarın. 🍲"),
-  L("Kızımın okul gösterisindeydim. En zor maçım buydu 😅"),
-  L("Tatil bitti, kampa dönüş. Batarya %100. 🔋"),
-  L("Yeni tattoo! Anlamını tahmin edin 👇"),
-  L("Kitap önerisi: “Savaş Sanatı”. Her dövüşçü okumalı. 📖"),
-  L("Bugün bir çocuk hastanesini ziyaret ettik. Asıl kahramanlar onlar. 🙏"),
-];
 const FIGHTER_CALLOUT = [
   L("{p}, sıralamada fazla hızlı yükseliyorsun. Seni yavaşlatmaya geliyorum."),
   L("Herkes {p}’ı konuşuyor. Ben de konuşayım: kafeste görüşürüz."),
@@ -490,8 +489,9 @@ export function socialTick(s: GameState, weeks = 1) {
     () => addPost(s, { yazar: L("MMA Kulis"), kullanici: '@mmakulis', tur: 'medya', metin: fresh(s, RUMOR, v) }),
     () => addPost(s, { yazar: pick(JOURNALISTS).split(' (')[0], kullanici: '@kafespostasi', tur: 'medya', metin: fresh(s, POLL, v), begeni: likes(s, 0.5) }),
     () => addPost(s, { yazar: L("Kafes Analiz"), kullanici: '@kafesanaliz', tur: 'medya', metin: fresh(s, ANALIZ, v) }),
-    () => a && addPost(s, { ...handleName(a), tur: 'dovuscu', metin: fresh(s, TRAINING, v), renk: '#f2c14e' }),
-    () => champ && addPost(s, { ...handleName(champ), tur: 'dovuscu', metin: fresh(s, CHAMP_FLEX, v), renk: '#f2c14e', hedefId: s.rakipler.some((r) => r.id === champ.id) ? champ.id : undefined }),
+    // Dövüşçülerin kendi paylaşımları fotoğraflıdır (ana sayfada Instagram gibi görünür)
+    () => a && npcPhoto(s, a, 'antrenman', fresh(s, TRAINING, v)),
+    () => champ && npcPhoto(s, champ, 'kemer', fresh(s, CHAMP_FLEX, v)),
     () => addPost(s, { yazar: pick([L("Troll Tayfun"), L("Keyboard Kaan"), L("Hater Hakan"), L("Anonim Arif"), L("Yorumcu Yılmaz")]), kullanici: `@anonim${randInt(100, 9999)}`, tur: 'taraftar', metin: fresh(s, TROLL, v), begeni: likes(s, 0.1) }),
     () => addPost(s, { yazar: pick([L("Çizer Ceren"), L("Fan Fatih"), L("Maç Anası Melek"), L("Tribün Tuna"), L("Kafes Kızı Kübra")]), kullanici: `@fan${randInt(10, 999)}`, tur: 'taraftar', metin: fresh(s, FAN_ART, v) }),
     () => addPost(s, { yazar: v.brand, kullanici: `@${slug(v.brand)}`, tur: 'organizasyon', metin: fresh(s, SPONSOR, v) }),
@@ -501,9 +501,10 @@ export function socialTick(s: GameState, weeks = 1) {
     () => s.stage !== 'amator' && addPost(s, { yazar: ORGS[currentOrg(s)].ad, kullanici: `@${slug(ORGS[currentOrg(s)].kisa)}`, tur: 'organizasyon', metin: fresh(s, ORG_NEWS, v) }),
     () => addPost(s, { yazar: s.takim.antrenor, kullanici: `@${slug(s.takim.antrenor).slice(0, 14)}coach`, tur: 'dovuscu', metin: fresh(s, COACH, v), renk: '#3ecf7a' }),
     () => a && b && npcFeud(s),
-    () => a && addPost(s, { ...handleName(a), tur: 'dovuscu', metin: fresh(s, FIGHTER_LIFE, v), renk: '#f2c14e', begeni: npcLikes(s, a) }),
-    () => b && addPost(s, { ...handleName(b), tur: 'dovuscu', metin: fresh(s, FIGHTER_THANKS, v), renk: '#f2c14e', begeni: npcLikes(s, b) }),
+    () => a && npcPhoto(s, a, pick(['aile', 'evcil', 'luks'] as const)),
+    () => b && npcPhoto(s, b, 'taraftar', fresh(s, FIGHTER_THANKS, v)),
     () => a && s.stage !== 'amator' && addPost(s, { ...handleName(a), tur: 'dovuscu', metin: fresh(s, FIGHTER_CALLOUT, v), renk: '#e63946', hedefId: a.id, begeni: npcLikes(s, a) }),
+    () => b && npcPhoto(s, b, pick(['antrenman', 'sponsor'] as const)),
   ];
   for (let i = 0; i < n; i++) pick(gens)();
 }

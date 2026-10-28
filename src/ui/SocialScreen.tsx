@@ -6,12 +6,13 @@ import { BioEditor, Highlights, IgTopBar, PhotoCard, PhotoComposer, ProfileGrid,
 import type { PhotoKind } from '../engine/gram';
 import { dmUnread } from '../engine/dm';
 import { DmChat, DmInbox, markRead } from './SocialDm';
+import { FeedHome } from './SocialFeed';
 import { useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { IDEA_KATS, postIdeas, type IdeaKat } from '../engine/postIdeas';
 import { playerPost, REPLY_TONES, replyToPost } from '../engine/social';
 import type { GameState, Post } from '../engine/types';
-import { Button, Icon, P, Screen, type IconName } from './components';
+import { Icon, P, Screen, type IconName } from './components';
 import type { Act } from './GameScreens';
 import { FighterAvatar } from './FighterAvatar';
 import { C, F, R } from './theme';
@@ -194,29 +195,38 @@ export function SocialScreen({ s, act }: { s: GameState; act: Act }) {
   const [edit, setEdit] = useState(false);
   const [hl, setHl] = useState<PhotoKind | null>(null);
   const [dm, setDm] = useState<null | 'list' | string>(null);
+  // Instagram gibi: açılışta ana sayfa (akış), alttaki çubukla profile geçilir
+  const [view, setView] = useState<'ana' | 'profil'>('ana');
   const takipci = followers(s);
   const done = (m: string) => {
     setMsg(m);
     setCompose(null);
     setTab('grid');
     setHl(null);
+    setView('profil');
   };
+  const toCareer = () =>
+    act((x) => {
+      // Sonuçlanmış kriz bu ekranda görüldü: çıkarken kapanır, ana sayfada tekrar çıkmaz
+      closeCrisis(x);
+      x.phase = 'hub';
+    });
+  const navBtn = (on: boolean, onPress: () => void, node: React.ReactNode, label: string) => (
+    <Pressable onPress={onPress} hitSlop={6} style={so.navBtn} accessibilityLabel={label}>
+      {node}
+      {on ? <View style={so.navDot} /> : null}
+    </Pressable>
+  );
   const posts = (s.sosyal ?? []).filter((p) => (tab === 'etiket' ? p.tur !== 'oyuncu' : true));
   return (
     <Screen
       footer={
-        <Button
-          label={L("Kariyere dön")}
-          icon="arrow-left"
-          tone="ghost"
-          onPress={() =>
-            act((x) => {
-              // Sonuçlanmış kriz bu ekranda görüldü: çıkarken kapanır, ana sayfada tekrar çıkmaz
-              closeCrisis(x);
-              x.phase = 'hub';
-            })
-          }
-        />
+        <View style={so.nav}>
+          {navBtn(false, toCareer, <Icon name="arrow-left" size={26} color={C.text} />, L("Kariyere dön"))}
+          {navBtn(view === 'ana' && !dm, () => (setDm(null), setView('ana')), <Icon name={view === 'ana' && !dm ? 'home-variant' : 'home-variant-outline'} size={28} color={C.text} />, L("Ana sayfa"))}
+          {navBtn(false, () => setCompose('foto'), <Icon name="plus-box-outline" size={28} color={C.text} />, L("Yeni gönderi"))}
+          {navBtn(view === 'profil' && !dm, () => (setDm(null), setView('profil')), <View style={[so.navAv, view === 'profil' && !dm && { borderColor: C.text }]}><FighterAvatar look={s.fighter.gorunum} size={26} /></View>, L("Profil"))}
+        </View>
       }
     >
       {dm === 'list' ? (
@@ -230,6 +240,17 @@ export function SocialScreen({ s, act }: { s: GameState; act: Act }) {
         />
       ) : dm ? (
         <DmChat s={s} act={act} id={dm} onBack={() => setDm('list')} />
+      ) : view === 'ana' ? (
+        <>
+          <CrisisCard s={s} act={act} />
+          {msg ? (
+            <Pressable onPress={() => setMsg(null)} style={so.toast}>
+              <Icon name="check-circle" size={16} color={C.gold} />
+              <Text style={so.toastText}>{msg}</Text>
+            </Pressable>
+          ) : null}
+          <FeedHome s={s} act={act} onMsg={setMsg} onNew={() => setCompose('foto')} onDm={() => setDm('list')} unread={dmUnread(s)} />
+        </>
       ) : (
         <>
           <CrisisCard s={s} act={act} />
@@ -336,6 +357,10 @@ const so = StyleSheet.create({
   modeOn: { backgroundColor: C.red, borderColor: C.red },
   toast: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#1a1408', borderWidth: 1, borderColor: C.goldDeep, borderRadius: 8, padding: 10, marginTop: 10 },
   toastText: { flex: 1, color: C.text, fontFamily: F.semi, fontSize: 13, lineHeight: 18 },
+  nav: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around', paddingVertical: 4 },
+  navBtn: { alignItems: 'center', justifyContent: 'center', minWidth: 48, minHeight: 40 },
+  navDot: { width: 4, height: 4, borderRadius: 2, backgroundColor: C.red, marginTop: 3 },
+  navAv: { borderRadius: 16, borderWidth: 2, borderColor: 'transparent', padding: 1 },
   igTabs: { flexDirection: 'row', borderTopWidth: 1, borderTopColor: C.border, marginTop: 12, marginHorizontal: -16 },
   igTab: { flex: 1, alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1.5, borderBottomColor: 'transparent' },
   igTabOn: { borderBottomColor: C.text },

@@ -138,6 +138,8 @@ export interface Post {
   yanitlar?: { yazar: string; metin: string }[];
   /** Fotoğraflı paylaşım (gram.ts) */
   foto?: import('./gram').PhotoPost;
+  /** Oyuncu beğendi (ana sayfada kalp) */
+  begendin?: boolean;
 }
 
 export interface Division {
@@ -757,6 +759,8 @@ export interface GameState {
   zirveGuc?: number;
   /** İlan edilen veda maçı (35 yaş sonrası); oynanınca emeklilik gelir. */
   veda?: import('./farewell').Farewell;
+  /** Bu hafta izlenen hikâyeler (sosyal medya ana sayfası) */
+  hikayeGorulen?: { hafta: number; ids: string[] };
   /** Mesaj kutusu (dm.ts) */
   dm?: import('./dm').DmState;
   duyurulan?: string[];

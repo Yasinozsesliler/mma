@@ -19,7 +19,7 @@ import { C, F, R } from './theme';
 const ago = (s: GameState, h: number) => (s.hafta - h <= 0 ? L("bu hafta") : L("{0} hf önce", [s.hafta - h]));
 
 /** Kapsayıcının genişliğini ölçer (fotoğraflar kare ve ekrana sığar; geniş ekranda 520 ile sınırlı). */
-function Measure({ children, max = 520 }: { children: (w: number) => ReactNode; max?: number }) {
+export function Measure({ children, max = 520 }: { children: (w: number) => ReactNode; max?: number }) {
   const [w, setW] = useState(0);
   return <View onLayout={(e: LayoutChangeEvent) => setW(Math.min(max, Math.floor(e.nativeEvent.layout.width)))}>{w > 0 ? children(w) : null}</View>;
 }
@@ -199,8 +199,8 @@ export function PhotoComposer({ s, act, onMsg }: { s: GameState; act: Act; onMsg
   );
 }
 
-const VERIFIED = 100_000;
-const BLUE_TICK = '#3897f0';
+export const VERIFIED = 100_000;
+export const BLUE_TICK = '#3897f0';
 
 /** Instagram üst çubuğu: kullanıcı adı, mavi tik (100B takipçiden sonra), yeni gönderi ve sıralama. */
 export function IgTopBar({ s, takipci, onNew, onBoard, onDm, unread }: { s: GameState; takipci: number; onNew: () => void; onBoard: () => void; onDm: () => void; unread: number }) {
