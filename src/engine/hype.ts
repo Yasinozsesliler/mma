@@ -1,17 +1,18 @@
 // Büyük maçlarda hype ve PPV: maç öncesi yapılan her şey (basın düellosu, face-off, giriş şovu, kriz, belgesel)
 // hype'ı yükseltir; dövüşten sonra hype ve takipçiye göre PPV satışı hesaplanır, oyuncu pay alır.
 import { isComebackFight } from './comeback';
+import { isFarewellFight } from './farewell';
 import { L, LOC } from '../i18n';
 import { currentOrg } from './character';
 import { diffOf } from './challenges';
 import { followers } from './fame';
 import type { GameState, Opponent } from './types';
 
-/** Büyük maç mı? (unvan, UCC ilk 5, memleket, rekabet/ezeli rakip, Grand Prix finali) */
+/** Büyük maç mı? (unvan, UCC ilk 5, memleket, rekabet/ezeli rakip, Grand Prix finali, dönüş ve veda maçı) */
 export function isBigFight(s: GameState, o: Opponent) {
   if (!['buyuk', 'ufc'].includes(s.stage)) return false;
   const gpFinal = !!s.gp && !s.gp.bitti && s.gp.turlar.length === 2;
-  return o.champion || s.sampiyon || (currentOrg(s) === 'ufc' && s.rank != null && s.rank <= 5) || !!o.memleket || o.rivalry >= 2 || s.ezeli?.id === o.id || gpFinal || isComebackFight(s);
+  return o.champion || s.sampiyon || (currentOrg(s) === 'ufc' && s.rank != null && s.rank <= 5) || !!o.memleket || o.rivalry >= 2 || s.ezeli?.id === o.id || gpFinal || isComebackFight(s) || isFarewellFight(s);
 }
 
 /** Kamp başında hype tabanı (büyük maç değilse hype yok). */

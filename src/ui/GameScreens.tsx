@@ -79,6 +79,8 @@ import { dmUnread } from '../engine/dm';
 import { canActivity, canFoundClub, members } from '../engine/fanClub';
 import { brainEpilogue } from '../engine/brain';
 import { comebackOffer } from '../engine/comeback';
+import { isFarewellFight } from '../engine/farewell';
+import { FarewellCard, FarewellSummary } from './FarewellCard';
 import { declinePodcast } from '../engine/podcast';
 import { unclaimedMilestones } from '../engine/cards';
 import { crisisTitle } from '../engine/crisis';
@@ -285,15 +287,16 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
           <KafesEviInvite s={s} act={act} />
           <BrainCard s={s} act={act} />
           <FightCTA
-            title={banned(s) ? L("MEN CEZASI") : L("DÖVÜŞ AYARLA")}
+            title={banned(s) ? L("MEN CEZASI") : isFarewellFight(s) ? L("VEDA MAÇI") : L("DÖVÜŞ AYARLA")}
             sub={
-              (org.rakipSecimi ? L("Rakibini kendin seç") : L("{0} rakip önerecek", [org.kisa])) +
+              (isFarewellFight(s) ? L("Kariyerinin son maçı") : org.rakipSecimi ? L("Rakibini kendin seç") : L("{0} rakip önerecek", [org.kisa])) +
               (s.stage !== 'amator' ? L(" · Kamp ~{0}", [money(campCostPreview(s))]) : '') +
               (injured ? L(" · ⚠️ Sakatsın") : '')
             }
             disabled={banned(s)}
             onPress={() => act(findNextFight)}
           />
+          <FarewellCard s={s} act={act} />
           <FirstStepsCard s={s} act={act} />
           {featureOpen(s, 'etkinlik') ? <SpecialEventCard s={s} act={act} /> : null}
           {featureOpen(s, 'etkinlik') ? <EventCard s={s} act={act} /> : null}
@@ -941,11 +944,12 @@ export function RetireScreen({ s, onNew, onDynasty, onComeback, onDoc, onLeague 
     >
       <LinearGradient colors={['#3a2a0a', '#0a0b0e']} style={gs.banner}>
         <Icon name={ufcChamp ? 'crown' : 'flag-checkered'} size={40} color={C.gold} />
-        <Text style={gs.bannerTitle}>{ufcChamp ? L("BİR EFSANE VEDA EDİYOR") : L("SON ZİL")}</Text>
+        <Text style={gs.bannerTitle}>{ufcChamp ? L("BİR EFSANE VEDA EDİYOR") : s.veda?.sonuc ? L("SON MAÇ, SON ZİL") : L("SON ZİL")}</Text>
         <Text style={gs.bannerSub}>
           {fullName(s.fighter)} · {s.fighter.yas} {L("yaşında eldivenlerini astı")}
         </Text>
       </LinearGradient>
+      <FarewellSummary s={s} />
       {donus && onComeback ? (
         <Card accent={C.orange}>
           <Text style={gs.kicker}>{L("📞 {0} YIL SONRA… TELEFON ÇALDI", [donus.yil])}</Text>

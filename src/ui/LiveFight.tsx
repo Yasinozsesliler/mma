@@ -45,6 +45,8 @@ const now = () => (typeof performance !== 'undefined' ? performance.now() : Date
 /** Rakibin hazırladığı hamlenin uyarı ikonu */
 const ICONS: Record<string, string> = { td: '⬇️', gsub: '🔒', escape: '⤴️', gnp: '👊' };
 const TUTORIAL_KEY = 'yol_canli_rehber';
+/** Rehberde görülen anlar: raunda sığmazsa kalanı sonraki rauntta sürer. */
+const GUIDE_SEEN_KEY = 'yol_canli_rehber_adim';
 const VB_W = 200;
 const VB_H = 130;
 const FLOOR = 118;
@@ -191,11 +193,17 @@ export const SPECIAL_NAMES: Record<SpecialKind, () => string> = {
   savurma: () => L("Savurma yumruk"),
 };
 
-const TUTORIAL = () => [
-  { icon: '⚠️', baslik: L("Rakibi oku"), metin: L("Rakip saldırı hazırlarken başında küçülen bir halka çıkar. Halka ALTIN olunca KAÇ'a bas, sonra hemen vur: kontra vuruşların çift hasar yapar.") },
-  { icon: '🥊', baslik: L("Vur ve kes"), metin: L("JAB hızlı ve ucuz, DİREKT ve TEKME ağırdır. Rakip hazırlanırken DİREKT ya da TEKME atarsan saldırısını kesersin. Sarı çubuk nefesin: bitince vuruşların zayıflar.") },
-  { icon: '🤼', baslik: L("Yere götür"), metin: L("İNDİR ile takedown dene; rakip ⬇️ ile dalarsa KAÇ ile sprawl yap. Yerde düğmeler değişir: üstteyken vur ve submission ara, alttayken 🔒 görünce hemen KURTUL.") },
-];
+/** İlk canlı maçta rehberli raunt: oyun doğru anda durur, hoca ne yapılacağını söyler, oyuncu o düğmeye basınca devam eder. */
+type GuideId = 'jab' | 'kac' | 'kontra' | 'indir' | 'yer' | 'son';
+type Guide = { id: GuideId; text: string; target?: LiveInput };
+const GUIDE_TEXT: Record<GuideId, () => string> = {
+  jab: () => L("Önce mesafeyi ölç. JAB hızlı ve ucuz: bas bakalım!"),
+  kac: () => L("Rakip saldırıya hazırlanıyor, halka ALTIN oldu! Şimdi KAÇ!"),
+  kontra: () => L("Kaçtın! Kontra penceresi açık, kontra vuruşlar çift hasar yapar. Hemen DİREKT!"),
+  indir: () => L("Güzel. Şimdi yere götür: İNDİR'e bas. Rakip ⬇️ ile dalarsa sen de KAÇ ile savun."),
+  yer: () => L("Üsttesin! YUMRUK ile puan topla. Pozisyon çubuğu dolunca SUB dene."),
+  son: () => L("Gerisi sende! Sarı çubuk nefesin: bitince vuruşların zayıflar. DİREKT ve TEKME rakibin hazırlığını keser."),
+};
 
 export function LiveFight({ fs, pLook, oLook, onEnd, ozel }: { fs: FightState; pLook?: Appearance; oLook: Appearance; onEnd: (r: LiveRoundResult) => void; ozel?: Special }) {
   const { width: W, height: H } = useWindowDimensions();
@@ -214,9 +222,12 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel }: { fs: FightState; p
   /** Bitiriş anı: ağır çekim ve sinema bantları */
   const [cine, setCine] = useState(false);
   const [banner, setBanner] = useState<string | null>(() => L("{0}. RAUNT", [fs.raunt]));
-  // İlk canlı maçta kısa rehber; görüldükten sonra raunt hemen başlar
-  const [started, setStarted] = useState(() => getPref(TUTORIAL_KEY) === '1');
-  const [step, setStep] = useState(0);
+  // İlk canlı maçta rehberli raunt (bir kez)
+  const guideOn = useRef(getPref(TUTORIAL_KEY) !== '1');
+  const guideSeen = useRef(new Set<GuideId>((getPref(GUIDE_SEEN_KEY) ?? '').split(',').filter(Boolean) as GuideId[]));
+  const guideAt = useRef(0);
+  const [guide, setGuide] = useState<Guide | null>(null);
+  const guideRef = useRef<Guide | null>(null);
   const [paused, setPaused] = useState(false);
   const [mid, setMid] = useState({ w: 0, h: 0 });
   const pausedAt = useRef<number | null>(null);
@@ -239,6 +250,48 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel }: { fs: FightState; p
     fx.current.push({ x: a === 'p' ? 72 : 128, y: FLOOR - HIP_H - 30, t0: now(), big });
     shake.current = { t0: now(), amp: big ? 3.2 : a === 'p' ? 1.6 : 0.8 };
     if (big) punch.current = { t0: now(), zoom: 0.06, flash: 0, ms: 700 };
+  };
+
+  const finishGuide = () => {
+    guideOn.current = false;
+    setPref(TUTORIAL_KEY, '1');
+  };
+  /** Rehber anı: oyun durur, hoca konuşur; hedef düğmeye (ya da "Anladım"a) basınca devam eder. */
+  const freeze = (id: GuideId, target?: LiveInput) => {
+    const sm = sim.current;
+    if (!guideOn.current || guideSeen.current.has(id) || pausedAt.current != null || !sm || sm.kilit) return;
+    // Hocanın söylediği düğme o an ekranda yoksa (konum değişti) bu an atlanır: oyuncu asla takılı kalmaz.
+    if (target && !BUTTONS[livePos(sm)].flat().some(([k]) => k === target)) return;
+    guideSeen.current.add(id);
+    pausedAt.current = now();
+    const g = { id, text: GUIDE_TEXT[id](), target };
+    guideRef.current = g;
+    setGuide(g);
+    buzz('hafif');
+  };
+  const unfreeze = () => {
+    const sm = sim.current;
+    if (sm && pausedAt.current != null) liveShift(sm, now() - pausedAt.current);
+    pausedAt.current = null;
+    guideAt.current = now();
+    if (guideRef.current?.id === 'son') finishGuide();
+    guideRef.current = null;
+    setGuide(null);
+  };
+  /** Rehberin zamanlamaya bağlı anları (her karede, simülasyon adımından önce). */
+  const guideTick = (s: LiveSim, t: number) => {
+    const seen = guideSeen.current;
+    const since = t - guideAt.current;
+    const pos = livePos(s);
+    if (!seen.has('jab')) {
+      if (t - s.start > 1600) freeze('jab', 'jab');
+      return;
+    }
+    const o = s.o;
+    const rem = o.state === 'windup' ? o.stateUntil - t : -1;
+    if (!seen.has('kac') && pos === 'ayakta' && rem > 60 && rem < s.cfg.dodgeMs * 0.7 && o.attack !== 'td' && !o.feint) return freeze('kac', 'kac');
+    if (!seen.has('indir') && pos === 'ayakta' && o.state !== 'windup' && since > 2500 && (seen.has('kontra') || since > 12000)) return freeze('indir', 'indir');
+    if (seen.has('indir') && !seen.has('son') && since > 3500 && !s.kilit) freeze('son');
   };
 
   /** Yer dövüşünde kim üstte (pozlar buna göre) */
@@ -303,6 +356,7 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel }: { fs: FightState; p
       case 'dodged':
         flash.show({ puan: 100, metin: L("KAÇTIN! ŞİMDİ KONTRA!"), renk: C.gold });
         buzz('basari');
+        freeze('kontra', 'direkt');
         return;
       case 'interrupt':
         flash.show({ puan: 100, metin: L("KESTİN!"), renk: C.gold });
@@ -331,6 +385,7 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel }: { fs: FightState; p
         buzz('orta');
         setBanner(top === 'p' ? L("YERE İNDİRDİN!") : L("YERE İNDİRİLDİN!"));
         setTimeout(() => setBanner(null), 1000);
+        if (top === 'p') setTimeout(() => ground.current === 'p' && freeze('yer', 'jab'), 900);
         return;
       }
       case 'stand':
@@ -422,7 +477,6 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel }: { fs: FightState; p
   };
 
   useEffect(() => {
-    if (!started) return;
     const s = liveCreate(fs, oppStatsOf(fs), now(), undefined, ozel ? { kind: ozel.kind, imza: ozel.imza } : undefined);
     sim.current = s;
     sfx('bell');
@@ -434,6 +488,7 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel }: { fs: FightState; p
     const loop = () => {
       const t = now();
       meter(t);
+      if (pausedAt.current == null && guideOn.current && !s.over) guideTick(s, t);
       if (pausedAt.current != null) {
         raf = requestAnimationFrame(loop);
         return;
@@ -484,6 +539,12 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel }: { fs: FightState; p
       const done = s.over || (t >= s.start && liveElapsed(s) >= s.dur);
       if (done && !ended.current) {
         ended.current = true;
+        // Temel dersler (vur, kaç, yere götür) bitmediyse kalanı sonraki raunda kalır; en geç 2. raunt sonunda kapanır.
+        if (guideOn.current) {
+          const g = guideSeen.current;
+          if ((g.has('kac') && g.has('indir')) || fs.raunt >= 2 || s.over) finishGuide();
+          else setPref(GUIDE_SEEN_KEY, [...g].join(','));
+        }
         if (!s.over) {
           setBanner(L("RAUNT BİTTİ"));
           sfx('bell2');
@@ -498,13 +559,13 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel }: { fs: FightState; p
       clearTimeout(t1);
       clearTimeout(t2);
     };
-    // Raunt bir kez başlar (rehber kapandığında).
+    // Raunt bir kez başlar.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [started]);
+  }, []);
 
   const togglePause = () => {
     const sm = sim.current;
-    if (!sm) return;
+    if (!sm || guideRef.current) return;
     if (pausedAt.current == null) {
       pausedAt.current = now();
       setPaused(true);
@@ -517,7 +578,15 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel }: { fs: FightState; p
 
   const press = (k: LiveInput) => {
     const sm = sim.current;
-    if (!sm || pausedAt.current != null) return;
+    if (!sm) return;
+    // Rehber anında yalnızca hocanın söylediği düğme oyunu sürdürür.
+    if (guideRef.current) {
+      if (guideRef.current.target !== k) return;
+      // Rehber anında söylenen hamle kesin uygulanır: az önceki vuruşun bekleme süresi engel olmaz.
+      sm.p.busyUntil = 0;
+      if (guideRef.current.id === 'kac') sm.kesinKac = true;
+      unfreeze();
+    } else if (pausedAt.current != null) return;
     liveStep(sm, now());
     liveInput(sm, k);
   };
@@ -687,7 +756,7 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel }: { fs: FightState; p
           {frame.kilit ? null : BUTTONS[frame.pos].map((row, ri) => (
             <View key={`${frame.pos}${ri}`} style={lf.row}>
               {row.map(([k, label, col]) => (
-                <Pressable key={k} {...INSTANT} onPressIn={() => press(k)} style={({ pressed }) => [lf.btn, ri === 1 && lf.btnBig, { borderColor: col }, pressed && { backgroundColor: col + '40' }, k === 'sub' && frame.pos === 'ustte' && frame.gpos < 0.45 && { opacity: 0.4 }]}>
+                <Pressable key={k} {...INSTANT} onPressIn={() => press(k)} style={({ pressed }) => [lf.btn, ri === 1 && lf.btnBig, { borderColor: col }, pressed && { backgroundColor: col + '40' }, k === 'sub' && frame.pos === 'ustte' && frame.gpos < 0.45 && { opacity: 0.4 }, guide && (guide.target === k ? lf.btnGuide : lf.btnDim)]}>
                   <Text style={[lf.btnText, { color: col }, label().length > 8 && { fontSize: 13 }, label().length > 11 && { fontSize: 11 }]} numberOfLines={1}>
                     {label()}
                   </Text>
@@ -713,28 +782,19 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel }: { fs: FightState; p
             </Pressable>
           </View>
         ) : null}
-        {!started ? (
-          <View style={lf.overlay}>
-            <Text style={lf.tutIcon}>{TUTORIAL()[step].icon}</Text>
-            <Text style={lf.overlayTitle}>{TUTORIAL()[step].baslik}</Text>
-            <Text style={lf.tutText}>{TUTORIAL()[step].metin}</Text>
-            <View style={lf.tutDots}>
-              {TUTORIAL().map((_, i) => (
-                <View key={i} style={[lf.tutDot, i === step && { backgroundColor: C.gold }]} />
-              ))}
+        {guide ? (
+          <View style={lf.guide} pointerEvents="box-none">
+            <View style={lf.guideBox}>
+              <Text style={lf.guideWho}>{L("🥋 HOCA")}</Text>
+              <Text style={lf.guideText}>{guide.text}</Text>
+              {guide.target ? (
+                <Text style={lf.guideHint}>{L("👇 Parlayan düğmeye bas")}</Text>
+              ) : (
+                <Pressable onPress={unfreeze} style={lf.guideBtn}>
+                  <Text style={lf.overlayBtnText}>{L("Anladım, dövüşelim!")}</Text>
+                </Pressable>
+              )}
             </View>
-            <Pressable
-              onPress={() => {
-                if (step < TUTORIAL().length - 1) setStep(step + 1);
-                else {
-                  setPref(TUTORIAL_KEY, '1');
-                  setStarted(true);
-                }
-              }}
-              style={lf.overlayBtn}
-            >
-              <Text style={lf.overlayBtnText}>{step < TUTORIAL().length - 1 ? L("Sonraki") : L("Anladım, dövüşelim!")}</Text>
-            </Pressable>
           </View>
         ) : null}
       </View>
@@ -749,10 +809,15 @@ const lf = StyleSheet.create({
   overlayTitle: { color: '#fff', fontFamily: F.display, fontSize: 30, letterSpacing: 1, textAlign: 'center', marginBottom: 10 },
   overlayBtn: { marginTop: 22, backgroundColor: C.gold, borderRadius: 12, paddingVertical: 14, paddingHorizontal: 28 },
   overlayBtnText: { color: '#1f1605', fontFamily: F.display, fontSize: 17, letterSpacing: 1 },
-  tutIcon: { fontSize: 54, marginBottom: 8 },
-  tutText: { color: '#d9dbe0', fontFamily: F.body, fontSize: 15, lineHeight: 22, textAlign: 'center' },
-  tutDots: { flexDirection: 'row', gap: 6, marginTop: 18 },
-  tutDot: { width: 9, height: 9, borderRadius: 5, backgroundColor: '#33363e' },
+  // Oyun dururken balon skor tablosunun üstüne gelir: sahnedeki halka ve dövüşçüler görünür kalsın
+  guide: { position: 'absolute', top: 6, left: 12, right: 12, alignItems: 'center', zIndex: 10 },
+  guideBox: { width: '100%', backgroundColor: 'rgba(8,8,10,0.94)', borderRadius: 14, borderWidth: 1, borderColor: C.goldDeep, padding: 16, gap: 8 },
+  guideWho: { color: C.gold, fontFamily: F.display, fontSize: 12, letterSpacing: 1.5 },
+  guideText: { color: '#fff', fontFamily: F.semi, fontSize: 16, lineHeight: 22 },
+  guideHint: { color: C.gold, fontFamily: F.display, fontSize: 12, letterSpacing: 1, textAlign: 'center' },
+  guideBtn: { marginTop: 6, backgroundColor: C.gold, borderRadius: 12, paddingVertical: 12, alignItems: 'center' },
+  btnGuide: { borderColor: C.gold, borderWidth: 3, backgroundColor: C.gold + '33' },
+  btnDim: { opacity: 0.3 },
   special: { height: 40, borderRadius: 12, borderWidth: 2, borderColor: C.goldDeep, backgroundColor: '#14110a', justifyContent: 'center', overflow: 'hidden' },
   specialOn: { borderColor: C.gold, backgroundColor: C.gold },
   specialFill: { position: 'absolute', left: 0, top: 0, bottom: 0, backgroundColor: C.gold + '33' },

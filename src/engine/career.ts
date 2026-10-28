@@ -14,6 +14,7 @@ import { needsTreatment } from './treatment';
 import { assignCities, pickCity, visitCity } from './worldMap';
 import { brainAfterFight } from './brain';
 import { comebackAfter, isComebackFight } from './comeback';
+import { farewellAfter, farewellDone, farewellOpponent, isFarewellFight } from './farewell';
 import { fanClubAfterFight } from './fanClub';
 import { announceUnlocks } from './onboarding';
 import { continueKafesEvi, maybeKafesEviInvite } from './kafesEvi';
@@ -116,6 +117,11 @@ export function findNextFight(s: GameState) {
     }
   }
   if (isComebackFight(s)) s.pending.secenekler.forEach((o) => (o.etiket = tL("🔥 DÖNÜŞ MAÇI")));
+  // İlan edilmiş veda maçı her şeyin yerine geçer: tek rakip, kariyerin son maçı.
+  if (isFarewellFight(s)) {
+    s.pending.secenekler = [farewellOpponent(s)];
+    s.pending.dayatma = true;
+  }
   assignCities(s, s.pending.secenekler, currentOrg(s));
   s.pending.secenekler.forEach((o) => (o.macHafta = leadWeeks(s, o, s.kisaHaber)));
   s.phase = 'rakipSecimi';
@@ -243,6 +249,7 @@ export function finishFight(s: GameState) {
   }
   lines.push(...gpAfterFight(s, opp, won && !caught));
   lines.push(...comebackAfter(s, won && !caught));
+  lines.push(...farewellAfter(s, won && !caught, draw, methodLabel(r.yontem), `${opp.ad} ${opp.soyad}`));
   lines.push(...fanClubAfterFight(s, won && !caught, finishMethod, !won && !draw && (r.yontem === 'KO' || r.yontem === 'TKO'), !!opp.memleket));
   lines.push(...challengeCheck(s, won && !caught, !won && !draw && (r.yontem === 'KO' || r.yontem === 'TKO'), r.yontem));
   // Bitiren hareket ustalık kazanır (maçı hangi teknikle bitirdiysen).
@@ -612,7 +619,7 @@ export function afterPostFight(s: GameState) {
   s.pending = {};
   s.phase = 'hub';
 
-  if (s.fighter.yas >= 45 || s.meydanBitti) {
+  if (s.fighter.yas >= 45 || s.meydanBitti || farewellDone(s)) {
     challengeOnRetire(s);
     s.phase = 'emeklilik';
     return;

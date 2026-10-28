@@ -1,4 +1,5 @@
 import { ORGS } from '../src/engine/data';
+import { announceFarewell, canAnnounceFarewell, isFarewellFight } from '../src/engine/farewell';
 import { canActivity, canFoundClub, doActivity, fanLevel, foundClub } from '../src/engine/fanClub';
 import { ALBUM_SETS } from '../src/engine/cards';
 import { acceptComeback, comebackOffer } from '../src/engine/comeback';
@@ -67,6 +68,7 @@ const kartStat: Record<string, number> = { toplam: 0 };
 const mapStat = { sehir: 0, kita: 0, odul: 0 };
 const cbStat = { n: 0, g: 0 };
 const fanStat: Record<string, number> = { kurulan: 0, sadakat: 0 };
+const vedaStat = { ilan: 0, oynanan: 0, g: 0, emekli: 0, hata: 0, donus: 0, diger: 0 };
 const dwStat = { kariyer: 0, ulasan: 0, dwcs: 0, dwcsG: 0, buyuk: 0, ilkDwcs: 0 };
 const brainStat: Record<string, number> = { toplam: 0, emekli: 0 };
 const keStat: Record<string, number> = { davet: 0, kabul: 0, ekran: 0 };
@@ -206,8 +208,10 @@ function playCareer() {
         for (const g of [...s.hedefler!.list]) if (goalDone(s, g)) { goalStat.n++; goalStat.para += g.odul.para; goalStat.puan += g.odul.puan; goalStat.tur[g.tur] = (goalStat.tur[g.tur] ?? 0) + 1; claimGoal(s, g.id); }
         if (s.fighter.yas >= 25 && !rec25 && input.yas <= 20) { rec25 = `${s.rekor.g}-${s.rekor.m}`; stats.rec25.push(rec25); stats.fights25.push(s.rekor.g + s.rekor.m + s.rekor.b + s.amator.g + s.amator.m + s.amator.b); }
         if (s.gecmis.length >= 90) return finalize();
+        if (canAnnounceFarewell(s) && s.fighter.yas >= 37 && chance(0.08)) { announceFarewell(s); vedaStat.ilan++; }
         if (s.saglik < 55 || s.sakatliklar.length) rest(s);
         else findNextFight(s);
+        if ((s.phase as string) === 'rakipSecimi' && isFarewellFight(s) && !s.pending.secenekler?.[0]?.etiket?.includes('VEDA')) vedaStat.hata++;
         break;
       case 'event':
         if (!s.pending.olay!.sonuc) chooseEvent(s, randInt(0, s.pending.olay!.secenekler.length - 1));
@@ -357,6 +361,7 @@ function playCareer() {
     stats.legacy.push(legacyScore(s));
     stats.totalFights.push(fights);
     stats.retireAge.push(s.fighter.yas);
+    if (s.veda?.sonuc) { vedaStat.oynanan++; if (s.veda.sonuc === 'G') vedaStat.g++; if (s.phase === 'emeklilik' && s.gecmis.length - 1 === s.veda.dovus) vedaStat.emekli++; else if (s.geriDonus) vedaStat.donus++; else vedaStat.diger++; }
     {
       const kr = [...s.gecmis].reverse();
       const firstUfc = kr.findIndex((h) => h.org === 'ufc');
@@ -406,6 +411,7 @@ const pct = (a: number, b: number) => `${((a / Math.max(1, b)) * 100).toFixed(1)
 const mean = (a: number[]) => (a.reduce((x, y) => x + y, 0) / Math.max(1, a.length)).toFixed(1);
 console.log(`18-20 yaşında başlayanlar, 25 yaşında: toplam dövüş ort. ${mean(stats.fights25)}, pro karne örnekleri: ${stats.rec25.slice(0, 12).join(', ')}`);
 console.log(`Maçlar arası gün ort. ${mean(stats.gaps)} (min ${Math.min(...stats.gaps)}, maks ${Math.max(...stats.gaps)}) · Kariyer sonu takipçi ort. ${Math.round(Number(mean(stats.followers))).toLocaleString('tr-TR')}, maks ${Math.max(...stats.followers).toLocaleString('tr-TR')}`);
+console.log(`Veda maçı: ilan ${vedaStat.ilan}, oynanan ${vedaStat.oynanan}, galibiyet ${vedaStat.g}, ardından emekli ${vedaStat.emekli}, etiket hatası ${vedaStat.hata}, sonra dönen ${vedaStat.donus}, açıklanamayan ${vedaStat.diger}`);
 console.log(`UCC yolu: büyük org'da UCC öncesi maç ort. ${(dwStat.buyuk / Math.max(1, dwStat.ulasan)).toFixed(1)}, ilk DWCS'ye kadar ${(dwStat.ilkDwcs / Math.max(1, dwStat.ulasan)).toFixed(1)}, kariyer başına DWCS ${(dwStat.dwcs / dwStat.kariyer).toFixed(2)} (galibiyet %${Math.round((dwStat.dwcsG / Math.max(1, dwStat.dwcs)) * 100)})`);
 console.log('Yaşa göre galibiyet:', Object.entries(stats.ageWins).map(([k, [w, l]]) => `${k} %${Math.round((w / (w + l)) * 100)} (${w + l})`).join(' · '));
 console.log('Rakip − oyuncu güç farkı / galibiyet oranı:', Object.entries(stats.gap).map(([k, v]) => `${k} ${mean(v)} (%${Math.round((stats.stageWins[k][0] / (stats.stageWins[k][0] + stats.stageWins[k][1])) * 100)})`).join(' · '));

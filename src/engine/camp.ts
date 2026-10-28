@@ -33,6 +33,7 @@ import { chooseRivalNews, closeRivalNews, rivalNewsMods, rivalNewsOpen } from '.
 import { mediaFatigue } from './media';
 import { fatigue, growthAt } from './fatigue';
 import { answerDuel, autoAnswer, createDuel, duelOutcome, type DuelAnswer } from './trashTalk';
+import { isFarewellFight } from './farewell';
 import type {
   GameState,
   Injury,
@@ -635,7 +636,8 @@ function beginFight(s: GameState) {
   s.sakatliklar.forEach((i) => (mods[i.stat] = (mods[i.stat] ?? 0) - i.ceza));
   if (s.saglik < 60) STAT_KEYS.forEach((st) => (mods[st] = (mods[st] ?? 0) - Math.round((60 - s.saglik) / 10)));
   const unvan = opp.champion || s.sampiyon;
-  const anaMac = currentOrg(s) === 'ufc' && s.rank != null && s.rank <= 5;
+  // Veda maçı her organizasyonda gecenin ana maçıdır (5 raunt).
+  const anaMac = (currentOrg(s) === 'ufc' && s.rank != null && s.rank <= 5) || isFarewellFight(s);
   s.pending.dovus = startFight({
     pStats: s.fighter.stats,
     pAd: s.fighter.lakap || s.fighter.soyad,

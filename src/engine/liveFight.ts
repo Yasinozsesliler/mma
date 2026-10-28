@@ -108,6 +108,8 @@ export interface LiveSim {
   o: LiveSide & { state: OState; stateUntil: number; attack: OAttack; feint: boolean; comboNext?: boolean };
   /** Sarsılan taraf ve bitiş anı (o sırada saldıramaz, aldığı hasar artar) */
   rocked: { side: 'p' | 'o'; until: number } | null;
+  /** Rehberli ilk raunt: hocanın söylediği anda basılan KAÇ bir kez kesin tutar (öğretirken şans faktörü yok). */
+  kesinKac?: boolean;
   /** Yer dövüşü: üstteki taraf */
   ground: { top: 'p' | 'o'; since: number; /** Üstteki tarafın pozisyon hâkimiyeti 0-1 */ pos: number } | null;
   /** Submission mücadelesi: kilitleyen taraf, kilidin sıkılığı (0 kaçtı … 1 tap), bitiş anı */
@@ -707,7 +709,8 @@ export function liveStep(s: LiveSim, t: number) {
       o.sta = clamp(o.sta - (o.attack === 'jab' ? 4 : o.attack === 'kick' ? 12 : 9), 0, 100);
       ev(s, { kind: 'oAttack', alt: o.attack });
       const dmg = O_BASE[o.attack] * s.cfg.oPow * (1 - s.cfg.edge * 2) * (o.sta < 15 ? 0.6 : 1);
-      if (t < p.dodgeUntil && !chance(s.cfg.dodgeFail)) {
+      if (t < p.dodgeUntil && (s.kesinKac || !chance(s.cfg.dodgeFail))) {
+        s.kesinKac = undefined;
         p.counterUntil = t + 950;
         ev(s, { kind: 'dodged' });
         return;

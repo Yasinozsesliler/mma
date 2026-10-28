@@ -1,5 +1,6 @@
 // Dövüş gecesi açılışı: arena, dönen spotlar, foto flaşları; dövüşçü rampadan kafese yürür, yayın bandı (lower third)
 // ismini verir; sonunda iki köşe karşı karşıya (VS). Büyük maçlarda tam anons, diğerlerinde kısa sürüm. Dokununca geçilir.
+import { isFarewellFight } from '../engine/farewell';
 import { fanLevel, SONGS, UNLOCKS, walkoutCrowd } from '../engine/fanClub';
 import { isAway } from '../engine/worldMap';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -37,7 +38,8 @@ function script(s: GameState): Card[] {
   const org = ORGS[currentOrg(s)];
   const pro = s.stage !== 'amator';
   const r = pro ? s.rekor : s.amator;
-  const big = fs.unvanMaci || fs.anaMac || s.ezeli?.id === o.id || s.gecmis.length === 0;
+  const veda = isFarewellFight(s);
+  const big = fs.unvanMaci || fs.anaMac || s.ezeli?.id === o.id || s.gecmis.length === 0 || veda;
   const pCard: Card = {
     kicker: big ? L("VE KIRMIZI KÖŞEDE…") : L("KIRMIZI KÖŞEDE…"),
     lines: [L("{0} galibiyet, {1} mağlubiyet", [r.g, r.m]), [FLAGS[f.uyruk], ...new Set([f.memleket, COUNTRIES[f.uyruk]?.ad].filter(Boolean))].filter(Boolean).join(' ')],
@@ -45,14 +47,16 @@ function script(s: GameState): Card[] {
     name: upName(`${f.ad} ${f.soyad}`, f.uyruk),
     side: 'p',
     ms: 4200,
-    say: !big ? L("Kırmızı köşede! {0}!", [spoken(f)]) : r.g + r.m === 0 ? L("Ve kırmızı köşede! İlk maçına çıkıyor… {0}!", [spoken(f)]) : L("Ve kırmızı köşede! {0} galibiyet, {1} mağlubiyet… {2}!", [r.g, r.m, spoken(f)]),
+    say: veda ? L("Ve kırmızı köşede! Son kez… {0}!", [spoken(f)]) : !big ? L("Kırmızı köşede! {0}!", [spoken(f)]) : r.g + r.m === 0 ? L("Ve kırmızı köşede! İlk maçına çıkıyor… {0}!", [spoken(f)]) : L("Ve kırmızı köşede! {0} galibiyet, {1} mağlubiyet… {2}!", [r.g, r.m, spoken(f)]),
   };
   const crowd = walkoutCrowd(s, isAway(s, o.sehir));
   const fanCard: Card[] = crowd ? [{ kicker: L("TRİBÜNLER AYAKTA…"), lines: [crowd.baslik.toLocaleUpperCase(LOC), crowd.satirlar[crowd.satirlar.length - 1]], ms: 2400, say: crowd.soz }] : [];
   const kulup = s.kulup;
   if (kulup?.sarki != null && fanLevel(s) >= UNLOCKS.sarki) pCard.lines = [...pCard.lines, `🎵 ${SONGS()[kulup.sarki]}`];
   if (!big) return [...fanCard, pCard, { kicker: L("KURALLAR BELLİ. DÖVÜŞÜN!"), lines: [], ms: 1800, say: L("Kurallar belli. Dövüşün!"), vs: true }];
-  const baslik = fs.unvanMaci
+  const baslik = veda
+    ? L("Veda maçı · {0} raunt", [fs.maxRaunt])
+    : fs.unvanMaci
     ? L("{0} sıklet şampiyonluk maçı", [WEIGHT_CLASSES[f.siklet].ad])
     : s.ezeli?.id === o.id
       ? L("Ezeli rakipler yine karşı karşıya")
@@ -69,6 +73,16 @@ function script(s: GameState): Card[] {
       say: L("Mavi köşede! {0}!", [spoken(o)]),
     },
     ...fanCard,
+    ...(veda
+      ? [
+          {
+            kicker: L("BU GECE BİR VEDA VAR…"),
+            lines: [L("{0} galibiyet · {1} kemer", [r.g, s.unvanlar.length]), L("{0} profesyonel maç, tek bir son", [r.g + r.m + r.b])],
+            ms: 3400,
+            say: L("Bayanlar ve baylar… bu gece bir savaşçı son kez kafese çıkıyor!"),
+          },
+        ]
+      : []),
     pCard,
     { kicker: L("HAYDİ BAŞLAYALIM!"), lines: [], ms: 2000, say: L("Haydi başlayalım!"), vs: true },
   ];
