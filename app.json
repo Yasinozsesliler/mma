@@ -98,7 +98,7 @@
           ]
         }
       ],
-      "./plugins/withUnityAdsMediation",
+      "./plugins/withAdMediation",
       "expo-iap",
       "expo-asset",
       [
