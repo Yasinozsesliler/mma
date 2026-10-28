@@ -9,7 +9,7 @@ import { clearNew, equip, useCosmetics, useUnlocked } from '../cosmetics';
 import { COSMETICS, packOwned, PACKS, RARITY, rarityOf, type Cosmetic, type CosSlot, type FxKind, type Rarity } from '../engine/cosmetics';
 import type { Appearance } from '../engine/types';
 import { L, LOC } from '../i18n';
-import { buy, MONETIZATION, PURCHASES, restorePurchases, useOwned, usePrice } from '../monetization';
+import { buy, MONETIZATION, PACK_STORE, PURCHASES, restorePurchases, useOwned, usePrice } from '../monetization';
 import { BUNDLE_SKU } from '../monetization/skus';
 import { Belt } from './Belt';
 import { Button, Icon, Screen, Section, SLANT, Title, type IconName } from './components';
@@ -184,7 +184,7 @@ export function LockerScreen({ look = DEFAULT_LOOK, onExit }: { look?: Appearanc
   const gir = show('giris');
   const fx = show('efekt').fx;
 
-  const sayilan = COSMETICS.filter((x) => PURCHASES || (x.kaynak.tur !== 'paket' && x.kaynak.tur !== 'sampiyon') || unlocked(x));
+  const sayilan = COSMETICS.filter((x) => PACK_STORE || (x.kaynak.tur !== 'paket' && x.kaynak.tur !== 'sampiyon') || unlocked(x));
   const total = sayilan.length;
   const have = sayilan.filter(unlocked).length;
   const allPacks = PACKS.every((p) => packOwned(owned, p.sku));
@@ -218,12 +218,12 @@ export function LockerScreen({ look = DEFAULT_LOOK, onExit }: { look?: Appearanc
   };
 
   const heroW = W - 32;
-  // Satın alma kapalıyken (iPhone ilk sürüm) yalnızca oynayarak açılan parçalar listelenir
-  const items = COSMETICS.filter((x) => x.slot === tab && (PURCHASES || (x.kaynak.tur !== 'paket' && x.kaynak.tur !== 'sampiyon') || unlocked(x))).sort((a, b) => RARITY[rarityOf(a)].sira - RARITY[rarityOf(b)].sira);
+  // Paket mağazası kapalıyken (iPhone) yalnızca oynayarak açılan parçalar listelenir
+  const items = COSMETICS.filter((x) => x.slot === tab && (PACK_STORE || (x.kaynak.tur !== 'paket' && x.kaynak.tur !== 'sampiyon') || unlocked(x))).sort((a, b) => RARITY[rarityOf(a)].sira - RARITY[rarityOf(b)].sira);
 
   return (
     <Screen footer={<Button label={L("Ana menü")} icon="arrow-left" tone="ghost" onPress={onExit} />}>
-      <Title kicker={L("YALNIZCA GÖRÜNÜM · OYUN GÜCÜ VERMEZ")} sub={PURCHASES ? L("Oynayarak yenilerini aç ya da paketlerle koleksiyonunu büyüt.") : L("Oynayarak yenilerini aç.")}>
+      <Title kicker={L("YALNIZCA GÖRÜNÜM · OYUN GÜCÜ VERMEZ")} sub={PACK_STORE ? L("Oynayarak yenilerini aç ya da paketlerle koleksiyonunu büyüt.") : L("Oynayarak yenilerini aç.")}>
         {L("Dolap")}
       </Title>
 
@@ -301,8 +301,8 @@ export function LockerScreen({ look = DEFAULT_LOOK, onExit }: { look?: Appearanc
         ))}
       </View>
 
-      {PURCHASES ? <Section>{L("MAĞAZA")}</Section> : null}
-      {PURCHASES && !allPacks ? (
+      {PACK_STORE ? <Section>{L("MAĞAZA")}</Section> : null}
+      {PACK_STORE && !allPacks ? (
         <LinearGradient colors={['#3a2a07', '#140f04', '#0c0d10']} style={[ls.pack, ls.bundle]}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
             <Icon name="crown" size={22} color={C.gold} />
@@ -313,7 +313,7 @@ export function LockerScreen({ look = DEFAULT_LOOK, onExit }: { look?: Appearanc
           <BuyButton sku={BUNDLE_SKU} big />
         </LinearGradient>
       ) : null}
-      {PURCHASES
+      {PACK_STORE
         ? PACKS.map((p) => <PackCard key={p.sku} p={p} look={look} onTry={() => tryPack(p)} />)
         : null}
       {MONETIZATION && PURCHASES ? (

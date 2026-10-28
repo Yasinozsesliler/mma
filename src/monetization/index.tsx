@@ -16,8 +16,10 @@ export { isAdFree, isPremium, owns, useAdFree, useOwned, usePremium } from './pr
 
 /** Bu platformda reklam ve satın alma var mı? */
 export const MONETIZATION = true;
-/** Uygulama içi satın almalar. iPhone'da ilk yayın için geçici olarak kapalı (yalnızca reklamlar); Android'de açık. */
-export const PURCHASES = Platform.OS !== 'ios';
+/** Uygulama içi satın almalar (Şampiyon Paketi, Reklamsız Paket): her iki platformda açık. */
+export const PURCHASES = true;
+/** Dolaptaki kozmetik paket mağazası. iPhone'da şimdilik kapalı (yalnızca reklam kaldıran ürünler satılır). */
+export const PACK_STORE = Platform.OS !== 'ios';
 export { dismissUpsell, useUpsellDue } from './upsell';
 
 // ---------- Reklamlar ----------

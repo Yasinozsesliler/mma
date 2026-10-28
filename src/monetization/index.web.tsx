@@ -3,6 +3,7 @@ export { isAdFree, isPremium, owns, useAdFree, useOwned, usePremium } from './pr
 
 export const MONETIZATION = false;
 export const PURCHASES = false;
+export const PACK_STORE = false;
 export { dismissUpsell, useUpsellDue } from './upsell';
 
 export async function initMonetization() {}
