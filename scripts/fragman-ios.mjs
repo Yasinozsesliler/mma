@@ -15,7 +15,7 @@ import puppeteer from 'puppeteer-core';
 
 const FF = process.argv[2];
 const RICH = process.argv[3];
-const VIDEO = ['taktik', 'yasam'].includes(process.argv[4]) ? process.argv[4] : 'ana';
+const VIDEO = ['taktik', 'yasam', 'insta'].includes(process.argv[4]) ? process.argv[4] : 'ana';
 const MODE = process.argv.slice(4).includes('yayinda') ? 'yayinda' : 'yakinda';
 if (!FF || !existsSync(FF)) throw new Error('ffmpeg yolu gerekli');
 if (!RICH || !existsSync(RICH)) throw new Error('zengin kariyer kaydı (json) gerekli');
@@ -69,6 +69,20 @@ const VIDEOS = {
     ['c3', 'kart', 'AMA UNUTMA:', '', 1.3],
     ['c4', 'kart', 'KEMER KAFESTE KAZANILIR.', '', 1.8],
     ['belt', 'kayit', 'TARİHE GEÇ', 'DÜNYA ŞAMPİYONU', 3.3],
+  ],
+  insta: [
+    ['c1', 'kart', 'KAFESTE DÖVÜŞ.', '', 1.5],
+    ['c2', 'kart', "KAFESGRAM'DA PARLA.", '', 1.7],
+    ['feed', 'kayit', 'AKIŞINI TAKİP ET', 'RAKİPLER · MEDYA · TARAFTAR', 3.0],
+    ['story', 'kayit', 'HİKÂYELERİ İZLE', 'ŞAMPİYONLAR NE PAYLAŞIYOR?', 2.6],
+    ['photo', 'kayit', 'FOTOĞRAFINI PAYLAŞ', 'FİLTRE · AÇIKLAMA · PRO ÇEKİM', 3.7],
+    ['profile', 'kayit', 'PROFİLİNİ BÜYÜT', 'TAKİPÇİ · BEĞENİ · ÖNE ÇIKANLAR', 2.8],
+    ['dm', 'kayit', "DM'LERE CEVAP VER", 'RAKİP · SPONSOR · HAYRAN', 3.3],
+    ['trash', 'kayit', 'RAKİBİNİ ETİKETLE', 'TRASH TALK · MEYDAN OKU', 3.2],
+    ['board', 'kayit', 'ZİRVEYE TIRMAN', 'EN ÇOK TAKİP EDİLENLER', 2.6],
+    ['c3', 'kart', 'TAKİPÇİ GÜÇTÜR.', '', 1.4],
+    ['c4', 'kart', 'AMA KEMER KAFESTE KAZANILIR.', '', 1.8],
+    ['belt', 'kayit', 'TARİHE GEÇ', 'DÜNYA ŞAMPİYONU', 3.0],
   ],
 };
 let SCENES = VIDEOS[VIDEO];
@@ -473,6 +487,98 @@ if (VIDEO === 'ana') {
     if (mk.qte != null && mk.son != null) break;
     console.log('↺ kritik an ya da nakavt yok, yeniden deneniyor', deneme);
   }
+} else if (VIDEO === 'insta') {
+  // ---------- Kafesgram (Instagram modu): akış, hikâye, fotoğraf, profil, DM, trash talk, sıralama ----------
+  // Dokunuş: etiket (aria-label) ya da yazıyla bulunur, ortasına gerçek fare tıklaması yapılır
+  const tap = async (k, { exact = false, offset = 0 } = {}) => {
+    const box = await page.evaluate((k, exact, offset) => {
+      const up = (s) => (s || '').trim().toLocaleUpperCase('tr');
+      const els = [...document.querySelectorAll('[tabindex="0"],[aria-label]')];
+      let i = els.findIndex((e) => up(e.getAttribute('aria-label')) === up(k));
+      if (i < 0) i = els.findIndex((e) => (exact ? up(e.innerText).split('\n').pop() === up(k) : up(e.innerText).includes(up(k))));
+      const el = i >= 0 ? els[i + offset] : null;
+      if (!el) return null;
+      el.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+      const r = el.getBoundingClientRect();
+      return { x: r.x + r.width / 2, y: r.y + r.height / 2 };
+    }, k, exact, offset);
+    if (!box) return console.log('⚠️ bulunamadı:', k), false;
+    await page.mouse.click(box.x, box.y);
+    return true;
+  };
+  await page.goto('http://localhost:8088/', { waitUntil: 'networkidle0' });
+  await sleep(700);
+  await show('sosyal');
+  await rec('feed', async () => {
+    await sleep(500);
+    await smoothScroll(900, 2700);
+    await sleep(200);
+  });
+  await show('sosyal');
+  await rec('story', async () => {
+    await sleep(450);
+    await tap('Şampiyon');
+    await sleep(2600);
+  });
+  await show('sosyal');
+  await rec('photo', async () => {
+    await sleep(350);
+    await tap('Yeni gönderi');
+    await sleep(600);
+    await tap('Lüks yaşam');
+    await sleep(550);
+    await tap('Altın');
+    await sleep(550);
+    await tap('Yeni oyuncağımla');
+    await sleep(500);
+    await tap('Profesyonel çekim');
+    await sleep(550);
+    await tap('PAYLAŞ', { exact: true });
+    await sleep(1100);
+  });
+  await show('sosyal');
+  await tap('Profil');
+  await sleep(900);
+  await rec('profile', async () => {
+    await sleep(500);
+    await smoothScroll(520, 2200);
+    await sleep(300);
+  });
+  await show('sosyal');
+  await rec('dm', async () => {
+    await sleep(400);
+    await tap('9+');
+    await sleep(1000);
+    await tap('Colton Covey');
+    await sleep(1000);
+    await tap('Sıraya gir');
+    await sleep(1300);
+  });
+  await show('sosyal');
+  await rec('trash', async () => {
+    await sleep(350);
+    await tap('Yeni gönderi');
+    await sleep(550);
+    await tap('YAZI', { exact: true });
+    await sleep(550);
+    await tap('Trash talk', { exact: true });
+    await sleep(650);
+    await tap('kaçacak yer');
+    await sleep(600);
+    await tap('PAYLAŞ', { exact: true });
+    await sleep(1100);
+  });
+  await show('sosyal');
+  await tap('Profil');
+  await sleep(900);
+  await rec('board', async () => {
+    await sleep(350);
+    await tap('Yeni', { exact: true, offset: 4 });
+    await sleep(1000);
+    await smoothScroll(300, 1200);
+    await sleep(300);
+  });
+  await recBelt();
 } else {
   // ---------- Yaşam: zengin kayıttan kafes dışı ekranlar ----------
   await page.goto('http://localhost:8088/', { waitUntil: 'networkidle0' });
@@ -615,14 +721,17 @@ for (const [name, tur, , , d, clip, st] of SCENES) {
     // Yavaş yakınlaşma
     execFileSync(FF, ['-y', '-loop', '1', '-t', String(d), '-i', `${tmp}/card-${name}.png`, '-filter_complex', `[0:v]scale=1080:1920,scale=w='trunc(1080*(1.06+0.06*t/${d})/2)*2':h=-2:eval=frame,crop=1080:1920,format=yuv420p[v]`, '-map', '[v]', '-t', String(d), ...enc, out], { stdio: 'ignore' });
   } else {
-    const ss = Math.min(st ? Math.max(0, st(segs[src].marks)) : startOf(src, d), Math.max(0, segs[src].sn - d));
+    // Instagram videosu: kaydın tamamı sahneye sığacak kadar hızlandırılır (dokunuşlar arası bekleme kısalır)
+    const fit = VIDEO === 'insta' && name !== 'belt';
+    const ss = fit ? 0.15 : Math.min(st ? Math.max(0, st(segs[src].marks)) : startOf(src, d), Math.max(0, segs[src].sn - d));
+    const speed = fit ? Math.max(1, (segs[src].sn - ss) / d) : 1;
     execFileSync(FF, [
       '-y', '-loop', '1', '-t', String(d), '-i', `${tmp}/bg-${name}.png`,
-      '-ss', ss.toFixed(2), '-t', String(d), '-i', `${tmp}/${src}.mp4`,
+      '-ss', ss.toFixed(2), '-t', String(d * speed), '-i', `${tmp}/${src}.mp4`,
       '-loop', '1', '-t', String(d), '-i', `${tmp}/mask-full.png`,
       '-loop', '1', '-t', String(d), '-i', `${tmp}/title-${name}.png`,
       '-filter_complex',
-      `[1:v]fps=30,scale=${PH.w}:${PH.h}:flags=lanczos,setsar=1,pad=1080:1920:${PH.x}:${PH.y}:black,format=rgba[ph];[2:v]scale=1080:1920,format=gray[mk];[ph][mk]alphamerge[phm];[0:v]scale=1080:1920,format=rgba[bg];[bg][phm]overlay=0:0:shortest=1[base];` +
+      `[1:v]setpts=PTS/${speed.toFixed(3)},fps=30,scale=${PH.w}:${PH.h}:flags=lanczos,setsar=1,pad=1080:1920:${PH.x}:${PH.y}:black,format=rgba[ph];[2:v]scale=1080:1920,format=gray[mk];[ph][mk]alphamerge[phm];[0:v]scale=1080:1920,format=rgba[bg];[bg][phm]overlay=0:0:shortest=1[base];` +
         `[3:v]scale=1080:1920,format=rgba,crop=1080:${TB.h}:0:${TB.y},scale=w='trunc(1080*(${POP})/2)*2':h=-2:eval=frame[tt];` +
         `[base][tt]overlay=x='(W-w)/2':y='${TB.y}+(${TB.h}-h)/2':eval=frame:enable='gte(t,${POP_AT})',` +
         `scale=w='trunc(1080*(1+0.06*max(0,1-(t-0.24)/0.22)*gte(t,0.24)+0.035*t/${d})/2)*2':h=-2:eval=frame,crop=1080:1920,format=yuv420p[v]`,
@@ -682,6 +791,15 @@ if (VIDEO === 'ana') {
   cue('ko', 0.05, 'heavy', 0.9);
   cue('ko', 0.3, 'roar', 0.8);
   cue('finish', 0.2, 'applause', 0.6);
+} else if (VIDEO === 'insta') {
+  cue('story', 0.45, 'whoosh', 0.5);
+  [0.7, 1.25, 1.8, 2.3].forEach((x) => cue('photo', x, 'tap', 0.7));
+  cue('photo', 2.85, 'chime', 0.7);
+  cue('profile', 0.4, 'cash', 0.4);
+  [0.4, 1.4, 2.4].forEach((x) => cue('dm', x, 'tap', 0.7));
+  cue('dm', 2.5, 'chime', 0.5);
+  cue('trash', 2.9, 'slam', 0.6);
+  cue('board', 0.9, 'swell', 0.5);
 } else {
   cue('social', 1.0, 'chime', 0.6);
   cue('date', 0.9, 'chime', 0.5);
