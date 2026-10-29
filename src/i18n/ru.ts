@@ -7602,4 +7602,10 @@ export const RU: Record<string, string> = {
   "Basın toplantısında bir laf düellosu kazan": "Выиграй словесную дуэль на пресс-конференции",
   "Yonca": "Клевер",
   "Dublin Gecesi etkinliği (sınırlı süre)": "Событие «Дублинская ночь» (ограниченное время)",
+  "🔒 PAKET": "🔒 НАБОР",
+  "Satın alma şu an yapılamadı. Biraz sonra tekrar dene.": "Сейчас покупка не удалась. Попробуй чуть позже.",
+  "EFSANELER PAKETİ": "НАБОР ЛЕГЕНД",
+  "{0} efsane, {1} bölüm, her efsaneye özel şort. Tek seferlik alım; sonra gelecek efsaneler de dahil.": "Легенд: {0}, глав: {1}, эксклюзивные шорты для каждой легенды. Разовая покупка; будущие легенды включены.",
+  "Paketi al · {0}": "Купить набор · {0}",
+  "Paketi al": "Купить набор",
 };

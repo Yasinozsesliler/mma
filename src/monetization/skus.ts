@@ -11,4 +11,7 @@ export type CosmeticSku = (typeof COSMETIC_SKUS)[number];
 /** Efsane Koleksiyonu: bütün kozmetik paketleri tek alımda. Önerilen ≈ 5,99 $ */
 export const BUNDLE_SKU = 'paket_efsane';
 
-export const ALL_SKUS: string[] = [PREMIUM_SKU, ADFREE_SKU, ...COSMETIC_SKUS, BUNDLE_SKU];
+/** Efsaneler Paketi: Conor dışındaki bütün Efsane Yolları hikâyeleri (ve sonra gelecek efsaneler). Önerilen ≈ 2,99 $ */
+export const LEGENDS_SKU = 'efsaneler_paketi';
+
+export const ALL_SKUS: string[] = [PREMIUM_SKU, ADFREE_SKU, ...COSMETIC_SKUS, BUNDLE_SKU, LEGENDS_SKU];

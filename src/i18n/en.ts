@@ -7553,4 +7553,10 @@ export const EN: Record<string, string> = {
   "Basın toplantısında bir laf düellosu kazan": "Win a trash-talk duel at a press conference",
   "Yonca": "Shamrock",
   "Dublin Gecesi etkinliği (sınırlı süre)": "Dublin Night event (limited time)",
+  "🔒 PAKET": "🔒 PACK",
+  "Satın alma şu an yapılamadı. Biraz sonra tekrar dene.": "The purchase couldn't be completed right now. Try again in a moment.",
+  "EFSANELER PAKETİ": "LEGENDS PACK",
+  "{0} efsane, {1} bölüm, her efsaneye özel şort. Tek seferlik alım; sonra gelecek efsaneler de dahil.": "{0} legends, {1} chapters, exclusive shorts for each legend. One-time purchase; future legends included.",
+  "Paketi al · {0}": "Get the pack · {0}",
+  "Paketi al": "Get the pack",
 };

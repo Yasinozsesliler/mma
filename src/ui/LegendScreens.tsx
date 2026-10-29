@@ -5,7 +5,8 @@ import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { cosmeticById } from '../engine/cosmetics';
 import { currentChapter, dismissLegendIntro, LEGEND_IDS, LEGENDS, legendMaxStars, legendName, legendStars, noteOpen, openNote, type Chapter, type LegendId, type LegendRun } from '../engine/legendRun';
-import { MONETIZATION } from '../monetization';
+import { buy, MONETIZATION, PURCHASES, restorePurchases, useOwned, usePrice } from '../monetization';
+import { LEGENDS_SKU } from '../monetization/skus';
 import { AdOffer } from './AdOffer';
 import { ShareButton } from '../share/ShareButton';
 import { legendCard } from '../share/build';
@@ -34,11 +35,20 @@ function Stars({ n, max = 3, size = 14 }: { n: number; max?: number; size?: numb
 
 // ---------- Menü: efsane listesi ----------
 
+/** Efsane açık mı: ücretsizler, web (satın alma yok) ya da Efsaneler Paketi sahipleri. */
+export function useLegendUnlocked() {
+  const owned = useOwned();
+  return (id: LegendId) => LEGENDS[id].ucretsiz || !PURCHASES || owned.has(LEGENDS_SKU);
+}
+
 export function LegendList({ canStart, onStart }: { canStart: boolean; onStart: (id: LegendId, isim: LegendName) => void }) {
   const best = useLegendBest();
   const [open, setOpen] = useState<LegendId | null>(null);
+  const unlocked = useLegendUnlocked();
+  const anyLocked = LEGEND_IDS.some((id) => !unlocked(id));
   return (
     <>
+      {anyLocked ? <LegendPack /> : null}
       <LinearGradient colors={['#1d1606', '#0c0d10']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={st.hero}>
         <Text style={st.heroKicker}>{L("HİKÂYE MODU")}</Text>
         <Text style={st.heroText}>{L("Kafesin en büyük hikâyelerini yeniden yaz. Her bölüm efsanenin hayatından bir dönem; yıldızlar tarihe ne kadar sadık kaldığını gösterir.")}</Text>
@@ -57,7 +67,11 @@ export function LegendList({ canStart, onStart }: { canStart: boolean; onStart: 
                     {d.bayrak} {upName(legendName(d), d.uyruk)}
                   </Text>
                   {d.oynanabilir ? (
-                    d.ucretsiz ? <Text style={[st.badge, { color: C.green, borderColor: C.green + '88' }]}>{L("ÜCRETSİZ")}</Text> : null
+                    d.ucretsiz ? (
+                      <Text style={[st.badge, { color: C.green, borderColor: C.green + '88' }]}>{L("ÜCRETSİZ")}</Text>
+                    ) : !unlocked(id) ? (
+                      <Text style={[st.badge, { color: C.gold, borderColor: C.gold + '88' }]}>{L("🔒 PAKET")}</Text>
+                    ) : null
                   ) : (
                     <Text style={[st.badge, { color: C.faint, borderColor: C.faint }]}>{L("YAKINDA")}</Text>
                   )}
@@ -85,7 +99,7 @@ export function LegendList({ canStart, onStart }: { canStart: boolean; onStart: 
               </View>
               {d.oynanabilir ? <Icon name={isOpen ? 'chevron-up' : 'chevron-down'} size={20} color={C.faint} /> : null}
             </Pressable>
-            {isOpen ? <LegendDetail id={id} canStart={canStart} onStart={(isim) => onStart(id, isim)} /> : null}
+            {isOpen ? <LegendDetail id={id} canStart={canStart} locked={!unlocked(id)} onStart={(isim) => onStart(id, isim)} /> : null}
           </View>
         );
       })}
@@ -93,7 +107,39 @@ export function LegendList({ canStart, onStart }: { canStart: boolean; onStart: 
   );
 }
 
-function LegendDetail({ id, canStart, onStart }: { id: LegendId; canStart: boolean; onStart: (isim: LegendName) => void }) {
+/** Efsaneler Paketi satın alma kutusu (liste başında ve kilitli efsanenin ayrıntısında). */
+function LegendPack({ compact }: { compact?: boolean }) {
+  const price = usePrice(LEGENDS_SKU);
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState('');
+  const paid = LEGEND_IDS.filter((id) => !LEGENDS[id].ucretsiz).length;
+  const chapters = LEGEND_IDS.filter((id) => !LEGENDS[id].ucretsiz).reduce((n, id) => n + LEGENDS[id].bolumler.length, 0);
+  const purchase = async () => {
+    if (busy) return;
+    setBusy(true);
+    setMsg('');
+    const r = await buy(LEGENDS_SKU);
+    setBusy(false);
+    if (r === 'hata') setMsg(L("Satın alma şu an yapılamadı. Biraz sonra tekrar dene."));
+  };
+  return (
+    <LinearGradient colors={['#2a1d05', '#100c04']} style={[st.pack, compact && { marginBottom: 0 }]}>
+      {!compact ? <Text style={st.packKicker}>{L("EFSANELER PAKETİ")}</Text> : null}
+      <Text style={st.packText}>
+        {L("{0} efsane, {1} bölüm, her efsaneye özel şort. Tek seferlik alım; sonra gelecek efsaneler de dahil.", [paid, chapters])}
+      </Text>
+      <Button label={price ? L("Paketi al · {0}", [price]) : L("Paketi al")} icon="crown" tone="gold" disabled={busy} onPress={purchase} />
+      {!compact ? (
+        <Pressable onPress={async () => setMsg((await restorePurchases()) ? L("Satın alımların geri yüklendi.") : L("Bu hesapta satın alma bulunamadı."))} hitSlop={8} style={{ alignSelf: 'center', marginTop: 8 }}>
+          <Text style={st.link}>{L("Satın alımları geri yükle")}</Text>
+        </Pressable>
+      ) : null}
+      {msg ? <Text style={[st.warn, { textAlign: 'center' }]}>{msg}</Text> : null}
+    </LinearGradient>
+  );
+}
+
+function LegendDetail({ id, canStart, locked, onStart }: { id: LegendId; canStart: boolean; locked: boolean; onStart: (isim: LegendName) => void }) {
   const d = LEGENDS[id];
   const [isim, setIsim] = useState<LegendName>({ ad: d.ad, soyad: d.soyad, lakap: d.lakap() });
   return (
@@ -113,8 +159,14 @@ function LegendDetail({ id, canStart, onStart }: { id: LegendId; canStart: boole
         <TextInput style={[st.input, { flex: 1, minWidth: 0, width: 0 }]} value={isim.soyad} onChangeText={(soyad) => setIsim({ ...isim, soyad })} placeholder={L("Soyad")} placeholderTextColor={C.faint} maxLength={18} />
       </View>
       <TextInput style={st.input} value={isim.lakap} onChangeText={(lakap) => setIsim({ ...isim, lakap })} placeholder={L("Lakap")} placeholderTextColor={C.faint} maxLength={18} />
-      {!canStart ? <Text style={st.warn}>{L("Efsane yolunu başlatmak için boş bir kariyer yuvası gerekli.")}</Text> : null}
-      <Button label={L("Hikâyeyi başlat")} icon="book-open-variant" tone="gold" disabled={!canStart} onPress={() => onStart(isim)} />
+      {locked ? (
+        <LegendPack compact />
+      ) : (
+        <>
+          {!canStart ? <Text style={st.warn}>{L("Efsane yolunu başlatmak için boş bir kariyer yuvası gerekli.")}</Text> : null}
+          <Button label={L("Hikâyeyi başlat")} icon="book-open-variant" tone="gold" disabled={!canStart} onPress={() => onStart(isim)} />
+        </>
+      )}
     </View>
   );
 }
@@ -339,6 +391,9 @@ const st = StyleSheet.create({
   replay: { flexDirection: 'row', alignItems: 'center', gap: 10, borderWidth: 1, borderColor: C.goldDeep, borderStyle: 'dashed', borderRadius: 12, padding: 10, marginTop: 6 },
   replayTitle: { color: C.gold, fontFamily: F.bold, fontSize: 13 },
   replayDesc: { color: C.dim, fontFamily: F.body, fontSize: 12, marginTop: 1 },
+  pack: { borderRadius: 14, borderWidth: 1, borderColor: C.gold + '66', padding: 14, marginBottom: 12, gap: 10 },
+  packKicker: { color: C.gold, fontFamily: F.display, fontSize: 14, letterSpacing: 1.5 },
+  packText: { color: C.text, fontFamily: F.body, fontSize: 13, lineHeight: 18 },
   note: { backgroundColor: '#15120a', borderWidth: 1, borderColor: C.goldDeep, borderRadius: 10, padding: 10, marginTop: 8 },
   noteKicker: { color: C.gold, fontFamily: F.bold, fontSize: 11, letterSpacing: 0.5 },
   noteText: { color: C.text, fontFamily: F.body, fontSize: 13, lineHeight: 18, marginTop: 4 },
