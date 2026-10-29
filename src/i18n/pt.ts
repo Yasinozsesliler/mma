@@ -6806,4 +6806,5 @@ export const PT: Record<string, string> = {
   "🥊 Asrın teklifi geldi: {0} (49-0) ile boks maçı. Ücret {1}.": "🥊 A proposta do século: luta de boxe com {0} (49-0). Bolsa {1}.",
   "Efsane Yolu: {0} hikâyesini tamamla": "Conclua a história Caminho da lenda: {0}",
   "Efsanelerin kariyerlerini bölüm bölüm yeniden yaşa. İlk hikâye: {0} 🇮🇪": "Reviva as carreiras das lendas capítulo a capítulo. Primeira história: {0} 🇮🇪",
+  "Yana taralı": "Penteado de lado",
 };

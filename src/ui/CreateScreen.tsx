@@ -87,7 +87,7 @@ export function CreateScreen({
         siklet,
         boy: BASE_BOY[siklet],
         gorunum: kadin
-          ? { ...g, kadin: true, sakal: 'yok', sac: g.sac === 'kisa' || g.sac === 'kazik' || g.sac === 'mohawk' || g.sac === 'kel' ? 'atkuyrugu' : g.sac, kulak: 0, kas: 0, dudak: 2 }
+          ? { ...g, kadin: true, sakal: 'yok', sac: g.sac === 'kisa' || g.sac === 'yanayrik' || g.sac === 'kazik' || g.sac === 'mohawk' || g.sac === 'kel' ? 'atkuyrugu' : g.sac, kulak: 0, kas: 0, dudak: 2 }
           : { ...g, kadin: undefined, sakal: g.sakal === 'yok' ? 'kirli' : g.sakal, sac: g.sac === 'atkuyrugu' ? 'kisa' : g.sac, kas: 1, dudak: 1 },
       };
     });

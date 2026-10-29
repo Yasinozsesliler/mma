@@ -107,7 +107,7 @@ function Head({ c, ang, look, skin, ref, hasar = 0 }: { c: { x: number; y: numbe
       {/* Kulak */}
       <Ellipse cx={c.x - 3} cy={c.y + 1} rx={2} ry={2.8} fill={dark} />
       {/* Saç */}
-      {s === 'kisa' || s === 'topuz' || s === 'uzun' || s === 'orgu' || s === 'atkuyrugu' ? <Path d={L("M{0} {1} q1 -11 10 -10.5 q6 1 7 6 q-7 -3 -13 1 q-1 1 -4 3.5 z", [c.x - 8.4, c.y - 1])} fill={hair} /> : null}
+      {s === 'kisa' || s === 'yanayrik' || s === 'topuz' || s === 'uzun' || s === 'orgu' || s === 'atkuyrugu' ? <Path d={L("M{0} {1} q1 -11 10 -10.5 q6 1 7 6 q-7 -3 -13 1 q-1 1 -4 3.5 z", [c.x - 8.4, c.y - 1])} fill={hair} /> : null}
       {s === 'kazik' ? <Path d={L("M{0} {1} q1 -9 9.5 -9.3 q6 0.5 7 5 q-8 -2 -16.5 4.3 z", [c.x - 8.2, c.y - 2])} fill={hair} opacity={0.55} /> : null}
       {s === 'mohawk' ? <Path d={L("M{0} {1} q5 -9 12 -4 l-2 3 q-5 -3 -10 1 z", [c.x - 6, c.y - 6])} fill={hair} /> : null}
       {/* Kaş, göz, burun */}

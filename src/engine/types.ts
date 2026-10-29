@@ -35,7 +35,7 @@ export type Stage = 'amator' | 'bolgesel' | 'buyuk' | 'ufc';
 
 export interface Appearance {
   ten: number; // SKIN_TONES indeksi
-  sac: 'kazik' | 'kisa' | 'mohawk' | 'uzun' | 'topuz' | 'afro' | 'orgu' | 'kel' | 'atkuyrugu';
+  sac: 'kazik' | 'kisa' | 'mohawk' | 'uzun' | 'topuz' | 'afro' | 'orgu' | 'kel' | 'atkuyrugu' | 'yanayrik';
   sacRenk: number;
   goz: number;
   sakal: 'yok' | 'kirli' | 'tam' | 'keci' | 'biyik';

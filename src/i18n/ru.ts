@@ -6846,4 +6846,5 @@ export const RU: Record<string, string> = {
   "🥊 Asrın teklifi geldi: {0} (49-0) ile boks maçı. Ücret {1}.": "🥊 Предложение века: боксёрский поединок, соперник — {0} (49-0). Гонорар {1}.",
   "Efsane Yolu: {0} hikâyesini tamamla": "Пройди историю «Путь легенды: {0}»",
   "Efsanelerin kariyerlerini bölüm bölüm yeniden yaşa. İlk hikâye: {0} 🇮🇪": "Проживи карьеры легенд глава за главой. Первая история: {0} 🇮🇪",
+  "Yana taralı": "Зачёс набок",
 };

@@ -327,7 +327,8 @@ export const LEGENDS: Record<LegendId, LegendDef> = {
     siklet: 'tuy',
     gecmis: 'boks',
     boy: 175,
-    gorunum: { ten: 0, sac: 'kisa', sacRenk: 2, goz: 4, sakal: 'tam', yara: false, dovme: true, dovmeler: ['gogus', 'kol'] },
+    // Yana taralı saç, kızıl kahve gür sakal, mavi gözler, kalın kaşlar, göğüste ve kolda dövme
+    gorunum: { ten: 0, sac: 'yanayrik', sacRenk: 3, goz: 3, sakal: 'tam', yara: false, dovme: true, dovmeler: ['gogus', 'kol'], kas: 2, yuz: 1, burun: 1 },
     statMod: { vurus: 6, hiz: 3, iq: 4, kondisyon: -3 },
     para: 400,
     populerlik: 14,
