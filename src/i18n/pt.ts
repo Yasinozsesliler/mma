@@ -7557,4 +7557,9 @@ export const PT: Record<string, string> = {
   "Kol Kilidi": "Chave de Braço",
   "Örümcek Ağı": "Teia",
   "Efsanelerin kariyerlerini bölüm bölüm yeniden yaşa: {0} hikâye, {1} bölüm.": "Reviva as carreiras das lendas capítulo a capítulo: {0} histórias, {1} capítulos.",
+  "DUBLIN GECESİ": "NOITE DE DUBLIN",
+  "Kasım boyunca efsanelerin ayı: konuş, tahmin et, bitir.": "Novembro é o mês das lendas: fale, preveja, finalize.",
+  "Basın toplantısında bir laf düellosu kazan": "Vença um duelo de provocações numa coletiva",
+  "Yonca": "Trevo",
+  "Dublin Gecesi etkinliği (sınırlı süre)": "Evento Noite de Dublin (tempo limitado)",
 };

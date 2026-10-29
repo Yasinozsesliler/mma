@@ -4,7 +4,7 @@ import { L, LOC } from '../i18n';
 import { count, type Counter } from './weeklyEvent';
 import type { GameState } from './types';
 
-export type SpecialId = 'yilbasi' | 'sevgililer' | 'yaz' | 'cadilar' | 'ramazan' | 'kurban';
+export type SpecialId = 'yilbasi' | 'sevgililer' | 'yaz' | 'cadilar' | 'dublin' | 'ramazan' | 'kurban';
 
 type Task = { c: Counter; n: number };
 type Window = [number, number, number, number]; // ay, gün → ay, gün (yıl dönümü sarabilir)
@@ -14,6 +14,7 @@ export const SPECIALS: Record<SpecialId, { ad: () => string; alt: () => string; 
   sevgililer: { ad: () => L("SEVGİLİLER GÜNÜ"), alt: () => L("Taraftarlarına aşkını göster."), emoji: '💘', renk: ['#4a0d26', '#14060c'], kozmetik: 'eld_kalp', gorevler: [{ c: 'gonderi', n: 2 }, { c: 'win', n: 1 }, { c: 'finish', n: 1 }], pencere: [2, 10, 2, 16] },
   yaz: { ad: () => L("YAZ FESTİVALİ"), alt: () => L("Sıcak kamplar, sıcak maçlar."), emoji: '☀️', renk: ['#4a3206', '#140e05'], kozmetik: 'cer_gunes', gorevler: [{ c: 'idman', n: 2 }, { c: 'win', n: 2 }, { c: 'finish', n: 1 }], pencere: [7, 1, 7, 21] },
   cadilar: { ad: () => L("KORKU GECESİ"), alt: () => L("Cadılar bayramında rakiplerine kâbus yaşat."), emoji: '🎃', renk: ['#3a1a06', '#120804'], kozmetik: 'sort_balkabagi', gorevler: [{ c: 'win', n: 1 }, { c: 'ko', n: 1 }, { c: 'r1', n: 1 }], pencere: [10, 24, 11, 2] },
+  dublin: { ad: () => L("DUBLIN GECESİ"), alt: () => L("Kasım boyunca efsanelerin ayı: konuş, tahmin et, bitir."), emoji: '☘️', renk: ['#0d3b22', '#06130b'], kozmetik: 'eld_yonca', gorevler: [{ c: 'duello', n: 1 }, { c: 'ko', n: 1 }, { c: 'r1', n: 1 }], pencere: [11, 3, 11, 23] },
   ramazan: { ad: () => L("RAMAZAN BAYRAMI"), alt: () => L("Bayram ruhuyla kafese çık."), emoji: '🌙', renk: ['#0f2e24', '#07120e'], kozmetik: 'kem_bayram', gorevler: [{ c: 'gonderi', n: 2 }, { c: 'win', n: 1 }, { c: 'win', n: 2 }], tarihler: [['2027-03-08', '2027-03-14'], ['2028-02-25', '2028-03-02'], ['2029-02-13', '2029-02-19']] },
   kurban: { ad: () => L("KURBAN BAYRAMI"), alt: () => L("Bayram kartında ana maç senin."), emoji: '🕌', renk: ['#0f2e24', '#07120e'], kozmetik: 'kem_bayram', gorevler: [{ c: 'win', n: 1 }, { c: 'gonderi', n: 2 }, { c: 'finish', n: 1 }], tarihler: [['2027-05-15', '2027-05-21'], ['2028-05-03', '2028-05-09'], ['2029-04-22', '2029-04-28']] },
 };
@@ -91,6 +92,10 @@ export function specialTaskText(ev: SpecialEvent, i: number) {
       return L("Bir maçı 1. rauntta bitir");
     case 'gonderi':
       return L("Sosyal medyada {0} paylaşım yap", [g.n]);
+    case 'duello':
+      return L("Basın toplantısında bir laf düellosu kazan");
+    case 'sub':
+      return L("Bir maçı submission ile kazan");
     case 'idman':
       return L("Antrenman oyunlarında {0} kez 80+ puan al", [g.n]);
     default:

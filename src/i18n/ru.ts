@@ -7597,4 +7597,9 @@ export const RU: Record<string, string> = {
   "Kol Kilidi": "Рычаг",
   "Örümcek Ağı": "Паутина",
   "Efsanelerin kariyerlerini bölüm bölüm yeniden yaşa: {0} hikâye, {1} bölüm.": "Проживи карьеры легенд глава за главой: историй — {0}, глав — {1}.",
+  "DUBLIN GECESİ": "ДУБЛИНСКАЯ НОЧЬ",
+  "Kasım boyunca efsanelerin ayı: konuş, tahmin et, bitir.": "Ноябрь — месяц легенд: говори, предсказывай, добивай.",
+  "Basın toplantısında bir laf düellosu kazan": "Выиграй словесную дуэль на пресс-конференции",
+  "Yonca": "Клевер",
+  "Dublin Gecesi etkinliği (sınırlı süre)": "Событие «Дублинская ночь» (ограниченное время)",
 };

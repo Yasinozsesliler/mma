@@ -7548,4 +7548,9 @@ export const EN: Record<string, string> = {
   "Kol Kilidi": "Armbar",
   "Örümcek Ağı": "Spider Web",
   "Efsanelerin kariyerlerini bölüm bölüm yeniden yaşa: {0} hikâye, {1} bölüm.": "Relive legends' careers chapter by chapter: {0} stories, {1} chapters.",
+  "DUBLIN GECESİ": "DUBLIN NIGHT",
+  "Kasım boyunca efsanelerin ayı: konuş, tahmin et, bitir.": "November is legends' month: talk, predict, finish.",
+  "Basın toplantısında bir laf düellosu kazan": "Win a trash-talk duel at a press conference",
+  "Yonca": "Shamrock",
+  "Dublin Gecesi etkinliği (sınırlı süre)": "Dublin Night event (limited time)",
 };
