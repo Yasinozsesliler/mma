@@ -225,6 +225,8 @@ function playCareer() {
           if (s.sampiyon && ch === 'orta' && s.fighter.siklet === 'welter') changeWeight(s, 'orta');
           if (ch === 'hukumdar' && s.fighter.siklet !== 'welter' && s.stage === 'ufc') changeWeight(s, 'welter');
           if (banned(s)) serveBan(s);
+          if (ch === 'yukari' && s.sampiyon && s.fighter.siklet === 'orta' && s.stage === 'ufc') changeWeight(s, 'yariagir');
+          if (ch === 'rovans' && s.fighter.siklet === 'yariagir' && s.stage === 'ufc') changeWeight(s, 'orta');
           if (ch === 'miras' && !s.salon) openGym(s);
           if (ch === 'miras' && s.salon && s.salon.seviye < 2) upgradeGym(s);
           if (s.salon && s.salon.ogrenciler.length < 3) { refreshCandidates(s); const c = s.salon.adaylar?.list[0]; if (c && s.para > signCost(c) * 2) signStudent(s, c.id); }
@@ -351,7 +353,9 @@ function playCareer() {
         const score = (o: (typeof offers)[number]) => (o.org === 'ufc' ? 2e9 : o.org === 'dwcs' ? 1e9 : o.ucret);
         // Efsane botu: UCC öncesi şampiyonken (ikinci kemer için) organizasyonunda kalır
         const stay = s.efsane && currentChapter(s)?.id === 'ucc' && s.sampiyon ? offers.find((o) => o.org === s.contract?.org) : undefined;
-        const best = stay ?? [...offers].sort((a, b) => score(b) - score(a))[0];
+        // Son İmparator UCC'yi reddeder
+        const disari = s.efsane?.id === 'imparator' ? offers.find((o) => o.org !== 'ufc' && o.org !== 'dwcs') : undefined;
+        const best = stay ?? disari ?? [...offers].sort((a, b) => score(b) - score(a))[0];
         if (!best.pazarlikYapildi && Math.random() < 0.3) negotiateOffer(s, best.id);
         else acceptOffer(s, best.id);
         break;

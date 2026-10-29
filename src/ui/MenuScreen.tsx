@@ -3,7 +3,7 @@ import { ChallengeList } from './ChallengeList';
 import { LegendList, type LegendName } from './LegendScreens';
 import { loadDream } from './DreamScreen';
 import { albumProgress, triesLeft } from '../engine/dreamFight';
-import type { LegendId } from '../engine/legendRun';
+import { LEGEND_IDS, LEGENDS, type LegendId } from '../engine/legendRun';
 import { useLegendBest } from '../legendPrefs';
 import type { ChallengeId } from '../engine/challenges';
 import { useCosmetics, useFrame } from '../cosmetics';
@@ -348,7 +348,7 @@ export function MenuScreen({
               <Text style={ms.newBadge}>{L("YENİ")}</Text>
             </View>
             <Text style={ms.chSub} numberOfLines={2}>
-              {L("Efsanelerin kariyerlerini bölüm bölüm yeniden yaşa. Conor, Jonah, Georges ve Khabir: 4 hikâye, 36 bölüm.")}
+              {L("Efsanelerin kariyerlerini bölüm bölüm yeniden yaşa: {0} hikâye, {1} bölüm.", [LEGEND_IDS.length, LEGEND_IDS.reduce((n, id) => n + LEGENDS[id].bolumler.length, 0)])}
             </Text>
           </View>
           <View style={{ alignItems: 'flex-end' }}>

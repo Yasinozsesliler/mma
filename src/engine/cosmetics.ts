@@ -69,6 +69,9 @@ export const COSMETICS: Cosmetic[] = [
   { id: 'sort_dahi', slot: 'sort', ad: L("İskelet"), renk: ['#0b132b', '#f1faee'], desen: 'simsek', desenRenk: '#3a86ff', nadir: 'efsane', kaynak: basari(L("Efsane Yolu: {0} hikâyesini tamamla", ['Jonah Jonsby']), (c) => c.ozel.includes('sort_dahi')) },
   { id: 'sort_profesor', slot: 'sort', ad: L("Akçaağaç"), renk: ['#d62828', '#ffffff'], nadir: 'efsane', kaynak: basari(L("Efsane Yolu: {0} hikâyesini tamamla", ['Georges Saint-Pierron']), (c) => c.ozel.includes('sort_profesor')) },
   { id: 'sort_yenilmez', slot: 'sort', ad: L("Dağ Kartalı"), renk: ['#111111', '#c9a227'], desen: 'yildiz', desenRenk: '#c9a227', nadir: 'efsane', kaynak: basari(L("Efsane Yolu: {0} hikâyesini tamamla", ['Khabir Nurmagaliev']), (c) => c.ozel.includes('sort_yenilmez')) },
+  { id: 'sort_kralice', slot: 'sort', ad: L("Kol Kilidi"), renk: ['#ff4d8d', '#111111'], nadir: 'efsane', kaynak: basari(L("Efsane Yolu: {0} hikâyesini tamamla", ['Rhonda Rousseau']), (c) => c.ozel.includes('sort_kralice')) },
+  { id: 'sort_orumcek', slot: 'sort', ad: L("Örümcek Ağı"), renk: ['#111111', '#00a859'], desen: 'yildiz', desenRenk: '#ffd400', nadir: 'efsane', kaynak: basari(L("Efsane Yolu: {0} hikâyesini tamamla", ['Andre Silvano']), (c) => c.ozel.includes('sort_orumcek')) },
+  { id: 'sort_imparator', slot: 'sort', ad: L("Son İmparator"), renk: ['#f4f8ff', '#c1121f'], desen: 'simsek', desenRenk: '#9ad1ff', nadir: 'efsane', kaynak: basari(L("Efsane Yolu: {0} hikâyesini tamamla", ['Fyodor Yemelyanov']), (c) => c.ozel.includes('sort_imparator')) },
   { id: 'sort_balkabagi', slot: 'sort', ad: L("Balkabağı"), renk: ['#f77f00', '#111111'], kaynak: basari(L("Korku Gecesi etkinliği (sınırlı süre)"), (c) => c.ozel.includes('sort_balkabagi')) },
   // Eldiven
   { id: 'eld_klasik', slot: 'eldiven', ad: L("Kırmızı"), renk: ['#b8121f'], kaynak: hazir },

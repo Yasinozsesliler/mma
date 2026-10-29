@@ -12,6 +12,9 @@ import { $, type Chapter, type LegendDef, type LegendFight, type LegendId, type 
 import { KRAL } from './legendKral';
 import { PROFESOR } from './legendProfesor';
 import { YENILMEZ } from './legendYenilmez';
+import { KRALICE } from './legendKralice';
+import { ORUMCEK } from './legendOrumcek';
+import { IMPARATOR } from './legendImparator';
 import { clamp } from './rng';
 import type { GameState, Opponent, StatKey } from './types';
 
@@ -130,6 +133,90 @@ export const LEGENDS: Record<LegendId, LegendDef> = {
     odulKozmetik: 'sort_yenilmez',
     final: () => L("Dağların çocuğundan yenilmez bir şampiyona, oradan babasının salonunu taşıyan bir hocaya. Söz verdin ve tuttun."),
   },
+  kralice: {
+    id: 'kralice',
+    ad: 'Rhonda',
+    soyad: 'Rousseau',
+    lakap: () => 'Rowdy Rho',
+    uyruk: 'us',
+    memleket: () => L("Riverside, Kaliforniya"),
+    bayrak: '🇺🇸',
+    renk: '#ff4d8d',
+    ozet: () => L("Judo olimpiyat madalyalı kol kilidi kraliçesi. UCC'nin ilk kadın şampiyonu ve kadın MMA'nın kapılarını açan isim."),
+    etiketler: () => [L("İlk kadın şampiyon"), L("Kol kilidi"), L("Hollywood")],
+    oynanabilir: true,
+    ucretsiz: true,
+    yas: 21,
+    siklet: 'horoz',
+    gecmis: 'judo',
+    boy: 170,
+    // Sarı at kuyruğu, mavi gözler
+    gorunum: { ten: 0, sac: 'atkuyrugu', sacRenk: 5, goz: 3, sakal: 'yok', yara: false, dovme: false, kadin: true, yuz: 0, kas: 1, dudak: 2 },
+    statMod: { gures: 5, yer: 5, iq: 2, vurus: -2 },
+    para: 300,
+    populerlik: 10,
+    hoca: () => 'Edmond Tarvan',
+    salon: () => 'Glendale Fight Club',
+    bolumler: KRALICE,
+    odulKozmetik: 'sort_kralice',
+    final: () => L("Tatamideki küçük kızdan kadınların ilk UCC şampiyonuna. Sen kapıyı açtın; arkandan binlerce kadın geçti."),
+  },
+  orumcek: {
+    id: 'orumcek',
+    ad: 'Andre',
+    soyad: 'Silvano',
+    lakap: () => 'The Tarantula',
+    uyruk: 'br',
+    memleket: () => L("Curitiba"),
+    bayrak: '🇧🇷',
+    renk: '#00a859',
+    ozet: () => L("Curitiba'nın yoksul sokaklarından kafesin en zarif nakavtçısına. Kollarını indirip rakiplerini davet eden adam."),
+    etiketler: () => [L("Rekor saltanat"), L("Matrix"), L("40 yaşında kafeste")],
+    oynanabilir: true,
+    ucretsiz: true,
+    yas: 22,
+    siklet: 'orta',
+    gecmis: 'muaythai',
+    boy: 188,
+    // Kel, keçi sakalı, uzun yüz
+    gorunum: { ten: 4, sac: 'kel', sacRenk: 0, goz: 0, sakal: 'keci', yara: false, dovme: false, yuz: 3, kas: 1, burun: 1 },
+    statMod: { vurus: 6, hiz: 4, iq: 4, gures: -4 },
+    para: 200,
+    populerlik: 6,
+    hoca: () => 'Mestre Ramos',
+    salon: () => 'Chuta Box Academy',
+    bolumler: ORUMCEK,
+    odulKozmetik: 'sort_orumcek',
+    final: () => L("Duvar arkasından ders izleyen çocuktan kafesin en zarif sanatçısına. Ağını ördün; tarih o ağa takıldı."),
+  },
+  imparator: {
+    id: 'imparator',
+    ad: 'Fyodor',
+    soyad: 'Yemelyanov',
+    lakap: () => 'The Last Tsar',
+    uyruk: 'ru',
+    memleket: () => L("Stary Oskol"),
+    bayrak: '🇷🇺',
+    renk: '#9ad1ff',
+    ozet: () => L("Hiç gülümsemeyen adam. Japonya'nın dev arenalarında on yıl yenilmeyen, UCC'yi reddeden son imparator."),
+    etiketler: () => [L("On yıl yenilmez"), L("UCC'yi reddetti"), L("Son İmparator")],
+    oynanabilir: true,
+    ucretsiz: true,
+    yas: 21,
+    siklet: 'agir',
+    gecmis: 'sambo',
+    boy: 183,
+    // Kısa açık kahve saç, sakalsız, yuvarlak yüz, mavi gözler
+    gorunum: { ten: 0, sac: 'kisa', sacRenk: 2, goz: 3, sakal: 'yok', yara: false, dovme: false, yuz: 2, kas: 1, burun: 1 },
+    statMod: { yer: 4, vurus: 4, cene: 3, kondisyon: 2, hiz: -3 },
+    para: 150,
+    populerlik: 4,
+    hoca: () => 'Vladimir Voronov',
+    salon: () => L("Kızıl Şeytan Spor Kulübü"),
+    bolumler: IMPARATOR,
+    odulKozmetik: 'sort_imparator',
+    final: () => L("Demir şehrin sessiz çocuğundan tarihin en büyük ağır sıkletlerinden birine. Tahtı kimse elinden almadı; kendin indin."),
+  },
 };
 
 export const LEGEND_IDS = Object.keys(LEGENDS) as LegendId[];
@@ -154,6 +241,7 @@ export function createLegendGame(id: LegendId, isim?: { ad?: string; soyad?: str
     hikaye: d.ozet(),
     gorunum: d.gorunum,
     boy: d.boy,
+    kadin: d.gorunum.kadin,
   };
   const stats = rollStartingStats(input, false);
   Object.entries(d.statMod).forEach(([k, v]) => (stats[k as StatKey] = clamp(stats[k as StatKey] + (v ?? 0), 10, 72)));
@@ -273,7 +361,8 @@ export function legendRivals(s: GameState) {
   const r = s.efsane;
   const ch = currentChapter(s);
   const rk = ch?.rakip;
-  if (!r || !ch || !rk || s.stage !== 'ufc' || s.fighter.siklet !== rk.siklet) return;
+  if (!r || !ch || !rk || s.fighter.siklet !== rk.siklet) return;
+  if (rk.disari ? s.stage === 'ufc' || s.stage === 'amator' : s.stage !== 'ufc') return;
   const key = `rk_${ch.id}`;
   if (r.bayrak?.[key]) return;
   ensureDivision(s);

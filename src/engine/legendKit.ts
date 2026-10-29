@@ -7,7 +7,7 @@ import { uid } from './rng';
 import type { Appearance, Background, GameState, Method, OrgId, StatKey, WeightClass } from './types';
 import type { NewFighterInput } from './character';
 
-export type LegendId = 'kral' | 'dahi' | 'profesor' | 'yenilmez';
+export type LegendId = 'kral' | 'dahi' | 'profesor' | 'yenilmez' | 'kralice' | 'orumcek' | 'imparator';
 
 export interface LegendRun {
   id: LegendId;
@@ -59,6 +59,8 @@ export interface ChapterRival {
   stil: Background;
   siklet: WeightClass;
   sampiyon?: boolean;
+  /** Rakip UCC dışındaki büyük organizasyonlarda çıkar (varsayılan UCC) */
+  disari?: boolean;
 }
 
 export interface Chapter {
