@@ -66,6 +66,9 @@ export const COSMETICS: Cosmetic[] = [
   { id: 'sort_parlak', slot: 'sort', ad: L("Hologram"), renk: ['#7fdbff', '#c86bff'], desen: 'yildiz', desenRenk: '#ffffff', nadir: 'efsane', kaynak: basari(L("Kart Albümü: Parlak Kartlar setini tamamla"), (c) => c.ozel.includes('sort_parlak')) },
   { id: 'sort_kar', slot: 'sort', ad: L("Kar Beyazı"), renk: ['#f4f8ff', '#c1121f'], kaynak: basari(L("Yılbaşı Kupası etkinliği (sınırlı süre)"), (c) => c.ozel.includes('sort_kar')) },
   { id: 'sort_kral', slot: 'sort', ad: L("Yeşil Ada"), renk: ['#169b62', '#ff883e'], nadir: 'efsane', kaynak: basari(L("Efsane Yolu: {0} hikâyesini tamamla", ['Conor McGrath']), (c) => c.ozel.includes('sort_kral')) },
+  { id: 'sort_dahi', slot: 'sort', ad: L("İskelet"), renk: ['#0b132b', '#f1faee'], desen: 'simsek', desenRenk: '#3a86ff', nadir: 'efsane', kaynak: basari(L("Efsane Yolu: {0} hikâyesini tamamla", ['Jonah Jonsby']), (c) => c.ozel.includes('sort_dahi')) },
+  { id: 'sort_profesor', slot: 'sort', ad: L("Akçaağaç"), renk: ['#d62828', '#ffffff'], nadir: 'efsane', kaynak: basari(L("Efsane Yolu: {0} hikâyesini tamamla", ['Georges Saint-Pierron']), (c) => c.ozel.includes('sort_profesor')) },
+  { id: 'sort_yenilmez', slot: 'sort', ad: L("Dağ Kartalı"), renk: ['#111111', '#c9a227'], desen: 'yildiz', desenRenk: '#c9a227', nadir: 'efsane', kaynak: basari(L("Efsane Yolu: {0} hikâyesini tamamla", ['Khabir Nurmagaliev']), (c) => c.ozel.includes('sort_yenilmez')) },
   { id: 'sort_balkabagi', slot: 'sort', ad: L("Balkabağı"), renk: ['#f77f00', '#111111'], kaynak: basari(L("Korku Gecesi etkinliği (sınırlı süre)"), (c) => c.ozel.includes('sort_balkabagi')) },
   // Eldiven
   { id: 'eld_klasik', slot: 'eldiven', ad: L("Kırmızı"), renk: ['#b8121f'], kaynak: hazir },

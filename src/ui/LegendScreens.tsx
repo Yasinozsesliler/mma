@@ -4,7 +4,9 @@ import { useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { cosmeticById } from '../engine/cosmetics';
-import { currentChapter, dismissLegendIntro, LEGEND_IDS, LEGENDS, legendMaxStars, legendName, legendStars, type Chapter, type LegendId, type LegendRun } from '../engine/legendRun';
+import { currentChapter, dismissLegendIntro, LEGEND_IDS, LEGENDS, legendMaxStars, legendName, legendStars, noteOpen, openNote, type Chapter, type LegendId, type LegendRun } from '../engine/legendRun';
+import { MONETIZATION } from '../monetization';
+import { AdOffer } from './AdOffer';
 import type { GameState } from '../engine/types';
 import { L, LOC } from '../i18n';
 import { useLegendBest } from '../legendPrefs';
@@ -161,6 +163,16 @@ export function LegendHubCard({ s, act }: { s: GameState; act: Act }) {
               );
             })}
             {ch.ipucu ? <Text style={st.hint}>💡 {ch.ipucu()}</Text> : null}
+            {ch.not ? (
+              noteOpen(s, ch) || !MONETIZATION ? (
+                <View style={st.note}>
+                  <Text style={st.noteKicker}>{L("📋 HOCANIN NOTU · {0}", [s.takim.antrenor])}</Text>
+                  <Text style={st.noteText}>{ch.not()}</Text>
+                </View>
+              ) : (
+                <AdOffer icon="clipboard-text" title={L("Hocanın notu")} desc={L("{0} bu bölümün yıldızları için ayrıntılı taktiğini anlatsın.", [s.takim.antrenor])} onReward={() => act(openNote)} />
+              )
+            ) : null}
             <Pressable onPress={() => setReread(true)} hitSlop={8} style={{ alignSelf: 'flex-start', marginTop: 6 }}>
               <Text style={st.link}>{L("Bölümün hikâyesini oku")}</Text>
             </Pressable>
@@ -279,6 +291,9 @@ const st = StyleSheet.create({
   goalProg: { color: C.gold, fontFamily: F.display, fontSize: 15 },
   starRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 3 },
   starText: { color: C.dim, fontFamily: F.body, fontSize: 12.5, flex: 1 },
+  note: { backgroundColor: '#15120a', borderWidth: 1, borderColor: C.goldDeep, borderRadius: 10, padding: 10, marginTop: 8 },
+  noteKicker: { color: C.gold, fontFamily: F.bold, fontSize: 11, letterSpacing: 0.5 },
+  noteText: { color: C.text, fontFamily: F.body, fontSize: 13, lineHeight: 18, marginTop: 4 },
   hint: { color: C.dim, fontFamily: F.body, fontSize: 12, lineHeight: 17, marginTop: 6 },
   link: { color: C.gold, fontFamily: F.semi, fontSize: 12, textDecorationLine: 'underline' },
   modalWrap: { flex: 1, backgroundColor: '#000000cc', paddingHorizontal: 16, justifyContent: 'center' },

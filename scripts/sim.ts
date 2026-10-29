@@ -35,6 +35,8 @@ import {
 } from '../src/engine/career';
 import { createGame, rollStartingStats } from '../src/engine/character';
 import { changeWeight } from '../src/engine/career';
+import { banned, serveBan } from '../src/engine/doping';
+import { openGym, refreshCandidates, signCost, signStudent, upgradeGym } from '../src/engine/academy';
 import { acceptCrossover, boxRound, closeBox } from '../src/engine/crossover';
 import { createLegendGame, currentChapter, LEGENDS, legendStars, type LegendId } from '../src/engine/legendRun';
 import { chooseEvent, closeEvent } from '../src/engine/events';
@@ -219,6 +221,13 @@ function playCareer() {
           const ch = currentChapter(s)?.id;
           if (s.sampiyon && s.fighter.siklet === 'tuy' && ch === 'ucc' && s.stage !== 'ufc') changeWeight(s, 'hafif');
           if (s.sampiyon && ch === 'cifte' && s.stage === 'ufc') changeWeight(s, s.fighter.siklet === 'tuy' ? 'hafif' : 'tuy');
+          if (s.sampiyon && ch === 'agir' && s.fighter.siklet === 'yariagir') changeWeight(s, 'agir');
+          if (s.sampiyon && ch === 'orta' && s.fighter.siklet === 'welter') changeWeight(s, 'orta');
+          if (ch === 'hukumdar' && s.fighter.siklet !== 'welter' && s.stage === 'ufc') changeWeight(s, 'welter');
+          if (banned(s)) serveBan(s);
+          if (ch === 'miras' && !s.salon) openGym(s);
+          if (ch === 'miras' && s.salon && s.salon.seviye < 2) upgradeGym(s);
+          if (s.salon && s.salon.ogrenciler.length < 3) { refreshCandidates(s); const c = s.salon.adaylar?.list[0]; if (c && s.para > signCost(c) * 2) signStudent(s, c.id); }
         }
         if (s.saglik < 55 || s.sakatliklar.length) rest(s);
         else findNextFight(s);

@@ -7,11 +7,12 @@ import Svg, { Circle, Ellipse, G, Rect, Text as SvgText } from 'react-native-svg
 import { sfx } from '../audio';
 import { currentOrg } from '../engine/character';
 import { ORGS } from '../engine/data';
-import type { PressStyle } from '../engine/pressConf';
+import { claimViral, viralPay, type PressStyle } from '../engine/pressConf';
 import { lookFor } from '../engine/tale';
 import type { GameState } from '../engine/types';
 import { buzz } from '../haptics';
 import { L, LOC } from '../i18n';
+import { AdOffer } from './AdOffer';
 import { Button, Icon, Screen, SLANT, upName, type IconName } from './components';
 import { FighterAvatar } from './FighterAvatar';
 import { C, F, R } from './theme';
@@ -66,7 +67,7 @@ function Stage({ w, org }: { w: number; org: string }) {
   );
 }
 
-export function PressConference({ s, header, choose }: { s: GameState; header: ReactNode; choose: (v: string | number) => void }) {
+export function PressConference({ s, header, choose, act }: { s: GameState; header: ReactNode; choose: (v: string | number) => void; act: (fn: (s: GameState) => void) => void }) {
   const p = s.pending.kamp!.basinSahne!;
   const o = s.pending.rakip!;
   const { width } = useWindowDimensions();
@@ -121,6 +122,7 @@ export function PressConference({ s, header, choose }: { s: GameState; header: R
             <Text style={st.muhabir}>
               🎤 {q.muhabir} · {L("Soru {0}/{1}", [n + 1, p.sorular.length])}
             </Text>
+            {q.tarihi ? <Text style={st.efsane}>{L("📜 EFSANE SORUSU · Tarihteki cevabı bul, maçı kazan: ek gelir")}</Text> : null}
             <Text style={st.soru}>{q.soru}</Text>
           </LinearGradient>
           <View style={{ gap: 8 }}>
@@ -136,9 +138,14 @@ export function PressConference({ s, header, choose }: { s: GameState; header: R
           </View>
         </>
       ) : (
+        <>
+          {!s.pending.kamp?.viral ? (
+            <AdOffer icon="trending-up" title={L("Viral klip")} desc={L("Basın toplantısının en sert anını paylaş: takipçi kazan, bilet satışları artsın (+{0}).", [`$${viralPay(s).toLocaleString(LOC)}`])} onReward={() => act(claimViral)} />
+          ) : null}
         <Text style={st.done}>
           {(s.pending.kamp?.iddia ?? 0) > 0 ? L("Büyük konuştun. Şimdi kafeste sözünü tutman gerek: kazanırsan alkış, kaybedersen manşetler acımaz.") : L("Basın toplantısı bitti. Gözler şimdi tartıda ve kafeste.")}
         </Text>
+        </>
       )}
     </Screen>
   );
@@ -153,6 +160,7 @@ const st = StyleSheet.create({
   react: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#1d1708', borderRadius: R, borderWidth: 1, borderColor: C.goldDeep, padding: 10, marginBottom: 10 },
   reactT: { flex: 1, color: C.text, fontFamily: F.semi, fontSize: 13, lineHeight: 18 },
   q: { borderRadius: R, borderWidth: 1, borderColor: C.border, padding: 14, marginBottom: 10 },
+  efsane: { color: C.gold, fontFamily: F.bold, fontSize: 11, marginTop: 4 },
   muhabir: { color: C.faint, fontFamily: F.semi, fontSize: 11, letterSpacing: 0.5 },
   soru: { color: C.text, fontFamily: F.bold, fontSize: 16, lineHeight: 22, marginTop: 4 },
   ans: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: C.card, borderRadius: R, borderWidth: 1, padding: 12 },

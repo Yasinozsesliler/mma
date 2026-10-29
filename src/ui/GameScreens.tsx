@@ -285,7 +285,7 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
             </Notice>
           ) : null}
           <LegendHubCard s={s} act={act} />
-          {legendHoldsUcc(s) || currentChapter(s)?.id === 'ucc' ? null : <UccRoadCard s={s} />}
+          {legendHoldsUcc(s) || currentChapter(s)?.uccKapi ? null : <UccRoadCard s={s} />}
           <GrandPrixCard s={s} act={act} />
           <KafesEviInvite s={s} act={act} />
           <BrainCard s={s} act={act} />
@@ -691,7 +691,7 @@ export function CampScreen({ s, act }: { s: GameState; act: Act }) {
   // Serbest haftalar ve kamp haftaları tek ekranda kendiliğinden akar; yalnızca kararlarda durur
   if (k.step === 'takvim' || k.step === 'haftalik') return <CampRun key="kamp-akisi" s={s} header={header} choose={choose} />;
   if (k.step === 'duello') return <TrashTalkDuel key={o.id} s={s} header={header} choose={choose} />;
-  if (k.step === 'basinsahne') return <PressConference s={s} header={header} choose={choose} />;
+  if (k.step === 'basinsahne') return <PressConference s={s} header={header} choose={choose} act={act} />;
   if (k.step === 'ozet') return <CampSummary s={s} act={act} choose={choose} />;
   if (k.step === 'kesim') return <WeightCutStep s={s} header={header} choose={choose} />;
 

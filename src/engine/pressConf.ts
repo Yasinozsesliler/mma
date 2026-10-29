@@ -1,9 +1,10 @@
 // Basın toplantısı sahnesi: kamp bitince masada rakibinle yan yana oturursun, gazeteciler iki soru sorar.
 // Alçakgönüllü, iddialı ya da esprili cevap; hype, popülerlik ve hocanla bağ değişir. İddialı konuşursan sözün
 // maç gecesi seni takip eder: kazanırsan alkış, kaybedersen "sözünü yedi" manşetleri.
-import { L } from '../i18n';
+import { L, LOC } from '../i18n';
 import { addHype } from './hype';
 import { addFollowers, followers } from './fame';
+import { legendPress, legendPressPayout } from './legendRun';
 import { clamp, shuffle } from './rng';
 import type { GameState } from './types';
 
@@ -12,6 +13,8 @@ export interface PressQ {
   muhabir: string;
   soru: string;
   cevaplar: Record<PressStyle, string>;
+  /** Efsane Yolu: tarihe sadık cevap */
+  tarihi?: PressStyle;
 }
 export interface PressScene {
   sorular: PressQ[];
@@ -63,7 +66,9 @@ function questions(s: GameState): PressQ[] {
   const ozel = out.slice(0, out.length - 3);
   const genel = shuffle(out.slice(-3));
   const muhabir = shuffle(MUHABIR);
-  return [...ozel.slice(0, 1), ...genel].slice(0, 2).map((q, i) => ({ ...q, muhabir: muhabir[i] }));
+  const efsane = legendPress(s);
+  const ilk = efsane ? [{ soru: efsane.soru, cevaplar: efsane.cevaplar, tarihi: efsane.tarihi }] : ozel.slice(0, 1);
+  return [...ilk, ...genel].slice(0, 2).map((q, i) => ({ ...q, muhabir: muhabir[i] }));
 }
 
 export function startPress(s: GameState) {
@@ -81,8 +86,13 @@ export function answerPress(s: GameState, st: PressStyle) {
   const k = s.pending.kamp!;
   const p = k.basinSahne;
   if (!p || p.secimler.length >= p.sorular.length) return;
+  const q = p.sorular[p.secimler.length];
   p.secimler.push(st);
   p.tepki = TEPKI[st]();
+  if (q?.tarihi === st) {
+    k.efsaneSoz = true;
+    p.tepki = L("📜 Tarihî söz! Salon bu cümleyi yıllarca hatırlayacak. Maçı kazanırsan manşetler senin.");
+  }
   if (st === 'mutevazi') {
     s.populerlik = clamp(s.populerlik + 1, 0, 100);
     if (s.hoca) s.hoca.bag = clamp(s.hoca.bag + 2, 0, 100);
@@ -97,6 +107,19 @@ export function answerPress(s: GameState, st: PressStyle) {
   }
 }
 
+/** Viral klip (reklam ödülü): basın toplantısının en sert anı paylaşılır; takipçi ve maçın bilet/PPV satışı artar. */
+export const viralPay = (s: GameState) => (s.stage === 'ufc' ? 40_000 : s.stage === 'buyuk' ? 6_000 : 800);
+export function claimViral(s: GameState) {
+  const k = s.pending.kamp;
+  if (!k?.basinSahne || k.viral) return;
+  k.viral = true;
+  const n = viralPay(s);
+  s.para += n;
+  addFollowers(s, Math.max(500, followers(s) * 0.03));
+  addHype(s, 5, L("Viral klip"));
+  k.basinSahne.tepki = L("📈 Klip patladı: milyonlarca izlenme. Bilet satışları arttı (+{0}).", [`$${n.toLocaleString(LOC)}`]);
+}
+
 export const pressDone = (s: GameState) => {
   const p = s.pending.kamp?.basinSahne;
   return !!p && p.secimler.length >= p.sorular.length;
@@ -104,11 +127,12 @@ export const pressDone = (s: GameState) => {
 
 /** Maç sonu: iddialı sözlerin hesabı. */
 export function pressAfterFight(s: GameState, won: boolean): string[] {
+  const efsane = won && s.pending.kamp?.efsaneSoz ? [legendPressPayout(s)] : [];
   const n = s.pending.kamp?.iddia ?? 0;
-  if (!n) return [];
+  if (!n) return efsane;
   if (won) {
     s.populerlik = clamp(s.populerlik + 2 * n, 0, 100);
-    return [L("🎤 Basın toplantısındaki sözlerini tuttun! Manşet: “Dediğini yaptı.” Popülerlik +{0}", [2 * n])];
+    return [L("🎤 Basın toplantısındaki sözlerini tuttun! Manşet: “Dediğini yaptı.” Popülerlik +{0}", [2 * n]), ...efsane];
   }
   s.populerlik = clamp(s.populerlik - 3 * n, 0, 100);
   return [L("🎤 Basın toplantısında büyük konuştun ama kaybettin. Manşet: “Sözünü yedi.” Popülerlik -{0}", [3 * n])];

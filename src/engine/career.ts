@@ -3,7 +3,7 @@ import { fatigue, fatigueAfterFight } from './fatigue';
 import { dmAfterFight } from './dm';
 import { ppvPayout } from './hype';
 import { challengeCheck, challengeOnRetire, diffOf } from './challenges';
-import { legendCheck, legendHoldsUcc, legendOffer } from './legendRun';
+import { legendCheck, legendHoldsUcc, legendOffer, legendRivals } from './legendRun';
 import { offerAppeal } from './appeal';
 import { maybeCrossover } from './crossover';
 import { signatureFinish } from './signature';
@@ -491,7 +491,7 @@ export function finishFight(s: GameState) {
   lines.push(...homelandTick(s));
   bondAfterFight(s, { won, finish: finishMethod, koLoss: !won && !draw && (r.yontem === 'KO' || r.yontem === 'TKO'), planUyum: !!kamp.planUyum });
   // Efsane Yolu: kemerler ve rekor işlendikten sonra bölüm kontrolü
-  lines.push(...legendCheck(s, { won: won && !caught, yontem: r.yontem, raunt: r.raunt, org, unvan: !!fs.unvanMaci || opp.champion || wasChampion }));
+  lines.push(...legendCheck(s, { won: won && !caught, yontem: r.yontem, raunt: r.raunt, org, unvan: !!fs.unvanMaci || opp.champion || wasChampion, rakip: `${opp.ad} ${opp.soyad}` }));
   const karneSon = pro ? s.rekor : s.amator;
   s.pending.sonrasi = {
     satirlar: lines,
@@ -968,6 +968,7 @@ export function changeWeight(s: GameState, to: WeightClass): string {
   s.bolum = null;
   s.rakipler.forEach((r) => (r.champion = false));
   ensureDivision(s);
+  legendRivals(s);
   const notes = advanceWeeks(s, 4);
   const yon = WEIGHT_ORDER.indexOf(to) > WEIGHT_ORDER.indexOf(from) ? tL("yükseldi") : tL("düştü");
   const msg = wasChamp

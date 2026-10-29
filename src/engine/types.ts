@@ -264,6 +264,9 @@ export interface CampState {
   /** Basın toplantısı sahnesi (pressConf.ts) ve iddialı söz sayısı */
   basinSahne?: import('./pressConf').PressScene;
   iddia?: number;
+  /** Efsane Yolu: tarihî basın sözü tutturuldu; viral klip (reklam) alındı */
+  efsaneSoz?: boolean;
+  viral?: boolean;
   step: 'basinsahne' | 'hoca' | 'planla' | 'sure' | 'takvim' | 'yer' | 'focus' | 'plan' | 'intensity' | 'kilo' | 'basin' | 'haftalik' | 'sakatlik' | 'ozet' | 'tarti' | 'yuzyuze' | 'duello' | 'kesim';
   pKilo?: number;
   oKilo?: number;
