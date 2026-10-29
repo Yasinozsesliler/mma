@@ -50,6 +50,8 @@ import { cityPin, visitedCount, visitedKitalar } from '../engine/worldMap';
 import { ActionGrid, ActionTile, FightCTA, HubHero, Notice } from './HubHome';
 import { pendingBouts, weeklyGymNet } from '../engine/academy';
 import { ACHIEVEMENTS } from '../engine/achievements';
+import { LegendHubCard } from './LegendScreens';
+import { currentChapter, legendHoldsUcc } from '../engine/legendRun';
 import { UccRoadCard } from './UccRoadCard';
 import { GoalsCard } from './GoalsCard';
 import { CountdownButton, HypeMeter } from './CountdownDoc';
@@ -282,7 +284,8 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
               {L("Öğrencilerinden {0} kişinin maçı var. Köşede sen dur!", [pendingBouts(s)])}
             </Notice>
           ) : null}
-          <UccRoadCard s={s} />
+          <LegendHubCard s={s} act={act} />
+          {legendHoldsUcc(s) || currentChapter(s)?.id === 'ucc' ? null : <UccRoadCard s={s} />}
           <GrandPrixCard s={s} act={act} />
           <KafesEviInvite s={s} act={act} />
           <BrainCard s={s} act={act} />

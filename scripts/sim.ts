@@ -34,6 +34,9 @@ import {
   nextKafesEvi,
 } from '../src/engine/career';
 import { createGame, rollStartingStats } from '../src/engine/character';
+import { changeWeight } from '../src/engine/career';
+import { acceptCrossover, boxRound, closeBox } from '../src/engine/crossover';
+import { createLegendGame, currentChapter, LEGENDS, legendStars, type LegendId } from '../src/engine/legendRun';
 import { chooseEvent, closeEvent } from '../src/engine/events';
 import { chooseTactic, nextRound, resolveCritical, resolveDecision } from '../src/engine/fight';
 import { weakest } from '../src/engine/opponents';
@@ -56,6 +59,7 @@ function cutPick(c: ManualCut): string {
   return need > 0.9 ? 'sauna' : need > 0.55 ? 'kosu' : 'banyo';
 }
 const meydanStat: Record<string, number> = {};
+const efsaneStat = { bolum: {} as Record<number, number>, yildiz: 0, y: {} as Record<string, number>, bitti: 0, yas: [] as number[], para: [] as number[] };
 const startStreak: number[] = [];
 const itirazStat = { n: 0, kabul: 0 };
 const imzaStat = { n: 0, sayi: 0 };
@@ -143,7 +147,7 @@ function playCareer() {
   };
   if (process.env.CH === 'sonsans') input.yas = 35;
   if (process.env.CH === 'sokak') (input as { gecmis: Background }).gecmis = 'sokak';
-  const s = createGame(input, rollStartingStats(input));
+  const s = process.env.LEGEND ? createLegendGame(process.env.LEGEND as LegendId) : createGame(input, rollStartingStats(input));
   if (process.env.DIFF) s.zorluk = process.env.DIFF as 'kolay' | 'efsane';
   if (process.env.CH) s.meydan = { id: process.env.CH as 'yenilmez', durum: 'devam' };
   stats.careers++;
@@ -209,6 +213,13 @@ function playCareer() {
         if (s.fighter.yas >= 25 && !rec25 && input.yas <= 20) { rec25 = `${s.rekor.g}-${s.rekor.m}`; stats.rec25.push(rec25); stats.fights25.push(s.rekor.g + s.rekor.m + s.rekor.b + s.amator.g + s.amator.m + s.amator.b); }
         if (s.gecmis.length >= 90) return finalize();
         if (canAnnounceFarewell(s) && s.fighter.yas >= 37 && chance(0.08)) { announceFarewell(s); vedaStat.ilan++; }
+        if (s.efsane) {
+          // Efsane botu: boks teklifini kabul eder, şampiyonken ikinci kemer için bir üst sıklete çıkar
+          if (s.boksTeklif) { acceptCrossover(s); break; }
+          const ch = currentChapter(s)?.id;
+          if (s.sampiyon && s.fighter.siklet === 'tuy' && ch === 'ucc' && s.stage !== 'ufc') changeWeight(s, 'hafif');
+          if (s.sampiyon && ch === 'cifte' && s.stage === 'ufc') changeWeight(s, s.fighter.siklet === 'tuy' ? 'hafif' : 'tuy');
+        }
         if (s.saglik < 55 || s.sakatliklar.length) rest(s);
         else findNextFight(s);
         if ((s.phase as string) === 'rakipSecimi' && isFarewellFight(s) && !s.pending.secenekler?.[0]?.etiket?.includes('VEDA')) vedaStat.hata++;
@@ -318,6 +329,10 @@ function playCareer() {
         lastFightWeek = hafta0;
         break;
       }
+      case 'boks':
+        while (s.boks && !s.boks.bitti) boxRound(s, pick(['jab', 'kombo', 'kontra', 'klinc'] as const));
+        closeBox(s);
+        break;
       case 'dovusSonrasi':
         if (!s.pending.sonrasi!.roportajSonucu) interview(s, randInt(0, 2));
         else afterPostFight(s);
@@ -325,7 +340,9 @@ function playCareer() {
       case 'teklifler': {
         const offers = s.pending.teklifler!;
         const score = (o: (typeof offers)[number]) => (o.org === 'ufc' ? 2e9 : o.org === 'dwcs' ? 1e9 : o.ucret);
-        const best = [...offers].sort((a, b) => score(b) - score(a))[0];
+        // Efsane botu: UCC öncesi şampiyonken (ikinci kemer için) organizasyonunda kalır
+        const stay = s.efsane && currentChapter(s)?.id === 'ucc' && s.sampiyon ? offers.find((o) => o.org === s.contract?.org) : undefined;
+        const best = stay ?? [...offers].sort((a, b) => score(b) - score(a))[0];
         if (!best.pazarlikYapildi && Math.random() < 0.3) negotiateOffer(s, best.id);
         else acceptOffer(s, best.id);
         break;
@@ -346,6 +363,13 @@ function playCareer() {
     (s.kartlar ?? []).forEach((c) => { kartStat[c.nadir] = (kartStat[c.nadir] ?? 0) + 1; kartStat.toplam++; });
     { const pro = [...s.gecmis].reverse().filter((h) => h.org !== 'amator'); let k = 0; while (k < pro.length && pro[k].sonuc === 'G') k++; startStreak.push(k); }
     if (s.meydan) meydanStat[s.meydan.durum] = (meydanStat[s.meydan.durum] ?? 0) + 1;
+    if (s.efsane) {
+      const r = s.efsane;
+      efsaneStat.bolum[r.bolum] = (efsaneStat.bolum[r.bolum] ?? 0) + 1;
+      efsaneStat.yildiz += legendStars(r);
+      Object.entries(r.yildiz).forEach(([k, v]) => v.forEach((i) => (efsaneStat.y[`${k}${i}`] = (efsaneStat.y[`${k}${i}`] ?? 0) + 1)));
+      if (r.bitti) { efsaneStat.bitti++; efsaneStat.yas.push(s.fighter.yas); efsaneStat.para.push(s.para); }
+    }
     if (s.imza) { imzaStat.n++; imzaStat.sayi += s.imza.sayi; }
     if (s.marka) { markaStat.n++; markaStat.toplam += s.marka.toplam; }
     markaStat.maxPara += s.istat?.maxPara ?? 0;
@@ -425,6 +449,12 @@ console.log(`İmza hareketi: ${pct(imzaStat.n, N)} kariyerde, imza ile bitiriş 
 console.log(`İtiraz: kariyer başına ${(itirazStat.n / N).toFixed(2)}, kabul ${pct(itirazStat.kabul, itirazStat.n)}`);
 console.log('Pro başlangıç serisi dağılımı:', [0, 1, 2, 3, 5, 8, 10].map((n) => `≥${n}: ${pct(startStreak.filter((x) => x >= n).length, N)}`).join(' '));
 if (process.env.CH) console.log('Meydan okuma:', process.env.CH, JSON.stringify(meydanStat));
+if (process.env.LEGEND) {
+  const d = LEGENDS[process.env.LEGEND as LegendId];
+  console.log(`Efsane Yolu ${d.lakap()}: bitiren ${pct(efsaneStat.bitti, N)}, ort. yıldız ${(efsaneStat.yildiz / N).toFixed(1)}/${d.bolumler.length * 3}, bitiş yaşı ${mean(efsaneStat.yas)}, servet ort. $${Math.round(Number(mean(efsaneStat.para)) || 0).toLocaleString('tr-TR')}`);
+  console.log('  Kalınan bölüm:', Object.entries(efsaneStat.bolum).map(([k, v]) => `${k === String(d.bolumler.length) ? 'bitti' : d.bolumler[Number(k)].id} ${pct(v, N)}`).join(' · '));
+  console.log('  Yıldız oranı:', d.bolumler.map((c) => `${c.id} ${[0, 1, 2].map((i) => pct(efsaneStat.y[`${c.id}${i}`] ?? 0, N)).join('/')}`).join(' · '));
+}
 console.log(`Tartı (elle kilo): ${cutStat.n} tartı · kaçırma ${pct(cutStat.kacti, cutStat.n)} · rakipten iri ${pct(cutStat.iri, cutStat.n)}`);
 console.log(`Büyük maç (hype): kariyer başına ${(hypeStat.n / N).toFixed(1)}, ort. başlangıç hype ${(hypeStat.top / Math.max(1, hypeStat.n)).toFixed(0)}`);
 console.log(`Podcast (kariyer başına): ${(podcastStat.n / N).toFixed(1)}`);

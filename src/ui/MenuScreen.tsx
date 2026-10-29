@@ -1,5 +1,8 @@
 import { L, LOC } from '../i18n';
 import { ChallengeList } from './ChallengeList';
+import { LegendList, type LegendName } from './LegendScreens';
+import type { LegendId } from '../engine/legendRun';
+import { useLegendBest } from '../legendPrefs';
 import type { ChallengeId } from '../engine/challenges';
 import { useCosmetics, useFrame } from '../cosmetics';
 import { ExportButton } from './CareerTransfer';
@@ -159,7 +162,7 @@ function SlotCard({ n, save, active, onNew, onContinue, onDelete, onDynasty }: {
   );
 }
 
-type Sheet = 'ayarlar' | 'meydan' | 'rehber' | null;
+type Sheet = 'ayarlar' | 'meydan' | 'efsane' | 'rehber' | null;
 
 /** Alttan açılan pencere: ayarlar, meydan okumalar ve rehber ana ekranı kalabalıklaştırmasın. */
 function MenuSheet({ title, icon, onClose, children }: { title: string; icon: IconName; onClose: () => void; children: ReactNode }) {
@@ -209,6 +212,7 @@ export function MenuScreen({
   active,
   onNew,
   onChallenge,
+  onLegend,
   onContinue,
   onDelete,
   onDaily,
@@ -220,6 +224,7 @@ export function MenuScreen({
   active: Slot;
   onNew: (slot: Slot) => void;
   onChallenge: (id: ChallengeId, slot: Slot) => void;
+  onLegend: (id: LegendId, isim: LegendName, slot: Slot) => void;
   onContinue: (slot: Slot) => void;
   onDelete: (slot: Slot) => void;
   onDynasty: (slot: Slot) => void;
@@ -238,6 +243,7 @@ export function MenuScreen({
   const firstEmpty = SLOTS.find((x) => !saves[x - 1]);
   const yeniKoz = useCosmetics().yeni.length;
   const doneCh = useCompletedChallenges();
+  const legendBest = useLegendBest();
   const chIds = Object.keys(CHALLENGES) as ChallengeId[];
   const gun = dayNumber();
   const daily = loadDaily();
@@ -323,6 +329,30 @@ export function MenuScreen({
 
       {/* Modlar */}
       <Section>{L("OYUN MODLARI")}</Section>
+      {/* Efsane Yolları: hikâye modu */}
+      <Pressable onPress={() => setSheet('efsane')} style={({ pressed }) => [ms.chBanner, { borderColor: C.gold + '66' }, pressed && { transform: [{ scale: 0.99 }], borderColor: C.gold }]}>
+        <LinearGradient colors={['#2b1f06', '#15110a', '#0c0d10']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={ms.chIn}>
+          <View style={[ms.chIcon, { backgroundColor: C.gold + '1c', borderColor: C.gold + '66' }]}>
+            <Icon name="book-open-variant" size={28} color={C.gold} />
+          </View>
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Text style={[ms.chTitle, SLANT]}>{L("Efsane Yolları").toLocaleUpperCase(LOC)}</Text>
+              <Text style={ms.newBadge}>{L("YENİ")}</Text>
+            </View>
+            <Text style={ms.chSub} numberOfLines={2}>
+              {L("Efsanelerin kariyerlerini bölüm bölüm yeniden yaşa. İlk hikâye: Kral 🇮🇪")}
+            </Text>
+          </View>
+          <View style={{ alignItems: 'flex-end' }}>
+            <Text style={ms.chCount}>
+              {Object.values(legendBest).reduce((a, b) => a + b.yildiz, 0)}
+              <Text style={ms.chCountAll}>★</Text>
+            </Text>
+            <Icon name="chevron-right" size={20} color={C.faint} />
+          </View>
+        </LinearGradient>
+      </Pressable>
       {/* Meydan okumalar: geniş afiş, ilerleme çubuğu ve son kategoriler */}
       <Pressable onPress={() => setSheet('meydan')} style={({ pressed }) => [ms.chBanner, pressed && { transform: [{ scale: 0.99 }], borderColor: C.red }]}>
         <LinearGradient colors={['#3a0b14', '#160a0d', '#0c0d10']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={ms.chIn}>
@@ -369,6 +399,18 @@ export function MenuScreen({
             onStart={(id) => {
               setSheet(null);
               if (firstEmpty) onChallenge(id, firstEmpty);
+            }}
+          />
+        </MenuSheet>
+      ) : null}
+
+      {sheet === 'efsane' ? (
+        <MenuSheet title={L("Efsane Yolları")} icon="book-open-variant" onClose={() => setSheet(null)}>
+          <LegendList
+            canStart={!!firstEmpty}
+            onStart={(id, isim) => {
+              setSheet(null);
+              if (firstEmpty) onLegend(id, isim, firstEmpty);
             }}
           />
         </MenuSheet>
@@ -445,6 +487,7 @@ const ms = StyleSheet.create({
   chFill: { height: '100%', backgroundColor: C.gold, borderRadius: 3 },
   chCount: { color: C.gold, fontFamily: F.display, fontSize: 22 },
   chCountAll: { color: C.faint, fontSize: 13 },
+  newBadge: { color: '#111', backgroundColor: C.gold, fontFamily: F.semi, fontSize: 9, letterSpacing: 1, borderRadius: 5, paddingHorizontal: 5, paddingVertical: 1, overflow: 'hidden' },
   tile: { width: '48%', flexGrow: 1, borderRadius: 14, borderWidth: 1, overflow: 'hidden' },
   tileIn: { padding: 12, minHeight: 124, gap: 4 },
   tileTop: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 6 },

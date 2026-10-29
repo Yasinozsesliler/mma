@@ -779,6 +779,8 @@ export interface GameState {
   /** Canlı yayın (stream.ts) */
   yayin?: import('./stream').Stream;
   yayinSon?: number;
+  /** Efsane Yolu hikâye modu (legendRun.ts) */
+  efsane?: import('./legendRun').LegendRun;
   /** Zorluk seviyesi ve meydan okuma modu (challenges.ts) */
   zorluk?: import('./challenges').Difficulty;
   meydan?: import('./challenges').Challenge;

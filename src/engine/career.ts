@@ -3,6 +3,7 @@ import { fatigue, fatigueAfterFight } from './fatigue';
 import { dmAfterFight } from './dm';
 import { ppvPayout } from './hype';
 import { challengeCheck, challengeOnRetire, diffOf } from './challenges';
+import { legendCheck, legendHoldsUcc, legendOffer } from './legendRun';
 import { offerAppeal } from './appeal';
 import { maybeCrossover } from './crossover';
 import { signatureFinish } from './signature';
@@ -489,6 +490,8 @@ export function finishFight(s: GameState) {
   lines.push(...pressAfterFight(s, won && !caught));
   lines.push(...homelandTick(s));
   bondAfterFight(s, { won, finish: finishMethod, koLoss: !won && !draw && (r.yontem === 'KO' || r.yontem === 'TKO'), planUyum: !!kamp.planUyum });
+  // Efsane Yolu: kemerler ve rekor işlendikten sonra bölüm kontrolü
+  lines.push(...legendCheck(s, { won: won && !caught, yontem: r.yontem, raunt: r.raunt, org, unvan: !!fs.unvanMaci || opp.champion || wasChampion }));
   const karneSon = pro ? s.rekor : s.amator;
   s.pending.sonrasi = {
     satirlar: lines,
@@ -624,6 +627,13 @@ export function afterPostFight(s: GameState) {
     s.phase = 'emeklilik';
     return;
   }
+  // Efsane Yolu: senaryolu UCC kapısı (Challenger Series beklenmeden)
+  legendCheck(s);
+  const efsaneTeklif = legendOffer(s, won);
+  if (efsaneTeklif) {
+    openOffers(s, 'ufcGiris', efsaneTeklif);
+    return;
+  }
   if (org === 'amator') {
     const gp = s.gp;
     if (gp?.yukselis && !gp.bitti) {
@@ -685,13 +695,13 @@ export function afterPostFight(s: GameState) {
       return;
     }
     // DWCS'de söz verildiyse büyük organizasyondaki ilk galibiyet UCC kapısını açar.
-    if (s.stage === 'buyuk' && won && s.dwcsSoz) {
+    if (s.stage === 'buyuk' && won && s.dwcsSoz && !legendHoldsUcc(s)) {
       s.dwcsSoz = undefined;
       openOffers(s, 'ufcGiris', tL("🎟️ Dean Wyatt sözünü tuttu: \"{0}, istediğim galibiyeti getirdin. UCC’ye hoş geldin!\"", [s.fighter.soyad]));
       return;
     }
     // Dean Wyatt iyi bir galibiyetten sonra arayabilir (kontrat ortasında da); yenilmez seride kesin arar.
-    if (s.stage === 'buyuk' && won && dwcsReady(s) && s.contract && (unbeatenRun(s) || chance(0.55)) && s.gecmis.length - (s.erkenTeklif ?? -99) >= 3) {
+    if (s.stage === 'buyuk' && won && dwcsReady(s) && s.contract && !legendHoldsUcc(s) && (unbeatenRun(s) || chance(0.55)) && s.gecmis.length - (s.erkenTeklif ?? -99) >= 3) {
       s.erkenTeklif = s.gecmis.length;
       openOffers(s, 'dwcsDavet', tL("📞 Telefon çaldı. Arayan: Dean Wyatt. “Seni izliyorum evlat. Challenger Series’e gel, kendini göster.”"));
       return;
@@ -813,7 +823,9 @@ export function openOffers(s: GameState, kind: OfferKind, metin: string) {
       offers.push(makeOffer(s, org, 3, 1.25, tL("Mevcut organizasyonun seni tutmak istiyor.")));
     } else if (s.stage === 'buyuk') {
       // UCC'ye tek kapı Dean Wyatt's Challenger Series. Davet için şampiyonluk ya da zirvede popüler bir isim olmak gerekir.
-      if (s.sampiyon) {
+      if (legendHoldsUcc(s)) {
+        // Efsane Yolu: önce kemer, sonra UCC
+      } else if (s.sampiyon) {
         offers.push(makeOffer(s, 'dwcs', 1, 1, tL("Şampiyonluğun Dean Wyatt’ın dikkatini çekti. DWCS’ye davetlisin. Kazanırsan ve etkilersen UCC kapısı açılır.")));
       } else if (dwcsReady(s)) {
         offers.push(makeOffer(s, 'dwcs', 1, 1, tL("Zirvedeki performansın izleniyor. Tek dövüş, tek şans: etkilersen UCC kontratı.")));
@@ -870,6 +882,7 @@ export function acceptOffer(s: GameState, id: string) {
   );
   s.pending = {};
   s.phase = 'hub';
+  legendCheck(s);
   if (s.kisaHaber) findNextFight(s);
 }
 

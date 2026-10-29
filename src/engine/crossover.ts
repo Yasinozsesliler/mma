@@ -3,6 +3,7 @@
 import { L, LOC } from '../i18n';
 import { addFollowers, fmtDelta, followers } from './fame';
 import { chance, clamp, pick, rand } from './rng';
+import { legendBoxResult } from './legendRun';
 import type { GameState } from './types';
 
 export type BoxPlan = 'jab' | 'kombo' | 'kontra' | 'klinc';
@@ -54,7 +55,8 @@ const PURSE: Record<GameState['stage'], number> = { amator: 0, bolgesel: 0, buyu
 
 /** Dövüşten sonra teklif gelebilir: kariyerde bir kez. */
 export function maybeCrossover(s: GameState) {
-  if (s.boksYapildi || s.boksTeklif || s.boks) return;
+  // Efsane Yolu kendi boks maçını senaryoyla getirir
+  if (s.boksYapildi || s.boksTeklif || s.boks || s.efsane) return;
   if (!['buyuk', 'ufc'].includes(s.stage)) return;
   // "Boks macerası" dönemi seçildiyse kapı aralık: şart aranmaz, teklif çabuk gelir
   if (s.boksKapi ? !chance(0.5) : s.populerlik < 55 || followers(s) < 500_000 || !chance(0.1)) return;
@@ -91,6 +93,7 @@ export function declineCrossover(s: GameState) {
   s.haberler.unshift(L("🥊 {0} teklifini geri çevirdin. “Kafes benim evim.”", [s.boksTeklif.boksor.ad]));
   s.boksTeklif = undefined;
   s.boksYapildi = true;
+  legendBoxResult(s, 'red');
 }
 
 /** Plan x niyet: oyuncunun raunt avantajı (-1 kötü … +1 iyi). */
@@ -154,6 +157,7 @@ function endBox(s: GameState, sonuc: 'G' | 'M', yontem: 'KO' | 'karar') {
       : L("🥊 Hakem kararıyla kazanan {0} oldu… ama sonuna kadar dayandın.", [b.boksor.ad]);
   b.log.unshift(txt);
   s.haberler.unshift(`${txt} ${L("Kazanç ${0}, {1} takipçi.", [para.toLocaleString(LOC), fmtDelta(d)])}`);
+  legendBoxResult(s, sonuc, yontem);
 }
 
 export function closeBox(s: GameState) {

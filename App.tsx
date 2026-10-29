@@ -47,6 +47,8 @@ import { PodcastScreen } from './src/ui/PodcastScreen';
 import { AwardsCeremony } from './src/ui/AwardsCeremony';
 import { challengeOnRetire, type ChallengeId } from './src/engine/challenges';
 import { markChallenge } from './src/challengePrefs';
+import { createLegendGame, legendStars } from './src/engine/legendRun';
+import { saveLegendBest } from './src/legendPrefs';
 import { MerchScreen } from './src/ui/MerchScreen';
 import { CrossoverScreen } from './src/ui/CrossoverScreen';
 import { StreamScreen } from './src/ui/StreamScreen';
@@ -219,6 +221,10 @@ export default function App() {
     const yeni = next.phase === 'emeklilik' ? [] : checkAchievements(next);
     if (next.phase === 'emeklilik') challengeOnRetire(next);
     if (next.meydan?.durum === 'basarili') markChallenge(next.meydan.id);
+    if (next.efsane) {
+      saveLegendBest(next.efsane.id, legendStars(next.efsane), !!next.efsane.bitti);
+      if (next.efsane.bolum > (cur.efsane?.bolum ?? 0)) track('legend_chapter', { efsane: next.efsane.id, bolum: next.efsane.bolum, yildiz: legendStars(next.efsane) });
+    }
     if (next.phase === 'hub') {
       refreshStaleGoals(next);
       // Yeni yıla girildiyse ödül töreni
@@ -312,6 +318,18 @@ export default function App() {
         active={slot}
         onNew={(x) => newCareer(x)}
         onChallenge={(id, x) => newCareer(x, id)}
+        onLegend={(id, isim, x) => {
+          const s = createLegendGame(id, isim);
+          socialWelcome(s);
+          ensureGoals(s);
+          ensureEvent(s);
+          track('legend_start', { efsane: id, yuva: x });
+          setSlot(x);
+          setGame(s);
+          void deleteGame(x).then(() => saveGame(s, x));
+          putSave(x, s);
+          setView('game');
+        }}
         onContinue={continueSlot}
         onDelete={removeSlot}
         onDaily={() => {
