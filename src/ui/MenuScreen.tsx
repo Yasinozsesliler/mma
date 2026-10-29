@@ -1,6 +1,8 @@
 import { L, LOC } from '../i18n';
 import { ChallengeList } from './ChallengeList';
 import { LegendList, type LegendName } from './LegendScreens';
+import { loadDream } from './DreamScreen';
+import { albumProgress, triesLeft } from '../engine/dreamFight';
 import type { LegendId } from '../engine/legendRun';
 import { useLegendBest } from '../legendPrefs';
 import type { ChallengeId } from '../engine/challenges';
@@ -216,6 +218,7 @@ export function MenuScreen({
   onContinue,
   onDelete,
   onDaily,
+  onDream,
   onDynasty,
   onLocker,
   onImport,
@@ -229,6 +232,7 @@ export function MenuScreen({
   onDelete: (slot: Slot) => void;
   onDynasty: (slot: Slot) => void;
   onDaily: () => void;
+  onDream: () => void;
   onLocker: () => void;
   onImport: (slot: Slot, g: GameState) => void;
 }) {
@@ -248,6 +252,9 @@ export function MenuScreen({
   const gun = dayNumber();
   const daily = loadDaily();
   const seri = liveStreak(daily, gun);
+  const dream = loadDream();
+  const dreamLeft = triesLeft(dream, gun) > 0;
+  const dreamProg = albumProgress(dream);
   // Dolu yuvalar (son oynanan önde), boşlar küçük "yeni kariyer" düğmesi olarak
   const filled = SLOTS.filter((x) => saves[x - 1]).sort((x, y) => (x === active ? -1 : y === active ? 1 : x - y));
   const empty = SLOTS.filter((x) => !saves[x - 1]);
@@ -385,6 +392,14 @@ export function MenuScreen({
           sub={daily.kayit[gun] ? L("Bugün oynandı · yarın yenisi") : L("Herkes aynı dövüşü oynuyor. Tek hakkın var.")}
           badge={seri ? `🔥 ${seri}` : undefined}
           onPress={onDaily}
+        />
+        <ModeTile
+          icon="star-four-points"
+          color={C.gold}
+          title={L("Hayalî Maçlar")}
+          sub={dreamLeft ? L("Bugünün efsane eşleşmesi seni bekliyor") : L("Bugün oynandı · yarın yeni eşleşme")}
+          badge={L("📒 {0}/{1}", [dreamProg.got, dreamProg.max])}
+          onPress={onDream}
         />
         <ModeTile icon="hanger" color={C.gold} title={L("Dolap")} sub={L("Şort, eldiven, çerçeve, kemer ve giriş müziği")} badge={yeniKoz ? L("{0} YENİ", [yeniKoz]) : undefined} onPress={onLocker} />
         <ModeTile icon="book-open-variant" color={C.blue} title={L("Rehber")} sub={L("Nasıl oynanır, gelişim, branşlar")} onPress={() => setSheet('rehber')} />

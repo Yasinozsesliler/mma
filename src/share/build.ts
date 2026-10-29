@@ -13,6 +13,7 @@ import { AWARD_NAMES, type AwardCat } from '../engine/awards';
 import { lookFor } from '../engine/tale';
 import { hypeLabel, isBigFight } from '../engine/hype';
 import { isComebackFight } from '../engine/comeback';
+import { LEGENDS, legendMaxStars, legendName, legendStars } from '../engine/legendRun';
 
 const up = (s: string) => s.toLocaleUpperCase(LOC);
 const rec = (s: GameState) => `${s.rekor.g}-${s.rekor.m}-${s.rekor.b}`;
@@ -168,5 +169,26 @@ export function wikiCard(s: GameState): ShareCardData {
     alt: '',
     mesaj: L("Kafespedia · Kendi dövüş efsaneni yaz"),
     wiki: { ozet: w.ozet, bilgi: w.bilgi.slice(0, 9) },
+  };
+}
+
+/** Efsane Yolu: biten bölüm (ya da bütün hikâye) kartı. bolum: biten bölümün sırası; null ise hikâyenin tamamı. */
+export function legendCard(s: GameState, bolum: number | null): ShareCardData | null {
+  const r = s.efsane;
+  if (!r) return null;
+  const d = LEGENDS[r.id];
+  const ch = bolum != null ? d.bolumler[bolum] : null;
+  const n = ch ? (r.yildiz[ch.id]?.length ?? 0) : legendStars(r);
+  return {
+    ...base(s),
+    tur: ch ? 'kariyer' : 'kemer',
+    baslik: `📖 ${L("EFSANE YOLU")}`,
+    ust: ch ? up(`${ch.baslik()} · ${'★'.repeat(n)}${'☆'.repeat(3 - n)}`) : up(L("{0}: TAMAMLANDI", [legendName(d)])),
+    kutular: [
+      [L("REKOR"), rec(s)],
+      [L("YAŞ"), String(s.fighter.yas)],
+      [L("YILDIZ"), `${legendStars(r)}/${legendMaxStars(r.id)}`],
+    ],
+    alt: ch ? `${ch.yil} · ${ch.yer()}` : (d.final?.() ?? ''),
   };
 }

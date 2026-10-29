@@ -104,6 +104,8 @@ export interface Opponent {
   rivalry: number;
   karsilasma: number;
   kadin?: boolean;
+  /** Hazır görünüm (efsaneler); yoksa id'den üretilir */
+  gorunum?: Appearance;
   /** Oyuncunun kaçıncı dövüşünde en son karşılaştılar (tekrarı sınırlamak için) */
   sonDovus?: number;
   stage?: Stage;

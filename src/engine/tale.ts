@@ -41,7 +41,8 @@ export function physique(seed: string, siklet: WeightClass) {
 }
 
 /** Rakibin yüzü: kimliğinden ve uyruğundan deterministik olarak üretilir. */
-export function lookFor(o: Pick<Opponent, 'id' | 'uyruk'> & { kadin?: boolean }): Appearance {
+export function lookFor(o: Pick<Opponent, 'id' | 'uyruk'> & { kadin?: boolean; gorunum?: Appearance }): Appearance {
+  if (o.gorunum) return o.gorunum;
   // İki bağımsız hash: her özellik farklı bitlerden gelsin (işaretsiz kaydırma; negatif indeks yok).
   const h = hash(o.id + o.uyruk);
   const h2 = hash(o.uyruk + o.id + '#yuz');

@@ -33,6 +33,7 @@ import {
 } from './src/ui/GameScreens';
 import { MenuScreen } from './src/ui/MenuScreen';
 import { DailyScreen } from './src/ui/DailyScreen';
+import { DreamScreen } from './src/ui/DreamScreen';
 import { ShopScreen } from './src/ui/ShopScreen';
 import { ArcadeScreen } from './src/ui/ArcadeScreen';
 import { SocialScreen } from './src/ui/SocialScreen';
@@ -47,8 +48,9 @@ import { PodcastScreen } from './src/ui/PodcastScreen';
 import { AwardsCeremony } from './src/ui/AwardsCeremony';
 import { challengeOnRetire, type ChallengeId } from './src/engine/challenges';
 import { markChallenge } from './src/challengePrefs';
-import { createLegendGame, legendStars } from './src/engine/legendRun';
+import { createLegendGame, currentChapter, legendStars } from './src/engine/legendRun';
 import { saveLegendBest } from './src/legendPrefs';
+import { clearCheckpoints, loadCheckpoints, noteCheckpoint } from './src/legendCheckpoint';
 import { MerchScreen } from './src/ui/MerchScreen';
 import { CrossoverScreen } from './src/ui/CrossoverScreen';
 import { StreamScreen } from './src/ui/StreamScreen';
@@ -127,7 +129,7 @@ const PHASE_LABELS: Record<Phase, string> = {
   memleket: L("Memleketim"),
 };
 
-type View_ = 'loading' | 'menu' | 'create' | 'game' | 'daily' | 'locker';
+type View_ = 'loading' | 'menu' | 'create' | 'game' | 'daily' | 'dream' | 'locker';
 
 installErrorLog();
 installImmersive();
@@ -168,6 +170,7 @@ export default function App() {
     slotRef.current = x;
     setSlotState(x);
     setActiveSlot(x);
+    void loadCheckpoints(x);
   };
   const putSave = (x: Slot, g: GameState | null) => setSaves((cur) => cur.map((v, i) => (i === x - 1 ? g : v)));
   // act her zaman en güncel duruma bakar; gecikmeli çağrılar (ör. blackjack) eski durumu ezmesin.
@@ -195,6 +198,7 @@ export default function App() {
       slotRef.current = active;
       setSlotState(active);
       setGame(all[active - 1]);
+      void loadCheckpoints(active);
       // Meydan okuma bağlantısıyla gelindiyse ve bugünkü dövüş oynanmadıysa doğrudan Günün Dövüşü.
       const gun = dayNumber();
       setView(challengeFor(gun) && !loadDaily().kayit[gun] ? 'daily' : 'menu');
@@ -224,6 +228,7 @@ export default function App() {
     if (next.efsane) {
       saveLegendBest(next.efsane.id, legendStars(next.efsane), !!next.efsane.bitti);
       if (next.efsane.bolum > (cur.efsane?.bolum ?? 0)) track('legend_chapter', { efsane: next.efsane.id, bolum: next.efsane.bolum, yildiz: legendStars(next.efsane) });
+      if (next.phase === 'hub') noteCheckpoint(slotRef.current, next);
     }
     if (next.phase === 'hub') {
       refreshStaleGoals(next);
@@ -269,12 +274,14 @@ export default function App() {
   useEffect(() => {
     if (view !== 'menu') return;
     const g = saves[slotRef.current - 1];
-    void rescheduleNotifications(loadDaily(), g && g.phase !== 'emeklilik' ? g.fighter.lakap || g.fighter.ad : undefined);
+    const ch = g && g.phase !== 'emeklilik' ? currentChapter(g) : null;
+    void rescheduleNotifications(loadDaily(), g && g.phase !== 'emeklilik' ? g.fighter.lakap || g.fighter.ad : undefined, ch && g?.efsane ? { bolum: g.efsane.bolum + 1, baslik: ch.baslik() } : null);
   }, [view, saves]);
   useEffect(
     () =>
       onNotificationOpen((hedef) => {
         if (hedef === 'gunluk') setView('daily');
+        else if (hedef === 'hayali') setView('dream');
         else if (gameRef.current && gameRef.current.phase !== 'emeklilik') setView('game');
       }),
     [],
@@ -287,7 +294,7 @@ export default function App() {
   // Android geri tuşu: oyundan ve karakter oluşturmadan menüye döner; menüdeyse uygulamadan çıkar.
   useEffect(() => {
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
-      if (view === 'game' || view === 'create' || view === 'daily' || view === 'locker') {
+      if (view === 'game' || view === 'create' || view === 'daily' || view === 'dream' || view === 'locker') {
         setView('menu');
         return true;
       }
@@ -325,6 +332,8 @@ export default function App() {
           ensureEvent(s);
           track('legend_start', { efsane: id, yuva: x });
           setSlot(x);
+          clearCheckpoints(x);
+          noteCheckpoint(x, s);
           setGame(s);
           void deleteGame(x).then(() => saveGame(s, x));
           putSave(x, s);
@@ -337,6 +346,10 @@ export default function App() {
           setView('daily');
         }}
         onLocker={() => setView('locker')}
+        onDream={() => {
+          track('dream_fight_open');
+          setView('dream');
+        }}
         onImport={(x, g) => {
           void deleteGame(x).then(() => saveGame(g, x));
           putSave(x, g);
@@ -355,6 +368,8 @@ export default function App() {
     content = <LockerScreen look={g?.fighter.gorunum} onExit={() => setView('menu')} />;
   } else if (view === 'daily') {
     content = <DailyScreen onExit={() => setView('menu')} />;
+  } else if (view === 'dream') {
+    content = <DreamScreen onExit={() => setView('menu')} />;
   } else if (view === 'create') {
     content = (
       <CreateScreen
@@ -507,7 +522,7 @@ export default function App() {
     }
   }
 
-  const topLabel = view === 'locker' ? L("Dolap") : view === 'daily' ? L("Günün Dövüşü") : view === 'create' ? L("Karakter Oluşturma") : view === 'game' && game ? PHASE_LABELS[game.phase] : null;
+  const topLabel = view === 'locker' ? L("Dolap") : view === 'daily' ? L("Günün Dövüşü") : view === 'dream' ? L("Hayalî Maçlar") : view === 'create' ? L("Karakter Oluşturma") : view === 'game' && game ? PHASE_LABELS[game.phase] : null;
 
   return (
     <SafeAreaProvider>

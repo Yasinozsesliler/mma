@@ -7,6 +7,9 @@ import { cosmeticById } from '../engine/cosmetics';
 import { currentChapter, dismissLegendIntro, LEGEND_IDS, LEGENDS, legendMaxStars, legendName, legendStars, noteOpen, openNote, type Chapter, type LegendId, type LegendRun } from '../engine/legendRun';
 import { MONETIZATION } from '../monetization';
 import { AdOffer } from './AdOffer';
+import { ShareButton } from '../share/ShareButton';
+import { legendCard } from '../share/build';
+import { checkpointOf, restoreInto, useCheckpoints } from '../legendCheckpoint';
 import type { GameState } from '../engine/types';
 import { L, LOC } from '../i18n';
 import { useLegendBest } from '../legendPrefs';
@@ -180,6 +183,7 @@ export function LegendHubCard({ s, act }: { s: GameState; act: Act }) {
         ) : (
           <Text style={st.hint}>{L("Bütün bölümleri bitirdin. Kariyerin artık senin: istediğin kadar devam et.")}</Text>
         )}
+        <ReplayOffers s={s} act={act} />
       </LinearGradient>
       {showIntro ? (
         <LegendIntro
@@ -192,6 +196,42 @@ export function LegendHubCard({ s, act }: { s: GameState; act: Act }) {
         />
       ) : null}
     </>
+  );
+}
+
+/** Bölümü yeniden oyna: önceki bölümün yıldızları eksikse ya da bu bölüm kötü gidiyorsa başına dön (ödüllü reklam). */
+function ReplayOffers({ s, act }: { s: GameState; act: Act }) {
+  useCheckpoints();
+  const [onay, setOnay] = useState<'cur' | 'prev' | null>(null);
+  const r = s.efsane!;
+  const d = LEGENDS[r.id];
+  const prev = checkpointOf(s, 'prev');
+  const cur = checkpointOf(s, 'cur');
+  const prevCh = prev ? d.bolumler[prev.bolum] : null;
+  const showPrev = !!prev && !!prevCh && prev.bolum === r.bolum - 1 && starsOf(r, prevCh).length < 3;
+  // Bu bölümde en az bir dövüş yapıldıysa baştan oynamak anlamlı
+  const showCur = !!cur && cur.bolum === r.bolum && !r.bitti && s.gecmis.length > cur.s.gecmis.length;
+  if (!showPrev && !showCur) return null;
+  const go = (snap: GameState) => act((x) => restoreInto(x, snap));
+  const offer = (which: 'cur' | 'prev', snap: GameState, title: string, desc: string) =>
+    MONETIZATION ? (
+      <AdOffer key={which} icon="restore" title={title} desc={desc} onReward={() => go(snap)} />
+    ) : (
+      <Pressable key={which} onPress={() => (onay === which ? go(snap) : setOnay(which))} style={st.replay}>
+        <Icon name="restore" size={16} color={C.gold} />
+        <View style={{ flex: 1 }}>
+          <Text style={st.replayTitle}>{onay === which ? L("Emin misin? Tekrar dokun") : title}</Text>
+          <Text style={st.replayDesc}>{desc}</Text>
+        </View>
+      </Pressable>
+    );
+  return (
+    <View style={{ marginTop: 6 }}>
+      {showPrev && prev && prevCh
+        ? offer('prev', prev.s, L("Önceki bölümü yeniden oyna: {0}", [prevCh.baslik()]), L("Kaçırdığın yıldızlar için o bölümün başına dön. Kariyerin o ana geri sarılır; en iyi yıldız rekorun korunur."))
+        : null}
+      {showCur && cur ? offer('cur', cur.s, L("Bu bölümü baştan oyna"), L("Bölüm kötü mü gidiyor? Bölümün başına dön; en iyi yıldız rekorun korunur.")) : null}
+    </View>
   );
 }
 
@@ -248,6 +288,11 @@ function LegendIntro({ s, idx, onClose }: { s: GameState; idx: number; onClose: 
                 </Text>
               </>
             )}
+            {idx > 0 ? (
+              <View style={{ marginBottom: 8 }}>
+                <ShareButton data={legendCard(s, ch ? idx - 1 : null)} label={ch ? L("Biten bölümü paylaş") : L("Hikâyeni paylaş")} />
+              </View>
+            ) : null}
             <Button label={ch ? L("Başla") : L("Devam")} icon="play" tone="gold" onPress={onClose} />
           </ScrollView>
         </LinearGradient>
@@ -291,6 +336,9 @@ const st = StyleSheet.create({
   goalProg: { color: C.gold, fontFamily: F.display, fontSize: 15 },
   starRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 3 },
   starText: { color: C.dim, fontFamily: F.body, fontSize: 12.5, flex: 1 },
+  replay: { flexDirection: 'row', alignItems: 'center', gap: 10, borderWidth: 1, borderColor: C.goldDeep, borderStyle: 'dashed', borderRadius: 12, padding: 10, marginTop: 6 },
+  replayTitle: { color: C.gold, fontFamily: F.bold, fontSize: 13 },
+  replayDesc: { color: C.dim, fontFamily: F.body, fontSize: 12, marginTop: 1 },
   note: { backgroundColor: '#15120a', borderWidth: 1, borderColor: C.goldDeep, borderRadius: 10, padding: 10, marginTop: 8 },
   noteKicker: { color: C.gold, fontFamily: F.bold, fontSize: 11, letterSpacing: 0.5 },
   noteText: { color: C.text, fontFamily: F.body, fontSize: 13, lineHeight: 18, marginTop: 4 },

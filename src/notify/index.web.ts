@@ -9,7 +9,8 @@ export async function enableNotifications(): Promise<boolean> {
   return false;
 }
 export async function disableNotifications() {}
-export async function rescheduleNotifications(_daily: DailyStore, _fighter?: string) {}
-export function onNotificationOpen(_fn: (hedef: 'gunluk' | 'kariyer') => void) {
+export type LegendNote = { bolum: number; baslik: string };
+export async function rescheduleNotifications(_daily: DailyStore, _fighter?: string, _efsane?: LegendNote | null) {}
+export function onNotificationOpen(_fn: (hedef: 'gunluk' | 'kariyer' | 'hayali') => void) {
   return () => {};
 }

@@ -285,6 +285,9 @@ export function legendRivals(s: GameState) {
   const var_ = [b.sampiyon, ...b.liste].find((o) => o?.soyad === rk.soyad);
   if (var_ && var_ !== target) Object.assign(var_, kim(target));
   if (var_ !== target) Object.assign(target, { ad: rk.ad, soyad: rk.soyad, lakap: rk.lakap, uyruk: rk.uyruk(), stil: rk.stil });
+  // Rakip bir efsaneyse (ör. Khabir'in hikâyesinde Conor) onun görünümüyle çıkar
+  const efsane = Object.values(LEGENDS).find((x) => x.ad === rk.ad && x.soyad === rk.soyad);
+  if (efsane) target.gorunum = efsane.gorunum;
   r.bayrak = { ...r.bayrak, [key]: true };
 }
 
