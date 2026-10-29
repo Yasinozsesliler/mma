@@ -65,7 +65,7 @@ export const COSMETICS: Cosmetic[] = [
   { id: 'sort_sultan', slot: 'sort', ad: L("Sultan"), renk: ['#7b1e2b', '#f2c14e'], kaynak: paket('paket_sultan') },
   { id: 'sort_parlak', slot: 'sort', ad: L("Hologram"), renk: ['#7fdbff', '#c86bff'], desen: 'yildiz', desenRenk: '#ffffff', nadir: 'efsane', kaynak: basari(L("Kart Albümü: Parlak Kartlar setini tamamla"), (c) => c.ozel.includes('sort_parlak')) },
   { id: 'sort_kar', slot: 'sort', ad: L("Kar Beyazı"), renk: ['#f4f8ff', '#c1121f'], kaynak: basari(L("Yılbaşı Kupası etkinliği (sınırlı süre)"), (c) => c.ozel.includes('sort_kar')) },
-  { id: 'sort_kral', slot: 'sort', ad: L("Yeşil Ada"), renk: ['#169b62', '#ff883e'], nadir: 'efsane', kaynak: basari(L("Efsane Yolu: Kral hikâyesini tamamla"), (c) => c.ozel.includes('sort_kral')) },
+  { id: 'sort_kral', slot: 'sort', ad: L("Yeşil Ada"), renk: ['#169b62', '#ff883e'], nadir: 'efsane', kaynak: basari(L("Efsane Yolu: {0} hikâyesini tamamla", ['Conor McGrath']), (c) => c.ozel.includes('sort_kral')) },
   { id: 'sort_balkabagi', slot: 'sort', ad: L("Balkabağı"), renk: ['#f77f00', '#111111'], kaynak: basari(L("Korku Gecesi etkinliği (sınırlı süre)"), (c) => c.ozel.includes('sort_balkabagi')) },
   // Eldiven
   { id: 'eld_klasik', slot: 'eldiven', ad: L("Kırmızı"), renk: ['#b8121f'], kaynak: hazir },

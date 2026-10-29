@@ -341,7 +341,7 @@ export function MenuScreen({
               <Text style={ms.newBadge}>{L("YENİ")}</Text>
             </View>
             <Text style={ms.chSub} numberOfLines={2}>
-              {L("Efsanelerin kariyerlerini bölüm bölüm yeniden yaşa. İlk hikâye: Kral 🇮🇪")}
+              {L("Efsanelerin kariyerlerini bölüm bölüm yeniden yaşa. İlk hikâye: {0} 🇮🇪", ['Conor McGrath'])}
             </Text>
           </View>
           <View style={{ alignItems: 'flex-end' }}>

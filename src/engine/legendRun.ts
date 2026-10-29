@@ -114,6 +114,9 @@ function pay(s: GameState, n: number, neden: string): string {
 
 // ---------- Kral (İrlanda) ----------
 
+// Normal oyundaki UCC kadrosu gibi: gerçeği çağrıştıran ama birebir aynı olmayan isimler
+const BOXER = { ad: 'Floyd Maywood', lakap: 'Money', rekor: '49-0', guc: 96 };
+
 const KRAL: Chapter[] = [
   {
     id: 'cirak',
@@ -267,7 +270,7 @@ const KRAL: Chapter[] = [
     yer: () => L("Las Vegas, ABD"),
     baslik: () => L("Para Dövüşü"),
     giris: () => [
-      L("Boks dünyasının kusursuz adamı, 49 maçta hiç yenilmemiş Marcus Bell, emekliliğinden senin için dönüyor."),
+      L("Boks dünyasının kusursuz adamı, 49 maçta hiç yenilmemiş {0}, emekliliğinden senin için dönüyor.", [BOXER.ad]),
       L("Herkes çıldırdığını söylüyor: hayatında tek profesyonel boks maçı yapmadın. Sen ise rakamlara bakıyorsun."),
       L("\"Kaybetsem de kazanırım,\" diyorsun. \"Ama kaybetmeye gitmiyorum.\""),
     ],
@@ -279,8 +282,8 @@ const KRAL: Chapter[] = [
       { ad: () => L("Boks efsanesini yen"), kontrol: (_s, _f, r) => r.boks === 'G', sonda: true },
     ],
     basla: (s) => {
-      s.boksTeklif = { boksor: { ad: 'Marcus Bell', lakap: L("Kusursuz"), rekor: '49-0', guc: 96 }, ucret: 100_000_000 };
-      return [L("🥊 Asrın teklifi geldi: Marcus Bell (49-0) ile boks maçı. Ücret {0}.", [$(100_000_000)])];
+      s.boksTeklif = { boksor: { ...BOXER }, ucret: 100_000_000 };
+      return [L("🥊 Asrın teklifi geldi: {0} (49-0) ile boks maçı. Ücret {1}.", [BOXER.ad, $(100_000_000)])];
     },
   },
   {
@@ -309,9 +312,9 @@ const KRAL: Chapter[] = [
 export const LEGENDS: Record<LegendId, LegendDef> = {
   kral: {
     id: 'kral',
-    ad: 'Cian',
-    soyad: 'Rourke',
-    lakap: () => L("Kral"),
+    ad: 'Conor',
+    soyad: 'McGrath',
+    lakap: () => 'The Infamous',
     uyruk: 'ie',
     memleket: () => L("Dublin"),
     bayrak: '🇮🇪',
@@ -333,21 +336,21 @@ export const LEGENDS: Record<LegendId, LegendDef> = {
     final: () => L("Tesisatçı çıraklığından dünyanın en çok kazanan sporcusuna. Hikâyeyi kendi yumruklarınla yeniden yazdın."),
   },
   dahi: {
-    id: 'dahi', ad: '', soyad: '', lakap: () => L("Dahi"), uyruk: 'us', memleket: () => L("New York"), bayrak: '🇺🇸', renk: '#3a86ff',
+    id: 'dahi', ad: 'Jonah', soyad: 'Jonsby', lakap: () => 'Skeleton', uyruk: 'us', memleket: () => L("New York"), bayrak: '🇺🇸', renk: '#3a86ff',
     ozet: () => L("23 yaşında en genç şampiyon. Kafeste kimsenin çözemediği bir bulmaca; kafes dışında kendi en büyük rakibi."),
     etiketler: () => [L("En genç şampiyon"), L("Yarı ağır kral")],
     oynanabilir: false, ucretsiz: false, yas: 20, siklet: 'yariagir', gecmis: 'gures', boy: 193,
     gorunum: { ten: 6, sac: 'kel', sacRenk: 0, goz: 0, sakal: 'kirli', yara: false, dovme: false }, statMod: {}, para: 1500, populerlik: 10, bolumler: [],
   },
   profesor: {
-    id: 'profesor', ad: '', soyad: '', lakap: () => L("Profesör"), uyruk: 'fr', memleket: () => L("Montreal"), bayrak: '🇨🇦', renk: '#e63946',
+    id: 'profesor', ad: 'Georges', soyad: 'Saint-Pierron', lakap: () => 'The Professor', uyruk: 'fr', memleket: () => L("Montreal"), bayrak: '🇨🇦', renk: '#e63946',
     ozet: () => L("Karate ile başlayan, her yenilgiyi rövanşta silen kusursuz taktisyen. Welter'ın en uzun soluklu hükümdarı."),
     etiketler: () => [L("Rövanş ustası"), L("Welter hükümdarı")],
     oynanabilir: false, ucretsiz: false, yas: 21, siklet: 'welter', gecmis: 'kyokushin', boy: 178,
     gorunum: { ten: 1, sac: 'kisa', sacRenk: 0, goz: 1, sakal: 'yok', yara: false, dovme: false }, statMod: {}, para: 1500, populerlik: 10, bolumler: [],
   },
   yenilmez: {
-    id: 'yenilmez', ad: '', soyad: '', lakap: () => L("Yenilmez"), uyruk: 'ru', memleket: () => L("Dağıstan"), bayrak: '🏔️', renk: '#f2c14e',
+    id: 'yenilmez', ad: 'Khabir', soyad: 'Nurmagaliev', lakap: () => 'The Falcon', uyruk: 'ru', memleket: () => L("Dağıstan"), bayrak: '🏔️', renk: '#f2c14e',
     ozet: () => L("Dağlarda ayılarla güreşerek büyüyen çocuk. Kimse onu yerde tutamadı, kimse onu yenemedi: 29-0."),
     etiketler: () => [L("29-0"), L("Hiç yenilmedi")],
     oynanabilir: false, ucretsiz: false, yas: 20, siklet: 'hafif', gecmis: 'sambo', boy: 178,
@@ -356,6 +359,9 @@ export const LEGENDS: Record<LegendId, LegendDef> = {
 };
 
 export const LEGEND_IDS = Object.keys(LEGENDS) as LegendId[];
+
+/** Hikâyenin adı: efsanenin tam adı. */
+export const legendName = (d: LegendDef) => `${d.ad} ${d.soyad}`.trim() || d.lakap();
 
 // ---------- Başlatma ----------
 
@@ -382,7 +388,7 @@ export function createLegendGame(id: LegendId, isim?: { ad?: string; soyad?: str
   s.populerlik = d.populerlik;
   s.takipci = initialFollowers(d.populerlik);
   s.efsane = { id, bolum: 0, yildiz: {}, giris: 0 };
-  s.haberler.unshift(L("📖 EFSANE YOLU: {0}. Bölüm 1 başlıyor.", [d.lakap()]));
+  s.haberler.unshift(L("📖 EFSANE YOLU: {0}. Bölüm 1 başlıyor.", [legendName(d)]));
   return s;
 }
 
@@ -442,9 +448,9 @@ export function legendCheck(s: GameState, f: LegendFight | null = null): string[
       r.bitti = true;
       r.giris = r.bolum;
       if (d.odulKozmetik) s.ozelKozmetik = [...new Set([...(s.ozelKozmetik ?? []), d.odulKozmetik])];
-      s.unvanlar.push(L("Efsane Yolu: {0}", [d.lakap()]));
+      s.unvanlar.push(L("Efsane Yolu: {0}", [legendName(d)]));
       addFollowers(s, followers(s) * 0.1);
-      lines.push(L("🏛️ EFSANE YOLU TAMAMLANDI: {0}! Toplam {1}/{2} yıldız.", [d.lakap(), legendStars(r), legendMaxStars(d.id)]));
+      lines.push(L("🏛️ EFSANE YOLU TAMAMLANDI: {0}! Toplam {1}/{2} yıldız.", [legendName(d), legendStars(r), legendMaxStars(d.id)]));
       break;
     }
   }

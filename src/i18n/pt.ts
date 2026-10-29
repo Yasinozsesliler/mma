@@ -6802,4 +6802,8 @@ export const PT: Record<string, string> = {
   "Efsanelerin kariyerlerini bölüm bölüm yeniden yaşa. İlk hikâye: Kral 🇮🇪": "Reviva as carreiras das lendas capítulo a capítulo. Primeira história: O Rei 🇮🇪",
   "Yeşil Ada": "Ilha Esmeralda",
   "Efsane Yolu: Kral hikâyesini tamamla": "Conclua a história Caminho da lenda: O Rei",
+  "Boks dünyasının kusursuz adamı, 49 maçta hiç yenilmemiş {0}, emekliliğinden senin için dönüyor.": "O homem perfeito do boxe, {0}, invicto em 49 lutas, está saindo da aposentadoria por você.",
+  "🥊 Asrın teklifi geldi: {0} (49-0) ile boks maçı. Ücret {1}.": "🥊 A proposta do século: luta de boxe com {0} (49-0). Bolsa {1}.",
+  "Efsane Yolu: {0} hikâyesini tamamla": "Conclua a história Caminho da lenda: {0}",
+  "Efsanelerin kariyerlerini bölüm bölüm yeniden yaşa. İlk hikâye: {0} 🇮🇪": "Reviva as carreiras das lendas capítulo a capítulo. Primeira história: {0} 🇮🇪",
 };

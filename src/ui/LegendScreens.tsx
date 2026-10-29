@@ -4,11 +4,11 @@ import { useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { cosmeticById } from '../engine/cosmetics';
-import { currentChapter, dismissLegendIntro, LEGEND_IDS, LEGENDS, legendMaxStars, legendStars, type Chapter, type LegendId, type LegendRun } from '../engine/legendRun';
+import { currentChapter, dismissLegendIntro, LEGEND_IDS, LEGENDS, legendMaxStars, legendName, legendStars, type Chapter, type LegendId, type LegendRun } from '../engine/legendRun';
 import type { GameState } from '../engine/types';
 import { L, LOC } from '../i18n';
 import { useLegendBest } from '../legendPrefs';
-import { Button, Icon, SLANT } from './components';
+import { Button, Icon, SLANT, upName } from './components';
 import { FighterAvatar } from './FighterAvatar';
 import { C, F, R } from './theme';
 
@@ -49,7 +49,7 @@ export function LegendList({ canStart, onStart }: { canStart: boolean; onStart: 
               <View style={{ flex: 1, minWidth: 0 }}>
                 <View style={st.nameRow}>
                   <Text style={[st.name, SLANT]}>
-                    {d.bayrak} {d.lakap().toLocaleUpperCase(LOC)}
+                    {d.bayrak} {upName(legendName(d), d.uyruk)}
                   </Text>
                   {d.oynanabilir ? (
                     d.ucretsiz ? <Text style={[st.badge, { color: C.green, borderColor: C.green + '88' }]}>{L("ÜCRETSİZ")}</Text> : null
@@ -57,6 +57,7 @@ export function LegendList({ canStart, onStart }: { canStart: boolean; onStart: 
                     <Text style={[st.badge, { color: C.faint, borderColor: C.faint }]}>{L("YAKINDA")}</Text>
                   )}
                 </View>
+                <Text style={[st.ozet, { color: d.renk, fontWeight: '700' }]}>“{d.lakap()}”</Text>
                 <Text style={st.ozet} numberOfLines={isOpen ? undefined : 2}>
                   {d.ozet()}
                 </Text>
@@ -218,7 +219,7 @@ function LegendIntro({ s, idx, onClose }: { s: GameState; idx: number; onClose: 
             ) : (
               <>
                 <Text style={st.mKicker}>{L("EFSANE YOLU")}</Text>
-                <Text style={[st.mTitle, SLANT]}>{L("{0}: TAMAMLANDI", [d.lakap().toLocaleUpperCase(LOC)])}</Text>
+                <Text style={[st.mTitle, SLANT]}>{L("{0}: TAMAMLANDI", [upName(legendName(d), d.uyruk)])}</Text>
                 {d.final ? <Text style={st.mPara}>{d.final()}</Text> : null}
                 {d.bolumler.map((c) => (
                   <View key={c.id} style={st.chRow}>

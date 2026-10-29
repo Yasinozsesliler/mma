@@ -212,7 +212,9 @@ export const rosterFor = (siklet: WeightClass, kadin: boolean): Star[] => (kadin
  */
 export function pickStar(s: GameState, siklet: WeightClass, kadin: boolean, rank: number | null, champion: boolean, used: Set<string>): Star | null {
   const list = rosterFor(siklet, kadin);
-  const free = (x: Star) => !used.has(`${x.ad} ${x.soyad}`);
+  // Oyuncu kadrodaki bir isimle oynuyorsa (Efsane Yolu) kendisiyle eşleşmez
+  const me = `${s.fighter.ad} ${s.fighter.soyad}`;
+  const free = (x: Star) => !used.has(`${x.ad} ${x.soyad}`) && `${x.ad} ${x.soyad}` !== me;
   if (champion) return list.find(free) ?? null;
   const want = rank != null ? Math.min(list.length - 1, Math.max(1, rank)) : 1 + Math.floor(rand() * Math.max(1, list.length - 1));
   for (let i = 0; i < list.length; i++) {
