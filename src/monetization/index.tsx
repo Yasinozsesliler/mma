@@ -11,6 +11,7 @@ import { AD_IDS } from './ids';
 import { grant, isAdFree, isPremium, owns } from './premium';
 import { ALL_SKUS, PREMIUM_SKU } from './skus';
 
+import { initRevenueCat, rcRecordPurchase, rcSync } from './revenuecat';
 import { noteAdShown } from './upsell';
 export { isAdFree, isPremium, owns, useAdFree, useOwned, usePremium } from './premium';
 
@@ -205,6 +206,7 @@ export const buyPremium = () => buy(PREMIUM_SKU);
 export async function restorePurchases(): Promise<boolean> {
   if (!restoreFn) return false;
   await restoreFn().catch(() => undefined);
+  void rcSync();
   // Liste durum güncellemesiyle gelir; bir sonraki çizimde işlenmesini bekle.
   await new Promise((r) => setTimeout(r, 400));
   return ALL_SKUS.some(owns);
@@ -221,6 +223,7 @@ function StoreManager() {
     onPurchaseSuccess: async (purchase) => {
       if (!ALL_SKUS.includes(purchase.productId)) return;
       grant(purchase.productId);
+      await rcRecordPurchase(purchase.productId);
       // Onaylanmayan satın alımlar 3 gün sonra iade edilir.
       await finishTransaction({ purchase, isConsumable: false }).catch(() => undefined);
       if (pending?.sku === purchase.productId) settle('ok');
@@ -231,6 +234,7 @@ function StoreManager() {
   // Ürünler gelene kadar artan aralıklarla yeniden istenir; uygulama öne gelince de tekrar denenir.
   // (Tek istek boş dönerse fiyatlar hiç görünmüyor, satın alma düğmeleri çalışmıyordu.)
   const loaded = products.length > 0;
+  useEffect(initRevenueCat, []);
   useEffect(() => {
     if (!connected) return;
     void getAvailablePurchases().catch(() => undefined);
