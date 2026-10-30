@@ -4,8 +4,9 @@ import { useEffect, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { cosmeticById } from '../engine/cosmetics';
-import { currentChapter, dismissLegendIntro, LEGEND_IDS, LEGENDS, legendMaxStars, legendName, legendStars, noteOpen, openNote, unlockLegendRun, type Chapter, type LegendId, type LegendRun } from '../engine/legendRun';
-import { buy, MONETIZATION, PURCHASES, restorePurchases, useOwned, usePrice } from '../monetization';
+import { bonusAvailable, bonusChapter, currentChapter, dismissLegendIntro, inBonus, LEGEND_IDS, LEGENDS, legendMaxStars, legendName, legendStars, noteOpen, openNote, startBonus, unlockLegendRun, type Chapter, type LegendId, type LegendRun } from '../engine/legendRun';
+import { buy, MONETIZATION, PURCHASES, restorePurchases, useOwned, usePremium, usePrice } from '../monetization';
+import { BuyPremium } from './PremiumCard';
 import { LEGENDS_SKU, PREMIUM_SKU } from '../monetization/skus';
 import { AdOffer } from './AdOffer';
 import { ShareButton } from '../share/ShareButton';
@@ -196,7 +197,7 @@ export function LegendHubCard({ s, act }: { s: GameState; act: Act }) {
         <View style={st.hubHead}>
           <Icon name="book-open-variant" size={16} color={C.gold} />
           <Text style={st.hubKicker}>
-            {ch ? L("EFSANE YOLU · BÖLÜM {0}/{1} · {2}", [r.bolum + 1, d.bolumler.length, ch.yil]) : L("EFSANE YOLU TAMAMLANDI")}
+            {ch ? (inBonus(s) ? L("🔀 YA ÖYLE OLSAYDI?") : L("EFSANE YOLU · BÖLÜM {0}/{1} · {2}", [r.bolum + 1, d.bolumler.length, ch.yil])) : L("EFSANE YOLU TAMAMLANDI")}
           </Text>
           <Stars n={1} max={1} size={13} />
           <Text style={st.hubStars}>
@@ -244,6 +245,7 @@ export function LegendHubCard({ s, act }: { s: GameState; act: Act }) {
         ) : (
           <>
             <Text style={st.hint}>{L("Bütün bölümleri bitirdin. Kariyerin artık senin: istediğin kadar devam et.")}</Text>
+            <BonusOffer s={s} act={act} />
             <NextLegend from={r.id} />
           </>
         )}
@@ -286,6 +288,39 @@ function TrialEnd({ r }: { r: LegendRun }) {
       </View>
       <Text style={[st.hint, { marginTop: 8 }]}>{L("Paket almadan da bu kariyere normal devam edebilirsin; yalnızca bölüm hedefleri ilerlemez.")}</Text>
     </LinearGradient>
+  );
+}
+
+/** Hikâye bitince: "Ya öyle olsaydı?" alternatif tarih bölümü (Şampiyon Paketi). Bittiyse yıldızları. */
+function BonusOffer({ s, act }: { s: GameState; act: Act }) {
+  const premium = usePremium();
+  const r = s.efsane!;
+  const ch = bonusChapter(r.id);
+  if (!ch) return null;
+  if (r.bonusBitti) {
+    const n = starsOf(r, ch).length;
+    return (
+      <View style={[st.note, { flexDirection: 'row', alignItems: 'center', gap: 8 }]}>
+        <Text style={[st.noteKicker, { flex: 1 }]}>{L("🔀 {0}", [ch.baslik()])}</Text>
+        <Stars n={n} />
+      </View>
+    );
+  }
+  if (!bonusAvailable(s)) return null;
+  const open = premium || !PURCHASES;
+  return (
+    <View style={[st.pack, { marginTop: 10, marginBottom: 0, borderColor: '#00f5d488' }]}>
+      <Text style={[st.packKicker, { color: '#00f5d4' }]}>{L("🔀 YA ÖYLE OLSAYDI?")}</Text>
+      <Text style={[st.name, SLANT, { fontSize: 17 }]}>{ch.baslik().toLocaleUpperCase(LOC)}</Text>
+      <Text style={st.packText}>{ch.giris()[1] ?? ch.giris()[0]}</Text>
+      <Text style={st.hint}>{L("Hikâyenin alternatif tarih bölümü. Bitirene özel “Alternatif Tarih” çerçevesi.")}</Text>
+      {open ? <Button label={L("Bölümü başlat")} icon="shuffle-variant" tone="gold" onPress={() => act(startBonus)} /> : (
+        <>
+          <Text style={[st.hint, { color: C.gold }]}>{L("👑 Şampiyon Paketi ile açılır")}</Text>
+          <BuyPremium />
+        </>
+      )}
+    </View>
   );
 }
 
@@ -385,7 +420,8 @@ function LegendIntro({ s, idx, onClose }: { s: GameState; idx: number; onClose: 
   const ins = useSafeAreaInsets();
   const r = s.efsane!;
   const d = LEGENDS[r.id];
-  const ch = d.bolumler[idx];
+  const bonus = idx >= d.bolumler.length && inBonus(s);
+  const ch = bonus ? bonusChapter(r.id) ?? undefined : d.bolumler[idx];
   return (
     <Modal transparent animationType="fade" onRequestClose={onClose}>
       <View style={st.modalWrap}>
@@ -393,7 +429,7 @@ function LegendIntro({ s, idx, onClose }: { s: GameState; idx: number; onClose: 
           <ScrollView contentContainerStyle={{ padding: 18 }}>
             {ch ? (
               <>
-                <Text style={st.mKicker}>{L("BÖLÜM {0} · {1} · {2}", [idx + 1, ch.yil, ch.yer()])}</Text>
+                <Text style={st.mKicker}>{bonus ? L("🔀 YA ÖYLE OLSAYDI? · {0}", [ch.yer()]) : L("BÖLÜM {0} · {1} · {2}", [idx + 1, ch.yil, ch.yer()])}</Text>
                 <Text style={[st.mTitle, SLANT]}>{ch.baslik().toLocaleUpperCase(LOC)}</Text>
                 {ch.giris().map((p, i) => (
                   <Text key={i} style={st.mPara}>
@@ -434,7 +470,7 @@ function LegendIntro({ s, idx, onClose }: { s: GameState; idx: number; onClose: 
                 </Text>
               </>
             )}
-            {idx > 0 ? (
+            {idx > 0 && !bonus ? (
               <View style={{ marginBottom: 8 }}>
                 <ShareButton data={legendCard(s, ch ? idx - 1 : null)} label={ch ? L("Biten bölümü paylaş") : L("Hikâyeni paylaş")} />
               </View>

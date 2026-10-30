@@ -10,6 +10,7 @@ import { addFollowers, followers, initialFollowers } from './fame';
 import { DAHI } from './legendDahi';
 import { $, type Chapter, type LegendDef, type LegendFight, type LegendId, type LegendPress, type LegendRun } from './legendKit';
 import { KRAL } from './legendKral';
+import { BONUS } from './legendBonus';
 import { PROFESOR } from './legendProfesor';
 import { YENILMEZ } from './legendYenilmez';
 import { KRALICE } from './legendKralice';
@@ -262,9 +263,17 @@ export const legendOf = (s: GameState) => (s.efsane ? LEGENDS[s.efsane.id] : nul
 export const currentChapter = (s: GameState): Chapter | null => {
   const r = s.efsane;
   const d = legendOf(s);
-  return r && d && !r.bekle && r.bolum < d.bolumler.length ? d.bolumler[r.bolum] : null;
+  if (!r || !d || r.bekle) return null;
+  if (r.bolum < d.bolumler.length) return d.bolumler[r.bolum];
+  return r.bonus && !r.bonusBitti ? (BONUS[r.id] ?? null) : null;
 };
-export const legendStars = (r: LegendRun) => Object.values(r.yildiz).reduce((a, x) => a + x.length, 0);
+/** Bonus bölümü sürüyor mu? */
+export const inBonus = (s: GameState) => !!s.efsane?.bonus && !s.efsane.bonusBitti;
+/** Hikâye bitti ve bu efsanenin "Ya öyle olsaydı?" bölümü henüz başlamadı. */
+export const bonusAvailable = (s: GameState) => !!s.efsane?.bitti && !s.efsane.bonus && !!BONUS[s.efsane.id];
+export const bonusChapter = (id: LegendId) => BONUS[id] ?? null;
+/** Ana hikâyenin yıldızları (bonus bölümü sayılmaz). */
+export const legendStars = (r: LegendRun) => Object.entries(r.yildiz).reduce((a, [k, x]) => (k.startsWith('alt_') ? a : a + x.length), 0);
 export const legendMaxStars = (id: LegendId) => LEGENDS[id].bolumler.length * 3;
 
 function earn(r: LegendRun, ch: Chapter, i: number) {
@@ -285,7 +294,8 @@ function startChapter(s: GameState, r: LegendRun, ch: Chapter): string[] {
 export function legendCheck(s: GameState, f: LegendFight | null = null): string[] {
   const r = s.efsane;
   const d = legendOf(s);
-  if (!r || !d || r.bitti || r.bekle) return [];
+  if (!r || !d || r.bekle) return [];
+  if (r.bitti && !(r.bonus && !r.bonusBitti)) return [];
   const lines: string[] = [];
   // Dövüş dışı güvenli an: bölümün ağır olayları (kemer alma, ceza, sakatlık) ve tarihî rakip
   if (!f) {
@@ -315,6 +325,13 @@ export function legendCheck(s: GameState, f: LegendFight | null = null): string[
       });
     }
     const n = r.yildiz[ch.id]?.length ?? 0;
+    if (ch.id.startsWith('alt_')) {
+      r.bonusBitti = true;
+      s.ozelKozmetik = [...new Set([...(s.ozelKozmetik ?? []), 'cer_alternatif'])];
+      lines.push(L("🔀 YA ÖYLE OLSAYDI? TAMAMLANDI: {0} · {1}", [ch.baslik(), '★'.repeat(n) + '☆'.repeat(3 - n)]));
+      lines.push(...odul);
+      break;
+    }
     lines.push(L("📖 BÖLÜM TAMAM: {0} · {1}", [ch.baslik(), '★'.repeat(n) + '☆'.repeat(3 - n)]));
     lines.push(...odul);
     r.bolum++;
@@ -404,6 +421,18 @@ export function unlockLegendRun(s: GameState) {
   const ch = currentChapter(s);
   if (!ch) return;
   const lines = [L("📖 EFSANE YOLU DEVAM EDİYOR: Bölüm {0}.", [r.bolum + 1]), ...startChapter(s, r, ch)];
+  lines.forEach((l) => s.haberler.unshift(l));
+  legendRivals(s);
+}
+
+/** "Ya öyle olsaydı?" bölümünü başlat (hikâye bitmiş olmalı). */
+export function startBonus(s: GameState) {
+  const r = s.efsane;
+  if (!r || !bonusAvailable(s)) return;
+  r.bonus = true;
+  const ch = currentChapter(s);
+  if (!ch) return;
+  const lines = [L("🔀 YA ÖYLE OLSAYDI?: {0}", [ch.baslik()]), ...startChapter(s, r, ch)];
   lines.forEach((l) => s.haberler.unshift(l));
   legendRivals(s);
 }

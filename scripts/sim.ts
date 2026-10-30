@@ -38,7 +38,7 @@ import { changeWeight } from '../src/engine/career';
 import { banned, serveBan } from '../src/engine/doping';
 import { openGym, refreshCandidates, signCost, signStudent, upgradeGym } from '../src/engine/academy';
 import { acceptCrossover, boxRound, closeBox } from '../src/engine/crossover';
-import { createLegendGame, currentChapter, LEGENDS, legendStars, unlockLegendRun, type LegendId } from '../src/engine/legendRun';
+import { createLegendGame, currentChapter, LEGENDS, legendStars, startBonus, unlockLegendRun, type LegendId } from '../src/engine/legendRun';
 import { chooseEvent, closeEvent } from '../src/engine/events';
 import { chooseTactic, nextRound, resolveCritical, resolveDecision } from '../src/engine/fight';
 import { weakest } from '../src/engine/opponents';
@@ -61,7 +61,7 @@ function cutPick(c: ManualCut): string {
   return need > 0.9 ? 'sauna' : need > 0.55 ? 'kosu' : 'banyo';
 }
 const meydanStat: Record<string, number> = {};
-const efsaneStat = { bolum: {} as Record<number, number>, yildiz: 0, y: {} as Record<string, number>, bitti: 0, yas: [] as number[], para: [] as number[] };
+const efsaneStat = { bolum: {} as Record<number, number>, yildiz: 0, y: {} as Record<string, number>, bitti: 0, yas: [] as number[], para: [] as number[], bonus: 0, bonusBitti: 0, bonusY: 0 };
 const startStreak: number[] = [];
 const itirazStat = { n: 0, kabul: 0 };
 const imzaStat = { n: 0, sayi: 0 };
@@ -323,6 +323,8 @@ function playCareer() {
         fights++;
         // TRIAL=1: paketsiz deneme · TRIAL=unlock: deneme bitince birkaç maç sonra paket alınır
         if (process.env.TRIAL === 'unlock' && s.efsane?.bekle && fights % 4 === 0) unlockLegendRun(s);
+        // BONUS=1: hikâye bitince "Ya öyle olsaydı?" bölümü başlar
+        if (process.env.BONUS && s.efsane?.bitti && !s.efsane.bonus) startBonus(s);
         stats.methods[r.yontem] = (stats.methods[r.yontem] ?? 0) + 1;
         if (r.kazanan === 'p') { stats.wins++; stats.byBg[bg].w++; }
         else if (r.kazanan === 'o') { stats.losses++; stats.byBg[bg].l++; }
@@ -384,6 +386,8 @@ function playCareer() {
       efsaneStat.yildiz += legendStars(r);
       Object.entries(r.yildiz).forEach(([k, v]) => v.forEach((i) => (efsaneStat.y[`${k}${i}`] = (efsaneStat.y[`${k}${i}`] ?? 0) + 1)));
       if (r.bitti) { efsaneStat.bitti++; efsaneStat.yas.push(s.fighter.yas); efsaneStat.para.push(s.para); }
+      if (r.bonus) efsaneStat.bonus++;
+      if (r.bonusBitti) { efsaneStat.bonusBitti++; efsaneStat.bonusY += Object.entries(r.yildiz).filter(([k]) => k.startsWith('alt_')).reduce((a, [, v]) => a + v.length, 0); }
     }
     if (s.imza) { imzaStat.n++; imzaStat.sayi += s.imza.sayi; }
     if (s.marka) { markaStat.n++; markaStat.toplam += s.marka.toplam; }
@@ -468,6 +472,7 @@ if (process.env.LEGEND) {
   const d = LEGENDS[process.env.LEGEND as LegendId];
   console.log(`Efsane Yolu ${d.lakap()}: bitiren ${pct(efsaneStat.bitti, N)}, ort. yıldız ${(efsaneStat.yildiz / N).toFixed(1)}/${d.bolumler.length * 3}, bitiş yaşı ${mean(efsaneStat.yas)}, servet ort. $${Math.round(Number(mean(efsaneStat.para)) || 0).toLocaleString('tr-TR')}`);
   console.log('  Kalınan bölüm:', Object.entries(efsaneStat.bolum).map(([k, v]) => `${k === String(d.bolumler.length) ? 'bitti' : d.bolumler[Number(k)].id} ${pct(v, N)}`).join(' · '));
+  if (process.env.BONUS) console.log(`  Ya öyle olsaydı?: başlayan ${efsaneStat.bonus}, biten ${pct(efsaneStat.bonusBitti, Math.max(1, efsaneStat.bonus))}, ort. yıldız ${(efsaneStat.bonusY / Math.max(1, efsaneStat.bonusBitti)).toFixed(1)}/3`);
   console.log('  Yıldız oranı:', d.bolumler.map((c) => `${c.id} ${[0, 1, 2].map((i) => pct(efsaneStat.y[`${c.id}${i}`] ?? 0, N)).join('/')}`).join(' · '));
 }
 console.log(`Tartı (elle kilo): ${cutStat.n} tartı · kaçırma ${pct(cutStat.kacti, cutStat.n)} · rakipten iri ${pct(cutStat.iri, cutStat.n)}`);

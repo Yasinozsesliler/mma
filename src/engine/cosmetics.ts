@@ -107,6 +107,7 @@ export const COSMETICS: Cosmetic[] = [
   { id: 'cer_ejder', slot: 'cerceve', ad: L("Ejderha"), renk: ['#ff3d00'], nadir: 'efsane', kaynak: paket('paket_ejder') },
   { id: 'cer_buz', slot: 'cerceve', ad: L("Buz Kralı"), renk: ['#7fdbff'], nadir: 'efsane', kaynak: paket('paket_buz') },
   { id: 'cer_koleksiyoncu', slot: 'cerceve', ad: L("Koleksiyoncu"), renk: ['#c86bff'], nadir: 'epik', kaynak: basari(L("Kart Albümü'nde 3 set tamamla"), (c) => c.ozel.includes('cer_koleksiyoncu')) },
+  { id: 'cer_alternatif', slot: 'cerceve', ad: L("Alternatif Tarih"), renk: ['#00f5d4'], nadir: 'epik', kaynak: basari(L("Bir \"Ya öyle olsaydı?\" bölümünü bitir"), (c) => c.ozel.includes('cer_alternatif')) },
   { id: 'cer_gunes', slot: 'cerceve', ad: L("Güneş"), renk: ['#ffb703'], kaynak: basari(L("Yaz Festivali etkinliği (sınırlı süre)"), (c) => c.ozel.includes('cer_gunes')) },
   // Kemer kaplaması (klasik: organizasyonun kendi renkleri)
   { id: 'kem_klasik', slot: 'kemer', ad: L("Organizasyon rengi"), renk: [], kaynak: hazir },

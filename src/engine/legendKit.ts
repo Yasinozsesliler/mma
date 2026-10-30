@@ -27,6 +27,9 @@ export interface LegendRun {
   deneme?: boolean;
   /** Deneme bitti: hikâye paket alınana kadar duraklatıldı (kariyer normal sürer) */
   bekle?: boolean;
+  /** "Ya öyle olsaydı?" bonus bölümü başladı / bitti (hikâye sonrası, Şampiyon Paketi) */
+  bonus?: boolean;
+  bonusBitti?: boolean;
 }
 
 /** Bir dövüşün özeti (bölüm yıldızları için). Dövüş dışı kontrollerde null. */
