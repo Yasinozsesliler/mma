@@ -6,6 +6,9 @@ name: Android derlemesi
 
 on:
   workflow_dispatch:
+  # android-build dalına gönderilen her commit derlemeyi kendiliğinden başlatır (elle başlatmaya gerek kalmaz)
+  push:
+    branches: [android-build]
 
 permissions:
   contents: write
