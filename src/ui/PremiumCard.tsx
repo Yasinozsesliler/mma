@@ -144,6 +144,9 @@ export function PremiumCompare() {
     [L("Ödüllü teklifler"), L("Reklamla"), L("Anında")],
     [L("Kariyer yuvası"), '3', '5'],
     [L("Efsane Yolları"), L("Conor + 1. bölümler"), L("{0} efsanenin tamamı", [LEGEND_IDS.length])],
+    [L("Sezon Kemeri ödülleri"), L("4 / ay"), L("10 / ay")],
+    [L("Hayalî Maç Stüdyosu"), '—', '✓'],
+    [L("Efsanelerim"), '1', '10'],
     [L("Altın Seri ve Şampiyon çerçevesi"), '—', '✓'],
   ];
   return (

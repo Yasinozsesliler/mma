@@ -34,6 +34,7 @@ import {
 import { MenuScreen } from './src/ui/MenuScreen';
 import { DailyScreen } from './src/ui/DailyScreen';
 import { DreamScreen } from './src/ui/DreamScreen';
+import { SeasonScreen } from './src/ui/SeasonScreen';
 import { ShopScreen } from './src/ui/ShopScreen';
 import { ArcadeScreen } from './src/ui/ArcadeScreen';
 import { SocialScreen } from './src/ui/SocialScreen';
@@ -76,6 +77,7 @@ import { popToFollowers } from './src/engine/fame';
 import { useSoundScene, type Scene } from './src/audio';
 import { initMonetization, PremiumManager } from './src/monetization';
 import { PremiumOfferModal } from './src/ui/PremiumCard';
+import { addSeasonXp } from './src/season';
 import { applyHeritage, heritageOf, type Heritage } from './src/engine/dynasty';
 import { unlockCtx } from './src/engine/cosmetics';
 import { refreshUnlocks } from './src/cosmetics';
@@ -130,7 +132,7 @@ const PHASE_LABELS: Record<Phase, string> = {
   memleket: L("Memleketim"),
 };
 
-type View_ = 'loading' | 'menu' | 'create' | 'game' | 'daily' | 'dream' | 'locker';
+type View_ = 'loading' | 'menu' | 'create' | 'game' | 'daily' | 'dream' | 'locker' | 'season';
 
 installErrorLog();
 installImmersive();
@@ -226,6 +228,16 @@ export default function App() {
     const yeni = next.phase === 'emeklilik' ? [] : checkAchievements(next);
     if (next.phase === 'emeklilik') challengeOnRetire(next);
     if (next.meydan?.durum === 'basarili') markChallenge(next.meydan.id);
+    // Sezon Kemeri puanı: oynanan maç (galibiyet, bitiriş) ve biten efsane bölümü
+    if (next.gecmis.length > cur.gecmis.length) {
+      const f = next.gecmis[0];
+      addSeasonXp('mac');
+      if (f.sonuc === 'G') {
+        addSeasonXp('galibiyet');
+        if (f.yontem === 'KO' || f.yontem === 'TKO' || f.yontem === 'SUB') addSeasonXp('bitiris');
+      }
+    }
+    if (next.efsane && cur.efsane?.id === next.efsane.id && next.efsane.bolum > cur.efsane.bolum) addSeasonXp('bolum', next.efsane.bolum - cur.efsane.bolum);
     if (next.efsane) {
       saveLegendBest(next.efsane.id, legendStars(next.efsane), !!next.efsane.bitti);
       if (next.efsane.bolum > (cur.efsane?.bolum ?? 0)) track('legend_chapter', { efsane: next.efsane.id, bolum: next.efsane.bolum, yildiz: legendStars(next.efsane) });
@@ -295,7 +307,7 @@ export default function App() {
   // Android geri tuşu: oyundan ve karakter oluşturmadan menüye döner; menüdeyse uygulamadan çıkar.
   useEffect(() => {
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
-      if (view === 'game' || view === 'create' || view === 'daily' || view === 'dream' || view === 'locker') {
+      if (view === 'game' || view === 'create' || view === 'daily' || view === 'dream' || view === 'locker' || view === 'season') {
         setView('menu');
         return true;
       }
@@ -347,6 +359,10 @@ export default function App() {
           setView('daily');
         }}
         onLocker={() => setView('locker')}
+        onSeason={() => {
+          track('season_open');
+          setView('season');
+        }}
         onDream={() => {
           track('dream_fight_open');
           setView('dream');
@@ -371,6 +387,8 @@ export default function App() {
     content = <DailyScreen onExit={() => setView('menu')} />;
   } else if (view === 'dream') {
     content = <DreamScreen onExit={() => setView('menu')} />;
+  } else if (view === 'season') {
+    content = <SeasonScreen look={(saves[slot - 1] ?? game)?.fighter.gorunum} onExit={() => setView('menu')} />;
   } else if (view === 'create') {
     content = (
       <CreateScreen
@@ -523,7 +541,7 @@ export default function App() {
     }
   }
 
-  const topLabel = view === 'locker' ? L("Dolap") : view === 'daily' ? L("Günün Dövüşü") : view === 'dream' ? L("Hayalî Maçlar") : view === 'create' ? L("Karakter Oluşturma") : view === 'game' && game ? PHASE_LABELS[game.phase] : null;
+  const topLabel = view === 'locker' ? L("Dolap") : view === 'daily' ? L("Günün Dövüşü") : view === 'dream' ? L("Hayalî Maçlar") : view === 'season' ? L("Sezon Kemeri") : view === 'create' ? L("Karakter Oluşturma") : view === 'game' && game ? PHASE_LABELS[game.phase] : null;
 
   return (
     <SafeAreaProvider>

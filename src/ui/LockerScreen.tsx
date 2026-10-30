@@ -11,6 +11,7 @@ import type { Appearance } from '../engine/types';
 import { L, LOC } from '../i18n';
 import { buy, MONETIZATION, PACK_STORE, PURCHASES, restorePurchases, useOwned, usePrice } from '../monetization';
 import { BUNDLE_SKU } from '../monetization/skus';
+import { seasonIndex } from '../engine/season';
 import { Belt } from './Belt';
 import { Button, Icon, Screen, Section, SLANT, Title, type IconName } from './components';
 import { DEFAULT_LOOK, FighterAvatar } from './FighterAvatar';
@@ -35,6 +36,7 @@ function lockText(x: Cosmetic) {
   if (k.tur === 'basari') return k.aciklama;
   if (k.tur === 'sampiyon') return L("Şampiyon Paketi ile gelir");
   if (k.tur === 'paket') return L("{0} paketinde", [PACK_NAME[k.sku]]);
+  if (k.tur === 'sezon') return k.pro ? L("Sezon Kemeri · {0}. basamak (Şampiyon)", [k.basamak]) : L("Sezon Kemeri · {0}. basamak", [k.basamak]);
   return '';
 }
 
@@ -52,7 +54,7 @@ function KitPreview({ look, x, eldiven, size = 120 }: { look: Appearance; x: Cos
 
 const PLAIN: Cosmetic = { id: '_', slot: 'sort', ad: '', renk: ['#2a2d33', '#555555'], kaynak: { tur: 'hazir' } };
 
-function Swatch({ x, look }: { x: Cosmetic; look: Appearance }) {
+export function Swatch({ x, look }: { x: Cosmetic; look: Appearance }) {
   if (x.slot === 'sort') return <KitPreview look={look} x={x} eldiven="#b8121f" size={64} />;
   if (x.slot === 'eldiven') return <KitPreview look={look} x={PLAIN} eldiven={x.renk[0]} size={64} />;
   if (x.slot === 'cerceve') return <FighterAvatar look={look} size={62} ring={x.renk[0] ?? C.red} />;
@@ -184,7 +186,9 @@ export function LockerScreen({ look = DEFAULT_LOOK, onExit }: { look?: Appearanc
   const gir = show('giris');
   const fx = show('efekt').fx;
 
-  const sayilan = COSMETICS.filter((x) => PACK_STORE || (x.kaynak.tur !== 'paket' && x.kaynak.tur !== 'sampiyon') || unlocked(x));
+  // Sezon ödülleri: yalnızca bu sezonunkiler ve sahip olunanlar (geçmiş sezonlar dolabı kalabalıklaştırmasın)
+  const visible = (x: Cosmetic) => x.kaynak.tur !== 'sezon' || x.kaynak.sezon === seasonIndex() || unlocked(x);
+  const sayilan = COSMETICS.filter((x) => visible(x) && (PACK_STORE || (x.kaynak.tur !== 'paket' && x.kaynak.tur !== 'sampiyon') || unlocked(x)));
   const total = sayilan.length;
   const have = sayilan.filter(unlocked).length;
   const allPacks = PACKS.every((p) => packOwned(owned, p.sku));
@@ -219,7 +223,7 @@ export function LockerScreen({ look = DEFAULT_LOOK, onExit }: { look?: Appearanc
 
   const heroW = W - 32;
   // Paket mağazası kapalıyken (iPhone) yalnızca oynayarak açılan parçalar listelenir
-  const items = COSMETICS.filter((x) => x.slot === tab && (PACK_STORE || (x.kaynak.tur !== 'paket' && x.kaynak.tur !== 'sampiyon') || unlocked(x))).sort((a, b) => RARITY[rarityOf(a)].sira - RARITY[rarityOf(b)].sira);
+  const items = COSMETICS.filter((x) => x.slot === tab && visible(x) && (PACK_STORE || (x.kaynak.tur !== 'paket' && x.kaynak.tur !== 'sampiyon') || unlocked(x))).sort((a, b) => RARITY[rarityOf(a)].sira - RARITY[rarityOf(b)].sira);
 
   return (
     <Screen footer={<Button label={L("Ana menü")} icon="arrow-left" tone="ghost" onPress={onExit} />}>

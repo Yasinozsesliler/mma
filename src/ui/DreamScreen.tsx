@@ -38,6 +38,7 @@ import { FighterAvatar } from './FighterAvatar';
 import { useLegendUnlocked } from './LegendScreens';
 import { requestLegend } from '../legendNav';
 import { StudioEntry, StudioScreen } from './StudioScreen';
+import { addSeasonXp } from '../season';
 import { FightScreen } from './FightScreen';
 import { PlanPicker } from './PlanPicker';
 import { C, F } from './theme';
@@ -81,6 +82,7 @@ export function DreamScreen({ onExit }: { onExit: () => void }) {
     const res: DreamResult = { sonuc: r.kazanan === 'p' ? 'G' : r.kazanan === 'o' ? 'M' : 'B', yontem: r.yontem, raunt: r.raunt };
     const next = recordDream(loadDream(), spec, res);
     setPref(STORE_KEY, JSON.stringify(next));
+    addSeasonXp('hayali');
     setPref(MATCH_KEY, '');
     endDreamFight();
     setStore(next);

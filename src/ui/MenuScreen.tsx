@@ -3,6 +3,7 @@ import { ChallengeList } from './ChallengeList';
 import { LegendList, useLegendUnlocked, type LegendName } from './LegendScreens';
 import { takeLegendRequest } from '../legendNav';
 import { MyLegendLink } from './StudioScreen';
+import { SeasonBanner } from './SeasonScreen';
 import { loadDream } from './DreamScreen';
 import { albumProgress, triesLeft } from '../engine/dreamFight';
 import { LEGEND_IDS, LEGENDS, type LegendId } from '../engine/legendRun';
@@ -270,6 +271,7 @@ export function MenuScreen({
   onDelete,
   onDaily,
   onDream,
+  onSeason,
   onDynasty,
   onLocker,
   onImport,
@@ -284,6 +286,7 @@ export function MenuScreen({
   onDynasty: (slot: Slot) => void;
   onDaily: () => void;
   onDream: () => void;
+  onSeason: () => void;
   onLocker: () => void;
   onImport: (slot: Slot, g: GameState) => void;
 }) {
@@ -406,6 +409,7 @@ export function MenuScreen({
 
       {/* Modlar */}
       <Section>{L("OYUN MODLARI")}</Section>
+      <SeasonBanner onPress={onSeason} />
       {/* Meydan okumalar: geniş afiş, ilerleme çubuğu ve son kategoriler */}
       <Pressable onPress={() => setSheet('meydan')} style={({ pressed }) => [ms.chBanner, pressed && { transform: [{ scale: 0.99 }], borderColor: C.red }]}>
         <LinearGradient colors={['#3a0b14', '#160a0d', '#0c0d10']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={ms.chIn}>

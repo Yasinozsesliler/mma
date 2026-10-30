@@ -42,6 +42,12 @@ export function refreshUnlocks(c: UnlockCtx) {
   if (fresh.length) commit({ ...state, acik: [...state.acik, ...fresh], yeni: [...state.yeni, ...fresh] });
 }
 
+/** Doğrudan açılan eşya (Sezon Kemeri ödülü). */
+export function grantCosmetic(id: string) {
+  if (state.acik.includes(id)) return;
+  commit({ ...state, acik: [...state.acik, id], yeni: [...state.yeni, id] });
+}
+
 export function clearNew() {
   if (state.yeni.length) commit({ ...state, yeni: [] });
 }

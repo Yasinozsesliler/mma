@@ -7,6 +7,7 @@ import { BUNDLE_SKU, PREMIUM_SKU } from '../monetization/skus';
 import type { DailyStore } from './daily';
 import { nemesisBeaten } from './nemesis';
 import type { GameState } from './types';
+import { allSeasonCosmetics } from './season';
 
 export type CosSlot = 'sort' | 'eldiven' | 'cerceve' | 'kemer' | 'giris' | 'efekt';
 export const COS_SLOTS: CosSlot[] = ['sort', 'eldiven', 'cerceve', 'kemer', 'giris', 'efekt'];
@@ -25,7 +26,13 @@ export type FxKind = 'ates' | 'duman' | 'konfeti' | 'simsek' | 'kar';
 /** Açılma koşullarının okunduğu özet: bütün kariyerlerin ve günlük dövüşün en iyileri. */
 export type UnlockCtx = { galibiyet: number; ko: number; sub: number; kemer: number; savunma: number; hof: boolean; nesil: number; gunlukSeri: number; intikam: boolean; ozel: string[] };
 
-type Source = { tur: 'hazir' } | { tur: 'basari'; aciklama: string; kosul: (c: UnlockCtx) => boolean } | { tur: 'paket'; sku: CosmeticSku } | { tur: 'sampiyon' };
+type Source =
+  | { tur: 'hazir' }
+  | { tur: 'basari'; aciklama: string; kosul: (c: UnlockCtx) => boolean }
+  | { tur: 'paket'; sku: CosmeticSku }
+  | { tur: 'sampiyon' }
+  /** Sezon Kemeri ödülü (season.ts): alınınca açılanlar listesine eklenir */
+  | { tur: 'sezon'; sezon: number; basamak: number; pro: boolean };
 
 export type Cosmetic = {
   id: string;
@@ -137,6 +144,9 @@ export const PACKS: { sku: CosmeticSku; ad: string; aciklama: string; renk: stri
   { sku: 'paket_sultan', ad: L("Sultan"), aciklama: L("Bordo-altın şort, bordo eldiven, Sultan çerçevesi ve kemeri, Mehter giriş müziği"), renk: '#9b2335', nadir: 'epik' },
 ];
 
+// Sezon Kemeri ödülleri (her ay temaya göre üretilir)
+COSMETICS.push(...allSeasonCosmetics());
+
 export const cosmeticById = (id: string) => COSMETICS.find((x) => x.id === id);
 
 export function unlockCtx(saves: (GameState | null)[], daily: DailyStore): UnlockCtx {
@@ -169,7 +179,7 @@ export const earnedNow = (c: UnlockCtx) => COSMETICS.filter((x) => x.kaynak.tur 
 export function isUnlocked(x: Cosmetic, earned: ReadonlySet<string>, owned: ReadonlySet<string>) {
   const k = x.kaynak;
   if (k.tur === 'hazir') return true;
-  if (k.tur === 'basari') return earned.has(x.id);
+  if (k.tur === 'basari' || k.tur === 'sezon') return earned.has(x.id);
   if (k.tur === 'sampiyon') return owned.has(PREMIUM_SKU);
   return packOwned(owned, k.sku);
 }
