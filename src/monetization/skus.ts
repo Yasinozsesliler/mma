@@ -14,4 +14,7 @@ export const BUNDLE_SKU = 'paket_efsane';
 /** Efsaneler Paketi: Conor dışındaki bütün Efsane Yolları hikâyeleri (ve sonra gelecek efsaneler). Önerilen ≈ 2,99 $ */
 export const LEGENDS_SKU = 'efsaneler_paketi';
 
-export const ALL_SKUS: string[] = [PREMIUM_SKU, ADFREE_SKU, ...COSMETIC_SKUS, BUNDLE_SKU, LEGENDS_SKU];
+/** Şampiyon + Koleksiyon: Şampiyon Paketi'nin her şeyi + bütün kozmetik paketleri (Efsane Koleksiyonu). Önerilen ≈ 7,99 $ */
+export const ULTIMATE_SKU = 'sampiyon_koleksiyon';
+
+export const ALL_SKUS: string[] = [PREMIUM_SKU, ADFREE_SKU, ...COSMETIC_SKUS, BUNDLE_SKU, LEGENDS_SKU, ULTIMATE_SKU];

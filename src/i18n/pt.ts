@@ -7786,4 +7786,7 @@ export const PT: Record<string, string> = {
   "Kendi tasarımın": "Seu design",
   "Kendi kemerin": "Seu próprio cinturão",
   "Tasarım: şort, kemer, saç rengi, dövme, afiş": "Design: calção, cinturão, cabelo, tatuagens, pôsteres",
+  "EN POPÜLER": "MAIS POPULAR",
+  "Şampiyon + Koleksiyon": "Campeão + Coleção",
+  "Şampiyon Paketi'nin her şeyi + 6 kozmetik paketin tamamı": "Tudo do Pacote Campeão + os 6 pacotes cosméticos",
 };

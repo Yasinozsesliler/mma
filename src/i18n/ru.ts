@@ -7825,4 +7825,7 @@ export const RU: Record<string, string> = {
   "Kendi tasarımın": "Твой дизайн",
   "Kendi kemerin": "Твой пояс",
   "Tasarım: şort, kemer, saç rengi, dövme, afiş": "Дизайн: шорты, пояс, цвет волос, тату, постеры",
+  "EN POPÜLER": "САМЫЙ ПОПУЛЯРНЫЙ",
+  "Şampiyon + Koleksiyon": "Чемпион + Коллекция",
+  "Şampiyon Paketi'nin her şeyi + 6 kozmetik paketin tamamı": "Всё из Набора чемпиона + все 6 косметических наборов",
 };

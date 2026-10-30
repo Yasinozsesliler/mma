@@ -7,7 +7,7 @@ import { L } from '../i18n';
 import { buy, buyPremium, closeOffer, dismissUpsell, MONETIZATION, PURCHASES, restorePremium, useAdFree, useOffer, usePremium, usePremiumPrice, usePrice, useUpsellDue, type OfferReason } from '../monetization';
 import { LEGEND_IDS } from '../engine/legendRun';
 import { getPref, setPref } from '../prefs';
-import { ADFREE_SKU } from '../monetization/skus';
+import { ADFREE_SKU, ULTIMATE_SKU } from '../monetization/skus';
 import { Button, Icon } from './components';
 import { C, F } from './theme';
 
@@ -16,6 +16,7 @@ export function PremiumCard() {
   const price = usePremiumPrice();
   const adFree = useAdFree();
   const adPrice = usePrice(ADFREE_SKU);
+  const ultPrice = usePrice(ULTIMATE_SKU);
   const [msg, setMsg] = useState('');
   const [busy, setBusy] = useState(false);
   if (!MONETIZATION || !PURCHASES) return null;
@@ -49,7 +50,16 @@ export function PremiumCard() {
       <Text style={st.lead}>{L("Oyunun tamamı ücretsiz kalır. Tam sürüm tek seferlik alınır, abonelik yoktur.")}</Text>
       <PremiumCompare />
       {/* Fiyat henüz gelmediyse de basılabilir: satın alma ürünleri önce yeniden ister */}
+      <Text style={st.popular}>{L("EN POPÜLER")}</Text>
       <Button label={price ? L("Satın al · {0}", [price]) : L("Satın al")} icon="crown" tone="gold" disabled={busy} onPress={() => purchase(buyPremium)} />
+      <Pressable disabled={busy} onPress={() => purchase(() => buy(ULTIMATE_SKU))} style={({ pressed }) => [st.ult, pressed && { opacity: 0.85 }, busy && { opacity: 0.5 }]}>
+        <View style={{ flex: 1 }}>
+          <Text style={st.ultKicker}>{L("EN İYİ DEĞER")}</Text>
+          <Text style={st.ultTitle}>{L("Şampiyon + Koleksiyon")}</Text>
+          <Text style={st.ultSub}>{L("Şampiyon Paketi'nin her şeyi + 6 kozmetik paketin tamamı")}</Text>
+        </View>
+        <Text style={st.ultPrice}>{ultPrice ?? ''}</Text>
+      </Pressable>
       {adFree ? (
         <Text style={st.adFree}>{L("Reklamsız Paket aktif")}</Text>
       ) : (
@@ -89,6 +99,12 @@ const st = StyleSheet.create({
   adFree: { color: C.green, fontFamily: F.semi, fontSize: 12, textAlign: 'center' },
   restore: { color: C.faint, fontFamily: F.semi, fontSize: 12, textAlign: 'center', textDecorationLine: 'underline', marginTop: 2 },
   msg: { color: C.dim, fontFamily: F.semi, fontSize: 12, textAlign: 'center' },
+  popular: { alignSelf: 'center', color: '#111', backgroundColor: C.gold, fontFamily: F.bold, fontSize: 10, letterSpacing: 1, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 2, overflow: 'hidden', marginBottom: -4 },
+  ult: { flexDirection: 'row', alignItems: 'center', gap: 10, borderWidth: 1, borderColor: '#c86bff88', backgroundColor: '#1a1028', borderRadius: 12, padding: 12 },
+  ultKicker: { color: '#c86bff', fontFamily: F.bold, fontSize: 10, letterSpacing: 1 },
+  ultTitle: { color: C.text, fontFamily: F.display, fontSize: 15, marginTop: 1 },
+  ultSub: { color: C.dim, fontFamily: F.body, fontSize: 11.5, marginTop: 1 },
+  ultPrice: { color: '#e0aaff', fontFamily: F.display, fontSize: 16 },
   table: { borderWidth: 1, borderColor: C.border, borderRadius: 10, overflow: 'hidden' },
   tRow: { flexDirection: 'row', alignItems: 'center', borderTopWidth: 1, borderTopColor: C.border, paddingVertical: 7, paddingHorizontal: 8 },
   tHead: { borderTopWidth: 0, backgroundColor: '#00000055' },

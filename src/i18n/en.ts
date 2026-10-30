@@ -7777,4 +7777,7 @@ export const EN: Record<string, string> = {
   "Kendi tasarımın": "Your design",
   "Kendi kemerin": "Your own belt",
   "Tasarım: şort, kemer, saç rengi, dövme, afiş": "Design: shorts, belt, hair color, tattoos, posters",
+  "EN POPÜLER": "MOST POPULAR",
+  "Şampiyon + Koleksiyon": "Champion + Collection",
+  "Şampiyon Paketi'nin her şeyi + 6 kozmetik paketin tamamı": "Everything in the Champion Pack + all 6 cosmetic packs",
 };
