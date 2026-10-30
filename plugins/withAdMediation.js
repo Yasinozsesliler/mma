@@ -29,6 +29,9 @@ const withAndroid = (config) =>
     if (c.modResults.contents.includes(MARK)) return c;
     const lines = NETWORKS.flatMap((n) => n.android.map((d) => `    implementation("${d}")`)).join('\n');
     c.modResults.contents = c.modResults.contents.replace(/dependencies\s*\{/, `dependencies {\n    ${MARK}\n${lines}`);
+    // play-services-ads 25.x Kotlin 2.3 ile derlendi, React Native Kotlin 2.1 kullanıyor: sürüm denetimi atlanmazsa
+    // :app:compileReleaseKotlin "incompatible version of Kotlin" hatasıyla durur (bayt kodu uyumlu, yalnızca üst veri yeni).
+    c.modResults.contents += `\n${MARK}\ntasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {\n    compilerOptions.freeCompilerArgs.add("-Xskip-metadata-version-check")\n}\n`;
     return c;
   });
 
