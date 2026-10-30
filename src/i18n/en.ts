@@ -7664,4 +7664,8 @@ export const EN: Record<string, string> = {
   "4 / ay": "4 / month",
   "10 / ay": "10 / month",
   "Efsanelerim": "My Legends",
+  "Gelişim": "Progress",
+  "Hayat": "Life",
+  "Koleksiyon": "Collection",
+  "MARKA VE ŞÖHRET": "BRAND & FAME",
 };

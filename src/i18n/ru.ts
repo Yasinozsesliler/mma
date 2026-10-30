@@ -7713,4 +7713,8 @@ export const RU: Record<string, string> = {
   "4 / ay": "4 / мес.",
   "10 / ay": "10 / мес.",
   "Efsanelerim": "Мои легенды",
+  "Gelişim": "Развитие",
+  "Hayat": "Жизнь",
+  "Koleksiyon": "Коллекция",
+  "MARKA VE ŞÖHRET": "БРЕНД И СЛАВА",
 };
