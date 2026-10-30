@@ -271,25 +271,27 @@ const RED = '#e63946';
 
 // Sahne: [ad, kaynak, başlangıç (sn ya da işaret fonksiyonu), süre, kırpma [x,y,w,h] (540'lık ekranda), altyazı (HTML), seçenekler]
 // Altyazıda <em> vurgulu (sarı) kelimedir. Seçenekler: kanca (yazı ilk karede), sars (sarsıntı anları, sahne içi sn), cy (görüntü merkezi)
+// Kırpmalar her zaman bütün bir arayüz kartını kapsar (yazı satırı yarıda kesilmez); ölçüler kayıttaki gerçek kart sınırlarından.
 const CROP = {
-  fight: [10, 38, 520, 620],
-  walk: [40, 120, 460, 800],
-  chapter: [24, 262, 340, 84],
-  offer: [26, 314, 490, 66],
-  vs: [24, 100, 492, 250],
-  belt: [0, 74, 540, 420],
+  fight: [0, 36, 540, 620], // skor/zaman şeridi + kafes, tam genişlik
+  walk: [0, 150, 540, 790], // spot + dövüşçü + anons paneli
+  b1: [16, 252, 508, 132], // bölüm kartı: etiket, başlık, ilk paragraf
+  b6: [16, 272, 508, 130],
+  offer: [16, 306, 508, 150], // teklif kartı (metin + düğmeler)
+  vs: [14, 74, 512, 290], // süper maç kartı
+  belt: [0, 70, 540, 410], // şampiyonluk başlığı, portre, isim, karne
 };
 const koAt = (m, before) => (m.ko != null ? Math.max(0, m.ko - before) : null);
 const SCENES = [
   // ---------- KANCA ----------
   ['h1', 'ko', (m) => Math.max(0, (m.ko ?? 3) - 2.95), 1.55, CROP.fight, 'BU ADAM HAFTADA<br><em>188 EURO</em> İLE YAŞIYORDU', { kanca: true, sars: [0, 0.75] }],
-  ['h2', 'offer', 0.2, 1.75, CROP.offer, '4 YIL SONRA MASADA<br><em>100 MİLYON DOLAR</em> VAR', { kanca: true, zoom: 0.12, sayac: true }],
+  ['h2', 'offer', 0.2, 1.75, CROP.offer, '4 YIL SONRA MASADA<br><em>100 MİLYON DOLAR</em> VAR', { kanca: true, sayac: true }],
   ['h3', 'kart', null, 0.85, null, 'NASIL MI?', { kanca: true }],
   // ---------- HİKÂYE ----------
-  ['s1', 'b1', 0.35, 1.7, CROP.chapter, 'DUBLİN, 2006.<br>BİR <em>TESİSATÇI ÇIRAĞI</em>'],
-  ['s2', 'walk', (m) => (m.ann ?? 3) + 0.4, 1.9, CROP.walk, 'BİR GECE ADI<br><em>KAFESTE</em> YANKILANDI'],
+  ['s1', 'b1', 0.35, 1.7, CROP.b1, 'DUBLİN, 2006.<br>BİR <em>TESİSATÇI ÇIRAĞI</em>'],
+  ['s2', 'walk', (m) => (m.ann ?? 3) + 1.3, 1.9, CROP.walk, 'BİR GECE ADI<br><em>KAFESTE</em> YANKILANDI'],
   ['s3', 'ko', (m) => koAt(m, 1.0), 2.3, CROP.fight, 'SOL ELİ <em>KONUŞTU.</em>', { sars: [1.0, 1.25] }],
-  ['s4', 'b6', 0.35, 1.6, CROP.chapter, 'ŞAMPİYONU<br><em>13 SANİYEDE</em> DEVİRDİ'],
+  ['s4', 'b6', 0.35, 1.6, CROP.b6, 'ŞAMPİYONU<br><em>13 SANİYEDE</em> DEVİRDİ'],
   ['s5', 'belt', 0.3, 1.9, CROP.belt, 'TARİH YAZDI.<br><em>KEMER ONUN.</em>'],
   ['s6', 'vs', (m) => (m.kabul ?? 0.3) + 0.6, 2.0, CROP.vs, 'SONRA KAPIYI ÇALDI:<br><em>49-0</em> BOKS EFSANESİ'],
   ['c1', 'kart', null, 1.2, null, 'KABUL EDER<br>MİSİN?'],
@@ -345,7 +347,8 @@ const dur = (f) => {
 for (const k of Object.keys(segs)) segs[k].sn = dur(`${tmp}/${k}.mp4`);
 const enc = ['-r', '30', '-c:v', 'libx264', '-preset', 'medium', '-crf', '18'];
 const parts = [];
-const FG_MAX_H = 1240; // büyütülen görüntünün en fazla yüksekliği (altyazıya yer kalsın)
+const FG_MAX_H = 1380; // büyütülen görüntünün en fazla yüksekliği (altyazıya yer kalsın)
+const FG_MAX_W = 1000; // bütün sahnelerde aynı kenar boşluğu (40 px)
 for (const [name, src, st, d, crop, , o = {}] of SCENES) {
   const out = `${tmp}/scene-${name}.mp4`;
   if (src === 'kart') {
@@ -360,7 +363,7 @@ for (const [name, src, st, d, crop, , o = {}] of SCENES) {
   if (ss == null) ss = 0.3;
   ss = Math.max(0, Math.min(ss, sg.sn - d - 0.05));
   const [cx, cy, cw, ch] = crop.map((v) => v * 2);
-  const k = Math.min(1080 / cw, FG_MAX_H / ch);
+  const k = Math.min(FG_MAX_W / cw, FG_MAX_H / ch);
   const fw = Math.round((cw * k) / 2) * 2;
   const fh = Math.round((ch * k) / 2) * 2;
   // Altyazı ve görüntü tek blok hâlinde dikeyde ortalanır: göz yazıdan doğrudan görüntüye iner
@@ -386,8 +389,8 @@ for (const [name, src, st, d, crop, , o = {}] of SCENES) {
     `[1:v]fps=30,crop=${cw}:${ch}:${cx}:${cy},setsar=1,split[a][b];` +
     // Arka plan: aynı görüntü ekranı kaplayacak kadar büyütülmüş, bulanık ve karartılmış
     `[a]scale=-2:1920,crop=1080:1920,boxblur=28:2,eq=brightness=-0.22:saturation=1.2[bg];` +
-    // Ön plan: yakın çekim, yavaş yakınlaşma
-    `[b]scale=w='trunc(${fw}*(1+${zoom}*t/${d})/2)*2':h=-2:eval=frame:flags=lanczos[fg];` +
+    // Ön plan: yakın çekim, yavaş yakınlaşma; %94'ten %100'e büyür, ekran dışına asla taşmaz
+    `[b]scale=w='trunc(${fw}*(${1 - zoom}+${zoom}*t/${d})/2)*2':h=-2:eval=frame:flags=lanczos[fg];` +
     `[bg][fg]overlay=x='(W-w)/2+${shakeX}':y='${centerY}-h/2+${shakeY}':eval=frame[base];` +
     `[base][2:v]overlay=0:0[ch];` +
     `[3:v]crop=1080:${CAP_BAND.h}:0:${CAP_BAND.y},scale=w='trunc(1080*(${pop})/2)*2':h=-2:eval=frame[cp];` +
