@@ -325,12 +325,12 @@ export default function App() {
         active={slot}
         onNew={(x) => newCareer(x)}
         onChallenge={(id, x) => newCareer(x, id)}
-        onLegend={(id, isim, x) => {
-          const s = createLegendGame(id, isim);
+        onLegend={(id, isim, x, deneme) => {
+          const s = createLegendGame(id, isim, deneme);
           socialWelcome(s);
           ensureGoals(s);
           ensureEvent(s);
-          track('legend_start', { efsane: id, yuva: x });
+          track('legend_start', { efsane: id, yuva: x, deneme });
           setSlot(x);
           clearCheckpoints(x);
           noteCheckpoint(x, s);

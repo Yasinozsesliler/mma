@@ -50,7 +50,7 @@ import { cityPin, visitedCount, visitedKitalar } from '../engine/worldMap';
 import { ActionGrid, ActionTile, FightCTA, HubHero, Notice } from './HubHome';
 import { pendingBouts, weeklyGymNet } from '../engine/academy';
 import { ACHIEVEMENTS } from '../engine/achievements';
-import { LegendHubCard } from './LegendScreens';
+import { BeltLegendTease, LegendHubCard } from './LegendScreens';
 import { currentChapter, legendHoldsUcc } from '../engine/legendRun';
 import { UccRoadCard } from './UccRoadCard';
 import { GoalsCard } from './GoalsCard';
@@ -285,6 +285,7 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
             </Notice>
           ) : null}
           <LegendHubCard s={s} act={act} />
+          <BeltLegendTease s={s} />
           {legendHoldsUcc(s) || currentChapter(s)?.uccKapi ? null : <UccRoadCard s={s} />}
           <GrandPrixCard s={s} act={act} />
           <KafesEviInvite s={s} act={act} />

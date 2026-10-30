@@ -45,7 +45,7 @@ export function PremiumCard() {
         </View>
       </View>
       <Text style={st.lead}>{L("Oyunun tamamı ücretsiz kalır. Tam sürüm tek seferlik alınır, abonelik yoktur.")}</Text>
-      {[L("Reklamsız oyun"), L("Ödüller reklam izlemeden, anında"), L("5 kariyer yuvası (3 yerine)"), L("Altın Seri kozmetik paketi ve Şampiyon çerçevesi"), L("Oyunun gelişimine destek")].map((t) => (
+      {[L("Efsaneler Paketi dahil: bütün Efsane Yolları hikâyeleri"), L("Reklamsız oyun"), L("Ödüller reklam izlemeden, anında"), L("5 kariyer yuvası (3 yerine)"), L("Altın Seri kozmetik paketi ve Şampiyon çerçevesi"), L("Oyunun gelişimine destek")].map((t) => (
         <View key={t} style={st.row}>
           <Icon name="check-bold" size={14} color={C.green} />
           <Text style={st.item}>{t}</Text>

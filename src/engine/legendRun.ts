@@ -227,7 +227,7 @@ export const legendName = (d: LegendDef) => `${d.ad} ${d.soyad}`.trim() || d.lak
 // ---------- Başlatma ----------
 
 /** Efsanenin hazır dövüşçüsüyle yeni kariyer. İsimler oyuncu tarafından değiştirilebilir. */
-export function createLegendGame(id: LegendId, isim?: { ad?: string; soyad?: string; lakap?: string }): GameState {
+export function createLegendGame(id: LegendId, isim?: { ad?: string; soyad?: string; lakap?: string }, deneme = false): GameState {
   const d = LEGENDS[id];
   const input: NewFighterInput = {
     ad: isim?.ad?.trim() || d.ad,
@@ -251,7 +251,7 @@ export function createLegendGame(id: LegendId, isim?: { ad?: string; soyad?: str
   s.takipci = initialFollowers(d.populerlik);
   if (d.hoca) s.takim.antrenor = d.hoca();
   if (d.salon) s.takim.salon = d.salon();
-  s.efsane = { id, bolum: 0, yildiz: {}, giris: 0 };
+  s.efsane = { id, bolum: 0, yildiz: {}, giris: 0, ...(deneme ? { deneme: true } : {}) };
   s.haberler.unshift(L("📖 EFSANE YOLU: {0}. Bölüm 1 başlıyor.", [legendName(d)]));
   return s;
 }
@@ -262,7 +262,7 @@ export const legendOf = (s: GameState) => (s.efsane ? LEGENDS[s.efsane.id] : nul
 export const currentChapter = (s: GameState): Chapter | null => {
   const r = s.efsane;
   const d = legendOf(s);
-  return r && d && r.bolum < d.bolumler.length ? d.bolumler[r.bolum] : null;
+  return r && d && !r.bekle && r.bolum < d.bolumler.length ? d.bolumler[r.bolum] : null;
 };
 export const legendStars = (r: LegendRun) => Object.values(r.yildiz).reduce((a, x) => a + x.length, 0);
 export const legendMaxStars = (id: LegendId) => LEGENDS[id].bolumler.length * 3;
@@ -285,7 +285,7 @@ function startChapter(s: GameState, r: LegendRun, ch: Chapter): string[] {
 export function legendCheck(s: GameState, f: LegendFight | null = null): string[] {
   const r = s.efsane;
   const d = legendOf(s);
-  if (!r || !d || r.bitti) return [];
+  if (!r || !d || r.bitti || r.bekle) return [];
   const lines: string[] = [];
   // Dövüş dışı güvenli an: bölümün ağır olayları (kemer alma, ceza, sakatlık) ve tarihî rakip
   if (!f) {
@@ -320,6 +320,12 @@ export function legendCheck(s: GameState, f: LegendFight | null = null): string[
     r.bolum++;
     f = null;
     const next = currentChapter(s);
+    if (next && r.deneme) {
+      // Deneme bölümü bitti: devamı Efsaneler Paketi'yle (paket alınınca unlockLegendRun sonraki bölümü başlatır)
+      r.bekle = true;
+      lines.push(L("🔒 {0} hikâyesinin devamı Efsaneler Paketi'nde. Kariyerine normal devam edebilirsin.", [legendName(d)]));
+      break;
+    }
     if (next) {
       lines.push(...startChapter(s, r, next));
     } else {
@@ -386,6 +392,20 @@ export function legendBoxResult(s: GameState, sonuc: 'G' | 'M' | 'red', yontem?:
   if (!r || currentChapter(s)?.id !== 'parabovusu') return;
   r.boks = sonuc === 'M' && yontem === 'KO' ? 'KO' : sonuc;
   legendCheck(s);
+}
+
+/** Paket alındı: deneme kalkar; hikâye duraklatılmışsa sonraki bölüm şimdi başlar. */
+export function unlockLegendRun(s: GameState) {
+  const r = s.efsane;
+  if (!r?.deneme) return;
+  r.deneme = false;
+  if (!r.bekle) return;
+  r.bekle = false;
+  const ch = currentChapter(s);
+  if (!ch) return;
+  const lines = [L("📖 EFSANE YOLU DEVAM EDİYOR: Bölüm {0}.", [r.bolum + 1]), ...startChapter(s, r, ch)];
+  lines.forEach((l) => s.haberler.unshift(l));
+  legendRivals(s);
 }
 
 export function dismissLegendIntro(s: GameState) {

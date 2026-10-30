@@ -1,12 +1,12 @@
 // Efsane Yolları: menüdeki efsane listesi (başlatma) ve kariyerde süren bölüm kartı + bölüm girişi.
 import { LinearGradient } from 'expo-linear-gradient';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { cosmeticById } from '../engine/cosmetics';
-import { currentChapter, dismissLegendIntro, LEGEND_IDS, LEGENDS, legendMaxStars, legendName, legendStars, noteOpen, openNote, type Chapter, type LegendId, type LegendRun } from '../engine/legendRun';
+import { currentChapter, dismissLegendIntro, LEGEND_IDS, LEGENDS, legendMaxStars, legendName, legendStars, noteOpen, openNote, unlockLegendRun, type Chapter, type LegendId, type LegendRun } from '../engine/legendRun';
 import { buy, MONETIZATION, PURCHASES, restorePurchases, useOwned, usePrice } from '../monetization';
-import { LEGENDS_SKU } from '../monetization/skus';
+import { LEGENDS_SKU, PREMIUM_SKU } from '../monetization/skus';
 import { AdOffer } from './AdOffer';
 import { ShareButton } from '../share/ShareButton';
 import { legendCard } from '../share/build';
@@ -14,6 +14,7 @@ import { checkpointOf, restoreInto, useCheckpoints } from '../legendCheckpoint';
 import type { GameState } from '../engine/types';
 import { L, LOC } from '../i18n';
 import { useLegendBest } from '../legendPrefs';
+import { getPref, setPref } from '../prefs';
 import { Button, Icon, SLANT, upName } from './components';
 import { FighterAvatar } from './FighterAvatar';
 import { C, F, R } from './theme';
@@ -35,15 +36,16 @@ function Stars({ n, max = 3, size = 14 }: { n: number; max?: number; size?: numb
 
 // ---------- Menü: efsane listesi ----------
 
-/** Efsane açık mı: ücretsizler, web (satın alma yok) ya da Efsaneler Paketi sahipleri. */
+/** Efsane açık mı: ücretsizler, web (satın alma yok), Efsaneler Paketi ya da Şampiyon Paketi sahipleri.
+ *  Kilitli efsanelerin 1. bölümü yine de deneme olarak oynanır. */
 export function useLegendUnlocked() {
   const owned = useOwned();
-  return (id: LegendId) => LEGENDS[id].ucretsiz || !PURCHASES || owned.has(LEGENDS_SKU);
+  return (id: LegendId) => LEGENDS[id].ucretsiz || !PURCHASES || owned.has(LEGENDS_SKU) || owned.has(PREMIUM_SKU);
 }
 
-export function LegendList({ canStart, onStart }: { canStart: boolean; onStart: (id: LegendId, isim: LegendName) => void }) {
+export function LegendList({ canStart, initial, onStart }: { canStart: boolean; initial?: LegendId; onStart: (id: LegendId, isim: LegendName, deneme: boolean) => void }) {
   const best = useLegendBest();
-  const [open, setOpen] = useState<LegendId | null>(null);
+  const [open, setOpen] = useState<LegendId | null>(initial ?? null);
   const unlocked = useLegendUnlocked();
   const anyLocked = LEGEND_IDS.some((id) => !unlocked(id));
   return (
@@ -70,7 +72,7 @@ export function LegendList({ canStart, onStart }: { canStart: boolean; onStart: 
                     d.ucretsiz ? (
                       <Text style={[st.badge, { color: C.green, borderColor: C.green + '88' }]}>{L("ÜCRETSİZ")}</Text>
                     ) : !unlocked(id) ? (
-                      <Text style={[st.badge, { color: C.gold, borderColor: C.gold + '88' }]}>{L("🔒 PAKET")}</Text>
+                      <Text style={[st.badge, { color: C.gold, borderColor: C.gold + '88' }]}>{L("1. BÖLÜM ÜCRETSİZ")}</Text>
                     ) : null
                   ) : (
                     <Text style={[st.badge, { color: C.faint, borderColor: C.faint }]}>{L("YAKINDA")}</Text>
@@ -99,7 +101,7 @@ export function LegendList({ canStart, onStart }: { canStart: boolean; onStart: 
               </View>
               {d.oynanabilir ? <Icon name={isOpen ? 'chevron-up' : 'chevron-down'} size={20} color={C.faint} /> : null}
             </Pressable>
-            {isOpen ? <LegendDetail id={id} canStart={canStart} locked={!unlocked(id)} onStart={(isim) => onStart(id, isim)} /> : null}
+            {isOpen ? <LegendDetail id={id} canStart={canStart} locked={!unlocked(id)} onStart={(isim) => onStart(id, isim, !unlocked(id))} /> : null}
           </View>
         );
       })}
@@ -107,8 +109,8 @@ export function LegendList({ canStart, onStart }: { canStart: boolean; onStart: 
   );
 }
 
-/** Efsaneler Paketi satın alma kutusu (liste başında ve kilitli efsanenin ayrıntısında). */
-function LegendPack({ compact }: { compact?: boolean }) {
+/** Efsaneler Paketi satın alma kutusu (liste başında, kilitli efsanenin ayrıntısında, deneme sonunda ve menüde). */
+export function LegendPack({ compact, lead }: { compact?: boolean; lead?: string }) {
   const price = usePrice(LEGENDS_SKU);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
@@ -125,6 +127,7 @@ function LegendPack({ compact }: { compact?: boolean }) {
   return (
     <LinearGradient colors={['#2a1d05', '#100c04']} style={[st.pack, compact && { marginBottom: 0 }]}>
       {!compact ? <Text style={st.packKicker}>{L("EFSANELER PAKETİ")}</Text> : null}
+      {lead ? <Text style={[st.packText, { fontFamily: F.bold, color: C.gold }]}>{lead}</Text> : null}
       <Text style={st.packText}>
         {L("{0} efsane, {1} bölüm, her efsaneye özel şort. Tek seferlik alım; sonra gelecek efsaneler de dahil.", [paid, chapters])}
       </Text>
@@ -159,14 +162,13 @@ function LegendDetail({ id, canStart, locked, onStart }: { id: LegendId; canStar
         <TextInput style={[st.input, { flex: 1, minWidth: 0, width: 0 }]} value={isim.soyad} onChangeText={(soyad) => setIsim({ ...isim, soyad })} placeholder={L("Soyad")} placeholderTextColor={C.faint} maxLength={18} />
       </View>
       <TextInput style={st.input} value={isim.lakap} onChangeText={(lakap) => setIsim({ ...isim, lakap })} placeholder={L("Lakap")} placeholderTextColor={C.faint} maxLength={18} />
+      {!canStart ? <Text style={st.warn}>{L("Efsane yolunu başlatmak için boş bir kariyer yuvası gerekli.")}</Text> : null}
+      <Button label={locked ? L("1. bölümü ücretsiz oyna") : L("Hikâyeyi başlat")} icon="book-open-variant" tone="gold" disabled={!canStart} onPress={() => onStart(isim)} />
       {locked ? (
-        <LegendPack compact />
-      ) : (
-        <>
-          {!canStart ? <Text style={st.warn}>{L("Efsane yolunu başlatmak için boş bir kariyer yuvası gerekli.")}</Text> : null}
-          <Button label={L("Hikâyeyi başlat")} icon="book-open-variant" tone="gold" disabled={!canStart} onPress={() => onStart(isim)} />
-        </>
-      )}
+        <View style={{ marginTop: 10 }}>
+          <LegendPack compact lead={L("Bütün hikâye için:")} />
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -175,8 +177,15 @@ function LegendDetail({ id, canStart, locked, onStart }: { id: LegendId; canStar
 
 export function LegendHubCard({ s, act }: { s: GameState; act: Act }) {
   const [reread, setReread] = useState(false);
+  const unlocked = useLegendUnlocked();
   const r = s.efsane;
+  const opened = !!r?.deneme && unlocked(r.id);
+  // Paket alındı (ya da geri yüklendi): deneme kalkar, duraklatılmış hikâye kaldığı yerden sürer
+  useEffect(() => {
+    if (opened) act(unlockLegendRun);
+  }, [opened, act]);
   if (!r) return null;
+  if (r.bekle) return <TrialEnd r={r} />;
   const d = LEGENDS[r.id];
   const ch = currentChapter(s);
   const showIntro = r.giris != null || reread;
@@ -233,7 +242,10 @@ export function LegendHubCard({ s, act }: { s: GameState; act: Act }) {
             </Pressable>
           </>
         ) : (
-          <Text style={st.hint}>{L("Bütün bölümleri bitirdin. Kariyerin artık senin: istediğin kadar devam et.")}</Text>
+          <>
+            <Text style={st.hint}>{L("Bütün bölümleri bitirdin. Kariyerin artık senin: istediğin kadar devam et.")}</Text>
+            <NextLegend from={r.id} />
+          </>
         )}
         <ReplayOffers s={s} act={act} />
       </LinearGradient>
@@ -248,6 +260,88 @@ export function LegendHubCard({ s, act }: { s: GameState; act: Act }) {
         />
       ) : null}
     </>
+  );
+}
+
+/** Deneme bölümü bitti: hikâye duraklatıldı, devamı pakette. Kariyer normal sürer. */
+function TrialEnd({ r }: { r: LegendRun }) {
+  const d = LEGENDS[r.id];
+  const next = d.bolumler[r.bolum];
+  const n = starsOf(r, d.bolumler[0]).length;
+  return (
+    <LinearGradient colors={[d.renk + '33', '#0c0d10']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[st.hub, { borderColor: d.renk + '88' }]}>
+      <View style={st.hubHead}>
+        <Icon name="book-open-variant" size={16} color={C.gold} />
+        <Text style={st.hubKicker}>{L("EFSANE YOLU · BÖLÜM 1 TAMAMLANDI")}</Text>
+        <Stars n={n} />
+      </View>
+      <Text style={[st.hubTitle, SLANT, { marginTop: 8 }]}>{L("HİKÂYE BURADA BİTMİYOR")}</Text>
+      {next ? (
+        <Text style={st.hint}>
+          {L("Sıradaki bölüm: {0} ({1}). Önünde {2} bölüm daha var.", [next.baslik(), next.yil, d.bolumler.length - r.bolum])}
+        </Text>
+      ) : null}
+      <View style={{ marginTop: 10 }}>
+        <LegendPack compact lead={L("{0} hikâyesine kaldığın yerden devam et:", [legendName(d)])} />
+      </View>
+      <Text style={[st.hint, { marginTop: 8 }]}>{L("Paket almadan da bu kariyere normal devam edebilirsin; yalnızca bölüm hedefleri ilerlemez.")}</Text>
+    </LinearGradient>
+  );
+}
+
+/** Efsane bitince: paket yoksa sıradaki efsaneyi göster. */
+function NextLegend({ from }: { from: LegendId }) {
+  const unlocked = useLegendUnlocked();
+  const next = LEGEND_IDS.find((id) => id !== from && !unlocked(id));
+  if (!next) return null;
+  const d = LEGENDS[next];
+  return (
+    <View style={[st.pack, { marginTop: 10, marginBottom: 0, borderColor: d.renk + '88' }]}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+        <FighterAvatar look={d.gorunum} size={48} ring={d.renk} />
+        <View style={{ flex: 1 }}>
+          <Text style={st.noteKicker}>{L("SIRADAKİ EFSANE")}</Text>
+          <Text style={[st.name, SLANT, { fontSize: 16 }]}>
+            {d.bayrak} {upName(legendName(d), d.uyruk)}
+          </Text>
+          <Text style={[st.ozet, { color: d.renk, marginTop: 0 }]}>“{d.lakap()}”</Text>
+        </View>
+      </View>
+      <LegendPack compact />
+    </View>
+  );
+}
+
+/** Normal kariyerde ilk UCC kemeri: bir kez, paket yoksa benzer bir efsanenin hikâyesi önerilir. */
+export function BeltLegendTease({ s }: { s: GameState }) {
+  const unlocked = useLegendUnlocked();
+  const [gone, setGone] = useState(() => getPref('efsane_kemer_teklif') === '1');
+  const id: LegendId = s.fighter.gorunum?.kadin ? 'kralice' : 'yenilmez';
+  if (gone || s.efsane || !(s.kemerler ?? []).some((b) => b.org === 'ufc') || unlocked(id)) return null;
+  const d = LEGENDS[id];
+  const close = () => {
+    setPref('efsane_kemer_teklif', '1');
+    setGone(true);
+  };
+  return (
+    <View style={[st.pack, { borderColor: d.renk + '88' }]}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+        <FighterAvatar look={d.gorunum} size={48} ring={d.renk} />
+        <View style={{ flex: 1 }}>
+          <Text style={st.noteKicker}>{L("ŞAMPİYONSUN. SIRADA EFSANELER VAR")}</Text>
+          <Text style={st.packText}>
+            {id === 'kralice'
+              ? L("{0} kemeri aldıktan sonra kadın MMA'sını dünyaya tanıttı. Onun yolunu bölüm bölüm yaşa.", [legendName(d)])
+              : L("{0} bu kemeri 29-0'lık yenilmez bir rekorla taşıdı. Onun yolunu bölüm bölüm yaşa.", [legendName(d)])}
+          </Text>
+        </View>
+        <Pressable onPress={close} hitSlop={10}>
+          <Icon name="close" size={18} color={C.faint} />
+        </Pressable>
+      </View>
+      <LegendPack compact />
+      <Text style={st.hint}>{L("İstersen önce menüdeki Efsane Yolları'ndan her efsanenin 1. bölümünü ücretsiz dene.")}</Text>
+    </View>
   );
 }
 

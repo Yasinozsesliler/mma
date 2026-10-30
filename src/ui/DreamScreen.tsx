@@ -1,6 +1,6 @@
 // Hayalî Maçlar ekranı: günün efsane eşleşmesi → plan → dövüş → sonuç ve albüm. Günde bir hak, reklamla bir hak daha.
 import { useEffect, useRef, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSoundScene } from '../audio';
 import { finishFight } from '../engine/career';
 import { WEIGHT_CLASSES } from '../engine/data';
@@ -32,9 +32,11 @@ import { ShareButton } from '../share/ShareButton';
 import type { ShareCardData } from '../share/types';
 import { AdOffer } from './AdOffer';
 import { Compare } from './Compare';
-import { Button, Card, Screen, SLANT, Title, upName } from './components';
+import { Button, Card, Icon, Screen, SLANT, Title, upName } from './components';
 import { resultText } from './DailyScreen';
 import { FighterAvatar } from './FighterAvatar';
+import { useLegendUnlocked } from './LegendScreens';
+import { requestLegend } from '../legendNav';
 import { FightScreen } from './FightScreen';
 import { PlanPicker } from './PlanPicker';
 import { C, F } from './theme';
@@ -220,9 +222,32 @@ function DreamResultView(p: { spec: DreamSpec; store: DreamStore; r?: DreamResul
           <Button label={L("Bir hak daha")} icon="sword-cross" tone="red" onPress={p.onExtra} />
         )
       ) : null}
+      {r ? <StoryLink id={spec.ben} onGo={p.onExit} /> : null}
       <AlbumGrid store={store} />
       <Text style={st.hint}>{L("Her gün yeni bir eşleşme. Albümü tamamlamak için her maçı iki taraftan da kazan.")}</Text>
     </Screen>
+  );
+}
+
+/** Maçtan sonra: bu efsanenin hikâyesine geçiş (menüde Efsane Yolları açılır). */
+function StoryLink({ id, onGo }: { id: DreamSpec['ben']; onGo: () => void }) {
+  const unlocked = useLegendUnlocked();
+  const d = LEGENDS[id];
+  return (
+    <Pressable
+      onPress={() => {
+        requestLegend(id);
+        onGo();
+      }}
+      style={({ pressed }) => [st.story, { borderColor: pressed ? d.renk : d.renk + '66' }]}
+    >
+      <FighterAvatar look={d.gorunum} size={42} ring={d.renk} />
+      <View style={{ flex: 1 }}>
+        <Text style={st.storyTitle}>{L("{0} nasıl efsane oldu?", [dreamName(id)])}</Text>
+        <Text style={st.storySub}>{unlocked(id) ? L("Hikâyesini bölüm bölüm oyna.") : L("Hikâyesini oyna: 1. bölüm ücretsiz.")}</Text>
+      </View>
+      <Icon name="chevron-right" size={20} color={d.renk} />
+    </Pressable>
   );
 }
 
@@ -247,6 +272,9 @@ function AlbumGrid({ store }: { store: DreamStore }) {
 }
 
 const st = StyleSheet.create({
+  story: { flexDirection: 'row', alignItems: 'center', gap: 10, borderWidth: 1, borderRadius: 14, padding: 12, marginTop: 10, backgroundColor: '#15110a' },
+  storyTitle: { color: C.text, fontFamily: F.bold, fontSize: 14 },
+  storySub: { color: C.dim, fontFamily: F.body, fontSize: 12, marginTop: 2 },
   head: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
   kicker: { color: C.gold, fontFamily: F.display, fontSize: 13, letterSpacing: 2 },
   album: { color: C.dim, fontFamily: F.bold, fontSize: 12 },

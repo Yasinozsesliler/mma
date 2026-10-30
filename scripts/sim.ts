@@ -38,7 +38,7 @@ import { changeWeight } from '../src/engine/career';
 import { banned, serveBan } from '../src/engine/doping';
 import { openGym, refreshCandidates, signCost, signStudent, upgradeGym } from '../src/engine/academy';
 import { acceptCrossover, boxRound, closeBox } from '../src/engine/crossover';
-import { createLegendGame, currentChapter, LEGENDS, legendStars, type LegendId } from '../src/engine/legendRun';
+import { createLegendGame, currentChapter, LEGENDS, legendStars, unlockLegendRun, type LegendId } from '../src/engine/legendRun';
 import { chooseEvent, closeEvent } from '../src/engine/events';
 import { chooseTactic, nextRound, resolveCritical, resolveDecision } from '../src/engine/fight';
 import { weakest } from '../src/engine/opponents';
@@ -149,7 +149,7 @@ function playCareer() {
   };
   if (process.env.CH === 'sonsans') input.yas = 35;
   if (process.env.CH === 'sokak') (input as { gecmis: Background }).gecmis = 'sokak';
-  const s = process.env.LEGEND ? createLegendGame(process.env.LEGEND as LegendId) : createGame(input, rollStartingStats(input));
+  const s = process.env.LEGEND ? createLegendGame(process.env.LEGEND as LegendId, undefined, !!process.env.TRIAL) : createGame(input, rollStartingStats(input));
   if (process.env.DIFF) s.zorluk = process.env.DIFF as 'kolay' | 'efsane';
   if (process.env.CH) s.meydan = { id: process.env.CH as 'yenilmez', durum: 'devam' };
   stats.careers++;
@@ -321,6 +321,8 @@ function playCareer() {
         stats.fights++;
         stats.stageFights[s.stage] = (stats.stageFights[s.stage] ?? 0) + 1;
         fights++;
+        // TRIAL=1: paketsiz deneme · TRIAL=unlock: deneme bitince birkaç maç sonra paket alınır
+        if (process.env.TRIAL === 'unlock' && s.efsane?.bekle && fights % 4 === 0) unlockLegendRun(s);
         stats.methods[r.yontem] = (stats.methods[r.yontem] ?? 0) + 1;
         if (r.kazanan === 'p') { stats.wins++; stats.byBg[bg].w++; }
         else if (r.kazanan === 'o') { stats.losses++; stats.byBg[bg].l++; }
