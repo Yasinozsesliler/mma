@@ -4,6 +4,7 @@ import { cosmeticById, COSMETICS, DEFAULT_EQUIP, earnedNow, isUnlocked, type Cos
 import { owns, useOwned } from './monetization/premium';
 import { ALL_SKUS } from './monetization/skus';
 import { getPref, setPref } from './prefs';
+import './customKit';
 
 const KEY = 'yol_kozmetik';
 type CosState = { equip: Record<CosSlot, string>; acik: string[]; yeni: string[] };

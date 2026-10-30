@@ -18,6 +18,7 @@ import { DEFAULT_LOOK, FighterAvatar } from './FighterAvatar';
 import { Figure, HIP_H, POSES } from './rig';
 import { C, F } from './theme';
 import { WalkoutFx } from './WalkoutFx';
+import { KitDesigner } from './KitDesigner';
 
 const TABS: { slot: CosSlot; ad: string; ikon: IconName }[] = [
   { slot: 'sort', ad: L("Şort"), ikon: 'tshirt-crew' },
@@ -296,6 +297,7 @@ export function LockerScreen({ look = DEFAULT_LOOK, onExit }: { look?: Appearanc
         })}
       </ScrollView>
 
+      {tab === 'sort' || tab === 'kemer' ? <KitDesigner key={tab} slot={tab} onPreview={(x) => setPrev({ [x.slot]: { ...x, renk: [...x.renk] }, etiket: x.ad })} /> : null}
       <View style={ls.grid}>
         {items.map((x) => (
           <View key={x.id} style={ls.cell}>

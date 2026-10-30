@@ -99,6 +99,8 @@ export const COSMETICS: Cosmetic[] = [
   { id: 'cer_gumus', slot: 'cerceve', ad: L("Gümüş"), renk: ['#c0c7d1'], kaynak: basari(L("Profesyonel kariyerde 10 galibiyet"), (c) => c.galibiyet >= 10) },
   { id: 'cer_hanedan', slot: 'cerceve', ad: L("Hanedan"), renk: ['#2ec4b6'], kaynak: basari(L("Nesil modunda ikinci nesle geç"), (c) => c.nesil >= 2) },
   { id: 'cer_intikam', slot: 'cerceve', ad: L("İntikam"), renk: ['#b388ff'], kaynak: basari(L("Ezeli rakibinle seriyi kazan"), (c) => c.intikam) },
+  { id: 'sort_ozel', slot: 'sort', ad: L("Kendi tasarımın"), renk: ['#111111', '#f2c14e'], nadir: 'efsane', kaynak: { tur: 'sampiyon' } },
+  { id: 'kem_ozel', slot: 'kemer', ad: L("Kendi kemerin"), renk: ['#fff3b0', '#c9a227', '#111111', '#e63946'], nadir: 'efsane', kaynak: { tur: 'sampiyon' } },
   { id: 'cer_sampiyon', slot: 'cerceve', ad: L("Şampiyon Paketi"), renk: ['#ffd166'], kaynak: { tur: 'sampiyon' } },
   { id: 'cer_altin', slot: 'cerceve', ad: L("Altın"), renk: ['#d4a017'], kaynak: paket('paket_altin') },
   { id: 'cer_neon', slot: 'cerceve', ad: L("Neon"), renk: ['#39ff14'], kaynak: paket('paket_sokak') },

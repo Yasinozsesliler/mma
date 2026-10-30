@@ -7,7 +7,8 @@ import type { Appearance, GameState } from '../engine/types';
 import { buzz } from '../haptics';
 import { L } from '../i18n';
 import { Button, Screen, Section, Title } from './components';
-import { BEARDS, DEFAULT_LOOK, FighterAvatar, HAIR_COLORS, HAIR_STYLES } from './FighterAvatar';
+import { BEARDS, DEFAULT_LOOK, FighterAvatar, HAIR_COLORS, HAIR_STYLES, NATURAL_HAIR } from './FighterAvatar';
+import { PURCHASES, usePremium } from '../monetization';
 import type { Act } from './GameScreens';
 import { C, F } from './theme';
 
@@ -21,6 +22,8 @@ const TATTOO_NAMES: Record<Tattoo, () => string> = {
 export function StyleScreen({ s, act }: { s: GameState; act: Act }) {
   const cur = s.fighter.gorunum ?? DEFAULT_LOOK;
   const [draft, setDraft] = useState<Appearance>({ ...cur });
+  const premium = usePremium();
+  const pro = premium || !PURCHASES;
   const [msg, setMsg] = useState<string | null>(null);
   const set = (p: Partial<Appearance>) => setDraft((d) => ({ ...d, ...p }));
   const toggleTattoo = (t: Tattoo) =>
@@ -68,7 +71,7 @@ export function StyleScreen({ s, act }: { s: GameState; act: Act }) {
       <Section>{L("SAÇ RENGİ · {0}", [money(stylePrice(s, 'sacRenk'))])}</Section>
       <View style={st.chips}>
         {HAIR_COLORS.map((c, i) => (
-          <Pressable key={c} onPress={() => set({ sacRenk: i })} style={[st.swatch, { backgroundColor: c }, draft.sacRenk === i && st.swatchOn]} />
+          <Pressable key={c} onPress={() => (i < NATURAL_HAIR || pro ? set({ sacRenk: i }) : undefined)} style={[st.swatch, { backgroundColor: c }, draft.sacRenk === i && st.swatchOn, i >= NATURAL_HAIR && !pro && { opacity: 0.35 }]} />
         ))}
       </View>
       {!draft.kadin ? (

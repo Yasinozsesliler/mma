@@ -1,5 +1,6 @@
 // Web: paylaşım kartı 1080×1920 (hikâye boyutu) bir tuvale çizilir ve PNG olarak paylaşılır/indirilir.
 // Portre ve kemer, ekranda (gizli) çizilen SVG'lerden alınır; yazılar oyunun kendi yazı tipleriyle çizilir.
+import { themeOf } from './themes';
 import { L, LOC } from '../i18n';
 import { C, F } from '../ui/theme';
 import type { ShareCardData } from './types';
@@ -76,13 +77,14 @@ export async function renderCard(d: ShareCardData, avatarId: string, beltId: str
   const ctx = cv.getContext('2d');
   if (!ctx) return null;
   const gold = C.gold;
-  const accent = d.tur === 'kemer' || d.tur === 'kariyer' ? gold : C.red;
+  const th = themeOf(d.tema);
+  const accent = th.vurgu ?? (d.tur === 'kemer' || d.tur === 'kariyer' ? gold : C.red);
 
-  // Arka plan: koyu, kırmızı bir parlama ve çapraz yayın çizgileri
+  // Arka plan: koyu, kırmızı bir parlama ve çapraz yayın çizgileri (şablona göre renkler)
   const bg = ctx.createLinearGradient(0, 0, 0, HT);
-  bg.addColorStop(0, '#1c070b');
-  bg.addColorStop(0.45, '#0b0c10');
-  bg.addColorStop(1, '#040405');
+  bg.addColorStop(0, th.bg[0]);
+  bg.addColorStop(0.45, th.bg[1]);
+  bg.addColorStop(1, th.bg[2]);
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, WD, HT);
   const glow = ctx.createRadialGradient(WD / 2, 640, 40, WD / 2, 640, 620);
@@ -92,7 +94,7 @@ export async function renderCard(d: ShareCardData, avatarId: string, beltId: str
   ctx.fillRect(0, 0, WD, HT);
   ctx.save();
   ctx.globalAlpha = 0.12;
-  ctx.fillStyle = C.red;
+  ctx.fillStyle = th.serit;
   for (let i = 0; i < 4; i++) {
     ctx.beginPath();
     const x = -300 + i * 140;

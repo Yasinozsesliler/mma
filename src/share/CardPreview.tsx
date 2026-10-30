@@ -1,5 +1,6 @@
 // Yerel (Android/iOS): kart gerçek bir görünüm olarak çizilir (web tuvaliyle aynı yerleşim), 1080×1920 PNG olarak
 // yakalanır (react-native-view-shot) ve telefonun paylaşım menüsüyle (expo-sharing) paylaşılır.
+import { themeOf } from './themes';
 import * as Sharing from 'expo-sharing';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useRef } from 'react';
@@ -39,7 +40,8 @@ export function CardPreview({ data, onReady }: { data: ShareCardData; onReady: (
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data]);
 
-  const accent = data.tur === 'kemer' || data.tur === 'kariyer' ? C.gold : C.red;
+  const th = themeOf(data.tema);
+  const accent = th.vurgu ?? (data.tur === 'kemer' || data.tur === 'kariyer' ? C.gold : C.red);
   const [ust, davet] = [data.mesaj.split('·')[0].trim(), data.mesaj.split('·').slice(1).join('·').trim()];
   const belt = !!data.kemer;
   const aS = belt ? 157 : 187;
@@ -57,11 +59,11 @@ export function CardPreview({ data, onReady }: { data: ShareCardData; onReady: (
         </View>
       ) : (
       <View ref={ref} collapsable={false} style={st.card}>
-        <LinearGradient colors={['#1c070b', '#0b0c10', '#040405']} locations={[0, 0.45, 1]} style={StyleSheet.absoluteFill} />
+        <LinearGradient colors={th.bg} locations={[0, 0.45, 1]} style={StyleSheet.absoluteFill} />
         <Svg width={WD} height={HT} style={StyleSheet.absoluteFill}>
           {[0, 1, 2, 3].map((i) => {
             const x = -100 + i * 47;
-            return <Polygon key={i} points={`${x},${HT} ${x + 9},${HT} ${x + 309},0 ${x + 300},0`} fill={C.red} opacity={0.12} />;
+            return <Polygon key={i} points={`${x},${HT} ${x + 9},${HT} ${x + 309},0 ${x + 300},0`} fill={th.serit} opacity={0.12} />;
           })}
         </Svg>
 

@@ -1,5 +1,7 @@
 // "Paylaş" düğmesi + önizleme penceresi. Kartın çizimi ve paylaşımı platforma göre CardPreview'dedir.
-import { useState, type ReactNode } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
+import { PURCHASES, usePremium } from '../monetization';
+import { CARD_THEME_IDS, CARD_THEMES, savedCardTheme, saveCardTheme, type CardThemeId } from './themes';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { sfx } from '../audio';
 import { L } from '../i18n';
@@ -19,9 +21,22 @@ export function ShareButton({ data, label, tone = 'ghost', render }: { data: Sha
   );
 }
 
-function ShareModal({ data, onClose }: { data: ShareCardData; onClose: () => void }) {
+function ShareModal({ data: raw, onClose }: { data: ShareCardData; onClose: () => void }) {
   const [handle, setHandle] = useState<CardHandle | null>(null);
   const [msg, setMsg] = useState('');
+  const premium = usePremium();
+  const pro = premium || !PURCHASES;
+  const themable = raw.tur !== 'afis' && raw.tur !== 'wiki';
+  const [tema, setTema] = useState<CardThemeId>(() => (pro ? savedCardTheme() : 'klasik'));
+  const data = useMemo(() => (themable ? { ...raw, tema } : raw), [raw, tema, themable]);
+  const pickTheme = (t: CardThemeId) => {
+    if (CARD_THEMES[t].pro && !pro) return setMsg(L("👑 Bu şablon Şampiyon Paketi ile açılır."));
+    sfx('click');
+    setMsg('');
+    setHandle(null);
+    setTema(t);
+    saveCardTheme(t);
+  };
 
   const onShare = async () => {
     if (!handle) return;
@@ -41,8 +56,21 @@ function ShareModal({ data, onClose }: { data: ShareCardData; onClose: () => voi
             </Pressable>
           </View>
           <View style={sm.preview}>
-            <CardPreview data={data} onReady={setHandle} />
+            <CardPreview key={tema} data={data} onReady={setHandle} />
           </View>
+          {themable ? (
+            <View style={sm.themes}>
+              {CARD_THEME_IDS.map((t) => (
+                <Pressable key={t} onPress={() => pickTheme(t)} style={[sm.theme, { borderColor: tema === t ? CARD_THEMES[t].serit : C.border }]}>
+                  <View style={[sm.themeDot, { backgroundColor: CARD_THEMES[t].serit }]} />
+                  <Text style={[sm.themeText, tema === t && { color: C.text }]}>
+                    {CARD_THEMES[t].ad()}
+                    {CARD_THEMES[t].pro && !pro ? ' 👑' : ''}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          ) : null}
           {msg ? <Text style={sm.msg}>{msg}</Text> : null}
           <View style={{ gap: 8 }}>
             <Button label={L("Paylaş")} icon="share-variant" tone="gold" disabled={!handle} onPress={onShare} />
@@ -55,6 +83,10 @@ function ShareModal({ data, onClose }: { data: ShareCardData; onClose: () => voi
 }
 
 const sm = StyleSheet.create({
+  themes: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, justifyContent: 'center' },
+  theme: { flexDirection: 'row', alignItems: 'center', gap: 5, borderWidth: 1, borderRadius: 14, paddingHorizontal: 9, paddingVertical: 5 },
+  themeDot: { width: 10, height: 10, borderRadius: 5 },
+  themeText: { color: C.dim, fontFamily: F.semi, fontSize: 11.5 },
   back: { flex: 1, backgroundColor: 'rgba(0,0,0,0.82)', alignItems: 'center', justifyContent: 'center', padding: 16 },
   box: { width: '100%', maxWidth: 420, backgroundColor: C.card, borderRadius: 16, borderWidth: 1, borderColor: C.border, padding: 14, gap: 12 },
   head: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },

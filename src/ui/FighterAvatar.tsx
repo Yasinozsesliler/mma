@@ -5,7 +5,9 @@ import type { Appearance } from '../engine/types';
 import { octPoints } from './components';
 
 export const SKIN_TONES = ['#f6d7c3', '#ecc0a0', '#d9a07a', '#c68a5f', '#a86b43', '#8a5534', '#6b3f24', '#4a2a17'];
-export const HAIR_COLORS = ['#0f0d0c', '#2e1d12', '#5a3a22', '#8a5a2b', '#c49a55', '#e3c587', '#9a2e1f', '#b8b8b8'];
+export const HAIR_COLORS = ['#0f0d0c', '#2e1d12', '#5a3a22', '#8a5a2b', '#c49a55', '#e3c587', '#9a2e1f', '#b8b8b8', '#ece6d6', '#2f8cff', '#ff5ca8', '#3ccf6e', '#8b5cf6'];
+/** İlk 8 doğal renk (son doğal renk gri); sonrakiler Şampiyon Paketi'nin özel renkleri. */
+export const NATURAL_HAIR = 8;
 export const EYE_COLORS = ['#3b2314', '#6b4423', '#4f7a3a', '#3f6fa8', '#7a8a96', '#1d1d1d'];
 
 export const HAIR_STYLES: { key: Appearance['sac']; ad: string }[] = [

@@ -147,6 +147,7 @@ export function PremiumCompare() {
     [L("Sezon Kemeri ödülleri"), L("4 / ay"), L("10 / ay")],
     [L("Hayalî Maç Stüdyosu"), '—', '✓'],
     [L("Efsanelerim"), '1', '10'],
+    [L("Tasarım: şort, kemer, saç rengi, dövme, afiş"), '—', '✓'],
     [L("Altın Seri ve Şampiyon çerçevesi"), '—', '✓'],
   ];
   return (
