@@ -37,6 +37,7 @@ import { resultText } from './DailyScreen';
 import { FighterAvatar } from './FighterAvatar';
 import { useLegendUnlocked } from './LegendScreens';
 import { requestLegend } from '../legendNav';
+import { StudioEntry, StudioScreen } from './StudioScreen';
 import { FightScreen } from './FightScreen';
 import { PlanPicker } from './PlanPicker';
 import { C, F } from './theme';
@@ -70,6 +71,7 @@ export function DreamScreen({ onExit }: { onExit: () => void }) {
   const [store, setStore] = useState<DreamStore>(loadDream);
   const [game, setGame] = useState<GameState | null>(() => loadMatch(gun));
   const [son, setSon] = useState<DreamResult | null>(null);
+  const [studio, setStudio] = useState(false);
   const gRef = useRef<GameState | null>(game);
   const kalan = triesLeft(store, gun);
   const bugun = store.gunler[gun] ?? [];
@@ -114,8 +116,9 @@ export function DreamScreen({ onExit }: { onExit: () => void }) {
   };
 
   if (game) return <DreamFight s={game} act={act} />;
-  if (kalan > 0 && !son) return <DreamIntro spec={spec} store={store} deneme={bugun.length} onStart={start} />;
-  return <DreamResultView spec={spec} store={store} r={son ?? bugun[bugun.length - 1]} canExtra={kalan === 0 && store.ekHak !== gun && !bugun.some((x) => x.sonuc === 'G')} onExtra={extra} onAgain={() => setSon(null)} again={kalan > 0} onExit={onExit} />;
+  if (studio) return <StudioScreen onBack={() => setStudio(false)} />;
+  if (kalan > 0 && !son) return <DreamIntro spec={spec} store={store} deneme={bugun.length} onStart={start} onStudio={() => setStudio(true)} />;
+  return <DreamResultView spec={spec} store={store} r={son ?? bugun[bugun.length - 1]} canExtra={kalan === 0 && store.ekHak !== gun && !bugun.some((x) => x.sonuc === 'G')} onExtra={extra} onAgain={() => setSon(null)} again={kalan > 0} onExit={onExit} onStudio={() => setStudio(true)} />;
 }
 
 function DreamFight({ s, act }: { s: GameState; act: (fn: (s: GameState) => void) => void }) {
@@ -156,7 +159,7 @@ function Versus({ spec }: { spec: DreamSpec }) {
   );
 }
 
-function DreamIntro({ spec, store, deneme, onStart }: { spec: DreamSpec; store: DreamStore; deneme: number; onStart: (p: PlanKey) => void }) {
+function DreamIntro({ spec, store, deneme, onStart, onStudio }: { spec: DreamSpec; store: DreamStore; deneme: number; onStart: (p: PlanKey) => void; onStudio: () => void }) {
   const [preview] = useState(() => dreamGame(spec, 'ayakta', 0));
   useEffect(() => endDreamFight(), []);
   return (
@@ -169,11 +172,12 @@ function DreamIntro({ spec, store, deneme, onStart }: { spec: DreamSpec; store: 
       <Compare me={dreamMe(spec).stats} opp={dreamOpponent(spec).stats} oppLabel={upName(LEGENDS[spec.rakip].soyad, LEGENDS[spec.rakip].uyruk)} />
       <Text style={st.pickTitle}>{L("{0} olarak oyun planını seç", [dreamName(spec.ben)])}</Text>
       <PlanPicker s={preview} onPick={onStart} />
+      <StudioEntry onOpen={onStudio} />
     </Screen>
   );
 }
 
-function DreamResultView(p: { spec: DreamSpec; store: DreamStore; r?: DreamResult; canExtra: boolean; again: boolean; onExtra: () => void; onAgain: () => void; onExit: () => void }) {
+function DreamResultView(p: { spec: DreamSpec; store: DreamStore; r?: DreamResult; canExtra: boolean; again: boolean; onExtra: () => void; onAgain: () => void; onExit: () => void; onStudio: () => void }) {
   const { spec, store, r } = p;
   const won = r?.sonuc === 'G';
   const prog = albumProgress(store);
@@ -223,6 +227,7 @@ function DreamResultView(p: { spec: DreamSpec; store: DreamStore; r?: DreamResul
         )
       ) : null}
       {r ? <StoryLink id={spec.ben} onGo={p.onExit} /> : null}
+      <StudioEntry onOpen={p.onStudio} />
       <AlbumGrid store={store} />
       <Text style={st.hint}>{L("Her gün yeni bir eşleşme. Albümü tamamlamak için her maçı iki taraftan da kazan.")}</Text>
     </Screen>

@@ -762,6 +762,8 @@ export interface GameState {
   acilanlar?: string[];
   /** Kariyerdeki en yüksek ortalama güç: rakipler buna göre seçilir, yaşlanınca rakipler de zayıflamaz. */
   zirveGuc?: number;
+  /** Zirve gücüne ulaşıldığı andaki istatistikler (Efsanelerim için) */
+  zirveStats?: Stats;
   /** İlan edilen veda maçı (35 yaş sonrası); oynanınca emeklilik gelir. */
   veda?: import('./farewell').Farewell;
   /** Bu hafta izlenen hikâyeler (sosyal medya ana sayfası) */

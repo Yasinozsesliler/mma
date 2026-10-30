@@ -38,7 +38,10 @@ const CHAMP_BONUS: Record<Stage, number> = { amator: 12, bolgesel: 11, buyuk: 16
 /** Oyuncunun referans gücü: kariyerindeki en yüksek güç. Yaşlanan oyuncuya göre rakipler zayıflamaz. */
 export function refPower(s: GameState) {
   const pa = statAverage(s.fighter.stats);
-  if (pa > (s.zirveGuc ?? 0)) s.zirveGuc = pa;
+  if (pa > (s.zirveGuc ?? 0)) {
+    s.zirveGuc = pa;
+    s.zirveStats = { ...s.fighter.stats };
+  }
   return Math.max(pa, s.zirveGuc ?? 0);
 }
 

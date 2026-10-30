@@ -51,6 +51,7 @@ import { ActionGrid, ActionTile, FightCTA, HubHero, Notice } from './HubHome';
 import { pendingBouts, weeklyGymNet } from '../engine/academy';
 import { ACHIEVEMENTS } from '../engine/achievements';
 import { BeltLegendTease, LegendHubCard } from './LegendScreens';
+import { SaveMyLegendCard } from './StudioScreen';
 import { currentChapter, legendHoldsUcc } from '../engine/legendRun';
 import { UccRoadCard } from './UccRoadCard';
 import { GoalsCard } from './GoalsCard';
@@ -954,6 +955,7 @@ export function RetireScreen({ s, onNew, onDynasty, onComeback, onDoc, onLeague 
         </Text>
       </LinearGradient>
       <FarewellSummary s={s} />
+      <SaveMyLegendCard s={s} />
       {donus && onComeback ? (
         <Card accent={C.orange}>
           <Text style={gs.kicker}>{L("📞 {0} YIL SONRA… TELEFON ÇALDI", [donus.yil])}</Text>

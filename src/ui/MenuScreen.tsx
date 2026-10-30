@@ -2,6 +2,7 @@ import { L, LOC } from '../i18n';
 import { ChallengeList } from './ChallengeList';
 import { LegendList, useLegendUnlocked, type LegendName } from './LegendScreens';
 import { takeLegendRequest } from '../legendNav';
+import { MyLegendLink } from './StudioScreen';
 import { loadDream } from './DreamScreen';
 import { albumProgress, triesLeft } from '../engine/dreamFight';
 import { LEGEND_IDS, LEGENDS, type LegendId } from '../engine/legendRun';
@@ -161,6 +162,7 @@ function SlotCard({ n, save, active, onNew, onContinue, onDelete, onDynasty }: {
           </Pressable>
         </View>
       )}
+      {retired && !sure ? <MyLegendLink s={save} /> : null}
     </LinearGradient>
   );
 }

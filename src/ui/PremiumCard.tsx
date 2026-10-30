@@ -165,7 +165,7 @@ export function PremiumCompare() {
 }
 
 /** Satın alma düğmesi + kısa sonuç mesajı (teklif kartları ve pencere için). */
-function BuyPremium() {
+export function BuyPremium() {
   const price = usePremiumPrice();
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');

@@ -7,7 +7,7 @@ import { PLANS, startFight } from './fight';
 import { LEGEND_IDS, LEGENDS, legendName, type LegendId } from './legendRun';
 import { weakest } from './opponents';
 import { clamp, pick, setSeed } from './rng';
-import type { GameState, Opponent, PlanKey, Stats, WeightClass } from './types';
+import type { Appearance, Background, GameState, Opponent, PlanKey, Stats, WeightClass } from './types';
 import { STAT_KEYS } from './types';
 import { dayNumber } from './daily';
 
@@ -52,26 +52,67 @@ export function primeStats(id: LegendId): Stats {
   return st;
 }
 
-function asOpponent(id: LegendId): Opponent {
+/** Hayalî maçta dövüşebilen herkes: efsaneler ve oyuncunun kaydettiği kendi efsaneleri (Efsanelerim). */
+export type DreamFighter = {
+  key: string;
+  ad: string;
+  soyad: string;
+  lakap: string;
+  /** Ülke kodu */
+  uyruk: string;
+  memleket: string;
+  gecmis: Background;
+  gorunum: Appearance;
+  boy?: number;
+  siklet: WeightClass;
+  stats: Stats;
+  rekor: { g: number; m: number; b: number };
+  kadin?: boolean;
+};
+
+export function legendFighter(id: LegendId): DreamFighter {
   const d = LEGENDS[id];
   return {
-    id: `efsane-${id}`,
+    key: id,
     ad: d.ad,
     soyad: d.soyad,
     lakap: d.lakap(),
-    uyruk: COUNTRIES[d.uyruk]?.ad ?? d.uyruk,
-    stil: d.gecmis,
-    kisilik: '',
+    uyruk: d.uyruk,
+    memleket: d.memleket(),
+    gecmis: d.gecmis,
+    gorunum: d.gorunum,
+    boy: d.boy,
+    siklet: d.siklet,
     stats: primeStats(id),
     rekor: { g: 25, m: 1, b: 0 },
+    kadin: d.gorunum.kadin,
+  };
+}
+
+function fighterOpponent(f: DreamFighter): Opponent {
+  return {
+    id: `efsane-${f.key}`,
+    ad: f.ad,
+    soyad: f.soyad,
+    lakap: f.lakap,
+    uyruk: COUNTRIES[f.uyruk]?.ad ?? f.uyruk,
+    stil: f.gecmis,
+    kisilik: '',
+    stats: f.stats,
+    rekor: f.rekor,
     rank: null,
     champion: true,
     rivalry: 0,
     karsilasma: 0,
-    kadin: d.gorunum.kadin,
-    gorunum: d.gorunum,
+    kadin: f.kadin,
+    gorunum: f.gorunum,
   };
 }
+const asOpponent = (id: LegendId) => fighterOpponent(legendFighter(id));
+
+/** Sıklet üstü maçta ağır olanın sıkleti. */
+export const heavierClass = (a: WeightClass, b: WeightClass) => WEIGHT_ORDER[Math.max(WEIGHT_ORDER.indexOf(a), WEIGHT_ORDER.indexOf(b))];
+export { WEIGHT_ORDER };
 
 /** Günün eşleşmesi: herkes için aynı. Sıklet, ağır olanın sıkleti (sıklet üstü maç). */
 export function dreamSpec(gun: number): DreamSpec {
@@ -88,21 +129,26 @@ export const dreamMe = (spec: DreamSpec) => asOpponent(spec.ben);
 
 /** Oynanabilir geçici oyun durumu (hiçbir yuvaya kaydedilmez). deneme: 0 ya da 1 (reklamla ikinci hak). */
 export function dreamGame(spec: DreamSpec, plan: PlanKey, deneme: number): GameState {
-  const d = LEGENDS[spec.ben];
-  const me = asOpponent(spec.ben);
+  setSeed(hash(`yol-hayali-dovus-${spec.gun}-${plan}-${deneme}`));
+  return fighterGame(legendFighter(spec.ben), legendFighter(spec.rakip), spec.siklet, plan);
+}
+
+/** Hayalî Maç Stüdyosu: istenen iki dövüşçü, istenen sıklet (tohum yok; her maç farklı akar). */
+export const studioGame = (ben: DreamFighter, rakip: DreamFighter, siklet: WeightClass, plan: PlanKey) => fighterGame(ben, rakip, siklet, plan);
+
+function fighterGame(me: DreamFighter, rk: DreamFighter, siklet: WeightClass, plan: PlanKey): GameState {
   const s = createGame(
-    { ad: d.ad, soyad: d.soyad, lakap: d.lakap(), uyruk: d.uyruk, memleket: d.memleket(), yas: 29, siklet: spec.siklet, gecmis: d.gecmis, hikaye: '', gorunum: d.gorunum, boy: d.boy },
-    me.stats,
+    { ad: me.ad, soyad: me.soyad, lakap: me.lakap, uyruk: me.uyruk, memleket: me.memleket, yas: 29, siklet, gecmis: me.gecmis, hikaye: '', gorunum: me.gorunum, boy: me.boy, kadin: me.kadin },
+    { ...me.stats },
   );
   s.contract = { org: 'ufc', kalan: 1, ucret: 0, bonus: 0, munhasir: true };
   s.stage = 'ufc';
   s.ipuclari = undefined;
-  const opp = asOpponent(spec.rakip);
+  const opp = fighterOpponent(rk);
   s.pending.rakip = opp;
-  setSeed(hash(`yol-hayali-dovus-${spec.gun}-${plan}-${deneme}`));
   s.pending.dovus = startFight({
     pStats: me.stats,
-    pAd: d.lakap() || d.soyad,
+    pAd: me.lakap || me.soyad,
     koseAdi: L("Köşen"),
     opp,
     mods: { stats: {}, plan, planUyum: PLANS[plan].hedef.includes(weakest(opp)), oppStats: {} },
