@@ -7789,4 +7789,8 @@ export const PT: Record<string, string> = {
   "EN POPÜLER": "MAIS POPULAR",
   "Şampiyon + Koleksiyon": "Campeão + Coleção",
   "Şampiyon Paketi'nin her şeyi + 6 kozmetik paketin tamamı": "Tudo do Pacote Campeão + os 6 pacotes cosméticos",
+  "👑 TAM SÜRÜM": "👑 VERSÃO COMPLETA",
+  "Conor'un hikâyesi ücretsiz. Diğer {0} efsane tam sürümde: Şampiyon Paketi ile hepsi açılır.": "A história de Conor é grátis. As outras {0} lendas estão na versão completa: o Pacote Campeão libera todas.",
+  "Hikâyesini tam sürümde oyna.": "Jogue a história na versão completa.",
+  "Conor": "Conor",
 };

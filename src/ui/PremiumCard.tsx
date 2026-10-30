@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { sfx } from '../audio';
 import { L } from '../i18n';
-import { buy, buyPremium, closeOffer, dismissUpsell, MONETIZATION, PURCHASES, restorePremium, useAdFree, useOffer, usePremium, usePremiumPrice, usePrice, useUpsellDue, type OfferReason } from '../monetization';
+import { buy, buyPremium, closeOffer, dismissUpsell, LEGENDS_STORE, MONETIZATION, PURCHASES, restorePremium, useAdFree, useOffer, usePremium, usePremiumPrice, usePrice, useUpsellDue, type OfferReason } from '../monetization';
 import { LEGEND_IDS } from '../engine/legendRun';
 import { getPref, setPref } from '../prefs';
 import { ADFREE_SKU, ULTIMATE_SKU } from '../monetization/skus';
@@ -52,14 +52,16 @@ export function PremiumCard() {
       {/* Fiyat henüz gelmediyse de basılabilir: satın alma ürünleri önce yeniden ister */}
       <Text style={st.popular}>{L("EN POPÜLER")}</Text>
       <Button label={price ? L("Satın al · {0}", [price]) : L("Satın al")} icon="crown" tone="gold" disabled={busy} onPress={() => purchase(buyPremium)} />
-      <Pressable disabled={busy} onPress={() => purchase(() => buy(ULTIMATE_SKU))} style={({ pressed }) => [st.ult, pressed && { opacity: 0.85 }, busy && { opacity: 0.5 }]}>
-        <View style={{ flex: 1 }}>
-          <Text style={st.ultKicker}>{L("EN İYİ DEĞER")}</Text>
-          <Text style={st.ultTitle}>{L("Şampiyon + Koleksiyon")}</Text>
-          <Text style={st.ultSub}>{L("Şampiyon Paketi'nin her şeyi + 6 kozmetik paketin tamamı")}</Text>
-        </View>
-        <Text style={st.ultPrice}>{ultPrice ?? ''}</Text>
-      </Pressable>
+      {LEGENDS_STORE ? (
+        <Pressable disabled={busy} onPress={() => purchase(() => buy(ULTIMATE_SKU))} style={({ pressed }) => [st.ult, pressed && { opacity: 0.85 }, busy && { opacity: 0.5 }]}>
+          <View style={{ flex: 1 }}>
+            <Text style={st.ultKicker}>{L("EN İYİ DEĞER")}</Text>
+            <Text style={st.ultTitle}>{L("Şampiyon + Koleksiyon")}</Text>
+            <Text style={st.ultSub}>{L("Şampiyon Paketi'nin her şeyi + 6 kozmetik paketin tamamı")}</Text>
+          </View>
+          <Text style={st.ultPrice}>{ultPrice ?? ''}</Text>
+        </Pressable>
+      ) : null}
       {adFree ? (
         <Text style={st.adFree}>{L("Reklamsız Paket aktif")}</Text>
       ) : (
@@ -159,7 +161,7 @@ export function PremiumCompare() {
     [L("Geçiş reklamları"), L("Var"), L("Yok")],
     [L("Ödüllü teklifler"), L("Reklamla"), L("Anında")],
     [L("Kariyer yuvası"), '3', '5'],
-    [L("Efsane Yolları"), L("Conor + 1. bölümler"), L("{0} efsanenin tamamı", [LEGEND_IDS.length])],
+    [L("Efsane Yolları"), LEGENDS_STORE ? L("Conor + 1. bölümler") : L("Conor"), L("{0} efsanenin tamamı", [LEGEND_IDS.length])],
     [L("Sezon Kemeri ödülleri"), L("4 / ay"), L("10 / ay")],
     [L("Hayalî Maç Stüdyosu"), '—', '✓'],
     [L("Efsanelerim"), '1', '10'],

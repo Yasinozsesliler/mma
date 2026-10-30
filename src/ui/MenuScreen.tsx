@@ -25,7 +25,7 @@ import { WEIGHT_CLASSES } from '../engine/data';
 import { slotsFor, type Slot } from '../storage';
 import { PremiumCard, SlotsFullOffer } from './PremiumCard';
 import { SettingsSheet } from './SettingsSheet';
-import { usePremium } from '../monetization';
+import { LEGENDS_STORE, usePremium } from '../monetization';
 import { FighterAvatar } from './FighterAvatar';
 import { BACKGROUNDS } from '../engine/data';
 import type { Background, GameState } from '../engine/types';
@@ -205,7 +205,7 @@ function LegendShowcase({ onOpen }: { onOpen: (id?: LegendId) => void }) {
                 ) : d.ucretsiz ? (
                   <Text style={[ms.lgBadge, { color: C.green }]}>{L("ÜCRETSİZ")}</Text>
                 ) : !open ? (
-                  <Text style={ms.lgBadge}>{L("1. BÖLÜM ÜCRETSİZ")}</Text>
+                  <Text style={ms.lgBadge}>{LEGENDS_STORE ? L("1. BÖLÜM ÜCRETSİZ") : L("👑 TAM SÜRÜM")}</Text>
                 ) : (
                   <Text style={ms.lgBadge}>{L("{0} bölüm", [d.bolumler.length])}</Text>
                 )}

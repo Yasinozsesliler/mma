@@ -5,7 +5,7 @@ import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { cosmeticById } from '../engine/cosmetics';
 import { bonusAvailable, bonusChapter, currentChapter, dismissLegendIntro, inBonus, LEGEND_IDS, LEGENDS, legendMaxStars, legendName, legendStars, noteOpen, openNote, startBonus, unlockLegendRun, type Chapter, type LegendId, type LegendRun } from '../engine/legendRun';
-import { buy, MONETIZATION, PURCHASES, restorePurchases, useOwned, usePremium, usePrice } from '../monetization';
+import { buy, LEGENDS_STORE, MONETIZATION, PURCHASES, restorePurchases, useOwned, usePremium, usePrice } from '../monetization';
 import { BuyPremium } from './PremiumCard';
 import { LEGENDS_SKU, PREMIUM_SKU } from '../monetization/skus';
 import { AdOffer } from './AdOffer';
@@ -73,7 +73,7 @@ export function LegendList({ canStart, initial, onStart }: { canStart: boolean; 
                     d.ucretsiz ? (
                       <Text style={[st.badge, { color: C.green, borderColor: C.green + '88' }]}>{L("ÜCRETSİZ")}</Text>
                     ) : !unlocked(id) ? (
-                      <Text style={[st.badge, { color: C.gold, borderColor: C.gold + '88' }]}>{L("1. BÖLÜM ÜCRETSİZ")}</Text>
+                      <Text style={[st.badge, { color: C.gold, borderColor: C.gold + '88' }]}>{LEGENDS_STORE ? L("1. BÖLÜM ÜCRETSİZ") : L("👑 TAM SÜRÜM")}</Text>
                     ) : null
                   ) : (
                     <Text style={[st.badge, { color: C.faint, borderColor: C.faint }]}>{L("YAKINDA")}</Text>
@@ -112,6 +112,24 @@ export function LegendList({ canStart, initial, onStart }: { canStart: boolean; 
 
 /** Efsaneler Paketi satın alma kutusu (liste başında, kilitli efsanenin ayrıntısında, deneme sonunda ve menüde). */
 export function LegendPack({ compact, lead }: { compact?: boolean; lead?: string }) {
+  if (!LEGENDS_STORE) return <FullVersionPack compact={compact} lead={lead} />;
+  return <LegendPackStore compact={compact} lead={lead} />;
+}
+
+/** Android: efsaneler ayrı satılmaz, tam sürümün (Şampiyon Paketi) parçası. */
+function FullVersionPack({ compact, lead }: { compact?: boolean; lead?: string }) {
+  const paid = LEGEND_IDS.filter((id) => !LEGENDS[id].ucretsiz).length;
+  return (
+    <LinearGradient colors={['#2a1d05', '#100c04']} style={[st.pack, compact && { marginBottom: 0 }]}>
+      {!compact ? <Text style={st.packKicker}>{L("👑 TAM SÜRÜM")}</Text> : null}
+      {lead ? <Text style={[st.packText, { fontFamily: F.bold, color: C.gold }]}>{lead}</Text> : null}
+      <Text style={st.packText}>{L("Conor'un hikâyesi ücretsiz. Diğer {0} efsane tam sürümde: Şampiyon Paketi ile hepsi açılır.", [paid])}</Text>
+      <BuyPremium />
+    </LinearGradient>
+  );
+}
+
+function LegendPackStore({ compact, lead }: { compact?: boolean; lead?: string }) {
   const price = usePrice(LEGENDS_SKU);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
@@ -164,10 +182,12 @@ function LegendDetail({ id, canStart, locked, onStart }: { id: LegendId; canStar
       </View>
       <TextInput style={st.input} value={isim.lakap} onChangeText={(lakap) => setIsim({ ...isim, lakap })} placeholder={L("Lakap")} placeholderTextColor={C.faint} maxLength={18} />
       {!canStart ? <Text style={st.warn}>{L("Efsane yolunu başlatmak için boş bir kariyer yuvası gerekli.")}</Text> : null}
-      <Button label={locked ? L("1. bölümü ücretsiz oyna") : L("Hikâyeyi başlat")} icon="book-open-variant" tone="gold" disabled={!canStart} onPress={() => onStart(isim)} />
+      {locked && !LEGENDS_STORE ? null : (
+        <Button label={locked ? L("1. bölümü ücretsiz oyna") : L("Hikâyeyi başlat")} icon="book-open-variant" tone="gold" disabled={!canStart} onPress={() => onStart(isim)} />
+      )}
       {locked ? (
         <View style={{ marginTop: 10 }}>
-          <LegendPack compact lead={L("Bütün hikâye için:")} />
+          <LegendPack compact lead={LEGENDS_STORE ? L("Bütün hikâye için:") : undefined} />
         </View>
       ) : null}
     </View>
@@ -375,7 +395,7 @@ export function BeltLegendTease({ s }: { s: GameState }) {
         </Pressable>
       </View>
       <LegendPack compact />
-      <Text style={st.hint}>{L("İstersen önce menüdeki Efsane Yolları'ndan her efsanenin 1. bölümünü ücretsiz dene.")}</Text>
+      {LEGENDS_STORE ? <Text style={st.hint}>{L("İstersen önce menüdeki Efsane Yolları'ndan her efsanenin 1. bölümünü ücretsiz dene.")}</Text> : null}
     </View>
   );
 }
