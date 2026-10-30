@@ -12,6 +12,7 @@ import { grant, isAdFree, isPremium, owns } from './premium';
 import { ALL_SKUS, PREMIUM_SKU } from './skus';
 
 import { initRevenueCat, rcRecordPurchase, rcSync } from './revenuecat';
+import { noteRewardedWatched } from './offers';
 import { noteAdShown } from './upsell';
 export { isAdFree, isPremium, owns, useAdFree, useOwned, usePremium } from './premium';
 
@@ -22,6 +23,7 @@ export const PURCHASES = true;
 /** Dolaptaki kozmetik paket mağazası. iPhone'da şimdilik kapalı (yalnızca reklam kaldıran ürünler satılır). */
 export const PACK_STORE = Platform.OS !== 'ios';
 export { dismissUpsell, useUpsellDue } from './upsell';
+export { closeOffer, openOffer, useOffer, type OfferReason } from './offers';
 
 // ---------- Reklamlar ----------
 
@@ -109,6 +111,7 @@ export function showRewarded(): Promise<'odul' | 'iptal' | 'yok'> {
       rewardedReady = false;
       loadRewarded();
       track('rewarded_ad', { sonuc: r });
+      if (r === 'odul') noteRewardedWatched();
       resolve(r);
     };
     offs.push(ad.addAdEventListener(RewardedAdEventType.EARNED_REWARD, () => (earned = true)));

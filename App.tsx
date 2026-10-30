@@ -75,6 +75,7 @@ import { ensureSpecial } from './src/engine/specialEvent';
 import { popToFollowers } from './src/engine/fame';
 import { useSoundScene, type Scene } from './src/audio';
 import { initMonetization, PremiumManager } from './src/monetization';
+import { PremiumOfferModal } from './src/ui/PremiumCard';
 import { applyHeritage, heritageOf, type Heritage } from './src/engine/dynasty';
 import { unlockCtx } from './src/engine/cosmetics';
 import { refreshUnlocks } from './src/cosmetics';
@@ -527,6 +528,7 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <PremiumManager />
+      <PremiumOfferModal />
       <View style={{ flex: 1, backgroundColor: C.bg }}>
         {/* Tarayıcıda telefon genişliğinde ortalanır */}
         <View style={{ flex: 1, width: '100%', maxWidth: 560, alignSelf: 'center' }}>

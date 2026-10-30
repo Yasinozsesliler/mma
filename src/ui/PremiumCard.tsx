@@ -1,10 +1,12 @@
 // Ana menüde Tam Sürüm (Şampiyon Paketi, tek seferlik satın alma) ve maç sonundaki nazik teklif. Yalnızca mağaza sürümünde görünür.
 import { LinearGradient } from 'expo-linear-gradient';
-import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { sfx } from '../audio';
 import { L } from '../i18n';
-import { buy, buyPremium, dismissUpsell, MONETIZATION, PURCHASES, restorePremium, useAdFree, usePremium, usePremiumPrice, usePrice, useUpsellDue } from '../monetization';
+import { buy, buyPremium, closeOffer, dismissUpsell, MONETIZATION, PURCHASES, restorePremium, useAdFree, useOffer, usePremium, usePremiumPrice, usePrice, useUpsellDue, type OfferReason } from '../monetization';
+import { LEGEND_IDS } from '../engine/legendRun';
+import { getPref, setPref } from '../prefs';
 import { ADFREE_SKU } from '../monetization/skus';
 import { Button, Icon } from './components';
 import { C, F } from './theme';
@@ -45,12 +47,7 @@ export function PremiumCard() {
         </View>
       </View>
       <Text style={st.lead}>{L("Oyunun tamamı ücretsiz kalır. Tam sürüm tek seferlik alınır, abonelik yoktur.")}</Text>
-      {[L("Efsaneler Paketi dahil: bütün Efsane Yolları hikâyeleri"), L("Reklamsız oyun"), L("Ödüller reklam izlemeden, anında"), L("5 kariyer yuvası (3 yerine)"), L("Altın Seri kozmetik paketi ve Şampiyon çerçevesi"), L("Oyunun gelişimine destek")].map((t) => (
-        <View key={t} style={st.row}>
-          <Icon name="check-bold" size={14} color={C.green} />
-          <Text style={st.item}>{t}</Text>
-        </View>
-      ))}
+      <PremiumCompare />
       {/* Fiyat henüz gelmediyse de basılabilir: satın alma ürünleri önce yeniden ister */}
       <Button label={price ? L("Satın al · {0}", [price]) : L("Satın al")} icon="crown" tone="gold" disabled={busy} onPress={() => purchase(buyPremium)} />
       {adFree ? (
@@ -92,6 +89,16 @@ const st = StyleSheet.create({
   adFree: { color: C.green, fontFamily: F.semi, fontSize: 12, textAlign: 'center' },
   restore: { color: C.faint, fontFamily: F.semi, fontSize: 12, textAlign: 'center', textDecorationLine: 'underline', marginTop: 2 },
   msg: { color: C.dim, fontFamily: F.semi, fontSize: 12, textAlign: 'center' },
+  table: { borderWidth: 1, borderColor: C.border, borderRadius: 10, overflow: 'hidden' },
+  tRow: { flexDirection: 'row', alignItems: 'center', borderTopWidth: 1, borderTopColor: C.border, paddingVertical: 7, paddingHorizontal: 8 },
+  tHead: { borderTopWidth: 0, backgroundColor: '#00000055' },
+  tHeadText: { color: C.dim, fontFamily: F.display, fontSize: 11, letterSpacing: 1, textAlign: 'center' },
+  tCell: { flex: 1 },
+  tLabel: { flex: 1.5, color: C.text, fontFamily: F.semi, fontSize: 12 },
+  tFree: { color: C.dim, fontFamily: F.body, fontSize: 12, textAlign: 'center' },
+  tPro: { color: C.gold, fontFamily: F.bold, fontSize: 12, textAlign: 'center' },
+  mWrap: { flex: 1, backgroundColor: '#000000cc', justifyContent: 'center', paddingHorizontal: 16 },
+  mBox: { borderWidth: 1, borderColor: C.gold + '66', borderRadius: 16, padding: 16, gap: 10 },
 });
 
 /** Maç sonunda nazik tam sürüm teklifi: birkaç reklamdan sonra bir kez; "Şimdi değil" uzun süre gizler. */
@@ -125,6 +132,146 @@ export function FullVersionNudge() {
           </Pressable>
         </View>
       </View>
+    </LinearGradient>
+  );
+}
+
+/** Ücretsiz ve Şampiyon karşılaştırması: oyunun tamamı ücretsiz kalır, paket rahatlık ve ekstralar getirir. */
+export function PremiumCompare() {
+  const rows: [string, string, string][] = [
+    [L("Bütün oyun modları"), '✓', '✓'],
+    [L("Geçiş reklamları"), L("Var"), L("Yok")],
+    [L("Ödüllü teklifler"), L("Reklamla"), L("Anında")],
+    [L("Kariyer yuvası"), '3', '5'],
+    [L("Efsane Yolları"), L("Conor + 1. bölümler"), L("{0} efsanenin tamamı", [LEGEND_IDS.length])],
+    [L("Altın Seri ve Şampiyon çerçevesi"), '—', '✓'],
+  ];
+  return (
+    <View style={st.table}>
+      <View style={[st.tRow, st.tHead]}>
+        <Text style={[st.tCell, st.tLabel]} />
+        <Text style={[st.tCell, st.tHeadText]}>{L("ÜCRETSİZ")}</Text>
+        <Text style={[st.tCell, st.tHeadText, { color: C.gold }]}>👑 {L("ŞAMPİYON")}</Text>
+      </View>
+      {rows.map(([k, a, b]) => (
+        <View key={k} style={st.tRow}>
+          <Text style={[st.tCell, st.tLabel]}>{k}</Text>
+          <Text style={[st.tCell, st.tFree]}>{a}</Text>
+          <Text style={[st.tCell, st.tPro]}>{b}</Text>
+        </View>
+      ))}
+    </View>
+  );
+}
+
+/** Satın alma düğmesi + kısa sonuç mesajı (teklif kartları ve pencere için). */
+function BuyPremium() {
+  const price = usePremiumPrice();
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState('');
+  return (
+    <>
+      <Button
+        label={price ? L("Şampiyon ol · {0}", [price]) : L("Şampiyon ol")}
+        icon="crown"
+        tone="gold"
+        disabled={busy}
+        onPress={async () => {
+          setBusy(true);
+          setMsg('');
+          const r = await buyPremium();
+          setBusy(false);
+          if (r === 'ok') {
+            sfx('fanfare');
+            closeOffer();
+          } else if (r === 'hata') setMsg(L("Satın alma şu an yapılamadı. İnternet bağlantını kontrol edip tekrar dene."));
+        }}
+      />
+      {msg ? <Text style={st.msg}>{msg}</Text> : null}
+    </>
+  );
+}
+
+const OFFER_TEXT: Record<OfferReason, () => [string, string]> = {
+  reklam: () => [L("BUGÜN 3 REKLAM İZLEDİN"), L("Şampiyon Paketi ile bütün ödüller reklamsız ve anında gelir. Tek seferlik alım, abonelik yok.")],
+  yuva: () => [L("BÜTÜN YUVALAR DOLU"), L("Şampiyon Paketi ile 5 kariyer yuvası: yeni bir hikâyeye başlamak için eskisini silmen gerekmez.")],
+  kemer: () => [L("BİR ŞAMPİYONA YAKIŞIR PAKET"), L("Kemeri kazandın. Şampiyon Paketi ile oyunun bütün ekstralarını aç.")],
+};
+
+/** Uygulama kökünde: teklif penceresi (reklam yorgunluğu anı). */
+export function PremiumOfferModal() {
+  const reason = useOffer();
+  const premium = usePremium();
+  if (!reason || premium || !MONETIZATION || !PURCHASES) return null;
+  const [title, text] = OFFER_TEXT[reason]();
+  return (
+    <Modal transparent animationType="fade" onRequestClose={closeOffer}>
+      <View style={st.mWrap}>
+        <LinearGradient colors={['#2a1d05', '#0c0d10']} style={st.mBox}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <Icon name="crown" size={22} color={C.gold} />
+            <Text style={[st.title, { flex: 1 }]}>{title}</Text>
+            <Pressable onPress={closeOffer} hitSlop={10}>
+              <Icon name="close" size={20} color={C.faint} />
+            </Pressable>
+          </View>
+          <Text style={st.lead}>{text}</Text>
+          <PremiumCompare />
+          <BuyPremium />
+          <Pressable onPress={closeOffer} hitSlop={8} style={{ alignSelf: 'center' }}>
+            <Text style={st.later}>{L("Şimdi değil")}</Text>
+          </Pressable>
+        </LinearGradient>
+      </View>
+    </Modal>
+  );
+}
+
+/** Menüde: bütün yuvalar doluyken 5 yuva teklifi (kapatılırsa 2 hafta görünmez). */
+export function SlotsFullOffer() {
+  const premium = usePremium();
+  const [gone, setGone] = useState(() => Date.now() - Number(getPref('yol_teklif_yuva') || 0) < 14 * 24 * 3600 * 1000);
+  if (premium || gone || !MONETIZATION || !PURCHASES) return null;
+  const [title, text] = OFFER_TEXT.yuva();
+  return (
+    <LinearGradient colors={['#1d1606', '#0c0d10']} style={[st.nudge, { flexDirection: 'column', alignItems: 'stretch' }]}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <Icon name="crown" size={20} color={C.gold} />
+        <Text style={[st.nudgeTitle, { flex: 1 }]}>{title}</Text>
+        <Pressable
+          onPress={() => {
+            setPref('yol_teklif_yuva', String(Date.now()));
+            setGone(true);
+          }}
+          hitSlop={10}
+        >
+          <Icon name="close" size={18} color={C.faint} />
+        </Pressable>
+      </View>
+      <Text style={st.nudgeSub}>{text}</Text>
+      <BuyPremium />
+    </LinearGradient>
+  );
+}
+
+/** İlk UCC kemeri kutlamasında bir kez: şampiyonun en mutlu anında, ısrarsız. */
+export function BeltOffer() {
+  const premium = usePremium();
+  const [show] = useState(() => getPref('yol_teklif_kemer') !== '1');
+  useEffect(() => {
+    if (show) setPref('yol_teklif_kemer', '1');
+  }, [show]);
+  if (premium || !show || !MONETIZATION || !PURCHASES) return null;
+  const [title, text] = OFFER_TEXT.kemer();
+  return (
+    <LinearGradient colors={['#2a1d05', '#0c0d10']} style={[st.box, { marginTop: 4 }]}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <Icon name="crown" size={20} color={C.gold} />
+        <Text style={[st.title, { fontSize: 15 }]}>{title}</Text>
+      </View>
+      <Text style={st.lead}>{text}</Text>
+      <PremiumCompare />
+      <BuyPremium />
     </LinearGradient>
   );
 }

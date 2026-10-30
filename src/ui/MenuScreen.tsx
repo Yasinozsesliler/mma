@@ -21,7 +21,7 @@ import { loadDaily } from './DailyScreen';
 import { STAGE_LABELS } from '../engine/career';
 import { WEIGHT_CLASSES } from '../engine/data';
 import { slotsFor, type Slot } from '../storage';
-import { PremiumCard } from './PremiumCard';
+import { PremiumCard, SlotsFullOffer } from './PremiumCard';
 import { SettingsSheet } from './SettingsSheet';
 import { usePremium } from '../monetization';
 import { FighterAvatar } from './FighterAvatar';
@@ -390,6 +390,7 @@ export function MenuScreen({
           <Icon name="chevron-right" size={20} color={C.gold} />
         </Pressable>
       ) : null}
+      {!firstEmpty ? <SlotsFullOffer /> : null}
       {empty.length && any ? (
         <View style={ms.newRow}>
           {empty.map((x) => (
