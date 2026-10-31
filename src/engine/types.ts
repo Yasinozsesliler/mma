@@ -789,6 +789,8 @@ export interface GameState {
   yayinSon?: number;
   /** Efsane Yolu hikâye modu (legendRun.ts) */
   efsane?: import('./legendRun').LegendRun;
+  /** Son görülen soru/olay kimlikleri (variety.ts; tekrar önleme) */
+  tekrar?: Record<string, string[]>;
   /** Antrenör Modu kariyeri (coachMode.ts) */
   antrenor?: import('./coachMode').CoachRun;
   /** Zorluk seviyesi ve meydan okuma modu (challenges.ts) */

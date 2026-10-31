@@ -139,6 +139,8 @@ export function TrashTalkDuel({ s, header, choose }: { s: GameState; header: Rea
         </View>
       </LinearGradient>
 
+      {d.tarif && phase !== 'son' ? <Text style={st.tip}>🧠 {d.tarif}</Text> : null}
+
       {phase === 'lafi' || phase === 'cevap' ? (
         <View style={st.bubble}>
           <View style={st.bubbleHead}>
@@ -175,7 +177,7 @@ export function TrashTalkDuel({ s, header, choose }: { s: GameState; header: Rea
         <View style={[st.react, { borderColor: REACT[d.son.derece].renk }]}>
           <Text style={[st.reactText, { color: REACT[d.son.derece].renk }]}>{REACT[d.son.derece].metin()}</Text>
           <Text style={st.reactPts}>{d.son.puan > 0 ? `+${d.son.puan}` : d.son.puan}</Text>
-          {d.son.derece === 'kotu' || d.son.derece === 'sus' ? <Text style={st.tip}>{DUEL_TIP()}</Text> : null}
+          {d.son.derece === 'kotu' || d.son.derece === 'sus' ? <Text style={st.tip}>{DUEL_TIP(d)}</Text> : null}
         </View>
       ) : null}
 
