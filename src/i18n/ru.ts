@@ -8381,4 +8381,6 @@ export const RU: Record<string, string> = {
   "Ailen anlayış gösterdi: “Kafeste görüşürüz.”": "Семья поняла: «Увидимся у клетки».",
   "Rakibinin kopyasıyla bir hafta: onun ritmine alıştın.": "Неделя с двойником соперника — ты привык к его ритму.",
   "Kendi partnerlerinle devam ettin.": "Ты продолжил со своими партнёрами.",
+  "VE KAZANAN…": "И ПОБЕДИТЕЛЬ…",
+  "ADAYLAR": "НОМИНАНТЫ",
 };

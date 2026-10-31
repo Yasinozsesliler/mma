@@ -8345,4 +8345,6 @@ export const ES: Record<string, string> = {
   "Ailen anlayış gösterdi: “Kafeste görüşürüz.”": "Tu familia lo entendió: “Nos vemos en la jaula.”",
   "Rakibinin kopyasıyla bir hafta: onun ritmine alıştın.": "Una semana con el doble de tu rival: te acostumbraste a su ritmo.",
   "Kendi partnerlerinle devam ettin.": "Seguiste con tus propios compañeros.",
+  "VE KAZANAN…": "Y EL GANADOR ES…",
+  "ADAYLAR": "NOMINADOS",
 };

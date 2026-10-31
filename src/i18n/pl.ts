@@ -8320,4 +8320,6 @@ export const PL: Record<string, string> = {
   "Ailen anlayış gösterdi: “Kafeste görüşürüz.”": "Rodzina zrozumiała: „Zobaczymy się przy klatce”.",
   "Rakibinin kopyasıyla bir hafta: onun ritmine alıştın.": "Tydzień z sobowtórem rywala: przyzwyczaiłeś się do jego rytmu.",
   "Kendi partnerlerinle devam ettin.": "Zostałeś przy swoich partnerach.",
+  "VE KAZANAN…": "A ZWYCIĘZCĄ JEST…",
+  "ADAYLAR": "NOMINOWANI",
 };

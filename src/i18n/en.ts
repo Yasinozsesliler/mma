@@ -8333,4 +8333,6 @@ export const EN: Record<string, string> = {
   "Ailen anlayış gösterdi: “Kafeste görüşürüz.”": "Your family understood: “See you at the cage.”",
   "Rakibinin kopyasıyla bir hafta: onun ritmine alıştın.": "A week with your opponent's double: you got used to their rhythm.",
   "Kendi partnerlerinle devam ettin.": "You stuck with your own partners.",
+  "VE KAZANAN…": "AND THE WINNER IS…",
+  "ADAYLAR": "NOMINEES",
 };
