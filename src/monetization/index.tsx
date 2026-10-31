@@ -66,33 +66,82 @@ export async function initMonetization() {
   if (!isAdFree()) loadInterstitial();
 }
 
+// Yükleme: aynı anda tek istek; başarısız olursa bekleme her seferinde ikiye katlanır (1 → 2 → 4 … en fazla 10 dk),
+// başarıda sıfırlanır. Oyuncu uygulamaya dönünce ya da reklam anı gelip reklam hazır değilse bekleme atlanır.
+type Slot = { loading: boolean; fails: number; timer: ReturnType<typeof setTimeout> | null };
+const rSlot: Slot = { loading: false, fails: 0, timer: null };
+const iSlot: Slot = { loading: false, fails: 0, timer: null };
+const backoff = (fails: number) => Math.min(600_000, 60_000 * 2 ** Math.max(0, fails - 1));
+
+function retryLater(slot: Slot, load: () => void) {
+  slot.loading = false;
+  slot.fails++;
+  if (slot.timer) clearTimeout(slot.timer);
+  slot.timer = setTimeout(() => {
+    slot.timer = null;
+    load();
+  }, backoff(slot.fails));
+}
+
+/** Bekleyen denemeyi iptal edip hemen yükler (hazır değilse ve şu an yüklenmiyorsa). */
+function loadNow(slot: Slot, ready: boolean, load: () => void) {
+  if (ready || slot.loading || !started || !canAds) return;
+  if (slot.timer) clearTimeout(slot.timer);
+  slot.timer = null;
+  load();
+}
+
 function loadRewarded() {
+  if (rSlot.loading) return;
   try {
+    rSlot.loading = true;
     const ad = RewardedAd.createForAdRequest(AD_IDS.rewarded);
     rewarded = ad;
     rewardedReady = false;
-    ad.addAdEventListener(RewardedAdEventType.LOADED, () => (rewardedReady = true));
+    ad.addAdEventListener(RewardedAdEventType.LOADED, () => {
+      rewardedReady = true;
+      rSlot.loading = false;
+      rSlot.fails = 0;
+    });
     ad.addAdEventListener(AdEventType.ERROR, () => {
-      rewardedReady = false;
-      setTimeout(loadRewarded, 45_000);
+      // Gösterim sırasındaki hata showRewarded'da ele alınır; burada yalnızca yükleme hatası yeniden denenir
+      if (rewardedReady) return;
+      retryLater(rSlot, loadRewarded);
     });
     ad.load();
-  } catch {}
+  } catch {
+    retryLater(rSlot, loadRewarded);
+  }
 }
 
 function loadInterstitial() {
+  if (iSlot.loading || isAdFree()) return;
   try {
+    iSlot.loading = true;
     const ad = InterstitialAd.createForAdRequest(AD_IDS.interstitial);
     interstitial = ad;
     interstitialReady = false;
-    ad.addAdEventListener(AdEventType.LOADED, () => (interstitialReady = true));
+    ad.addAdEventListener(AdEventType.LOADED, () => {
+      interstitialReady = true;
+      iSlot.loading = false;
+      iSlot.fails = 0;
+    });
     ad.addAdEventListener(AdEventType.ERROR, () => {
-      interstitialReady = false;
-      setTimeout(loadInterstitial, 60_000);
+      if (interstitialReady) return;
+      retryLater(iSlot, loadInterstitial);
     });
     ad.load();
-  } catch {}
+  } catch {
+    retryLater(iSlot, loadInterstitial);
+  }
 }
+
+// Uygulamaya dönüldüğünde hazır olmayan reklamlar beklemeden yeniden istenir.
+AppState.addEventListener('change', (st) => {
+  if (st !== 'active') return;
+  loadNow(rSlot, rewardedReady, loadRewarded);
+  loadNow(iSlot, interstitialReady, loadInterstitial);
+});
 
 /**
  * Ödüllü reklam. Şampiyon Paketi sahiplerine ödül reklamsız ve anında verilir.
@@ -102,7 +151,7 @@ export function showRewarded(): Promise<'odul' | 'iptal' | 'yok'> {
   if (isPremium()) return Promise.resolve('odul');
   const ad = rewarded;
   if (!ad || !rewardedReady) {
-    if (started && canAds && !rewardedReady) loadRewarded();
+    loadNow(rSlot, rewardedReady, loadRewarded);
     track('rewarded_ad', { sonuc: 'yok' });
     return Promise.resolve('yok');
   }
@@ -147,7 +196,11 @@ export async function maybeInterstitial(careerFights: number, afterLoss = false)
   fightsSinceAd++;
   if (afterLoss || careerFights < 5 || fightsSinceAd < 4 || Date.now() - lastAdAt < 360_000) return false;
   const ad = interstitial;
-  if (!ad || !interstitialReady) return false;
+  if (!ad || !interstitialReady) {
+    // Reklam anı geldi ama hazır değil: bir sonraki an için hemen dene
+    loadNow(iSlot, interstitialReady, loadInterstitial);
+    return false;
+  }
   await new Promise<void>((resolve) => {
     const unmute = pushScene('off');
     const offs: (() => void)[] = [];
