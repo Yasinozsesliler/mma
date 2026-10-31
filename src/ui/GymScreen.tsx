@@ -12,7 +12,10 @@ import {
   CORNER_CALLS,
   boutPlans,
   describeStyle,
-  finishBout,
+  cornerCall,
+  OPP_TIPS,
+  temperOf,
+  TEMPERS,
   GYM_LEVELS,
   gymLevel,
   gymName,
@@ -179,25 +182,39 @@ function StudentCard({ st, onRelease, extra }: { st: Student; onRelease?: () => 
 
 type BoutView = { st: Student; rakip: NonNullable<Student['mac']>['rakip']; plans: PlanKey[] };
 
+function Side({ label, sag, hasar }: { label: string; sag: number; hasar: number }) {
+  return (
+    <View style={{ flex: 1, gap: 2 }}>
+      <Text style={gy.sideLabel}>{label}</Text>
+      <Bar value={sag} color={sag < 35 ? C.orange : C.blue} label={L("NEFES")} />
+      <Bar value={hasar} color={C.red} label={L("HASAR")} />
+    </View>
+  );
+}
+
 function BoutModal({ s, view, act, onClose }: { s: GameState; view: BoutView; act: Act; onClose: () => void }) {
   const { st, rakip, plans } = view;
   const live = s.salon?.ogrenciler.find((x) => x.id === st.id);
-  const r1 = live?.mac?.r1;
+  const b = live?.mac;
+  const k = b?.kose;
   const [out, setOut] = useState<BoutOutcome | null>(null);
-  const step = out ? 'sonuc' : r1 ? 'kose' : 'plan';
+  const step = out ? 'sonuc' : k ? 'kose' : 'plan';
   const rakipLook = lookFor({ id: st.id + rakip.soyad, uyruk: rakip.uyruk, kadin: rakip.kadin });
+  const temper = temperOf(live ?? st);
 
-  const finish = (call: CornerCall) => {
-    const box: { r: BoutOutcome | null } = { r: null };
-    act((x) => {
-      box.r = finishBout(x, st.id, call);
-    });
-    const res = box.r;
+  const done = (res: BoutOutcome | null) => {
     if (!res) return;
     setOut(res);
     sfx(res.kazandi ? 'win' : 'lose');
     buzz(res.kazandi ? 'basari' : 'hata');
     if (res.kazandi) void announce(L("Kazanan… {0}!", [`${st.ad}, "${st.lakap}", ${st.soyad}`]));
+  };
+  const call = (c: CornerCall) => {
+    const box: { r: BoutOutcome | null } = { r: null };
+    act((x) => {
+      box.r = cornerCall(x, st.id, c);
+    });
+    done(box.r);
   };
 
   return (
@@ -232,22 +249,48 @@ function BoutModal({ s, view, act, onClose }: { s: GameState; view: BoutView; ac
               <Card accent={C.blue}>
                 <Text style={gy.cardKicker}>{L("KEŞİF RAPORU")}</Text>
                 <Text style={gy.cardText}>{describeStyle(rakip)}</Text>
+                {b?.tipRapor ? <Text style={[gy.cardText, gy.divider]}>{L("Eski maçlarına bakılırsa: {0}", [OPP_TIPS[b.tipRapor]()])}</Text> : null}
+                <Text style={[gy.cardText, gy.divider]}>{L("{0}: {1}", [L("Öğrencin"), `${TEMPERS[temper].ad()} · ${TEMPERS[temper].aciklama()}`])}</Text>
               </Card>
               <Text style={gy.q}>{L("Oyun planını sen belirle:")}</Text>
               {plans.map((p) => (
                 <Choice key={p} icon={PLANS[p].ikon as IconName} label={PLANS[p].ad} desc={PLANS[p].aciklama} tone="gold" onPress={() => act((x) => startBout(x, st.id, p))} />
               ))}
             </>
-          ) : step === 'kose' && r1 ? (
+          ) : step === 'kose' && k ? (
             <>
-              <Card accent={r1.onde ? C.green : C.red}>
-                <Text style={gy.cardKicker}>{L("RAUNT ARASI")}</Text>
-                <Text style={gy.cardText}>{r1.metin}</Text>
+              <View style={gy.rounds}>
+                {Array.from({ length: k.toplam }, (_, i) => {
+                  const r = k.rauntlar[i];
+                  return (
+                    <View key={i} style={[gy.roundDot, r != null && { backgroundColor: r > 0 ? '#12351f' : '#3a1216', borderColor: r > 0 ? C.green : C.red }]}>
+                      <Text style={[gy.roundNo, r != null && { color: r > 0 ? C.green : C.red }]}>{r == null ? i + 1 : r > 0 ? '✓' : '✗'}</Text>
+                    </View>
+                  );
+                })}
+              </View>
+              <View style={{ flexDirection: 'row', gap: 12 }}>
+                <Side label={st.soyad.toLocaleUpperCase(LOC)} sag={k.sag} hasar={k.hasar} />
+                <Side label={rakip.soyad.toLocaleUpperCase(LOC)} sag={k.rSag} hasar={k.rHasar} />
+              </View>
+              <Card accent={k.rauntlar[k.rauntlar.length - 1] > 0 ? C.green : C.red}>
+                <Text style={gy.cardKicker}>{k.bitis ? L("MAÇ BİTTİ") : L("RAUNT ARASI · {0}/{1}", [k.rauntlar.length, k.toplam])}</Text>
+                {k.metin.split('\n').map((l, i) => (
+                  <Text key={i} style={[gy.cardText, i > 0 && gy.divider]}>
+                    {l}
+                  </Text>
+                ))}
               </Card>
-              <Text style={gy.q}>{L("{0} köşede sana bakıyor. Talimatın ne?", [st.ad])}</Text>
-              {(Object.keys(CORNER_CALLS) as CornerCall[]).map((c) => (
-                <Choice key={c} icon={CORNER_CALLS[c].ikon as IconName} label={CORNER_CALLS[c].ad} desc={CORNER_CALLS[c].aciklama} onPress={() => finish(c)} />
-              ))}
+              {k.bitis ? (
+                <Button label={L("Sonucu gör")} icon="flag-checkered" tone="gold" onPress={() => call('sakin')} />
+              ) : (
+                <>
+                  <Text style={gy.q}>{L("{0} köşede sana bakıyor. Talimatın ne?", [st.ad])}</Text>
+                  {k.secenek.map((c) => (
+                    <Choice key={c} icon={CORNER_CALLS[c].ikon as IconName} label={CORNER_CALLS[c].ad} desc={CORNER_CALLS[c].aciklama} onPress={() => call(c)} />
+                  ))}
+                </>
+              )}
             </>
           ) : out ? (
             <>
@@ -498,6 +541,10 @@ const gy = StyleSheet.create({
   cardText: { color: C.text, fontFamily: F.body, fontSize: 14, lineHeight: 20, paddingVertical: 4 },
   divider: { borderTopWidth: 1, borderTopColor: C.border },
   q: { color: C.text, fontFamily: F.display, fontSize: 16, marginTop: 4 },
+  rounds: { flexDirection: 'row', justifyContent: 'center', gap: 8 },
+  roundDot: { width: 34, height: 34, borderRadius: 17, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center', backgroundColor: '#0d0f13' },
+  roundNo: { color: C.faint, fontFamily: F.display, fontSize: 14 },
+  sideLabel: { color: C.dim, fontFamily: F.display, fontSize: 11, letterSpacing: 1 },
   result: { borderRadius: R + 4, padding: 18, alignItems: 'center' },
   resultTitle: { fontFamily: F.display, fontSize: 40 },
 });

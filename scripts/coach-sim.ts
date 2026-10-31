@@ -1,5 +1,5 @@
 // Antrenör Modu dengesi: otomatik hoca 15 yıl oynar (köşede doğru talimat ~%60, olaylarda rastgele seçim).
-import { boutPlans, finishBout, gymLevel, GYM_LEVELS, signCost, signStudent, startBout, upgradeGym, weakOf } from '../src/engine/academy';
+import { boutPlans, cornerCall, gymLevel, GYM_LEVELS, signCost, signStudent, startBout, upgradeGym, weakOf } from '../src/engine/academy';
 import { advanceCoachWeek, chooseEvent, coachGoals, createCoachGame, learnSkill, setFocus, SKILLS, type CoachSkill } from '../src/engine/coachMode';
 import { PLANS } from '../src/engine/fight';
 
@@ -30,8 +30,13 @@ for (let run = 0; run < RUNS; run++) {
         const plans = boutPlans(st.mac);
         const good = plans.find((p) => PLANS[p].hedef.includes(weakOf(st.mac!.rakip.stats))) ?? plans[0];
         startBout(s, st.id, Math.random() < 0.7 ? good : plans[0]);
-        const r1 = st.mac.r1!;
-        finishBout(s, st.id, Math.random() < 0.6 ? r1.dogru : 'bas');
+        // Oyuncu raunt aralarında %60 doğru talimat verir
+        let done = null as ReturnType<typeof cornerCall>;
+        while (st.mac?.kose && !done) {
+          const k = st.mac.kose;
+          const key = ({ onde: 'sakin', geride: 'bas', yakin: 'govde', onde_yorgun: 'nefes', rakip_yorgun: 'bas', kesik: 'kesik', sarsildi: 'nefes', rakip_sarsildi: 'bitir', yerde: 'kalk', rakip_ayak: 'bacak', rakip_govde: 'govde' } as const)[k.durum];
+          done = cornerCall(s, st.id, Math.random() < 0.6 && k.secenek.includes(key) ? key : k.secenek[Math.floor(Math.random() * k.secenek.length)]);
+        }
       }
     });
     advanceCoachWeek(s);

@@ -1,6 +1,10 @@
 // Salon testi: açılış, kayıt, gelişim, maçlar (köşede / köşesiz), terfi, gelir dengesi.
 // Çalıştırma: npx tsx scripts/academy-test.ts
-import { gymRanking, gymScore, finishBout, GYM_LEVELS, openGym, power, signCost, signStudent, startBout, boutPlans, upgradeGym, weeklyGymNet, type CornerCall } from '../src/engine/academy';
+import { gymRanking, gymScore, cornerCall, GYM_LEVELS, openGym, power, signCost, signStudent, startBout, boutPlans, upgradeGym, weeklyGymNet, type CornerCall, type CornerState } from '../src/engine/academy';
+
+// Durumun anahtar talimatı (oyuncu metni okuyup doğru karar verirse)
+const KEY: Record<string, CornerCall> = { onde: 'sakin', geride: 'bas', yakin: 'govde', onde_yorgun: 'nefes', rakip_yorgun: 'bas', kesik: 'kesik', sarsildi: 'nefes', rakip_sarsildi: 'bitir', yerde: 'kalk', rakip_ayak: 'bacak', rakip_govde: 'govde' };
+const bestCall = (k: CornerState): CornerCall => (k.secenek.includes(KEY[k.durum]) ? KEY[k.durum] : k.secenek[0]);
 import { advanceWeeks, createGame, rollStartingStats } from '../src/engine/character';
 import { setSeed } from '../src/engine/rng';
 
@@ -41,8 +45,13 @@ function career(seed: number, corner: 'iyi' | 'yok' | 'kotu', weeks = 260) {
       // İyi köşe: zaafa uyan planı seç, 1. raunda göre doğru talimatı ver. Kötü köşe: rastgele.
       const good = plans.find((p) => ['ayakta', 'kontra', 'bacak', 'govde', 'blitz', 'gures', 'gnp', 'yer', 'kafes', 'tempo', 'puan'].includes(p))!;
       startBout(s, st.id, corner === 'iyi' ? plans.find((p) => st.mac!.rakip && isGood(p, st.mac!.rakip.stats)) ?? good : plans[0]);
-      const call: CornerCall = corner === 'iyi' ? st.mac!.r1!.dogru : (['bas', 'sakin', 'indir'] as const)[w % 3];
-      const r = finishBout(s, st.id, call);
+      // İyi köşe: her raunt arası durumun anahtar talimatını ver. Kötü köşe: seçeneklerden rastgele.
+      let r = null as ReturnType<typeof cornerCall>;
+      while (st.mac?.kose && !r) {
+        const k = st.mac.kose;
+        const c: CornerCall = corner === 'iyi' ? bestCall(k) : k.secenek[(w + k.rauntlar.length) % k.secenek.length];
+        r = cornerCall(s, st.id, c);
+      }
       if (r) {
         stats.mac++;
         if (r.kazandi) stats.g++;

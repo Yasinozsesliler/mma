@@ -13,23 +13,6 @@ import { STAT_KEYS, STAT_LABELS } from './types';
 
 export type Tier = 'amator' | 'bolgesel' | 'buyuk' | 'ucc';
 
-export interface BoutState {
-  rakip: { ad: string; soyad: string; lakap: string; uyruk: string; kadin?: boolean; stil: Background; stats: Stats; rekor: { g: number; m: number } };
-  /** Maçın açıldığı hafta: BEKLEME hafta içinde köşeye gelinmezse ekip köşede durur. */
-  hafta: number;
-  /** Plan seçilince 1. raunt bir kez oynanır; köşe kararı bu duruma göre verilir. */
-  r1?: RoundOne;
-}
-
-export interface RoundOne {
-  plan: PlanKey;
-  edge: number;
-  onde: boolean;
-  dogru: CornerCall;
-  uyum: boolean;
-  metin: string;
-}
-
 export interface Student {
   id: string;
   ad: string;
@@ -55,6 +38,8 @@ export interface Student {
   mac?: BoutState;
   katilis: number;
   sampiyon?: boolean;
+  /** Köşe talimatlarına nasıl uyduğu (eski kayıtlarda kimlikten türetilir) */
+  karakter?: Temper;
 }
 
 export interface GymResult {
@@ -279,6 +264,7 @@ function makeStudent(s: GameState): Student {
     moral: 70,
     macHafta: 0,
     katilis: 0,
+    karakter: pick(TEMPER_KEYS),
   };
 }
 
@@ -329,8 +315,11 @@ function makeBout(s: GameState, st: Student): BoutState {
   const stats = baseStatsFor(stil, level);
   STAT_KEYS.forEach((k) => (stats[k] = Math.round(clamp(stats[k] + noise(4), 8, 96))));
   const tecrube = { amator: 2, bolgesel: 6, buyuk: 11, ucc: 16 }[st.seviye];
+  const tip = oppTipFor(stil);
   return {
     hafta: s.hafta,
+    tip,
+    tipRapor: scoutTip(s, tip),
     rakip: {
       ad: pick(st.kadin ? pool.kadin : pool.ad),
       soyad: st.kadin && pool.slav ? femSurname(pick(pool.soyad)) : pick(pool.soyad),
@@ -347,6 +336,300 @@ function makeBout(s: GameState, st: Student): BoutState {
 export const weakOf = (st: Stats): StatKey => STAT_KEYS.reduce((a, b) => (st[b] < st[a] ? b : a));
 export const strongOf = (st: Stats): StatKey => STAT_KEYS.reduce((a, b) => (st[b] > st[a] ? b : a));
 
+// ---------- Köşe: raunt raunt ----------
+// Maç raunt raunt oynanır. Her raunt arası durum değişir (kim önde, kim yorgun, kesik, sarsılma, rakibin
+// eğilimi) ve köşeye o duruma göre 4 talimat gelir. Doğru talimat tek değildir: öğrencinin karakteri, rakibin
+// gizli eğilimi ve kondisyon da işin içinde. Aynı rakip tipi bile farklı rauntlarda farklı cevap ister.
+
+export type CornerCall = 'bas' | 'sakin' | 'indir' | 'kalk' | 'govde' | 'bacak' | 'kontra' | 'nefes' | 'bitir' | 'kesik';
+
+export const CORNER_CALLS: Record<CornerCall, { ad: string; aciklama: string; ikon: string }> = {
+  bas: { ad: L("Baskıyı artır"), aciklama: L("Üstüne yürü, ritmi sen belirle. Nefes götürür."), ikon: 'fire' },
+  sakin: { ad: L("Sakin kal, puan topla"), aciklama: L("Temiz vuruş, iyi savunma. Hata yapma."), ikon: 'shield-check' },
+  indir: { ad: L("Yere götür"), aciklama: L("Takedown'a git, oyunu yere taşı."), ikon: 'arrow-collapse-down' },
+  kalk: { ad: L("Ayakta kal, kalçayı kaçır"), aciklama: L("Takedown'ları savun, sırtını kafese verme."), ikon: 'arrow-expand-up' },
+  govde: { ad: L("Gövdeye çalış"), aciklama: L("Karaciğer ve kaburga: nefesini kes, elleri düşsün."), ikon: 'target' },
+  bacak: { ad: L("Ön bacağa tekme"), aciklama: L("Hareketini öldür, ayağını sök."), ikon: 'shoe-sneaker' },
+  kontra: { ad: L("Bekle, kontra at"), aciklama: L("Onun gelmesine izin ver, açığını yakala."), ikon: 'shield-sword' },
+  nefes: { ad: L("Tempoyu düşür, nefeslen"), aciklama: L("Bu raundu idareli geçir, sonrasına güç sakla."), ikon: 'lungs' },
+  bitir: { ad: L("Şimdi bitir!"), aciklama: L("Sarsıldıysa üstüne çullan. Değilse pahalıya patlar."), ikon: 'lightning-bolt' },
+  kesik: { ad: L("Kesiği kapat"), aciklama: L("Cutman'e öncelik ver: doktor maçı durdurmasın."), ikon: 'bandage' },
+};
+
+/** Rakibin gizli eğilimi: keşif raporunda (her zaman doğru olmayan) bir ipucu olarak görünür. */
+export type OppTip = 'baskici' | 'kontraci' | 'guresci' | 'dayanikli' | 'vurucu';
+export const OPP_TIPS: Record<OppTip, () => string> = {
+  baskici: () => L("Erken baskıcı: ilk rauntta yüklenir, sonra düşer."),
+  kontraci: () => L("Kontracı: üstüne gelinmesini bekler, açığı cezalandırır."),
+  guresci: () => L("Güreşçi: indirmeye ve kafes kenarında boğmaya çalışır."),
+  dayanikli: () => L("Geç açılan: yavaş başlar, son rauntlarda güçlenir."),
+  vurucu: () => L("Ağır el: az atar ama tek vuruşla maçı bitirebilir."),
+};
+
+/** Öğrencinin karakteri talimatlara nasıl uyduğunu belirler. */
+export type Temper = 'dinleyen' | 'inatci' | 'sinirli' | 'sakin';
+export const TEMPERS: Record<Temper, { ad: () => string; aciklama: () => string }> = {
+  dinleyen: { ad: () => L("Söz dinler"), aciklama: () => L("Talimatları harfiyen uygular.") },
+  inatci: { ad: () => L("İnatçı"), aciklama: () => L("Bazen köşeyi duymaz, kendi bildiğini yapar.") },
+  sinirli: { ad: () => L("Sinirli"), aciklama: () => L("Baskı ve bitiriş talimatlarında coşar, sabırda zorlanır.") },
+  sakin: { ad: () => L("Soğukkanlı"), aciklama: () => L("Sabırlı oyunda ustadır, çılgın baskıda bocalar.") },
+};
+const TEMPER_KEYS = Object.keys(TEMPERS) as Temper[];
+/** Eski kayıtlardaki öğrencilerin karakteri kimliklerinden türetilir. */
+export const temperOf = (st: Pick<Student, 'id' | 'karakter'>): Temper => st.karakter ?? TEMPER_KEYS[[...st.id].reduce((a, c) => a + c.charCodeAt(0), 0) % TEMPER_KEYS.length];
+
+export type Situation = 'onde' | 'geride' | 'yakin' | 'onde_yorgun' | 'rakip_yorgun' | 'kesik' | 'sarsildi' | 'rakip_sarsildi' | 'yerde' | 'rakip_ayak' | 'rakip_govde';
+
+export interface BoutState {
+  rakip: { ad: string; soyad: string; lakap: string; uyruk: string; kadin?: boolean; stil: Background; stats: Stats; rekor: { g: number; m: number } };
+  /** Maçın açıldığı hafta: BEKLEME hafta içinde köşeye gelinmezse ekip köşede durur. */
+  hafta: number;
+  /** Rakibin gerçek eğilimi ve keşif raporunun söylediği (yanlış olabilir) */
+  tip?: OppTip;
+  tipRapor?: OppTip;
+  /** Raunt raunt maç durumu (plan seçilince başlar) */
+  kose?: CornerState;
+  /** Eski kayıtlar: tek raunt + tek talimat düzeni */
+  r1?: RoundOne;
+}
+
+export interface CornerState {
+  plan: PlanKey;
+  uyum: boolean;
+  toplam: number;
+  /** Raunt sonuçları: + öğrenci aldı, − rakip aldı */
+  rauntlar: number[];
+  sag: number;
+  hasar: number;
+  rSag: number;
+  rHasar: number;
+  durum: Situation;
+  metin: string;
+  secenek: CornerCall[];
+  /** Verilen talimatlar ve uyulup uyulmadığı */
+  talimat: { c: CornerCall; iyi: boolean; duymadi?: boolean }[];
+  /** Yeni rauntta "kesik kapatılmadı" riski */
+  kesikAcik?: boolean;
+  /** 1. rauntta bitiş olduysa */
+  bitis?: { kazandi: boolean; yontem: string; raunt: number };
+}
+
+export interface RoundOne {
+  plan: PlanKey;
+  edge: number;
+  onde: boolean;
+  dogru: CornerCall;
+  uyum: boolean;
+  metin: string;
+}
+
+const OPP_TIP_KEYS = Object.keys(OPP_TIPS) as OppTip[];
+
+function oppTipFor(stil: Background): OppTip {
+  if (['gures', 'sambo', 'judo', 'bjj'].includes(stil)) return chance(0.6) ? 'guresci' : pick(OPP_TIP_KEYS);
+  if (['boks', 'kyokushin'].includes(stil)) return chance(0.4) ? 'vurucu' : pick(OPP_TIP_KEYS);
+  return pick(OPP_TIP_KEYS);
+}
+
+/** Keşif raporu: salon seviyesi ve gözcülük arttıkça rakibin eğilimi daha doğru okunur. */
+function scoutTip(s: GameState, tip: OppTip): OppTip {
+  const ok = 0.55 + (s.salon?.seviye ?? 1) * 0.06 + skill(s, 'gozcu') * 0.1;
+  return chance(ok) ? tip : pick(OPP_TIP_KEYS.filter((x) => x !== tip));
+}
+
+const T = (arr: string[]) => pick(arr);
+
+function roundLine(st: Student, o: string, e: number, n: number): string {
+  const s = st.soyad;
+  if (e > 4) return T([L("{0}. raunt: {1} raundu açık ara aldı.", [n, s]), L("{0}. raunt: {1} her yerde üstündü, {2} cevap bulamadı.", [n, s, o]), L("{0}. raunt: kartlar net, raundu {1} aldı.", [n, s])]);
+  if (e > 0) return T([L("{0}. raunt: çekişmeli ama son saniyelerde {1} öne geçti.", [n, s]), L("{0}. raunt: kıl payı, muhtemelen {1} aldı.", [n, s]), L("{0}. raunt: {1} biraz daha temizdi.", [n, s])]);
+  if (e > -4) return T([L("{0}. raunt: yakın geçti, {1} biraz daha aktifti.", [n, o]), L("{0}. raunt: kartlarda {1} önde olabilir.", [n, o]), L("{0}. raunt: {1} raundu çaldı gibi.", [n, o])]);
+  return T([L("{0}. raunt: {1} raundu domine etti.", [n, o]), L("{0}. raunt: zor raunt, {1} sürekli geri adım attı.", [n, s]), L("{0}. raunt: {1} ritmi tamamen ele geçirdi.", [n, o])]);
+}
+
+const SIT_LINES: Record<Situation, (s: string, o: string) => string[]> = {
+  onde: (s, o) => [L("{0} önde. {1} çaresizleşmeye başladı.", [s, o]), L("Kartlarda öndeyiz. Şimdi akıllı olmak lazım.")],
+  geride: (s, o) => [L("{0} geride. Bir şeyler değişmeli.", [s]), L("{0} ritmi buldu; böyle giderse kaybederiz.", [o])],
+  yakin: (s, o) => [L("Başa baş gidiyor. Bu raunt maçı belirleyebilir."), L("{0} ile {1} arasında kılı kırk yaran bir maç.", [s, o])],
+  onde_yorgun: (s) => [L("{0} önde ama nefes nefese. Ağzı açık, elleri düşük.", [s]), L("Puanda öndeyiz ama {0} nefesini kaybediyor.", [s])],
+  rakip_yorgun: (s, o) => [L("{0} yoruldu: elleri düşüyor, ağzından nefes alıyor.", [o]), L("{0} bacaklarını zor taşıyor. Fırsat kapıda.", [o])],
+  kesik: (s) => [L("Kesik var: {0} kaşından kanıyor, doktor köşeye bakıyor.", [s]), L("Kesik kötü: {0} sağ gözünü zor görüyor.", [s])],
+  sarsildi: (s) => [L("{0} sarsıldı, bacakları titriyor. Köşeye zor geldi.", [s]), L("Son yumrukla {0} sallandı. Gözleri dalgın.", [s])],
+  rakip_sarsildi: (s, o) => [L("{0} sarsıldı! Köşesine sendeleyerek gitti.", [o]), L("{0} ayakta zor duruyor, gözleri kaydı.", [o])],
+  yerde: (s, o) => [L("{0} indirip kafese dayıyor; {1} altta eziliyor.", [o, s]), L("Raundun yarısı yerde geçti, {0} üstte kontrol etti.", [o])],
+  rakip_ayak: (s, o) => [L("{0} ön bacağına basamıyor, topallıyor.", [o]), L("Tekmeler işledi: {0} artık rahat basamıyor.", [o])],
+  rakip_govde: (s, o) => [L("Gövdeye gelen her vuruşta {0} eğiliyor, dirsekleri iniyor.", [o]), L("{0} karaciğerini korumak için elleri indiriyor.", [o])],
+};
+
+/** Durumun anahtar talimatı (seçeneklerde mutlaka bulunur) ve ikinci iyi seçenek. */
+const SIT_KEY: Record<Situation, CornerCall[]> = {
+  onde: ['sakin', 'kontra'],
+  geride: ['bas', 'indir'],
+  yakin: ['govde', 'bacak'],
+  onde_yorgun: ['nefes', 'sakin'],
+  rakip_yorgun: ['bas', 'govde'],
+  kesik: ['kesik', 'sakin'],
+  sarsildi: ['nefes', 'kalk'],
+  rakip_sarsildi: ['bitir', 'bas'],
+  yerde: ['kalk', 'kontra'],
+  rakip_ayak: ['bacak', 'bas'],
+  rakip_govde: ['govde', 'bitir'],
+};
+
+interface CallCtx {
+  durum: Situation;
+  tip: OppTip;
+  raunt: number;
+  toplam: number;
+  onde: boolean;
+  sag: number;
+  rHasar: number;
+  yerZayif: boolean;
+  temper: Temper;
+}
+
+/** Talimatın bu raunda katkısı (raunt avantajına eklenir). */
+function callValue(c: CornerCall, x: CallCtx): number {
+  let v = SIT_KEY[x.durum][0] === c ? 4.5 : SIT_KEY[x.durum][1] === c ? 2 : 0;
+  switch (c) {
+    case 'bas':
+      v += x.onde ? -0.5 : 1;
+      if (x.tip === 'kontraci') v -= 2.5;
+      if (x.tip === 'baskici' && x.raunt >= 3) v += 1.5;
+      if (x.sag < 35) v -= 2;
+      break;
+    case 'sakin':
+      v += x.onde ? 1 : -1.5;
+      if (x.tip === 'vurucu') v += 1;
+      break;
+    case 'indir':
+      v += x.yerZayif ? 2.5 : -1;
+      if (x.tip === 'guresci') v -= 2;
+      break;
+    case 'kalk':
+      v += x.tip === 'guresci' ? 2 : -0.5;
+      break;
+    case 'govde':
+      v += x.tip === 'baskici' || x.tip === 'dayanikli' ? 1 : 0.5;
+      break;
+    case 'bacak':
+      v += x.tip === 'kontraci' ? 1.5 : 0.3;
+      break;
+    case 'kontra':
+      v += x.tip === 'baskici' ? 2.5 : x.tip === 'kontraci' ? -2 : 0;
+      break;
+    case 'nefes':
+      v += x.sag < 45 ? 1.5 : -1.5;
+      if (x.raunt >= x.toplam) v -= 1;
+      break;
+    case 'bitir':
+      v += x.rHasar >= 45 ? 2 : -2.5;
+      break;
+    case 'kesik':
+      v += x.durum === 'kesik' ? 0 : -1;
+      break;
+  }
+  // Karakter: sinirli baskıda coşar, sabırda zorlanır; soğukkanlı tersi
+  const aggro = c === 'bas' || c === 'bitir';
+  const calm = c === 'sakin' || c === 'kontra' || c === 'nefes';
+  if (x.temper === 'sinirli') v += aggro ? 1 : calm ? -1 : 0;
+  if (x.temper === 'sakin') v += calm ? 1 : aggro ? -1 : 0;
+  if (x.temper === 'dinleyen') v *= 1.2;
+  return v;
+}
+
+function situationOf(k: CornerState, edge: number, tip: OppTip, b: BoutState): Situation {
+  const lead = k.rauntlar.reduce((a, r) => a + Math.sign(r), 0);
+  if (k.hasar > 25 && chance(0.12)) return 'kesik';
+  if (edge < -3 && k.hasar >= 45) return 'sarsildi';
+  if (edge > 3 && k.rHasar >= 45) return 'rakip_sarsildi';
+  if (tip === 'guresci' && edge < 0 && chance(0.6)) return 'yerde';
+  if (k.rSag < 40 && chance(0.7)) return 'rakip_yorgun';
+  if (lead > 0 && k.sag < 45) return 'onde_yorgun';
+  if ((k.plan === 'bacak' || k.talimat.some((t) => t.c === 'bacak')) && chance(0.5)) return 'rakip_ayak';
+  if ((k.plan === 'govde' || k.talimat.some((t) => t.c === 'govde')) && chance(0.45)) return 'rakip_govde';
+  if (Math.abs(edge) < 2.5 && chance(0.6)) return 'yakin';
+  if (weakOf(b.rakip.stats) === 'kondisyon' && k.rauntlar.length >= 2 && chance(0.4)) return 'rakip_yorgun';
+  return lead > 0 ? 'onde' : lead < 0 ? 'geride' : edge >= 0 ? 'onde' : 'geride';
+}
+
+const ALL_CALLS = (Object.keys(CORNER_CALLS) as CornerCall[]).filter((c) => c !== 'kesik');
+
+function offerCalls(d: Situation): CornerCall[] {
+  const keys = SIT_KEY[d];
+  const rest = shuffle(ALL_CALLS.filter((c) => !keys.includes(c))).slice(0, 2);
+  // İkinci iyi seçenek her zaman gelmez: bazen iki tuzak, bir anahtar
+  const second = chance(0.7) ? [keys[1]] : shuffle(ALL_CALLS.filter((c) => !keys.includes(c) && !rest.includes(c))).slice(0, 1);
+  return shuffle([keys[0], ...second, ...rest]);
+}
+
+/** Bir raundu oynatır. Dönüş: bitiriş olduysa sonucu. */
+function playRound(s: GameState, st: Student, b: BoutState, call: CornerCall | null): { kazandi: boolean; yontem: string; raunt: number } | null {
+  const k = b.kose!;
+  const n = k.rauntlar.length + 1;
+  const tip = b.tip ?? 'vurucu';
+  const temper = temperOf(st);
+  const yerZayif = ['yer', 'gures'].includes(weakOf(b.rakip.stats));
+  let callV = 0;
+  let duymadi = false;
+  if (call) {
+    const ctx: CallCtx = { durum: k.durum, tip, raunt: n, toplam: k.toplam, onde: k.rauntlar.reduce((a, r) => a + Math.sign(r), 0) > 0, sag: k.sag, rHasar: k.rHasar, yerZayif, temper };
+    duymadi = temper === 'inatci' && chance(0.3);
+    callV = duymadi ? 0 : callValue(call, ctx) + skill(s, 'taktik') * 0.4;
+    k.talimat.push({ c: call, iyi: callV >= 2, duymadi: duymadi || undefined });
+    // Kondisyon bedeli / kazancı
+    if (!duymadi) {
+      if (call === 'bas' || call === 'indir') k.sag -= 8;
+      if (call === 'bitir') k.sag -= k.rHasar >= 45 ? 6 : 14;
+      if (call === 'nefes') k.sag += 18;
+      if (call === 'govde') k.rSag -= 9;
+      if (call === 'bacak') k.rSag -= 5;
+    }
+  }
+  // Kesik kapatılmadıysa doktor durdurabilir
+  if (k.kesikAcik) {
+    k.kesikAcik = false;
+    if (call !== 'kesik' && chance(0.22)) return { kazandi: false, yontem: L("Doktor durdurdu (TKO)"), raunt: n };
+  }
+  const tipMod = tip === 'baskici' ? (n === 1 ? -2 : n >= 3 ? 1.5 : 0) : tip === 'dayanikli' ? (n === 1 ? 1 : n >= 3 ? -2 : 0) : 0;
+  // Rauntlar ayrı ayrı oynandığı için favori çoğunlukla daha sık kazanır: sabit −2 ve geniş zar eski dengeyi korur
+  const edge = power(st.stats) - power(b.rakip.stats) - 2 + (k.uyum ? (n === 1 ? 2.5 : 1) : -1) + (st.moral - 50) / 15 + (k.sag - k.rSag) / 22 + tipMod + callV + noise(6.5);
+  k.rauntlar.push(Math.round(edge * 10) / 10 || 0.1);
+  // Hasar ve kondisyon
+  const dmg = 10 + Math.abs(edge) * 2 + noise(3);
+  if (edge > 0) {
+    k.rHasar = clamp(k.rHasar + dmg * (tip === 'vurucu' ? 0.9 : 1), 0, 100);
+    k.hasar = clamp(k.hasar + 4 + (tip === 'vurucu' ? 4 : 0), 0, 100);
+  } else {
+    k.hasar = clamp(k.hasar + dmg * (tip === 'vurucu' ? 1.25 : 1), 0, 100);
+    k.rHasar = clamp(k.rHasar + 4, 0, 100);
+  }
+  k.sag = clamp(k.sag - 10, 0, 100);
+  k.rSag = clamp(k.rSag - (tip === 'baskici' ? 15 : 10), 0, 100);
+  // Bitiriş
+  const grappler = ['gures', 'bjj', 'judo', 'sambo'].includes(st.stil);
+  if (edge > 0) {
+    const p = clamp((k.rHasar - 50) / 60 + (call === 'bitir' && !duymadi && k.rHasar >= 45 ? 0.3 : 0), 0, 0.8);
+    if (chance(p)) return { kazandi: true, yontem: grappler && chance(0.55) ? L("Submission") : chance(0.5) ? 'KO' : 'TKO', raunt: n };
+  } else {
+    const rGrappler = ['gures', 'bjj', 'judo', 'sambo'].includes(b.rakip.stil);
+    const p = clamp((k.hasar - 55) / 60 + (call === 'bas' && k.hasar >= 55 ? 0.12 : 0) + (tip === 'vurucu' ? 0.06 : 0), 0, 0.75);
+    if (chance(p)) return { kazandi: false, yontem: rGrappler && chance(0.55) ? L("Submission") : chance(0.5) ? 'KO' : 'TKO', raunt: n };
+  }
+  // Bir sonraki raunt arası
+  const o = b.rakip.soyad;
+  k.durum = situationOf(k, edge, tip, b);
+  if (k.durum === 'kesik') k.kesikAcik = true;
+  const lines = [roundLine(st, o, edge, n)];
+  if (call && duymadi) lines.push(L("🙉 {0} talimatı duymadı, kendi bildiğini yaptı.", [st.ad]));
+  else if (call) lines.push(callV >= 2 ? L("🗣️ Talimat işledi: {0}.", [CORNER_CALLS[call].ad]) : callV < 0 ? L("🗣️ {0} bu raunda uymadı.", [CORNER_CALLS[call].ad]) : L("🗣️ {0}: fena değil ama fark yaratmadı.", [CORNER_CALLS[call].ad]));
+  lines.push(T(SIT_LINES[k.durum](st.soyad, o)));
+  k.metin = lines.join('\n');
+  const secenek = offerCalls(k.durum);
+  k.secenek = k.durum === 'kesik' ? ['kesik', ...secenek.filter((c) => c !== 'kesik').slice(0, 3)] : secenek;
+  return null;
+}
+
 /** Maç öncesi üç plan: biri rakibin zaafına oturur, ikisi değil. Sıra karışık. */
 export function boutPlans(b: BoutState): PlanKey[] {
   const weak = weakOf(b.rakip.stats);
@@ -357,37 +640,29 @@ export function boutPlans(b: BoutState): PlanKey[] {
   return shuffle([pickGood, ...shuffle(bad.filter((p) => p !== pickGood)).slice(0, 2)]);
 }
 
-export type CornerCall = 'bas' | 'sakin' | 'indir';
-
-export const CORNER_CALLS: Record<CornerCall, { ad: string; aciklama: string; ikon: string }> = {
-  bas: { ad: L("Baskıyı artır"), aciklama: L("Geride kaldıysan riski göze al."), ikon: 'fire' },
-  sakin: { ad: L("Sakin kal, puan topla"), aciklama: L("Öndeysen hata yapma."), ikon: 'shield-check' },
-  indir: { ad: L("Yere götür"), aciklama: L("Rakip yerde zayıfsa oyunu değiştir."), ikon: 'arrow-collapse-down' },
-};
-
-/** 1. raunt nasıl geçti? Maç açılınca bir kez hesaplanır ve köşe kararı için ipucu verir. */
-function roundOne(st: Student, b: BoutState, plan: PlanKey): RoundOne {
-  const uyum = PLANS[plan].hedef.includes(weakOf(b.rakip.stats));
-  const edge = power(st.stats) - power(b.rakip.stats) + (uyum ? 3 : -1) + (st.moral - 50) / 15 + noise(4);
-  const onde = edge >= 0;
-  const yerZayif = ['yer', 'gures'].includes(weakOf(b.rakip.stats));
-  const dogru: CornerCall = !onde ? (yerZayif ? 'indir' : 'bas') : 'sakin';
-  const o = b.rakip.soyad;
-  const metin = onde
-    ? uyum
-      ? L("1. raunt: plan işliyor. {0} rakibinin zaafına yükleniyor, raundu açık ara aldı.", [st.soyad])
-      : L("1. raunt: {0} raundu önde kapattı ama {1} hâlâ tehlikeli.", [st.soyad, o])
-    : yerZayif
-      ? L("1. raunt: {0} ayakta zorlandı. Ama {1} takedown'larda bocalıyor gibi.", [st.soyad, o])
-      : L("1. raunt: {0} geride. {1} ritmi ele geçirdi, bir şeyler değişmeli.", [st.soyad, o]);
-  return { plan, edge, onde, dogru, uyum, metin };
-}
-
-/** Köşeye geçildi, plan seçildi: 1. raunt oynanır. */
+/** Köşeye geçildi, plan seçildi: 1. raunt oynanır, raunt arası durum ve seçenekler gelir. */
 export function startBout(s: GameState, id: string, plan: PlanKey) {
   const st = s.salon?.ogrenciler.find((x) => x.id === id);
-  if (!st?.mac || st.mac.r1) return;
-  st.mac.r1 = roundOne(st, st.mac, plan);
+  const b = st?.mac;
+  if (!st || !b || b.kose) return;
+  b.r1 = undefined;
+  b.tip ??= oppTipFor(b.rakip.stil);
+  b.kose = {
+    plan,
+    uyum: PLANS[plan].hedef.includes(weakOf(b.rakip.stats)),
+    toplam: st.seviye === 'ucc' ? 5 : 3,
+    rauntlar: [],
+    sag: clamp(70 + (st.stats.kondisyon - 50) / 2, 45, 100),
+    hasar: 0,
+    rSag: clamp(70 + (b.rakip.stats.kondisyon - 50) / 2, 45, 100),
+    rHasar: 0,
+    durum: 'yakin',
+    metin: '',
+    secenek: [],
+    talimat: [],
+  };
+  const end = playRound(s, st, b, null);
+  if (end) b.kose.bitis = end;
 }
 
 export interface BoutOutcome {
@@ -397,31 +672,57 @@ export interface BoutOutcome {
   kese: number;
   un: number;
   terfi?: string;
+  /** Raunt sonuçları ve doğru talimat sayısı (sonuç ekranı için) */
+  rauntlar?: number[];
+  iyi?: number;
 }
 
-/** Maçı bitirir. Talimat yoksa ekip köşede durur (plan rastgele, köşe bonusu yok). */
-export function finishBout(s: GameState, id: string, call: CornerCall | null): BoutOutcome | null {
-  const g = s.salon;
-  const st = g?.ogrenciler.find((x) => x.id === id);
-  if (!g || !st?.mac) return null;
-  const b = st.mac;
+/** Raunt arası talimat: bir sonraki raunt oynanır. Maç bittiyse sonucu döner. */
+export function cornerCall(s: GameState, id: string, call: CornerCall): BoutOutcome | null {
+  const st = s.salon?.ogrenciler.find((x) => x.id === id);
+  const k = st?.mac?.kose;
+  if (!st || !k) return null;
+  if (k.bitis) return settle(s, st, k.bitis.kazandi, k.bitis.yontem, k.bitis.raunt, true);
+  const end = playRound(s, st, st.mac!, call);
+  if (end) return settle(s, st, end.kazandi, end.yontem, end.raunt, true);
+  if (k.rauntlar.length >= k.toplam) return decide(s, st, true);
+  return null;
+}
+
+function decide(s: GameState, st: Student, kose: boolean): BoutOutcome {
+  const k = st.mac!.kose!;
+  const won = k.rauntlar.filter((r) => r > 0).length;
+  return settle(s, st, won * 2 > k.rauntlar.length, L("Karar"), k.rauntlar.length, kose);
+}
+
+/** Talimat yoksa ekip köşede durur: maç kendiliğinden sonuçlanır (köşe bonusu yok). */
+export function finishBout(s: GameState, id: string, call: CornerCall | null = null): BoutOutcome | null {
+  const st = s.salon?.ogrenciler.find((x) => x.id === id);
+  const b = st?.mac;
+  if (!st || !b) return null;
+  if (call && b.kose) return cornerCall(s, id, call);
+  const kose = !!b.kose?.talimat.length;
+  if (!b.kose) startBout(s, id, pick(Object.keys(PLANS) as PlanKey[]));
+  const k = b.kose!;
+  if (k.bitis) return settle(s, st, k.bitis.kazandi, k.bitis.yontem, k.bitis.raunt, kose);
+  while (k.rauntlar.length < k.toplam) {
+    const end = playRound(s, st, b, null);
+    if (end) return settle(s, st, end.kazandi, end.yontem, end.raunt, kose);
+  }
+  return decide(s, st, kose);
+}
+
+function settle(s: GameState, st: Student, kazandi: boolean, yontem: string, raunt: number, kose: boolean): BoutOutcome {
+  const g = s.salon!;
+  const b = st.mac!;
+  const k = b.kose;
   const b0 = st.seviye;
   const sampiyon0 = !!st.sampiyon;
-  const kose = !!b.r1 && !!call;
-  const r1 = b.r1 ?? roundOne(st, b, pick(Object.keys(PLANS) as PlanKey[]));
-  const dogruKose = call === r1.dogru;
-  const edge = r1.edge + (kose ? (dogruKose ? 4 + skill(s, 'taktik') * 1.5 : -2) : 0) + noise(3);
-  const pWin = 1 / (1 + Math.exp(-edge / 6));
-  const kazandi = rand() < pWin;
-  const W = kazandi ? st : b.rakip;
-  const Lo = kazandi ? b.rakip : st;
-  const fark = Math.abs(power(W.stats) - power(Lo.stats)) + Math.abs(edge) / 2;
-  const grappler = ['gures', 'bjj', 'judo', 'sambo'].includes(W.stil);
-  const finish = chance(clamp(0.25 + fark / 40, 0.2, 0.7));
-  const yontem = !finish ? L("Karar") : grappler && chance(0.6) ? L("Submission") : chance(0.5) ? 'KO' : 'TKO';
-  const raunt = finish ? (call === 'bas' && kazandi ? 2 : randInt(2, 3)) : 3;
-  const satirlar = [r1.metin];
-  if (kose) satirlar.push(dogruKose ? L("🗣️ Köşeden doğru talimat: {0}. {1} anında uyguladı.", [CORNER_CALLS[call!].ad, st.soyad]) : L("🗣️ Talimat: {0}. Ama maçın gidişatına uymadı.", [CORNER_CALLS[call!].ad]));
+  const iyi = k?.talimat.filter((t) => t.iyi).length ?? 0;
+  const finish = yontem !== L("Karar");
+  const satirlar: string[] = [];
+  if (k) satirlar.push(k.rauntlar.map((r, i) => `${i + 1}: ${r > 0 ? '✅' : '❌'}`).join('  '));
+  if (kose && k) satirlar.push(L("🗣️ Köşeden {0} talimat, {1} tanesi maçı çevirdi.", [k.talimat.length, iyi]));
   else satirlar.push(L("🧢 Sen yoktun; köşede ekip durdu."));
   satirlar.push(
     kazandi
@@ -432,6 +733,7 @@ export function finishBout(s: GameState, id: string, call: CornerCall | null): B
         ? L("❌ {0}. rauntta {1}. {2} bu gece kaybetti.", [raunt, yontem, st.soyad])
         : L("❌ Hakem kararı rakipten yana. {0} kaybetti.", [st.soyad]),
   );
+  if (k && b.tipRapor && b.tip && b.tipRapor !== b.tip) satirlar.push(L("🔎 Keşif raporu yanılmış: {0}", [OPP_TIPS[b.tip]()]));
 
   // Sonuçlar
   const t = TIERS[st.seviye];
@@ -449,7 +751,7 @@ export function finishBout(s: GameState, id: string, call: CornerCall | null): B
   st.lig = { g: (st.lig?.g ?? 0) + (kazandi ? 1 : 0), m: (st.lig?.m ?? 0) + (kazandi ? 0 : 1) };
   st.moral = clamp(st.moral + (kazandi ? 10 : -12 + skill(s, 'motivasyon') * 3) + (kose ? 6 : -4), 0, 100);
   // Maç tecrübesi: kazanan da kaybeden de biraz gelişir.
-  STAT_KEYS.forEach((k) => chance(0.3) && (st.stats[k] = Math.min(99, st.stats[k] + 1)));
+  STAT_KEYS.forEach((k2) => chance(0.3) && (st.stats[k2] = Math.min(99, st.stats[k2] + 1)));
   st.mac = undefined;
   st.macHafta = s.hafta + randInt(...t.aralik);
 
@@ -488,7 +790,7 @@ export function finishBout(s: GameState, id: string, call: CornerCall | null): B
   if (pay > 0) satirlar.push(L("💵 Menajerlik payı: +{0}", [$(pay)]));
   if (s.antrenor) satirlar.push(...noteCoachBout(s, kazandi, kose, terfi && st.seviye !== b0 ? st.seviye : null, !!st.sampiyon && !sampiyon0));
   g.sonuclar = [{ hafta: s.hafta, ogrenci: `${st.ad} ${st.soyad}`, rakip: `${b.rakip.ad} ${b.rakip.soyad}`, kazandi, yontem, kose }, ...g.sonuclar].slice(0, 20);
-  return { kazandi, yontem, satirlar, kese: pay, un, terfi };
+  return { kazandi, yontem, satirlar, kese: pay, un, terfi, rauntlar: k?.rauntlar, iyi };
 }
 
 // ---------- Haftalık tik ----------
