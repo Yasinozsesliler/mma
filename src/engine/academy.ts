@@ -7,6 +7,7 @@ import { GYMS } from './gyms';
 import { BACKGROUNDS, baseStatsFor, COUNTRIES, femSurname, NAME_POOLS, NICKNAMES, WEIGHT_CLASSES } from './data';
 import { PLANS } from './fight';
 import { chance, clamp, noise, pick, rand, randInt, shuffle, uid, weighted } from './rng';
+import { noteCoachBout } from './coachMode';
 import type { Background, GameState, PlanKey, Stats, StatKey, WeightClass } from './types';
 import { STAT_KEYS, STAT_LABELS } from './types';
 
@@ -127,6 +128,8 @@ const $ = (n: number) => `$${Math.round(n).toLocaleString(LOC)}`;
 const TIER_ORDER: Tier[] = ['amator', 'bolgesel', 'buyuk', 'ucc'];
 
 export const gymLevel = (g: Gym) => GYM_LEVELS[g.seviye - 1];
+/** Antrenör Modu becerisi (normal kariyerde 0). */
+const skill = (s: GameState, k: import('./coachMode').CoachSkill) => s.antrenor?.beceri[k] ?? 0;
 export const gymStageOk = (s: GameState) => s.stage === 'buyuk' || s.stage === 'ufc';
 export const canOpenGym = (s: GameState) => gymStageOk(s) && followers(s) >= GYM_MIN_FOLLOWERS;
 export const power = (st: Stats) => Math.round(statAverage(st));
@@ -255,7 +258,7 @@ function makeStudent(s: GameState): Student {
   const stats = baseStatsFor(stil, level);
   STAT_KEYS.forEach((k) => (stats[k] = Math.round(clamp(stats[k] + noise(3), 8, 70))));
   // Ünlü, büyük salona daha yetenekli gençler gelir.
-  const potansiyel = Math.round(clamp(52 + g.un * 0.12 + g.seviye * 2.5 + noise(7), 48, 90));
+  const potansiyel = Math.round(clamp(52 + g.un * 0.12 + g.seviye * 2.5 + skill(s, 'gozcu') * 3 + noise(7), 48, 92));
   const siklets = Object.keys(WEIGHT_CLASSES) as WeightClass[];
   const yas = randInt(18, 23);
   return {
@@ -402,10 +405,12 @@ export function finishBout(s: GameState, id: string, call: CornerCall | null): B
   const st = g?.ogrenciler.find((x) => x.id === id);
   if (!g || !st?.mac) return null;
   const b = st.mac;
+  const b0 = st.seviye;
+  const sampiyon0 = !!st.sampiyon;
   const kose = !!b.r1 && !!call;
   const r1 = b.r1 ?? roundOne(st, b, pick(Object.keys(PLANS) as PlanKey[]));
   const dogruKose = call === r1.dogru;
-  const edge = r1.edge + (kose ? (dogruKose ? 4 : -2) : 0) + noise(3);
+  const edge = r1.edge + (kose ? (dogruKose ? 4 + skill(s, 'taktik') * 1.5 : -2) : 0) + noise(3);
   const pWin = 1 / (1 + Math.exp(-edge / 6));
   const kazandi = rand() < pWin;
   const W = kazandi ? st : b.rakip;
@@ -431,7 +436,7 @@ export function finishBout(s: GameState, id: string, call: CornerCall | null): B
   // Sonuçlar
   const t = TIERS[st.seviye];
   const kese = t.kese * (kazandi ? 2 : 1);
-  const pay = Math.round(kese * PAY);
+  const pay = Math.round(kese * (PAY + skill(s, 'menajer') * 0.04));
   s.para += pay;
   g.kasa += pay;
   let un = kazandi ? (finish ? 3 : 2) + TIER_ORDER.indexOf(st.seviye) : -1;
@@ -442,7 +447,7 @@ export function finishBout(s: GameState, id: string, call: CornerCall | null): B
     if (kose) g.koseG = (g.koseG ?? 0) + 1;
   }
   st.lig = { g: (st.lig?.g ?? 0) + (kazandi ? 1 : 0), m: (st.lig?.m ?? 0) + (kazandi ? 0 : 1) };
-  st.moral = clamp(st.moral + (kazandi ? 10 : -12) + (kose ? 6 : -4), 0, 100);
+  st.moral = clamp(st.moral + (kazandi ? 10 : -12 + skill(s, 'motivasyon') * 3) + (kose ? 6 : -4), 0, 100);
   // Maç tecrübesi: kazanan da kaybeden de biraz gelişir.
   STAT_KEYS.forEach((k) => chance(0.3) && (st.stats[k] = Math.min(99, st.stats[k] + 1)));
   st.mac = undefined;
@@ -481,6 +486,7 @@ export function finishBout(s: GameState, id: string, call: CornerCall | null): B
     s.haberler.unshift(terfi);
   }
   if (pay > 0) satirlar.push(L("💵 Menajerlik payı: +{0}", [$(pay)]));
+  if (s.antrenor) satirlar.push(...noteCoachBout(s, kazandi, kose, terfi && st.seviye !== b0 ? st.seviye : null, !!st.sampiyon && !sampiyon0));
   g.sonuclar = [{ hafta: s.hafta, ogrenci: `${st.ad} ${st.soyad}`, rakip: `${b.rakip.ad} ${b.rakip.soyad}`, kazandi, yontem, kose }, ...g.sonuclar].slice(0, 20);
   return { kazandi, yontem, satirlar, kese: pay, un, terfi };
 }
@@ -504,9 +510,12 @@ export function gymTick(s: GameState, weeks: number): string[] {
       // Salonda antrenman: potansiyeline kadar gelişir.
       const gap = st.potansiyel - statAverage(st.stats);
       if (gap > 0) {
-        const hiz = 0.18 * lv.gelisim * growthMultiplier(st.yas) * (0.6 + st.moral / 125);
+        const hiz = 0.18 * lv.gelisim * growthMultiplier(st.yas) * (0.6 + st.moral / 125) * (1 + skill(s, 'gelisim') * 0.12);
+        // Antrenör Modu: odaklanılan özellik iki kat hızlı, diğerleri biraz yavaş
+        const odak = s.antrenor?.odak[st.id];
         STAT_KEYS.forEach((k) => {
-          if (chance(hiz * clamp(gap / 12, 0.25, 1))) st.stats[k] = Math.min(99, st.stats[k] + 1);
+          const m = !odak || odak === 'denge' ? 1 : k === odak ? 2 : 0.8;
+          if (chance(hiz * m * clamp(gap / 12, 0.25, 1))) st.stats[k] = Math.min(99, st.stats[k] + 1);
         });
       }
       st.yas = (st.yas0 ?? st.yas) + Math.floor((s.hafta - st.katilis) / 52);

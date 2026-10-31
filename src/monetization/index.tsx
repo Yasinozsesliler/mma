@@ -25,6 +25,8 @@ export const PACK_STORE = Platform.OS !== 'ios';
 /** Efsaneler Paketi, Şampiyon + Koleksiyon ve kilitli efsanelerin 1. bölüm denemesi yalnızca iPhone'da.
  *  Android'de Conor ücretsiz, diğer efsaneler tam sürümle (Şampiyon Paketi) açılır. */
 export const LEGENDS_STORE = Platform.OS === 'ios';
+/** Antrenör Modu şimdilik yalnızca iPhone'da (Play'de ürünü yok). */
+export const COACH_STORE = Platform.OS === 'ios';
 export { dismissUpsell, useUpsellDue } from './upsell';
 export { closeOffer, openOffer, useOffer, type OfferReason } from './offers';
 

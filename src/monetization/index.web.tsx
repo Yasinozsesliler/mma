@@ -5,6 +5,7 @@ export const MONETIZATION = false;
 export const PURCHASES = false;
 export const PACK_STORE = false;
 export const LEGENDS_STORE = true;
+export const COACH_STORE = true;
 export { dismissUpsell, useUpsellDue } from './upsell';
 export { closeOffer, openOffer, useOffer, type OfferReason } from './offers';
 

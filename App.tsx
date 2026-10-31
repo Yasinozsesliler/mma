@@ -19,6 +19,8 @@ import { ErrorBoundary } from './src/ui/ErrorBoundary';
 import { installErrorLog } from './src/errorLog';
 import { installImmersive } from './src/immersive';
 import { GymScreen } from './src/ui/GymScreen';
+import { CoachScreen } from './src/ui/CoachScreen';
+import { createCoachGame } from './src/engine/coachMode';
 import { warmAnnouncer } from './src/announcer';
 import { CreateScreen } from './src/ui/CreateScreen';
 import { FightScreen } from './src/ui/FightScreen';
@@ -110,6 +112,7 @@ const PHASE_LABELS: Record<Phase, string> = {
   gece: L("Gece Hayatı"),
   basarimlar: L("Başarımlar"),
   salon: L("Salonum"),
+  antrenor: L("Antrenör Modu"),
   album: L("Kart Albümü"),
   podcast: L("Podcast"),
   odul: L("Ödül Töreni"),
@@ -220,6 +223,13 @@ export default function App() {
       console.warn('İşlem hatası:', e);
       setHata(L("Bu işlem şu an yapılamadı. Kariyerin güvende."));
       setTimeout(() => setHata(null), 4000);
+      return;
+    }
+    // Antrenör Modu: dövüşçü kariyerine ait başarım, olay, hedef ve tören kontrolleri çalışmaz
+    if (next.antrenor) {
+      setGame(next);
+      saveGame(next, slotRef.current);
+      putSave(slotRef.current, next);
       return;
     }
     // Olaylar, sosyal medya, gece hayatı…: popülerlik değişimi takipçiye yansır (maç sonucu kendi hesabını yapar).
@@ -352,6 +362,16 @@ export default function App() {
           putSave(x, s);
           setView('game');
         }}
+        onCoach={(isim, x, deneme) => {
+          const s = createCoachGame(isim, deneme);
+          track('coach_start', { yuva: x, deneme });
+          setSlot(x);
+          clearCheckpoints(x);
+          setGame(s);
+          void deleteGame(x).then(() => saveGame(s, x));
+          putSave(x, s);
+          setView('game');
+        }}
         onContinue={continueSlot}
         onDelete={removeSlot}
         onDaily={() => {
@@ -461,6 +481,9 @@ export default function App() {
         break;
       case 'salon':
         content = <GymScreen {...props} />;
+        break;
+      case 'antrenor':
+        content = <CoachScreen {...props} />;
         break;
       case 'album':
         content = <AlbumScreen {...props} />;

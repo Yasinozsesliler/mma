@@ -526,6 +526,7 @@ export type Phase =
   | 'gece'
   | 'basarimlar'
   | 'salon'
+  | 'antrenor'
   | 'album'
   | 'podcast'
   | 'odul'
@@ -788,6 +789,8 @@ export interface GameState {
   yayinSon?: number;
   /** Efsane Yolu hikâye modu (legendRun.ts) */
   efsane?: import('./legendRun').LegendRun;
+  /** Antrenör Modu kariyeri (coachMode.ts) */
+  antrenor?: import('./coachMode').CoachRun;
   /** Zorluk seviyesi ve meydan okuma modu (challenges.ts) */
   zorluk?: import('./challenges').Difficulty;
   meydan?: import('./challenges').Challenge;

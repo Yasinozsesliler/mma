@@ -17,4 +17,7 @@ export const LEGENDS_SKU = 'efsaneler_paketi';
 /** Şampiyon + Koleksiyon: Şampiyon Paketi'nin her şeyi + bütün kozmetik paketleri (Efsane Koleksiyonu). Önerilen ≈ 7,99 $ */
 export const ULTIMATE_SKU = 'sampiyon_koleksiyon';
 
-export const ALL_SKUS: string[] = [PREMIUM_SKU, ADFREE_SKU, ...COSMETIC_SKUS, BUNDLE_SKU, LEGENDS_SKU, ULTIMATE_SKU];
+/** Antrenör Modu: ayrı kariyer modu (hoca olarak oyna). Şampiyon Paketi'ne dahil değil. Önerilen ≈ 1,99 $ */
+export const COACH_SKU = 'antrenor_modu';
+
+export const ALL_SKUS: string[] = [PREMIUM_SKU, ADFREE_SKU, ...COSMETIC_SKUS, BUNDLE_SKU, LEGENDS_SKU, ULTIMATE_SKU, COACH_SKU];

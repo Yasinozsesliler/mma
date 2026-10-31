@@ -25,7 +25,8 @@ import { WEIGHT_CLASSES } from '../engine/data';
 import { slotsFor, type Slot } from '../storage';
 import { PremiumCard, SlotsFullOffer } from './PremiumCard';
 import { SettingsSheet } from './SettingsSheet';
-import { LEGENDS_STORE, usePremium } from '../monetization';
+import { COACH_STORE, LEGENDS_STORE, usePremium } from '../monetization';
+import { CoachStart } from './CoachScreen';
 import { FighterAvatar } from './FighterAvatar';
 import { BACKGROUNDS } from '../engine/data';
 import type { Background, GameState } from '../engine/types';
@@ -116,14 +117,25 @@ function SlotCard({ n, save, active, onNew, onContinue, onDelete, onDynasty }: {
           <Text style={[ms.slotName, SLANT]} numberOfLines={1}>
             {upName(`${f.ad} ${f.soyad}`, f.uyruk)}
           </Text>
-          <Text style={ms.slotMeta} numberOfLines={1}>
-            {f.yas} {L("yaş ·")}{' '}{WEIGHT_CLASSES[f.siklet].ad} · {STAGE_LABELS[save.stage].replace(/^Aşama \d · /, '')}
-          </Text>
-          <Text style={ms.slotRec}>
-            {pro ? '' : L("Amatör ")}
-            {r.g}-{r.m}-{r.b}
-            {belts ? `  ·  🏆 ${belts}` : ''}
-          </Text>
+          {save.antrenor ? (
+            <>
+              <Text style={ms.slotMeta} numberOfLines={1}>
+                {L("🧢 Antrenör · {0}", [save.salon?.ad ?? ''])}
+              </Text>
+              <Text style={ms.slotRec}>{L("Seviye {0} · {1} öğrenci{2}", [save.antrenor.seviye, save.salon?.ogrenciler.length ?? 0, save.antrenor.oduller.length ? `  ·  🏆 ${save.antrenor.oduller.length}` : ''])}</Text>
+            </>
+          ) : (
+            <>
+              <Text style={ms.slotMeta} numberOfLines={1}>
+                {f.yas} {L("yaş ·")}{' '}{WEIGHT_CLASSES[f.siklet].ad} · {STAGE_LABELS[save.stage].replace(/^Aşama \d · /, '')}
+              </Text>
+              <Text style={ms.slotRec}>
+                {pro ? '' : L("Amatör ")}
+                {r.g}-{r.m}-{r.b}
+                {belts ? `  ·  🏆 ${belts}` : ''}
+              </Text>
+            </>
+          )}
         </View>
       </View>
       {sure ? (
@@ -168,7 +180,7 @@ function SlotCard({ n, save, active, onNew, onContinue, onDelete, onDynasty }: {
   );
 }
 
-type Sheet = 'ayarlar' | 'meydan' | 'efsane' | 'rehber' | null;
+type Sheet = 'ayarlar' | 'meydan' | 'efsane' | 'rehber' | 'antrenor' | null;
 
 /** Menünün üstündeki efsane vitrini: yüzler yan yana, dokununca o efsanenin ayrıntısı açılır. */
 function LegendShowcase({ onOpen }: { onOpen: (id?: LegendId) => void }) {
@@ -267,6 +279,7 @@ export function MenuScreen({
   onNew,
   onChallenge,
   onLegend,
+  onCoach,
   onContinue,
   onDelete,
   onDaily,
@@ -281,6 +294,7 @@ export function MenuScreen({
   onNew: (slot: Slot) => void;
   onChallenge: (id: ChallengeId, slot: Slot) => void;
   onLegend: (id: LegendId, isim: LegendName, slot: Slot, deneme: boolean) => void;
+  onCoach: (isim: { ad: string; soyad: string; lakap: string; uyruk: string }, slot: Slot, deneme: boolean) => void;
   onContinue: (slot: Slot) => void;
   onDelete: (slot: Slot) => void;
   onDynasty: (slot: Slot) => void;
@@ -451,6 +465,7 @@ export function MenuScreen({
           badge={L("📒 {0}/{1}", [dreamProg.got, dreamProg.max])}
           onPress={onDream}
         />
+        {COACH_STORE ? <ModeTile icon="whistle" color={C.blue} title={L("Antrenör Modu")} sub={L("Bu sefer hoca sensin: salonunu kur, şampiyon yetiştir")} badge={L("YENİ")} onPress={() => setSheet('antrenor')} /> : null}
         <ModeTile icon="hanger" color={C.gold} title={L("Dolap")} sub={L("Şort, eldiven, çerçeve, kemer ve giriş müziği")} badge={yeniKoz ? L("{0} YENİ", [yeniKoz]) : undefined} onPress={onLocker} />
         <ModeTile icon="book-open-variant" color={C.blue} title={L("Rehber")} sub={L("Nasıl oynanır, gelişim, branşlar")} onPress={() => setSheet('rehber')} />
       </View>
@@ -464,6 +479,18 @@ export function MenuScreen({
             onStart={(id) => {
               setSheet(null);
               if (firstEmpty) onChallenge(id, firstEmpty);
+            }}
+          />
+        </MenuSheet>
+      ) : null}
+
+      {sheet === 'antrenor' ? (
+        <MenuSheet title={L("Antrenör Modu")} icon="whistle" onClose={() => setSheet(null)}>
+          <CoachStart
+            canStart={!!firstEmpty}
+            onStart={(isim, deneme) => {
+              setSheet(null);
+              if (firstEmpty) onCoach(isim, firstEmpty, deneme);
             }}
           />
         </MenuSheet>

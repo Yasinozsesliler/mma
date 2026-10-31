@@ -1,6 +1,6 @@
 // Kendi salonun: salonu aç / büyüt, öğrenci yetiştir, maçlarında köşede dur.
 import { LinearGradient } from 'expo-linear-gradient';
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { announce } from '../announcer';
 import { sfx } from '../audio';
@@ -120,7 +120,7 @@ function OpenGym({ s, act }: { s: GameState; act: Act }) {
 
 // ---------- Öğrenci kartı ----------
 
-function StudentCard({ st, onRelease }: { st: Student; onRelease?: () => void }) {
+function StudentCard({ st, onRelease, extra }: { st: Student; onRelease?: () => void; extra?: ReactNode }) {
   const [sure, setSure] = useState(false);
   const pw = power(st.stats);
   return (
@@ -154,6 +154,7 @@ function StudentCard({ st, onRelease }: { st: Student; onRelease?: () => void })
         </Text>
       </View>
       <Bar value={st.moral} color={st.moral < 30 ? C.red : st.moral < 60 ? C.orange : C.blue} label={L("MORAL")} />
+      {extra}
       {onRelease ? (
         sure ? (
           <View style={[gy.row, { gap: 8, marginTop: 6 }]}>
@@ -315,7 +316,8 @@ function RankTable({ rows, sira, puan }: { rows: RankRow[]; sira: number; puan: 
 
 // ---------- Salon ----------
 
-export function GymScreen({ s, act }: { s: GameState; act: Act }) {
+/** Antrenör Modu aynı ekranı kullanır: üst bölüm, alt çubuk ve öğrenci kartı ekleri dışarıdan gelir. */
+export function GymScreen({ s, act, top, footer, studentExtra }: { s: GameState; act: Act; top?: ReactNode; footer?: ReactNode; studentExtra?: (st: Student) => ReactNode }) {
   const [bout, setBout] = useState<BoutView | null>(null);
   const g = s.salon;
   if (!g) return <OpenGym s={s} act={act} />;
@@ -328,7 +330,7 @@ export function GymScreen({ s, act }: { s: GameState; act: Act }) {
   const rank = gymRanking(s);
 
   return (
-    <Screen footer={<Button label={L("Ana ekrana dön")} icon="arrow-left" tone="ghost" onPress={() => act((x) => (x.phase = 'hub'))} />}>
+    <Screen footer={footer ?? <Button label={L("Ana ekrana dön")} icon="arrow-left" tone="ghost" onPress={() => act((x) => (x.phase = 'hub'))} />}>
       <LinearGradient colors={['#2a1d06', '#0e0c07', '#08090b']} style={gy.hero}>
         <Text style={gy.kicker}>{lv.ad.toLocaleUpperCase(LOC)}</Text>
         <Text style={[gy.title, SLANT]} numberOfLines={2} adjustsFontSizeToFit>
@@ -355,6 +357,8 @@ export function GymScreen({ s, act }: { s: GameState; act: Act }) {
           </Text>
         ) : null}
       </LinearGradient>
+
+      {top}
 
       {bouts.length ? (
         <>
@@ -385,7 +389,7 @@ export function GymScreen({ s, act }: { s: GameState; act: Act }) {
 
       <Section>{L("ÖĞRENCİLER ({0}/{1})", [g.ogrenciler.length, lv.kapasite])}</Section>
       {g.ogrenciler.length ? (
-        g.ogrenciler.map((st) => <StudentCard key={st.id} st={{ ...st, macHafta: st.macHafta - s.hafta }} onRelease={() => act((x) => releaseStudent(x, st.id))} />)
+        g.ogrenciler.map((st) => <StudentCard key={st.id} st={{ ...st, macHafta: st.macHafta - s.hafta }} onRelease={() => act((x) => releaseStudent(x, st.id))} extra={studentExtra?.(st)} />)
       ) : (
         <P dim>{L("Henüz öğrencin yok. Aşağıdaki yetenek avından ilk öğrencini seç.")}</P>
       )}
