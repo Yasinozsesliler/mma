@@ -218,6 +218,12 @@ export interface NightBout {
   sure: string;
   /** Gecenin Performansı için puan */
   puan: number;
+  /** Tahmin kartı bilgisi: karneler, tarzlar ve A'nın kazanma olasılığı (eski kayıtlarda yok) */
+  ra?: string;
+  rb?: string;
+  sa?: Background;
+  sb?: Background;
+  pa?: number;
 }
 export interface FightNight {
   ad: string;
@@ -229,6 +235,9 @@ export interface FightNight {
   sonra: NightBout[];
   seyirci: number;
   yaris?: { aday: string; adayYontem: string; adayPuan: number; benim: number; kazandi: boolean };
+  /** Oyuncunun tahminleri: maç anahtarı → seçilen köşe ve bitiriş mi */
+  tahmin?: Record<string, { k: 0 | 1; bit?: boolean }>;
+  tahminSonuc?: { dogru: number; yontem: number; toplam: number; para: number; kahin: boolean };
 }
 
 export interface FightHistory {

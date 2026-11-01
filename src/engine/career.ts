@@ -47,7 +47,7 @@ import { OWNER_EVENTS, ownerReaction, ownerRel } from './owners';
 import { socialAfterFight, socialTick } from './social';
 import { merchIncome, restMultiplier } from './shop';
 import { chance, clamp, pick, rand, randInt, uid } from './rng';
-import { performanceRace } from './fightNight';
+import { performanceRace, settlePredictions } from './fightNight';
 import { fightMementos, stampCity } from './memories';
 import { worldTick } from './worldLife';
 import { rutinAfterFight } from './body';
@@ -292,6 +292,12 @@ export function finishFight(s: GameState) {
   let bonusSay = 0;
   // Gecenin Performansı: kartın en iyi diğer bitirişiyle yarış (fightNight.ts); gece kurulmadıysa eski şans.
   const yaris = s.pending.gece ? performanceRace(s) : won && finishMethod && chance(r.raunt === 1 ? 0.5 : 0.35);
+  const tahminPara = settlePredictions(s);
+  const ts = s.pending.gece?.tahminSonuc;
+  if (ts) {
+    kazanc += tahminPara;
+    lines.push(ts.kahin ? tL("🔮 KÂHİN! Kartın {0} maçını da bildin: +{1}", [ts.toplam, money(tahminPara)]) : tL("🔮 Tahminlerin: {0}/{1} doğru{2}", [ts.dogru, ts.toplam, tahminPara ? ` · +${money(tahminPara)}` : '']));
+  }
   if (bonus && won && finishMethod && yaris) {
     kazanc += bonus;
     bonusSay++;

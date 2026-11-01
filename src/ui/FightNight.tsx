@@ -5,8 +5,8 @@ import { useEffect, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import Svg, { Defs, Ellipse, Polygon, RadialGradient, LinearGradient as SvgLinear, Stop } from 'react-native-svg';
 import { sfx } from '../audio';
-import { ORGS, WEIGHT_CLASSES } from '../engine/data';
-import { SLOT_LABEL } from '../engine/fightNight';
+import { BACKGROUNDS, ORGS, WEIGHT_CLASSES } from '../engine/data';
+import { judgePick, predictionBouts, SLOT_LABEL } from '../engine/fightNight';
 import { coachLine } from '../engine/coachBond';
 import { methodLabel } from '../engine/fight';
 import type { FightNight, GameState, NightBout } from '../engine/types';
@@ -19,10 +19,14 @@ const short = (n: string) => {
   return p.length > 1 ? `${p[0][0]}. ${p.slice(1).join(' ')}` : n;
 };
 
-function BoutRow({ b, shown, dim }: { b: NightBout; shown: boolean; dim?: boolean }) {
+type Pick = { k: 0 | 1; bit?: boolean };
+
+function BoutRow({ b, shown, dim, pick }: { b: NightBout; shown: boolean; dim?: boolean; pick?: Pick }) {
   const win = (i: 0 | 1) => shown && b.kazanan === i;
+  const j = pick && shown ? judgePick(b, pick) : null;
   return (
-    <View style={[fn.row, dim && { opacity: 0.55 }]}>
+    <View style={[fn.row, dim && { opacity: 0.55 }, pick && fn.picked]}>
+      {pick ? <Text style={[fn.mark, j && { color: j.dogru ? C.green : C.red }]}>{j ? (j.dogru ? '✓' : '✗') : '🔮'}</Text> : null}
       <Text style={[fn.name, win(0) && fn.winner, shown && b.kazanan === 1 && fn.loser]} numberOfLines={1}>
         {short(b.a)}
       </Text>
@@ -62,20 +66,29 @@ function Spot({ w }: { w: number }) {
 }
 
 /** Kulis: kafese yürümeden önceki gece. */
-export function FightNightIntro({ s, onDone }: { s: GameState; onDone: () => void }) {
+export function FightNightIntro({ s, onDone, onPredict }: { s: GameState; onDone: () => void; onPredict: (p: Record<string, Pick>) => void }) {
   const g = s.pending.gece!;
   const opp = s.pending.dovus!.opp;
   const { width: W } = useWindowDimensions();
   const [n, setN] = useState(0);
+  const preds = predictionBouts(g);
+  const [tahmin, setTahmin] = useState(preds.length > 0 && !g.tahmin);
+  const [picks, setPicks] = useState<Record<string, Pick>>(g.tahmin ?? {});
   const bitti = n >= g.once.length;
   useEffect(() => {
     sfx('swell', 0.35);
   }, []);
   useEffect(() => {
-    if (bitti) return;
+    if (bitti || tahmin) return;
     const t = setTimeout(() => setN((x) => x + 1), n === 0 ? 900 : 650);
     return () => clearTimeout(t);
-  }, [n, bitti]);
+  }, [n, bitti, tahmin]);
+  const lock = (p: Record<string, Pick>) => {
+    onPredict(p);
+    setPicks(p);
+    setTahmin(false);
+  };
+  const keyOf = (i: number) => (i < g.once.length ? `o${i}` : `s${i - g.once.length - 1}`);
   // Kart ana maçtan aşağı doğru listelenir (afiş düzeni).
   const toplam = g.once.length + 1 + g.sonra.length;
   const anaKartBas = Math.max(0, toplam - 5);
@@ -109,13 +122,14 @@ export function FightNightIntro({ s, onDone }: { s: GameState; onDone: () => voi
             </View>
           </View>
 
+          {tahmin ? <PredictionCard preds={preds} picks={picks} setPicks={setPicks} /> : null}
           <View style={fn.card}>
             {satirlar.map(({ i, b }) => (
               <View key={i}>
                 {i === toplam - 1 ? <Text style={fn.group}>{anaKartBas > 0 ? L("ANA KART") : L("GECENİN KARTI")}</Text> : null}
                 {anaKartBas > 0 && i === anaKartBas - 1 ? <Text style={fn.group}>{L("ÖN ELEMELER")}</Text> : null}
                 {b ? (
-                  <BoutRow b={b} shown={i < n} dim={i >= g.once.length} />
+                  <BoutRow b={b} shown={!tahmin && i < n} dim={i >= g.once.length} pick={picks[keyOf(i)]} />
                 ) : (
                   <LinearGradient colors={['#3a0d12', '#1a0a0d']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={[fn.row, fn.me]}>
                     <Text style={[fn.name, { color: '#fff' }]} numberOfLines={1}>
@@ -144,10 +158,89 @@ export function FightNightIntro({ s, onDone }: { s: GameState; onDone: () => voi
           </View>
         </ScrollView>
         <View style={fn.foot}>
-          <Button label={bitti ? L("KAFESE YÜRÜ") : L("Sonuçları geç")} tone={bitti ? 'gold' : 'ghost'} icon={bitti ? 'walk' : 'fast-forward'} onPress={() => (bitti ? onDone() : setN(g.once.length))} />
+          {tahmin ? (
+            <View style={{ gap: 8 }}>
+              <Button label={L("Tahminleri kilitle")} tone="gold" icon="crystal-ball" disabled={preds.some((p) => !picks[p.key])} onPress={() => lock(picks)} />
+              <Button label={L("Tahmin yapmadan geç")} tone="ghost" onPress={() => lock({})} />
+            </View>
+          ) : (
+            <Button label={bitti ? L("KAFESE YÜRÜ") : L("Sonuçları geç")} tone={bitti ? 'gold' : 'ghost'} icon={bitti ? 'walk' : 'fast-forward'} onPress={() => (bitti ? onDone() : setN(g.once.length))} />
+          )}
         </View>
       </View>
     </Modal>
+  );
+}
+
+/** Kulis: kartın en üstündeki maçlar için tahmin (kazanan + isteğe bağlı bitiriş/karar). Bilgi gerçek: karne ve favori yüzdesi. */
+function PredictionCard({ preds, picks, setPicks }: { preds: { key: string; b: NightBout }[]; picks: Record<string, Pick>; setPicks: (p: Record<string, Pick>) => void }) {
+  const set = (key: string, p: Partial<Pick>) => {
+    const cur = picks[key];
+    setPicks({ ...picks, [key]: { k: p.k ?? cur?.k ?? 0, bit: 'bit' in p ? p.bit : cur?.bit } });
+  };
+  return (
+    <View style={fn.pred}>
+      <Text style={fn.predHead}>{L("🔮 TAHMİN KARTI")}</Text>
+      <Text style={fn.predSub}>{L("Kartın zirvesindeki maçları tahmin et. Doğru kazanan para kazandırır; favori olmayanı bilmek daha değerli. Bitiriş ya da kararı da bilirsen ek ödül.")}</Text>
+      {preds.map(({ key, b }) => {
+        const p = picks[key];
+        const side = (i: 0 | 1) => {
+          const pct = Math.round((i === 0 ? b.pa! : 1 - b.pa!) * 100);
+          const on = p?.k === i;
+          return (
+            <Pressable key={i} onPress={() => set(key, { k: i })} style={[fn.side, on && fn.sideOn]}>
+              <Text style={[fn.sideName, on && { color: C.gold }]} numberOfLines={1}>
+                {short(i === 0 ? b.a : b.b)}
+              </Text>
+              <Text style={fn.sideMeta} numberOfLines={1}>
+                {(i === 0 ? b.ra : b.rb) ?? ''} · {BACKGROUNDS[(i === 0 ? b.sa : b.sb) ?? 'boks'].ad}
+              </Text>
+              <Text style={[fn.sidePct, pct >= 50 && { color: C.green }]}>{pct >= 50 ? L("Favori %{0}", [pct]) : L("Sürpriz %{0}", [pct])}</Text>
+            </Pressable>
+          );
+        };
+        const opts: [boolean, string][] = [
+          [true, L("Bitiriş")],
+          [false, L("Karar")],
+        ];
+        return (
+          <View key={key} style={fn.predBout}>
+            <Text style={fn.wc}>{WEIGHT_CLASSES[b.siklet].ad.toLocaleUpperCase(LOC)}</Text>
+            <View style={{ flexDirection: 'row', gap: 6, marginTop: 4 }}>
+              {side(0)}
+              {side(1)}
+            </View>
+            <View style={{ flexDirection: 'row', gap: 6, marginTop: 6 }}>
+              {opts.map(([v, t]) => (
+                <Pressable key={t} onPress={() => set(key, { bit: p?.bit === v ? undefined : v })} style={[fn.chip, p?.bit === v && fn.chipOn]}>
+                  <Text style={[fn.chipText, p?.bit === v && { color: '#111' }]}>{t}</Text>
+                </Pressable>
+              ))}
+            </View>
+          </View>
+        );
+      })}
+    </View>
+  );
+}
+
+/** Maç sonu: tahminlerin sonucu. */
+function PredictionResults({ g }: { g: FightNight }) {
+  const t = g.tahminSonuc;
+  if (!t || !t.toplam || !g.tahmin) return null;
+  const rows = Object.entries(g.tahmin)
+    .map(([key, p]) => ({ key, p, b: (key[0] === 'o' ? g.once : g.sonra)[Number(key.slice(1))] }))
+    .filter((x) => x.b);
+  return (
+    <View style={[fn.panel, t.kahin && { borderColor: C.gold }]}>
+      <Text style={[fn.panelHead, t.dogru ? { color: C.gold } : null]}>
+        {t.kahin ? L("🔮 KÂHİN · {0}/{0} DOĞRU", [t.toplam]) : L("🔮 TAHMİNLERİN · {0}/{1} DOĞRU", [t.dogru, t.toplam])}
+        {t.para ? `  +$${t.para.toLocaleString(LOC)}` : ''}
+      </Text>
+      {rows.map(({ key, p, b }) => (
+        <BoutRow key={key} b={b} shown pick={p} />
+      ))}
+    </View>
   );
 }
 
@@ -163,6 +256,7 @@ export function NightResults({ s }: { s: GameState }) {
   return (
     <>
       <Section>{L("GECENİN KARTI")}</Section>
+      <PredictionResults g={g} />
       {yarisVar && y ? (
         <LinearGradient colors={y.kazandi ? ['#2a2108', '#121014'] : ['#17181d', '#0e0f12']} style={[fn.race, y.kazandi && { borderColor: C.gold }]}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -255,4 +349,18 @@ const fn = StyleSheet.create({
   panelHead: { color: C.faint, fontFamily: F.display, fontSize: 10, letterSpacing: 2, marginTop: 4, marginBottom: 2, marginLeft: 6 },
   more: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingVertical: 8 },
   moreText: { color: C.dim, fontFamily: F.semi, fontSize: 12 },
+  picked: { backgroundColor: '#15110a' },
+  mark: { width: 18, color: C.gold, fontFamily: F.bold, fontSize: 13 },
+  pred: { backgroundColor: '#100d07', borderRadius: R, borderWidth: 1, borderColor: C.gold + '66', padding: 12, marginBottom: 10, gap: 8 },
+  predHead: { color: C.gold, fontFamily: F.display, fontSize: 14, letterSpacing: 1.5 },
+  predSub: { color: C.dim, fontFamily: F.body, fontSize: 12, lineHeight: 17 },
+  predBout: { borderTopWidth: 1, borderTopColor: C.border, paddingTop: 8 },
+  side: { flex: 1, borderWidth: 1, borderColor: C.border, borderRadius: 10, padding: 8, gap: 2, backgroundColor: C.card },
+  sideOn: { borderColor: C.gold, backgroundColor: '#2a2108' },
+  sideName: { color: C.text, fontFamily: F.bold, fontSize: 13 },
+  sideMeta: { color: C.faint, fontFamily: F.body, fontSize: 11 },
+  sidePct: { color: C.orange, fontFamily: F.semi, fontSize: 11 },
+  chip: { borderWidth: 1, borderColor: C.border, borderRadius: 14, paddingHorizontal: 12, paddingVertical: 4 },
+  chipOn: { backgroundColor: C.gold, borderColor: C.gold },
+  chipText: { color: C.dim, fontFamily: F.semi, fontSize: 11 },
 });
