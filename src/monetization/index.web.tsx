@@ -7,7 +7,7 @@ export const PACK_STORE = false;
 export const LEGENDS_STORE = true;
 export const COACH_STORE = true;
 export { dismissUpsell, useUpsellDue } from './upsell';
-export { closeOffer, openOffer, useOffer, type OfferReason } from './offers';
+export { closeNudge, closeOffer, milestoneOffer, noteInterstitialShown, openOffer, rewardedCount, useNudge, useOffer, type OfferReason } from './offers';
 
 export async function initMonetization() {}
 export function showRewarded(): Promise<'odul' | 'iptal' | 'yok'> {

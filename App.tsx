@@ -78,7 +78,8 @@ import { ensureSpecial } from './src/engine/specialEvent';
 import { popToFollowers } from './src/engine/fame';
 import { useSoundScene, type Scene } from './src/audio';
 import { initMonetization, PremiumManager } from './src/monetization';
-import { PremiumOfferModal } from './src/ui/PremiumCard';
+import { PremiumNudge, PremiumOfferModal } from './src/ui/PremiumCard';
+import { milestoneOffer } from './src/monetization';
 import { addSeasonXp } from './src/season';
 import { applyHeritage, heritageOf, type Heritage } from './src/engine/dynasty';
 import { unlockCtx } from './src/engine/cosmetics';
@@ -232,6 +233,12 @@ export default function App() {
       putSave(slotRef.current, next);
       return;
     }
+    // Kilometre taşı teklifleri (her biri bir kez, yalnızca galibiyetten sonra ya da emeklilikte)
+    if (next.phase === 'hub' && cur.phase !== 'hub' && next.gecmis[0]?.sonuc === 'G' && next.gecmis.length > (cur.gecmis.length || 0) - 1) {
+      if (next.stage !== 'amator' && next.rekor.g >= 10) milestoneOffer('galibiyet10', 'yol_teklif_g10');
+      else if (next.stage === 'ufc') milestoneOffer('ucc', 'yol_teklif_ucc');
+    }
+    if (next.phase === 'emeklilik' && cur.phase !== 'emeklilik') milestoneOffer('emeklilik', 'yol_teklif_emekli', 1500);
     // Olaylar, sosyal medya, gece hayatı…: popülerlik değişimi takipçiye yansır (maç sonucu kendi hesabını yapar).
     if (!(cur.phase === 'dovus' && next.phase === 'dovusSonrasi') && next.populerlik !== cur.populerlik) popToFollowers(next, next.populerlik - cur.populerlik);
     // Kafes dışındaki başarımlar da (ev, araba, sevgili…) anında açılır.
@@ -570,6 +577,7 @@ export default function App() {
     <SafeAreaProvider>
       <PremiumManager />
       <PremiumOfferModal />
+      <PremiumNudge />
       <View style={{ flex: 1, backgroundColor: C.bg }}>
         {/* Tarayıcıda telefon genişliğinde ortalanır */}
         <View style={{ flex: 1, width: '100%', maxWidth: 560, alignSelf: 'center' }}>

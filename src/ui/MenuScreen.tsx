@@ -12,7 +12,7 @@ import type { ChallengeId } from '../engine/challenges';
 import { useCosmetics, useFrame } from '../cosmetics';
 import { ExportButton } from './CareerTransfer';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Defs, Ellipse, LinearGradient as SvgLinear, Polygon, RadialGradient, Stop } from 'react-native-svg';
@@ -25,7 +25,9 @@ import { WEIGHT_CLASSES } from '../engine/data';
 import { slotsFor, type Slot } from '../storage';
 import { PremiumCard, SlotsFullOffer } from './PremiumCard';
 import { SettingsSheet } from './SettingsSheet';
-import { COACH_STORE, LEGENDS_STORE, usePremium } from '../monetization';
+import { COACH_STORE, LEGENDS_STORE, milestoneOffer, openOffer, PURCHASES, usePremium } from '../monetization';
+import { useSeason } from '../season';
+import { seasonDaysLeft, seasonRewards, tierOf } from '../engine/season';
 import { CoachStart } from './CoachScreen';
 import { FighterAvatar } from './FighterAvatar';
 import { BACKGROUNDS } from '../engine/data';
@@ -318,6 +320,13 @@ export function MenuScreen({
   const cur = saves[active - 1];
   const canContinue = !!cur && cur.phase !== 'emeklilik';
   const premium = usePremium();
+  // Sezonun son 3 günü: Şampiyon sırasında alınabilecek ödül varsa sezon başına bir kez hatırlat
+  const season = useSeason();
+  useEffect(() => {
+    if (premium || seasonDaysLeft() > 3) return;
+    const t = tierOf(season.xp);
+    if (seasonRewards(season.idx).some((r) => r.pro && r.basamak <= t && !season.alinan.includes(r.id))) milestoneOffer('sezon', `yol_teklif_sezon_${season.idx}`, 1200);
+  }, [premium, season]);
   const SLOTS = slotsFor(premium);
   const firstEmpty = SLOTS.find((x) => !saves[x - 1]);
   const yeniKoz = useCosmetics().yeni.length;
@@ -416,6 +425,17 @@ export function MenuScreen({
             <Pressable key={x} onPress={() => onNew(x)} style={({ pressed }) => [ms.newChip, pressed && { borderColor: C.gold }]}>
               <Icon name="plus" size={16} color={C.gold} />
               <Text style={ms.newChipText}>{L("Yeni kariyer · Yuva {0}", [x])}</Text>
+            </Pressable>
+          ))}
+        </View>
+      ) : null}
+      {/* Şampiyon Paketi'nin 4. ve 5. yuvası: kilitli olarak görünür, dokununca teklif açılır */}
+      {any && !premium && PURCHASES ? (
+        <View style={ms.newRow}>
+          {[4, 5].map((x) => (
+            <Pressable key={x} onPress={() => openOffer('yuva5', true)} style={({ pressed }) => [ms.newChip, ms.lockChip, pressed && { borderColor: C.gold }]}>
+              <Icon name="lock" size={14} color={C.goldDeep} />
+              <Text style={[ms.newChipText, { color: C.dim }]}>{L("Yuva {0} · 👑 Şampiyon", [x])}</Text>
             </Pressable>
           ))}
         </View>
@@ -583,6 +603,7 @@ const ms = StyleSheet.create({
   story: { borderRadius: 14, borderWidth: 1, borderColor: C.goldDeep, padding: 14, marginTop: 6, marginBottom: 6 },
   newRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 6 },
   newChip: { flexGrow: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderWidth: 1, borderStyle: 'dashed', borderColor: '#4a4d55', borderRadius: 12, paddingVertical: 12, paddingHorizontal: 12, backgroundColor: '#0a0b0d' },
+  lockChip: { borderStyle: 'dashed', borderColor: '#4a3810' },
   newChipText: { color: C.text, fontFamily: F.display, fontSize: 13, letterSpacing: 0.8 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 12 },
   chBanner: { borderRadius: 16, borderWidth: 1, borderColor: '#4a1a22', overflow: 'hidden', marginBottom: 10 },

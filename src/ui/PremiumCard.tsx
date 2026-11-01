@@ -2,9 +2,10 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { sfx } from '../audio';
 import { L } from '../i18n';
-import { buy, buyPremium, closeOffer, dismissUpsell, LEGENDS_STORE, MONETIZATION, PURCHASES, restorePremium, useAdFree, useOffer, usePremium, usePremiumPrice, usePrice, useUpsellDue, type OfferReason } from '../monetization';
+import { buy, buyPremium, closeNudge, closeOffer, dismissUpsell, LEGENDS_STORE, openOffer, rewardedCount, useNudge, MONETIZATION, PURCHASES, restorePremium, useAdFree, useOffer, usePremium, usePremiumPrice, usePrice, useUpsellDue, type OfferReason } from '../monetization';
 import { LEGEND_IDS } from '../engine/legendRun';
 import { getPref, setPref } from '../prefs';
 import { ADFREE_SKU, ULTIMATE_SKU } from '../monetization/skus';
@@ -90,6 +91,10 @@ const st = StyleSheet.create({
   title: { color: C.gold, fontFamily: F.display, fontSize: 18, letterSpacing: 1 },
   kicker: { color: C.faint, fontFamily: F.display, fontSize: 10, letterSpacing: 2 },
   lead: { color: C.dim, fontFamily: F.body, fontSize: 12, lineHeight: 17 },
+  nudgeWrap: { position: 'absolute', left: 12, right: 12, alignItems: 'center' },
+  nudgeBar: { flexDirection: 'row', alignItems: 'center', gap: 10, width: '100%', maxWidth: 520, borderRadius: 14, borderWidth: 1, borderColor: '#5a4310', paddingHorizontal: 12, paddingVertical: 10 },
+  nudgeBarT: { color: C.gold, fontFamily: F.bold, fontSize: 13 },
+  nudgeBarS: { color: C.dim, fontFamily: F.body, fontSize: 11 },
   nudge: { flexDirection: 'row', alignItems: 'center', gap: 10, borderWidth: 1, borderColor: C.goldDeep, borderRadius: 12, padding: 12, marginBottom: 12 },
   nudgeTitle: { color: C.text, fontFamily: F.display, fontSize: 14, letterSpacing: 0.5 },
   nudgeSub: { color: C.dim, fontFamily: F.body, fontSize: 12, lineHeight: 16 },
@@ -218,7 +223,35 @@ const OFFER_TEXT: Record<OfferReason, () => [string, string]> = {
   reklam: () => [L("BUGÜN 3 REKLAM İZLEDİN"), L("Şampiyon Paketi ile bütün ödüller reklamsız ve anında gelir. Tek seferlik alım, abonelik yok.")],
   yuva: () => [L("BÜTÜN YUVALAR DOLU"), L("Şampiyon Paketi ile 5 kariyer yuvası: yeni bir hikâyeye başlamak için eskisini silmen gerekmez.")],
   kemer: () => [L("BİR ŞAMPİYONA YAKIŞIR PAKET"), L("Kemeri kazandın. Şampiyon Paketi ile oyunun bütün ekstralarını aç.")],
+  yuva5: () => [L("5 KARİYER YUVASI"), L("Şampiyon Paketi ile aynı anda 5 kariyer: bir efsane yolu, bir antrenör kariyeri ve üç kendi hikâyen yan yana.")],
+  reklam10: () => [L("{0} ÖDÜLLÜ REKLAM İZLEDİN", [rewardedCount()]), L("Şampiyon Paketi ile bundan sonra bütün ödüller anında gelir, tek bir reklam bile izlemeden. Tek seferlik alım.")],
+  galibiyet10: () => [L("10 GALİBİYET!"), L("Kariyerin yükselişte. Şampiyon Paketi ile 5 kariyer yuvası, bütün efsaneler ve reklamsız oyun.")],
+  ucc: () => [L("UCC'YE HOŞ GELDİN"), L("En büyük sahnedesin. Şampiyon Paketi ile bu yolculuğu reklamsız ve bütün ekstralarla yaşa.")],
+  emeklilik: () => [L("BİR EFSANE DOĞDU"), L("Kariyerin bitti ama hikâyen bitmek zorunda değil: Şampiyon Paketi ile 10 Efsanem yuvası, Hayalî Maç Stüdyosu ve 5 kariyer yuvası.")],
+  sezon: () => [L("SEZON BİTMEK ÜZERE"), L("Şampiyon sırasındaki ödüller sezonla birlikte kaybolacak. Şampiyon Paketi ile hepsini şimdi al.")],
 };
+
+/** Geçiş reklamı kapanınca: ekranın altında küçük, kapatılabilir not (günde en fazla bir kez). */
+export function PremiumNudge() {
+  const show = useNudge();
+  const premium = usePremium();
+  const ins = useSafeAreaInsets();
+  if (!show || premium || !MONETIZATION || !PURCHASES) return null;
+  return (
+    <View pointerEvents="box-none" style={[st.nudgeWrap, { bottom: 86 + ins.bottom }]}>
+      <LinearGradient colors={['#2a1d05', '#14100a']} style={st.nudgeBar}>
+        <Icon name="crown" size={18} color={C.gold} />
+        <Pressable onPress={() => openOffer('reklam', true)} style={{ flex: 1 }}>
+          <Text style={st.nudgeBarT}>{L("Reklamsız oyna · Şampiyon Paketi")}</Text>
+          <Text style={st.nudgeBarS}>{L("Geçiş reklamı yok, ödüller anında")}</Text>
+        </Pressable>
+        <Pressable onPress={closeNudge} hitSlop={10}>
+          <Icon name="close" size={18} color={C.faint} />
+        </Pressable>
+      </LinearGradient>
+    </View>
+  );
+}
 
 /** Uygulama kökünde: teklif penceresi (reklam yorgunluğu anı). */
 export function PremiumOfferModal() {
