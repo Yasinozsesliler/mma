@@ -1,3 +1,4 @@
+import { ScoutNote } from './ScoutNote';
 import { L, LOC } from '../i18n';
 import { AdOffer } from './AdOffer';
 import { ScoutReportCard } from './ScoutReportCard';
@@ -739,6 +740,7 @@ export function CampScreen({ s, act }: { s: GameState; act: Act }) {
         steps={
           <>
             <CampSteps k={k} />
+            <ScoutNote s={s} />
             <CoachTip s={s} act={act} id="kamp" />
           </>
         }

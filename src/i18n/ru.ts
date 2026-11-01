@@ -8402,4 +8402,8 @@ export const RU: Record<string, string> = {
   "Yuva {0} · 👑 Şampiyon": "Слот {0} · 👑 Чемпион",
   "5 KARİYER YUVASI": "5 СЛОТОВ КАРЬЕРЫ",
   "Şampiyon Paketi ile aynı anda 5 kariyer: bir efsane yolu, bir antrenör kariyeri ve üç kendi hikâyen yan yana.": "С Набором чемпиона — 5 карьер одновременно: путь легенды, тренерская карьера и три своих истории.",
+  "🧠 {0} dalışlarını çözmeye başladı; kalçası hep geride, sprawl’a hazır.": "🧠 {0} начал читать твои проходы: таз отведён, готов к спраулу.",
+  "📼 {0} son maçlarını kare kare izledi: neredeyse her rauntta bacaklara daldığını fark etti. Kampında sprawl ve kafeste kalkış çalıştı (rakip güreş +{1}). Bu sefer ayakta da bir planın olsun.": "📼 {0} покадрово разобрал твои последние бои и заметил, что ты почти каждый раунд проходишь в ноги. На сборах он отрабатывал спраул и подъём у сетки (борьба соперника +{1}). В этот раз имей план и для стойки.",
+  "📼 {0} son maçlarını izledi: hiç yere gitmediğini fark etti. Kampında çene sertleştirdi ve seni indirmeye çalıştı (rakip çene ve güreş +{1}). Takedown savunmanı unutma.": "📼 {0} посмотрел твои последние бои и заметил, что ты никогда не идёшь в партер. На сборах он укреплял подбородок и учился переводить тебя (подбородок и борьба соперника +{1}). Не забывай про защиту от тейкдаунов.",
+  "RAKİP SENİ ÇALIŞTI": "СОПЕРНИК ИЗУЧИЛ ТЕБЯ",
 };

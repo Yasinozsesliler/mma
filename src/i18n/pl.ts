@@ -8341,4 +8341,8 @@ export const PL: Record<string, string> = {
   "Yuva {0} · 👑 Şampiyon": "Miejsce {0} · 👑 Mistrz",
   "5 KARİYER YUVASI": "5 MIEJSC NA KARIERY",
   "Şampiyon Paketi ile aynı anda 5 kariyer: bir efsane yolu, bir antrenör kariyeri ve üç kendi hikâyen yan yana.": "Z Pakietem Mistrza 5 karier naraz: droga legendy, kariera trenera i trzy własne historie obok siebie.",
+  "🧠 {0} dalışlarını çözmeye başladı; kalçası hep geride, sprawl’a hazır.": "🧠 {0} zaczyna czytać twoje sprowadzenia; biodra z tyłu, gotowy na sprawl.",
+  "📼 {0} son maçlarını kare kare izledi: neredeyse her rauntta bacaklara daldığını fark etti. Kampında sprawl ve kafeste kalkış çalıştı (rakip güreş +{1}). Bu sefer ayakta da bir planın olsun.": "📼 {0} przeanalizował twoje ostatnie walki klatka po klatce i zauważył, że niemal w każdej rundzie atakujesz nogi. Na obozie ćwiczył sprawl i wstawanie przy siatce (zapasy rywala +{1}). Tym razem miej też plan w stójce.",
+  "📼 {0} son maçlarını izledi: hiç yere gitmediğini fark etti. Kampında çene sertleştirdi ve seni indirmeye çalıştı (rakip çene ve güreş +{1}). Takedown savunmanı unutma.": "📼 {0} obejrzał twoje ostatnie walki i zauważył, że nigdy nie schodzisz do parteru. Na obozie wzmacniał szczękę i ćwiczył sprowadzanie cię (szczęka i zapasy rywala +{1}). Nie zapominaj o obronie przed sprowadzeniami.",
+  "RAKİP SENİ ÇALIŞTI": "RYWAL CIĘ PRZEANALIZOWAŁ",
 };

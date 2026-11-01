@@ -131,6 +131,8 @@ export interface LiveSim {
   } | null;
   /** Oyuncunun maç boyunca kaçırdığı kilitler: rakip her seferinde daha uyanık */
   subFails: number;
+  /** Bu rauntta denenen takedown sayısı: tekrarlandıkça rakip sprawl'a hazır bekler */
+  tdN?: number;
   cfg: LiveCfg;
   events: LiveEvent[];
   over: { kazanan: 'p' | 'o'; yontem: 'KO' | 'TKO' | 'SUB'; t: number } | null;
@@ -405,7 +407,9 @@ export function liveInput(s: LiveSim, k: LiveInput) {
     p.busyUntil = s.t + 650;
     p.guardUntil = 0;
     const open = o.state === 'windup' || o.state === 'strike' ? 0.25 : o.state === 'rocked' ? 0.3 : o.state === 'guard' ? 0.08 : 0;
-    const ok = chance(clamp(0.3 + s.cfg.wr / 110 + open + s.cfg.edge, 0.08, 0.85));
+    s.tdN = (s.tdN ?? 0) + 1;
+    const okundu = Math.min(0.25, Math.max(0, s.tdN - 2) * 0.06);
+    const ok = chance(clamp(0.3 + s.cfg.wr / 125 + open + s.cfg.edge - okundu, 0.08, 0.78));
     ev(s, { kind: 'td', side: 'p', alt: ok ? 'ok' : 'stuffed' });
     if (ok) setGround(s, 'p');
     else {

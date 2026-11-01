@@ -8363,4 +8363,8 @@ export const PT: Record<string, string> = {
   "Yuva {0} · 👑 Şampiyon": "Espaço {0} · 👑 Campeão",
   "5 KARİYER YUVASI": "5 ESPAÇOS DE CARREIRA",
   "Şampiyon Paketi ile aynı anda 5 kariyer: bir efsane yolu, bir antrenör kariyeri ve üç kendi hikâyen yan yana.": "Com o Pacote Campeão, 5 carreiras ao mesmo tempo: um caminho de lenda, uma carreira de treinador e três histórias suas.",
+  "🧠 {0} dalışlarını çözmeye başladı; kalçası hep geride, sprawl’a hazır.": "🧠 {0} começou a ler suas quedas; quadril para trás, pronto para o sprawl.",
+  "📼 {0} son maçlarını kare kare izledi: neredeyse her rauntta bacaklara daldığını fark etti. Kampında sprawl ve kafeste kalkış çalıştı (rakip güreş +{1}). Bu sefer ayakta da bir planın olsun.": "📼 {0} estudou suas últimas lutas quadro a quadro e percebeu que você ataca as pernas quase todo round. No camp treinou sprawl e levantar na grade (wrestling do rival +{1}). Desta vez tenha um plano em pé também.",
+  "📼 {0} son maçlarını izledi: hiç yere gitmediğini fark etti. Kampında çene sertleştirdi ve seni indirmeye çalıştı (rakip çene ve güreş +{1}). Takedown savunmanı unutma.": "📼 {0} assistiu às suas últimas lutas e percebeu que você nunca vai para o chão. No camp endureceu o queixo e treinou para te derrubar (queixo e wrestling do rival +{1}). Não esqueça a defesa de quedas.",
+  "RAKİP SENİ ÇALIŞTI": "SEU RIVAL TE ESTUDOU",
 };

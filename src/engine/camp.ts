@@ -1,4 +1,5 @@
 import { brainMods } from './brain';
+import { scoutMods, scoutRival } from './scouting';
 import { L, LOC } from '../i18n';
 import { addHype, initHype } from './hype';
 import { perkCamp, perkFightMods } from './perks';
@@ -213,6 +214,7 @@ export function startCamp(s: GameState) {
   };
   s.phase = 'kamp';
   initHype(s);
+  scoutRival(s);
   ensurePartner(s);
   socialCampStart(s);
 }
@@ -625,6 +627,7 @@ function beginFight(s: GameState) {
   familyMods(s, mods);
   coachMods(s, mods);
   rivalNewsMods(s, mods, k.oppMods);
+  scoutMods(s, k.oppMods);
   perkFightMods(s, mods);
   brainMods(s, mods);
   Object.entries(fightItemMods(s)).forEach(([st, v]) => (mods[st as StatKey] = (mods[st as StatKey] ?? 0) + (v ?? 0)));

@@ -301,6 +301,8 @@ export interface CampState {
   hypeLog?: string[];
   belgesel?: boolean;
   ozet: string[];
+  /** Rakip analizi: rakip son maçlarını izleyip senin silahına karşı çalıştı (scouting.ts) */
+  analiz?: { silah: 'gures' | 'vurus'; v: number; metin: string };
   tartiMetni?: string;
   sakatlik?: Injury;
   kisaHaber?: boolean;
@@ -425,6 +427,8 @@ export interface FightState {
   oyuncuTaktikGecmisi?: Tactic[];
   /** Bu raunt için okunma cezası (0 = yok). */
   okunma?: number;
+  /** Oyuncunun bu maçtaki takedown denemesi (arttıkça rakip çözer). */
+  tdDeneme?: number;
   taktikBasari: Partial<Record<Tactic, number>>;
   log: string[];
   /** Maçın öne çıkan anları (bütün rauntlar; maç sonu "en iyi 3 an") */
@@ -765,6 +769,8 @@ export interface GameState {
   acilanlar?: string[];
   /** Kariyerdeki en yüksek ortalama güç: rakipler buna göre seçilir, yaşlanınca rakipler de zayıflamaz. */
   zirveGuc?: number;
+  /** Son maçlarda hangi silaha yaslandığı (0-1); rakipler buna göre kamp yapar (scouting.ts) */
+  tarz?: { gures: number; vurus: number };
   /** Zirve gücüne ulaşıldığı andaki istatistikler (Efsanelerim için) */
   zirveStats?: Stats;
   /** İlan edilen veda maçı (35 yaş sonrası); oynanınca emeklilik gelir. */

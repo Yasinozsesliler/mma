@@ -1,4 +1,5 @@
 import { L as tL, LOC } from '../i18n';
+import { noteStyle } from './scouting';
 import { fatigue, fatigueAfterFight } from './fatigue';
 import { dmAfterFight } from './dm';
 import { ppvPayout } from './hype';
@@ -200,6 +201,7 @@ export function finishFight(s: GameState) {
   const finishMethod = r.yontem === 'KO' || r.yontem === 'TKO' || r.yontem === 'SUB';
   const lines: string[] = [];
   const pro = org !== 'amator';
+  noteStyle(s, fs);
   s.sonMacHafta = s.hafta;
 
   lines.push(
@@ -816,7 +818,7 @@ export function openOffers(s: GameState, kind: OfferKind, metin: string) {
     }
   } else if (kind === 'yenileme') {
     if (s.stage === 'bolgesel') {
-      if (s.sampiyon || (s.rank != null && s.rank <= 3) || (winsInOrg >= 3 && s.populerlik >= 18) || s.seri >= 5) {
+      if (s.sampiyon || (s.rank != null && s.rank <= 2) || (winsInOrg >= 5 && s.populerlik >= 22) || s.seri >= 6) {
         pickN(bigOrgs, 2).forEach((o) => offers.push(makeOffer(s, o, 4)));
         metin += tL(" Büyük organizasyonlar kapıda!");
       }
