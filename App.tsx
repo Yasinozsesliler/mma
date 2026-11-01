@@ -36,6 +36,8 @@ import {
 import { MenuScreen } from './src/ui/MenuScreen';
 import { DailyScreen } from './src/ui/DailyScreen';
 import { DreamScreen } from './src/ui/DreamScreen';
+import { GhostScreen } from './src/ui/GhostScreen';
+import { readGhostFromUrl } from './src/ghost';
 import { SeasonScreen } from './src/ui/SeasonScreen';
 import { ShopScreen } from './src/ui/ShopScreen';
 import { ArcadeScreen } from './src/ui/ArcadeScreen';
@@ -90,6 +92,7 @@ import { dayNumber } from './src/engine/daily';
 import { initAnalytics, track, trackScreen } from './src/analytics';
 
 readChallengeFromUrl();
+readGhostFromUrl();
 import { onNotificationOpen, rescheduleNotifications } from './src/notify';
 import { loadDaily } from './src/ui/DailyScreen';
 import { socialWelcome } from './src/engine/social';
@@ -136,7 +139,7 @@ const PHASE_LABELS: Record<Phase, string> = {
   memleket: L("Memleketim"),
 };
 
-type View_ = 'loading' | 'menu' | 'create' | 'game' | 'daily' | 'dream' | 'locker' | 'season';
+type View_ = 'loading' | 'menu' | 'create' | 'game' | 'daily' | 'dream' | 'ghost' | 'locker' | 'season';
 
 installErrorLog();
 installImmersive();
@@ -324,7 +327,7 @@ export default function App() {
   // Android geri tuşu: oyundan ve karakter oluşturmadan menüye döner; menüdeyse uygulamadan çıkar.
   useEffect(() => {
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
-      if (view === 'game' || view === 'create' || view === 'daily' || view === 'dream' || view === 'locker' || view === 'season') {
+      if (view === 'game' || view === 'create' || view === 'daily' || view === 'dream' || view === 'ghost' || view === 'locker' || view === 'season') {
         setView('menu');
         return true;
       }
@@ -394,6 +397,10 @@ export default function App() {
           track('dream_fight_open');
           setView('dream');
         }}
+        onGhost={() => {
+          track('ghost_open');
+          setView('ghost');
+        }}
         onImport={(x, g) => {
           void deleteGame(x).then(() => saveGame(g, x));
           putSave(x, g);
@@ -414,6 +421,8 @@ export default function App() {
     content = <DailyScreen onExit={() => setView('menu')} />;
   } else if (view === 'dream') {
     content = <DreamScreen onExit={() => setView('menu')} />;
+  } else if (view === 'ghost') {
+    content = <GhostScreen saves={saves} onExit={() => setView('menu')} />;
   } else if (view === 'season') {
     content = <SeasonScreen look={(saves[slot - 1] ?? game)?.fighter.gorunum} onExit={() => setView('menu')} />;
   } else if (view === 'create') {
@@ -571,7 +580,7 @@ export default function App() {
     }
   }
 
-  const topLabel = view === 'locker' ? L("Dolap") : view === 'daily' ? L("Günün Dövüşü") : view === 'dream' ? L("Hayalî Maçlar") : view === 'season' ? L("Sezon Kemeri") : view === 'create' ? L("Karakter Oluşturma") : view === 'game' && game ? PHASE_LABELS[game.phase] : null;
+  const topLabel = view === 'locker' ? L("Dolap") : view === 'daily' ? L("Günün Dövüşü") : view === 'dream' ? L("Hayalî Maçlar") : view === 'ghost' ? L("Hayalet Maç") : view === 'season' ? L("Sezon Kemeri") : view === 'create' ? L("Karakter Oluşturma") : view === 'game' && game ? PHASE_LABELS[game.phase] : null;
 
   return (
     <SafeAreaProvider>

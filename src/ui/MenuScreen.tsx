@@ -5,6 +5,7 @@ import { takeLegendRequest } from '../legendNav';
 import { MyLegendLink } from './StudioScreen';
 import { SeasonBanner } from './SeasonScreen';
 import { loadDream } from './DreamScreen';
+import { pendingGhost, useGhosts } from '../ghost';
 import { albumProgress, triesLeft } from '../engine/dreamFight';
 import { LEGEND_IDS, LEGENDS, type LegendId } from '../engine/legendRun';
 import { useLegendBest } from '../legendPrefs';
@@ -286,6 +287,7 @@ export function MenuScreen({
   onDelete,
   onDaily,
   onDream,
+  onGhost,
   onSeason,
   onDynasty,
   onLocker,
@@ -302,6 +304,7 @@ export function MenuScreen({
   onDynasty: (slot: Slot) => void;
   onDaily: () => void;
   onDream: () => void;
+  onGhost: () => void;
   onSeason: () => void;
   onLocker: () => void;
   onImport: (slot: Slot, g: GameState) => void;
@@ -336,6 +339,7 @@ export function MenuScreen({
   const daily = loadDaily();
   const seri = liveStreak(daily, gun);
   const dream = loadDream();
+  const ghostCount = useGhosts().length;
   const dreamLeft = triesLeft(dream, gun) > 0;
   const dreamProg = albumProgress(dream);
   // Dolu yuvalar (son oynanan önde), boşlar küçük "yeni kariyer" düğmesi olarak
@@ -484,6 +488,14 @@ export function MenuScreen({
           sub={dreamLeft ? L("Bugünün efsane eşleşmesi seni bekliyor") : L("Bugün oynandı · yarın yeni eşleşme")}
           badge={L("📒 {0}/{1}", [dreamProg.got, dreamProg.max])}
           onPress={onDream}
+        />
+        <ModeTile
+          icon="ghost"
+          color={C.blue}
+          title={L("Hayalet Maç")}
+          sub={pendingGhost() ? L("Bir arkadaşın sana meydan okudu!") : L("Arkadaşının dövüşçüsüyle kapış, kodunu paylaş")}
+          badge={pendingGhost() ? L("YENİ") : ghostCount ? `👻 ${ghostCount}` : L("YENİ")}
+          onPress={onGhost}
         />
         {COACH_STORE ? <ModeTile icon="whistle" color={C.blue} title={L("Antrenör Modu")} sub={L("Bu sefer hoca sensin: salonunu kur, şampiyon yetiştir")} badge={L("YENİ")} onPress={() => setSheet('antrenor')} /> : null}
         <ModeTile icon="hanger" color={C.gold} title={L("Dolap")} sub={L("Şort, eldiven, çerçeve, kemer ve giriş müziği")} badge={yeniKoz ? L("{0} YENİ", [yeniKoz]) : undefined} onPress={onLocker} />
