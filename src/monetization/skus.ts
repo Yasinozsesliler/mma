@@ -20,4 +20,7 @@ export const ULTIMATE_SKU = 'sampiyon_koleksiyon';
 /** Antrenör Modu: ayrı kariyer modu (hoca olarak oyna). Şampiyon Paketi'ne dahil değil. Önerilen ≈ 1,99 $ */
 export const COACH_SKU = 'antrenor_modu';
 
-export const ALL_SKUS: string[] = [PREMIUM_SKU, ADFREE_SKU, ...COSMETIC_SKUS, BUNDLE_SKU, LEGENDS_SKU, ULTIMATE_SKU, COACH_SKU];
+/** Hakem Modu: ayrı mod (kafesin içindeki hakem olarak oyna). Şampiyon Paketi'ne dahil değil. Önerilen ≈ 1,99 $ */
+export const REF_SKU = 'hakem_modu';
+
+export const ALL_SKUS: string[] = [PREMIUM_SKU, ADFREE_SKU, ...COSMETIC_SKUS, BUNDLE_SKU, LEGENDS_SKU, ULTIMATE_SKU, COACH_SKU, REF_SKU];

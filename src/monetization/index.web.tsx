@@ -6,6 +6,8 @@ export const PURCHASES = false;
 export const PACK_STORE = false;
 export const LEGENDS_STORE = true;
 export const COACH_STORE = true;
+/** Hakem Modu şimdilik yalnızca iPhone'da (Play'de ürünü yok). */
+export const REF_STORE = true;
 export { dismissUpsell, useUpsellDue } from './upsell';
 export { closeNudge, closeOffer, milestoneOffer, noteInterstitialShown, openOffer, rewardedCount, useNudge, useOffer, type OfferReason } from './offers';
 

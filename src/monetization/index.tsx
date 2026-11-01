@@ -27,6 +27,8 @@ export const PACK_STORE = Platform.OS !== 'ios';
 export const LEGENDS_STORE = Platform.OS === 'ios';
 /** Antrenör Modu şimdilik yalnızca iPhone'da (Play'de ürünü yok). */
 export const COACH_STORE = Platform.OS === 'ios';
+/** Hakem Modu şimdilik yalnızca iPhone'da (Play'de ürünü yok). */
+export const REF_STORE = Platform.OS === 'ios';
 export { dismissUpsell, useUpsellDue } from './upsell';
 export { closeNudge, closeOffer, milestoneOffer, noteInterstitialShown, openOffer, rewardedCount, useNudge, useOffer, type OfferReason } from './offers';
 

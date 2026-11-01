@@ -26,7 +26,7 @@ import { WEIGHT_CLASSES } from '../engine/data';
 import { slotsFor, type Slot } from '../storage';
 import { PremiumCard, SlotsFullOffer } from './PremiumCard';
 import { SettingsSheet } from './SettingsSheet';
-import { COACH_STORE, LEGENDS_STORE, milestoneOffer, openOffer, PURCHASES, usePremium } from '../monetization';
+import { COACH_STORE, REF_STORE, LEGENDS_STORE, milestoneOffer, openOffer, PURCHASES, usePremium } from '../monetization';
 import { useSeason } from '../season';
 import { seasonDaysLeft, seasonRewards, tierOf } from '../engine/season';
 import { CoachStart } from './CoachScreen';
@@ -288,6 +288,7 @@ export function MenuScreen({
   onDaily,
   onDream,
   onGhost,
+  onReferee,
   onSeason,
   onDynasty,
   onLocker,
@@ -305,6 +306,7 @@ export function MenuScreen({
   onDaily: () => void;
   onDream: () => void;
   onGhost: () => void;
+  onReferee: () => void;
   onSeason: () => void;
   onLocker: () => void;
   onImport: (slot: Slot, g: GameState) => void;
@@ -497,6 +499,7 @@ export function MenuScreen({
           badge={pendingGhost() ? L("YENİ") : ghostCount ? `👻 ${ghostCount}` : L("YENİ")}
           onPress={onGhost}
         />
+        {REF_STORE ? <ModeTile icon="hand-back-left" color={C.red} title={L("Hakem Modu")} sub={L("Kafesin içindeki karar senin: durdur, devam ettir, puanla")} badge={L("YENİ")} onPress={onReferee} /> : null}
         {COACH_STORE ? <ModeTile icon="whistle" color={C.blue} title={L("Antrenör Modu")} sub={L("Bu sefer hoca sensin: salonunu kur, şampiyon yetiştir")} badge={L("YENİ")} onPress={() => setSheet('antrenor')} /> : null}
         <ModeTile icon="hanger" color={C.gold} title={L("Dolap")} sub={L("Şort, eldiven, çerçeve, kemer ve giriş müziği")} badge={yeniKoz ? L("{0} YENİ", [yeniKoz]) : undefined} onPress={onLocker} />
         <ModeTile icon="book-open-variant" color={C.blue} title={L("Rehber")} sub={L("Nasıl oynanır, gelişim, branşlar")} onPress={() => setSheet('rehber')} />
