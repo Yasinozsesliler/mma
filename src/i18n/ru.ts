@@ -8383,4 +8383,8 @@ export const RU: Record<string, string> = {
   "Kendi partnerlerinle devam ettin.": "Ты продолжил со своими партнёрами.",
   "VE KAZANAN…": "И ПОБЕДИТЕЛЬ…",
   "ADAYLAR": "НОМИНАНТЫ",
+  "{0} parmağını yüzüne doğru sallayıp bir şeyler bağırıyor.": "{0} тычет пальцем тебе в лицо и что-то кричит.",
+  "{0} alaycı bir şekilde seni alkışlıyor.": "{0} издевательски тебе аплодирует.",
+  "1. TUR · {0}": "1-Й РАУНД · {0}",
+  "2. tur: rakip karşılık verdi. Son sözün ne?": "2-й раунд: соперник ответил. Твоё последнее слово?",
 };

@@ -884,7 +884,7 @@ export function CampScreen({ s, act }: { s: GameState; act: Act }) {
         <FaceOffStage s={s} />
         {!k.yuzyuze ? (
           <>
-            <Text style={gs.faceAsk}>{k.rakipHamle ? L("Tepkini seç") : L("İlk hamle senin")}</Text>
+            <Text style={gs.faceAsk}>{k.yuzyuzeIlk ? L("2. tur: rakip karşılık verdi. Son sözün ne?") : k.rakipHamle ? L("Tepkini seç") : L("İlk hamle senin")}</Text>
             {FACEOFF.map((f, i) => (
               <Choice key={f.key} n={i + 1} icon={f.ikon as IconName} label={f.ad} desc={f.aciklama} tone="gold" onPress={() => choose(f.key)} />
             ))}

@@ -670,6 +670,8 @@ export const RIVAL_MOVES: Record<string, { metin: (o: string) => string; anim: s
   alin: { metin: (o) => L("{0} alnını senin alnına dayadı, geri çekilmiyor.", [o]), anim: 'forehead' },
   sirit: { metin: (o) => L("{0} sana bakıp alaycı bir şekilde sırıtıyor.", [o]), anim: 'smirk' },
   laf: { metin: (o) => L("{0} eğilip kulağına bir şeyler fısıldadı.", [o]), anim: 'oppwhisper' },
+  parmak: { metin: (o) => L("{0} parmağını yüzüne doğru sallayıp bir şeyler bağırıyor.", [o]), anim: 'oppoint' },
+  alkis: { metin: (o) => L("{0} alaycı bir şekilde seni alkışlıyor.", [o]), anim: 'oppclap' },
 };
 
 function planRivalMove(s: GameState): string | undefined {
@@ -691,7 +693,7 @@ function faceOff(s: GameState, key: string) {
   const edge = (f.stats.iq - o.stats.iq) / 200 + (s.populerlik - 50) / 500;
   const hamle = k.rakipHamle;
   // Rakip üstüne geldiyse sakin kalmak daha değerli, karşılık vermek daha riskli.
-  const bonus = hamle === 'it' || hamle === 'alin' ? (key === 'sakin' ? 0.12 : key === 'alin' ? -0.05 : 0) : 0;
+  const bonus = hamle === 'it' || hamle === 'alin' || hamle === 'parmak' ? (key === 'sakin' ? 0.12 : key === 'alin' ? -0.05 : 0) : hamle === 'alkis' ? (key === 'laf' || key === 'bagir' ? 0.08 : 0) : 0;
   const win = (base: number) => chance(clamp(base + edge + bonus, 0.15, 0.85));
   let r: FaceResult;
 
@@ -752,7 +754,18 @@ function faceOff(s: GameState, key: string) {
     r = { anim: 'handshake', kazanan: null, baslik: L("SAYGI"), metin: L("Tokalaştınız. Saygılı bir an. Kameralar bu kareyi sevdi."), etkiler: [L("Popülerlik +1")] };
   }
   const pre = hamle ? `${RIVAL_MOVES[hamle].metin(o.soyad)} ` : '';
-  k.yuzyuze = `${pre}${r.metin}`;
-  k.yuzyuzeSonuc = { anim: r.anim, kazanan: r.kazanan, baslik: r.baslik, etkiler: r.etkiler };
   addHype(s, r.anim === 'brawl' ? 15 : r.kazanan === 'p' ? 6 : r.kazanan === 'o' ? 3 : 1, L("Face to face"));
+  const ilk = k.yuzyuzeIlk;
+  // İlk tur: kavga ya da tokalaşma olmadıysa rakip çoğu zaman karşılık verir, ikinci tur gelir
+  if (!ilk && r.anim !== 'brawl' && r.anim !== 'handshake' && chance(0.75)) {
+    k.yuzyuzeIlk = { metin: `${pre}${r.metin}`, baslik: r.baslik, kazanan: r.kazanan, etkiler: r.etkiler, anim: r.anim };
+    k.rakipHamle = r.kazanan === 'p' ? pick(['it', 'parmak', 'laf']) : pick(['sirit', 'alkis']);
+    return;
+  }
+  // Sonuç iki turun toplamı: biri kazandı biri kaybettiyse kimse geri adım atmamış sayılır
+  const puan = (x: 'p' | 'o' | null) => (x === 'p' ? 1 : x === 'o' ? -1 : 0);
+  const top = puan(r.kazanan) + (ilk ? puan(ilk.kazanan) : 0);
+  const kazanan = ilk ? (top > 0 ? 'p' : top < 0 ? 'o' : null) : r.kazanan;
+  k.yuzyuze = ilk ? `${ilk.metin} ${pre}${r.metin}` : `${pre}${r.metin}`;
+  k.yuzyuzeSonuc = { anim: r.anim, kazanan, baslik: r.baslik, etkiler: [...(ilk?.etkiler ?? []), ...r.etkiler] };
 }

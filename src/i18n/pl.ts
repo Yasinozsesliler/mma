@@ -8322,4 +8322,8 @@ export const PL: Record<string, string> = {
   "Kendi partnerlerinle devam ettin.": "Zostałeś przy swoich partnerach.",
   "VE KAZANAN…": "A ZWYCIĘZCĄ JEST…",
   "ADAYLAR": "NOMINOWANI",
+  "{0} parmağını yüzüne doğru sallayıp bir şeyler bağırıyor.": "{0} macha ci palcem przed twarzą i coś krzyczy.",
+  "{0} alaycı bir şekilde seni alkışlıyor.": "{0} szyderczo ci klaszcze.",
+  "1. TUR · {0}": "1. RUNDA · {0}",
+  "2. tur: rakip karşılık verdi. Son sözün ne?": "2. runda: rywal odpowiedział. Twoje ostatnie słowo?",
 };

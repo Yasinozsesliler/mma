@@ -8335,4 +8335,8 @@ export const EN: Record<string, string> = {
   "Kendi partnerlerinle devam ettin.": "You stuck with your own partners.",
   "VE KAZANAN…": "AND THE WINNER IS…",
   "ADAYLAR": "NOMINEES",
+  "{0} parmağını yüzüne doğru sallayıp bir şeyler bağırıyor.": "{0} is wagging a finger in your face and shouting.",
+  "{0} alaycı bir şekilde seni alkışlıyor.": "{0} is giving you a sarcastic round of applause.",
+  "1. TUR · {0}": "ROUND 1 · {0}",
+  "2. tur: rakip karşılık verdi. Son sözün ne?": "Round 2: your opponent fired back. What's your final word?",
 };

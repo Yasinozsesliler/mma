@@ -278,6 +278,8 @@ export interface CampState {
   rakipHamle?: string;
   /** Face to face sonucu: animasyon ve kimin üstün geldiği */
   yuzyuzeSonuc?: { anim: string; kazanan: 'p' | 'o' | null; baslik: string; etkiler: string[] };
+  /** İki turlu face-off: ilk turun sonucu (rakip karşılık verince ikinci tur gelir) */
+  yuzyuzeIlk?: { metin: string; baslik: string; kazanan: 'p' | 'o' | null; etkiler: string[]; anim: string };
   yer?: string;
   hafta: number;
   focus?: StatKey;
