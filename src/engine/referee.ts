@@ -19,7 +19,7 @@ export const TIER_NAME: Record<RefTier, () => string> = {
 const PROMOTE: Record<RefTier, [number, number] | null> = { amator: [30, 6], bolgesel: [55, 14], buyuk: [75, 24], ucc: null };
 const BASE: Record<RefTier, number> = { amator: 48, bolgesel: 58, buyuk: 67, ucc: 76 };
 /** Deneme: ilk bu kadar maç ücretsiz */
-export const REF_TRIAL = 6;
+export const REF_TRIAL = 3;
 export const YEAR_BOUTS = 10;
 
 export type RefFighter = { ad: string; ulke: string; stil: Background; vurus: number; gures: number; yer: number; cene: number; kond: number; rekor: string };
