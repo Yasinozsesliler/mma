@@ -123,8 +123,8 @@ function RefStart({ unlocked, onExit }: { unlocked: boolean; onExit: () => void 
       </View>
       <Text style={rs.label}>{L("HAKEMİN ADI")}</Text>
       <View style={{ flexDirection: 'row', gap: 8, marginBottom: 12 }}>
-        <TextInput value={ad} onChangeText={setAd} placeholder={L("Ad")} placeholderTextColor={C.faint} style={[rs.input, { flex: 1 }]} maxLength={16} />
-        <TextInput value={soyad} onChangeText={setSoyad} placeholder={L("Soyad")} placeholderTextColor={C.faint} style={[rs.input, { flex: 1 }]} maxLength={18} />
+        <TextInput value={ad} onChangeText={setAd} placeholder={L("Ad")} placeholderTextColor={C.faint} style={[rs.input, { flex: 1, minWidth: 0, width: 0 }]} maxLength={16} />
+        <TextInput value={soyad} onChangeText={setSoyad} placeholder={L("Soyad")} placeholderTextColor={C.faint} style={[rs.input, { flex: 1, minWidth: 0, width: 0 }]} maxLength={18} />
       </View>
       {!unlocked ? <RefPack lead={L("İlk {0} maç ücretsiz.", [REF_TRIAL])} /> : null}
     </Screen>
