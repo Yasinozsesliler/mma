@@ -25,10 +25,10 @@ export const PACK_STORE = Platform.OS !== 'ios';
 /** Efsaneler Paketi, Şampiyon + Koleksiyon ve kilitli efsanelerin 1. bölüm denemesi yalnızca iPhone'da.
  *  Android'de Conor ücretsiz, diğer efsaneler tam sürümle (Şampiyon Paketi) açılır. */
 export const LEGENDS_STORE = Platform.OS === 'ios';
-/** Antrenör Modu ve Hakem Modu mobilde şimdilik kapalı: App Store ürünleri henüz incelemeye
- *  gönderilemedi (bekleyen ürün sınırı), Play'de ürünleri yok. Ürünler gidince iPhone'da açılır. */
-export const COACH_STORE = false;
-export const REF_STORE = false;
+/** Antrenör Modu şimdilik yalnızca iPhone'da (Play'de ürünü yok). */
+export const COACH_STORE = Platform.OS === 'ios';
+/** Hakem Modu şimdilik yalnızca iPhone'da (Play'de ürünü yok). */
+export const REF_STORE = Platform.OS === 'ios';
 export { dismissUpsell, useUpsellDue } from './upsell';
 export { closeNudge, closeOffer, milestoneOffer, noteInterstitialShown, openOffer, rewardedCount, useNudge, useOffer, type OfferReason } from './offers';
 
