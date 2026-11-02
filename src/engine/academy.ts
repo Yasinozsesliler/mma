@@ -412,6 +412,8 @@ export interface CornerState {
   kesikAcik?: boolean;
   /** 1. rauntta bitiş olduysa */
   bitis?: { kazandi: boolean; yontem: string; raunt: number };
+  /** Son oynanan rauntun kafes sahnesi satırları (Antrenör Modu köşe ekranı) */
+  anim?: string[];
 }
 
 export interface RoundOne {
@@ -564,7 +566,44 @@ function offerCalls(d: Situation): CornerCall[] {
 }
 
 /** Bir raundu oynatır. Dönüş: bitiriş olduysa sonucu. */
+const GRAPPLE: Background[] = ['gures', 'bjj', 'judo', 'sambo'];
+
+/** Rauntun kafes sahnesinde oynanacak anları: üstün taraf tarzına göre vurur ya da indirir; bitişte nakavt, tap ya da doktor. */
+function roundBeats(st: Student, b: BoutState, edge: number, end: { kazandi: boolean; yontem: string } | null): string[] {
+  const s = st.soyad;
+  const o = b.rakip.soyad;
+  const win = edge > 0;
+  const A = win ? s : o;
+  const D = win ? o : s;
+  const gA = GRAPPLE.includes(win ? st.stil : b.rakip.stil);
+  const out: string[] = [];
+  const n = 3 + randInt(0, 1);
+  for (let i = 0; i < n; i++) {
+    const r = rand();
+    if (Math.abs(edge) < 2 && r < 0.4) out.push(L("Ortada sert bir değişim, ikisi de vurdu.", []));
+    else if (gA && r < 0.55) out.push(chance(0.7) ? L("{0} rakibini yere indirdi, üstten kontrol ediyor.", [A]) : L("{0} bacaklara daldı, {1} sprawl ile savundu.", [A, D]));
+    else if (r < 0.8) out.push(L("{0} kombinasyonlarla öne geçti.", [A]));
+    else out.push(chance(0.5) ? L("{0} rakibini kafese yasladı.", [A]) : L("Ortada sert bir değişim, ikisi de vurdu.", []));
+  }
+  if (!end && Math.abs(edge) > 5) out.push(L("💥 {0} yere düştü!", [D]), L("{0} ayağa kalktı, maç sürüyor.", [D]));
+  if (end) {
+    const W = end.kazandi ? s : o;
+    const Lo = end.kazandi ? o : s;
+    if (end.yontem === L("Submission")) out.push(L("{0} kilidi kapattı!", [W]), L("Tap attı! Bitti! Kazanan… {0}!", [W]));
+    else if (end.yontem === L("Doktor durdurdu (TKO)")) out.push(L("🩺 Doktor maçı durdurdu: kesik çok derin."));
+    else out.push(L("💥 {0} yere düştü!", [Lo]), L("Bitti! {0} ayağa kalkamadı, hakem hemen araya girdi.", [Lo]));
+  }
+  return out;
+}
+
 function playRound(s: GameState, st: Student, b: BoutState, call: CornerCall | null): { kazandi: boolean; yontem: string; raunt: number } | null {
+  const end = playRoundInner(s, st, b, call);
+  const k = b.kose!;
+  k.anim = roundBeats(st, b, k.rauntlar[k.rauntlar.length - 1] ?? (end?.kazandi ? 1 : -1), end);
+  return end;
+}
+
+function playRoundInner(s: GameState, st: Student, b: BoutState, call: CornerCall | null): { kazandi: boolean; yontem: string; raunt: number } | null {
   const k = b.kose!;
   const n = k.rauntlar.length + 1;
   const tip = b.tip ?? 'vurucu';
@@ -675,6 +714,8 @@ export interface BoutOutcome {
   /** Raunt sonuçları ve doğru talimat sayısı (sonuç ekranı için) */
   rauntlar?: number[];
   iyi?: number;
+  /** Son rauntun kafes sahnesi satırları */
+  anim?: string[];
 }
 
 /** Raunt arası talimat: bir sonraki raunt oynanır. Maç bittiyse sonucu döner. */
@@ -788,9 +829,9 @@ function settle(s: GameState, st: Student, kazandi: boolean, yontem: string, rau
     s.haberler.unshift(terfi);
   }
   if (pay > 0) satirlar.push(L("💵 Menajerlik payı: +{0}", [$(pay)]));
-  if (s.antrenor) satirlar.push(...noteCoachBout(s, kazandi, kose, terfi && st.seviye !== b0 ? st.seviye : null, !!st.sampiyon && !sampiyon0));
+  if (s.antrenor) satirlar.push(...noteCoachBout(s, kazandi, kose, terfi && st.seviye !== b0 ? st.seviye : null, !!st.sampiyon && !sampiyon0, { st, rakip: `${b.rakip.ad} ${b.rakip.soyad}`, yontem, iyi }));
   g.sonuclar = [{ hafta: s.hafta, ogrenci: `${st.ad} ${st.soyad}`, rakip: `${b.rakip.ad} ${b.rakip.soyad}`, kazandi, yontem, kose }, ...g.sonuclar].slice(0, 20);
-  return { kazandi, yontem, satirlar, kese: pay, un, terfi, rauntlar: k?.rauntlar, iyi };
+  return { kazandi, yontem, satirlar, kese: pay, un, terfi, rauntlar: k?.rauntlar, iyi, anim: k?.anim };
 }
 
 // ---------- Haftalık tik ----------

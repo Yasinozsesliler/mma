@@ -32,7 +32,7 @@ import { seasonDaysLeft, seasonRewards, tierOf } from '../engine/season';
 import { CoachStart } from './CoachScreen';
 import { FighterAvatar } from './FighterAvatar';
 import { BACKGROUNDS } from '../engine/data';
-import type { Background, GameState } from '../engine/types';
+import type { Appearance, Background, GameState } from '../engine/types';
 import { Button, Card, Icon, Logo, Pill, Screen, Section, SLANT, upName, type IconName } from './components';
 import { useOfflineStatus } from './offline';
 import { C, F, R } from './theme';
@@ -299,7 +299,7 @@ export function MenuScreen({
   onNew: (slot: Slot) => void;
   onChallenge: (id: ChallengeId, slot: Slot) => void;
   onLegend: (id: LegendId, isim: LegendName, slot: Slot, deneme: boolean) => void;
-  onCoach: (isim: { ad: string; soyad: string; lakap: string; uyruk: string }, slot: Slot, deneme: boolean) => void;
+  onCoach: (isim: { ad: string; soyad: string; lakap: string; uyruk: string; gorunum?: Appearance }, slot: Slot, deneme: boolean) => void;
   onContinue: (slot: Slot) => void;
   onDelete: (slot: Slot) => void;
   onDynasty: (slot: Slot) => void;
