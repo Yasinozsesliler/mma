@@ -12,10 +12,10 @@ export type CosmeticSku = (typeof COSMETIC_SKUS)[number];
 export const BUNDLE_SKU = 'paket_efsane';
 
 /** Efsaneler Paketi: Conor dışındaki bütün Efsane Yolları hikâyeleri (ve sonra gelecek efsaneler). Önerilen ≈ 2,99 $ */
-export const LEGENDS_SKU = 'efsaneler_paketi';
+export const LEGENDS_SKU = 'efsaneler_paketi_v2';
 
 /** Şampiyon + Koleksiyon: Şampiyon Paketi'nin her şeyi + bütün kozmetik paketleri (Efsane Koleksiyonu). Önerilen ≈ 7,99 $ */
-export const ULTIMATE_SKU = 'sampiyon_koleksiyon';
+export const ULTIMATE_SKU = 'sampiyon_koleksiyon_v2';
 
 /** Antrenör Modu: ayrı kariyer modu (hoca olarak oyna). Şampiyon Paketi'ne dahil değil. Önerilen ≈ 1,99 $ */
 export const COACH_SKU = 'antrenor_modu';
