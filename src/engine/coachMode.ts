@@ -5,8 +5,9 @@ import { L, LOC } from '../i18n';
 import { gymLevel, gymRanking, gymTick, power, refreshCandidates, TIERS, type Student, type Tier } from './academy';
 import { createGame, rollStartingStats, type NewFighterInput } from './character';
 import { COUNTRIES } from './data';
-import { chance, clamp, pick, randInt } from './rng';
-import type { GameState, StatKey } from './types';
+import { GYMS } from './gyms';
+import { chance, clamp, pick, rand, randInt } from './rng';
+import type { Appearance, GameState, StatKey } from './types';
 import { STAT_KEYS, STAT_LABELS } from './types';
 
 export type CoachSkill = 'taktik' | 'gelisim' | 'gozcu' | 'motivasyon' | 'menajer';
@@ -40,6 +41,28 @@ export interface CoachRun {
   /** Satın alınmadan oynanıyor; DENEME haftasında durur */
   deneme?: boolean;
   bekle?: boolean;
+  /** Hocanın sosyal medyası: takipçi ve öğrencilerin maçlarından sonra gelen paylaşımlar */
+  takipci?: number;
+  akis?: CoachPost[];
+  /** Yıl sonu töreni (kapanana kadar gösterilir) */
+  toren?: CoachCeremony | null;
+  /** Kariyer boyunca: köşede kazanılan maç, toplam galibiyet/mağlubiyet */
+  toplam?: { g: number; m: number; kose: number };
+}
+
+export interface CoachPost {
+  kim: string;
+  kul: string;
+  metin: string;
+  ton: 'iyi' | 'kotu' | 'notr';
+  begeni: number;
+}
+
+export interface CoachCeremony {
+  no: number;
+  adaylar: { ad: string; salon: string; ulke: string; puan: number; sen: boolean }[];
+  kazanan: number;
+  odul: number;
 }
 
 export const DENEME = 20;
@@ -59,7 +82,7 @@ const $ = (n: number) => `$${Math.round(n).toLocaleString(LOC)}`;
 export const isCoach = (s: GameState) => !!s.antrenor;
 export const xpNeeded = (lv: number) => 80 + lv * 60;
 
-export function createCoachGame(isim: { ad: string; soyad: string; lakap: string; uyruk: string; kadin?: boolean }, deneme: boolean): GameState {
+export function createCoachGame(isim: { ad: string; soyad: string; lakap: string; uyruk: string; kadin?: boolean; gorunum?: Appearance }, deneme: boolean): GameState {
   const uyruk = COUNTRIES[isim.uyruk] ? isim.uyruk : 'tr';
   const input: NewFighterInput = {
     ad: isim.ad.trim() || L("Hoca"),
@@ -74,6 +97,7 @@ export function createCoachGame(isim: { ad: string; soyad: string; lakap: string
     kadin: isim.kadin,
   };
   const s = createGame(input, rollStartingStats(input, false));
+  if (isim.gorunum) s.fighter.gorunum = isim.gorunum;
   s.para = START_MONEY;
   // Eski bir dövüşçü olarak biraz tanınırsın: garaj salonu ilk haftadan küçük de olsa kâra geçer
   s.populerlik = 30;
@@ -88,6 +112,9 @@ export function createCoachGame(isim: { ad: string; soyad: string; lakap: string
     olayHafta: s.hafta,
     yil: { no: 1, g: 0, m: 0, terfi: 0, sampiyon: 0 },
     oduller: [],
+    takipci: 1_200,
+    akis: [],
+    toplam: { g: 0, m: 0, kose: 0 },
     ...(deneme ? { deneme: true } : {}),
   };
   refreshCandidates(s, true);
@@ -344,10 +371,45 @@ export function chooseEvent(s: GameState, i: number): string {
 
 // ---------- Hafta ----------
 
+// ---------- Sosyal medya ----------
+
+const handle = (n: string) => '@' + n.toLocaleLowerCase('tr-TR').replace(/[^a-z0-9ğüşıöç]/g, '');
+const TIER_FANS: Record<Tier, number> = { amator: 1, bolgesel: 2.5, buyuk: 6, ucc: 15 };
+
+function coachPosts(s: GameState, st: Student, info: { rakip: string; yontem: string; iyi: number }, kazandi: boolean, kose: boolean, terfi: Tier | null, sampiyon: boolean): CoachPost[] {
+  const r = s.antrenor!;
+  const salon = s.salon?.ad ?? '';
+  const hoca = `${s.fighter.ad} ${s.fighter.soyad}`;
+  const ogr = `${st.ad} ${st.soyad}`;
+  const like = () => Math.round((40 + (r.takipci ?? 0) * 0.03) * (0.6 + rand() * 1.2));
+  const fan = pick([L("MMA Gündem"), L("Kafes Haber"), L("Dövüş Gecesi TV")]);
+  const out: CoachPost[] = [];
+  if (sampiyon) out.push({ kim: L("Kafes Haber"), kul: '@kafeshaber', metin: L("👑 YENİ ŞAMPİYON! {0}, {1} salonundan çıktı. Köşesinde {2} vardı.", [ogr, salon, hoca]), ton: 'iyi', begeni: like() * 6 });
+  else if (terfi) out.push({ kim: fan, kul: handle(fan), metin: L("{0} artık {1} seviyesinde. {2} adını daha çok duyacağız.", [ogr, TIERS[terfi].ad, salon]), ton: 'iyi', begeni: like() * 3 });
+  if (kazandi) {
+    out.push({ kim: ogr, kul: handle(ogr), metin: kose ? pick([L("Bu zafer hocama! Köşede o varken kaybetmem. 🙏"), L("Raunt arasında hocam ne dediyse onu yaptım. İşte sonuç! 💪")]) : L("Kazandım! Salona ve takımıma teşekkürler. 💪"), ton: 'iyi', begeni: like() * 2 });
+    if (kose && info.iyi > 0) out.push({ kim: fan, kul: handle(fan), metin: L("{0}, {1} ile kazandı. {2} köşeden maçı çevirdi.", [ogr, info.yontem, hoca]), ton: 'iyi', begeni: like() });
+    else out.push({ kim: fan, kul: handle(fan), metin: L("{0} öğrencisi yine kazandı. Bu salonda bir şeyler oluyor. 🔥", [salon]), ton: 'iyi', begeni: like() });
+  } else {
+    out.push({ kim: ogr, kul: handle(ogr), metin: L("Bu gece olmadı. Salona dönüp daha çok çalışacağım."), ton: 'notr', begeni: like() });
+    out.push(kose ? { kim: fan, kul: handle(fan), metin: L("{0} için zor bir gece. {1} rakibe cevap bulamadı. 🤔", [ogr, info.rakip]), ton: 'kotu', begeni: like() } : { kim: fan, kul: handle(fan), metin: L("Köşede hocası yoktu, belli oldu. 😕"), ton: 'kotu', begeni: like() });
+  }
+  return out;
+}
+
 /** Maç sonucunu antrenör kariyerine işler (academy.finishBout çağırır). */
-export function noteCoachBout(s: GameState, kazandi: boolean, kose: boolean, terfi: Tier | null, sampiyon: boolean): string[] {
+export function noteCoachBout(s: GameState, kazandi: boolean, kose: boolean, terfi: Tier | null, sampiyon: boolean, info?: { st: Student; rakip: string; yontem: string; iyi: number }): string[] {
   const r = s.antrenor;
   if (!r) return [];
+  r.toplam ??= { g: 0, m: 0, kose: 0 };
+  if (kazandi) r.toplam.g++;
+  else r.toplam.m++;
+  if (kazandi && kose) r.toplam.kose++;
+  if (info) {
+    const gain = Math.round((40 + (s.salon?.un ?? 0) * 6) * TIER_FANS[info.st.seviye] * (kazandi ? 1.4 : 0.5) * (kose ? 1.2 : 1) * (terfi ? 2 : 1) * (sampiyon ? 5 : 1) * (0.7 + rand() * 0.6));
+    r.takipci = (r.takipci ?? 1_200) + gain;
+    r.akis = [...coachPosts(s, info.st, info, kazandi, kose, terfi, sampiyon), ...(r.akis ?? [])].slice(0, 30);
+  }
   if (kazandi) r.yil.g++;
   else r.yil.m++;
   if (terfi) r.yil.terfi++;
@@ -373,11 +435,35 @@ function yearEnd(s: GameState): string | null {
     s.para += odul;
     if (s.salon) s.salon.un = clamp(s.salon.un + 8, 0, 100);
     addCoachXp(s, 60);
+    r.takipci = (r.takipci ?? 1_200) + 3_000;
     satir = L("🏆 YILIN ANTRENÖRÜ: {0}! {1}. yılın ödülü senin. Ödül {2}, ün +8.", [`${s.fighter.ad} ${s.fighter.soyad}`, y.no, $(odul)]);
   } else satir = L("🎙️ {0}. yılın antrenörü ödülünü bu yıl başkası aldı. Yıl: {1} galibiyet, {2} terfi.", [y.no, y.g, y.terfi]);
   r.yilSonu = { no: y.no, kazandi, satir };
+  // Tören: en iyi üç rakip salonun hocaları ve sen; kazanan yılın puanına göre
+  const rivals = gymRanking(s)
+    .rows.filter((x) => !x.sen)
+    .slice(0, 3)
+    .map((row, i) => {
+      const def = GYMS.find((x) => x.id === row.id);
+      const p = i === 0 ? (kazandi ? Math.min(rakip, puan - 1 - randInt(0, 4)) : Math.max(rakip, puan + 1 + randInt(0, 6))) : rakip - randInt(4, 16);
+      return { ad: def?.antrenor ?? row.ad, salon: row.ad, ulke: row.ulke, puan: Math.max(1, Math.round(p)), sen: false };
+    });
+  const adaylar = [...rivals, { ad: `${s.fighter.ad} ${s.fighter.soyad}`, salon: s.salon?.ad ?? '', ulke: COUNTRIES[s.fighter.uyruk]?.ad ?? '', puan: Math.round(puan), sen: true }].sort(() => rand() - 0.5);
+  let kaz = 0;
+  adaylar.forEach((a, i) => {
+    if (kazandi ? a.sen : !a.sen && a.puan > (adaylar[kaz].sen ? -1 : adaylar[kaz].puan)) kaz = i;
+  });
+  r.toren = { no: y.no, adaylar, kazanan: kaz, odul: kazandi ? 10_000 + y.no * 2_500 : 0 };
   r.yil = { no: y.no + 1, g: 0, m: 0, terfi: 0, sampiyon: 0 };
   return satir;
+}
+
+/** Tören kapanır (ödül yıl sonunda işlendi). */
+export function closeCoachCeremony(s: GameState) {
+  const r = s.antrenor;
+  if (!r) return;
+  r.toren = null;
+  delete r.yilSonu;
 }
 
 /** Bir hafta ilerlet. Dönüş: haftanın notları. */
