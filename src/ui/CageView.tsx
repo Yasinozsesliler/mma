@@ -11,7 +11,7 @@ import { Modal, Pressable, StyleSheet, Text, View, type LayoutChangeEvent } from
 import Svg, { Circle, Defs, Ellipse, G, Line, LinearGradient as SvgLinear, Polygon, RadialGradient, Rect, Stop, Text as SvgText } from 'react-native-svg';
 import type { Appearance, FightState } from '../engine/types';
 import { DEFAULT_LOOK } from './FighterAvatar';
-import { Figure, HIP_H, joints, lerpPose, POSES, type Pose, type PoseName } from './rig';
+import { Figure, HIP_H, joints, lerpPose, POSES, type Kit, type Pose, type PoseName } from './rig';
 import { C, F, R } from './theme';
 
 type Actor = 'p' | 'o' | 'r';
@@ -145,6 +145,9 @@ export function CageView({
   speed = 1,
   replayOnly,
   onReplayEnd,
+  rLook,
+  pKitOverride,
+  noReplay,
 }: {
   fs: FightState;
   shown: number;
@@ -154,8 +157,14 @@ export function CageView({
   /** Yalnızca nakavt tekrarını oynatan kopya (tam ekran pencerede). */
   replayOnly?: boolean;
   onReplayEnd?: () => void;
+  /** Hakemin görünümü (Hakem Modu: oyuncunun hakemi) */
+  rLook?: Appearance;
+  /** Kırmızı köşenin kıyafeti (verilmezse oyuncunun kozmetikleri) */
+  pKitOverride?: Kit;
+  /** Nakavt tekrarı gösterilmez */
+  noReplay?: boolean;
 }) {
-  const [pKit] = useState(playerKit);
+  const [pKit] = useState(() => pKitOverride ?? playerKit());
   const [w, setW] = useState(340);
   const k = Math.max(0.95, Math.min(1.3, w / 300));
   const cx = w / 2;
@@ -505,7 +514,7 @@ export function CageView({
       if (fs.durum === 'bitti' && fs.sonuc) {
         const kz = fs.sonuc.kazanan;
         const bitirme = ['KO', 'TKO', 'SUB'].includes(fs.sonuc.yontem);
-        setCaption(kz === 'berabere' ? tL("BERABERE") : `KAZANAN: ${kz === 'p' ? fs.pAd : fs.oAd}`.toLocaleUpperCase(LOC));
+        setCaption(kz === 'berabere' ? tL("BERABERE") : `${tL("KAZANAN")}: ${kz === 'p' ? fs.pAd : fs.oAd}`.toLocaleUpperCase(LOC));
         sfx('bell2');
         hype.current = { t0: now(), amp: bitirme ? 1.4 : 0.6, ms: 3000 };
         kick();
@@ -537,7 +546,7 @@ export function CageView({
         queue(W, [['stance', 500, { x: GAP / 2 - 22 }], ['stance', 300, { x: GAP / 2 - 22 }], ['winHeld', 400, { x: GAP / 2 - 20 }]]);
         if (!bitirme) queue(L, [['dejected', 700, { x: 4 }]]);
         else if (fs.sonuc.yontem === 'SUB') queue(L, [['sitUp', 700, { x: -8 }]]);
-        if ((fs.sonuc.yontem === 'KO' || fs.sonuc.yontem === 'TKO') && !replayed.current) {
+        if ((fs.sonuc.yontem === 'KO' || fs.sonuc.yontem === 'TKO') && !replayed.current && !noReplay) {
           replayed.current = true;
           after(() => setShowReplay(true), 2600 * spd());
         }
@@ -583,7 +592,7 @@ export function CageView({
     const f = face.current[a];
     const X = baseX(a) + f * k * ps.x;
     const Y = floorY - HIP_H * k + k * ps.y;
-    const look = a === 'p' ? pLook ?? DEFAULT_LOOK : a === 'o' ? oLook : REF_LOOK;
+    const look = a === 'p' ? pLook ?? DEFAULT_LOOK : a === 'o' ? oLook : rLook ?? REF_LOOK;
     const kit = a === 'p' ? pKit : a === 'o' ? { shorts: '#1f4fbf', trim: '#ffffff', glove: '#1740a8' } : { shorts: '#15161a', trim: '#fff', glove: '#000', ref: true };
     return (
       <G key={a}>

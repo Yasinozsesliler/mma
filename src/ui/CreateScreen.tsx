@@ -536,7 +536,7 @@ function Chips<T extends string>({ items, value, onPick }: { items: { key: T; ad
   );
 }
 
-function LookPicker({ look, onChange }: { look: Appearance; onChange: (g: Appearance) => void }) {
+export function LookPicker({ look, onChange }: { look: Appearance; onChange: (g: Appearance) => void }) {
   const set = (p: Partial<Appearance>) => onChange({ ...look, ...p });
   // Şampiyon Paketi: özel saç renkleri ve oluştururken ek dövmeler (web sürümünde açık)
   const premium = usePremium();

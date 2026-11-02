@@ -1,14 +1,17 @@
-// Hakem Modu ekranları: başlangıç (ad + deneme/paket), kariyer merkezi (itibar, terfi, geçmiş, yıl sonu),
-// maç (akış, karar anı kartı, raunt sonu puan kartı) ve maç sonu özeti.
+// Hakem Modu ekranları: başlangıç (karakter + ad + ülke + deneme/paket), sekmeli kariyer merkezi
+// (Kariyer · Gelişim · Hayat · Profil), kafes sahnesinde maç (akış, karar anı kartı, raunt sonu puan kartı)
+// ve Yılın Hakemi töreni.
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { track } from '../analytics';
 import { sfx, useSoundScene } from '../audio';
-import { BACKGROUNDS } from '../engine/data';
+import { money } from '../engine/career';
+import { BACKGROUNDS, COUNTRIES } from '../engine/data';
+import { fmtFollowers } from '../engine/fame';
 import {
+  cardHint,
   cardLabel,
-  closeYearEnd,
   createRefRun,
   decide,
   finishBout,
@@ -19,16 +22,40 @@ import {
   TIER_NAME,
   trialOver,
   YEAR_BOUTS,
+  fighterName,
   type Card as RefCard,
   type RefBout,
   type RefFighter,
   type RefRun,
 } from '../engine/referee';
+import {
+  chooseEvent,
+  closeCeremony,
+  DEFAULT_REF_LOOK,
+  myRank,
+  REF_SKILLS,
+  refRanking,
+  seminarCost,
+  SEMINARS,
+  SKILL_MAX,
+  skillCost,
+  skillLvl,
+  takeSeminar,
+  TIER_COLOR,
+  upgradeSkill,
+  type RefOffer,
+} from '../engine/refereeCareer';
+import { lookFor } from '../engine/tale';
+import type { Appearance, FightState } from '../engine/types';
 import { L, LOC } from '../i18n';
 import { buy, PURCHASES, restorePurchases, useOwned, usePrice } from '../monetization';
 import { REF_SKU } from '../monetization/skus';
 import { actRef, setRun, useRefRun } from '../refereeStore';
-import { Bar, Button, Card, Icon, Screen, SLANT, Title, type IconName } from './components';
+import { CageView } from './CageView';
+import { Bar, Button, CageBg, Card, Choice, Icon, Screen, SLANT, type IconName } from './components';
+import { LookPicker } from './CreateScreen';
+import { FighterAvatar } from './FighterAvatar';
+import { HubNav, type NavItem } from './HubNav';
 import { C, F, R } from './theme';
 
 export function useRefUnlocked() {
@@ -77,12 +104,21 @@ export function RefereeScreen({ onExit }: { onExit: () => void }) {
   }, [r?.deneme, unlocked]);
   if (!r) return <RefStart unlocked={unlocked} onExit={onExit} />;
   if (r.aktif) return <BoutView r={r} b={r.aktif} />;
+  if (r.toren) return <Ceremony r={r} />;
   return <RefHub r={r} unlocked={unlocked} onExit={onExit} />;
 }
+
+// ---------- Başlangıç: hakemini oluştur ----------
+
+const REF_COUNTRIES = ['tr', 'us', 'br', 'ru', 'pl', 'gb', 'ie', 'mx', 'jp', 'kz', 'az', 'ge'];
+const countryName = (k?: string) => (k && COUNTRIES[k] ? COUNTRIES[k].ad : k ?? '');
 
 function RefStart({ unlocked, onExit }: { unlocked: boolean; onExit: () => void }) {
   const [ad, setAd] = useState('');
   const [soyad, setSoyad] = useState('');
+  const [ulke, setUlke] = useState('tr');
+  const [look, setLook] = useState<Appearance>({ ...DEFAULT_REF_LOOK });
+  const [edit, setEdit] = useState(false);
   return (
     <Screen
       footer={
@@ -93,7 +129,7 @@ function RefStart({ unlocked, onExit }: { unlocked: boolean; onExit: () => void 
             tone="gold"
             onPress={() => {
               track('referee_start', { deneme: unlocked ? 0 : 1 });
-              setRun(createRefRun(ad, soyad, !unlocked));
+              setRun(createRefRun(ad, soyad, !unlocked, { gorunum: look, ulke }));
             }}
           />
           <Button label={L("Menüye dön")} icon="arrow-left" tone="ghost" onPress={onExit} />
@@ -108,11 +144,12 @@ function RefStart({ unlocked, onExit }: { unlocked: boolean; onExit: () => void 
       <View style={{ gap: 10, marginVertical: 14 }}>
         {(
           [
-            ['hand-back-left', L("Sarsılan dövüşçü, sıkılan kilit, faul, kesik: maçı durdur ya da devam ettir.")],
+            ['hand-back-left', L("Kafeste maçı canlı izle: sarsılan dövüşçü, sıkılan kilit, faul, kesik… durdur ya da devam ettir.")],
             ['clipboard-text', L("Her raunt sonunda istatistiklere bakıp puan kartını doldur: 10-9, 10-8, 10-10.")],
-            ['eye', L("Refleks değil, okuma: ipuçları gerçeği gösterir; gri anlarda iki karar da kabul edilir.")],
-            ['trending-up', L("İtibarını yükselt: amatör gecelerden UCC şampiyonluk maçlarına çık.")],
-            ['trophy', L("Her yıl sonu Yılın Hakemi ödülü için yarış.")],
+            ['calendar-star', L("Organizasyonların tekliflerinden maçını seç: alt kart, ana kart, ünvan maçı.")],
+            ['chart-line', L("Beceri puanlarıyla okuma, pozisyon, sakinlik ve kural bilgini geliştir.")],
+            ['cellphone-message', L("Sosyal medya, basın, sponsorlar ve komisyon: her kararın bir yankısı var.")],
+            ['trophy', L("Amatör gecelerden UCC'ye yüksel, Yılın Hakemi töreninde sahneye çık.")],
           ] as [IconName, string][]
         ).map(([icon, t]) => (
           <View key={icon} style={rs.bullet}>
@@ -121,85 +158,173 @@ function RefStart({ unlocked, onExit }: { unlocked: boolean; onExit: () => void 
           </View>
         ))}
       </View>
-      <Text style={rs.label}>{L("HAKEMİN ADI")}</Text>
-      <View style={{ flexDirection: 'row', gap: 8, marginBottom: 12 }}>
-        <TextInput value={ad} onChangeText={setAd} placeholder={L("Ad")} placeholderTextColor={C.faint} style={[rs.input, { flex: 1, minWidth: 0, width: 0 }]} maxLength={16} />
-        <TextInput value={soyad} onChangeText={setSoyad} placeholder={L("Soyad")} placeholderTextColor={C.faint} style={[rs.input, { flex: 1, minWidth: 0, width: 0 }]} maxLength={18} />
-      </View>
+      <Card>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+          <FighterAvatar look={look} size={72} ring={C.red} />
+          <View style={{ flex: 1, gap: 6 }}>
+            <Text style={rs.label}>{L("HAKEMİN ADI")}</Text>
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+              <TextInput value={ad} onChangeText={setAd} placeholder={L("Ad")} placeholderTextColor={C.faint} style={[rs.input, { flex: 1, minWidth: 0, width: 0 }]} maxLength={16} />
+              <TextInput value={soyad} onChangeText={setSoyad} placeholder={L("Soyad")} placeholderTextColor={C.faint} style={[rs.input, { flex: 1, minWidth: 0, width: 0 }]} maxLength={18} />
+            </View>
+          </View>
+        </View>
+        <Text style={[rs.label, { marginTop: 12 }]}>{L("ÜLKE")}</Text>
+        <View style={rs.chips}>
+          {REF_COUNTRIES.filter((k) => COUNTRIES[k]).map((k) => (
+            <Pressable key={k} onPress={() => setUlke(k)} style={[rs.chip, ulke === k && rs.chipOn]}>
+              <Text style={[rs.chipText, ulke === k && { color: '#1a0406' }]}>{COUNTRIES[k].ad}</Text>
+            </Pressable>
+          ))}
+        </View>
+        <View style={{ marginTop: 12 }}>
+          <Button label={edit ? L("Görünümü kapat") : L("Görünümünü oluştur")} icon="account-edit" tone="ghost" onPress={() => setEdit(!edit)} />
+        </View>
+      </Card>
+      {edit ? <LookPicker look={look} onChange={setLook} /> : null}
       {!unlocked ? <RefPack lead={L("İlk {0} maç ücretsiz.", [REF_TRIAL])} /> : null}
     </Screen>
   );
 }
 
+// ---------- Kariyer merkezi ----------
+
+type Tab = 'kariyer' | 'gelisim' | 'hayat' | 'profil';
+
 function RefHub({ r, unlocked, onExit }: { r: RefRun; unlocked: boolean; onExit: () => void }) {
-  const req = promoteReq(r);
-  const kilit = trialOver(r) && !unlocked;
+  const [tab, setTab] = useState<Tab>('kariyer');
+  const nav: NavItem<Tab>[] = [
+    { key: 'kariyer', label: L("Kariyer"), icon: 'whistle', badge: r.olay ? '!' : null },
+    { key: 'gelisim', label: L("Gelişim"), icon: 'chart-line', badge: (r.bp ?? 0) > 0 ? r.bp : null },
+    { key: 'hayat', label: L("Hayat"), icon: 'cellphone-message' },
+    { key: 'profil', label: L("Profil"), icon: 'account' },
+  ];
   return (
-    <Screen
-      footer={
-        <View style={{ gap: 8 }}>
-          {kilit ? null : (
-            <Button
-              label={r.son ? L("Sıradaki maç") : L("İlk maçına çık")}
-              icon="whistle"
-              tone="red"
-              onPress={() => {
-                track('referee_bout');
-                actRef(startBout);
-              }}
-            />
-          )}
-          <Button label={L("Menüye dön")} icon="arrow-left" tone="ghost" onPress={onExit} />
+    <Screen key={tab} footer={<HubNav items={nav} value={tab} onChange={setTab} />}>
+      <RefHero r={r} />
+      {tab === 'kariyer' ? <CareerTab r={r} unlocked={unlocked} onExit={onExit} /> : null}
+      {tab === 'gelisim' ? <GrowthTab r={r} /> : null}
+      {tab === 'hayat' ? <LifeTab r={r} /> : null}
+      {tab === 'profil' ? <ProfileTab r={r} onExit={onExit} /> : null}
+    </Screen>
+  );
+}
+
+function RefHero({ r }: { r: RefRun }) {
+  const tc = TIER_COLOR[r.seviye];
+  return (
+    <LinearGradient colors={r.seviye === 'ucc' ? ['#2e2206', '#0e0c07', '#08090b'] : ['#240710', '#0e0f12', '#08090b']} locations={[0, 0.55, 1]} style={rs.heroCard}>
+      <CageBg opacity={0.05} />
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+        <FighterAvatar look={r.gorunum ?? DEFAULT_REF_LOOK} size={64} ring={tc} />
+        <View style={{ flex: 1 }}>
+          <Text style={rs.nick}>{L("🏁 HAKEM")}</Text>
+          <Text style={[rs.name, SLANT]} numberOfLines={1} adjustsFontSizeToFit>
+            {`${r.ad} ${r.soyad}`.trim().toLocaleUpperCase(LOC)}
+          </Text>
+          <View style={rs.heroChips}>
+            <Text style={[rs.heroChip, { color: tc }]}>{TIER_NAME[r.seviye]().toLocaleUpperCase(LOC)}</Text>
+            <Text style={rs.dot}>•</Text>
+            <Text style={rs.heroChip}>{countryName(r.ulke).toLocaleUpperCase(LOC)}</Text>
+            <Text style={rs.dot}>•</Text>
+            <Text style={[rs.heroChip, { color: C.text }]}>{L("#{0} SIRALAMA", [myRank(r)])}</Text>
+          </View>
         </View>
-      }
-    >
-      <Title kicker={L("🏁 HAKEM · {0}", [TIER_NAME[r.seviye]().toLocaleUpperCase(LOC)])} sub={L("{0} maç · {1} kusursuz · yıl {2}", [r.mac, r.kusursuz, r.yil])}>
-        {`${r.ad} ${r.soyad}`.trim()}
-      </Title>
+      </View>
+      <View style={rs.meters}>
+        <Meter label={L("MAÇ")} value={String(r.mac)} />
+        <Meter label={L("PARA")} value={money(r.para ?? 0)} color={C.green} />
+        <Meter label={L("İTİBAR")} value={String(r.itibar)} color={r.itibar >= 70 ? C.gold : r.itibar >= 35 ? C.green : C.orange} />
+        <Meter label={L("TAKİPÇİ")} value={fmtFollowers(r.takipci ?? 0)} color={C.gold} />
+      </View>
+    </LinearGradient>
+  );
+}
+
+function Meter({ label, value, color = C.text }: { label: string; value: string; color?: string }) {
+  return (
+    <View style={rs.meter}>
+      <Text style={rs.meterLabel}>{label}</Text>
+      <Text style={[rs.meterVal, { color }]} numberOfLines={1} adjustsFontSizeToFit>
+        {value}
+      </Text>
+    </View>
+  );
+}
+
+function CareerTab({ r, unlocked, onExit }: { r: RefRun; unlocked: boolean; onExit: () => void }) {
+  const kilit = trialOver(r) && !unlocked;
+  const req = promoteReq(r);
+  return (
+    <>
+      {r.olay ? <EventCard r={r} /> : null}
+      {r.sonMesaj && !r.olay ? (
+        <View style={rs.notice}>
+          <Icon name="information" size={18} color={C.gold} />
+          <Text style={rs.noticeText}>{r.sonMesaj}</Text>
+        </View>
+      ) : null}
+      {r.son ? <LastBout r={r} /> : null}
+      {kilit ? <RefPack lead={L("Deneme bitti. Kafes seni bekliyor:")} /> : null}
+      <Text style={rs.section}>{L("MAÇ TEKLİFLERİ")}</Text>
+      {(r.teklifler ?? []).map((o, i) => (
+        <OfferCard key={i} o={o} disabled={kilit || !!r.olay} onPress={() => {
+          track('referee_bout', { anaKart: o.anaKart ? 1 : 0, unvan: o.unvan ? 1 : 0 });
+          sfx('bell');
+          actRef((x) => startBout(x, i));
+        }} />
+      ))}
+      {r.olay ? <Text style={rs.small}>{L("Önce bekleyen durumu çöz.")}</Text> : null}
       <Card>
+        <Text style={rs.kicker}>{L("KARİYER YOLU")}</Text>
         <Bar value={r.itibar} color={r.itibar >= 70 ? C.gold : r.itibar >= 35 ? C.green : C.orange} label={L("İtibar")} right={`${r.itibar}/100`} />
         <Text style={rs.small}>
           {req ? L("Terfi için: itibar {0} ve {1} maç ({2}/{1})", [req[0], req[1], r.mac]) : r.itibar >= 85 ? L("UCC şampiyonluk maçlarına atanabilirsin.") : L("Şampiyonluk maçları için itibar 85.")}
         </Text>
-        <Text style={rs.small}>{L("Doğru karar {0} · hatalı karar {1} · bu yıl {2}/{3} maç", [r.dogru, r.yanlis, r.yilMac, YEAR_BOUTS])}</Text>
+        <Text style={rs.small}>{L("Bu yıl {0}/{1} maç · yıl sonunda Yılın Hakemi töreni", [r.yilMac, YEAR_BOUTS])}</Text>
       </Card>
-      {r.yilSonu ? (
-        <Card accent={r.yilSonu.odul ? C.gold : undefined}>
-          <Text style={rs.kicker}>{L("YIL SONU · {0}. YIL", [r.yilSonu.yil])}</Text>
-          <Text style={rs.text}>
-            {r.yilSonu.odul ? L("🏆 Yılın Hakemi seçildin! Maç başı ortalama puanın {0}.", [r.yilSonu.ort]) : L("Maç başı ortalama puanın {0}. Yılın Hakemi için 8 gerekiyordu.", [r.yilSonu.ort])}
+      <Button label={L("Menüye dön")} icon="arrow-left" tone="ghost" onPress={onExit} />
+    </>
+  );
+}
+
+function OfferCard({ o, onPress, disabled }: { o: RefOffer; onPress: () => void; disabled?: boolean }) {
+  const accent = o.unvan ? C.gold : o.anaKart ? C.red : C.border;
+  return (
+    <Pressable onPress={onPress} disabled={disabled} style={({ pressed }) => [{ opacity: disabled ? 0.45 : pressed ? 0.85 : 1, marginBottom: 8 }]}>
+      <LinearGradient colors={o.unvan ? ['#3a2a06', '#141007'] : o.anaKart ? ['#2a0b10', '#121014'] : ['#16181d', '#101115']} style={[rs.offer, { borderColor: accent }]}>
+        <View style={[rs.offerIcon, { borderColor: accent }]}>
+          <Icon name={o.unvan ? 'trophy' : o.anaKart ? 'star' : 'whistle'} size={22} color={o.unvan ? C.gold : o.anaKart ? C.red : C.dim} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+            {o.unvan ? <Text style={[rs.badge, { backgroundColor: C.gold }]}>{L("ÜNVAN MAÇI")}</Text> : o.anaKart ? <Text style={[rs.badge, { backgroundColor: C.red, color: '#fff' }]}>{L("ANA KART")}</Text> : <Text style={[rs.badge, { backgroundColor: '#2a2d35', color: C.dim }]}>{L("ALT KART")}</Text>}
+            <Text style={rs.offerCity}>{o.sehir}</Text>
+          </View>
+          <Text style={[rs.offerOrg, SLANT]} numberOfLines={1}>
+            {o.org}
           </Text>
-          <Button label={L("Devam")} tone="ghost" onPress={() => actRef(closeYearEnd)} />
-        </Card>
-      ) : null}
-      {r.son ? <LastBout r={r} /> : null}
-      {kilit ? <RefPack lead={L("Deneme bitti. Kafes seni bekliyor:")} /> : null}
-      {r.oduller.length ? (
-        <Card>
-          <Text style={rs.kicker}>{L("ÖDÜLLER")}</Text>
-          {r.oduller.map((o, i) => (
-            <Text key={i} style={rs.text}>
-              🏆 {o}
-            </Text>
-          ))}
-        </Card>
-      ) : null}
-      {r.gecmis.length ? (
-        <Card>
-          <Text style={rs.kicker}>{L("SON MAÇLAR")}</Text>
-          {r.gecmis.slice(0, 8).map((g, i) => (
-            <View key={i} style={rs.hist}>
-              <Text style={rs.histName} numberOfLines={1}>
-                {g.a.split(' ').slice(-1)[0]} – {g.b.split(' ').slice(-1)[0]}
-              </Text>
-              <Text style={[rs.histNote, { color: g.puan >= 5 ? C.green : g.puan >= -4 ? C.dim : C.red }]} numberOfLines={1}>
-                {g.not}
-              </Text>
-            </View>
-          ))}
-        </Card>
-      ) : null}
-    </Screen>
+          <Text style={rs.offerSub}>{o.unvan ? L("5 raunt · baskı yüksek, itibar etkisi büyük") : o.anaKart ? L("3 raunt · gözler üstünde, itibar etkisi daha büyük") : L("3 raunt · sakin bir gece")}</Text>
+        </View>
+        <View style={{ alignItems: 'flex-end' }}>
+          <Text style={rs.offerPay}>{money(o.ucret)}</Text>
+          <Icon name="chevron-right" size={22} color={C.dim} />
+        </View>
+      </LinearGradient>
+    </Pressable>
+  );
+}
+
+function EventCard({ r }: { r: RefRun }) {
+  const ev = r.olay!;
+  return (
+    <Card accent={C.orange}>
+      <Text style={[rs.kicker, { color: C.orange }]}>{ev.baslik}</Text>
+      <Text style={rs.text}>{ev.metin}</Text>
+      {ev.secenekler.map((o, i) => (
+        <Choice key={i} label={o.ad} onPress={() => actRef((x) => chooseEvent(x, i))} />
+      ))}
+    </Card>
   );
 }
 
@@ -212,27 +337,265 @@ function LastBout({ r }: { r: RefRun }) {
       <Text style={rs.kicker}>{L("SON MAÇ · {0}", [s.sonuc.toLocaleUpperCase(LOC)])}</Text>
       <Text style={[rs.verdict, SLANT, { color: s.puan >= 5 ? C.gold : s.puan >= -4 ? C.text : C.red }]}>{s.not}</Text>
       <Text style={rs.small}>{L("Maç puanın {0} · itibar {1}", [s.puan, s.itibar >= 0 ? `+${s.itibar}` : s.itibar])}</Text>
+      {s.para != null ? (
+        <View style={rs.gains}>
+          <Text style={[rs.gain, { color: C.green }]}>+{money(s.para)}</Text>
+          {s.bonus ? <Text style={[rs.gain, { color: C.gold }]}>{L("Gecenin hakemi bonusu")}</Text> : null}
+          <Text style={[rs.gain, { color: C.gold }]}>+{fmtFollowers(s.takipci ?? 0)} {L("takipçi")}</Text>
+          {s.bp ? <Text style={[rs.gain, { color: C.blue }]}>+{s.bp} {L("beceri puanı")}</Text> : null}
+        </View>
+      ) : null}
       {s.terfi ? <Text style={[rs.text, { color: C.gold, fontFamily: F.bold }]}>{L("⬆️ TERFİ! Artık {0} maçlarını yönetiyorsun.", [TIER_NAME[s.terfi]()])}</Text> : null}
       {s.kararlar.map((k, i) => (
         <Text key={i} style={[rs.small, { color: k.puan > 0 ? C.green : k.puan < 0 ? C.red : C.dim }]}>
           {KIND_ICON[k.kind]} {k.not}
         </Text>
       ))}
-      {s.kartlar.length ? (
-        <Text style={rs.small}>
-          {L("Puan kartları: {0}/{1} birebir", [s.kartlar.filter((k) => k.benim === k.dogru).length, s.kartlar.length])}
-        </Text>
-      ) : null}
+      {s.kartlar.length ? <Text style={rs.small}>{L("Puan kartları: {0}/{1} birebir", [s.kartlar.filter((k) => k.benim === k.dogru).length, s.kartlar.length])}</Text> : null}
     </Card>
+  );
+}
+
+// ---------- Gelişim ----------
+
+function GrowthTab({ r }: { r: RefRun }) {
+  return (
+    <>
+      <Card>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Text style={rs.kicker}>{L("BECERİLER")}</Text>
+          <Text style={[rs.kicker, { color: (r.bp ?? 0) > 0 ? C.gold : C.faint }]}>{L("{0} PUAN", [r.bp ?? 0])}</Text>
+        </View>
+        <Text style={rs.small}>{L("Beceri puanı: iyi yönetilen maç +1, kusursuz maç +2, terfi +2, seminerler ve olaylar.")}</Text>
+        {REF_SKILLS.map((sk) => {
+          const lv = skillLvl(r, sk.key);
+          const cost = skillCost(lv);
+          const can = lv < SKILL_MAX && (r.bp ?? 0) >= cost;
+          return (
+            <View key={sk.key} style={rs.skill}>
+              <View style={rs.skillIcon}>
+                <Icon name={sk.icon as IconName} size={20} color={lv ? C.gold : C.dim} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <Text style={rs.skillName}>{sk.ad()}</Text>
+                  <View style={{ flexDirection: 'row', gap: 3 }}>
+                    {Array.from({ length: SKILL_MAX }, (_, i) => (
+                      <View key={i} style={[rs.pip, i < lv && { backgroundColor: C.gold, borderColor: C.gold }]} />
+                    ))}
+                  </View>
+                </View>
+                <Text style={rs.skillDesc}>{sk.acik()}</Text>
+              </View>
+              <Pressable
+                disabled={!can}
+                onPress={() => {
+                  sfx('chime');
+                  actRef((x) => upgradeSkill(x, sk.key));
+                }}
+                style={[rs.plus, !can && { opacity: 0.35 }]}
+              >
+                <Icon name="plus" size={18} color="#fff" />
+                {lv < SKILL_MAX ? <Text style={rs.plusCost}>{cost}</Text> : null}
+              </Pressable>
+            </View>
+          );
+        })}
+      </Card>
+      <Card>
+        <Text style={rs.kicker}>{L("SEMİNERLER")}</Text>
+        <Text style={rs.small}>{r.seminer ? L("Bu maç arasında seminer aldın. Sıradaki maçtan sonra yenisi açılır.") : L("Maçlar arasında bir seminere katılabilirsin.")}</Text>
+        {SEMINARS.map((s) => {
+          const cost = seminarCost(r, s.id);
+          const ok = !r.seminer && (r.para ?? 0) >= cost;
+          return <Choice key={s.id} label={`${s.ad()} · ${money(cost)}`} desc={`${s.acik()} +${s.bp} ${L("beceri puanı")}`} tone="gold" disabled={!ok} onPress={() => actRef((x) => takeSeminar(x, s.id))} />;
+        })}
+      </Card>
+    </>
+  );
+}
+
+// ---------- Hayat ----------
+
+function LifeTab({ r }: { r: RefRun }) {
+  const akis = r.akis ?? [];
+  return (
+    <>
+      <Card>
+        <Text style={rs.kicker}>{L("SOSYAL MEDYA")}</Text>
+        <Text style={rs.small}>{L("{0} takipçi · ün {1}/100", [fmtFollowers(r.takipci ?? 0), r.un ?? 0])}</Text>
+        {!akis.length ? <Text style={rs.text}>{L("Henüz kimse senden bahsetmiyor. İlk maçından sonra herkes konuşacak.")}</Text> : null}
+        {akis.slice(0, 12).map((p, i) => (
+          <View key={i} style={rs.post}>
+            <View style={[rs.postAvatar, { backgroundColor: p.ton === 'iyi' ? '#1d3a26' : p.ton === 'kotu' ? '#3a1a1d' : '#22252c' }]}>
+              <Text style={rs.postInit}>{p.kim.slice(0, 1).toLocaleUpperCase(LOC)}</Text>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={rs.postName} numberOfLines={1}>
+                {p.kim} <Text style={rs.postHandle}>{p.kul}</Text>
+              </Text>
+              <Text style={rs.postText}>{p.metin}</Text>
+              <Text style={rs.postLike}>♥ {fmtFollowers(p.begeni)}</Text>
+            </View>
+          </View>
+        ))}
+      </Card>
+      <Card>
+        <Text style={rs.kicker}>{L("ÖDÜLLER")}</Text>
+        {r.oduller.length ? r.oduller.map((o, i) => <Text key={i} style={rs.text}>🏆 {o}</Text>) : <Text style={rs.small}>{L("Henüz ödül yok. Her yıl sonu Yılın Hakemi töreni yapılır.")}</Text>}
+      </Card>
+    </>
+  );
+}
+
+// ---------- Profil ----------
+
+function ProfileTab({ r, onExit }: { r: RefRun; onExit: () => void }) {
+  const [edit, setEdit] = useState(false);
+  const rank = refRanking(r);
+  const stats: [string, string][] = [
+    [L("Maç"), String(r.mac)],
+    [L("Kusursuz"), String(r.kusursuz)],
+    [L("Ünvan maçı"), String(r.unvanMaci)],
+    [L("Doğru karar"), String(r.dogru)],
+    [L("Hatalı karar"), String(r.yanlis)],
+    [L("Toplam kazanç"), money(r.kazanc ?? 0)],
+  ];
+  return (
+    <>
+      <Card>
+        <Text style={rs.kicker}>{L("İSTATİSTİKLER")}</Text>
+        <View style={rs.grid}>
+          {stats.map(([k, v]) => (
+            <View key={k} style={rs.cell}>
+              <Text style={rs.cellVal}>{v}</Text>
+              <Text style={rs.cellLab}>{k}</Text>
+            </View>
+          ))}
+        </View>
+        <Button label={edit ? L("Görünümü kapat") : L("Görünümü düzenle")} icon="account-edit" tone="ghost" onPress={() => setEdit(!edit)} />
+      </Card>
+      {edit ? <LookPicker look={r.gorunum ?? DEFAULT_REF_LOOK} onChange={(g) => actRef((x) => (x.gorunum = g))} /> : null}
+      <Card>
+        <Text style={rs.kicker}>{L("HAKEM SIRALAMASI")}</Text>
+        {rank.map((x, i) => (
+          <View key={i} style={[rs.rankRow, x.sen && rs.rankMe]}>
+            <Text style={[rs.rankNo, i < 3 && { color: C.gold }]}>{i + 1}</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={[rs.rankName, x.sen && { color: C.gold }]} numberOfLines={1}>
+                {x.sen ? L("{0} (SEN)", [x.ad]) : x.ad}
+              </Text>
+              <Text style={rs.rankSub}>
+                {TIER_NAME[x.tier]()} · {x.sen ? countryName(x.ulke) : x.ulke}
+              </Text>
+            </View>
+            <Text style={rs.rankPts}>{x.itibar}</Text>
+          </View>
+        ))}
+      </Card>
+      {r.gecmis.length ? (
+        <Card>
+          <Text style={rs.kicker}>{L("SON MAÇLAR")}</Text>
+          {r.gecmis.slice(0, 10).map((g, i) => (
+            <View key={i} style={rs.hist}>
+              <Text style={rs.histName} numberOfLines={1}>
+                {g.a.split(' ').slice(-1)[0]} – {g.b.split(' ').slice(-1)[0]}
+              </Text>
+              <Text style={[rs.histNote, { color: g.puan >= 5 ? C.green : g.puan >= -4 ? C.dim : C.red }]} numberOfLines={1}>
+                {g.not}
+              </Text>
+            </View>
+          ))}
+        </Card>
+      ) : null}
+      <Button label={L("Menüye dön")} icon="arrow-left" tone="ghost" onPress={onExit} />
+    </>
+  );
+}
+
+// ---------- Yılın Hakemi töreni ----------
+
+function Ceremony({ r }: { r: RefRun }) {
+  const t = r.toren!;
+  const [step, setStep] = useState(0);
+  const n = t.adaylar.length;
+  const win = t.adaylar[t.kazanan];
+  useEffect(() => {
+    const at = step <= n ? 650 : step === n + 1 ? 1800 : 0;
+    if (!at) return;
+    const tm = setTimeout(() => {
+      const next = step + 1;
+      if (next <= n) sfx('whoosh');
+      if (next === n + 1) sfx('swell');
+      if (next === n + 2) sfx(win.sen ? 'fanfare' : 'applause');
+      setStep(next);
+    }, at);
+    return () => clearTimeout(tm);
+  }, [step, n, win.sen]);
+  const reveal = step >= n + 2;
+  useSoundScene('celebrate');
+  return (
+    <Screen footer={reveal ? <Button label={win.sen ? L("Ödülünü al") : L("Devam")} icon={win.sen ? 'trophy' : 'arrow-right'} tone="gold" onPress={() => actRef(closeCeremony)} /> : undefined}>
+      <LinearGradient colors={['#3a0d14', '#1a0a0c', '#0b0809']} style={rs.stage}>
+        <Text style={rs.stageKicker}>{L("{0}. YIL · GALA GECESİ", [t.yil])}</Text>
+        <Text style={[rs.stageTitle, SLANT]}>{L("YILIN HAKEMİ")}</Text>
+        <Text style={rs.small}>{L("Adaylar")}</Text>
+      </LinearGradient>
+      {t.adaylar.map((a, i) =>
+        step > i ? (
+          <View key={i} style={[rs.nominee, reveal && i === t.kazanan && rs.nomineeWin, reveal && i !== t.kazanan && { opacity: 0.55 }]}>
+            <FighterAvatar look={a.sen ? r.gorunum ?? DEFAULT_REF_LOOK : lookFor({ id: a.ad, uyruk: a.ulke })} size={52} ring={reveal && i === t.kazanan ? C.gold : '#5a5e68'} />
+            <View style={{ flex: 1 }}>
+              <Text style={[rs.nomName, a.sen && { color: C.gold }]} numberOfLines={1}>
+                {a.sen ? L("{0} (SEN)", [a.ad]) : a.ad}
+              </Text>
+              <Text style={rs.small}>{a.sen ? countryName(a.ulke) : a.ulke}</Text>
+            </View>
+            {reveal ? <Text style={rs.nomScore}>{a.ort.toFixed(1)}</Text> : null}
+          </View>
+        ) : null,
+      )}
+      {step === n + 1 ? <Text style={[rs.envelope, SLANT]}>{L("Ve kazanan…")}</Text> : null}
+      {reveal ? (
+        <Card accent={win.sen ? C.gold : undefined}>
+          <Text style={[rs.verdict, SLANT, { color: win.sen ? C.gold : C.text }]}>{win.sen ? L("🏆 YILIN HAKEMİ SENSİN!") : L("Kazanan: {0}", [win.ad])}</Text>
+          <Text style={rs.text}>
+            {win.sen ? L("Ödül: {0} · +2 beceri puanı · ün ve takipçi.", [money(t.odul)]) : L("Maç başı ortalaman {0}. Gelecek yıl sahne senin olabilir.", [t.adaylar.find((a) => a.sen)?.ort.toFixed(1)])}
+          </Text>
+        </Card>
+      ) : null}
+    </Screen>
   );
 }
 
 // ---------- Maç ----------
 
+const RED_KIT = { shorts: '#b5121b', trim: '#ffffff', glove: '#c1121f' };
+const looks = (b: RefBout): [Appearance, Appearance] => [lookFor({ id: b.a.ad, uyruk: b.a.ulke, kadin: b.kadin }), lookFor({ id: b.b.ad, uyruk: b.b.ulke, kadin: b.kadin })];
+
+/** Kafes sahnesi için hakem maçını dövüş durumuna çevirir (sahne yalnızca bu alanları okur). */
+function cageState(b: RefBout, log: string[]): FightState {
+  const an = b.an;
+  const crit = an && (an.kind === 'sarsildi' || an.kind === 'kilit');
+  return {
+    pAd: fighterName(b, 0),
+    oAd: fighterName(b, 1),
+    raunt: b.raunt,
+    pHasar: Math.max(0, Math.min(100, 100 - b.hp[0])),
+    oHasar: Math.max(0, Math.min(100, 100 - b.hp[1])),
+    log,
+    durum: b.sonuc ? 'bitti' : b.kart ? 'rauntSonu' : crit ? 'kritik' : 'canli',
+    kritik: an?.kind === 'sarsildi' ? (an.side === 1 ? 'rakipSersem' : 'sarsildin') : an?.kind === 'kilit' ? (an.side === 1 ? 'subFirsat' : 'subTehlike') : null,
+    subAdi: b.subAdi ?? '',
+    sonuc: b.sonuc ? { kazanan: b.sonuc.kazanan == null ? 'berabere' : b.sonuc.kazanan === 0 ? 'p' : 'o', yontem: b.sonuc.yontem } : undefined,
+  } as unknown as FightState;
+}
+
 function BoutView({ r, b }: { r: RefRun; b: RefBout }) {
   useSoundScene('fight');
   const [shown, setShown] = useState(0);
   const [len, setLen] = useState(b.log.length);
+  const [lk] = useState(() => looks(b));
   // Log yenilendiğinde (yeni raunt) baştan akar; uzadığında kaldığı yerden devam eder.
   if (b.log.length !== len) {
     setLen(b.log.length);
@@ -240,10 +603,12 @@ function BoutView({ r, b }: { r: RefRun; b: RefBout }) {
   }
   useEffect(() => {
     if (shown >= b.log.length) return;
-    const t = setTimeout(() => setShown((n) => n + 1), 650);
+    const t = setTimeout(() => setShown((n) => n + 1), 900);
     return () => clearTimeout(t);
   }, [shown, b.log.length]);
   const ready = shown >= b.log.length;
+  const cageLog = ready && b.an ? [...b.log, b.an.metin] : b.log;
+  const cageShown = ready && b.an ? b.log.length + 1 : Math.min(shown, b.log.length);
   return (
     <Screen
       footer={
@@ -262,16 +627,23 @@ function BoutView({ r, b }: { r: RefRun; b: RefBout }) {
         ) : undefined
       }
     >
+      <View style={rs.boutTop}>
+        <Text style={rs.boutOrg} numberOfLines={1}>
+          {[b.org, b.sehir].filter(Boolean).join(' · ').toLocaleUpperCase(LOC) || TIER_NAME[r.seviye]().toLocaleUpperCase(LOC)}
+        </Text>
+        {b.unvan ? <Text style={rs.title}>{L("ÜNVAN")}</Text> : b.anaKart ? <Text style={[rs.title, { backgroundColor: C.red, color: '#fff' }]}>{L("ANA KART")}</Text> : null}
+      </View>
       <View style={rs.vs}>
-        <Corner f={b.a} hp={b.hp[0]} color={C.red} />
+        <Corner f={b.a} hp={b.hp[0]} color={C.red} look={lk[0]} />
         <View style={{ alignItems: 'center', gap: 2 }}>
           <Text style={rs.round}>{b.sonuc ? L("BİTTİ") : L("R{0}/{1}", [b.raunt, b.maxRaunt])}</Text>
-          {b.unvan ? <Text style={rs.title}>{L("ÜNVAN")}</Text> : null}
+          <FighterAvatar look={r.gorunum ?? DEFAULT_REF_LOOK} size={30} ring={C.gold} />
         </View>
-        <Corner f={b.b} hp={b.hp[1]} color={C.blue} right />
+        <Corner f={b.b} hp={b.hp[1]} color={C.blue} look={lk[1]} right />
       </View>
+      <CageView fs={cageState(b, cageLog)} shown={cageShown} pLook={lk[0]} oLook={lk[1]} rLook={r.gorunum ?? DEFAULT_REF_LOOK} pKitOverride={RED_KIT} noReplay />
       <View style={rs.logBox}>
-        {b.log.slice(0, shown).slice(-9).map((t, i) => (
+        {b.log.slice(0, shown).slice(-4).map((t, i) => (
           <Text key={`${b.raunt}-${i}-${t}`} style={[rs.logLine, t.startsWith('📋') && { color: C.gold }]}>
             {t}
           </Text>
@@ -283,17 +655,20 @@ function BoutView({ r, b }: { r: RefRun; b: RefBout }) {
   );
 }
 
-function Corner({ f, hp, color, right }: { f: RefFighter; hp: number; color: string; right?: boolean }) {
+function Corner({ f, hp, color, right, look }: { f: RefFighter; hp: number; color: string; right?: boolean; look: Appearance }) {
   return (
-    <View style={{ flex: 1, alignItems: right ? 'flex-end' : 'flex-start', gap: 2 }}>
-      <Text style={[rs.cName, { color }]} numberOfLines={1}>
-        {f.ad.split(' ').slice(-1)[0].toLocaleUpperCase(LOC)}
-      </Text>
-      <Text style={rs.cMeta} numberOfLines={1}>
-        {f.rekor} · {BACKGROUNDS[f.stil].ad}
-      </Text>
-      <View style={rs.hpTrack}>
-        <View style={[rs.hpFill, { width: `${Math.max(3, Math.min(100, hp))}%`, backgroundColor: color, alignSelf: right ? 'flex-end' : 'flex-start' }]} />
+    <View style={{ flex: 1, flexDirection: right ? 'row-reverse' : 'row', alignItems: 'center', gap: 8 }}>
+      <FighterAvatar look={look} size={44} ring={color} />
+      <View style={{ flex: 1, alignItems: right ? 'flex-end' : 'flex-start', gap: 2 }}>
+        <Text style={[rs.cName, { color }]} numberOfLines={1}>
+          {f.ad.split(' ').slice(-1)[0].toLocaleUpperCase(LOC)}
+        </Text>
+        <Text style={rs.cMeta} numberOfLines={1}>
+          {f.rekor} · {BACKGROUNDS[f.stil].ad}
+        </Text>
+        <View style={rs.hpTrack}>
+          <View style={[rs.hpFill, { width: `${Math.max(3, Math.min(100, hp))}%`, backgroundColor: color, alignSelf: right ? 'flex-end' : 'flex-start' }]} />
+        </View>
       </View>
     </View>
   );
@@ -301,6 +676,9 @@ function Corner({ f, hp, color, right }: { f: RefFighter; hp: number; color: str
 
 function MomentCard({ b }: { b: RefBout }) {
   const an = b.an!;
+  useEffect(() => {
+    sfx('swell', 0.8);
+  }, [an.metin]);
   return (
     <LinearGradient colors={['#2a1a08', '#120d07']} style={rs.moment}>
       <Text style={rs.momentKicker}>
@@ -309,13 +687,21 @@ function MomentCard({ b }: { b: RefBout }) {
       <Text style={rs.momentText}>{an.metin}</Text>
       {an.ipuclari.map((t) => (
         <View key={t} style={rs.clue}>
-          <View style={rs.clueDot} />
-          <Text style={rs.clueText}>{t}</Text>
+          <View style={[rs.clueDot, t.startsWith('🔎') && { backgroundColor: C.green }, t.startsWith('📘') && { backgroundColor: C.blue }]} />
+          <Text style={[rs.clueText, t.startsWith('🔎') && { color: C.green }, t.startsWith('📘') && { color: '#8fb8ff' }]}>{t}</Text>
         </View>
       ))}
       <View style={{ gap: 8, marginTop: 6 }}>
         {an.secenekler.map((o, i) => (
-          <Button key={o.key} label={o.ad} tone={i === 0 ? 'red' : 'ghost'} onPress={() => actRef((x) => x.aktif && decide(x.aktif, o.key))} />
+          <Button
+            key={o.key}
+            label={o.ad}
+            tone={i === 0 ? 'red' : 'ghost'}
+            onPress={() => {
+              if (o.key === 'dur' || o.key === 'dq' || o.key === 'ayir') sfx('slam');
+              actRef((x) => x.aktif && decide(x.aktif, o.key));
+            }}
+          />
         ))}
       </View>
     </LinearGradient>
@@ -326,6 +712,7 @@ const fmt = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '
 
 function ScoreCard({ b }: { b: RefBout }) {
   const s = b.stats;
+  const hint = cardHint(b);
   const rows: [string, string, string][] = [
     [L("Önemli vuruş"), String(s.sig[0]), String(s.sig[1])],
     [L("Takedown"), String(s.td[0]), String(s.td[1])],
@@ -348,11 +735,32 @@ function ScoreCard({ b }: { b: RefBout }) {
           <Text style={rs.sVal}>{y}</Text>
         </View>
       ))}
-      <Text style={rs.small}>{L("İpucu: knockdown ve ezici üstünlük 10-8 getirir; yakın rauntta etkili vuruş ve kontrol belirleyicidir.")}</Text>
+      {hint.pts ? (
+        <View style={rs.sRow}>
+          <Text style={[rs.sVal, { color: '#8fb8ff' }]}>{hint.pts[0]}</Text>
+          <Text style={[rs.sLab, { color: '#8fb8ff' }]}>{L("📘 Puan hesabı")}</Text>
+          <Text style={[rs.sVal, { color: '#8fb8ff' }]}>{hint.pts[1]}</Text>
+        </View>
+      ) : null}
+      {hint.lead !== undefined ? (
+        <Text style={[rs.small, { color: '#8fb8ff' }]}>
+          {hint.lead == null ? L("📘 Kural bilgin: bu raunt başa baş.") : L("📘 Kural bilgin: bu rauntta {0} önde.", [hint.lead === 0 ? L("Kırmızı") : L("Mavi")])}
+        </Text>
+      ) : (
+        <Text style={rs.small}>{L("İpucu: knockdown ve ezici üstünlük 10-8 getirir; yakın rauntta etkili vuruş ve kontrol belirleyicidir.")}</Text>
+      )}
       <View style={rs.cards}>
         {cards.map((c) => (
-          <Pressable key={c} onPress={() => actRef((x) => x.aktif && scoreRound(x.aktif, c))} style={({ pressed }) => [rs.cardBtn, { borderColor: c === '10-10' ? C.border : c.endsWith('a') ? C.red : C.blue }, pressed && { backgroundColor: '#1d1f25' }]}>
+          <Pressable
+            key={c}
+            onPress={() => {
+              sfx('click');
+              actRef((x) => x.aktif && scoreRound(x.aktif, c));
+            }}
+            style={({ pressed }) => [rs.cardBtn, { borderColor: hint.card === c ? C.gold : c === '10-10' ? C.border : c.endsWith('a') ? C.red : C.blue }, hint.card === c && { borderWidth: 2 }, pressed && { backgroundColor: '#1d1f25' }]}
+          >
             <Text style={[rs.cardBtnT, { color: c === '10-10' ? C.dim : c.endsWith('a') ? C.red : C.blue }]}>{cardLabel(c)}</Text>
+            {hint.card === c ? <Text style={rs.suggest}>{L("önerilen")}</Text> : null}
           </Pressable>
         ))}
       </View>
@@ -372,22 +780,82 @@ const rs = StyleSheet.create({
   bulletText: { flex: 1, color: C.text, fontFamily: F.body, fontSize: 14, lineHeight: 20 },
   label: { color: C.faint, fontFamily: F.display, fontSize: 10, letterSpacing: 1.5, marginBottom: 4 },
   input: { backgroundColor: '#0d0f13', borderWidth: 1, borderColor: C.border, borderRadius: R, color: C.text, fontFamily: F.semi, fontSize: 15, paddingHorizontal: 12, paddingVertical: 10 },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  chip: { borderWidth: 1, borderColor: C.border, borderRadius: 14, paddingHorizontal: 10, paddingVertical: 5, backgroundColor: '#0d0f13' },
+  chipOn: { backgroundColor: C.red, borderColor: C.red },
+  chipText: { color: C.dim, fontFamily: F.semi, fontSize: 12 },
+  heroCard: { borderRadius: R + 4, padding: 14, marginBottom: 12, borderWidth: 1, borderColor: '#3a1a20', overflow: 'hidden' },
+  nick: { color: C.gold, fontFamily: F.displayMed, fontSize: 11, letterSpacing: 1.5 },
+  name: { color: C.text, fontFamily: F.display, fontSize: 24, lineHeight: 28 },
+  heroChips: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 3, flexWrap: 'wrap' },
+  heroChip: { color: C.dim, fontFamily: F.display, fontSize: 11, letterSpacing: 1 },
+  dot: { color: C.faint, fontSize: 10 },
+  meters: { flexDirection: 'row', marginTop: 14, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.07)', paddingTop: 12 },
+  meter: { flex: 1, alignItems: 'center', paddingHorizontal: 4 },
+  meterLabel: { color: C.faint, fontFamily: F.display, fontSize: 9, letterSpacing: 1.5 },
+  meterVal: { fontFamily: F.display, fontSize: 18, marginTop: 1 },
+  section: { color: C.text, fontFamily: F.display, fontSize: 14, letterSpacing: 1.5, marginTop: 4, marginBottom: 8 },
+  offer: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: R + 2, borderWidth: 1, padding: 12 },
+  offerIcon: { width: 44, height: 44, borderRadius: 22, borderWidth: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.25)' },
+  badge: { color: '#111', fontFamily: F.display, fontSize: 9.5, letterSpacing: 1, paddingHorizontal: 6, paddingVertical: 1, borderRadius: 3, overflow: 'hidden' },
+  offerCity: { color: C.faint, fontFamily: F.semi, fontSize: 11 },
+  offerOrg: { color: C.text, fontFamily: F.display, fontSize: 18, marginTop: 2 },
+  offerSub: { color: C.dim, fontFamily: F.body, fontSize: 11.5, marginTop: 1 },
+  offerPay: { color: C.green, fontFamily: F.display, fontSize: 16 },
+  notice: { flexDirection: 'row', gap: 10, borderWidth: 1, borderColor: C.gold + '66', borderRadius: R, padding: 12, marginBottom: 10, backgroundColor: '#1a160b' },
+  noticeText: { flex: 1, color: C.text, fontFamily: F.body, fontSize: 13, lineHeight: 18 },
   kicker: { color: C.gold, fontFamily: F.semi, fontSize: 11, letterSpacing: 1.5, marginBottom: 6 },
   text: { color: C.text, fontFamily: F.body, fontSize: 13, lineHeight: 19, marginBottom: 6 },
   small: { color: C.dim, fontFamily: F.body, fontSize: 12, lineHeight: 17, marginTop: 4 },
   verdict: { fontFamily: F.display, fontSize: 22, marginVertical: 2 },
+  gains: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 6 },
+  gain: { fontFamily: F.display, fontSize: 13, letterSpacing: 0.5 },
   hist: { flexDirection: 'row', justifyContent: 'space-between', gap: 8, paddingVertical: 4, borderTopWidth: 1, borderTopColor: C.border },
   histName: { flex: 1, color: C.text, fontFamily: F.semi, fontSize: 12 },
   histNote: { fontFamily: F.semi, fontSize: 12 },
-  vs: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 },
+  skill: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, borderTopWidth: 1, borderTopColor: C.border },
+  skillIcon: { width: 38, height: 38, borderRadius: 10, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center' },
+  skillName: { color: C.text, fontFamily: F.display, fontSize: 15 },
+  skillDesc: { color: C.dim, fontFamily: F.body, fontSize: 12, lineHeight: 16, marginTop: 2 },
+  pip: { width: 9, height: 9, borderRadius: 2, borderWidth: 1, borderColor: C.faint },
+  plus: { width: 40, height: 40, borderRadius: 20, backgroundColor: C.blue, alignItems: 'center', justifyContent: 'center' },
+  plusCost: { position: 'absolute', bottom: -6, right: -4, color: '#111', backgroundColor: C.gold, fontFamily: F.bold, fontSize: 10, borderRadius: 7, paddingHorizontal: 4, overflow: 'hidden' },
+  post: { flexDirection: 'row', gap: 10, paddingVertical: 10, borderTopWidth: 1, borderTopColor: C.border },
+  postAvatar: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center' },
+  postInit: { color: C.text, fontFamily: F.display, fontSize: 15 },
+  postName: { color: C.text, fontFamily: F.bold, fontSize: 13 },
+  postHandle: { color: C.faint, fontFamily: F.body, fontSize: 12 },
+  postText: { color: C.text, fontFamily: F.body, fontSize: 13, lineHeight: 18, marginTop: 2 },
+  postLike: { color: C.faint, fontFamily: F.semi, fontSize: 11, marginTop: 4 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 10 },
+  cell: { width: '31%', flexGrow: 1, backgroundColor: '#0f1014', borderRadius: R, borderWidth: 1, borderColor: C.border, paddingVertical: 10, alignItems: 'center' },
+  cellVal: { color: C.text, fontFamily: F.display, fontSize: 18 },
+  cellLab: { color: C.faint, fontFamily: F.semi, fontSize: 10.5, marginTop: 2 },
+  rankRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 7, paddingHorizontal: 6, borderTopWidth: 1, borderTopColor: C.border },
+  rankMe: { backgroundColor: '#2a2106', borderRadius: 8, borderTopColor: 'transparent' },
+  rankNo: { width: 22, color: C.dim, fontFamily: F.display, fontSize: 16, textAlign: 'center' },
+  rankName: { color: C.text, fontFamily: F.semi, fontSize: 13 },
+  rankSub: { color: C.faint, fontFamily: F.body, fontSize: 11 },
+  rankPts: { color: C.text, fontFamily: F.display, fontSize: 15 },
+  stage: { borderRadius: R + 4, borderWidth: 1, borderColor: '#6a2a1a', padding: 18, alignItems: 'center', marginBottom: 12 },
+  stageKicker: { color: C.gold, fontFamily: F.display, fontSize: 11, letterSpacing: 2 },
+  stageTitle: { color: C.text, fontFamily: F.display, fontSize: 34, marginTop: 4 },
+  nominee: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: C.card, borderRadius: R + 2, borderWidth: 1, borderColor: C.border, padding: 10, marginBottom: 8 },
+  nomineeWin: { borderColor: C.gold, backgroundColor: '#2a2106' },
+  nomName: { color: C.text, fontFamily: F.display, fontSize: 16 },
+  nomScore: { color: C.gold, fontFamily: F.display, fontSize: 20 },
+  envelope: { color: C.gold, fontFamily: F.display, fontSize: 26, textAlign: 'center', marginVertical: 14 },
+  boutTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 8 },
+  boutOrg: { color: C.faint, fontFamily: F.display, fontSize: 11, letterSpacing: 1.5 },
+  vs: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 },
   round: { color: C.gold, fontFamily: F.display, fontSize: 16 },
-  title: { color: '#111', backgroundColor: C.gold, fontFamily: F.display, fontSize: 10, paddingHorizontal: 6, borderRadius: 3 },
-  cName: { fontFamily: F.display, fontSize: 16 },
-  cMeta: { color: C.faint, fontFamily: F.body, fontSize: 11 },
+  title: { color: '#111', backgroundColor: C.gold, fontFamily: F.display, fontSize: 10, paddingHorizontal: 6, borderRadius: 3, overflow: 'hidden' },
+  cName: { fontFamily: F.display, fontSize: 15 },
+  cMeta: { color: C.faint, fontFamily: F.body, fontSize: 10.5 },
   hpTrack: { width: '100%', height: 5, backgroundColor: '#22242b', borderRadius: 3, overflow: 'hidden', marginTop: 3 },
   hpFill: { height: 5, borderRadius: 3 },
-  logBox: { backgroundColor: '#0f1014', borderRadius: R, borderWidth: 1, borderColor: C.border, padding: 10, gap: 6, minHeight: 120, marginBottom: 10 },
-  logLine: { color: C.text, fontFamily: F.body, fontSize: 13, lineHeight: 19 },
+  logBox: { backgroundColor: '#0f1014', borderRadius: R, borderWidth: 1, borderColor: C.border, padding: 10, gap: 5, minHeight: 84, marginBottom: 10 },
+  logLine: { color: C.text, fontFamily: F.body, fontSize: 13, lineHeight: 18 },
   moment: { borderRadius: R, borderWidth: 1, borderColor: C.gold + '88', padding: 12, gap: 6 },
   momentKicker: { color: C.gold, fontFamily: F.display, fontSize: 13, letterSpacing: 1.5 },
   momentText: { color: '#fff', fontFamily: F.bold, fontSize: 15, lineHeight: 21 },
@@ -401,4 +869,5 @@ const rs = StyleSheet.create({
   cards: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 8 },
   cardBtn: { flexGrow: 1, minWidth: '30%', borderWidth: 1, borderRadius: 10, paddingVertical: 10, alignItems: 'center' },
   cardBtnT: { fontFamily: F.display, fontSize: 13 },
+  suggest: { color: C.gold, fontFamily: F.semi, fontSize: 9.5, marginTop: 1 },
 });

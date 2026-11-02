@@ -1,13 +1,16 @@
 // Hakem Modu kaydı (cihazda, kariyer yuvalarından bağımsız). Motor durumu değiştirir; burada saklanır ve yayınlanır.
 import { useSyncExternalStore } from 'react';
 import type { RefRun } from './engine/referee';
+import { ensureCareer } from './engine/refereeCareer';
 import { getPref, setPref } from './prefs';
 
 const KEY = 'yol_hakem';
 
 function load(): RefRun | null {
   try {
-    return JSON.parse(getPref(KEY) || 'null') as RefRun | null;
+    const r = JSON.parse(getPref(KEY) || 'null') as RefRun | null;
+    // Eski kayıtlar: kariyer alanları (görünüm, para, beceriler, teklifler…) varsayılanlarla dolar
+    return r ? ensureCareer(r) : null;
   } catch {
     return null;
   }
