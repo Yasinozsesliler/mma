@@ -47,7 +47,16 @@ const NEW = {
   ru: ['Продумай план. Читай соперника.', 'Пройди путь легенд'],
   pl: ['Zaplanuj. Czytaj rywala.', 'Przejdź drogę legend'],
 }[lang];
-const CAPS = { yuruyus: CAP[0], dovus: CAP[1], 'mac-sonrasi': CAP[2], kariyer: CAP[3], 'dunya-turu': CAP[4], kafespedia: CAP[5], dolap: CAP[6], kemer: CAP[7], taktik: NEW[0], efsane: NEW[1] };
+// 1.0.8: Hakem ve Antrenör modları
+const MODES = {
+  tr: ['YENİ: Hakem Modu', 'YENİ: Antrenör Modu'],
+  en: ['NEW: Referee Mode', 'NEW: Coach Mode'],
+  es: ['NUEVO: Modo Árbitro', 'NUEVO: Modo Entrenador'],
+  pt: ['NOVO: Modo Árbitro', 'NOVO: Modo Treinador'],
+  ru: ['НОВОЕ: режим рефери', 'НОВОЕ: режим тренера'],
+  pl: ['NOWOŚĆ: Tryb Sędziego', 'NOWOŚĆ: Tryb Trenera'],
+}[lang];
+const CAPS = { hakem: MODES[0], antrenor: MODES[1], yuruyus: CAP[0], dovus: CAP[1], 'mac-sonrasi': CAP[2], kariyer: CAP[3], 'dunya-turu': CAP[4], kafespedia: CAP[5], dolap: CAP[6], kemer: CAP[7], taktik: NEW[0], efsane: NEW[1] };
 const BANNER = {
   tr: ['KAFESTEN KEMERE', 'Sokaktan dünya şampiyonluğuna. Her karar senin.'],
   en: ['FROM CAGE TO BELT', 'From the streets to world champion. Every choice is yours.'],
@@ -75,8 +84,10 @@ const errors = [];
 page.on('pageerror', (e) => errors.push(e.message));
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const up = (s) => s.toLocaleUpperCase(LOC);
-const buttons = () => page.$$eval('[tabindex="0"]', (els) => els.map((e) => e.innerText.trim()));
-const body = () => page.$eval('body', (b) => b.innerText);
+// Sayfa yeniden yüklenirken çerçeve kısa süre kopuk olabilir: bekle ve yeniden dene
+const retry = async (f, empty) => { for (let i = 0; i < 20; i++) { try { return await f(); } catch { await new Promise((r) => setTimeout(r, 400)); } } return empty; };
+const buttons = () => retry(() => page.$$eval('[tabindex="0"]', (els) => els.map((e) => e.innerText.trim())), []);
+const body = () => retry(() => page.$eval('body', (b) => b.innerText), '');
 async function click(k, raw_ = false) {
   const want = up(raw_ ? k : t(k));
   const b = await buttons();
@@ -118,7 +129,7 @@ const edit = async (fn) => {
 };
 await edit("s.ipuclari = ['hub','gelisim','rakip','kamp','plan','yuzyuze','dovus','macSonrasi'];");
 // Kamp kendiliğinden akar; karar kartlarında ilk seçenek seçilir, kulisten kafese yürünür
-const PRI = ['DÖVÜŞ AYARLA', 'Bu rakibi seç', 'Hocanın planıyla başla', 'Atla, kamp aksın', 'Hızlandır', 'Birkaç gün dinlen', 'Ekstra seansı ekle', 'Diyete şimdi başla', 'Ertesi gün sen de sert gir', 'Birlikte koş', 'Ter kıyafetiyle koşu', 'Dinle', 'Kapı orada', 'Kardeşim benim 🤝', 'Devam', 'Son 48 saat: kilonu ver', 'Tartıya çık', 'Yüz yüze gel', 'Soğukkanlı bak', 'Dövüş gecesi', 'KAFESE YÜRÜ'];
+const PRI = ['Tahmin yapmadan geç', 'KAFESE YÜRÜ', 'DÖVÜŞ AYARLA', 'Bu rakibi seç', 'Hocanın planıyla başla', 'Atla, kamp aksın', 'Hızlandır', 'Birkaç gün dinlen', 'Ekstra seansı ekle', 'Diyete şimdi başla', 'Ertesi gün sen de sert gir', 'Birlikte koş', 'Ter kıyafetiyle koşu', 'Dinle', 'Kapı orada', 'Kardeşim benim 🤝', 'Devam', 'Son 48 saat: kilonu ver', 'Tartıya çık', 'Yüz yüze gel', 'Soğukkanlı bak', 'Dövüş gecesi', 'KAFESE YÜRÜ'];
 for (let i = 0; i < 120; i++) {
   if ((await body()).includes(t('BAYANLAR VE BAYLAR…'))) break;
   // Dövüş gecesinden hemen önce: anonsta görünecek amatör rekor
@@ -277,13 +288,114 @@ await sleep(1200);
 await sleep(900);
 await shot('efsane');
 
+// Başlık metninden sonra gelen ilk düğmeye gerçek fare tıklaması (Pressable DOM click() ile tetiklenmez)
+const clickAfter = async (head) => {
+  const i = await retry(() => page.evaluate((head, loc) => {
+    const h = [...document.querySelectorAll('div')].find((d) => d.childElementCount === 0 && d.innerText?.trim().toLocaleUpperCase(loc) === head);
+    if (!h) return -1;
+    const els = [...document.querySelectorAll('[tabindex="0"]')];
+    return els.findIndex((el) => h.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING);
+  }, head, LOC), -1);
+  if (i < 0) return false;
+  await (await page.$$('[tabindex="0"]'))[i].click();
+  await sleep(400);
+  return true;
+};
+// Hakem Modu: kafeste bir karar anı
+const pre = (k) => up(t(k).split('{0}')[0].replace(/[(·\s]+$/, ''));
+const clickPre = async (k) => {
+  const want = pre(k);
+  const b = await buttons();
+  const i = b.findIndex((x) => up(x).includes(want));
+  if (i < 0) return false;
+  await (await page.$$('[tabindex="0"]'))[i].click();
+  await sleep(300);
+  return true;
+};
+const fillNames = async (a, b2) => {
+  const inputs = await page.$$('input');
+  if (inputs[0]) await inputs[0].type(a);
+  if (inputs[1]) await inputs[1].type(b2);
+};
+await page.goto(URL_, { waitUntil: 'networkidle0' });
+await sleep(1200);
+await click('Hakem Modu');
+await sleep(800);
+await fillNames('Deniz', 'Kaya');
+if (!(await clickPre('Ücretsiz dene ({0} maç)'))) await click('Hakemliğe başla');
+await sleep(900);
+const takeOffer = async () => {
+  const b = await buttons();
+  const i = b.findIndex((x) => /\$\s?\d/.test(x));
+  if (i >= 0) await (await page.$$('[tabindex="0"]'))[i].click();
+  await sleep(1200);
+};
+await takeOffer();
+let refShot = false;
+for (let i = 0; i < 600 && !refShot; i++) {
+  const txt = up(await body());
+  if (txt.includes(up(t('KARAR ANI')))) {
+    await sleep(900);
+    await shot('hakem');
+    refShot = true;
+    break;
+  }
+  const b = await buttons();
+  const card = b.findIndex((x) => /^10-9/.test(x.trim()));
+  if (card >= 0) { await (await page.$$('[tabindex="0"]'))[card].click(); await sleep(300); continue; }
+  // karar anı çıkmadan biten maç: bitir, basın/olay sorusunu geç, yeni teklif al
+  if (await click('Maçı bitir')) { await sleep(900); continue; }
+  if (b.some((x) => /\$\s?\d/.test(x)) && !b.some((x) => up(x).includes(up(t('Hızlı geç'))))) {
+    await clickAfter(up(t('BASIN KAPIDA'))) || await clickAfter(up(t('KOMİSYON İNCELEMESİ')));
+    await takeOffer();
+    continue;
+  }
+  if (!(await click('Hızlı geç'))) await sleep(300);
+}
+
+// Antrenör Modu: kafeste köşe maçı
+await page.goto(URL_, { waitUntil: 'networkidle0' });
+await sleep(1200);
+await click('Antrenör Modu');
+await sleep(800);
+await fillNames('Ali', 'Demir');
+await clickPre('Salonu aç');
+await sleep(1200);
+// İki öğrenci kaydet (öğrencisi olmayan salonda maç çıkmaz)
+await click('Öğrenciler');
+await sleep(600);
+for (let k = 0; k < 2; k++) await clickPre('Kaydet · {0}');
+await click('Salon');
+await sleep(600);
+for (let w = 0; w < 60; w++) {
+  if (await clickPre('KÖŞEDE SENİ BEKLİYOR · {0}')) break;
+  if (up(await body()).includes(up(t('SALONDA BİR DURUM VAR'))) && (await clickAfter(up(t('SALONDA BİR DURUM VAR'))))) {
+    await sleep(400);
+    continue;
+  }
+  if (!(await click('Haftayı ilerlet'))) await sleep(300);
+}
+await sleep(1000);
+let cornerShot = false;
+for (let i = 0; i < 120 && !cornerShot; i++) {
+  const txt = up(await body());
+  if (txt.includes(up(t('Oyun planını sen belirle:')))) {
+    await clickAfter(up(t('Oyun planını sen belirle:')));
+    await sleep(4200);
+    await shot('antrenor');
+    cornerShot = true;
+    break;
+  }
+  if (!(await click('Hızlı geç'))) await sleep(400);
+}
+
 // Çerçeveli mağaza görselleri: başlık + telefon ekranı
 const font = (f) => readFileSync(`${root}/node_modules/@expo-google-fonts/${f}`).toString('base64');
 const OS = font('oswald/700Bold/Oswald_700Bold.ttf');
 const INTER = font('inter/600SemiBold/Inter_600SemiBold.ttf');
 const g = await browser.newPage();
 await g.setViewport({ width: FW, height: FH, deviceScaleFactor: 1 });
-const ORDER = ['yuruyus', 'taktik', 'efsane', 'kemer', 'kariyer', 'mac-sonrasi', 'dunya-turu', 'kafespedia', 'dolap', 'dovus'];
+const ORDER = ['dovus', 'kemer', 'hakem', 'antrenor', 'efsane', 'yuruyus', 'kariyer', 'mac-sonrasi', 'dunya-turu', 'kafespedia'];
 // Eski numaralı görseller silinir; yeni sırayla 01-…10- olarak yazılır
 for (const f of readdirSync(out)) if (/^\d\d-.*\.png$/.test(f)) unlinkSync(`${out}/${f}`);
 for (const name of ORDER.filter((n) => shots.includes(n))) {
