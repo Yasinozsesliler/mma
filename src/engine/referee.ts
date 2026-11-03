@@ -5,6 +5,32 @@
 import { L } from '../i18n';
 import { BACKGROUNDS, femSurname, NAME_POOLS } from './data';
 import { afterBout, BASE_PAY, ensureCareer, makeCeremony, type RefCeremony, type RefEvent, type RefOffer, type RefPost, type RefRival, type RefSkill } from './refereeCareer';
+import {
+  addFatigue,
+  alwaysInstinct,
+  axesFromBout,
+  bumpOrg,
+  CONTRACT_BOUTS,
+  ease,
+  EXAM_PASS,
+  EXAM_QUESTIONS,
+  fatigueSkills,
+  foulRate,
+  HATIRA_METIN,
+  hasPerk,
+  imaj,
+  makeExam,
+  noteStyle,
+  pickMemory,
+  remember,
+  saygi,
+  stallRate,
+  WHY,
+  type Hatira,
+  type MentorTask,
+  type OfferTag,
+  type PerkSlot,
+} from './refereeDepth';
 import { chance, clamp, noise, pick, rand, randInt } from './rng';
 import type { Appearance, Background } from './types';
 
@@ -34,6 +60,22 @@ export type Moment = { kind: MomentKind; side: Side; truth: Truth; ipuclari: str
 export type RoundStats = { sig: [number, number]; td: [number, number]; ctrl: [number, number]; kd: [number, number] };
 export type Card = '10-9a' | '10-9b' | '10-8a' | '10-8b' | '10-10';
 
+/** Karar kaydı: maç sonu analizi için doğru seçenek ve gerekçesi de tutulur */
+export type Karar = {
+  kind: MomentKind;
+  puan: number;
+  not: string;
+  tip?: 'erken' | 'gec' | 'koruma';
+  /** Kararın ilgili olduğu köşe */
+  taraf?: 0 | 1;
+  /** Maç durduruldu mu */
+  durdu?: boolean;
+  /** Senin seçimin ve doğru seçim (analiz) */
+  secilen?: string;
+  dogru?: string;
+  neden?: string;
+};
+
 export type RefBout = {
   a: RefFighter;
   b: RefFighter;
@@ -53,7 +95,7 @@ export type RefBout = {
   /** Raunt bitti, puan kartı bekleniyor */
   kart?: boolean;
   kartlar: { benim: Card; dogru: Card }[];
-  kararlar: { kind: MomentKind; puan: number; not: string; tip?: 'erken' | 'gec' | 'koruma' }[];
+  kararlar: Karar[];
   /** Kesik var mı (doktor anı bir kez) */
   kesik?: Side;
   sonuc?: { kazanan: Side | null; yontem: string; raunt: number };
@@ -68,6 +110,26 @@ export type RefBout = {
   anaKart?: boolean;
   /** Kilit anında boğmanın/kolun adı (kafes sahnesi için) */
   subAdi?: string;
+  // ---- Derinlik katmanı (refereeDepth.ts) ----
+  /** Teklifin etiketleri: faulcü, zayıf çene, gergin rövanş, yıldız */
+  etiketler?: OfferTag[];
+  /** Canlı yayın: itibar etkileri büyür */
+  yayin?: boolean;
+  /** Uzak şehir: yorgunluk */
+  uzak?: boolean;
+  /** Kırmızı köşe ev sahibi: salon onu destekliyor */
+  evSahibi?: boolean;
+  /** Maç başındaki dövüşçü saygısı (faul sıklığı) */
+  saygi?: number;
+  /** Maç başındaki uzmanlıklar */
+  uz?: Partial<Record<PerkSlot, 'a' | 'b'>>;
+  /** Tekrar izleme hakkı kullanıldı */
+  tekrar?: boolean;
+  /** Seni hatırlayan dövüşçü (mavi köşe) */
+  hatira?: Hatira;
+  orgId?: string;
+  /** Bu maçtaki kararların tarz etkisi (durdurma: koruyucu, devam: serbest) */
+  durdurma?: { kind: MomentKind; stop: boolean; truth: Truth }[];
 };
 
 export type RefRun = {
@@ -95,7 +157,7 @@ export type RefRun = {
     not: string;
     itibar: number;
     terfi?: RefTier;
-    kararlar: { kind: MomentKind; puan: number; not: string }[];
+    kararlar: Karar[];
     kartlar: { benim: Card; dogru: Card }[];
     sonuc: string;
     org?: string;
@@ -103,6 +165,13 @@ export type RefRun = {
     bonus?: boolean;
     takipci?: number;
     bp?: number;
+    /** Üç itibardaki değişim */
+    saygi?: number;
+    imaj?: number;
+    /** Maç analizi yapıldı (beceri puanı bir kez) */
+    analiz?: boolean;
+    sinav?: boolean;
+    mentor?: string;
   };
   yilSonu?: { yil: number; ort: number; odul: boolean };
   // ---- Kariyer katmanı (refereeCareer.ts) ----
@@ -125,6 +194,30 @@ export type RefRun = {
   kazanc?: number;
   /** Son olayın/seminerin sonucu (bir sonraki maça kadar gösterilir) */
   sonMesaj?: string;
+  // ---- Derinlik katmanı (refereeDepth.ts) ----
+  /** Dövüşçü saygısı (0-100) */
+  saygi?: number;
+  /** Taraftar ve basın imajı (0-100) */
+  imaj?: number;
+  /** Hakem tarzı: -100 koruyucu … +100 bırak dövüşsünler */
+  tarz?: number;
+  /** Organizasyonlarla ilişki (-50…50) */
+  iliski?: Record<string, number>;
+  sozlesme?: { org: string; orgAd: string; kalan: number; carpan: number } | null;
+  /** Yorgunluk (0-100) */
+  yorgunluk?: number;
+  uzmanlik?: Partial<Record<PerkSlot, 'a' | 'b'>>;
+  /** Lisans sınavı (terfi şartları dolunca) */
+  sinav?: { tier: RefTier; sorular: number[]; cevap: (number | null)[] } | null;
+  /** Kalınan sınavdan sonra yeniden deneme için gereken maç sayısı */
+  sinavBekle?: number;
+  mentor?: MentorTask | null;
+  mentorAd?: string;
+  mentorTamam?: number;
+  kiyafet?: string;
+  hafiza?: Hatira[];
+  rakipHakem?: string;
+  emekli?: boolean;
 };
 
 const VURUSCU: Background[] = ['boks', 'muaythai', 'kickboks', 'kyokushin', 'sokak'];
@@ -151,6 +244,16 @@ export function startBout(r: RefRun, teklif?: number) {
   const o = teklif != null ? r.teklifler?.[teklif] : undefined;
   const kadin = chance(0.25);
   const unvan = o ? o.unvan : r.seviye === 'ucc' ? r.itibar >= 85 && chance(0.4) : r.seviye !== 'amator' && chance(0.15);
+  // Organizasyon ilişkileri: seçilen +3, geri çevrilenler -1 (sözleşmede değilsen)
+  if (o?.orgId) {
+    bumpOrg(r, o.orgId, 3);
+    if (!r.sozlesme) for (const x of r.teklifler ?? []) if (x !== o && x.orgId && x.orgId !== o.orgId) bumpOrg(r, x.orgId, -1);
+  }
+  if (o?.sozlesme && o.orgId) r.sozlesme = { org: o.orgId, orgAd: o.org, kalan: CONTRACT_BOUTS, carpan: o.sozlesme.carpan };
+  const uzak = !!o?.uzak;
+  const bec = fatigueSkills(r, r.beceri ?? {}, uzak);
+  addFatigue(r, uzak);
+  const hatira = pickMemory(r);
   r.teklifler = [];
   r.sonMesaj = undefined;
   r.aktif = {
@@ -169,20 +272,38 @@ export function startBout(r: RefRun, teklif?: number) {
     kartlar: [],
     kararlar: [],
     kadin,
-    bec: { ...(r.beceri ?? {}) },
+    bec,
     org: o?.org,
+    orgId: o?.orgId,
+    etiketler: o?.etiketler,
+    yayin: o?.yayin,
+    uzak,
+    evSahibi: o?.evSahibi,
+    saygi: saygi(r),
+    uz: { ...(r.uzmanlik ?? {}) },
+    hatira: hatira ?? undefined,
+    durdurma: [],
     sehir: o?.sehir,
     ucret: o?.ucret ?? BASE_PAY[r.seviye],
     anaKart: o ? o.anaKart || o.unvan : unvan,
   };
   r.son = undefined;
-  advance(r.aktif);
+  const bb = r.aktif;
+  // Zayıf çene: bir dövüşçü çabuk sarsılır
+  if (bb.etiketler?.includes('cene')) bb[chance(0.5) ? 'a' : 'b'].cene -= 14;
+  // Seni hatırlayan dövüşçü mavi köşede
+  if (hatira) {
+    bb.b.ad = hatira.ad;
+    bb.b.ulke = hatira.ulke;
+    bb.log.push(L("👀 {0} seni hatırlıyor: {1}.", [hatira.ad.split(' ').slice(-1)[0], HATIRA_METIN[hatira.neden]()]));
+  }
+  advance(bb);
 }
 
 /** Okuma becerisi: seviye/5 olasılıkla gerçeği söyleyen bir "içgüdü" ipucu. */
 function instinct(b: RefBout, kind: MomentKind, truth: Truth): string[] {
   const lv = b.bec?.okuma ?? 0;
-  if (!lv || !chance(lv / 5)) return [];
+  if (!alwaysInstinct(b, kind) && (!lv || !chance(lv / 5))) return [];
   const t: Record<Truth, () => string> = {
     dur: () => L("🔎 İçgüdün: bu dövüşçünün korunmaya ihtiyacı var."),
     gri: () => L("🔎 İçgüdün: ince bir çizgi; iki karar da savunulur."),
@@ -232,8 +353,9 @@ function beat(b: RefBout) {
   const D = F(b, def);
   // Durgunluk ve faul anları seyrek gelir (her raunt en fazla bir karar anı daha akıcı).
   const r0 = rand();
-  if (r0 < 0.06) return foulMoment(b, att);
-  if (r0 < 0.1 && b.beat >= 3) return stallMoment(b, att);
+  const fr = foulRate(b);
+  if (r0 < fr) return foulMoment(b, att);
+  if (r0 < fr + stallRate(b) && b.beat >= 3) return stallMoment(b, att);
   const grappler = !VURUSCU.includes(A.stil);
   if (chance(grappler ? 0.45 : 0.15)) {
     // Takedown denemesi
@@ -305,7 +427,13 @@ function rockedMoment(b: RefBout, att: Side) {
     side: v,
     truth,
     metin: L("{0} sarsıldı! {1} üstüne yürüyor.", [nm(b, v), nm(b, att)]),
-    ipuclari: [savunma, hasar, L("Rauntun bitmesine {0}:{1}", [Math.floor(kalan / 60), String(kalan % 60).padStart(2, '0')]), L("Seyirci ayakta, “durdur” diye bağıranlar var."), ...instinct(b, 'sarsildi', truth)],
+    ipuclari: [
+      savunma,
+      hasar,
+      L("Rauntun bitmesine {0}:{1}", [Math.floor(kalan / 60), String(kalan % 60).padStart(2, '0')]),
+      b.evSahibi && v === 0 ? L("Salon ev sahibi {0} için bağırıyor; durdurursan yuhalanacaksın.", [nm(b, v)]) : L("Seyirci ayakta, “durdur” diye bağıranlar var."),
+      ...instinct(b, 'sarsildi', truth),
+    ],
     secenekler: [DUR(), DEVAM()],
   };
 }
@@ -390,6 +518,19 @@ function stallMoment(b: RefBout, att: Side) {
   };
 }
 
+/** Tekrar izleme uzmanlığı: maç başına bir kez, karar anında gerçeği gösteren ipucu */
+export function canReplay(b: RefBout) {
+  return !!b.an && !b.tekrar && hasPerk(b, 'kural5', 'a');
+}
+export function replayMoment(b: RefBout) {
+  if (!canReplay(b) || !b.an) return;
+  b.tekrar = true;
+  const t = b.an.truth;
+  const txt =
+    t === 'gri' ? L("📺 Tekrar: ince bir çizgi; iki karar da savunulur.") : L("📺 Tekrar izlendi: doğru karar “{0}”.", [b.an.secenekler.find((x) => x.key === (b.an!.kind === 'kilit' && t === 'devam' ? 'bekle' : t))?.ad ?? t]);
+  b.an.ipuclari = [...b.an.ipuclari, txt];
+}
+
 // ---------- Kararın sonucu ----------
 
 /** Karar puanı: doğru +6, kabul edilebilir +3, yanlış -6, tehlikeli (geç durdurma) -12 */
@@ -405,6 +546,7 @@ export function decide(b: RefBout, key: string) {
   const stop = key === 'dur';
   if (an.kind === 'sarsildi' || an.kind === 'kilit') {
     const w = other;
+    b.durdurma?.push({ kind: an.kind, stop, truth: an.truth });
     if (stop) {
       if (an.truth === 'devam') {
         puan = -6;
@@ -419,14 +561,14 @@ export function decide(b: RefBout, key: string) {
       b.log.push(L("✋ Hakem maçı durdurdu! Kazanan {0}.", [nm(b, w)]));
     } else {
       if (an.truth === 'dur') {
-        puan = Math.min(-4, -12 + poz * 2);
+        puan = Math.min(hasPerk(b, 'pozisyon3', 'a') ? -2 : -4, -12 + poz * 2 + (hasPerk(b, 'pozisyon3', 'a') ? 3 : 0));
         tip = 'gec';
         not = an.kind === 'kilit' ? L("Geç kaldın: kilitte bilincini kaybetti. Doktorlar uzun süre başında kaldı.") : L("Geç durdurma: savunmasız dövüşçü fazladan darbe aldı.");
-        b.hp[v] -= 15 - poz * 2;
+        if (!hasPerk(b, 'pozisyon5', 'a')) b.hp[v] -= 15 - poz * 2;
         b.sonuc = { kazanan: w, yontem: an.kind === 'kilit' ? 'SUB' : 'KO', raunt: b.raunt };
         b.log.push(L("Sonunda araya girdin ama çok geçti."));
       } else if (an.truth === 'gri') {
-        if (chance(0.5 + poz * 0.07)) {
+        if (chance(0.5 + poz * 0.07 + (hasPerk(b, 'pozisyon3', 'b') ? 0.15 : 0))) {
           puan = 3;
           not = L("Cesur karar: toparlandı ve maç sürdü.");
           b.hp[v] += 8;
@@ -447,7 +589,7 @@ export function decide(b: RefBout, key: string) {
   } else if (an.kind === 'faul') {
     const order: Truth[] = ['uyar', 'puan', 'dq'];
     const fark = order.indexOf(key as Truth) - order.indexOf(an.truth);
-    puan = fark === 0 ? 6 : Math.abs(fark) === 1 ? -3 : -8;
+    puan = fark === 0 ? 6 : Math.abs(fark) === 1 ? (hasPerk(b, 'kural3', 'a') ? 0 : -3) : -8;
     not = fark === 0 ? L("Doğru yaptırım.") : fark > 0 ? L("Fazla sert bir yaptırım, köşe itiraz etti.") : L("Fazla yumuşak kaldın; faul ödüllendirilmiş oldu.");
     if (key === 'puan') b.ceza[v]++;
     if (key === 'dq') {
@@ -464,11 +606,23 @@ export function decide(b: RefBout, key: string) {
     } else if (key === 'doktor') b.log.push(L("🩺 Doktor baktı, devam izni verdi."));
   } else {
     const ok = (key === 'ayir') === (an.truth === 'ayir');
-    puan = ok ? 4 : -3;
+    puan = ok ? 4 : hasPerk(b, 'pozisyon5', 'b') ? 0 : -3;
     not = ok ? (key === 'ayir' ? L("Doğru: maçı yeniden hareketlendirdin.") : L("Doğru: kafeste çalışıyordu, sabrın yerindeydi.")) : key === 'ayir' ? L("Erken ayırdın; kafeste çalışıyordu.") : L("Durgunluğa göz yumdun, salon sıkıldı.");
     if (key === 'ayir') b.log.push(L("Hakem dövüşçüleri ayırdı, ortadan devam."));
   }
-  b.kararlar.push({ kind: an.kind, puan, not, tip });
+  const label = (k: string) => an.secenekler.find((x) => x.key === k)?.ad ?? k;
+  const dogruKey = an.truth === 'gri' ? null : an.kind === 'kilit' && an.truth === 'devam' ? 'bekle' : an.truth;
+  b.kararlar.push({
+    kind: an.kind,
+    puan,
+    not,
+    tip,
+    taraf: v,
+    durdu: !!b.sonuc,
+    secilen: label(key),
+    dogru: dogruKey ? label(dogruKey) : L("İkisi de kabul"),
+    neden: WHY[an.truth](an.kind),
+  });
   if (!b.sonuc) advance(b);
 }
 
@@ -524,7 +678,7 @@ function decision(b: RefBout) {
 }
 
 /** Kartın puanı: birebir +2, yalnızca kazanan doğru 0, kazanan yanlış -3 */
-const cardScore = (k: { benim: Card; dogru: Card }) => (k.benim === k.dogru ? 2 : cardWinner(k.benim) === cardWinner(k.dogru) ? 0 : -3);
+const cardScore = (k: { benim: Card; dogru: Card }, b?: RefBout) => (k.benim === k.dogru ? 2 : cardWinner(k.benim) === cardWinner(k.dogru) ? 0 : b && hasPerk(b, 'kural3', 'b') ? -1 : -3);
 
 // ---------- Maç sonu ----------
 
@@ -532,14 +686,32 @@ export function finishBout(r: RefRun) {
   const b = r.aktif;
   if (!b?.sonuc) return;
   const karar = b.kararlar.reduce((t, k) => t + k.puan, 0);
-  const kart = b.kartlar.reduce((t, k) => t + cardScore(k), 0);
+  const kart = b.kartlar.reduce((t, k) => t + cardScore(k, b), 0);
   const puan = karar + kart;
-  const hata = b.kararlar.some((k) => k.puan < 0) || b.kartlar.some((k) => cardScore(k) < 0);
+  const hata = b.kararlar.some((k) => k.puan < 0) || b.kartlar.some((k) => cardScore(k, b) < 0);
   const tierMul = { amator: 1, bolgesel: 0.85, buyuk: 0.7, ucc: 0.6 }[r.seviye];
   let delta = Math.round(clamp(puan / 3, -10, 7) * (puan > 0 ? tierMul : 1) * (b.unvan ? 1.4 : b.anaKart ? 1.2 : 1));
-  // Sakinlik: hataların itibar bedeli azalır
-  if (delta < 0) delta = Math.round(delta * (1 - 0.1 * (r.beceri?.sakinlik ?? 0)));
+  // Canlı yayın: her şey daha çok görülür
+  if (b.yayin && !(delta < 0 && hasPerk(b, 'sakinlik3', 'b'))) delta = Math.round(delta * 1.3);
+  // Sakinlik: hataların itibar bedeli azalır (Demir sinir: yarıya)
+  if (delta < 0) delta = Math.round(delta * (1 - 0.1 * (b.bec?.sakinlik ?? 0)) * (hasPerk(b, 'sakinlik5', 'a') ? 0.5 : 1));
+  if (!hata && hasPerk(b, 'kural5', 'b') && b.kararlar.length + b.kartlar.length >= 2) delta += 2;
   r.itibar = clamp(r.itibar + delta, 0, 100);
+  // Dövüşçü saygısı ve taraftar imajı; hakem tarzı
+  const ax = axesFromBout(r, b, puan, hata);
+  if (ax.saygi < 0 && hasPerk(b, 'pozisyon5', 'a') && b.kararlar.some((k) => k.tip === 'gec')) ax.saygi = Math.round(ax.saygi / 2);
+  r.saygi = clamp(saygi(r) + ease(saygi(r), ax.saygi), 0, 100);
+  r.imaj = clamp(imaj(r) + ease(imaj(r), ax.imaj), 0, 100);
+  for (const d of b.durdurma ?? []) noteStyle(r, d.kind, d.stop, d.truth);
+  // Dövüşçü hafızası: erken/geç durdurduğun ve diskalifiye ettiğin dövüşçüler seni hatırlar
+  for (const k of b.kararlar) {
+    const f = k.taraf === 1 ? b.b : b.a;
+    if (k.tip === 'erken' || k.tip === 'gec') remember(r, { ad: f.ad, ulke: f.ulke, neden: k.tip });
+  }
+  if (b.sonuc.yontem === 'DQ') {
+    const f = b.sonuc.kazanan === 0 ? b.b : b.a;
+    remember(r, { ad: f.ad, ulke: f.ulke, neden: 'dq' });
+  }
   r.mac++;
   r.yilMac++;
   r.yilPuan += puan;
@@ -549,13 +721,13 @@ export function finishBout(r: RefRun) {
   const not = puan >= 12 && !hata ? L("Kusursuz yönetim") : puan >= 5 ? L("İyi bir gece") : puan >= -4 ? L("Tartışmalı anlar") : L("Skandal: herkes seni konuşuyor");
   const yontem = b.sonuc.kazanan == null ? L("Berabere") : `${nm(b, b.sonuc.kazanan)} · ${b.sonuc.yontem} · R${b.sonuc.raunt}`;
   r.gecmis = [{ a: b.a.ad, b: b.b.ad, not, puan, tier: r.seviye }, ...r.gecmis].slice(0, 30);
-  // Terfi
-  let terfi: RefTier | undefined;
+  // Terfi şartları dolunca lisans sınavı açılır; terfi sınavı geçince gelir
+  const terfi: RefTier | undefined = undefined;
   const req = PROMOTE[r.seviye];
-  if (req && r.itibar >= req[0] && r.mac >= req[1]) {
-    terfi = REF_TIERS[REF_TIERS.indexOf(r.seviye) + 1];
-    r.seviye = terfi;
-    r.itibar = Math.max(20, r.itibar - 25);
+  let sinav = false;
+  if (req && r.itibar >= req[0] && r.mac >= req[1] && !r.sinav && (r.sinavBekle ?? 0) <= r.mac) {
+    r.sinav = makeExam(REF_TIERS[REF_TIERS.indexOf(r.seviye) + 1]);
+    sinav = true;
   }
   // Skandal üstüne skandal: bir alt lige düşebilirsin (yalnızca çok düşük itibarda)
   if (!terfi && r.itibar < 5 && r.seviye !== 'amator' && puan < -8) {
@@ -564,8 +736,7 @@ export function finishBout(r: RefRun) {
   }
   r.aktif = undefined;
   const hayat = afterBout(r, b, puan, hata);
-  r.son = { puan, not, itibar: delta, terfi, kararlar: b.kararlar, kartlar: b.kartlar, sonuc: yontem, org: b.org, ...hayat };
-  if (terfi) r.bp = (r.bp ?? 0) + 2;
+  r.son = { puan, not, itibar: delta, terfi, kararlar: b.kararlar, kartlar: b.kartlar, sonuc: yontem, org: b.org, saygi: ax.saygi, imaj: ax.imaj, sinav, ...hayat };
   if (r.yilMac >= YEAR_BOUTS) {
     const ort = Math.round((r.yilPuan / r.yilMac) * 10) / 10;
     const toren = makeCeremony(r, r.yil, ort);
@@ -580,6 +751,34 @@ export function finishBout(r: RefRun) {
 }
 
 export const closeYearEnd = (r: RefRun) => (r.yilSonu = undefined);
+
+/** Lisans sınavı: soruyu cevapla */
+export function answerExam(r: RefRun, i: number, choice: number) {
+  if (!r.sinav || r.sinav.cevap[i] != null) return;
+  r.sinav.cevap = r.sinav.cevap.map((c, j) => (j === i ? choice : c));
+}
+export const examScore = (s: NonNullable<RefRun['sinav']>) => s.sorular.filter((q, i) => s.cevap[i] === EXAM_QUESTIONS[q].d).length;
+/** Sınavı bitir: geçersen terfi (+2 beceri puanı), kalırsan 2 maç sonra yeniden. */
+export function finishExam(r: RefRun): { gecti: boolean; dogru: number; tier: RefTier } | null {
+  const s = r.sinav;
+  if (!s || s.cevap.some((c) => c == null)) return null;
+  const dogru = examScore(s);
+  const gecti = dogru >= EXAM_PASS;
+  r.sinav = null;
+  if (gecti) {
+    r.seviye = s.tier;
+    r.itibar = Math.max(20, r.itibar - 25);
+    r.bp = (r.bp ?? 0) + 2;
+    r.sozlesme = null;
+    r.teklifler = [];
+    ensureCareer(r);
+    r.sonMesaj = L("🎓 Lisans sınavını geçtin ({0}/{1}): artık {2} seviyesindesin!", [dogru, s.sorular.length, TIER_NAME[s.tier]()]);
+  } else {
+    r.sinavBekle = r.mac + 2;
+    r.sonMesaj = L("📘 Sınavı geçemedin ({0}/{1}). İki maç sonra yeniden girebilirsin.", [dogru, s.sorular.length]);
+  }
+  return { gecti, dogru, tier: s.tier };
+}
 
 /** Sıradaki terfinin şartı (yoksa null). */
 export const promoteReq = (r: RefRun) => PROMOTE[r.seviye];

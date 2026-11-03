@@ -148,6 +148,7 @@ export function CageView({
   rLook,
   pKitOverride,
   noReplay,
+  rShirt,
 }: {
   fs: FightState;
   shown: number;
@@ -163,6 +164,8 @@ export function CageView({
   pKitOverride?: Kit;
   /** Nakavt tekrarı gösterilmez */
   noReplay?: boolean;
+  /** Hakem gömleği rengi (Hakem Modu kıyafeti) */
+  rShirt?: string;
 }) {
   const [pKit] = useState(() => pKitOverride ?? playerKit());
   const [w, setW] = useState(340);
@@ -593,7 +596,7 @@ export function CageView({
     const X = baseX(a) + f * k * ps.x;
     const Y = floorY - HIP_H * k + k * ps.y;
     const look = a === 'p' ? pLook ?? DEFAULT_LOOK : a === 'o' ? oLook : rLook ?? REF_LOOK;
-    const kit = a === 'p' ? pKit : a === 'o' ? { shorts: '#1f4fbf', trim: '#ffffff', glove: '#1740a8' } : { shorts: '#15161a', trim: '#fff', glove: '#000', ref: true };
+    const kit = a === 'p' ? pKit : a === 'o' ? { shorts: '#1f4fbf', trim: '#ffffff', glove: '#1740a8' } : { shorts: rShirt ?? '#15161a', trim: '#fff', glove: '#000', ref: true };
     return (
       <G key={a}>
         <Ellipse cx={X} cy={floorY + 4} rx={20 * k} ry={4 * k} fill="#000" opacity={0.25} />

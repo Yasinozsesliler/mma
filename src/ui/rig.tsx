@@ -181,8 +181,8 @@ export function Figure({ p, look, kit, hasar = 0 }: { p: Pose; look: Appearance;
       <Glove at={j.wrR} dir={p.aR1 + p.aR2} color={shade(kit.glove, -25)} bare={ref || kit.bare} skin={skinD} />
 
       {/* Gövde */}
-      <Path d={torsoPath} fill={shade(ref ? '#15161a' : skin, -70)} opacity={0.5} transform="translate(0.6 0.6)" />
-      <Path d={torsoPath} fill={ref ? '#15161a' : `url(#${gT})`} />
+      <Path d={torsoPath} fill={shade(ref ? kit.shorts : skin, -70)} opacity={0.5} transform="translate(0.6 0.6)" />
+      <Path d={torsoPath} fill={ref ? kit.shorts : `url(#${gT})`} />
       <Path d={backPath} fill={ref ? '#000' : skinD} opacity={ref ? 0.4 : 0.55} />
       {!ref ? (
         <>
@@ -234,7 +234,7 @@ export function Figure({ p, look, kit, hasar = 0 }: { p: Pose; look: Appearance;
           <Line x1={pt(shortsTop, 9).x} y1={pt(shortsTop, 9).y + 3} x2={pt(shortsTop, -9).x} y2={pt(shortsTop, -9).y + 3} stroke={kit.trim} strokeWidth={1.2} opacity={0.8} />
         </>
       ) : null}
-      <Limb a={j.shL} b={j.elL} w={8} color={ref ? '#15161a' : armC} />
+      <Limb a={j.shL} b={j.elL} w={8} color={ref ? kit.shorts : armC} />
       {!ref && look.dovmeler?.includes('kol') ? (
         <Line x1={j.shL.x + (j.elL.x - j.shL.x) * 0.2} y1={j.shL.y + (j.elL.y - j.shL.y) * 0.2} x2={j.shL.x + (j.elL.x - j.shL.x) * 0.85} y2={j.shL.y + (j.elL.y - j.shL.y) * 0.85} stroke="#1d1d1d" strokeWidth={2.6} strokeDasharray="2 1.5" opacity={0.5} />
       ) : null}

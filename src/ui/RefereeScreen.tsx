@@ -10,11 +10,15 @@ import { money } from '../engine/career';
 import { BACKGROUNDS, COUNTRIES } from '../engine/data';
 import { fmtFollowers } from '../engine/fame';
 import {
+  answerExam,
+  canReplay,
   cardHint,
   cardLabel,
   createRefRun,
   decide,
   finishBout,
+  finishExam,
+  replayMoment,
   promoteReq,
   REF_TRIAL,
   scoreRound,
@@ -40,17 +44,44 @@ import {
   SKILL_MAX,
   skillCost,
   skillLvl,
+  restWeek,
   takeSeminar,
   TIER_COLOR,
   upgradeSkill,
   type RefOffer,
 } from '../engine/refereeCareer';
+import {
+  choosePerk,
+  CONTRACT_BOUTS,
+  EXAM_PASS,
+  EXAM_QUESTIONS,
+  HATIRA_METIN,
+  hallWorthy,
+  iliski,
+  imaj,
+  KIYAFETLER,
+  kiyafetRenk,
+  mentorText,
+  ORG_TARZ,
+  PERKS,
+  pendingPerks,
+  RETIRE_MIN,
+  saygi,
+  TAG_INFO,
+  TARZ_ACIK,
+  TARZ_NAME,
+  tarzOf,
+  TIER_ORGS,
+  yorgun,
+  type PerkSlot,
+} from '../engine/refereeDepth';
+import { orgName } from '../engine/refereeCareer';
 import { lookFor } from '../engine/tale';
 import type { Appearance, FightState } from '../engine/types';
 import { L, LOC } from '../i18n';
 import { buy, PURCHASES, restorePurchases, useOwned, usePrice } from '../monetization';
 import { REF_SKU, ULTIMATE_SKU } from '../monetization/skus';
-import { actRef, setRun, useRefRun } from '../refereeStore';
+import { actRef, retireRef, setRun, useHall, useRefRun } from '../refereeStore';
 import { CageView } from './CageView';
 import { Bar, Button, CageBg, Card, Choice, Icon, Screen, SLANT, type IconName } from './components';
 import { LookPicker } from './CreateScreen';
@@ -104,7 +135,9 @@ export function RefereeScreen({ onExit }: { onExit: () => void }) {
     if (r?.deneme && unlocked) actRef((x) => (x.deneme = false));
   }, [r?.deneme, unlocked]);
   if (!r) return <RefStart unlocked={unlocked} onExit={onExit} />;
+  if (r.emekli) return <RetiredView r={r} onExit={onExit} />;
   if (r.aktif) return <BoutView r={r} b={r.aktif} />;
+  if (r.sinav) return <ExamView r={r} />;
   if (r.toren) return <Ceremony r={r} />;
   return <RefHub r={r} unlocked={unlocked} onExit={onExit} />;
 }
@@ -196,7 +229,7 @@ function RefHub({ r, unlocked, onExit }: { r: RefRun; unlocked: boolean; onExit:
   const [tab, setTab] = useState<Tab>('kariyer');
   const nav: NavItem<Tab>[] = [
     { key: 'kariyer', label: L("Kariyer"), icon: 'whistle', badge: r.olay ? '!' : null },
-    { key: 'gelisim', label: L("Gelişim"), icon: 'chart-line', badge: (r.bp ?? 0) > 0 ? r.bp : null },
+    { key: 'gelisim', label: L("Gelişim"), icon: 'chart-line', badge: pendingPerks(r).length ? '★' : (r.bp ?? 0) > 0 ? r.bp : null },
     { key: 'hayat', label: L("Hayat"), icon: 'cellphone-message' },
     { key: 'profil', label: L("Profil"), icon: 'account' },
   ];
@@ -235,8 +268,17 @@ function RefHero({ r }: { r: RefRun }) {
       <View style={rs.meters}>
         <Meter label={L("MAÇ")} value={String(r.mac)} />
         <Meter label={L("PARA")} value={money(r.para ?? 0)} color={C.green} />
-        <Meter label={L("İTİBAR")} value={String(r.itibar)} color={r.itibar >= 70 ? C.gold : r.itibar >= 35 ? C.green : C.orange} />
         <Meter label={L("TAKİPÇİ")} value={fmtFollowers(r.takipci ?? 0)} color={C.gold} />
+      </View>
+      <View style={{ marginTop: 8 }}>
+        <Bar value={r.itibar} color={C.gold} label={L("Komisyon güveni")} right={String(r.itibar)} />
+        <Bar value={saygi(r)} color={C.green} label={L("Dövüşçü saygısı")} right={String(saygi(r))} />
+        <Bar value={imaj(r)} color={C.blue} label={L("Taraftar imajı")} right={String(imaj(r))} />
+      </View>
+      <View style={[rs.heroChips, { marginTop: 4 }]}>
+        <Text style={[rs.heroChip, { color: C.text }]}>{L("TARZ: {0}", [TARZ_NAME[tarzOf(r)]().toLocaleUpperCase(LOC)])}</Text>
+        <Text style={rs.dot}>•</Text>
+        <Text style={[rs.heroChip, { color: yorgun(r) >= 60 ? C.orange : C.dim }]}>{L("YORGUNLUK %{0}", [yorgun(r)])}</Text>
       </View>
     </LinearGradient>
   );
@@ -267,6 +309,18 @@ function CareerTab({ r, unlocked, onExit }: { r: RefRun; unlocked: boolean; onEx
       ) : null}
       {r.son ? <LastBout r={r} /> : null}
       {kilit ? <RefPack lead={L("Deneme bitti. Kafes seni bekliyor:")} /> : null}
+      {r.sozlesme ? (
+        <View style={[rs.notice, { borderColor: C.gold }]}>
+          <Icon name="file-sign" size={18} color={C.gold} />
+          <Text style={rs.noticeText}>{L("Sözleşme: {0} · {1} maç kaldı · ücretler ×{2}", [r.sozlesme.orgAd, r.sozlesme.kalan, String(r.sozlesme.carpan).replace('.', ',')])}</Text>
+        </View>
+      ) : null}
+      {yorgun(r) >= 60 ? (
+        <View style={[rs.notice, { borderColor: C.orange + '88', backgroundColor: '#1d140b' }]}>
+          <Icon name="sleep" size={18} color={C.orange} />
+          <Text style={rs.noticeText}>{L("Yorgunsun: okuma ve pozisyon becerilerin maçta bir seviye düşük çalışır. Bir hafta dinlenmeyi düşün.")}</Text>
+        </View>
+      ) : null}
       <Text style={rs.section}>{L("MAÇ TEKLİFLERİ")}</Text>
       {(r.teklifler ?? []).map((o, i) => (
         <OfferCard key={i} o={o} disabled={kilit || !!r.olay} onPress={() => {
@@ -276,12 +330,20 @@ function CareerTab({ r, unlocked, onExit }: { r: RefRun; unlocked: boolean; onEx
         }} />
       ))}
       {r.olay ? <Text style={rs.small}>{L("Önce bekleyen durumu çöz.")}</Text> : null}
+      <Button
+        label={L("Bu hafta dinlen · yorgunluk -45")}
+        icon="sleep"
+        tone="ghost"
+        disabled={kilit || !!r.olay || yorgun(r) === 0}
+        onPress={() => actRef(restWeek)}
+      />
       <Card>
         <Text style={rs.kicker}>{L("KARİYER YOLU")}</Text>
         <Bar value={r.itibar} color={r.itibar >= 70 ? C.gold : r.itibar >= 35 ? C.green : C.orange} label={L("İtibar")} right={`${r.itibar}/100`} />
         <Text style={rs.small}>
-          {req ? L("Terfi için: itibar {0} ve {1} maç ({2}/{1})", [req[0], req[1], r.mac]) : r.itibar >= 85 ? L("UCC şampiyonluk maçlarına atanabilirsin.") : L("Şampiyonluk maçları için itibar 85.")}
+          {req ? L("Terfi için: itibar {0} ve {1} maç ({2}/{1}), ardından lisans sınavı", [req[0], req[1], r.mac]) : r.itibar >= 85 ? L("UCC şampiyonluk maçlarına atanabilirsin.") : L("Şampiyonluk maçları için itibar 85.")}
         </Text>
+        {(r.sinavBekle ?? 0) > r.mac ? <Text style={[rs.small, { color: C.orange }]}>{L("Lisans sınavına yeniden girmek için {0} maç daha.", [(r.sinavBekle ?? 0) - r.mac])}</Text> : null}
         <Text style={rs.small}>{L("Bu yıl {0}/{1} maç · yıl sonunda Yılın Hakemi töreni", [r.yilMac, YEAR_BOUTS])}</Text>
       </Card>
       <Button label={L("Menüye dön")} icon="arrow-left" tone="ghost" onPress={onExit} />
@@ -299,6 +361,7 @@ function OfferCard({ o, onPress, disabled }: { o: RefOffer; onPress: () => void;
         </View>
         <View style={{ flex: 1 }}>
           <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+            {o.sozlesme ? <Text style={[rs.badge, { backgroundColor: C.gold }]}>{L("SÖZLEŞME · {0} MAÇ", [CONTRACT_BOUTS])}</Text> : null}
             {o.unvan ? <Text style={[rs.badge, { backgroundColor: C.gold }]}>{L("ÜNVAN MAÇI")}</Text> : o.anaKart ? <Text style={[rs.badge, { backgroundColor: C.red, color: '#fff' }]}>{L("ANA KART")}</Text> : <Text style={[rs.badge, { backgroundColor: '#2a2d35', color: C.dim }]}>{L("ALT KART")}</Text>}
             <Text style={rs.offerCity}>{o.sehir}</Text>
           </View>
@@ -306,6 +369,19 @@ function OfferCard({ o, onPress, disabled }: { o: RefOffer; onPress: () => void;
             {o.org}
           </Text>
           <Text style={rs.offerSub}>{o.unvan ? L("5 raunt · baskı yüksek, itibar etkisi büyük") : o.anaKart ? L("3 raunt · gözler üstünde, itibar etkisi daha büyük") : L("3 raunt · sakin bir gece")}</Text>
+          {o.sozlesme ? <Text style={[rs.offerSub, { color: C.gold }]}>{L("İmzalarsan sonraki {0} maçın bu organizasyondan gelir; ücretler daha yüksek, ünvan maçı şansı artar.", [CONTRACT_BOUTS])}</Text> : null}
+          <View style={ds.chips}>
+            {(o.etiketler ?? []).map((t) => (
+              <View key={t} style={[ds.chip, { borderColor: C.orange + '88' }]}>
+                <Icon name={TAG_INFO[t].icon as IconName} size={11} color={C.orange} />
+                <Text style={[ds.chipT, { color: C.orange }]}>{TAG_INFO[t].ad()}</Text>
+              </View>
+            ))}
+            {o.yayin ? <Text style={ds.chipPlain}>{L("📺 Canlı yayın")}</Text> : null}
+            {o.uzak ? <Text style={ds.chipPlain}>{L("✈️ Uzak şehir")}</Text> : null}
+            {o.evSahibi ? <Text style={ds.chipPlain}>{L("🏟️ Ev sahibi salon")}</Text> : null}
+            {o.tarzUyum ? <Text style={[ds.chipPlain, { color: C.green, borderColor: C.green + '66' }]}>{L("👍 Tarzını seviyor")}</Text> : null}
+          </View>
         </View>
         <View style={{ alignItems: 'flex-end' }}>
           <Text style={rs.offerPay}>{money(o.ucret)}</Text>
@@ -346,12 +422,38 @@ function LastBout({ r }: { r: RefRun }) {
           {s.bp ? <Text style={[rs.gain, { color: C.blue }]}>+{s.bp} {L("beceri puanı")}</Text> : null}
         </View>
       ) : null}
+      {s.saygi != null ? <Text style={rs.small}>{L("Komisyon {0} · Saygı {1} · İmaj {2}", [sign(s.itibar), sign(s.saygi), sign(s.imaj ?? 0)])}</Text> : null}
+      {s.mentor ? <Text style={[rs.text, { color: C.gold }]}>🎯 {s.mentor}</Text> : null}
+      {s.sinav ? <Text style={[rs.text, { color: C.gold, fontFamily: F.bold }]}>{L("🎓 Terfi şartlarını tamamladın: lisans sınavı seni bekliyor.")}</Text> : null}
       {s.terfi ? <Text style={[rs.text, { color: C.gold, fontFamily: F.bold }]}>{L("⬆️ TERFİ! Artık {0} maçlarını yönetiyorsun.", [TIER_NAME[s.terfi]()])}</Text> : null}
       {s.kararlar.map((k, i) => (
-        <Text key={i} style={[rs.small, { color: k.puan > 0 ? C.green : k.puan < 0 ? C.red : C.dim }]}>
-          {KIND_ICON[k.kind]} {k.not}
-        </Text>
+        <View key={i}>
+          <Text style={[rs.small, { color: k.puan > 0 ? C.green : k.puan < 0 ? C.red : C.dim }]}>
+            {KIND_ICON[k.kind]} {k.not}
+          </Text>
+          {s.analiz && k.dogru ? (
+            <View style={ds.analysis}>
+              <Text style={ds.anaLine}>{L("Senin kararın: {0} · Doğrusu: {1}", [k.secilen ?? '', k.dogru])}</Text>
+              {k.neden ? <Text style={ds.anaWhy}>{k.neden}</Text> : null}
+            </View>
+          ) : null}
+        </View>
       ))}
+      {!s.analiz && s.kararlar.some((k) => k.dogru) ? (
+        <Button
+          label={L("Maçı analiz et · +1 beceri puanı")}
+          icon="movie-search"
+          tone="ghost"
+          onPress={() =>
+            actRef((x) => {
+              if (x.son && !x.son.analiz) {
+                x.son.analiz = true;
+                x.bp = (x.bp ?? 0) + 1;
+              }
+            })
+          }
+        />
+      ) : null}
       {s.kartlar.length ? <Text style={rs.small}>{L("Puan kartları: {0}/{1} birebir", [s.kartlar.filter((k) => k.benim === k.dogru).length, s.kartlar.length])}</Text> : null}
     </Card>
   );
@@ -360,8 +462,41 @@ function LastBout({ r }: { r: RefRun }) {
 // ---------- Gelişim ----------
 
 function GrowthTab({ r }: { r: RefRun }) {
+  const pend = pendingPerks(r);
+  const req = promoteReq(r);
   return (
     <>
+      {pend.map((slot) => {
+        const sk = REF_SKILLS.find((x) => slot.startsWith(x.key))!;
+        return (
+          <Card key={slot} accent={C.gold}>
+            <Text style={rs.kicker}>{L("UZMANLIK SEÇ · {0} {1}", [sk.ad().toLocaleUpperCase(LOC), slot.slice(-1)])}</Text>
+            <Text style={rs.small}>{L("İkisinden birini seç; seçimin kalıcı.")}</Text>
+            {(['a', 'b'] as const).map((v) => (
+              <Choice
+                key={v}
+                label={PERKS[slot][v].ad()}
+                desc={PERKS[slot][v].acik()}
+                tone="gold"
+                onPress={() => {
+                  sfx('chime');
+                  actRef((x) => choosePerk(x, slot, v));
+                }}
+              />
+            ))}
+          </Card>
+        );
+      })}
+      <MentorCard r={r} />
+      <Card>
+        <Text style={rs.kicker}>{L("LİSANS")}</Text>
+        <Text style={rs.text}>{L("Şu anki lisansın: {0}", [TIER_NAME[r.seviye]()])}</Text>
+        <Text style={rs.small}>
+          {req
+            ? L("Sıradaki lisans için komisyon güveni {0} ve {1} maç gerekir; sonra {2} soruluk kural sınavına girersin ({3} doğru yeter).", [req[0], req[1], 5, EXAM_PASS])
+            : L("En üst lisanstasın: UCC.")}
+        </Text>
+      </Card>
       <Card>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
           <Text style={rs.kicker}>{L("BECERİLER")}</Text>
@@ -387,6 +522,16 @@ function GrowthTab({ r }: { r: RefRun }) {
                   </View>
                 </View>
                 <Text style={rs.skillDesc}>{sk.acik()}</Text>
+                {([3, 5] as const).map((n) => {
+                  const v = r.uzmanlik?.[`${sk.key}${n}` as PerkSlot];
+                  return v ? (
+                    <Text key={n} style={ds.perk}>
+                      ★ {PERKS[`${sk.key}${n}` as PerkSlot][v].ad()}
+                    </Text>
+                  ) : lv < n ? (
+                    <Text key={n} style={[ds.perk, { color: C.faint }]}>{L("Seviye {0}: uzmanlık seçimi", [n])}</Text>
+                  ) : null;
+                })}
               </View>
               <Pressable
                 disabled={!can}
@@ -477,14 +622,29 @@ function ProfileTab({ r, onExit }: { r: RefRun; onExit: () => void }) {
         <Button label={edit ? L("Görünümü kapat") : L("Görünümü düzenle")} icon="account-edit" tone="ghost" onPress={() => setEdit(!edit)} />
       </Card>
       {edit ? <LookPicker look={r.gorunum ?? DEFAULT_REF_LOOK} onChange={(g) => actRef((x) => (x.gorunum = g))} /> : null}
+      <StyleCard r={r} />
+      <OrgsCard r={r} />
+      <OutfitCard r={r} />
+      {r.hafiza?.length ? (
+        <Card>
+          <Text style={rs.kicker}>{L("SENİ HATIRLAYANLAR")}</Text>
+          <Text style={rs.small}>{L("Bu dövüşçüler bir gün yine senin maçına çıkabilir.")}</Text>
+          {r.hafiza.slice(0, 6).map((h) => (
+            <Text key={h.ad} style={rs.text}>
+              👀 {h.ad} · {HATIRA_METIN[h.neden]()}
+            </Text>
+          ))}
+        </Card>
+      ) : null}
       <Card>
         <Text style={rs.kicker}>{L("HAKEM SIRALAMASI")}</Text>
+        {r.rakipHakem ? <Text style={rs.small}>{L("⚔️ Ezeli rakibin: {0}. Basın sizi sürekli kıyaslıyor.", [r.rakipHakem])}</Text> : null}
         {rank.map((x, i) => (
           <View key={i} style={[rs.rankRow, x.sen && rs.rankMe]}>
             <Text style={[rs.rankNo, i < 3 && { color: C.gold }]}>{i + 1}</Text>
             <View style={{ flex: 1 }}>
               <Text style={[rs.rankName, x.sen && { color: C.gold }]} numberOfLines={1}>
-                {x.sen ? L("{0} (SEN)", [x.ad]) : x.ad}
+                {x.sen ? L("{0} (SEN)", [x.ad]) : x.ad === r.rakipHakem ? `⚔️ ${x.ad}` : x.ad}
               </Text>
               <Text style={rs.rankSub}>
                 {TIER_NAME[x.tier]()} · {x.sen ? countryName(x.ulke) : x.ulke}
@@ -509,8 +669,218 @@ function ProfileTab({ r, onExit }: { r: RefRun; onExit: () => void }) {
           ))}
         </Card>
       ) : null}
+      <RetireCard r={r} />
+      <HallCard />
       <Button label={L("Menüye dön")} icon="arrow-left" tone="ghost" onPress={onExit} />
     </>
+  );
+}
+
+const sign = (n: number) => (n > 0 ? `+${n}` : String(n));
+
+function MentorCard({ r }: { r: RefRun }) {
+  const t = r.mentor;
+  return (
+    <Card>
+      <Text style={rs.kicker}>{L("MENTOR · {0}", [(r.mentorAd ?? '').toLocaleUpperCase(LOC)])}</Text>
+      {t ? (
+        <>
+          <Text style={rs.text}>🎯 {mentorText(t)}</Text>
+          <Bar value={(t.ilerleme / t.hedef) * 100} color={C.gold} label={L("İlerleme")} right={`${t.ilerleme}/${t.hedef}`} />
+          <Text style={rs.small}>{L("Ödül: +2 beceri puanı ve para. Tamamlanan görev sayısı: {0}", [r.mentorTamam ?? 0])}</Text>
+        </>
+      ) : (
+        <Text style={rs.small}>{L("İki maç yönettikten sonra kıdemli bir hakem sana görevler vermeye başlayacak.")}</Text>
+      )}
+    </Card>
+  );
+}
+
+function StyleCard({ r }: { r: RefRun }) {
+  const t = tarzOf(r);
+  const sev = TIER_ORGS[r.seviye].filter((o) => ORG_TARZ[o] === t).map(orgName);
+  return (
+    <Card>
+      <Text style={rs.kicker}>{L("HAKEM TARZIN")}</Text>
+      <Text style={[rs.verdict, SLANT]}>{TARZ_NAME[t]()}</Text>
+      <Text style={rs.small}>{TARZ_ACIK[t]()}</Text>
+      <View style={ds.styleTrack}>
+        <View style={[ds.styleDot, { left: `${Math.round(((r.tarz ?? 0) + 100) / 2)}%` }]} />
+      </View>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+        <Text style={ds.styleEnd}>{TARZ_NAME.koruyucu()}</Text>
+        <Text style={ds.styleEnd}>{TARZ_NAME.serbest()}</Text>
+      </View>
+      <Text style={rs.small}>{L("Tarzın gri anlardaki ve hatalı kararlarından oluşur. Tarzını seven organizasyonlar daha çok öder.")}</Text>
+      {sev.length ? <Text style={[rs.small, { color: C.green }]}>{L("Tarzını sevenler: {0}", [sev.join(', ')])}</Text> : null}
+    </Card>
+  );
+}
+
+function OrgsCard({ r }: { r: RefRun }) {
+  return (
+    <Card>
+      <Text style={rs.kicker}>{L("ORGANİZASYONLAR")}</Text>
+      <Text style={rs.small}>{L("Teklifi kabul ettiğin organizasyonla ilişkin güçlenir, geri çevirdiklerinle biraz bozulur. İlişkisi 20'yi geçen organizasyon sözleşme teklif edebilir.")}</Text>
+      {TIER_ORGS[r.seviye].map((o) => {
+        const v = iliski(r, o);
+        return (
+          <View key={o} style={ds.orgRow}>
+            <View style={{ flex: 1 }}>
+              <Text style={rs.text} numberOfLines={1}>
+                {orgName(o)}
+              </Text>
+              <Text style={ds.orgSub}>{L("Sevdiği tarz: {0}", [TARZ_NAME[ORG_TARZ[o]]()])}</Text>
+            </View>
+            <Text style={[ds.orgVal, { color: v >= 20 ? C.gold : v > 0 ? C.green : v < 0 ? C.red : C.dim }]}>{sign(v)}</Text>
+          </View>
+        );
+      })}
+    </Card>
+  );
+}
+
+function OutfitCard({ r }: { r: RefRun }) {
+  return (
+    <Card>
+      <Text style={rs.kicker}>{L("HAKEM KIYAFETİ")}</Text>
+      <Text style={rs.small}>{L("Yalnızca görünüm: kafeste gömleğin bu renkte olur.")}</Text>
+      <View style={ds.outfits}>
+        {KIYAFETLER.map((k) => {
+          const acik = k.acik(r);
+          const sec = (r.kiyafet ?? 'klasik') === k.id;
+          return (
+            <Pressable key={k.id} disabled={!acik} onPress={() => actRef((x) => (x.kiyafet = k.id))} style={[ds.outfit, sec && { borderColor: C.gold }, !acik && { opacity: 0.45 }]}>
+              <View style={[ds.swatch, { backgroundColor: k.renk }]}>{!acik ? <Icon name="lock" size={14} color="#fff" /> : null}</View>
+              <Text style={ds.outfitName} numberOfLines={1}>
+                {k.ad()}
+              </Text>
+              <Text style={ds.outfitReq} numberOfLines={2}>
+                {acik ? (sec ? L("Giyiliyor") : L("Giy")) : k.kosul()}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+    </Card>
+  );
+}
+
+function RetireCard({ r }: { r: RefRun }) {
+  const [ask, setAsk] = useState(false);
+  if (r.mac < RETIRE_MIN) return <Text style={[rs.small, { marginBottom: 10 }]}>{L("Emeklilik {0} maçtan sonra açılır.", [RETIRE_MIN])}</Text>;
+  return (
+    <Card>
+      <Text style={rs.kicker}>{L("EMEKLİLİK")}</Text>
+      <Text style={rs.small}>{hallWorthy(r) ? L("Bugün bırakırsan adın Hakem Onur Listesi'ne yazılır.") : L("Onur Listesi için: iki Yılın Hakemi ödülü, 25 kusursuz maç ya da UCC'de 60 maç ve 80 komisyon güveni.")}</Text>
+      {!ask ? (
+        <Button label={L("Kariyerini noktala")} icon="flag-checkered" tone="ghost" onPress={() => setAsk(true)} />
+      ) : (
+        <>
+          <Text style={rs.text}>{L("Emeklilikten sonra ne yapacaksın? Bu karar kalıcı.")}</Text>
+          <Choice label={L("Hakem eğitmeni ol")} desc={L("Yeni nesil hakemleri yetiştir.")} tone="gold" onPress={() => retireRef('egitmen')} />
+          <Choice label={L("TV yorumcusu ol")} desc={L("Maçları bu kez stüdyodan yorumla.")} tone="gold" onPress={() => retireRef('yorumcu')} />
+          <Button label={L("Vazgeç")} tone="ghost" onPress={() => setAsk(false)} />
+        </>
+      )}
+    </Card>
+  );
+}
+
+function HallCard() {
+  const hall = useHall();
+  if (!hall.length) return null;
+  return (
+    <Card>
+      <Text style={rs.kicker}>{L("HAKEM ONUR LİSTESİ")}</Text>
+      {hall.map((h, i) => (
+        <Text key={i} style={rs.text}>
+          {h.onur ? '🏛️' : '🏁'} {h.ad} · {TIER_NAME[h.seviye]()} · {L("{0} maç", [h.mac])}
+          {h.oduller ? ` · 🏆${h.oduller}` : ''}
+        </Text>
+      ))}
+    </Card>
+  );
+}
+
+// ---------- Lisans sınavı ----------
+
+function ExamView({ r }: { r: RefRun }) {
+  const ex = r.sinav!;
+  const [goster, setGoster] = useState<number | null>(null);
+  const i = ex.cevap.findIndex((c) => c == null);
+  const bitti = i < 0;
+  const dogru = ex.sorular.filter((q, j) => ex.cevap[j] === EXAM_QUESTIONS[q].d).length;
+  const q = goster != null ? EXAM_QUESTIONS[ex.sorular[goster]] : !bitti ? EXAM_QUESTIONS[ex.sorular[i]] : null;
+  return (
+    <Screen>
+      <Card accent={C.gold}>
+        <Text style={rs.kicker}>{L("LİSANS SINAVI · {0}", [TIER_NAME[ex.tier]().toLocaleUpperCase(LOC)])}</Text>
+        <Text style={rs.small}>{L("{0} soru · geçmek için {1} doğru. Kalırsan iki maç sonra yeniden girebilirsin.", [ex.sorular.length, EXAM_PASS])}</Text>
+        <Bar value={(ex.cevap.filter((c) => c != null).length / ex.sorular.length) * 100} color={C.gold} right={`${ex.cevap.filter((c) => c != null).length}/${ex.sorular.length}`} />
+      </Card>
+      {q ? (
+        <Card>
+          <Text style={rs.kicker}>{L("SORU {0}", [(goster ?? i) + 1])}</Text>
+          <Text style={rs.text}>{q.q()}</Text>
+          {q.a.map((a, k) => {
+            const cev = goster != null ? ex.cevap[goster] : null;
+            const tone = cev == null ? 'plain' : k === q.d ? 'gold' : k === cev ? 'red' : 'plain';
+            return (
+              <Choice
+                key={k}
+                label={a()}
+                tone={tone}
+                selected={cev === k}
+                disabled={cev != null}
+                onPress={() => {
+                  actRef((x) => answerExam(x, i, k));
+                  setGoster(i);
+                  sfx(k === q.d ? 'chime' : 'click');
+                }}
+              />
+            );
+          })}
+          {goster != null ? (
+            <>
+              <Text style={[rs.text, { color: ex.cevap[goster] === q.d ? C.green : C.red }]}>{ex.cevap[goster] === q.d ? L("✓ Doğru") : L("✗ Doğrusu: {0}", [q.a[q.d]()])}</Text>
+              <Button label={bitti ? L("Sonucu gör") : L("Sonraki soru")} icon="arrow-right" tone="gold" onPress={() => setGoster(null)} />
+            </>
+          ) : null}
+        </Card>
+      ) : (
+        <Card accent={dogru >= EXAM_PASS ? C.green : C.red}>
+          <Text style={[rs.verdict, SLANT, { color: dogru >= EXAM_PASS ? C.gold : C.red }]}>{dogru >= EXAM_PASS ? L("GEÇTİN!") : L("KALDIN")}</Text>
+          <Text style={rs.text}>{L("{0}/{1} doğru.", [dogru, ex.sorular.length])}</Text>
+          <Button label={dogru >= EXAM_PASS ? L("Yeni lisansını al") : L("Kariyere dön")} icon="school" tone="gold" onPress={() => actRef((x) => void finishExam(x))} />
+        </Card>
+      )}
+    </Screen>
+  );
+}
+
+// ---------- Emeklilik ----------
+
+function RetiredView({ r, onExit }: { r: RefRun; onExit: () => void }) {
+  const hall = useHall();
+  const me = hall[0];
+  return (
+    <Screen>
+      <LinearGradient colors={['#2e2206', '#0e0c07', '#08090b']} style={rs.heroCard}>
+        <View style={{ alignItems: 'center', gap: 8 }}>
+          <FighterAvatar look={r.gorunum ?? DEFAULT_REF_LOOK} size={84} ring={C.gold} />
+          <Text style={[rs.name, SLANT]}>{`${r.ad} ${r.soyad}`.trim().toLocaleUpperCase(LOC)}</Text>
+          <Text style={rs.kicker}>{me?.onur ? L("🏛️ HAKEM ONUR LİSTESİ'NDE") : L("🏁 EMEKLİ HAKEM")}</Text>
+        </View>
+      </LinearGradient>
+      <Card>
+        <Text style={rs.text}>{L("{0} maç · {1} kusursuz yönetim · {2} ödül · son lisans: {3}", [r.mac, r.kusursuz, r.oduller.length, TIER_NAME[r.seviye]()])}</Text>
+        <Text style={rs.text}>{me?.yol === 'yorumcu' ? L("Artık maçları stüdyodan yorumluyorsun. İzleyiciler kafesin içini en iyi senin anlattığını söylüyor.") : L("Artık hakem eğitmenisin. Yetiştirdiğin gençler bir gün UCC kafesinde senin yerini alacak.")}</Text>
+      </Card>
+      <HallCard />
+      <Button label={L("Yeni hakem kariyeri")} icon="whistle" tone="gold" onPress={() => setRun(null)} />
+      <Button label={L("Menüye dön")} icon="arrow-left" tone="ghost" onPress={onExit} />
+    </Screen>
   );
 }
 
@@ -642,7 +1012,18 @@ function BoutView({ r, b }: { r: RefRun; b: RefBout }) {
         </View>
         <Corner f={b.b} hp={b.hp[1]} color={C.blue} look={lk[1]} right />
       </View>
-      <CageView fs={cageState(b, cageLog)} shown={cageShown} pLook={lk[0]} oLook={lk[1]} rLook={r.gorunum ?? DEFAULT_REF_LOOK} pKitOverride={RED_KIT} noReplay />
+      {b.etiketler?.length || b.yayin || b.evSahibi ? (
+        <View style={[ds.chips, { justifyContent: 'center', marginBottom: 6 }]}>
+          {(b.etiketler ?? []).map((t) => (
+            <Text key={t} style={[ds.chipPlain, { color: C.orange, borderColor: C.orange + '66' }]}>
+              {TAG_INFO[t].ad()}
+            </Text>
+          ))}
+          {b.yayin ? <Text style={ds.chipPlain}>{L("📺 Canlı yayın")}</Text> : null}
+          {b.evSahibi ? <Text style={ds.chipPlain}>{L("🏟️ Ev sahibi salon")}</Text> : null}
+        </View>
+      ) : null}
+      <CageView fs={cageState(b, cageLog)} shown={cageShown} pLook={lk[0]} oLook={lk[1]} rLook={r.gorunum ?? DEFAULT_REF_LOOK} rShirt={kiyafetRenk(r)} pKitOverride={RED_KIT} noReplay />
       <View style={rs.logBox}>
         {b.log.slice(0, shown).slice(-4).map((t, i) => (
           <Text key={`${b.raunt}-${i}-${t}`} style={[rs.logLine, t.startsWith('📋') && { color: C.gold }]}>
@@ -689,9 +1070,10 @@ function MomentCard({ b }: { b: RefBout }) {
       {an.ipuclari.map((t) => (
         <View key={t} style={rs.clue}>
           <View style={[rs.clueDot, t.startsWith('🔎') && { backgroundColor: C.green }, t.startsWith('📘') && { backgroundColor: C.blue }]} />
-          <Text style={[rs.clueText, t.startsWith('🔎') && { color: C.green }, t.startsWith('📘') && { color: '#8fb8ff' }]}>{t}</Text>
+          <Text style={[rs.clueText, (t.startsWith('🔎') || t.startsWith('📺')) && { color: C.green }, t.startsWith('📘') && { color: '#8fb8ff' }]}>{t}</Text>
         </View>
       ))}
+      {canReplay(b) ? <Button label={L("📺 Tekrar izle (maç başına 1)")} tone="ghost" onPress={() => actRef((x) => x.aktif && replayMoment(x.aktif))} /> : null}
       <View style={{ gap: 8, marginTop: 6 }}>
         {an.secenekler.map((o, i) => (
           <Button
@@ -871,4 +1253,26 @@ const rs = StyleSheet.create({
   cardBtn: { flexGrow: 1, minWidth: '30%', borderWidth: 1, borderRadius: 10, paddingVertical: 10, alignItems: 'center' },
   cardBtnT: { fontFamily: F.display, fontSize: 13 },
   suggest: { color: C.gold, fontFamily: F.semi, fontSize: 9.5, marginTop: 1 },
+});
+
+const ds = StyleSheet.create({
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 6 },
+  chip: { flexDirection: 'row', alignItems: 'center', gap: 3, borderWidth: 1, borderRadius: 10, paddingHorizontal: 6, paddingVertical: 1 },
+  chipT: { fontFamily: F.semi, fontSize: 10 },
+  chipPlain: { color: C.dim, fontFamily: F.semi, fontSize: 10, borderWidth: 1, borderColor: C.border, borderRadius: 10, paddingHorizontal: 6, paddingVertical: 1, overflow: 'hidden' },
+  analysis: { marginLeft: 18, marginTop: 2, marginBottom: 4, paddingLeft: 8, borderLeftWidth: 2, borderLeftColor: C.border },
+  anaLine: { color: C.text, fontFamily: F.semi, fontSize: 11.5 },
+  anaWhy: { color: C.dim, fontFamily: F.body, fontSize: 11.5, lineHeight: 16 },
+  perk: { color: C.gold, fontFamily: F.semi, fontSize: 11, marginTop: 2 },
+  styleTrack: { height: 8, borderRadius: 4, backgroundColor: '#22252c', marginTop: 10, marginBottom: 4 },
+  styleDot: { position: 'absolute', top: -4, width: 16, height: 16, marginLeft: -8, borderRadius: 8, backgroundColor: C.gold, borderWidth: 2, borderColor: '#000' },
+  styleEnd: { color: C.faint, fontFamily: F.semi, fontSize: 10 },
+  orgRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 4, borderTopWidth: 1, borderTopColor: C.border },
+  orgSub: { color: C.faint, fontFamily: F.body, fontSize: 11, marginTop: -4 },
+  orgVal: { fontFamily: F.display, fontSize: 18, minWidth: 40, textAlign: 'right' },
+  outfits: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 },
+  outfit: { width: '30%', flexGrow: 1, borderWidth: 1, borderColor: C.border, borderRadius: 10, padding: 8, alignItems: 'center', gap: 4 },
+  swatch: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#ffffff33' },
+  outfitName: { color: C.text, fontFamily: F.semi, fontSize: 11 },
+  outfitReq: { color: C.faint, fontFamily: F.body, fontSize: 10, textAlign: 'center' },
 });

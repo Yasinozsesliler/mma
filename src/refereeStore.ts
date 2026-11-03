@@ -2,6 +2,7 @@
 import { useSyncExternalStore } from 'react';
 import type { RefRun } from './engine/referee';
 import { ensureCareer } from './engine/refereeCareer';
+import { hallWorthy, type HallEntry } from './engine/refereeDepth';
 import { getPref, setPref } from './prefs';
 
 const KEY = 'yol_hakem';
@@ -41,4 +42,38 @@ export function setRun(next: RefRun | null) {
   run = next;
   setPref(KEY, next ? JSON.stringify(next) : '');
   subs.forEach((f) => f());
+}
+
+// ---------- Onur Listesi (emekli hakemler, cihazda) ----------
+
+const HALL = 'yol_hakem_onur';
+function loadHall(): HallEntry[] {
+  try {
+    return JSON.parse(getPref(HALL) || '[]') as HallEntry[];
+  } catch {
+    return [];
+  }
+}
+let hall = loadHall();
+const hallSubs = new Set<() => void>();
+
+export function useHall(): HallEntry[] {
+  return useSyncExternalStore(
+    (f) => {
+      hallSubs.add(f);
+      return () => void hallSubs.delete(f);
+    },
+    () => hall,
+    () => hall,
+  );
+}
+
+/** Emekli ol: kariyer Onur Listesi'ne yazılır, hakem kaydı emekli olarak işaretlenir. */
+export function retireRef(yol: HallEntry['yol']) {
+  if (!run) return;
+  const e: HallEntry = { ad: `${run.ad} ${run.soyad}`.trim(), ulke: run.ulke ?? 'tr', mac: run.mac, seviye: run.seviye, oduller: run.oduller.length, kusursuz: run.kusursuz, onur: hallWorthy(run), yol, tarih: Date.now() };
+  hall = [e, ...hall].slice(0, 20);
+  setPref(HALL, JSON.stringify(hall));
+  hallSubs.forEach((f) => f());
+  actRef((x) => (x.emekli = true));
 }

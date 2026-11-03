@@ -6,6 +6,26 @@ import { chance, clamp, pick, rand, randInt } from './rng';
 import type { Appearance } from './types';
 import { CITIES } from './worldMap';
 import type { RefBout, RefRun, RefTier } from './referee';
+import {
+  bumpOrg,
+  contractCandidate,
+  hasPerk,
+  imaj,
+  iliski,
+  makeMentorName,
+  newMentorTask,
+  ORG_TARZ,
+  pickOrg,
+  pickRival,
+  rest,
+  rollTags,
+  saygi,
+  stepMentor,
+  tarzOf,
+  yayinChance,
+  type OfferTag,
+  type RefOrg,
+} from './refereeDepth';
 
 // ---------- Beceriler ----------
 
@@ -70,28 +90,65 @@ export function takeSeminar(r: RefRun, id: string) {
 
 // ---------- Maç teklifleri (takvim) ----------
 
-export type RefOffer = { org: string; sehir: string; ucret: number; unvan: boolean; anaKart: boolean };
-
-const TIER_ORGS: Record<RefTier, (() => string)[]> = {
-  amator: [() => ORGS.amator.ad, () => L("Kulüpler Kupası"), () => L("Gençler Turnuvası")],
-  bolgesel: [() => ORGS.cfc.ad, () => ORGS.oktagon.ad],
-  buyuk: [() => ORGS.pfl.ad, () => ORGS.one.ad, () => ORGS.mvp.ad, () => ORGS.dwcs.ad],
-  ucc: [() => ORGS.ufc.ad],
+export type RefOffer = {
+  org: string;
+  sehir: string;
+  ucret: number;
+  unvan: boolean;
+  anaKart: boolean;
+  orgId?: RefOrg;
+  etiketler?: OfferTag[];
+  yayin?: boolean;
+  uzak?: boolean;
+  evSahibi?: boolean;
+  /** Organizasyon senin tarzını seviyor (ücret biraz yüksek) */
+  tarzUyum?: boolean;
+  /** Sözleşme teklifi: bu maçla başlar */
+  sozlesme?: { carpan: number };
 };
+
+export function orgName(o: RefOrg): string {
+  if (o === 'kulup') return L("Kulüpler Kupası");
+  if (o === 'genc') return L("Gençler Turnuvası");
+  return ORGS[o].ad;
+}
 const r10 = (n: number) => Math.round(n / 10) * 10;
 
 export function canTitle(r: RefRun) {
   return r.seviye === 'ucc' ? r.itibar >= 85 : r.seviye !== 'amator' && r.itibar >= 45;
 }
 
-/** Sıradaki maç için üç teklif: alt kart, (itibar yetiyorsa) ana kart, (yetiyorsa) ünvan maçı. */
+/** Sıradaki maç için üç teklif: alt kart, (itibar yetiyorsa) ana kart, (yetiyorsa) ünvan maçı. Her teklifin
+ *  etiketleri (faulcü, zayıf çene, rövanş, yıldız), yayını, uzaklığı ve salonu vardır; ilişkisi iyi organizasyon
+ *  daha sık ve daha iyi teklif yapar, tarzını seven daha çok öder. Sözleşmedeysen teklifler o organizasyondan gelir. */
 export function makeOffers(r: RefRun): RefOffer[] {
   const base = BASE_PAY[r.seviye] * (1 + (r.un ?? 0) / 200);
-  const one = (carpan: number, anaKart = false, unvan = false): RefOffer => ({ org: pick(TIER_ORGS[r.seviye])(), sehir: pick(CITIES).ad, ucret: r10(base * carpan), anaKart, unvan });
+  const sz = r.sozlesme;
+  const one = (carpan: number, anaKart = false, unvan = false): RefOffer => {
+    const orgId = (sz?.org as RefOrg | undefined) ?? pickOrg(r, r.seviye);
+    const etiketler = rollTags();
+    const uzak = chance(0.35);
+    const tarzUyum = ORG_TARZ[orgId] === tarzOf(r);
+    const ucret = base * carpan * (1 + iliski(r, orgId) / 100) * (tarzUyum ? 1.1 : 1) * (uzak ? 1.25 : 1) * (etiketler.includes('rovans') ? 1.2 : 1) * (etiketler.includes('yildiz') ? 1.3 : 1) * (sz ? sz.carpan : 1);
+    return { org: orgName(orgId), orgId, sehir: pick(CITIES).ad, ucret: r10(ucret), anaKart, unvan, etiketler, yayin: chance(yayinChance[r.seviye] * (anaKart ? 1.4 : 0.8)), uzak, evSahibi: chance(0.3), tarzUyum };
+  };
   const list = [one(0.8)];
   list.push(r.itibar >= 25 || r.seviye !== 'amator' ? one(1.6, true) : one(1.0));
-  list.push(canTitle(r) && chance(0.65) ? one(2.6, true, true) : one(1.1));
+  list.push(canTitle(r) && chance(sz ? 0.85 : 0.65) ? one(2.6, true, true) : one(1.1));
+  const c = contractCandidate(r);
+  if (c) {
+    const o = one(1.2, true);
+    list[2] = { ...o, org: orgName(c), orgId: c, sozlesme: { carpan: 1.3 }, ucret: r10(base * 1.2 * 1.3) };
+  }
   return list;
+}
+
+/** Bu haftayı dinlenerek geç: yorgunluk düşer, teklifler yenilenir; teklifi geri çevrilen organizasyonlar biraz bozulur. */
+export function restWeek(r: RefRun) {
+  if (!r.sozlesme) for (const o of r.teklifler ?? []) if (o.orgId) bumpOrg(r, o.orgId, -1);
+  rest(r);
+  r.teklifler = makeOffers(r);
+  r.sonMesaj = L("😴 Bir hafta dinlendin; yorgunluğun azaldı.");
 }
 
 // ---------- Sosyal medya ----------
@@ -133,7 +190,7 @@ function makePosts(r: RefRun, b: RefBout, puan: number, hata: boolean): RefPost[
 
 // ---------- Olaylar ----------
 
-type Effect = { itibar?: number; un?: number; para?: number; bp?: number; takipci?: number };
+type Effect = { itibar?: number; un?: number; para?: number; bp?: number; takipci?: number; saygi?: number; imaj?: number };
 export type RefEvent = { id: string; baslik: string; metin: string; secenekler: { ad: string; etki: Effect; sonuc: string }[] };
 
 type Ctx = { r: RefRun; b: RefBout; puan: number; hata: boolean };
@@ -144,14 +201,14 @@ const EVENTS: { id: string; w: number; when: (c: Ctx) => boolean; make: (c: Ctx)
     w: 10,
     when: (c) => c.puan < -4,
     make: ({ r }) => {
-      const sak = Math.floor(skillLvl(r, 'sakinlik') / 2);
+      const sak = Math.floor(skillLvl(r, 'sakinlik') / 2) + (hasPerk(r, 'sakinlik3', 'a') ? 1 : 0);
       return {
         id: 'basin',
         baslik: L("BASIN KAPIDA"),
         metin: L("Maçtan sonra gazeteciler tartışmalı kararını soruyor. Kameralar sende."),
         secenekler: [
-          { ad: L("Hatamı kabul ediyorum"), etki: { itibar: 3 + sak, un: -1 }, sonuc: L("Dürüstlüğün takdir gördü.") },
-          { ad: L("Kararımın arkasındayım"), etki: { itibar: -2 + sak, un: 3, takipci: 400 }, sonuc: L("Tartışma büyüdü; adın her yerde.") },
+          { ad: L("Hatamı kabul ediyorum"), etki: { itibar: 3 + sak, un: -1, saygi: 2 }, sonuc: L("Dürüstlüğün takdir gördü.") },
+          { ad: L("Kararımın arkasındayım"), etki: { itibar: -2 + sak, un: 3, takipci: 400, imaj: 2 }, sonuc: L("Tartışma büyüdü; adın her yerde.") },
           { ad: L("Yorum yapmayacağım"), etki: { itibar: sak }, sonuc: L("Sessizlik fırtınayı biraz dindirdi.") },
         ],
       };
@@ -170,7 +227,7 @@ const EVENTS: { id: string; w: number; when: (c: Ctx) => boolean; make: (c: Ctx)
         metin: L("{0} sana yazdı: “O gece beni korudun. Teşekkür ederim.”", [los.ad]),
         secenekler: [
           { ad: L("Mesajı paylaş"), etki: { un: 2, takipci: 600 }, sonuc: L("Paylaşım binlerce beğeni aldı.") },
-          { ad: L("Özelden cevap ver"), etki: { itibar: 2 }, sonuc: L("Dövüşçülerin gözünde güvenilir bir isimsin.") },
+          { ad: L("Özelden cevap ver"), etki: { itibar: 2, saygi: 3 }, sonuc: L("Dövüşçülerin gözünde güvenilir bir isimsin.") },
         ],
       };
     },
@@ -180,7 +237,7 @@ const EVENTS: { id: string; w: number; when: (c: Ctx) => boolean; make: (c: Ctx)
     w: 5,
     when: (c) => c.hata,
     make: ({ r }) => {
-      const k = skillLvl(r, 'kural');
+      const k = skillLvl(r, 'kural') + (hasPerk(r, 'sakinlik3', 'a') ? 1 : 0);
       return {
         id: 'komisyon',
         baslik: L("KOMİSYON İNCELEMESİ"),
@@ -201,7 +258,7 @@ const EVENTS: { id: string; w: number; when: (c: Ctx) => boolean; make: (c: Ctx)
       baslik: L("SPONSOR TEKLİFİ"),
       metin: L("Bir spor ekipmanı markası seninle reklam çekmek istiyor."),
       secenekler: [
-        { ad: L("Kabul et"), etki: { para: 3, itibar: -1, un: 2 }, sonuc: L("Reklam yayında; bazıları hakemin tarafsızlığını sorguladı.") },
+        { ad: L("Kabul et"), etki: { para: 3, itibar: -1, un: 2, imaj: 3 }, sonuc: L("Reklam yayında; bazıları hakemin tarafsızlığını sorguladı.") },
         { ad: L("Reddet: hakem tarafsız kalır"), etki: { itibar: 2 }, sonuc: L("İlkelerin konuşuldu.") },
       ],
     }),
@@ -224,6 +281,53 @@ const EVENTS: { id: string; w: number; when: (c: Ctx) => boolean; make: (c: Ctx)
         ],
       };
     },
+  },
+  {
+    id: 'suclama',
+    w: 8,
+    when: (c) => c.b.kararlar.some((k) => k.tip === 'erken') && (!!c.b.hatira || saygi(c.r) < 35 || chance(0.4)),
+    make: ({ b }) => {
+      const k = b.kararlar.find((x) => x.tip === 'erken');
+      const f = k?.taraf === 1 ? b.b : b.a;
+      return {
+        id: 'suclama',
+        baslik: L("DÖVÜŞÇÜ SENİ SUÇLUYOR"),
+        metin: L("{0} röportajında seni hedef aldı: “Hakem maçımı çaldı. Daha savaşıyordum.”", [f.ad]),
+        secenekler: [
+          { ad: L("Görüntüleri paylaş ve açıkla"), etki: { imaj: 2, saygi: -1 }, sonuc: L("Görüntüler konuşuldu; taraftarların bir kısmı sana hak verdi.") },
+          { ad: L("Onu ara, konuş"), etki: { saygi: 4, itibar: -1 }, sonuc: L("Telefonda gerildi ama sonunda “bir dahaki sefere” dedi.") },
+          { ad: L("Görmezden gel"), etki: { itibar: 1, imaj: -1 }, sonuc: L("Sessiz kaldın; tartışma kendiliğinden söndü.") },
+        ],
+      };
+    },
+  },
+  {
+    id: 'tv',
+    w: 3,
+    when: (c) => imaj(c.r) >= 55 && c.r.seviye !== 'amator',
+    make: () => ({
+      id: 'tv',
+      baslik: L("TV YORUMCULUĞU"),
+      metin: L("Bir spor kanalı, boş haftalarında maç yorumculuğu yapmanı istiyor."),
+      secenekler: [
+        { ad: L("Kabul et"), etki: { para: 4, imaj: 4, itibar: -2 }, sonuc: L("Ekranda doğal duruyorsun; komisyon ise çıkar çatışmasından hoşnut değil.") },
+        { ad: L("Reddet, hakemliğe odaklan"), etki: { itibar: 1 }, sonuc: L("Komisyon odaklanmanı takdir etti.") },
+      ],
+    }),
+  },
+  {
+    id: 'saygi',
+    w: 4,
+    when: (c) => saygi(c.r) >= 70,
+    make: () => ({
+      id: 'saygi',
+      baslik: L("SOYUNMA ODASINDA"),
+      metin: L("Kıdemli bir dövüşçü maçtan sonra yanına geldi: “Senin yönettiğin maçta içim rahat dövüşüyorum.”"),
+      secenekler: [
+        { ad: L("Teşekkür et"), etki: { saygi: 2, un: 1 }, sonuc: L("Bu sözler kulisten kulise yayıldı.") },
+        { ad: L("Röportajda anlatmasını iste"), etki: { imaj: 3, saygi: -1 }, sonuc: L("Röportaj ilgi gördü ama bazıları gösteriş dedi.") },
+      ],
+    }),
   },
   {
     id: 'mentor',
@@ -262,6 +366,8 @@ function apply(r: RefRun, e: Effect) {
   if (e.para) r.para = Math.max(0, (r.para ?? 0) + r10(BASE_PAY[r.seviye] * e.para));
   if (e.bp) r.bp = (r.bp ?? 0) + e.bp;
   if (e.takipci) r.takipci = (r.takipci ?? 0) + Math.round(e.takipci * (1 + (r.un ?? 0) / 25));
+  if (e.saygi) r.saygi = clamp(saygi(r) + e.saygi, 0, 100);
+  if (e.imaj) r.imaj = clamp(imaj(r) + e.imaj, 0, 100);
 }
 
 export function chooseEvent(r: RefRun, i: number) {
@@ -277,7 +383,7 @@ function rollEvent(c: Ctx): RefEvent | null {
   if (c.puan >= -4 && !chance(0.45)) return null;
   const pool = EVENTS.filter((e) => e.when(c));
   if (!pool.length) return null;
-  const forced = pool.find((e) => e.id === 'basin');
+  const forced = pool.find((e) => e.id === 'basin') ?? (chance(0.6) ? pool.find((e) => e.id === 'suclama') : undefined);
   if (forced) return forced.make(c);
   let x = rand() * pool.reduce((t, e) => t + e.w, 0);
   for (const e of pool) {
@@ -368,13 +474,21 @@ export function ensureCareer(r: RefRun): RefRun {
   r.akis ??= [];
   r.rakipler ??= makeRivals();
   r.kazanc ??= 0;
+  r.saygi ??= 40;
+  r.imaj ??= 30;
+  r.tarz ??= 0;
+  r.iliski ??= {};
+  r.yorgunluk ??= 0;
+  r.mentorAd ??= makeMentorName();
+  r.kiyafet ??= 'klasik';
+  r.rakipHakem ??= pickRival(r);
   if (!r.aktif && !r.teklifler?.length) r.teklifler = makeOffers(r);
   return r;
 }
 
 // ---------- Maç sonu ----------
 
-export type AfterBout = { para: number; bonus: boolean; takipci: number; bp: number };
+export type AfterBout = { para: number; bonus: boolean; takipci: number; bp: number; mentor?: string };
 
 /** Maç sonrası hayat: ücret, beceri puanı, ün ve takipçi, sosyal medya, olay, yeni teklifler. */
 export function afterBout(r: RefRun, b: RefBout, puan: number, hata: boolean): AfterBout {
@@ -389,14 +503,46 @@ export function afterBout(r: RefRun, b: RefBout, puan: number, hata: boolean): A
   const unD = Math.round(clamp(puan / 4, -2, 3)) + (b.anaKart ? 1 : 0) + (b.unvan ? 2 : 0) + (puan < -8 ? 2 : 0);
   r.un = clamp((r.un ?? 0) + unD, 0, 100);
   const tierMul = { amator: 1, bolgesel: 2.5, buyuk: 6, ucc: 15 }[r.seviye];
-  const takipci = Math.round((20 + (r.un ?? 0) * 6) * tierMul * (b.anaKart ? 1.5 : 1) * (b.unvan ? 2 : 1) * (puan < -8 ? 2.2 : kusursuz ? 1.4 : 1) * (0.7 + rand() * 0.6));
+  const takipci = Math.round((0.5 + imaj(r) / 60) * (b.yayin ? 1.8 : 1) * (20 + (r.un ?? 0) * 6) * tierMul * (b.anaKart ? 1.5 : 1) * (b.unvan ? 2 : 1) * (puan < -8 ? 2.2 : kusursuz ? 1.4 : 1) * (0.7 + rand() * 0.6));
   r.takipci = (r.takipci ?? 0) + takipci;
-  r.akis = [...makePosts(r, b, puan, hata), ...(r.akis ?? [])].slice(0, 30);
+  const posts = makePosts(r, b, puan, hata);
+  if (r.rakipHakem && r.mac % 4 === 0) posts.push(rivalPost(r));
+  r.akis = [...posts, ...(r.akis ?? [])].slice(0, 30);
   r.olay = rollEvent({ r, b, puan, hata });
   r.seminer = false;
   driftRivals(r);
+  // Mentor görevi
+  let mentor: string | undefined;
+  if (!r.mentor && r.mac >= 2) r.mentor = newMentorTask();
+  else if (r.mentor && stepMentor(r, { b, puan, hata })) {
+    const odul = r10(BASE_PAY[r.seviye] * 2);
+    r.bp = (r.bp ?? 0) + 2;
+    r.para = (r.para ?? 0) + odul;
+    r.mentorTamam = (r.mentorTamam ?? 0) + 1;
+    mentor = L("{0}: “Görevi tamamladın.” +2 beceri puanı, ${1}", [r.mentorAd ?? '', odul.toLocaleString()]);
+    r.mentor = newMentorTask(r.mentor.id);
+  }
+  // Sözleşme
+  if (r.sozlesme) {
+    r.sozlesme.kalan--;
+    if (r.sozlesme.kalan <= 0) r.sozlesme = null;
+  }
   r.teklifler = makeOffers(r);
-  return { para, bonus, takipci, bp };
+  return { para, bonus, takipci, bp, mentor };
+}
+
+/** Rakip hakemle kıyaslayan basın gönderisi */
+function rivalPost(r: RefRun): RefPost {
+  const ref = `${r.ad} ${r.soyad}`.trim();
+  const rv = r.rakipHakem ?? '';
+  const ust = refRanking(r).findIndex((x) => x.ad === rv) < myRank(r) - 1;
+  return {
+    kim: L("Kafes Haber"),
+    kul: '@kafeshaber',
+    metin: ust ? L("Sıralamada {0} hâlâ {1} önünde. Bu yarış kızışıyor.", [rv, ref]) : L("{0}, ezeli rakibi {1} karşısında öne geçti. Hakemlerin yarışı da en az maçlar kadar heyecanlı.", [ref, rv]),
+    ton: 'notr',
+    begeni: Math.round(80 + (r.takipci ?? 0) * 0.03),
+  };
 }
 
 export const TIER_COLOR: Record<RefTier, string> = { amator: '#8a8f9c', bolgesel: '#3ccf6e', buyuk: '#4cc9f0', ucc: '#ffc22e' };
