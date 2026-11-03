@@ -3,9 +3,10 @@
 import { Platform } from 'react-native';
 import Purchases, { PURCHASES_ARE_COMPLETED_BY_TYPE, STOREKIT_VERSION } from 'react-native-purchases';
 
-/** RevenueCat açık SDK anahtarları (gizli değildir). Android, Play bağlanınca eklenecek. */
+/** RevenueCat açık SDK anahtarları (gizli değildir). */
 const KEYS: Partial<Record<typeof Platform.OS, string>> = {
   ios: 'appl_jGusUgWPbDcFyxaummHBfvWFtgO',
+  android: 'goog_TobFiprBGsVTHmLZSIVBWFOTRgc',
 };
 
 let ready = false;
@@ -26,8 +27,10 @@ const quick = <T>(p: Promise<T>) => Promise.race([p, new Promise<void>((r) => se
 
 /** Yeni satın almayı bildirir; işlem kapatılmadan (finishTransaction) önce çağrılmalı. */
 export async function rcRecordPurchase(sku: string) {
-  if (!ready || Platform.OS !== 'ios') return;
-  await quick(Purchases.recordPurchase(sku));
+  if (!ready) return;
+  // iOS'ta tek işlem bildirilir; Android'de gözlemci modunda Play satın almaları eşitlenir
+  if (Platform.OS === 'ios') await quick(Purchases.recordPurchase(sku));
+  else await quick(Purchases.syncPurchasesForResult());
 }
 
 /** "Satın alımları geri yükle"de geçmiş satın almaları RevenueCat'e eşitler. */
