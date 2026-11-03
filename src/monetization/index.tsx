@@ -20,15 +20,14 @@ export { isAdFree, isPremium, owns, useAdFree, useOwned, usePremium } from './pr
 export const MONETIZATION = true;
 /** Uygulama içi satın almalar (Şampiyon Paketi, Reklamsız Paket): her iki platformda açık. */
 export const PURCHASES = true;
-/** Dolaptaki kozmetik paket mağazası. iPhone'da şimdilik kapalı (yalnızca reklam kaldıran ürünler satılır). */
-export const PACK_STORE = Platform.OS !== 'ios';
-/** Efsaneler Paketi, Şampiyon + Koleksiyon ve kilitli efsanelerin 1. bölüm denemesi yalnızca iPhone'da.
- *  Android'de Conor ücretsiz, diğer efsaneler tam sürümle (Şampiyon Paketi) açılır. */
-export const LEGENDS_STORE = Platform.OS === 'ios';
-/** Antrenör Modu şimdilik yalnızca iPhone'da (Play'de ürünü yok). */
-export const COACH_STORE = Platform.OS === 'ios';
-/** Hakem Modu şimdilik yalnızca iPhone'da (Play'de ürünü yok). */
-export const REF_STORE = Platform.OS === 'ios';
+/** Dolaptaki tek tek kozmetik paket mağazası kapalı; kozmetikler Şampiyon + Koleksiyon ile gelir (iPhone ve Android aynı). */
+export const PACK_STORE = false;
+/** Efsaneler Paketi, Şampiyon + Koleksiyon ve kilitli efsanelerin 1. bölüm denemesi (iPhone ve Android). */
+export const LEGENDS_STORE = true;
+/** Antrenör Modu (antrenor_modu) — iPhone ve Android. */
+export const COACH_STORE = true;
+/** Hakem Modu (hakem_modu) — iPhone ve Android. */
+export const REF_STORE = true;
 export { dismissUpsell, useUpsellDue } from './upsell';
 export { closeNudge, closeOffer, milestoneOffer, noteInterstitialShown, openOffer, rewardedCount, useNudge, useOffer, type OfferReason } from './offers';
 
