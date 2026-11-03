@@ -93,6 +93,7 @@ export const COSMETICS: Cosmetic[] = [
   { id: 'eld_buz', slot: 'eldiven', ad: L("Buz"), renk: ['#9ad9ff'], nadir: 'efsane', kaynak: paket('paket_buz') },
   { id: 'eld_avci', slot: 'eldiven', ad: L("Şampiyon Avcısı"), renk: ['#d4a017'], nadir: 'epik', kaynak: basari(L("Kart Albümü: Şampiyon Avcısı setini tamamla"), (c) => c.ozel.includes('eld_avci')) },
   { id: 'eld_yonca', slot: 'eldiven', ad: L("Yonca"), renk: ['#169b62'], kaynak: basari(L("Dublin Gecesi etkinliği (sınırlı süre)"), (c) => c.ozel.includes('eld_yonca')) },
+  { id: 'eld_karacuma', slot: 'eldiven', ad: L("Kara Altın"), renk: ['#1c1a14'], nadir: 'epik', kaynak: basari(L("Kara Cuma Gecesi etkinliği (sınırlı süre)"), (c) => c.ozel.includes('eld_karacuma')) },
   { id: 'eld_kalp', slot: 'eldiven', ad: L("Kalp"), renk: ['#ff5c8a'], kaynak: basari(L("Sevgililer Günü etkinliği (sınırlı süre)"), (c) => c.ozel.includes('eld_kalp')) },
   // Avatar çerçevesi (klasik: kemer varsa altın, yoksa kırmızı)
   { id: 'cer_klasik', slot: 'cerceve', ad: L("Klasik"), renk: [], kaynak: hazir },

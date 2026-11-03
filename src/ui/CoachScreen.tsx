@@ -31,7 +31,7 @@ import type { Appearance, GameState } from '../engine/types';
 import { STAT_KEYS, STAT_LABELS } from '../engine/types';
 import { L, LOC } from '../i18n';
 import { buy, PURCHASES, restorePurchases, useOwned, usePrice } from '../monetization';
-import { COACH_SKU } from '../monetization/skus';
+import { COACH_SKU, ULTIMATE_SKU } from '../monetization/skus';
 import { Bar, Button, CageBg, Card, Choice, Icon, SLANT, Screen, Section, type IconName } from './components';
 import { LookPicker } from './CreateScreen';
 import { DEFAULT_LOOK, FighterAvatar } from './FighterAvatar';
@@ -43,7 +43,7 @@ import { C, F, R } from './theme';
 /** Antrenör Modu açık mı: paket sahibi ya da satın almanın olmadığı web. */
 export function useCoachUnlocked() {
   const owned = useOwned();
-  return !PURCHASES || owned.has(COACH_SKU);
+  return !PURCHASES || owned.has(COACH_SKU) || owned.has(ULTIMATE_SKU);
 }
 
 /** Antrenör Modu paketi satın alma kutusu (menüde ve deneme sonunda). */
@@ -56,6 +56,7 @@ export function CoachPack({ lead }: { lead?: string }) {
     <LinearGradient colors={['#0d2230', '#08121a']} style={cs.pack}>
       {lead ? <Text style={cs.packLead}>{lead}</Text> : null}
       <Text style={cs.packText}>{L("Tek seferlik alım: sınırsız antrenör kariyeri, bütün beceriler, Yılın Antrenörü ödülleri ve UCC şampiyonları.")}</Text>
+      <Text style={cs.packText}>{L("Şampiyon + Koleksiyon paketine de dahil.")}</Text>
       <Button
         label={price ? L("Antrenör Modu · {0}", [price]) : L("Antrenör Modu'nu al")}
         icon="whistle"

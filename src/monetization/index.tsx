@@ -280,8 +280,21 @@ export function PremiumManager() {
   return PURCHASES ? <StoreManager /> : null;
 }
 
+/** App Store'daki öne çıkan satın almaya dokunulduysa mağaza bağlanınca satın alma başlatılır (iOS). */
+let promotedSku: string | null = null;
+const startPromoted = () => {
+  if (!promotedSku || !buyFn) return;
+  const sku = promotedSku;
+  promotedSku = null;
+  if (ALL_SKUS.includes(sku)) void buyFn(sku).catch(() => undefined);
+};
+
 function StoreManager() {
   const { connected, products, availablePurchases, fetchProducts, requestPurchase, finishTransaction, getAvailablePurchases } = useIAP({
+    onPromotedProductIOS: (product) => {
+      promotedSku = product.id;
+      startPromoted();
+    },
     onPurchaseSuccess: async (purchase) => {
       if (!ALL_SKUS.includes(purchase.productId)) return;
       grant(purchase.productId);
@@ -340,6 +353,7 @@ function StoreManager() {
     buyFn = connected ? (sku) => requestPurchase({ request: { google: { skus: [sku] }, apple: { sku } }, type: 'in-app' }) : null;
     restoreFn = connected ? () => getAvailablePurchases() : null;
     fetchFn = connected ? () => fetchProducts({ skus: ALL_SKUS, type: 'in-app' }) : null;
+    startPromoted();
   }, [connected, requestPurchase, getAvailablePurchases, fetchProducts]);
 
   return null;

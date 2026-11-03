@@ -8748,4 +8748,10 @@ export const PT: Record<string, string> = {
   "Yetenek avı: potansiyeli yüksek gençleri bul, profillerini incele ve kaydet.": "Caça-talentos: encontre jovens de alto potencial, estude seus perfis e contrate.",
   "Maç günü köşedesin: kafeste raunt raunt izle, oyun planını ve raunt arası talimatı sen ver.": "No dia da luta você está no corner: assista no octógono round a round, defina o plano e dê a instrução entre os rounds.",
   "Sosyal medya, salon olayları, dünya salon sıralaması ve Yılın Antrenörü töreni.": "Redes sociais, eventos da academia, o ranking mundial de academias e a gala de Treinador do Ano.",
+  "KARA CUMA GECESİ": "NOITE DA BLACK FRIDAY",
+  "Yılın en kara gecesi: ışıklar sönük, kafes senin.": "A noite mais escura do ano: luzes apagadas, o octógono é seu.",
+  "Kara Altın": "Ouro Negro",
+  "Kara Cuma Gecesi etkinliği (sınırlı süre)": "Evento Noite da Black Friday (tempo limitado)",
+  "Şampiyon Paketi'nin her şeyi + 6 kozmetik paket + Antrenör ve Hakem Modu": "Tudo do Pacote Campeão + 6 pacotes cosméticos + Modo Treinador e Árbitro",
+  "Şampiyon + Koleksiyon paketine de dahil.": "Também incluído em Campeão + Coleção.",
 };

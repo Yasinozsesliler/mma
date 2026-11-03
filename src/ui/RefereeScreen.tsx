@@ -49,7 +49,7 @@ import { lookFor } from '../engine/tale';
 import type { Appearance, FightState } from '../engine/types';
 import { L, LOC } from '../i18n';
 import { buy, PURCHASES, restorePurchases, useOwned, usePrice } from '../monetization';
-import { REF_SKU } from '../monetization/skus';
+import { REF_SKU, ULTIMATE_SKU } from '../monetization/skus';
 import { actRef, setRun, useRefRun } from '../refereeStore';
 import { CageView } from './CageView';
 import { Bar, Button, CageBg, Card, Choice, Icon, Screen, SLANT, type IconName } from './components';
@@ -60,7 +60,7 @@ import { C, F, R } from './theme';
 
 export function useRefUnlocked() {
   const owned = useOwned();
-  return !PURCHASES || owned.has(REF_SKU);
+  return !PURCHASES || owned.has(REF_SKU) || owned.has(ULTIMATE_SKU);
 }
 
 /** Hakem Modu satın alma kutusu. */
@@ -73,6 +73,7 @@ export function RefPack({ lead }: { lead?: string }) {
     <LinearGradient colors={['#2a0d10', '#140809']} style={rs.pack}>
       {lead ? <Text style={rs.packLead}>{lead}</Text> : null}
       <Text style={rs.packText}>{L("Tek seferlik alım: sınırsız hakemlik kariyeri, UCC şampiyonluk maçları ve Yılın Hakemi ödülleri.")}</Text>
+      <Text style={rs.packText}>{L("Şampiyon + Koleksiyon paketine de dahil.")}</Text>
       <Button
         label={price ? L("Hakem Modu · {0}", [price]) : L("Hakem Modu'nu al")}
         icon="whistle"

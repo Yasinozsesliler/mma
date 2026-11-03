@@ -58,7 +58,7 @@ export function PremiumCard() {
           <View style={{ flex: 1 }}>
             <Text style={st.ultKicker}>{L("EN İYİ DEĞER")}</Text>
             <Text style={st.ultTitle}>{L("Şampiyon + Koleksiyon")}</Text>
-            <Text style={st.ultSub}>{L("Şampiyon Paketi'nin her şeyi + 6 kozmetik paketin tamamı")}</Text>
+            <Text style={st.ultSub}>{L("Şampiyon Paketi'nin her şeyi + 6 kozmetik paket + Antrenör ve Hakem Modu")}</Text>
           </View>
           <Text style={st.ultPrice}>{ultPrice ?? ''}</Text>
         </Pressable>
