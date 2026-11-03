@@ -97,6 +97,19 @@ async function click(k, raw_ = false) {
   await sleep(220);
   return true;
 }
+// Başlık metninden sonra gelen ilk düğmeye gerçek fare tıklaması (Pressable DOM click() ile tetiklenmez)
+const clickAfter = async (head) => {
+  const i = await retry(() => page.evaluate((head, loc) => {
+    const h = [...document.querySelectorAll('div')].find((d) => d.childElementCount === 0 && d.innerText?.trim().toLocaleUpperCase(loc) === head);
+    if (!h) return -1;
+    const els = [...document.querySelectorAll('[tabindex="0"]')];
+    return els.findIndex((el) => h.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING);
+  }, head, LOC), -1);
+  if (i < 0) return false;
+  await (await page.$$('[tabindex="0"]'))[i].click();
+  await sleep(400);
+  return true;
+};
 const shots = [];
 const shot = async (name, scrollTo = null) => {
   if (scrollTo) await page.evaluate((s) => [...document.querySelectorAll('div')].find((d) => d.innerText?.startsWith(s))?.scrollIntoView({ block: 'center' }), scrollTo);
@@ -136,6 +149,8 @@ for (let i = 0; i < 120; i++) {
   if ((await buttons()).some((b) => up(b).includes(up(t('Dövüş gecesi'))))) await edit('s.amator = { g: 9, m: 1, b: 0 }; Object.keys(s.fighter.stats).forEach((k) => (s.fighter.stats[k] = 88)); const r = s.pending.rakip; if (r) Object.keys(r.stats).forEach((k) => (r.stats[k] = 35));'); // maç sonu görseli hep zafer olsun
   let ok = false;
   for (const p of PRI) if (await click(p)) { ok = true; break; }
+  // Listede olmayan rastgele kamp anı: kartın ilk seçeneği
+  if (!ok && (await clickAfter(up(t('KAMPTA BİR AN'))))) ok = true;
   if (!ok) await sleep(400);
 }
 // Kırmızı köşe anonsu: dövüşçü yürüsün, yayın bandı girsin
@@ -288,19 +303,6 @@ await sleep(1200);
 await sleep(900);
 await shot('efsane');
 
-// Başlık metninden sonra gelen ilk düğmeye gerçek fare tıklaması (Pressable DOM click() ile tetiklenmez)
-const clickAfter = async (head) => {
-  const i = await retry(() => page.evaluate((head, loc) => {
-    const h = [...document.querySelectorAll('div')].find((d) => d.childElementCount === 0 && d.innerText?.trim().toLocaleUpperCase(loc) === head);
-    if (!h) return -1;
-    const els = [...document.querySelectorAll('[tabindex="0"]')];
-    return els.findIndex((el) => h.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING);
-  }, head, LOC), -1);
-  if (i < 0) return false;
-  await (await page.$$('[tabindex="0"]'))[i].click();
-  await sleep(400);
-  return true;
-};
 // Hakem Modu: kafeste bir karar anı
 const pre = (k) => up(t(k).split('{0}')[0].replace(/[(·\s]+$/, ''));
 const clickPre = async (k) => {
