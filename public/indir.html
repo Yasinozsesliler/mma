@@ -3,77 +3,38 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>YOL: Kafesten Kemere — İndir</title>
-<meta name="description" content="YOL: MMA kariyer simülasyonu. iPhone ve Android için ücretsiz." />
+<title>YOL: Kafesten Kemere</title>
 <meta property="og:title" content="YOL: Kafesten Kemere" />
-<meta property="og:description" content="Kafeste dövüş, kemeri kazan. iPhone ve Android için ücretsiz." />
+<meta property="og:description" content="MMA kariyer oyunu. Ücretsiz indir." />
 <meta property="og:image" content="/icon-512.png" />
 <link rel="icon" href="/icon-192.png" />
 <style>
-  :root { --bg: #0b0b0e; --card: #15161b; --text: #f2f2f5; --dim: #a3a6b1; --red: #e63946; --gold: #f2c14e; }
-  * { box-sizing: border-box; }
-  html, body { margin: 0; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-  body { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px 16px; background: radial-gradient(ellipse at 50% 0%, #3b0d14 0%, var(--bg) 60%); }
-  main { width: 100%; max-width: 380px; text-align: center; }
-  img.logo { width: 120px; height: 120px; border-radius: 28px; box-shadow: 0 0 40px rgba(230, 57, 70, .45); }
-  h1 { font-size: 30px; letter-spacing: 6px; color: var(--red); margin: 18px 0 2px; }
-  h2 { font-size: 17px; color: var(--gold); margin: 0 0 10px; font-weight: 700; }
-  p { color: var(--dim); font-size: 15px; line-height: 1.45; margin: 0 0 24px; }
-  a.btn { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 16px; margin-bottom: 12px; border-radius: 14px; font-size: 17px; font-weight: 700; text-decoration: none; }
-  a.play { background: var(--gold); color: #111; }
-  a.ios { background: #fff; color: #111; }
-  a.web { color: var(--dim); font-size: 14px; font-weight: 600; padding: 10px; }
-  .hint { font-size: 12px; color: #6f7280; margin-top: 18px; }
-  .hidden { display: none !important; }
+  html, body { margin: 0; height: 100%; background: #0b0b0e; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  body { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 28px; padding: 16px; box-sizing: border-box; }
+  img { width: 128px; height: 128px; border-radius: 30px; box-shadow: 0 0 40px rgba(230, 57, 70, .45); }
+  a { display: block; width: 100%; max-width: 340px; padding: 18px; border-radius: 14px; background: #f2c14e; color: #111; text-align: center; font-size: 18px; font-weight: 800; text-decoration: none; box-sizing: border-box; }
 </style>
 </head>
 <body>
-<main>
-  <img class="logo" src="/icon-512.png" alt="YOL" />
-  <h1>YOL</h1>
-  <h2>Kafesten Kemere</h2>
-  <p>Sokaktan UCC şampiyonluğuna MMA kariyeri. Kafeste kendin dövüş, her kararı sen ver. Ücretsiz.</p>
-  <a id="play" class="btn play" href="https://play.google.com/store/apps/details?id=com.yolmma.game&amp;referrer=utm_source%3Dinstagram%26utm_medium%3Dstory" target="_blank" rel="noopener">▶ Google Play'den indir</a>
-  <a id="ios" class="btn ios" href="https://apps.apple.com/app/id6823537918" target="_blank" rel="noopener"> App Store'dan indir</a>
-  <a id="play2" class="btn web hidden" href="https://play.google.com/store/apps/details?id=com.yolmma.game">Play Store açılmadıysa buraya dokun</a>
-  <a class="btn web" href="/">Tarayıcıda oyna</a>
-  <div id="hint" class="hint hidden">Hâlâ açılmazsa sağ üstteki ⋯ menüsünden “Tarayıcıda aç”ı ya da “Chrome'da aç”ı seç.</div>
-</main>
+  <img src="/icon-512.png" alt="YOL" />
+  <a id="git" href="https://play.google.com/store/apps/details?id=com.yolmma.game">Google Play'de aç</a>
 <script>
-  // Platformu tanı: iPhone'da App Store'a doğrudan git; Android'de Play düğmesi en üstte kalır.
-  // Instagram ve Facebook'un Android tarayıcısı otomatik yönlendirmeyi engeller; kullanıcının dokunduğu bağlantı çalışır.
+  // Instagram'ın Android tarayıcısı Play bağlantısını Play Store'a aktarmıyor; market:// ile Play Store uygulaması açılır.
+  // iPhone'da App Store'a, diğer yerlerde normal Play sayfasına gider.
   (function () {
     var ua = navigator.userAgent || '';
-    var android = /Android/i.test(ua);
-    var ios = /iPhone|iPad|iPod/i.test(ua);
-    var inApp = /Instagram|FBAN|FBAV|FB_IAB|TikTok|musical_ly/i.test(ua);
-    var q = new URLSearchParams(location.search);
-    var src = q.get('k') || (inApp ? 'instagram' : 'web');
-    var play = document.getElementById('play');
-    play.href = 'https://play.google.com/store/apps/details?id=com.yolmma.game&referrer=' + encodeURIComponent('utm_source=' + src + '&utm_medium=link');
-    if (ios) {
-      document.getElementById('play').classList.add('hidden');
-      location.replace('https://apps.apple.com/app/id6823537918');
-    } else if (android) {
-      document.getElementById('ios').classList.add('hidden');
-      if (inApp) {
-        // Instagram'ın Android tarayıcısı intent:// tanımıyor; reklamlarında kullandığı market:// ile Play Store'u açar.
-        // Açılmazsa (sayfa hâlâ görünürse) kısa süre sonra normal Play bağlantısına geçilir; ayrıca ikinci bağlantı ve ipucu görünür.
-        var web = play.href;
-        var p2 = document.getElementById('play2');
-        p2.href = web;
-        play.href = 'market://details?id=com.yolmma.game&referrer=' + encodeURIComponent('utm_source=' + src + '&utm_medium=link');
-        play.removeAttribute('target');
-        play.addEventListener('click', function () {
-          setTimeout(function () {
-            if (document.visibilityState === 'visible') {
-              p2.classList.remove('hidden');
-              document.getElementById('hint').classList.remove('hidden');
-              location.href = web;
-            }
-          }, 1500);
-        });
-      }
+    var a = document.getElementById('git');
+    var src = /Instagram/i.test(ua) ? 'instagram' : /FBAN|FBAV|FB_IAB/i.test(ua) ? 'facebook' : /TikTok|musical_ly/i.test(ua) ? 'tiktok' : 'web';
+    var ref = '&referrer=' + encodeURIComponent('utm_source=' + src + '&utm_medium=link');
+    if (/iPhone|iPad|iPod/i.test(ua)) {
+      a.textContent = "App Store'da aç";
+      a.href = 'https://apps.apple.com/app/id6823537918';
+      location.replace(a.href);
+    } else if (/Android/i.test(ua)) {
+      a.href = 'market://details?id=com.yolmma.game' + ref;
+      location.href = a.href;
+    } else {
+      a.href += ref;
     }
   })();
 </script>
