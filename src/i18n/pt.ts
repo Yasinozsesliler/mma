@@ -8969,4 +8969,9 @@ export const PT: Record<string, string> = {
   "Artık hakem eğitmenisin. Yetiştirdiğin gençler bir gün UCC kafesinde senin yerini alacak.": "Agora você é instrutor de árbitros. Os jovens que você forma vão um dia ocupar seu lugar no octógono do UCC.",
   "Yeni hakem kariyeri": "Nova carreira de árbitro",
   "📺 Tekrar izle (maç başına 1)": "📺 Ver replay (1 por luta)",
+  "Organizasyon bu geceki performansını ödüllendiriyor: +{0}": "O evento premia sua atuação desta noite: +{0}",
+  "💰 Galibiyet primi: +{0}": "💰 Bônus de vitória: +{0}",
+  "Tahmin ödülünü ikiye katla": "Dobre o prêmio dos palpites",
+  "Bu gecenin tahmin kazancı bir kez daha: +${0}": "O prêmio dos palpites desta noite mais uma vez: +${0}",
+  "🔮 Tahmin ödülü ikiye katlandı: +${0}": "🔮 Prêmio dos palpites dobrado: +${0}",
 };

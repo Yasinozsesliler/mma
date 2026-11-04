@@ -6916,7 +6916,7 @@ export const RU: Record<string, string> = {
   "“Hazırlık kısa ama fırsat büyük. Elimden geleni yapacağım.”": "«Подготовка короткая, но шанс большой. Сделаю всё, что смогу.»",
   "“Ben her zaman hazırım. İki hafta bile fazla.”": "«Я всегда готов. Даже двух недель много.»",
   "“Valizi açmaya vaktim olmadı, maçı da uzatmam.”": "«Чемодан распаковать не успел, так что и бой затягивать не буду.»",
-  "Galibiyet primi": "Бонус за победу",
+  "Galibiyet primi": "Премия за победу",
   "🦴 Dönen dirseklerin bütün salonu ayağa kaldırdı. Spikerler adını hecelemeyi öğrendi.": "🦴 Твои локти с разворота подняли весь зал. Комментаторы выучили, как пишется твоё имя.",
   "Rakiplerini öyle kolay geçiyorsun ki maçlar birer gösteriye dönüşüyor.": "Ты проходишь соперников так легко, что бои превращаются в показательные выступления.",
   "Bir gece fazla ileri gidiyorsun: hakemin uyarısına rağmen yasak dirsekler. Kariyerinin tek lekesi o gece yazılıyor ve kimse onu gerçek bir yenilgi saymıyor.": "Однажды ты заходишь слишком далеко: запрещённые локти, несмотря на предупреждение рефери. В ту ночь появляется единственное пятно в карьере, и никто не считает его настоящим поражением.",
@@ -9008,4 +9008,9 @@ export const RU: Record<string, string> = {
   "Artık hakem eğitmenisin. Yetiştirdiğin gençler bir gün UCC kafesinde senin yerini alacak.": "Теперь ты наставник рефери. Твои ученики однажды займут твоё место в клетке UCC.",
   "Yeni hakem kariyeri": "Новая карьера рефери",
   "📺 Tekrar izle (maç başına 1)": "📺 Смотреть повтор (1 за бой)",
+  "Organizasyon bu geceki performansını ödüllendiriyor: +{0}": "Промоушен отмечает твоё выступление этим вечером: +{0}",
+  "💰 Galibiyet primi: +{0}": "💰 Премия за победу: +{0}",
+  "Tahmin ödülünü ikiye katla": "Удвой выигрыш за прогнозы",
+  "Bu gecenin tahmin kazancı bir kez daha: +${0}": "Выигрыш за прогнозы этого вечера ещё раз: +${0}",
+  "🔮 Tahmin ödülü ikiye katlandı: +${0}": "🔮 Выигрыш за прогнозы удвоен: +${0}",
 };

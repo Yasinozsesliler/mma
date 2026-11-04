@@ -237,7 +237,7 @@ export interface FightNight {
   yaris?: { aday: string; adayYontem: string; adayPuan: number; benim: number; kazandi: boolean };
   /** Oyuncunun tahminleri: maç anahtarı → seçilen köşe ve bitiriş mi */
   tahmin?: Record<string, { k: 0 | 1; bit?: boolean }>;
-  tahminSonuc?: { dogru: number; yontem: number; toplam: number; para: number; kahin: boolean };
+  tahminSonuc?: { dogru: number; yontem: number; toplam: number; para: number; kahin: boolean; /** Ödüllü reklamla ikiye katlandı */ katlandi?: boolean };
 }
 
 export interface FightHistory {
@@ -485,6 +485,8 @@ export interface GameEventState {
 export interface PostFight {
   /** Ödüllü sponsor reklam çekiminden kazanılan (bir kez) */
   reklamCekimi?: number;
+  /** Ödüllü galibiyet priminden kazanılan (yalnızca galibiyette, bir kez) */
+  galibiyetPrimi?: number;
   satirlar: string[];
   roportajSecenekleri: string[];
   roportaj?: { id: string; text: string }[];

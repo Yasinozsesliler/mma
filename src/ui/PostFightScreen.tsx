@@ -1,7 +1,7 @@
 import { L, LOC } from '../i18n';
 import { askReview } from '../review';
 import { maybeInterstitial, noteInterstitialShown } from '../monetization';
-import { adShootAmount, careerFights, claimAdShoot } from '../engine/rewards';
+import { adShootAmount, canWinBonus, careerFights, claimAdShoot, claimWinBonus, winBonusAmount } from '../engine/rewards';
 import { AdOffer } from './AdOffer';
 import { FullVersionNudge } from './PremiumCard';
 import { NightResults } from './FightNight';
@@ -223,6 +223,12 @@ export function PostFightScreen({ s, act }: { s: GameState; act: Act }) {
         </View>
       ) : null}
 
+      {/* Galibiyet primi: yalnızca galibiyette, bir kez (ödüllü reklam; Şampiyon Paketi'nde anında) */}
+      {canWinBonus(s) ? (
+        <AdOffer icon="cash-plus" title={L("Galibiyet primi")} desc={L("Organizasyon bu geceki performansını ödüllendiriyor: +{0}", [money(winBonusAmount(s))])} onReward={() => act((x) => void claimWinBonus(x))} />
+      ) : null}
+      {ps.galibiyetPrimi ? <Text style={pf.shootDone}>{L("💰 Galibiyet primi: +{0}", [money(ps.galibiyetPrimi)])}</Text> : null}
+
       {/* Röportaj: gecenin tek kararı, hemen sonucun altında */}
       {ps.roportajSonucu ? (
         <LinearGradient colors={['#1a1509', '#0d0d10']} style={pf.micDone}>
@@ -275,7 +281,7 @@ export function PostFightScreen({ s, act }: { s: GameState; act: Act }) {
       ) : null}
       {ps.reklamCekimi ? <Text style={pf.shootDone}>{L("🎬 Reklam çekimi: +{0}", [money(ps.reklamCekimi)])}</Text> : null}
 
-      {ps.roportajSonucu ? <NightResults s={s} /> : null}
+      {ps.roportajSonucu ? <NightResults s={s} act={act} /> : null}
 
       {rows.length ? (
         <>

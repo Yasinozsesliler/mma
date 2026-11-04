@@ -7,11 +7,14 @@ import Svg, { Defs, Ellipse, Polygon, RadialGradient, LinearGradient as SvgLinea
 import { sfx } from '../audio';
 import { BACKGROUNDS, ORGS, WEIGHT_CLASSES } from '../engine/data';
 import { judgePick, predictionBouts, SLOT_LABEL } from '../engine/fightNight';
+import { claimDoublePrediction } from '../engine/rewards';
 import { coachLine } from '../engine/coachBond';
 import { methodLabel } from '../engine/fight';
 import type { FightNight, GameState, NightBout } from '../engine/types';
 import { L, LOC } from '../i18n';
+import { AdOffer } from './AdOffer';
 import { Button, Icon, Section } from './components';
+import type { Act } from './GameScreens';
 import { C, F, R } from './theme';
 
 const short = (n: string) => {
@@ -225,7 +228,7 @@ function PredictionCard({ preds, picks, setPicks }: { preds: { key: string; b: N
 }
 
 /** Maç sonu: tahminlerin sonucu. */
-function PredictionResults({ g }: { g: FightNight }) {
+function PredictionResults({ g, act }: { g: FightNight; act?: Act }) {
   const t = g.tahminSonuc;
   if (!t || !t.toplam || !g.tahmin) return null;
   const rows = Object.entries(g.tahmin)
@@ -240,12 +243,16 @@ function PredictionResults({ g }: { g: FightNight }) {
       {rows.map(({ key, p, b }) => (
         <BoutRow key={key} b={b} shown pick={p} />
       ))}
+      {act && t.para > 0 && !t.katlandi ? (
+        <AdOffer icon="crystal-ball" title={L("Tahmin ödülünü ikiye katla")} desc={L("Bu gecenin tahmin kazancı bir kez daha: +${0}", [t.para.toLocaleString(LOC)])} onReward={() => act((x) => void claimDoublePrediction(x))} />
+      ) : null}
+      {t.katlandi ? <Text style={[fn.panelHead, { color: C.gold, marginTop: 6 }]}>{L("🔮 Tahmin ödülü ikiye katlandı: +${0}", [t.para.toLocaleString(LOC)])}</Text> : null}
     </View>
   );
 }
 
 /** Maç sonu: gecenin geri kalanı ve bonus yarışı. */
-export function NightResults({ s }: { s: GameState }) {
+export function NightResults({ s, act }: { s: GameState; act?: Act }) {
   const g: FightNight | undefined = s.pending.gece;
   const [acik, setAcik] = useState(false);
   if (!g) return null;
@@ -256,7 +263,7 @@ export function NightResults({ s }: { s: GameState }) {
   return (
     <>
       <Section>{L("GECENİN KARTI")}</Section>
-      <PredictionResults g={g} />
+      <PredictionResults g={g} act={act} />
       {yarisVar && y ? (
         <LinearGradient colors={y.kazandi ? ['#2a2108', '#121014'] : ['#17181d', '#0e0f12']} style={[fn.race, y.kazandi && { borderColor: C.gold }]}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
