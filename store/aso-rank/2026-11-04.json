@@ -1,0 +1,70 @@
+{
+ "us": {
+  "mma": null,
+  "mma game": null,
+  "fighting game": null,
+  "mma manager": 15,
+  "fighter career": 30,
+  "boxing": null,
+  "ufc": null,
+  "cage fighting": 8,
+  "martial arts": null,
+  "career sim": null
+ },
+ "gb": {
+  "mma": null,
+  "mma game": null,
+  "fighting game": null,
+  "boxing game": null,
+  "cage fighting": null
+ },
+ "tr": {
+  "mma": 2,
+  "mma oyunu": 11,
+  "dövüş oyunu": 164,
+  "kafes dövüşü": null,
+  "boks oyunu": null,
+  "dövüş": null,
+  "kariyer simülasyonu": 1,
+  "yol": 1
+ },
+ "br": {
+  "mma": null,
+  "jogo de luta": null,
+  "luta": null,
+  "vale tudo": null,
+  "jiu jitsu": null,
+  "lutador": 160,
+  "jogo mma": 36
+ },
+ "mx": {
+  "mma": null,
+  "juego de peleas": null,
+  "peleas": null,
+  "box": null,
+  "lucha libre": null,
+  "boxeo": null
+ },
+ "es": {
+  "mma": null,
+  "juego de peleas": null,
+  "lucha": null,
+  "boxeo": null,
+  "artes marciales": null
+ },
+ "ru": {
+  "мма": null,
+  "бои без правил": null,
+  "бои": null,
+  "бокс": null,
+  "файтинг": null,
+  "симулятор бойца": 8
+ },
+ "pl": {
+  "mma": 132,
+  "gra mma": 8,
+  "walki": null,
+  "boks": null,
+  "walki w klatce": null
+ }
+}
