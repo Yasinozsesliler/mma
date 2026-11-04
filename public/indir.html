@@ -35,8 +35,9 @@
   <p>Sokaktan UCC şampiyonluğuna MMA kariyeri. Kafeste kendin dövüş, her kararı sen ver. Ücretsiz.</p>
   <a id="play" class="btn play" href="https://play.google.com/store/apps/details?id=com.yolmma.game&amp;referrer=utm_source%3Dinstagram%26utm_medium%3Dstory" target="_blank" rel="noopener">▶ Google Play'den indir</a>
   <a id="ios" class="btn ios" href="https://apps.apple.com/app/id6823537918" target="_blank" rel="noopener"> App Store'dan indir</a>
+  <a id="play2" class="btn web hidden" href="https://play.google.com/store/apps/details?id=com.yolmma.game">Play Store açılmadıysa buraya dokun</a>
   <a class="btn web" href="/">Tarayıcıda oyna</a>
-  <div id="hint" class="hint hidden">Açılmazsa sağ üstteki ⋯ menüsünden “Tarayıcıda aç”ı seç.</div>
+  <div id="hint" class="hint hidden">Hâlâ açılmazsa sağ üstteki ⋯ menüsünden “Tarayıcıda aç”ı ya da “Chrome'da aç”ı seç.</div>
 </main>
 <script>
   // Platformu tanı: iPhone'da App Store'a doğrudan git; Android'de Play düğmesi en üstte kalır.
@@ -56,10 +57,22 @@
     } else if (android) {
       document.getElementById('ios').classList.add('hidden');
       if (inApp) {
-        document.getElementById('hint').classList.remove('hidden');
-        // Android uygulama içi tarayıcı: Play Store uygulamasını intent ile aç (dokunuşla)
-        play.href = 'intent://details?id=com.yolmma.game&referrer=' + encodeURIComponent('utm_source=' + src + '&utm_medium=link') + '#Intent;scheme=market;package=com.android.vending;S.browser_fallback_url=' + encodeURIComponent(play.href) + ';end';
+        // Instagram'ın Android tarayıcısı intent:// tanımıyor; reklamlarında kullandığı market:// ile Play Store'u açar.
+        // Açılmazsa (sayfa hâlâ görünürse) kısa süre sonra normal Play bağlantısına geçilir; ayrıca ikinci bağlantı ve ipucu görünür.
+        var web = play.href;
+        var p2 = document.getElementById('play2');
+        p2.href = web;
+        play.href = 'market://details?id=com.yolmma.game&referrer=' + encodeURIComponent('utm_source=' + src + '&utm_medium=link');
         play.removeAttribute('target');
+        play.addEventListener('click', function () {
+          setTimeout(function () {
+            if (document.visibilityState === 'visible') {
+              p2.classList.remove('hidden');
+              document.getElementById('hint').classList.remove('hidden');
+              location.href = web;
+            }
+          }, 1500);
+        });
       }
     }
   })();
