@@ -1,6 +1,8 @@
 import { L, LOC } from '../i18n';
 import { askReview } from '../review';
-import { maybeInterstitial, noteInterstitialShown } from '../monetization';
+import { maybeInterstitial, maybeStartWelcome, noteInterstitialShown, usePrice } from '../monetization';
+import { DEAL_SKU } from '../monetization/skus';
+import { DealPopup } from './ShopSheet';
 import { adShootAmount, canWinBonus, careerFights, claimAdShoot, claimWinBonus, winBonusAmount } from '../engine/rewards';
 import { AdOffer } from './AdOffer';
 import { FullVersionNudge } from './PremiumCard';
@@ -257,6 +259,7 @@ export function PostFightScreen({ s, act }: { s: GameState; act: Act }) {
       )}
 
       {ps.roportajSonucu ? <FullVersionNudge /> : null}
+      {ps.roportajSonucu && key === 'win' ? <WelcomeDeal fights={careerFights(s)} /> : null}
 
       {ps.roportajSonucu && s.puan > 0 ? (
         gelisim ? (
@@ -365,3 +368,10 @@ const pf = StyleSheet.create({
   quoteMark: { fontFamily: F.display, fontSize: 28, lineHeight: 30, marginTop: -2 },
   quoteText: { flex: 1, color: C.text, fontFamily: F.medium, fontSize: 14, lineHeight: 20, fontStyle: 'italic' },
 });
+
+/** Galibiyetten sonra: 3. maçla Hoş Geldin Fırsatı penceresi açılır ve duyurusu bir kez çıkar. */
+function WelcomeDeal({ fights }: { fights: number }) {
+  const ready = !!usePrice(DEAL_SKU);
+  useEffect(() => maybeStartWelcome(fights, ready), [fights, ready]);
+  return <DealPopup />;
+}

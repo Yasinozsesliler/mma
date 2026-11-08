@@ -82,6 +82,7 @@ import { popToFollowers } from './src/engine/fame';
 import { useSoundScene, type Scene } from './src/audio';
 import { initMonetization, PremiumManager } from './src/monetization';
 import { PremiumNudge, PremiumOfferModal } from './src/ui/PremiumCard';
+import { ShopModal } from './src/ui/ShopSheet';
 import { milestoneOffer } from './src/monetization';
 import { addSeasonXp } from './src/season';
 import { applyHeritage, heritageOf, type Heritage } from './src/engine/dynasty';
@@ -593,6 +594,7 @@ export default function App() {
     <SafeAreaProvider>
       <PremiumManager />
       <PremiumOfferModal />
+      <ShopModal />
       <PremiumNudge />
       <View style={{ flex: 1, backgroundColor: C.bg }}>
         {/* Tarayıcıda telefon genişliğinde ortalanır */}

@@ -34,10 +34,13 @@ import { buy, PURCHASES, restorePurchases, useOwned, usePrice } from '../monetiz
 import { COACH_SKU, ULTIMATE_SKU } from '../monetization/skus';
 import { Bar, Button, CageBg, Card, Choice, Icon, SLANT, Screen, Section, type IconName } from './components';
 import { LookPicker } from './CreateScreen';
+import { FullPackLink } from './ShopSheet';
 import { DEFAULT_LOOK, FighterAvatar } from './FighterAvatar';
 import type { Act } from './GameScreens';
 import { BoutModal, GymUpgrade, RankTable, RecentBouts, Scouting, Stars, StudentCard, studentLook, TIER_COLOR, type BoutView } from './GymScreen';
 import { HubNav, type NavItem } from './HubNav';
+import { AxesCard, AxesStrip, CampPicker, CoachHallOfFame, PerkRow, PhilosophyPicker, RetireCard, RetiredHero, RivalCard, StaffCard } from './CoachDepthViews';
+import { PHILOSOPHIES } from '../engine/coachDepth';
 import { C, F, R } from './theme';
 
 /** Antrenör Modu açık mı: paket sahibi ya da satın almanın olmadığı web. */
@@ -56,7 +59,6 @@ export function CoachPack({ lead }: { lead?: string }) {
     <LinearGradient colors={['#0d2230', '#08121a']} style={cs.pack}>
       {lead ? <Text style={cs.packLead}>{lead}</Text> : null}
       <Text style={cs.packText}>{L("Tek seferlik alım: sınırsız antrenör kariyeri, bütün beceriler, Yılın Antrenörü ödülleri ve UCC şampiyonları.")}</Text>
-      <Text style={cs.packText}>{L("Şampiyon + Koleksiyon paketine de dahil.")}</Text>
       <Button
         label={price ? L("Antrenör Modu · {0}", [price]) : L("Antrenör Modu'nu al")}
         icon="whistle"
@@ -74,6 +76,7 @@ export function CoachPack({ lead }: { lead?: string }) {
       <Pressable onPress={async () => setMsg((await restorePurchases()) ? L("Satın alımların geri yüklendi.") : L("Bu hesapta satın alma bulunamadı."))} hitSlop={8} style={{ alignSelf: 'center', marginTop: 8 }}>
         <Text style={cs.link}>{L("Satın alımları geri yükle")}</Text>
       </Pressable>
+      <FullPackLink kaynak="antrenor_kilit" />
       {msg ? <Text style={cs.warn}>{msg}</Text> : null}
     </LinearGradient>
   );
@@ -100,6 +103,14 @@ function CoachHero({ s }: { s: GameState }) {
             <Text style={[cs.chip, { color: C.gold }]} numberOfLines={1}>
               {g.ad.toLocaleUpperCase(LOC)}
             </Text>
+            {r.felsefe ? (
+              <>
+                <Text style={cs.dot}>•</Text>
+                <Text style={[cs.chip, { color: PHILOSOPHIES[r.felsefe].renk }]} numberOfLines={1}>
+                  {PHILOSOPHIES[r.felsefe].ad().toLocaleUpperCase(LOC)}
+                </Text>
+              </>
+            ) : null}
           </View>
           <View style={cs.chips}>
             <Text style={cs.chip}>{lv.ad.toLocaleUpperCase(LOC)}</Text>
@@ -119,6 +130,7 @@ function CoachHero({ s }: { s: GameState }) {
         <Meter label={L("ÖĞRENCİ")} value={`${g.ogrenciler.length}/${lv.kapasite}`} />
         <Meter label={L("TAKİPÇİ")} value={fmtFollowers(r.takipci ?? 1_200)} color={C.gold} />
       </View>
+      <AxesStrip s={s} />
     </LinearGradient>
   );
 }
@@ -136,7 +148,7 @@ function Meter({ label, value, color = C.text }: { label: string; value: string;
 
 // ---------- Salon sekmesi ----------
 
-function EventCard({ s, act }: { s: GameState; act: Act }) {
+function EventCard({ s, act, onResult }: { s: GameState; act: Act; onResult: (t: string) => void }) {
   const ev = s.antrenor!.olay!;
   const st = ev.ogrenci ? s.salon?.ogrenciler.find((x) => x.id === ev.ogrenci) : undefined;
   return (
@@ -147,7 +159,17 @@ function EventCard({ s, act }: { s: GameState; act: Act }) {
       </View>
       <Text style={cs.cardText}>{ev.metin}</Text>
       {ev.secenekler.map((t, i) => (
-        <Choice key={i} label={t} onPress={() => act((x) => void chooseEvent(x, i))} />
+        <Choice
+          key={i}
+          label={t}
+          onPress={() => {
+            const box = { t: '' };
+            act((x) => {
+              box.t = chooseEvent(x, i);
+            });
+            onResult(box.t);
+          }}
+        />
       ))}
     </Card>
   );
@@ -167,7 +189,7 @@ function WeekNotes({ notes }: { notes: string[] }) {
   );
 }
 
-function FightDay({ s, onCorner }: { s: GameState; onCorner: (v: BoutView) => void }) {
+function FightDay({ s, act, onCorner }: { s: GameState; act: Act; onCorner: (v: BoutView) => void }) {
   const bouts = (s.salon?.ogrenciler ?? []).filter((x) => x.mac);
   if (!bouts.length) return null;
   return (
@@ -177,7 +199,8 @@ function FightDay({ s, onCorner }: { s: GameState; onCorner: (v: BoutView) => vo
         const rk = st.mac!.rakip;
         const left = Math.max(1, BEKLEME - (s.hafta - st.mac!.hafta));
         return (
-          <Pressable key={st.id} onPress={() => onCorner({ st, rakip: rk, plans: boutPlans(st.mac!) })} style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1, marginBottom: 8 }]}>
+          <View key={st.id}>
+          <Pressable onPress={() => onCorner({ st, rakip: rk, plans: boutPlans(st.mac!) })} style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1, marginBottom: 8 }]}>
             <LinearGradient colors={['#e63946', '#8f0a17']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={cs.fight}>
               <FighterAvatar look={studentLook(st)} size={46} ring="#fff" />
               <View style={{ flex: 1 }}>
@@ -185,11 +208,14 @@ function FightDay({ s, onCorner }: { s: GameState; onCorner: (v: BoutView) => vo
                 <Text style={[cs.fightTitle, SLANT]} numberOfLines={1}>
                   {st.soyad.toLocaleUpperCase(LOC)} vs {rk.soyad.toLocaleUpperCase(LOC)}
                 </Text>
+                {st.mac!.rakipHoca && s.antrenor?.rakip ? <Text style={cs.rivalTag}>{L("⚔️ EZELİ RAKİP {0} SALONUNDAN", [s.antrenor.rakip.ad.toLocaleUpperCase(LOC)])}</Text> : null}
                 <Text style={cs.fightSub}>{L("{0} hafta içinde gelmezsen ekip köşede durur", [left])}</Text>
               </View>
               <FighterAvatar look={lookFor({ id: st.id + rk.soyad, uyruk: rk.uyruk, kadin: rk.kadin })} size={46} ring="#9fc4ff" />
             </LinearGradient>
           </Pressable>
+          <CampPicker s={s} st={st} act={act} />
+          </View>
         );
       })}
     </>
@@ -242,14 +268,31 @@ function GymCard({ s }: { s: GameState }) {
 
 function SalonTab({ s, act, notes, onCorner }: { s: GameState; act: Act; notes: string[]; onCorner: (v: BoutView) => void }) {
   const r = s.antrenor!;
+  const [sonuc, setSonuc] = useState('');
   const next = coachGoals(s).find((x) => !x.tamam);
+  if (r.emekli)
+    return (
+      <>
+        <RetiredHero s={s} />
+        <CoachHallOfFame me={r.emekli.tarih} />
+        <RecentBouts s={s} />
+      </>
+    );
   return (
     <>
       {r.bekle ? <CoachPack lead={L("Deneme bitti. Salonun seni bekliyor:")} /> : null}
-      {r.olay ? <EventCard s={s} act={act} /> : null}
-      <FightDay s={s} onCorner={onCorner} />
+      {!r.felsefe ? <PhilosophyPicker s={s} act={act} first /> : null}
+      {r.olay ? <EventCard s={s} act={act} onResult={setSonuc} /> : null}
+      {sonuc && !r.olay ? (
+        <Card accent={C.orange}>
+          <Text style={[cs.cardKicker, { color: C.orange }]}>{L("KARARIN SONUCU")}</Text>
+          <Text style={cs.cardText}>{sonuc}</Text>
+        </Card>
+      ) : null}
+      <FightDay s={s} act={act} onCorner={onCorner} />
       <WeekNotes notes={notes} />
       <GymCard s={s} />
+      <RivalCard s={s} />
       <Calendar s={s} />
       {next ? (
         <View style={cs.goalPill}>
@@ -393,6 +436,7 @@ function GrowthTab({ s, act }: { s: GameState; act: Act }) {
                   </View>
                 </View>
                 <Text style={cs.meta}>{SKILLS[k].aciklama()}</Text>
+                <PerkRow s={s} k={k} act={act} />
               </View>
               <Pressable
                 disabled={!can}
@@ -409,6 +453,7 @@ function GrowthTab({ s, act }: { s: GameState; act: Act }) {
           );
         })}
       </Card>
+      <StaffCard s={s} act={act} />
       <GymUpgrade s={s} act={act} />
       <Section>{L("HEDEFLER · {0}/{1}", [goals.filter((x) => x.tamam).length, goals.length])}</Section>
       <Card>
@@ -496,6 +541,10 @@ function ProfileTab({ s, act }: { s: GameState; act: Act }) {
         <Button label={edit ? L("Görünümü kapat") : L("Görünümü düzenle")} icon="account-edit" tone="ghost" onPress={() => setEdit(!edit)} />
       </Card>
       {edit ? <LookPicker look={s.fighter.gorunum ?? DEFAULT_LOOK} onChange={(look) => act((x) => (x.fighter.gorunum = look))} /> : null}
+      {r.felsefe && !r.emekli ? <PhilosophyPicker s={s} act={act} /> : null}
+      <AxesCard s={s} />
+      <RetireCard s={s} act={act} />
+      {!r.emekli ? <CoachHallOfFame /> : null}
       <RankTable rows={rank.rows} sira={rank.sira} puan={gymScore(g)} />
     </>
   );
@@ -573,7 +622,7 @@ export function CoachScreen({ s, act }: { s: GameState; act: Act }) {
   }, [r.deneme, unlocked, act]);
   if (r.toren) return <Ceremony s={s} act={act} />;
   const bouts = pendingBouts(s);
-  const blocked = !!r.olay || !!r.bekle;
+  const blocked = !!r.olay || !!r.bekle || !!r.emekli || !r.felsefe;
   const nav: NavItem<Tab>[] = [
     { key: 'salon', label: L("Salon"), icon: 'home-city', badge: r.olay ? '!' : bouts || null },
     { key: 'ogrenci', label: L("Öğrenciler"), icon: 'account-group' },
@@ -585,7 +634,7 @@ export function CoachScreen({ s, act }: { s: GameState; act: Act }) {
     <View style={{ gap: 8 }}>
       {r.deneme ? <Text style={cs.hint}>{L("Deneme: {0}/{1} hafta", [Math.min(DENEME, s.hafta - (s.salon?.acilis ?? 0)), DENEME])}</Text> : null}
       <Button
-        label={r.olay ? L("Önce salondaki durumu çöz") : r.bekle ? L("Deneme bitti") : L("Haftayı ilerlet")}
+        label={r.emekli ? L("Emekli oldun") : r.olay ? L("Önce salondaki durumu çöz") : r.bekle ? L("Deneme bitti") : !r.felsefe ? L("Önce felsefeni seç") : L("Haftayı ilerlet")}
         icon="calendar-arrow-right"
         tone="gold"
         disabled={blocked}
@@ -698,6 +747,7 @@ const cs = StyleSheet.create({
   fight: { flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: R + 4, padding: 12, shadowColor: C.red, shadowOpacity: 0.35, shadowRadius: 16 },
   fightKicker: { color: 'rgba(255,255,255,0.75)', fontFamily: F.display, fontSize: 9.5, letterSpacing: 1.5 },
   fightTitle: { color: '#fff', fontFamily: F.display, fontSize: 20, lineHeight: 24 },
+  rivalTag: { color: '#ffd166', fontFamily: F.display, fontSize: 10, letterSpacing: 1, marginTop: 1 },
   fightSub: { color: 'rgba(255,255,255,0.8)', fontFamily: F.body, fontSize: 11.5 },
   calRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 4 },
   calWeeks: { color: C.gold, fontFamily: F.display, fontSize: 13 },

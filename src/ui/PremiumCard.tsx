@@ -5,82 +5,72 @@ import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { sfx } from '../audio';
 import { L } from '../i18n';
-import { buy, buyPremium, closeNudge, closeOffer, dismissUpsell, LEGENDS_STORE, openOffer, rewardedCount, useNudge, MONETIZATION, PURCHASES, restorePremium, useAdFree, useOffer, usePremium, usePremiumPrice, usePrice, useUpsellDue, type OfferReason } from '../monetization';
+import { buyPremium, closeNudge, closeOffer, COACH_STORE, dismissUpsell, LEGENDS_STORE, maybeStartBeltDeal, openOffer, openShop, REF_STORE, rewardedCount, useDeal, useNudge, MONETIZATION, PURCHASES, useOffer, useOwned, usePremium, usePremiumPrice, usePrice, useUpsellDue, type OfferReason } from '../monetization';
 import { LEGEND_IDS } from '../engine/legendRun';
 import { getPref, setPref } from '../prefs';
-import { ADFREE_SKU, ULTIMATE_SKU } from '../monetization/skus';
+import { DEAL_SKU, PREMIUM_SKU, ULTIMATE_SKU } from '../monetization/skus';
+import { DealCard, FullPackLink } from './ShopSheet';
 import { Button, Icon } from './components';
 import { C, F } from './theme';
 
 export function PremiumCard() {
-  const premium = usePremium();
-  const price = usePremiumPrice();
-  const adFree = useAdFree();
-  const adPrice = usePrice(ADFREE_SKU);
-  const ultPrice = usePrice(ULTIMATE_SKU);
-  const [msg, setMsg] = useState('');
-  const [busy, setBusy] = useState(false);
+  const owned = useOwned();
+  const premium = owned.has(PREMIUM_SKU);
+  const all = owned.has(ULTIMATE_SKU);
+  const deal = useDeal();
+  const dealPrice = usePrice(DEAL_SKU);
+  const fullPrice = usePrice(ULTIMATE_SKU);
   if (!MONETIZATION || !PURCHASES) return null;
 
-  if (premium)
+  if (all || (premium && !REF_STORE && !COACH_STORE))
     return (
       <View style={[st.box, st.owned]}>
         <Icon name="crown" size={20} color={C.gold} />
-        <Text style={st.ownedText}>{L("Şampiyon Paketi aktif · Teşekkürler!")}</Text>
+        <Text style={st.ownedText}>{all ? L("Tam Paket aktif · Teşekkürler!") : L("Şampiyon Paketi aktif · Teşekkürler!")}</Text>
       </View>
     );
 
-  const purchase = async (fn: () => ReturnType<typeof buyPremium>) => {
-    setBusy(true);
-    setMsg('');
-    const r = await fn();
-    setBusy(false);
-    if (r === 'ok') sfx('fanfare');
-    else if (r === 'hata') setMsg(L("Satın alma şu an yapılamadı. İnternet bağlantını kontrol edip tekrar dene."));
-  };
+  // Şampiyon sahibi: yalnızca eksikleri tamamlama kısayolu
+  if (premium)
+    return (
+      <Pressable onPress={() => openShop('menu_tamamla')} style={({ pressed }) => [st.box, st.owned, pressed && { borderColor: C.gold }]}>
+        <Icon name="crown" size={20} color={C.gold} />
+        <View style={{ flex: 1 }}>
+          <Text style={st.ownedText}>{L("Şampiyon Paketi aktif · Teşekkürler!")}</Text>
+          <Text style={st.nudgeSub}>{L("Hakem ve Antrenör Modu ile Tam Paket'i tamamla")}</Text>
+        </View>
+        <Icon name="chevron-right" size={18} color={C.gold} />
+      </Pressable>
+    );
+
+  if (deal && dealPrice)
+    return (
+      <View style={{ marginTop: 12, marginBottom: 4, gap: 8 }}>
+        <DealCard deal={deal} compact />
+        <Pressable onPress={() => openShop('menu_firsat')} hitSlop={8}>
+          <Text style={st.restore}>{L("Bütün paketleri gör")}</Text>
+        </Pressable>
+      </View>
+    );
 
   return (
-    <LinearGradient colors={['#2a1d05', '#0c0d10']} style={st.box}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-        <Icon name="crown" size={22} color={C.gold} />
-        <View style={{ flex: 1 }}>
-          <Text style={st.kicker}>{L("TAM SÜRÜM")}</Text>
-          <Text style={st.title}>{L("ŞAMPİYON PAKETİ")}</Text>
-        </View>
-      </View>
-      <Text style={st.lead}>{L("Oyunun tamamı ücretsiz kalır. Tam sürüm tek seferlik alınır, abonelik yoktur.")}</Text>
-      <PremiumCompare />
-      {/* Fiyat henüz gelmediyse de basılabilir: satın alma ürünleri önce yeniden ister */}
-      <Text style={st.popular}>{L("EN POPÜLER")}</Text>
-      <Button label={price ? L("Satın al · {0}", [price]) : L("Satın al")} icon="crown" tone="gold" disabled={busy} onPress={() => purchase(buyPremium)} />
-      {LEGENDS_STORE ? (
-        <Pressable disabled={busy} onPress={() => purchase(() => buy(ULTIMATE_SKU))} style={({ pressed }) => [st.ult, pressed && { opacity: 0.85 }, busy && { opacity: 0.5 }]}>
+    <Pressable onPress={() => openShop('menu')} style={({ pressed }) => [pressed && { opacity: 0.9 }]}>
+      <LinearGradient colors={['#2e2206', '#0c0d10']} style={st.box}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <Icon name="crown" size={24} color={C.gold} />
           <View style={{ flex: 1 }}>
-            <Text style={st.ultKicker}>{L("EN İYİ DEĞER")}</Text>
-            <Text style={st.ultTitle}>{L("Şampiyon + Koleksiyon")}</Text>
-            <Text style={st.ultSub}>{L("Şampiyon Paketi'nin her şeyi + 6 kozmetik paket + Antrenör ve Hakem Modu")}</Text>
+            <Text style={st.kicker}>{L("PAKETLER")}</Text>
+            <Text style={st.title}>{L("TAM PAKET")}</Text>
           </View>
-          <Text style={st.ultPrice}>{ultPrice ?? ''}</Text>
-        </Pressable>
-      ) : null}
-      {adFree ? (
-        <Text style={st.adFree}>{L("Reklamsız Paket aktif")}</Text>
-      ) : (
-        <Pressable disabled={busy} onPress={() => purchase(() => buy(ADFREE_SKU))} style={[st.adBtn, busy && { opacity: 0.5 }]}>
-          <Icon name="cancel" size={14} color={C.dim} />
-          <Text style={st.adText}>{adPrice ? L("Yalnızca reklamları kaldır · {0}", [adPrice]) : L("Yalnızca reklamları kaldır")}</Text>
-        </Pressable>
-      )}
-      <Pressable
-        onPress={async () => {
-          setMsg((await restorePremium()) ? '' : L("Bu hesapta satın alma bulunamadı."));
-        }}
-        hitSlop={8}
-      >
-        <Text style={st.restore}>{L("Satın alımları geri yükle")}</Text>
-      </Pressable>
-      {msg ? <Text style={st.msg}>{msg}</Text> : null}
-    </LinearGradient>
+          <Text style={st.popular}>{L("EN İYİ DEĞER")}</Text>
+        </View>
+        <Text style={st.lead}>{L("Hakem + Antrenör Modu, bütün efsaneler, reklamsız oyun ve 6 kozmetik paket.")}</Text>
+        <View pointerEvents="none">
+          <Button label={fullPrice ? L("Tam Paket · {0}", [fullPrice]) : L("Paketleri gör")} icon="crown" tone="gold" onPress={() => undefined} />
+        </View>
+        <Text style={st.restore}>{L("Reklamsız oyun iki pakete de dahil · Şampiyon Paketi de burada")}</Text>
+      </LinearGradient>
+    </Pressable>
   );
 }
 
@@ -273,6 +263,7 @@ export function PremiumOfferModal() {
           <Text style={st.lead}>{text}</Text>
           <PremiumCompare />
           <BuyPremium />
+          <FullPackLink kaynak={`teklif_${reason}`} />
           <Pressable onPress={closeOffer} hitSlop={8} style={{ alignSelf: 'center' }}>
             <Text style={st.later}>{L("Şimdi değil")}</Text>
           </Pressable>
@@ -313,9 +304,14 @@ export function SlotsFullOffer() {
 export function BeltOffer() {
   const premium = usePremium();
   const [show] = useState(() => getPref('yol_teklif_kemer') !== '1');
+  const dealReady = !!usePrice(DEAL_SKU);
   useEffect(() => {
     if (show) setPref('yol_teklif_kemer', '1');
   }, [show]);
+  // İlk kemerden sonra 24 saatlik Şampiyon Fırsatı (Hoş Geldin bittiyse; fırsat ürünü mağazada varsa)
+  useEffect(() => {
+    if (show) maybeStartBeltDeal(dealReady);
+  }, [show, dealReady]);
   if (premium || !show || !MONETIZATION || !PURCHASES) return null;
   const [title, text] = OFFER_TEXT.kemer();
   return (
@@ -327,6 +323,7 @@ export function BeltOffer() {
       <Text style={st.lead}>{text}</Text>
       <PremiumCompare />
       <BuyPremium />
+      <FullPackLink kaynak="kemer" />
     </LinearGradient>
   );
 }

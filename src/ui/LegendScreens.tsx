@@ -18,6 +18,7 @@ import { useLegendBest } from '../legendPrefs';
 import { getPref, setPref } from '../prefs';
 import { Button, Icon, SLANT, upName } from './components';
 import { FighterAvatar } from './FighterAvatar';
+import { FullPackLink } from './ShopSheet';
 import { C, F, R } from './theme';
 
 type Act = (fn: (s: GameState) => void) => void;
@@ -151,6 +152,7 @@ function LegendPackStore({ compact, lead }: { compact?: boolean; lead?: string }
         {L("{0} efsane, {1} bölüm, her efsaneye özel şort. Tek seferlik alım; sonra gelecek efsaneler de dahil.", [paid, chapters])}
       </Text>
       <Button label={price ? L("Paketi al · {0}", [price]) : L("Paketi al")} icon="crown" tone="gold" disabled={busy} onPress={purchase} />
+      {!compact ? <FullPackLink kaynak="efsane_kilit" /> : null}
       {!compact ? (
         <Pressable onPress={async () => setMsg((await restorePurchases()) ? L("Satın alımların geri yüklendi.") : L("Bu hesapta satın alma bulunamadı."))} hitSlop={8} style={{ alignSelf: 'center', marginTop: 8 }}>
           <Text style={st.link}>{L("Satın alımları geri yükle")}</Text>

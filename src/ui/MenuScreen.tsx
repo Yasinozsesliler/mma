@@ -26,7 +26,10 @@ import { WEIGHT_CLASSES } from '../engine/data';
 import { slotsFor, type Slot } from '../storage';
 import { PremiumCard, SlotsFullOffer } from './PremiumCard';
 import { SettingsSheet } from './SettingsSheet';
-import { COACH_STORE, REF_STORE, LEGENDS_STORE, milestoneOffer, openOffer, PURCHASES, usePremium } from '../monetization';
+import { COACH_STORE, REF_STORE, LEGENDS_STORE, maybeStartWelcome, milestoneOffer, openOffer, PURCHASES, usePremium, usePrice } from '../monetization';
+import { DEAL_SKU } from '../monetization/skus';
+import { careerFights } from '../engine/rewards';
+import { DealPopup } from './ShopSheet';
 import { useSeason } from '../season';
 import { seasonDaysLeft, seasonRewards, tierOf } from '../engine/season';
 import { CoachStart } from './CoachScreen';
@@ -332,6 +335,10 @@ export function MenuScreen({
     const t = tierOf(season.xp);
     if (seasonRewards(season.idx).some((r) => r.pro && r.basamak <= t && !season.alinan.includes(r.id))) milestoneOffer('sezon', `yol_teklif_sezon_${season.idx}`, 1200);
   }, [premium, season]);
+  // Hoş Geldin Fırsatı: 3. maçtan sonra 72 saat, bir kez (fırsat ürünü mağazada varsa)
+  const dealReady = !!usePrice(DEAL_SKU);
+  const fights = cur && !cur.antrenor ? careerFights(cur) : 0;
+  useEffect(() => maybeStartWelcome(fights, dealReady), [fights, dealReady]);
   const SLOTS = slotsFor(premium);
   const firstEmpty = SLOTS.find((x) => !saves[x - 1]);
   const yeniKoz = useCosmetics().yeni.length;
@@ -506,6 +513,7 @@ export function MenuScreen({
       </View>
 
       <PremiumCard />
+      <DealPopup />
 
       {sheet === 'meydan' ? (
         <MenuSheet title={L("Meydan Okumalar")} icon="sword-cross" onClose={() => setSheet(null)}>

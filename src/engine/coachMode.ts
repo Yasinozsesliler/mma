@@ -6,6 +6,7 @@ import { gymLevel, gymRanking, gymTick, power, refreshCandidates, TIERS, type St
 import { createGame, rollStartingStats, type NewFighterInput } from './character';
 import { COUNTRIES } from './data';
 import { GYMS } from './gyms';
+import { axesFromBout, chooseDepthEvent, DEPTH_EVENT_IDS, DEPTH_EVENTS, ensureCoachDepth, fanMod, itibar, LEGACY_EVENT_AXES, axesNote, noteRivalBout, shiftAxes, sponsorMod, staffWages, weeklyAxes, type CampKey, type CoachLegacy, type DepthEventId, type Itibar, type Perk, type Philosophy, type Rival, type StaffRole } from './coachDepth';
 import { chance, clamp, pick, rand, randInt } from './rng';
 import type { Appearance, GameState, StatKey } from './types';
 import { STAT_KEYS, STAT_LABELS } from './types';
@@ -14,7 +15,7 @@ export type CoachSkill = 'taktik' | 'gelisim' | 'gozcu' | 'motivasyon' | 'menaje
 export type Focus = StatKey | 'denge';
 
 export interface CoachEvent {
-  id: EventId;
+  id: EventId | DepthEventId;
   /** İlgili öğrenci (varsa) */
   ogrenci?: string;
   metin: string;
@@ -48,6 +49,19 @@ export interface CoachRun {
   toren?: CoachCeremony | null;
   /** Kariyer boyunca: köşede kazanılan maç, toplam galibiyet/mağlubiyet */
   toplam?: { g: number; m: number; kose: number };
+  /** Derinlik (coachDepth.ts): hoca felsefesi ve son değiştirildiği yıl */
+  felsefe?: Philosophy;
+  felsefeYil?: number;
+  /** Üç itibar: öğrenci sadakati, organizasyon ilişkisi, medya imajı */
+  itibar?: Itibar;
+  /** Yardımcı ekip (haftalık maaşlı) */
+  ekip?: StaffRole[];
+  /** Beceri uzmanlıkları (beceri en üst seviyedeyken) */
+  uzman?: Partial<Record<CoachSkill, Perk>>;
+  /** Ezeli rakip hoca */
+  rakip?: Rival;
+  /** Emekli olduysa miras özeti */
+  emekli?: CoachLegacy;
 }
 
 export interface CoachPost {
@@ -119,6 +133,9 @@ export function createCoachGame(isim: { ad: string; soyad: string; lakap: string
   };
   refreshCandidates(s, true);
   s.salon.sira = gymRanking(s).sira;
+  s.antrenor.itibar = { sadakat: 50, iliski: 30, imaj: 30 };
+  s.antrenor.ekip = [];
+  ensureCoachDepth(s, () => rivalFor(s));
   s.haberler = [L("🧢 {0} kapılarını açtı. Garajda iki torba, bir ring ve büyük bir hayal.", [s.salon.ad])];
   return s;
 }
@@ -225,17 +242,31 @@ const EVENTS: Record<EventId, { kosul: (s: GameState) => Student | true | null; 
 };
 
 const transferCost = (st: Student) => ({ amator: 2_000, bolgesel: 6_000, buyuk: 15_000, ucc: 40_000 })[st.seviye];
-const sponsorPay = (s: GameState) => Math.round((3_000 + (s.salon?.un ?? 0) * 150) / 500) * 500;
+const sponsorPay = (s: GameState) => Math.round(((3_000 + (s.salon?.un ?? 0) * 150) * sponsorMod(s)) / 500) * 500;
+
+/** Ezeli rakip: sıralamada hemen üstündeki salonun hocası (yoksa en yakın rakip). */
+export function rivalFor(s: GameState): { ad: string; salon: string; ulke: string } | null {
+  const rows = gymRanking(s).rows;
+  const me = rows.findIndex((x) => x.sen);
+  const row = rows[Math.max(0, me - 1)]?.sen ? rows[me + 1] : rows[Math.max(0, me - 1)];
+  if (!row) return null;
+  const def = GYMS.find((x) => x.id === row.id);
+  return { ad: def?.antrenor ?? row.ad, salon: row.ad, ulke: row.ulke };
+}
+
+const ALL_EVENTS: Record<EventId | DepthEventId, (typeof EVENTS)[EventId]> = { ...EVENTS, ...DEPTH_EVENTS };
 
 function maybeEvent(s: GameState) {
   const r = s.antrenor!;
   if (r.olay || coachWeek(s) - (r.olayHafta - (s.salon?.acilis ?? 0)) < 5 || !chance(0.3)) return;
-  const ids = (Object.keys(EVENTS) as EventId[]).filter((id) => EVENTS[id].kosul(s));
+  const ids = ([...(Object.keys(EVENTS) as EventId[]), ...DEPTH_EVENT_IDS] as (EventId | DepthEventId)[]).filter((id) => ALL_EVENTS[id].kosul(s));
+  // Savaşçı Okulu'nda sert antrenman: sakatlık olayı daha sık
+  if (r.felsefe === 'savasci' && ids.includes('sakatlik')) ids.push('sakatlik');
   if (!ids.length) return;
   const id = pick(ids);
-  const hit = EVENTS[id].kosul(s);
+  const hit = ALL_EVENTS[id].kosul(s);
   const st = hit === true || !hit ? undefined : hit;
-  r.olay = { id, ogrenci: st?.id, ...EVENTS[id].kur(s, st) };
+  r.olay = { id, ogrenci: st?.id, ...ALL_EVENTS[id].kur(s, st) };
   r.olayHafta = s.hafta;
 }
 
@@ -247,9 +278,14 @@ export function chooseEvent(s: GameState, i: number): string {
   if (!r || !g || !ev) return '';
   r.olay = undefined;
   const st = ev.ogrenci ? g.ogrenciler.find((x) => x.id === ev.ogrenci) : undefined;
+  if ((DEPTH_EVENT_IDS as string[]).includes(ev.id)) {
+    const o = chooseDepthEvent(s, ev.id as DepthEventId, i, st);
+    if (o) s.haberler.unshift(o);
+    return o;
+  }
   const moral = (n: number) => st && (st.moral = clamp(st.moral + n, 0, 100));
   let out = '';
-  switch (ev.id) {
+  switch (ev.id as EventId) {
     case 'transfer': {
       if (!st) break;
       if (i === 0) {
@@ -263,7 +299,7 @@ export function chooseEvent(s: GameState, i: number): string {
         moral(15);
         out = L("{0} kaldı ve motivasyonu tavan yaptı.", [st.ad]);
       } else if (i === 1) {
-        if (chance(0.45 + st.moral / 200 + r.beceri.motivasyon * 0.08)) {
+        if (chance(0.45 + st.moral / 200 + r.beceri.motivasyon * 0.08 + (itibar(s).sadakat - 50) / 250 + (r.felsefe === 'aile' ? 0.15 : 0))) {
           moral(8);
           out = L("“Beni sokaktan sen aldın hocam.” {0} kalıyor.", [st.ad]);
         } else {
@@ -365,6 +401,12 @@ export function chooseEvent(s: GameState, i: number): string {
       }
       break;
   }
+  const d = LEGACY_EVENT_AXES[ev.id]?.[i];
+  if (d) {
+    shiftAxes(s, d);
+    const note = axesNote(d);
+    if (out && note) out = `${out} (${note})`;
+  }
   if (out) s.haberler.unshift(out);
   return out;
 }
@@ -398,15 +440,24 @@ function coachPosts(s: GameState, st: Student, info: { rakip: string; yontem: st
 }
 
 /** Maç sonucunu antrenör kariyerine işler (academy.finishBout çağırır). */
-export function noteCoachBout(s: GameState, kazandi: boolean, kose: boolean, terfi: Tier | null, sampiyon: boolean, info?: { st: Student; rakip: string; yontem: string; iyi: number }): string[] {
+export function noteCoachBout(s: GameState, kazandi: boolean, kose: boolean, terfi: Tier | null, sampiyon: boolean, info?: { st: Student; rakip: string; yontem: string; iyi: number; finish?: boolean; rakipHoca?: boolean; kamp?: CampKey }): string[] {
   const r = s.antrenor;
   if (!r) return [];
+  const extra: string[] = [];
+  if (info) {
+    const d = axesFromBout(s, { kazandi, kose, finish: !!info.finish, terfi: !!terfi, sampiyon, rakipHoca: !!info.rakipHoca, iyi: info.iyi, kamp: info.kamp });
+    shiftAxes(s, d);
+    if (info.rakipHoca) {
+      const rv = noteRivalBout(s, kazandi);
+      if (rv) extra.push(rv);
+    }
+  }
   r.toplam ??= { g: 0, m: 0, kose: 0 };
   if (kazandi) r.toplam.g++;
   else r.toplam.m++;
   if (kazandi && kose) r.toplam.kose++;
   if (info) {
-    const gain = Math.round((40 + (s.salon?.un ?? 0) * 6) * TIER_FANS[info.st.seviye] * (kazandi ? 1.4 : 0.5) * (kose ? 1.2 : 1) * (terfi ? 2 : 1) * (sampiyon ? 5 : 1) * (0.7 + rand() * 0.6));
+    const gain = Math.round((40 + (s.salon?.un ?? 0) * 6) * TIER_FANS[info.st.seviye] * (kazandi ? 1.4 : 0.5) * (kose ? 1.2 : 1) * (terfi ? 2 : 1) * (sampiyon ? 5 : 1) * fanMod(s, !!info.finish) * (0.7 + rand() * 0.6));
     r.takipci = (r.takipci ?? 1_200) + gain;
     r.akis = [...coachPosts(s, info.st, info, kazandi, kose, terfi, sampiyon), ...(r.akis ?? [])].slice(0, 30);
   }
@@ -415,8 +466,8 @@ export function noteCoachBout(s: GameState, kazandi: boolean, kose: boolean, ter
   if (terfi) r.yil.terfi++;
   if (sampiyon) r.yil.sampiyon++;
   const xp = (kazandi ? (kose ? 22 : 12) : 5) + (terfi ? (terfi === 'ucc' ? 80 : 35) : 0) + (sampiyon ? 150 : 0);
-  const up = addCoachXp(s, xp);
-  return up ? [up] : [];
+  const up = addCoachXp(s, xp + (info?.rakipHoca && kazandi ? 15 : 0));
+  return up ? [...extra, up] : extra;
 }
 
 function yearEnd(s: GameState): string | null {
@@ -431,8 +482,9 @@ function yearEnd(s: GameState): string | null {
   let satir: string;
   if (kazandi) {
     r.oduller.push(y.no);
-    const odul = 10_000 + y.no * 2_500;
+    const odul = Math.round((10_000 + y.no * 2_500) * sponsorMod(s));
     s.para += odul;
+    shiftAxes(s, { imaj: 6, iliski: 3 });
     if (s.salon) s.salon.un = clamp(s.salon.un + 8, 0, 100);
     addCoachXp(s, 60);
     r.takipci = (r.takipci ?? 1_200) + 3_000;
@@ -453,7 +505,7 @@ function yearEnd(s: GameState): string | null {
   adaylar.forEach((a, i) => {
     if (kazandi ? a.sen : !a.sen && a.puan > (adaylar[kaz].sen ? -1 : adaylar[kaz].puan)) kaz = i;
   });
-  r.toren = { no: y.no, adaylar, kazanan: kaz, odul: kazandi ? 10_000 + y.no * 2_500 : 0 };
+  r.toren = { no: y.no, adaylar, kazanan: kaz, odul: kazandi ? Math.round((10_000 + y.no * 2_500) * sponsorMod(s)) : 0 };
   r.yil = { no: y.no + 1, g: 0, m: 0, terfi: 0, sampiyon: 0 };
   return satir;
 }
@@ -469,9 +521,16 @@ export function closeCoachCeremony(s: GameState) {
 /** Bir hafta ilerlet. Dönüş: haftanın notları. */
 export function advanceCoachWeek(s: GameState): string[] {
   const r = s.antrenor;
-  if (!r || r.bekle || r.olay) return [];
+  if (!r || r.bekle || r.olay || r.emekli) return [];
+  ensureCoachDepth(s, () => rivalFor(s));
   s.hafta++;
   const notes = gymTick(s, 1);
+  const maas = staffWages(s);
+  if (maas) {
+    s.para -= maas;
+    notes.push(L("👥 Ekip maaşları: −{0}", [$(maas)]));
+  }
+  weeklyAxes(s);
   if (coachWeek(s) > 0 && coachWeek(s) % 52 === 0) {
     const y = yearEnd(s);
     if (y) notes.push(y);
