@@ -9161,4 +9161,7 @@ export const EN: Record<string, string> = {
   "Oyundaki her şey açık. Desteğin için teşekkürler!": "Everything in the game is unlocked. Thanks for your support!",
   "Hepsi tek seferlik alım; abonelik yok. Oyunun kendisi ücretsiz kalır.": "All one-time purchases; no subscriptions. The game itself stays free.",
   "YA DA TAM PAKET": "OR THE FULL PACK",
+  "Şampiyon Paketi'nden yalnızca {0} fazla": "Only {0} more than the Champion Pack",
+  "+{0} ile Tam Paket: Hakem + Antrenör Modu ve 6 kozmetik paket de gelsin": "+{0} for the Full Pack: get Referee + Coach Mode and 6 cosmetic packs too",
+  "Hepsi birden (Tam Paket) · parça parça {0}": "All at once (Full Pack) · {0} separately",
 };

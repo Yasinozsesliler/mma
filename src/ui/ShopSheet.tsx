@@ -51,6 +51,13 @@ function useSeparateTotal(): { total: number; cur: string; text: string } | null
   return text ? { total, cur: parts[0]!.cur, text } : null;
 }
 
+/** Şampiyon Paketi'nden Tam Paket'e fark (aynı para biriminde). */
+function useUpgradeDiff(): string | null {
+  const [p, u] = useAmounts([PREMIUM_SKU, ULTIMATE_SKU]);
+  if (!p || !u || p.cur !== u.cur || u.n <= p.n) return null;
+  return money(Math.round((u.n - p.n) * 100) / 100, u.cur);
+}
+
 const pct = (a: Amt | number, b: number) => {
   const x = typeof a === 'number' ? a : a?.n;
   return x && b > x ? Math.round((1 - x / b) * 100) : 0;
@@ -159,6 +166,7 @@ function FullPackCard({ onBought }: { onBought?: () => void }) {
   const [amt] = useAmounts([ULTIMATE_SKU]);
   const sep = useSeparateTotal();
   const save = sep && amt && sep.cur === amt.cur ? pct(amt, sep.total) : 0;
+  const diff = useUpgradeDiff();
   const { busy, msg, go } = useBuy(onBought);
   return (
     <LinearGradient colors={['#2e2206', '#0e0c07']} style={[s.card, { borderColor: C.gold }]}>
@@ -174,6 +182,7 @@ function FullPackCard({ onBought }: { onBought?: () => void }) {
         </View>
       ) : null}
       <BigBuy label={price ? L("Tam Paket · {0}", [price]) : L("Tam Paket")} busy={busy} onPress={() => go(ULTIMATE_SKU)} />
+      {diff ? <Text style={s.diff}>{L("Şampiyon Paketi'nden yalnızca {0} fazla", [diff])}</Text> : null}
       {msg ? <Text style={s.msg}>{msg}</Text> : null}
     </LinearGradient>
   );
@@ -181,6 +190,7 @@ function FullPackCard({ onBought }: { onBought?: () => void }) {
 
 function ChampionCard({ onBought }: { onBought?: () => void }) {
   const price = usePrice(PREMIUM_SKU);
+  const diff = useUpgradeDiff();
   const [open, setOpen] = useState(false);
   const { busy, msg, go } = useBuy(onBought);
   return (
@@ -198,6 +208,12 @@ function ChampionCard({ onBought }: { onBought?: () => void }) {
       <Pressable disabled={busy} onPress={() => go(PREMIUM_SKU)} style={({ pressed }) => [s.outlineBtn, pressed && { opacity: 0.8 }, busy && { opacity: 0.5 }]}>
         <Text style={s.outlineT}>{price ? L("Şampiyon Paketi · {0}", [price]) : L("Şampiyon Paketi")}</Text>
       </Pressable>
+      {diff ? (
+        <Pressable disabled={busy} onPress={() => go(ULTIMATE_SKU)} style={({ pressed }) => [s.upsell, pressed && { borderColor: C.gold }]}>
+          <Icon name="arrow-up-bold-circle" size={18} color={C.gold} />
+          <Text style={s.upsellT}>{L("+{0} ile Tam Paket: Hakem + Antrenör Modu ve 6 kozmetik paket de gelsin", [diff])}</Text>
+        </Pressable>
+      ) : null}
       {msg ? <Text style={s.msg}>{msg}</Text> : null}
     </View>
   );
@@ -212,10 +228,16 @@ function CompleteCard({ owned }: { owned: ReadonlySet<string> }) {
       [BUNDLE_SKU, 'tshirt-crew', L("Efsane Koleksiyonu (6 kozmetik paket)")],
     ] as [string, IconName, string][]
   ).filter(([k]) => !owned.has(k));
+  const amts = useAmounts([...parts.map(([k]) => k), ULTIMATE_SKU]);
+  const full = amts[amts.length - 1];
+  const partSum = amts.slice(0, -1).every((a) => a && full && a.cur === full.cur) ? amts.slice(0, -1).reduce((t, a) => t + a!.n, 0) : 0;
+  const fullPrice = usePrice(ULTIMATE_SKU);
+  const allInOne = parts.length > 1 && full && partSum > full.n;
   return (
     <LinearGradient colors={['#2e2206', '#0e0c07']} style={[s.card, { borderColor: C.gold }]}>
       <Text style={s.cardTitle}>{L("EKSİKLERİNİ TAMAMLA")}</Text>
       <Text style={s.lead}>{L("Şampiyon Paketi sende. Tam Paket'e giden yolda yalnızca bunlar kaldı:")}</Text>
+      {allInOne ? <PartRow sku={ULTIMATE_SKU} icon="crown" title={L("Hepsi birden (Tam Paket) · parça parça {0}", [money(partSum, full!.cur) ?? ''])} price={fullPrice} /> : null}
       {parts.map(([sku, ic, t]) => (
         <PartRow key={sku} sku={sku} icon={ic} title={t} />
       ))}
@@ -223,8 +245,9 @@ function CompleteCard({ owned }: { owned: ReadonlySet<string> }) {
   );
 }
 
-function PartRow({ sku, icon, title }: { sku: string; icon: IconName; title: string }) {
-  const price = usePrice(sku);
+function PartRow({ sku, icon, title, price: fixed }: { sku: string; icon: IconName; title: string; price?: string | null }) {
+  const store = usePrice(sku);
+  const price = fixed ?? store;
   const { busy, msg, go } = useBuy();
   return (
     <>
@@ -395,6 +418,9 @@ const s = StyleSheet.create({
   timerT: { color: '#fff', fontFamily: F.display, fontSize: 13, letterSpacing: 0.5 },
   dealTitle: { color: '#fff', fontFamily: F.display, fontSize: 30, letterSpacing: 1 },
   off: { color: '#1f1605', backgroundColor: C.gold, fontFamily: F.display, fontSize: 15, borderRadius: 8, paddingHorizontal: 8, overflow: 'hidden', marginBottom: 5 },
+  diff: { color: C.dim, fontFamily: F.semi, fontSize: 12, textAlign: 'center', marginTop: -2 },
+  upsell: { flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1, borderColor: C.goldDeep, backgroundColor: '#15110a', borderRadius: 10, padding: 10 },
+  upsellT: { flex: 1, color: C.gold, fontFamily: F.semi, fontSize: 12.5, lineHeight: 17 },
   fullLink: { flexDirection: 'row', alignItems: 'center', gap: 10, borderWidth: 1, borderColor: C.goldDeep, backgroundColor: '#140f05', borderRadius: 12, padding: 12, marginTop: 10 },
   fullLinkT: { color: C.gold, fontFamily: F.bold, fontSize: 13 },
 });

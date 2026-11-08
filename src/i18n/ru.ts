@@ -9208,4 +9208,7 @@ export const RU: Record<string, string> = {
   "Oyundaki her şey açık. Desteğin için teşekkürler!": "Всё в игре открыто. Спасибо за поддержку!",
   "Hepsi tek seferlik alım; abonelik yok. Oyunun kendisi ücretsiz kalır.": "Все покупки разовые, без подписок. Сама игра остаётся бесплатной.",
   "YA DA TAM PAKET": "ИЛИ ПОЛНЫЙ ПАКЕТ",
+  "Şampiyon Paketi'nden yalnızca {0} fazla": "Всего на {0} дороже Пакета чемпиона",
+  "+{0} ile Tam Paket: Hakem + Antrenör Modu ve 6 kozmetik paket de gelsin": "+{0} за Полный пакет: режимы рефери и тренера и 6 наборов косметики в придачу",
+  "Hepsi birden (Tam Paket) · parça parça {0}": "Всё сразу (Полный пакет) · по отдельности {0}",
 };
