@@ -9164,4 +9164,5 @@ export const EN: Record<string, string> = {
   "Şampiyon Paketi'nden yalnızca {0} fazla": "Only {0} more than the Champion Pack",
   "+{0} ile Tam Paket: Hakem + Antrenör Modu ve 6 kozmetik paket de gelsin": "+{0} for the Full Pack: get Referee + Coach Mode and 6 cosmetic packs too",
   "Hepsi birden (Tam Paket) · parça parça {0}": "All at once (Full Pack) · {0} separately",
+  "Reklamsız oyun iki pakete de dahil · Şampiyon Paketi de burada": "No ads in both packs · the Champion Pack is here too",
 };

@@ -1,4 +1,5 @@
-// Paket Mağazası: üç net seçenek (Tam Paket · Şampiyon Paketi · Reklamsız) ve süreli Tam Paket Fırsatı.
+// Paket Mağazası: iki net seçenek (Tam Paket · Şampiyon Paketi; reklamsız oyun ikisine de dahil) ve süreli Tam Paket Fırsatı.
+// Reklamsız tek başına satılmaz (eski alıcıların hakkı premium.ts'de geçerli kalır).
 // Bütün teklifler buraya açılır. "Ayrı ayrı alsan" toplamı ve indirim oranı mağazanın gerçek fiyatlarından hesaplanır;
 // fiyatlar gelmediyse bu satırlar hiç görünmez (uydurma rakam yok).
 import { LinearGradient } from 'expo-linear-gradient';
@@ -26,7 +27,7 @@ import {
   useShop,
   type Deal,
 } from '../monetization';
-import { ADFREE_SKU, BUNDLE_SKU, COACH_SKU, DEAL_SKU, PREMIUM_SKU, REF_SKU, ULTIMATE_SKU } from '../monetization/skus';
+import { BUNDLE_SKU, COACH_SKU, DEAL_SKU, PREMIUM_SKU, REF_SKU, ULTIMATE_SKU } from '../monetization/skus';
 import { Icon, type IconName } from './components';
 import { PremiumCompare } from './PremiumCard';
 import { C, F } from './theme';
@@ -261,24 +262,6 @@ function PartRow({ sku, icon, title, price: fixed }: { sku: string; icon: IconNa
   );
 }
 
-function AdFreeRow() {
-  const price = usePrice(ADFREE_SKU);
-  const { busy, msg, go } = useBuy();
-  return (
-    <>
-      <Pressable disabled={busy} onPress={() => go(ADFREE_SKU)} style={({ pressed }) => [s.part, pressed && { borderColor: C.dim }, busy && { opacity: 0.5 }]}>
-        <Icon name="cancel" size={16} color={C.dim} />
-        <View style={{ flex: 1 }}>
-          <Text style={s.item}>{L("Yalnızca reklamları kaldır")}</Text>
-          <Text style={s.small}>{L("Geçiş reklamları kalkar; ödüllü reklamlar isteğe bağlı kalır.")}</Text>
-        </View>
-        <Text style={s.side}>{price ?? ''}</Text>
-      </Pressable>
-      {msg ? <Text style={s.msg}>{msg}</Text> : null}
-    </>
-  );
-}
-
 /** Mağaza penceresi (uygulama kökünde bir kez). */
 export function ShopModal() {
   const src = useShop();
@@ -290,7 +273,6 @@ export function ShopModal() {
   if (!src || !PURCHASES) return null;
   const all = owned.has(ULTIMATE_SKU);
   const prem = owned.has(PREMIUM_SKU);
-  const adFree = prem || owned.has(ADFREE_SKU);
   return (
     <Modal transparent animationType="slide" onRequestClose={closeShop}>
       <View style={s.wrap}>
@@ -314,7 +296,6 @@ export function ShopModal() {
                 {deal && dealPrice && !prem ? <DealCard deal={deal} onBought={closeShop} /> : null}
                 {prem ? <CompleteCard owned={owned} /> : <FullPackCard onBought={closeShop} />}
                 {!prem ? <ChampionCard onBought={closeShop} /> : null}
-                {!adFree ? <AdFreeRow /> : null}
               </>
             )}
             <Text style={s.small}>{L("Hepsi tek seferlik alım; abonelik yok. Oyunun kendisi ücretsiz kalır.")}</Text>

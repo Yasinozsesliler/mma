@@ -68,7 +68,7 @@ export function PremiumCard() {
         <View pointerEvents="none">
           <Button label={fullPrice ? L("Tam Paket · {0}", [fullPrice]) : L("Paketleri gör")} icon="crown" tone="gold" onPress={() => undefined} />
         </View>
-        <Text style={st.restore}>{L("Şampiyon Paketi ve Reklamsız seçenekleri de burada")}</Text>
+        <Text style={st.restore}>{L("Reklamsız oyun iki pakete de dahil · Şampiyon Paketi de burada")}</Text>
       </LinearGradient>
     </Pressable>
   );

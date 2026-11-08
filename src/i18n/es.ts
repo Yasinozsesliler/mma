@@ -9176,4 +9176,5 @@ export const ES: Record<string, string> = {
   "Şampiyon Paketi'nden yalnızca {0} fazla": "Solo {0} más que el Paquete Campeón",
   "+{0} ile Tam Paket: Hakem + Antrenör Modu ve 6 kozmetik paket de gelsin": "+{0} por el Paquete Completo: llévate también los modos Árbitro y Entrenador y 6 paquetes cosméticos",
   "Hepsi birden (Tam Paket) · parça parça {0}": "Todo junto (Paquete Completo) · {0} por separado",
+  "Reklamsız oyun iki pakete de dahil · Şampiyon Paketi de burada": "Sin anuncios en ambos paquetes · aquí también está el Paquete Campeón",
 };
