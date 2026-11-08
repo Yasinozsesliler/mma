@@ -14,7 +14,8 @@ export const BUNDLE_SKU = 'paket_efsane';
 /** Efsaneler Paketi: Conor dışındaki bütün Efsane Yolları hikâyeleri (ve sonra gelecek efsaneler). Önerilen ≈ 2,99 $ */
 export const LEGENDS_SKU = 'efsaneler_paketi_v2';
 
-/** Şampiyon + Koleksiyon: Şampiyon Paketi'nin her şeyi + bütün kozmetik paketleri (Efsane Koleksiyonu). Önerilen ≈ 7,99 $ */
+/** TAM PAKET (eski adı Şampiyon + Koleksiyon): Şampiyon Paketi'nin her şeyi + bütün kozmetik paketleri + Antrenör ve
+ *  Hakem Modu. Mağazanın ana ürünü. Önerilen ≈ 9,99 $ (Türkiye ≈ 199,99 TL) */
 export const ULTIMATE_SKU = 'sampiyon_koleksiyon_v2';
 
 /** Antrenör Modu: ayrı kariyer modu (hoca olarak oyna). Şampiyon Paketi'ne dahil değil. Önerilen ≈ 1,99 $ */
@@ -23,4 +24,8 @@ export const COACH_SKU = 'antrenor_modu';
 /** Hakem Modu: ayrı mod (kafesin içindeki hakem olarak oyna). Şampiyon Paketi'ne dahil değil. Önerilen ≈ 1,99 $ */
 export const REF_SKU = 'hakem_modu';
 
-export const ALL_SKUS: string[] = [PREMIUM_SKU, ADFREE_SKU, ...COSMETIC_SKUS, BUNDLE_SKU, LEGENDS_SKU, ULTIMATE_SKU, COACH_SKU, REF_SKU];
+/** Tam Paket Fırsatı: Tam Paket'in aynısı, indirimli fiyatla ayrı ürün. Yalnızca süreli pencerelerde satılır
+ *  (Hoş Geldin 72 saat, Kara Cuma, ilk UCC kemerinden sonra 24 saat). Önerilen ≈ 4,99 $ (Türkiye ≈ 99,99 TL) */
+export const DEAL_SKU = 'tam_paket_firsat';
+
+export const ALL_SKUS: string[] = [PREMIUM_SKU, ADFREE_SKU, ...COSMETIC_SKUS, BUNDLE_SKU, LEGENDS_SKU, ULTIMATE_SKU, COACH_SKU, REF_SKU, DEAL_SKU];

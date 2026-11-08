@@ -85,6 +85,7 @@ import { actRef, retireRef, setRun, useHall, useRefRun } from '../refereeStore';
 import { CageView } from './CageView';
 import { Bar, Button, CageBg, Card, Choice, Icon, Screen, SLANT, type IconName } from './components';
 import { LookPicker } from './CreateScreen';
+import { FullPackLink } from './ShopSheet';
 import { FighterAvatar } from './FighterAvatar';
 import { HubNav, type NavItem } from './HubNav';
 import { C, F, R } from './theme';
@@ -104,7 +105,6 @@ export function RefPack({ lead }: { lead?: string }) {
     <LinearGradient colors={['#2a0d10', '#140809']} style={rs.pack}>
       {lead ? <Text style={rs.packLead}>{lead}</Text> : null}
       <Text style={rs.packText}>{L("Tek seferlik alım: sınırsız hakemlik kariyeri, UCC şampiyonluk maçları ve Yılın Hakemi ödülleri.")}</Text>
-      <Text style={rs.packText}>{L("Şampiyon + Koleksiyon paketine de dahil.")}</Text>
       <Button
         label={price ? L("Hakem Modu · {0}", [price]) : L("Hakem Modu'nu al")}
         icon="whistle"
@@ -122,6 +122,7 @@ export function RefPack({ lead }: { lead?: string }) {
       <Pressable onPress={async () => setMsg((await restorePurchases()) ? L("Satın alımların geri yüklendi.") : L("Bu hesapta satın alma bulunamadı."))} hitSlop={8} style={{ alignSelf: 'center', marginTop: 8 }}>
         <Text style={rs.link}>{L("Satın alımları geri yükle")}</Text>
       </Pressable>
+      <FullPackLink kaynak="hakem_kilit" />
       {msg ? <Text style={rs.packText}>{msg}</Text> : null}
     </LinearGradient>
   );

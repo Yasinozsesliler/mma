@@ -14,7 +14,7 @@ import { ALL_SKUS, PREMIUM_SKU } from './skus';
 import { initRevenueCat, rcRecordPurchase, rcSync } from './revenuecat';
 import { noteRewardedWatched } from './offers';
 import { noteAdShown } from './upsell';
-export { isAdFree, isPremium, owns, useAdFree, useOwned, usePremium } from './premium';
+export { hasAll, isAdFree, isPremium, owns, useAdFree, useOwned, usePremium } from './premium';
 
 /** Bu platformda reklam ve satın alma var mı? */
 export const MONETIZATION = true;
@@ -29,6 +29,7 @@ export const COACH_STORE = true;
 /** Hakem Modu (hakem_modu) — iPhone ve Android. */
 export const REF_STORE = true;
 export { dismissUpsell, useUpsellDue } from './upsell';
+export { closeShop, currentDeal, dealSeen, fmtLeft, markDealSeen, maybeStartBeltDeal, maybeStartWelcome, openShop, useDeal, useNow, useShop, type Deal, type DealKind } from './deals';
 export { closeNudge, closeOffer, milestoneOffer, noteInterstitialShown, openOffer, rewardedCount, useNudge, useOffer, type OfferReason } from './offers';
 
 // ---------- Reklamlar ----------
@@ -226,6 +227,8 @@ export async function maybeInterstitial(careerFights: number, afterLoss = false)
 
 type BuyResult = 'ok' | 'iptal' | 'hata';
 let prices: Record<string, string> = {};
+/** Sayısal fiyat ve para birimi ("ayrı ayrı alsan" toplamı ve indirim oranı için) */
+let amounts: Record<string, { n: number; cur: string }> = {};
 const priceSubs = new Set<() => void>();
 let buyFn: ((sku: string) => Promise<unknown>) | null = null;
 let fetchFn: (() => Promise<unknown>) | null = null;
@@ -250,6 +253,19 @@ export function usePrice(sku: string): string | null {
   );
 }
 export const usePremiumPrice = () => usePrice(PREMIUM_SKU);
+
+/** Ürünlerin sayısal fiyatı (yüklenmediyse null). Bileşen başına bir kez çağrılır: hepsi gelince dolar. */
+export function useAmounts(skus: string[]): ({ n: number; cur: string } | null)[] {
+  const key = useSyncExternalStore(
+    (f) => {
+      priceSubs.add(f);
+      return () => void priceSubs.delete(f);
+    },
+    () => skus.map((k) => (amounts[k] ? `${amounts[k].n}${amounts[k].cur}` : '')).join('|'),
+    () => '',
+  );
+  return key.split('|').map((_, i) => amounts[skus[i]] ?? null);
+}
 
 export function buy(sku: string): Promise<BuyResult> {
   if (!buyFn) return Promise.resolve('hata');
@@ -345,6 +361,7 @@ function StoreManager() {
   const key = products.map((p) => `${p.id}=${p.displayPrice}`).join('|');
   useEffect(() => {
     prices = Object.fromEntries(products.map((p) => [p.id, p.displayPrice]));
+    amounts = Object.fromEntries(products.filter((p) => typeof p.price === 'number' && p.price > 0).map((p) => [p.id, { n: p.price as number, cur: p.currency }]));
     priceSubs.forEach((f) => f());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);

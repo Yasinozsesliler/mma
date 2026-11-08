@@ -8,6 +8,7 @@ import { BACKGROUNDS, baseStatsFor, COUNTRIES, femSurname, NAME_POOLS, NICKNAMES
 import { PLANS } from './fight';
 import { chance, clamp, noise, pick, rand, randInt, shuffle, uid, weighted } from './rng';
 import { noteCoachBout } from './coachMode';
+import { callBonus, doctorChance, edgeBonus, finishBonus, growthMod, moraleMod, payMod, prospectBonus, rivalChance, scoutBonus, staminaBonus, titleBonus, type CampKey } from './coachDepth';
 import type { Background, GameState, PlanKey, Stats, StatKey, WeightClass } from './types';
 import { STAT_KEYS, STAT_LABELS } from './types';
 
@@ -40,6 +41,8 @@ export interface Student {
   sampiyon?: boolean;
   /** Köşe talimatlarına nasıl uyduğu (eski kayıtlarda kimlikten türetilir) */
   karakter?: Temper;
+  /** Kısa süreli maç teklifini kabul etti: sıradaki maç iki kat ücretli */
+  kisaSure?: boolean;
 }
 
 export interface GymResult {
@@ -243,7 +246,7 @@ function makeStudent(s: GameState): Student {
   const stats = baseStatsFor(stil, level);
   STAT_KEYS.forEach((k) => (stats[k] = Math.round(clamp(stats[k] + noise(3), 8, 70))));
   // Ünlü, büyük salona daha yetenekli gençler gelir.
-  const potansiyel = Math.round(clamp(52 + g.un * 0.12 + g.seviye * 2.5 + skill(s, 'gozcu') * 3 + noise(7), 48, 92));
+  const potansiyel = Math.round(clamp(52 + g.un * 0.12 + g.seviye * 2.5 + skill(s, 'gozcu') * 3 + prospectBonus(s) + noise(7), 48, 92));
   const siklets = Object.keys(WEIGHT_CLASSES) as WeightClass[];
   const yas = randInt(18, 23);
   return {
@@ -316,8 +319,10 @@ function makeBout(s: GameState, st: Student): BoutState {
   STAT_KEYS.forEach((k) => (stats[k] = Math.round(clamp(stats[k] + noise(4), 8, 96))));
   const tecrube = { amator: 2, bolgesel: 6, buyuk: 11, ucc: 16 }[st.seviye];
   const tip = oppTipFor(stil);
+  const rakipHoca = chance(rivalChance(s));
   return {
     hafta: s.hafta,
+    ...(rakipHoca ? { rakipHoca } : {}),
     tip,
     tipRapor: scoutTip(s, tip),
     rakip: {
@@ -391,6 +396,9 @@ export interface BoutState {
   kose?: CornerState;
   /** Eski kayıtlar: tek raunt + tek talimat düzeni */
   r1?: RoundOne;
+  /** Antrenör Modu: seçilen maç kampı ve rakibin ezeli rakip hocanın öğrencisi olması */
+  kamp?: CampKey;
+  rakipHoca?: boolean;
 }
 
 export interface CornerState {
@@ -435,7 +443,7 @@ function oppTipFor(stil: Background): OppTip {
 
 /** Keşif raporu: salon seviyesi ve gözcülük arttıkça rakibin eğilimi daha doğru okunur. */
 function scoutTip(s: GameState, tip: OppTip): OppTip {
-  const ok = 0.55 + (s.salon?.seviye ?? 1) * 0.06 + skill(s, 'gozcu') * 0.1;
+  const ok = 0.55 + (s.salon?.seviye ?? 1) * 0.06 + skill(s, 'gozcu') * 0.1 + scoutBonus(s);
   return chance(ok) ? tip : pick(OPP_TIP_KEYS.filter((x) => x !== tip));
 }
 
@@ -614,7 +622,7 @@ function playRoundInner(s: GameState, st: Student, b: BoutState, call: CornerCal
   if (call) {
     const ctx: CallCtx = { durum: k.durum, tip, raunt: n, toplam: k.toplam, onde: k.rauntlar.reduce((a, r) => a + Math.sign(r), 0) > 0, sag: k.sag, rHasar: k.rHasar, yerZayif, temper };
     duymadi = temper === 'inatci' && chance(0.3);
-    callV = duymadi ? 0 : callValue(call, ctx) + skill(s, 'taktik') * 0.4;
+    callV = duymadi ? 0 : callValue(call, ctx) + skill(s, 'taktik') * 0.4 + callBonus(s, n, k.toplam);
     k.talimat.push({ c: call, iyi: callV >= 2, duymadi: duymadi || undefined });
     // Kondisyon bedeli / kazancı
     if (!duymadi) {
@@ -628,11 +636,11 @@ function playRoundInner(s: GameState, st: Student, b: BoutState, call: CornerCal
   // Kesik kapatılmadıysa doktor durdurabilir
   if (k.kesikAcik) {
     k.kesikAcik = false;
-    if (call !== 'kesik' && chance(0.22)) return { kazandi: false, yontem: L("Doktor durdurdu (TKO)"), raunt: n };
+    if (call !== 'kesik' && chance(doctorChance(s))) return { kazandi: false, yontem: L("Doktor durdurdu (TKO)"), raunt: n };
   }
   const tipMod = tip === 'baskici' ? (n === 1 ? -2 : n >= 3 ? 1.5 : 0) : tip === 'dayanikli' ? (n === 1 ? 1 : n >= 3 ? -2 : 0) : 0;
   // Rauntlar ayrı ayrı oynandığı için favori çoğunlukla daha sık kazanır: sabit −2 ve geniş zar eski dengeyi korur
-  const edge = power(st.stats) - power(b.rakip.stats) - 2 + (k.uyum ? (n === 1 ? 2.5 : 1) : -1) + (st.moral - 50) / 15 + (k.sag - k.rSag) / 22 + tipMod + callV + noise(6.5);
+  const edge = power(st.stats) - power(b.rakip.stats) - 2 + (k.uyum ? (n === 1 ? 2.5 : 1) : -1) + (st.moral - 50) / 15 + (k.sag - k.rSag) / 22 + tipMod + callV + edgeBonus(s, b, n, k.uyum) + noise(6.5);
   k.rauntlar.push(Math.round(edge * 10) / 10 || 0.1);
   // Hasar ve kondisyon
   const dmg = 10 + Math.abs(edge) * 2 + noise(3);
@@ -648,7 +656,7 @@ function playRoundInner(s: GameState, st: Student, b: BoutState, call: CornerCal
   // Bitiriş
   const grappler = ['gures', 'bjj', 'judo', 'sambo'].includes(st.stil);
   if (edge > 0) {
-    const p = clamp((k.rHasar - 50) / 60 + (call === 'bitir' && !duymadi && k.rHasar >= 45 ? 0.3 : 0), 0, 0.8);
+    const p = clamp((k.rHasar - 50) / 60 + (call === 'bitir' && !duymadi && k.rHasar >= 45 ? 0.3 : 0) + finishBonus(s), 0, 0.8);
     if (chance(p)) return { kazandi: true, yontem: grappler && chance(0.55) ? L("Submission") : chance(0.5) ? 'KO' : 'TKO', raunt: n };
   } else {
     const rGrappler = ['gures', 'bjj', 'judo', 'sambo'].includes(b.rakip.stil);
@@ -691,7 +699,7 @@ export function startBout(s: GameState, id: string, plan: PlanKey) {
     uyum: PLANS[plan].hedef.includes(weakOf(b.rakip.stats)),
     toplam: st.seviye === 'ucc' ? 5 : 3,
     rauntlar: [],
-    sag: clamp(70 + (st.stats.kondisyon - 50) / 2, 45, 100),
+    sag: clamp(70 + (st.stats.kondisyon - 50) / 2 + staminaBonus(s, b), 45, 100),
     hasar: 0,
     rSag: clamp(70 + (b.rakip.stats.kondisyon - 50) / 2, 45, 100),
     rHasar: 0,
@@ -778,8 +786,9 @@ function settle(s: GameState, st: Student, kazandi: boolean, yontem: string, rau
 
   // Sonuçlar
   const t = TIERS[st.seviye];
-  const kese = t.kese * (kazandi ? 2 : 1);
-  const pay = Math.round(kese * (PAY + skill(s, 'menajer') * 0.04));
+  const kese = t.kese * (kazandi ? 2 : 1) * (st.kisaSure ? 2 : 1);
+  delete st.kisaSure;
+  const pay = Math.round(kese * (PAY + skill(s, 'menajer') * 0.04 + payMod(s)));
   s.para += pay;
   g.kasa += pay;
   let un = kazandi ? (finish ? 3 : 2) + TIER_ORDER.indexOf(st.seviye) : -1;
@@ -790,7 +799,7 @@ function settle(s: GameState, st: Student, kazandi: boolean, yontem: string, rau
     if (kose) g.koseG = (g.koseG ?? 0) + 1;
   }
   st.lig = { g: (st.lig?.g ?? 0) + (kazandi ? 1 : 0), m: (st.lig?.m ?? 0) + (kazandi ? 0 : 1) };
-  st.moral = clamp(st.moral + (kazandi ? 10 : -12 + skill(s, 'motivasyon') * 3) + (kose ? 6 : -4), 0, 100);
+  st.moral = clamp(st.moral + (kazandi ? 10 : -12 + skill(s, 'motivasyon') * 3) + (kose ? 6 : -4) + moraleMod(s, kazandi, kose), 0, 100);
   // Maç tecrübesi: kazanan da kaybeden de biraz gelişir.
   STAT_KEYS.forEach((k2) => chance(0.3) && (st.stats[k2] = Math.min(99, st.stats[k2] + 1)));
   st.mac = undefined;
@@ -817,7 +826,7 @@ function settle(s: GameState, st: Student, kazandi: boolean, yontem: string, rau
         : L("📈 {0} {1} artık {2} seviyesinde dövüşecek.", [st.ad, st.soyad, TIERS[next].ad]);
     if (next === 'ucc') g.uccSayisi = (g.uccSayisi ?? 0) + 1;
   }
-  if (kazandi && st.seviye === 'ucc' && !st.sampiyon && lg.g >= 5 && pw >= 74 && chance(0.35)) {
+  if (kazandi && st.seviye === 'ucc' && !st.sampiyon && lg.g >= 5 && pw >= 74 && chance(0.35 + titleBonus(s))) {
     st.sampiyon = true;
     un += 25;
     g.sampiyonSayisi = (g.sampiyonSayisi ?? 0) + 1;
@@ -829,7 +838,7 @@ function settle(s: GameState, st: Student, kazandi: boolean, yontem: string, rau
     s.haberler.unshift(terfi);
   }
   if (pay > 0) satirlar.push(L("💵 Menajerlik payı: +{0}", [$(pay)]));
-  if (s.antrenor) satirlar.push(...noteCoachBout(s, kazandi, kose, terfi && st.seviye !== b0 ? st.seviye : null, !!st.sampiyon && !sampiyon0, { st, rakip: `${b.rakip.ad} ${b.rakip.soyad}`, yontem, iyi }));
+  if (s.antrenor) satirlar.push(...noteCoachBout(s, kazandi, kose, terfi && st.seviye !== b0 ? st.seviye : null, !!st.sampiyon && !sampiyon0, { st, rakip: `${b.rakip.ad} ${b.rakip.soyad}`, yontem, iyi, finish, rakipHoca: !!b.rakipHoca, kamp: b.kamp }));
   g.sonuclar = [{ hafta: s.hafta, ogrenci: `${st.ad} ${st.soyad}`, rakip: `${b.rakip.ad} ${b.rakip.soyad}`, kazandi, yontem, kose }, ...g.sonuclar].slice(0, 20);
   return { kazandi, yontem, satirlar, kese: pay, un, terfi, rauntlar: k?.rauntlar, iyi, anim: k?.anim };
 }
@@ -856,8 +865,9 @@ export function gymTick(s: GameState, weeks: number): string[] {
         const hiz = 0.18 * lv.gelisim * growthMultiplier(st.yas) * (0.6 + st.moral / 125) * (1 + skill(s, 'gelisim') * 0.12);
         // Antrenör Modu: odaklanılan özellik iki kat hızlı, diğerleri biraz yavaş
         const odak = s.antrenor?.odak[st.id];
+        const odakVar = !!odak && odak !== 'denge';
         STAT_KEYS.forEach((k) => {
-          const m = !odak || odak === 'denge' ? 1 : k === odak ? 2 : 0.8;
+          const m = growthMod(s, st, k, k === odak, odakVar);
           if (chance(hiz * m * clamp(gap / 12, 0.25, 1))) st.stats[k] = Math.min(99, st.stats[k] + 1);
         });
       }
