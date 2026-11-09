@@ -7,6 +7,7 @@ import { BUNDLE_SKU, PREMIUM_SKU } from '../monetization/skus';
 import type { DailyStore } from './daily';
 import { nemesisBeaten } from './nemesis';
 import type { GameState } from './types';
+import { allSeasonCosmetics } from './season';
 
 export type CosSlot = 'sort' | 'eldiven' | 'cerceve' | 'kemer' | 'giris' | 'efekt';
 export const COS_SLOTS: CosSlot[] = ['sort', 'eldiven', 'cerceve', 'kemer', 'giris', 'efekt'];
@@ -25,7 +26,13 @@ export type FxKind = 'ates' | 'duman' | 'konfeti' | 'simsek' | 'kar';
 /** Açılma koşullarının okunduğu özet: bütün kariyerlerin ve günlük dövüşün en iyileri. */
 export type UnlockCtx = { galibiyet: number; ko: number; sub: number; kemer: number; savunma: number; hof: boolean; nesil: number; gunlukSeri: number; intikam: boolean; ozel: string[] };
 
-type Source = { tur: 'hazir' } | { tur: 'basari'; aciklama: string; kosul: (c: UnlockCtx) => boolean } | { tur: 'paket'; sku: CosmeticSku } | { tur: 'sampiyon' };
+type Source =
+  | { tur: 'hazir' }
+  | { tur: 'basari'; aciklama: string; kosul: (c: UnlockCtx) => boolean }
+  | { tur: 'paket'; sku: CosmeticSku }
+  | { tur: 'sampiyon' }
+  /** Sezon Kemeri ödülü (season.ts): alınınca açılanlar listesine eklenir */
+  | { tur: 'sezon'; sezon: number; basamak: number; pro: boolean };
 
 export type Cosmetic = {
   id: string;
@@ -65,6 +72,13 @@ export const COSMETICS: Cosmetic[] = [
   { id: 'sort_sultan', slot: 'sort', ad: L("Sultan"), renk: ['#7b1e2b', '#f2c14e'], kaynak: paket('paket_sultan') },
   { id: 'sort_parlak', slot: 'sort', ad: L("Hologram"), renk: ['#7fdbff', '#c86bff'], desen: 'yildiz', desenRenk: '#ffffff', nadir: 'efsane', kaynak: basari(L("Kart Albümü: Parlak Kartlar setini tamamla"), (c) => c.ozel.includes('sort_parlak')) },
   { id: 'sort_kar', slot: 'sort', ad: L("Kar Beyazı"), renk: ['#f4f8ff', '#c1121f'], kaynak: basari(L("Yılbaşı Kupası etkinliği (sınırlı süre)"), (c) => c.ozel.includes('sort_kar')) },
+  { id: 'sort_kral', slot: 'sort', ad: L("Yeşil Ada"), renk: ['#169b62', '#ff883e'], nadir: 'efsane', kaynak: basari(L("Efsane Yolu: {0} hikâyesini tamamla", ['Conor McGrath']), (c) => c.ozel.includes('sort_kral')) },
+  { id: 'sort_dahi', slot: 'sort', ad: L("İskelet"), renk: ['#0b132b', '#f1faee'], desen: 'simsek', desenRenk: '#3a86ff', nadir: 'efsane', kaynak: basari(L("Efsane Yolu: {0} hikâyesini tamamla", ['Jonah Jonsby']), (c) => c.ozel.includes('sort_dahi')) },
+  { id: 'sort_profesor', slot: 'sort', ad: L("Akçaağaç"), renk: ['#d62828', '#ffffff'], nadir: 'efsane', kaynak: basari(L("Efsane Yolu: {0} hikâyesini tamamla", ['Georges Saint-Pierron']), (c) => c.ozel.includes('sort_profesor')) },
+  { id: 'sort_yenilmez', slot: 'sort', ad: L("Dağ Kartalı"), renk: ['#111111', '#c9a227'], desen: 'yildiz', desenRenk: '#c9a227', nadir: 'efsane', kaynak: basari(L("Efsane Yolu: {0} hikâyesini tamamla", ['Khabir Nurmagaliev']), (c) => c.ozel.includes('sort_yenilmez')) },
+  { id: 'sort_kralice', slot: 'sort', ad: L("Kol Kilidi"), renk: ['#ff4d8d', '#111111'], nadir: 'efsane', kaynak: basari(L("Efsane Yolu: {0} hikâyesini tamamla", ['Rhonda Rousseau']), (c) => c.ozel.includes('sort_kralice')) },
+  { id: 'sort_orumcek', slot: 'sort', ad: L("Örümcek Ağı"), renk: ['#111111', '#00a859'], desen: 'yildiz', desenRenk: '#ffd400', nadir: 'efsane', kaynak: basari(L("Efsane Yolu: {0} hikâyesini tamamla", ['Andre Silvano']), (c) => c.ozel.includes('sort_orumcek')) },
+  { id: 'sort_imparator', slot: 'sort', ad: L("Son İmparator"), renk: ['#f4f8ff', '#c1121f'], desen: 'simsek', desenRenk: '#9ad1ff', nadir: 'efsane', kaynak: basari(L("Efsane Yolu: {0} hikâyesini tamamla", ['Fyodor Yemelyanov']), (c) => c.ozel.includes('sort_imparator')) },
   { id: 'sort_balkabagi', slot: 'sort', ad: L("Balkabağı"), renk: ['#f77f00', '#111111'], kaynak: basari(L("Korku Gecesi etkinliği (sınırlı süre)"), (c) => c.ozel.includes('sort_balkabagi')) },
   // Eldiven
   { id: 'eld_klasik', slot: 'eldiven', ad: L("Kırmızı"), renk: ['#b8121f'], kaynak: hazir },
@@ -78,12 +92,16 @@ export const COSMETICS: Cosmetic[] = [
   { id: 'eld_ejder', slot: 'eldiven', ad: L("Ateş"), renk: ['#ff4500'], nadir: 'efsane', kaynak: paket('paket_ejder') },
   { id: 'eld_buz', slot: 'eldiven', ad: L("Buz"), renk: ['#9ad9ff'], nadir: 'efsane', kaynak: paket('paket_buz') },
   { id: 'eld_avci', slot: 'eldiven', ad: L("Şampiyon Avcısı"), renk: ['#d4a017'], nadir: 'epik', kaynak: basari(L("Kart Albümü: Şampiyon Avcısı setini tamamla"), (c) => c.ozel.includes('eld_avci')) },
+  { id: 'eld_yonca', slot: 'eldiven', ad: L("Yonca"), renk: ['#169b62'], kaynak: basari(L("Dublin Gecesi etkinliği (sınırlı süre)"), (c) => c.ozel.includes('eld_yonca')) },
+  { id: 'eld_karacuma', slot: 'eldiven', ad: L("Kara Altın"), renk: ['#1c1a14'], nadir: 'epik', kaynak: basari(L("Kara Cuma Gecesi etkinliği (sınırlı süre)"), (c) => c.ozel.includes('eld_karacuma')) },
   { id: 'eld_kalp', slot: 'eldiven', ad: L("Kalp"), renk: ['#ff5c8a'], kaynak: basari(L("Sevgililer Günü etkinliği (sınırlı süre)"), (c) => c.ozel.includes('eld_kalp')) },
   // Avatar çerçevesi (klasik: kemer varsa altın, yoksa kırmızı)
   { id: 'cer_klasik', slot: 'cerceve', ad: L("Klasik"), renk: [], kaynak: hazir },
   { id: 'cer_gumus', slot: 'cerceve', ad: L("Gümüş"), renk: ['#c0c7d1'], kaynak: basari(L("Profesyonel kariyerde 10 galibiyet"), (c) => c.galibiyet >= 10) },
   { id: 'cer_hanedan', slot: 'cerceve', ad: L("Hanedan"), renk: ['#2ec4b6'], kaynak: basari(L("Nesil modunda ikinci nesle geç"), (c) => c.nesil >= 2) },
   { id: 'cer_intikam', slot: 'cerceve', ad: L("İntikam"), renk: ['#b388ff'], kaynak: basari(L("Ezeli rakibinle seriyi kazan"), (c) => c.intikam) },
+  { id: 'sort_ozel', slot: 'sort', ad: L("Kendi tasarımın"), renk: ['#111111', '#f2c14e'], nadir: 'efsane', kaynak: { tur: 'sampiyon' } },
+  { id: 'kem_ozel', slot: 'kemer', ad: L("Kendi kemerin"), renk: ['#fff3b0', '#c9a227', '#111111', '#e63946'], nadir: 'efsane', kaynak: { tur: 'sampiyon' } },
   { id: 'cer_sampiyon', slot: 'cerceve', ad: L("Şampiyon Paketi"), renk: ['#ffd166'], kaynak: { tur: 'sampiyon' } },
   { id: 'cer_altin', slot: 'cerceve', ad: L("Altın"), renk: ['#d4a017'], kaynak: paket('paket_altin') },
   { id: 'cer_neon', slot: 'cerceve', ad: L("Neon"), renk: ['#39ff14'], kaynak: paket('paket_sokak') },
@@ -92,6 +110,7 @@ export const COSMETICS: Cosmetic[] = [
   { id: 'cer_ejder', slot: 'cerceve', ad: L("Ejderha"), renk: ['#ff3d00'], nadir: 'efsane', kaynak: paket('paket_ejder') },
   { id: 'cer_buz', slot: 'cerceve', ad: L("Buz Kralı"), renk: ['#7fdbff'], nadir: 'efsane', kaynak: paket('paket_buz') },
   { id: 'cer_koleksiyoncu', slot: 'cerceve', ad: L("Koleksiyoncu"), renk: ['#c86bff'], nadir: 'epik', kaynak: basari(L("Kart Albümü'nde 3 set tamamla"), (c) => c.ozel.includes('cer_koleksiyoncu')) },
+  { id: 'cer_alternatif', slot: 'cerceve', ad: L("Alternatif Tarih"), renk: ['#00f5d4'], nadir: 'epik', kaynak: basari(L("Bir \"Ya öyle olsaydı?\" bölümünü bitir"), (c) => c.ozel.includes('cer_alternatif')) },
   { id: 'cer_gunes', slot: 'cerceve', ad: L("Güneş"), renk: ['#ffb703'], kaynak: basari(L("Yaz Festivali etkinliği (sınırlı süre)"), (c) => c.ozel.includes('cer_gunes')) },
   // Kemer kaplaması (klasik: organizasyonun kendi renkleri)
   { id: 'kem_klasik', slot: 'kemer', ad: L("Organizasyon rengi"), renk: [], kaynak: hazir },
@@ -129,6 +148,9 @@ export const PACKS: { sku: CosmeticSku; ad: string; aciklama: string; renk: stri
   { sku: 'paket_sultan', ad: L("Sultan"), aciklama: L("Bordo-altın şort, bordo eldiven, Sultan çerçevesi ve kemeri, Mehter giriş müziği"), renk: '#9b2335', nadir: 'epik' },
 ];
 
+// Sezon Kemeri ödülleri (her ay temaya göre üretilir)
+COSMETICS.push(...allSeasonCosmetics());
+
 export const cosmeticById = (id: string) => COSMETICS.find((x) => x.id === id);
 
 export function unlockCtx(saves: (GameState | null)[], daily: DailyStore): UnlockCtx {
@@ -161,7 +183,7 @@ export const earnedNow = (c: UnlockCtx) => COSMETICS.filter((x) => x.kaynak.tur 
 export function isUnlocked(x: Cosmetic, earned: ReadonlySet<string>, owned: ReadonlySet<string>) {
   const k = x.kaynak;
   if (k.tur === 'hazir') return true;
-  if (k.tur === 'basari') return earned.has(x.id);
+  if (k.tur === 'basari' || k.tur === 'sezon') return earned.has(x.id);
   if (k.tur === 'sampiyon') return owned.has(PREMIUM_SKU);
   return packOwned(owned, k.sku);
 }

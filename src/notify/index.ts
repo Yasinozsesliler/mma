@@ -4,6 +4,7 @@ import * as Notifications from 'expo-notifications';
 import { useSyncExternalStore } from 'react';
 import { Platform } from 'react-native';
 import { dayNumber, liveStreak, type DailyStore } from '../engine/daily';
+import { dreamName, dreamSpec } from '../engine/dreamFight';
 import { L } from '../i18n';
 import { getPref, setPref } from '../prefs';
 
@@ -63,7 +64,7 @@ const at = (dayOffset: number, h: number, m: number) => {
   return d;
 };
 
-async function schedule(date: Date, title: string, body: string, hedef: 'gunluk' | 'kariyer') {
+async function schedule(date: Date, title: string, body: string, hedef: 'gunluk' | 'kariyer' | 'hayali') {
   if (date.getTime() <= Date.now() + 60_000) return;
   await Notifications.scheduleNotificationAsync({
     content: { title, body, data: { hedef } },
@@ -75,7 +76,12 @@ async function schedule(date: Date, title: string, body: string, hedef: 'gunluk'
  * Bildirimleri baştan planlar. Bugün oynanan günlük dövüş için hatırlatma kurulmaz; seri varsa akşam uyarısı eklenir.
  * fighter: aktif kariyerdeki dövüşçünün adı (3 gün sonra "kafes seni bekliyor" için).
  */
-export async function rescheduleNotifications(daily: DailyStore, fighter?: string) {
+/** Süren Efsane Yolu (hatırlatma için): son bilinen hâli saklanır, günlük dövüş ekranı yeniden planlarken de kullanılır. */
+export type LegendNote = { bolum: number; baslik: string };
+let legendCtx: LegendNote | undefined;
+
+export async function rescheduleNotifications(daily: DailyStore, fighter?: string, efsane?: LegendNote | null) {
+  if (efsane !== undefined) legendCtx = efsane ?? undefined;
   if (state !== '1') return;
   try {
     await Notifications.cancelAllScheduledNotificationsAsync();
@@ -88,16 +94,23 @@ export async function rescheduleNotifications(daily: DailyStore, fighter?: strin
       // Seri bugün oynanmadıysa bu akşam, oynandıysa yarın akşam bozulur.
       await schedule(at(playedToday ? 1 : 0, 21, 30), L("🔥 {0} günlük serin bozulmak üzere!", [seri]), L("Günün Dövüşü'nü oyna, serini koru."), 'gunluk');
     }
-    if (fighter)
+    if (legendCtx)
+      await schedule(at(2, 18, 30), L("📖 Bölüm {0} seni bekliyor", [legendCtx.bolum]), L("{0}: hikâye kaldığın yerden devam ediyor.", [legendCtx.baslik]), 'kariyer');
+    else if (fighter)
       await schedule(at(3, 18, 0), L("Kafes seni bekliyor"), L("{0} bir sonraki dövüşü için hazır. Kampı başlat!", [fighter]), 'kariyer');
+    // Hayalî Maçlar: önümüzdeki iki günün eşleşmesi öğlen duyurulur
+    for (let i = 1; i <= 2; i++) {
+      const d = dreamSpec(gun + i);
+      await schedule(at(i, 12, 30), L("⭐ Bugünün hayalî maçı"), L("{0} ile {1} karşı karşıya. Sence kim kazanır?", [dreamName(d.ben), dreamName(d.rakip)]), 'hayali');
+    }
   } catch {}
 }
 
 /** Bildirime dokunulunca hangi ekran açılsın. */
-export function onNotificationOpen(fn: (hedef: 'gunluk' | 'kariyer') => void) {
+export function onNotificationOpen(fn: (hedef: 'gunluk' | 'kariyer' | 'hayali') => void) {
   const sub = Notifications.addNotificationResponseReceivedListener((r) => {
     const h = r.notification.request.content.data?.hedef;
-    if (h === 'gunluk' || h === 'kariyer') fn(h);
+    if (h === 'gunluk' || h === 'kariyer' || h === 'hayali') fn(h);
   });
   return () => sub.remove();
 }

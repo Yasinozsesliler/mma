@@ -19,7 +19,7 @@ import { TestIds } from 'react-native-google-mobile-ads';
 const REAL_BY_OS = {
   android: {
     rewarded: 'ca-app-pub-6387108639379747/4985012523',
-    interstitial: 'ca-app-pub-6387108639379747/8893212804',
+    interstitial: 'ca-app-pub-6387108639379747/3990283601',
   },
   ios: {
     rewarded: 'ca-app-pub-6387108639379747/5010528290',

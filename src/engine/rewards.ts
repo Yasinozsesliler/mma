@@ -23,6 +23,41 @@ export function claimAdShoot(s: GameState): number {
   return n;
 }
 
+// ---------- Galibiyet primi (maç sonu: yalnızca galibiyette, bir kez) ----------
+
+/** Maç ücretinin yarısı (tahmin kazancı hariç). Mağlubiyet, beraberlik ve iptal edilen galibiyette yok. */
+export function winBonusAmount(s: GameState): number {
+  const ps = s.pending.sonrasi;
+  const ucret = (ps?.ozet?.kazanc ?? 0) - (s.pending.gece?.tahminSonuc?.para ?? 0);
+  return Math.max(MIN_SHOOT[s.stage], Math.round((ucret * 0.5) / 100) * 100);
+}
+export const canWinBonus = (s: GameState) => {
+  const ps = s.pending.sonrasi;
+  return !!ps && ps.kazandi && !ps.berabere && !ps.ozet?.nc && !ps.galibiyetPrimi;
+};
+export function claimWinBonus(s: GameState): number {
+  const ps = s.pending.sonrasi;
+  if (!ps || !canWinBonus(s)) return 0;
+  const n = winBonusAmount(s);
+  s.para += n;
+  ps.galibiyetPrimi = n;
+  return n;
+}
+
+// ---------- Tahmin ödülünü ikiye katla (dövüş gecesi, bir kez) ----------
+
+export const canDoublePrediction = (s: GameState) => {
+  const t = s.pending.gece?.tahminSonuc;
+  return !!t && t.para > 0 && !t.katlandi;
+};
+export function claimDoublePrediction(s: GameState): number {
+  const t = s.pending.gece?.tahminSonuc;
+  if (!t || !canDoublePrediction(s)) return 0;
+  t.katlandi = true;
+  s.para += t.para;
+  return t.para;
+}
+
 // ---------- Detaylı keşif raporu (kamp, plan seçimi) ----------
 
 export type ScoutReport = {

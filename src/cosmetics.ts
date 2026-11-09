@@ -4,6 +4,7 @@ import { cosmeticById, COSMETICS, DEFAULT_EQUIP, earnedNow, isUnlocked, type Cos
 import { owns, useOwned } from './monetization/premium';
 import { ALL_SKUS } from './monetization/skus';
 import { getPref, setPref } from './prefs';
+import './customKit';
 
 const KEY = 'yol_kozmetik';
 type CosState = { equip: Record<CosSlot, string>; acik: string[]; yeni: string[] };
@@ -40,6 +41,12 @@ const ownedSet = () => new Set(ALL_SKUS.filter(owns));
 export function refreshUnlocks(c: UnlockCtx) {
   const fresh = earnedNow(c).filter((id) => !state.acik.includes(id));
   if (fresh.length) commit({ ...state, acik: [...state.acik, ...fresh], yeni: [...state.yeni, ...fresh] });
+}
+
+/** Doğrudan açılan eşya (Sezon Kemeri ödülü). */
+export function grantCosmetic(id: string) {
+  if (state.acik.includes(id)) return;
+  commit({ ...state, acik: [...state.acik, id], yeni: [...state.yeni, id] });
 }
 
 export function clearNew() {

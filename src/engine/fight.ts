@@ -341,12 +341,17 @@ function takedownBeat(fs: FightState, shooter: Side, beat: number): boolean {
   const D = sideDom(fs, other(shooter));
   const tA = shooter === 'p' ? fs.taktik! : fs.rakipTaktik!;
   const tD = shooter === 'p' ? fs.rakipTaktik! : fs.taktik!;
-  let p = 0.38 + (A.wrestling - D.wrestling) / 55 + ADV[tA][tD] * 1.5;
-  if (shooter === 'p') p += planBonus(fs.mods, 'takedown', fs.raunt) - (fs.okunma ?? 0) * 1.5 + anlik(fs) * 1.5;
-  p = clamp(p, 0.08, 0.9);
+  let p = 0.38 + (A.wrestling - D.wrestling) / 66 + ADV[tA][tD] * 1.5;
+  if (shooter === 'p') {
+    // Aynı maçta dalışlar arttıkça rakip zamanlamayı çözer, sprawl'a hazır bekler.
+    const n = (fs.tdDeneme = (fs.tdDeneme ?? 0) + 1);
+    p += planBonus(fs.mods, 'takedown', fs.raunt) - (fs.okunma ?? 0) * 1.5 + anlik(fs) * 1.5 - Math.min(0.2, Math.max(0, n - 3) * 0.022);
+    if (n === 6) fs.log.push(L("🧠 {0} dalışlarını çözmeye başladı; kalçası hep geride, sprawl’a hazır.", [fs.oAd]));
+  }
+  p = clamp(p, 0.08, 0.78);
   const ok = chance(p);
   fs.log.push(tdLine(shooter, ok, names(fs)));
-  drain(fs, shooter, 'takedown', ok ? 0 : 4);
+  drain(fs, shooter, 'takedown', ok ? 0 : 6);
   if (shooter === 'p') successRate(fs, 'takedown', ok ? 2 : -1);
   if (!ok) {
     addPts(fs, other(shooter), 0.9);
@@ -473,6 +478,23 @@ function oppTactic(fs: FightState): Tactic {
   }
   const behind = fs.rauntFarklari.reduce((a, b) => a + b, 0) > 0;
   if (fs.raunt === fs.maxRaunt && behind) mul('baski', 2.2);
+  // Akıllı rakip senin güçlü yanından kaçar, zayıf yanına gider: üstün güreşçiyle boğuşmaz, zayıf vurucuyu indirmeye çalışır.
+  const P = sideDom(fs, 'p');
+  const O = sideDom(fs, 'o');
+  const zeka = 0.5 + o.iq / 200;
+  const wGap = P.wrestling - O.wrestling;
+  const sGap = P.striking - O.striking;
+  if (wGap > 8) {
+    mul('takedown', 1 - Math.min(0.7, (wGap / 40) * zeka));
+    mul('clinch', 1 - Math.min(0.5, (wGap / 60) * zeka));
+    mul('mesafe', 1 + Math.min(1.2, (wGap / 25) * zeka));
+  }
+  if (sGap > 8) {
+    mul('takedown', 1 + Math.min(1.5, (sGap / 20) * zeka));
+    mul('clinch', 1 + Math.min(0.8, (sGap / 30) * zeka));
+  }
+  // Takedown'ı hiç önemsemeyen bir rakip bile, tarzında hiç yoksa biraz dalış dener.
+  if (sGap > 8 && !w.get('takedown')) w.set('takedown', 0.5);
   // Rakip, oyuncunun önceki rauntlarını izler: aynı taktik tekrarlandıkça ve rakip zekileştikçe karşı taktiğe geçer.
   const hist = fs.oyuncuTaktikGecmisi ?? [];
   const last = hist[hist.length - 1];

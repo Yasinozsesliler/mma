@@ -57,22 +57,32 @@ function atRank(s: GameState, r: number): Opponent | null {
   return b.liste[idx] ?? null;
 }
 
-/** Son dövüşlerde karşılaşılmamış, r'ye en yakın sıradaki dövüşçü. */
-export function rankedOpponent(s: GameState, r: number): Opponent | null {
+/** r'ye en yakın sıradaki, daha önce dövüşülmemiş dövüşçü (önce bir önceki teklifte de olmayan). Rövanşlar ayrı sistemlerden gelir. */
+export function rankedOpponent(s: GameState, r: number, exclude: Opponent[] = []): Opponent | null {
   const b = s.bolum;
   if (!b) return null;
   const L = ORGS[b.org].merdiven;
-  // Son 5 dövüşte karşılaşılan ya da zaten 2 kez dövüşülen isimler atlanır (rövanşlar ayrı sistemden gelir).
-  const recent = new Set(s.gecmis.slice(0, 5).map((h) => h.rakipId));
-  const count = new Map<string, number>();
-  s.gecmis.forEach((h) => h.rakipId && count.set(h.rakipId, (count.get(h.rakipId) ?? 0) + 1));
-  for (const d of [0, 1, -1, 2, -2, 3, -3]) {
-    const rr = r + d;
-    if (rr < 1 || rr > L) continue;
-    const o = atRank(s, rr);
-    if (o && !recent.has(o.id) && (count.get(o.id) ?? 0) < 2) return { ...o, rank: rr, champion: false, rivalry: o.rivalry ?? 0 };
+  const fought = new Set(s.gecmis.map((h) => h.rakipId));
+  const offered = new Set(s.sonTeklif ?? []);
+  const skip = new Set(exclude.map((x) => x.id));
+  for (const yeni of [true, false]) {
+    for (const d of [0, 1, -1, 2, -2, 3, -3]) {
+      const rr = r + d;
+      if (rr < 1 || rr > L) continue;
+      const o = atRank(s, rr);
+      if (o && !skip.has(o.id) && !fought.has(o.id) && (!yeni || !offered.has(o.id))) return { ...o, rank: rr, champion: false, rivalry: o.rivalry ?? 0 };
+    }
   }
   return null;
+}
+
+/** Sıradaki herkesle dövüşüldüyse yeni isim o sırayı devralır: sıralama kendini yeniler. */
+export function freshenRank(s: GameState, r: number, o: Opponent) {
+  const b = s.bolum;
+  const cur = atRank(s, r);
+  if (!b || !cur || !s.gecmis.some((h) => h.rakipId === cur.id)) return;
+  const i = b.liste.indexOf(cur);
+  if (i >= 0) b.liste[i] = { ...o, stats: { ...o.stats }, rekor: { ...o.rekor }, zorluk: undefined };
 }
 
 export function divisionChampion(s: GameState): Opponent | null {
@@ -136,9 +146,11 @@ export function syncDivision(s: GameState, opp: Opponent, won: boolean, draw: bo
     notes.push(tL("📋 {0} {1}, {2} dövüşçüsünü yenerek sıralamaya girdi.", [yeni.ad, yeni.soyad, giden.soyad]));
   }
   // Şampiyonluk maçı: 1 numara şampiyona meydan okur.
-  if (b.sampiyon && !titleLost && chance(0.12)) {
+  // Oyuncunun defalarca karşılaştığı şampiyon kemeri daha çabuk bırakır: zirvede de yeni yüz görünür.
+  const sampMac = b.sampiyon ? s.gecmis.filter((h) => h.rakipId === b.sampiyon!.id).length : 0;
+  if (b.sampiyon && !titleLost && chance(sampMac >= 2 ? 0.35 : 0.12)) {
     const aday = b.liste[0];
-    if (chance(0.4)) {
+    if (chance(sampMac >= 2 ? 0.7 : 0.4)) {
       b.liste[0] = { ...b.sampiyon, champion: false };
       b.sampiyon = { ...aday, champion: true, rank: null };
       notes.push(tL("🏆 {0}’da yeni şampiyon: {1} “{2}” {3}!", [ORGS[b.org].kisa, aday.ad, aday.lakap, aday.soyad]));

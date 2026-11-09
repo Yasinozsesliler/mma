@@ -5,12 +5,15 @@ import type { Appearance } from '../engine/types';
 import { octPoints } from './components';
 
 export const SKIN_TONES = ['#f6d7c3', '#ecc0a0', '#d9a07a', '#c68a5f', '#a86b43', '#8a5534', '#6b3f24', '#4a2a17'];
-export const HAIR_COLORS = ['#0f0d0c', '#2e1d12', '#5a3a22', '#8a5a2b', '#c49a55', '#e3c587', '#9a2e1f', '#b8b8b8'];
+export const HAIR_COLORS = ['#0f0d0c', '#2e1d12', '#5a3a22', '#8a5a2b', '#c49a55', '#e3c587', '#9a2e1f', '#b8b8b8', '#ece6d6', '#2f8cff', '#ff5ca8', '#3ccf6e', '#8b5cf6'];
+/** İlk 8 doğal renk (son doğal renk gri); sonrakiler Şampiyon Paketi'nin özel renkleri. */
+export const NATURAL_HAIR = 8;
 export const EYE_COLORS = ['#3b2314', '#6b4423', '#4f7a3a', '#3f6fa8', '#7a8a96', '#1d1d1d'];
 
 export const HAIR_STYLES: { key: Appearance['sac']; ad: string }[] = [
   { key: 'kazik', ad: tL("Kazıma") },
   { key: 'kisa', ad: tL("Kısa") },
+  { key: 'yanayrik', ad: tL("Yana taralı") },
   { key: 'mohawk', ad: tL("Mohawk") },
   { key: 'uzun', ad: tL("Uzun") },
   { key: 'topuz', ad: tL("Topuz") },
@@ -239,6 +242,18 @@ function AvatarBase({ look = DEFAULT_LOOK, size = 72, ring = '#e63946', bg = '#0
             <Path d="M52 20 Q58 19 63 23" />
             <Path d="M34 30 Q38 25 43 24" />
           </G>
+        ) : null}
+        {look.sac === 'yanayrik' ? (
+          <>
+            <Path d="M31.5 39 Q32 22 50 21 Q68 22 68.5 39 Q60 30.5 50 30.5 Q40 30.5 31.5 39 Z" fill={hair} opacity={0.4} />
+            <Path d="M33 35 Q31.5 17 50 14.5 Q68.5 15.5 67.5 34 Q63 26.5 53 25 Q45 24.5 40 28.5 Q37.5 27 33 35 Z" fill={`url(#${id('hair')})`} />
+            <Path d="M40 28.5 Q41.5 21 47 16" stroke={shade(hair, -40)} strokeWidth={0.9} fill="none" opacity={0.8} />
+            <G stroke={hairL} strokeWidth={0.8} fill="none" opacity={0.6}>
+              <Path d="M45 22 Q54 17.5 64 24" />
+              <Path d="M44 25.5 Q54 21.5 63 27.5" />
+              <Path d="M35 30 Q36 23 41 19.5" />
+            </G>
+          </>
         ) : null}
         {look.sac === 'orgu' ? (
           <G stroke={shade(hair, 45)} strokeWidth={1} opacity={0.8}>

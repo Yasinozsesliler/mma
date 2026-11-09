@@ -55,6 +55,10 @@ export function FaceOffStage({ s }: { s: GameState }) {
         return seq([par([t(v.pX, 42, 420), t(v.oX, -42, 420)]), shakeIt(6, 2), wait(300)]);
       case 'smirk':
         return seq([pop({ emoji: '😏', side: 'o' }), t(v.oR, 6, 300)]);
+      case 'oppoint':
+        return seq([t(v.oX, -45, 260), pop({ emoji: '☝️', side: 'o' }), seq([t(v.oR, -8, 120), t(v.oR, 8, 120), t(v.oR, -8, 120), t(v.oR, 0, 120)]), shakeIt(2, 3)]);
+      case 'oppclap':
+        return seq([pop({ emoji: '👏', side: 'o' }), seq([t(v.oS, 1.06, 140), t(v.oS, 1, 140), t(v.oS, 1.06, 140), t(v.oS, 1, 140)])]);
       case 'oppwhisper':
         return seq([t(v.oX, -50, 350), pop({ emoji: '💬', side: 'o' }), wait(300), t(v.pTint, 0.45, 300), home()]);
       // Senin hamlelerin
@@ -86,6 +90,7 @@ export function FaceOffStage({ s }: { s: GameState }) {
 
   const hamle = k.rakipHamle ? RIVAL_MOVES[k.rakipHamle] : undefined;
   const sonuc = k.yuzyuzeSonuc;
+  const ilk = k.yuzyuzeIlk;
 
   // Rakibin ilk hamlesi sahneye girişte oynar.
   useSoundScene('fight');
@@ -94,6 +99,14 @@ export function FaceOffStage({ s }: { s: GameState }) {
     if (hamle && !sonuc) play(hamle.anim).start();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  // İlk tur bitti: senin hamlenin sonucu oynar, sonra rakibin karşılığı.
+  useEffect(() => {
+    if (!ilk || sonuc) return;
+    sfx('flash');
+    const next = k.rakipHamle ? RIVAL_MOVES[k.rakipHamle] : undefined;
+    seq([play(ilk.anim), wait(450), home(), ...(next ? [play(next.anim)] : [])]).start();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ilk?.anim, ilk?.baslik]);
   // Seçimin sonucu gelince oynar, ardından sonuç bandı açılır.
   useEffect(() => {
     if (!sonuc) return;
@@ -113,6 +126,8 @@ export function FaceOffStage({ s }: { s: GameState }) {
     <>
       <Animated.View style={{ transform: [{ translateX: v.shake }] }}>
         <LinearGradient colors={['#1a0508', '#060607']} style={fo.stage}>
+          {/* Foto muhabirlerinin flaşları */}
+          <Flashes />
           {/* Flaşlar */}
           <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: '#fff', opacity: v.flash.interpolate({ inputRange: [0, 1], outputRange: [0, 0.35] }) }]} />
           <Animated.View style={{ transform: [{ translateX: v.pX }, { rotate: rot(v.pR) }, { scale: v.pS }] }}>
@@ -135,6 +150,12 @@ export function FaceOffStage({ s }: { s: GameState }) {
         {upName(s.fighter.soyad, s.fighter.uyruk)} <Text style={{ color: C.gold }}>vs</Text> {upName(o.soyad, o.uyruk)}
       </Text>
 
+      {ilk && !sonuc ? (
+        <View style={[fo.round, { borderColor: (ilk.kazanan === 'p' ? C.green : ilk.kazanan === 'o' ? '#ff4d5e' : C.gold) + '88' }]}>
+          <Text style={[fo.roundK, { color: ilk.kazanan === 'p' ? C.green : ilk.kazanan === 'o' ? '#ff4d5e' : C.gold }]}>{L("1. TUR · {0}", [ilk.baslik])}</Text>
+          <Text style={fo.rivalText}>{ilk.metin}</Text>
+        </View>
+      ) : null}
       {hamle && !sonuc ? (
         <View style={fo.rival}>
           <Icon name="alert" size={16} color="#ff4d5e" />
@@ -170,7 +191,29 @@ export function FaceOffStage({ s }: { s: GameState }) {
   );
 }
 
+/** Kalabalıktan rastgele patlayan küçük flaşlar. */
+function Flashes() {
+  const dots = useRef(Array.from({ length: 6 }, (_, i) => ({ a: new Animated.Value(0), x: 6 + ((i * 37) % 88), y: 4 + ((i * 23) % 30) }))).current;
+  useEffect(() => {
+    const loops = dots.map((d, i) =>
+      Animated.loop(Animated.sequence([Animated.delay(400 + ((i * 530) % 1700)), Animated.timing(d.a, { toValue: 1, duration: 60, useNativeDriver: true }), Animated.timing(d.a, { toValue: 0, duration: 380, useNativeDriver: true }), Animated.delay(900 + ((i * 310) % 1300))])),
+    );
+    loops.forEach((l) => l.start());
+    return () => loops.forEach((l) => l.stop());
+  }, [dots]);
+  return (
+    <>
+      {dots.map((d, i) => (
+        <Animated.View key={i} pointerEvents="none" style={[fo.flashDot, { left: `${d.x}%`, top: `${d.y}%`, opacity: d.a, transform: [{ scale: d.a.interpolate({ inputRange: [0, 1], outputRange: [0.4, 1.4] }) }] }]} />
+      ))}
+    </>
+  );
+}
+
 const fo = StyleSheet.create({
+  flashDot: { position: 'absolute', width: 14, height: 14, borderRadius: 7, backgroundColor: '#fff', shadowColor: '#fff', shadowOpacity: 1, shadowRadius: 10 },
+  round: { borderWidth: 1, borderRadius: R, padding: 10, marginBottom: 8, backgroundColor: '#0f1014' },
+  roundK: { fontFamily: F.display, fontSize: 12, letterSpacing: 1.5, marginBottom: 2 },
   stage: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 26, paddingHorizontal: 14, borderRadius: R + 4, borderWidth: 1, borderColor: '#3a1a20', overflow: 'hidden', marginBottom: 8 },
   vs: { color: C.gold, fontFamily: F.display, fontSize: 30 },
   tint: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 999, backgroundColor: '#ff2a2a' },

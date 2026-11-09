@@ -1,8 +1,10 @@
 import { L as tL, LOC } from '../i18n';
+import { noteStyle } from './scouting';
 import { fatigue, fatigueAfterFight } from './fatigue';
 import { dmAfterFight } from './dm';
 import { ppvPayout } from './hype';
 import { challengeCheck, challengeOnRetire, diffOf } from './challenges';
+import { legendCheck, legendHoldsUcc, legendOffer, legendRivals } from './legendRun';
 import { offerAppeal } from './appeal';
 import { maybeCrossover } from './crossover';
 import { signatureFinish } from './signature';
@@ -28,6 +30,7 @@ import { campCost, randomInjury, startCamp } from './camp';
 import { ORGS, WEIGHT_CLASSES, WEIGHT_MODS } from './data';
 import { methodLabel, topMoments } from './fight';
 import { maybeEvent } from './events';
+import { ligAcik, ligAfterFight, ligBitisMetni, ligBitti } from './amateurLeague';
 import { ensureDivision, syncDivision } from './division';
 import { imposedOpponent, opponentChoices } from './matchmaking';
 import { applyInterview, buildInterview, interviewTargets, type InterviewCtx } from './interview';
@@ -45,7 +48,7 @@ import { OWNER_EVENTS, ownerReaction, ownerRel } from './owners';
 import { socialAfterFight, socialTick } from './social';
 import { merchIncome, restMultiplier } from './shop';
 import { chance, clamp, pick, rand, randInt, uid } from './rng';
-import { performanceRace } from './fightNight';
+import { performanceRace, settlePredictions } from './fightNight';
 import { fightMementos, stampCity } from './memories';
 import { worldTick } from './worldLife';
 import { rutinAfterFight } from './body';
@@ -124,6 +127,7 @@ export function findNextFight(s: GameState) {
   }
   assignCities(s, s.pending.secenekler, currentOrg(s));
   s.pending.secenekler.forEach((o) => (o.macHafta = leadWeeks(s, o, s.kisaHaber)));
+  s.sonTeklif = s.pending.secenekler.map((o) => o.id);
   s.phase = 'rakipSecimi';
 }
 
@@ -199,6 +203,7 @@ export function finishFight(s: GameState) {
   const finishMethod = r.yontem === 'KO' || r.yontem === 'TKO' || r.yontem === 'SUB';
   const lines: string[] = [];
   const pro = org !== 'amator';
+  noteStyle(s, fs);
   s.sonMacHafta = s.hafta;
 
   lines.push(
@@ -233,6 +238,7 @@ export function finishFight(s: GameState) {
   s.gecmis.unshift({
     rakip: `${opp.ad} ${opp.soyad}`,
     rakipId: opp.id,
+    rakipLakap: opp.lakap,
     org,
     sonuc: won ? 'G' : draw ? 'B' : 'M',
     yontem: methodLabel(r.yontem),
@@ -289,6 +295,12 @@ export function finishFight(s: GameState) {
   let bonusSay = 0;
   // Gecenin Performansı: kartın en iyi diğer bitirişiyle yarış (fightNight.ts); gece kurulmadıysa eski şans.
   const yaris = s.pending.gece ? performanceRace(s) : won && finishMethod && chance(r.raunt === 1 ? 0.5 : 0.35);
+  const tahminPara = settlePredictions(s);
+  const ts = s.pending.gece?.tahminSonuc;
+  if (ts) {
+    kazanc += tahminPara;
+    lines.push(ts.kahin ? tL("🔮 KÂHİN! Kartın {0} maçını da bildin: +{1}", [ts.toplam, money(tahminPara)]) : tL("🔮 Tahminlerin: {0}/{1} doğru{2}", [ts.dogru, ts.toplam, tahminPara ? ` · +${money(tahminPara)}` : '']));
+  }
   if (bonus && won && finishMethod && yaris) {
     kazanc += bonus;
     bonusSay++;
@@ -371,6 +383,7 @@ export function finishFight(s: GameState) {
   const wasChampion = s.sampiyon;
   const rankNote = caught ? null : updateRank(s, opp, won, draw);
   if (rankNote) lines.push(rankNote);
+  if (!caught) lines.push(...ligAfterFight(s, opp, won, draw, finishMethod));
   const divNotes = syncDivision(s, opp, won, draw, won && opp.champion, wasChampion && !won && !draw);
   if (org === 'ufc') {
     const p4pNote = updateP4P(s);
@@ -489,6 +502,8 @@ export function finishFight(s: GameState) {
   lines.push(...pressAfterFight(s, won && !caught));
   lines.push(...homelandTick(s));
   bondAfterFight(s, { won, finish: finishMethod, koLoss: !won && !draw && (r.yontem === 'KO' || r.yontem === 'TKO'), planUyum: !!kamp.planUyum });
+  // Efsane Yolu: kemerler ve rekor işlendikten sonra bölüm kontrolü
+  lines.push(...legendCheck(s, { won: won && !caught, yontem: r.yontem, raunt: r.raunt, org, unvan: !!fs.unvanMaci || opp.champion || wasChampion, rakip: `${opp.ad} ${opp.soyad}` }));
   const karneSon = pro ? s.rekor : s.amator;
   s.pending.sonrasi = {
     satirlar: lines,
@@ -624,6 +639,13 @@ export function afterPostFight(s: GameState) {
     s.phase = 'emeklilik';
     return;
   }
+  // Efsane Yolu: senaryolu UCC kapısı (Challenger Series beklenmeden)
+  legendCheck(s);
+  const efsaneTeklif = legendOffer(s, won);
+  if (efsaneTeklif) {
+    openOffers(s, 'ufcGiris', efsaneTeklif);
+    return;
+  }
   if (org === 'amator') {
     const gp = s.gp;
     if (gp?.yukselis && !gp.bitti) {
@@ -638,6 +660,11 @@ export function afterPostFight(s: GameState) {
           : tL("🥈 Finalde kaybettin ama herkes seni izledi. Profesyonel organizasyonlar seni kadrosunda istiyor!"),
       );
       return;
+    } else if (ligAcik(s)) {
+      if (ligBitti(s)) {
+        openOffers(s, 'profesyonel', ligBitisMetni(s));
+        return;
+      }
     } else if (s.amator.g >= 3 && s.amator.g > s.amator.m) {
       openOffers(s, 'profesyonel', tL("Amatörde adın duyuldu. İki bölgesel organizasyon seni profesyonel kadrosuna istiyor!"));
       return;
@@ -685,13 +712,13 @@ export function afterPostFight(s: GameState) {
       return;
     }
     // DWCS'de söz verildiyse büyük organizasyondaki ilk galibiyet UCC kapısını açar.
-    if (s.stage === 'buyuk' && won && s.dwcsSoz) {
+    if (s.stage === 'buyuk' && won && s.dwcsSoz && !legendHoldsUcc(s)) {
       s.dwcsSoz = undefined;
       openOffers(s, 'ufcGiris', tL("🎟️ Dean Wyatt sözünü tuttu: \"{0}, istediğim galibiyeti getirdin. UCC’ye hoş geldin!\"", [s.fighter.soyad]));
       return;
     }
     // Dean Wyatt iyi bir galibiyetten sonra arayabilir (kontrat ortasında da); yenilmez seride kesin arar.
-    if (s.stage === 'buyuk' && won && dwcsReady(s) && s.contract && (unbeatenRun(s) || chance(0.55)) && s.gecmis.length - (s.erkenTeklif ?? -99) >= 3) {
+    if (s.stage === 'buyuk' && won && dwcsReady(s) && s.contract && !legendHoldsUcc(s) && (unbeatenRun(s) || chance(0.55)) && s.gecmis.length - (s.erkenTeklif ?? -99) >= 3) {
       s.erkenTeklif = s.gecmis.length;
       openOffers(s, 'dwcsDavet', tL("📞 Telefon çaldı. Arayan: Dean Wyatt. “Seni izliyorum evlat. Challenger Series’e gel, kendini göster.”"));
       return;
@@ -806,14 +833,16 @@ export function openOffers(s: GameState, kind: OfferKind, metin: string) {
     }
   } else if (kind === 'yenileme') {
     if (s.stage === 'bolgesel') {
-      if (s.sampiyon || (s.rank != null && s.rank <= 3) || (winsInOrg >= 3 && s.populerlik >= 18) || s.seri >= 5) {
+      if (s.sampiyon || (s.rank != null && s.rank <= 2) || (winsInOrg >= 5 && s.populerlik >= 22) || s.seri >= 6) {
         pickN(bigOrgs, 2).forEach((o) => offers.push(makeOffer(s, o, 4)));
         metin += tL(" Büyük organizasyonlar kapıda!");
       }
       offers.push(makeOffer(s, org, 3, 1.25, tL("Mevcut organizasyonun seni tutmak istiyor.")));
     } else if (s.stage === 'buyuk') {
       // UCC'ye tek kapı Dean Wyatt's Challenger Series. Davet için şampiyonluk ya da zirvede popüler bir isim olmak gerekir.
-      if (s.sampiyon) {
+      if (legendHoldsUcc(s)) {
+        // Efsane Yolu: önce kemer, sonra UCC
+      } else if (s.sampiyon) {
         offers.push(makeOffer(s, 'dwcs', 1, 1, tL("Şampiyonluğun Dean Wyatt’ın dikkatini çekti. DWCS’ye davetlisin. Kazanırsan ve etkilersen UCC kapısı açılır.")));
       } else if (dwcsReady(s)) {
         offers.push(makeOffer(s, 'dwcs', 1, 1, tL("Zirvedeki performansın izleniyor. Tek dövüş, tek şans: etkilersen UCC kontratı.")));
@@ -870,6 +899,7 @@ export function acceptOffer(s: GameState, id: string) {
   );
   s.pending = {};
   s.phase = 'hub';
+  legendCheck(s);
   if (s.kisaHaber) findNextFight(s);
 }
 
@@ -955,6 +985,7 @@ export function changeWeight(s: GameState, to: WeightClass): string {
   s.bolum = null;
   s.rakipler.forEach((r) => (r.champion = false));
   ensureDivision(s);
+  legendRivals(s);
   const notes = advanceWeeks(s, 4);
   const yon = WEIGHT_ORDER.indexOf(to) > WEIGHT_ORDER.indexOf(from) ? tL("yükseldi") : tL("düştü");
   const msg = wasChamp

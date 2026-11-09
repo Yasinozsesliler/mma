@@ -6,6 +6,8 @@ import { money, REST_WEEKS, rest, restPreview } from '../engine/career';
 import { statAverage } from '../engine/character';
 import { ORGS, WEIGHT_CLASSES } from '../engine/data';
 import { rankingRows } from '../engine/division';
+import { ligAcik } from '../engine/amateurLeague';
+import { LeagueCard } from './LeagueCard';
 import { describeOpponent } from '../engine/opponents';
 import { BACKGROUNDS } from '../engine/data';
 import type { GameState } from '../engine/types';
@@ -91,6 +93,7 @@ export function NewsFeed({ items }: { items: string[] }) {
 export function RankingList({ s }: { s: GameState }) {
   const rows = rankingRows(s);
   const [open, setOpen] = useState<string | null>(null);
+  if (ligAcik(s)) return <LeagueCard s={s} />;
   if (!s.bolum || !rows.length) {
     return (
       <Card>

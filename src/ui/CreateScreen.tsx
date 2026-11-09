@@ -2,7 +2,7 @@ import { L, LANG, LOC } from '../i18n';
 import { challengeWeight, CHALLENGES, DIFFICULTIES, type ChallengeId, type Difficulty } from '../engine/challenges';
 import { HeritageBanner } from './DynastyPanel';
 import type { Heritage } from '../engine/dynasty';
-import { MONETIZATION, showRewarded, usePremium } from '../monetization';
+import { MONETIZATION, showRewarded, PURCHASES, usePremium } from '../monetization';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { generateBackstory, growthMultiplier, rollStartingStats, type NewFighterInput } from '../engine/character';
@@ -10,7 +10,7 @@ import { BACKGROUNDS, COUNTRIES, femSurname, NAME_POOLS, NICKNAMES, WEIGHT_CLASS
 import { WOMEN_WEIGHTS } from '../engine/career';
 import { gymsFor } from '../engine/gyms';
 import type { Appearance } from '../engine/types';
-import { BEARDS, BROWS, DEFAULT_LOOK, EYE_COLORS, EYE_SHAPES, FACE_SHAPES, FighterAvatar, HAIR_COLORS, HAIR_STYLES, LIPS, NOSES, SKIN_TONES } from './FighterAvatar';
+import { BEARDS, BROWS, DEFAULT_LOOK, EYE_COLORS, EYE_SHAPES, FACE_SHAPES, FighterAvatar, HAIR_COLORS, HAIR_STYLES, LIPS, NATURAL_HAIR, NOSES, SKIN_TONES } from './FighterAvatar';
 import { START_POINTS } from '../engine/progression';
 import type { Background, Stats, WeightClass } from '../engine/types';
 import { STAT_KEYS, STAT_LABELS } from '../engine/types';
@@ -87,7 +87,7 @@ export function CreateScreen({
         siklet,
         boy: BASE_BOY[siklet],
         gorunum: kadin
-          ? { ...g, kadin: true, sakal: 'yok', sac: g.sac === 'kisa' || g.sac === 'kazik' || g.sac === 'mohawk' || g.sac === 'kel' ? 'atkuyrugu' : g.sac, kulak: 0, kas: 0, dudak: 2 }
+          ? { ...g, kadin: true, sakal: 'yok', sac: g.sac === 'kisa' || g.sac === 'yanayrik' || g.sac === 'kazik' || g.sac === 'mohawk' || g.sac === 'kel' ? 'atkuyrugu' : g.sac, kulak: 0, kas: 0, dudak: 2 }
           : { ...g, kadin: undefined, sakal: g.sakal === 'yok' ? 'kirli' : g.sakal, sac: g.sac === 'atkuyrugu' ? 'kisa' : g.sac, kas: 1, dudak: 1 },
       };
     });
@@ -128,7 +128,7 @@ export function CreateScreen({
       gorunum: lookFor({ id: `oyuncu-${Date.now()}`, uyruk: COUNTRIES[inp.uyruk]?.ad ?? inp.uyruk, kadin: !!inp.kadin }),
     };
     // Genç karaktere rastgele gri saç verilmez (son renk gri); oyuncu isterse elle seçebilir.
-    if (x.gorunum && x.gorunum.sacRenk >= HAIR_COLORS.length - 1) x.gorunum.sacRenk = x.gorunum.sacRenk % (HAIR_COLORS.length - 1);
+    if (x.gorunum && x.gorunum.sacRenk >= NATURAL_HAIR - 1) x.gorunum.sacRenk = x.gorunum.sacRenk % (NATURAL_HAIR - 1);
     x.hikaye = generateBackstory(x);
     onDone(x, rollStartingStats(x));
   };
@@ -536,8 +536,15 @@ function Chips<T extends string>({ items, value, onPick }: { items: { key: T; ad
   );
 }
 
-function LookPicker({ look, onChange }: { look: Appearance; onChange: (g: Appearance) => void }) {
+export function LookPicker({ look, onChange }: { look: Appearance; onChange: (g: Appearance) => void }) {
   const set = (p: Partial<Appearance>) => onChange({ ...look, ...p });
+  // Şampiyon Paketi: özel saç renkleri ve oluştururken ek dövmeler (web sürümünde açık)
+  const premium = usePremium();
+  const pro = premium || !PURCHASES;
+  const [lockMsg, setLockMsg] = useState(false);
+  const proOnly = (fn: () => void) => () => (pro ? fn() : setLockMsg(true));
+  const tats = look.dovmeler ?? [];
+  const toggleTat = (t: 'gogus' | 'kol' | 'boyun') => set({ dovmeler: tats.includes(t) ? tats.filter((x) => x !== t) : [...tats, t] });
   const rnd = <T,>(a: readonly T[]) => a[Math.floor(Math.random() * a.length)];
   return (
     <Card>
@@ -546,7 +553,8 @@ function LookPicker({ look, onChange }: { look: Appearance; onChange: (g: Appear
       <Text style={cs.label}>{L("SAÇ MODELİ")}</Text>
       <Chips items={HAIR_STYLES} value={look.sac} onPick={(sac) => set({ sac })} />
       <Text style={cs.label}>{L("SAÇ RENGİ")}</Text>
-      <Swatches colors={HAIR_COLORS} value={look.sacRenk} onPick={(sacRenk) => set({ sacRenk })} />
+      <Swatches colors={HAIR_COLORS} value={look.sacRenk} onPick={(sacRenk) => (sacRenk < NATURAL_HAIR ? set({ sacRenk }) : proOnly(() => set({ sacRenk }))())} />
+      <Text style={cs.proNote}>{L("👑 Son beş renk Şampiyon Paketi ile")}</Text>
       <Text style={cs.label}>{L("GÖZ RENGİ")}</Text>
       <Swatches colors={EYE_COLORS} value={look.goz} onPick={(goz) => set({ goz })} />
       {!look.kadin ? (
@@ -575,6 +583,17 @@ function LookPicker({ look, onChange }: { look: Appearance; onChange: (g: Appear
         value={(look.yara ? 'yara' : '') as 'yara'}
         onPick={(k) => set(k === 'yara' ? { yara: !look.yara } : k === 'dovme' ? { dovme: !look.dovme } : { kulak: look.kulak ? 0 : 1 })}
       />
+      <Text style={cs.label}>{L("DÖVMELER 👑")}</Text>
+      <Chips
+        items={[
+          { key: 'gogus' as const, ad: tats.includes('gogus') ? L("✓ Göğüs") : L("Göğüs") },
+          { key: 'kol' as const, ad: tats.includes('kol') ? L("✓ Kol") : L("Kol") },
+          { key: 'boyun' as const, ad: tats.includes('boyun') ? L("✓ Boyun") : L("Boyun") },
+        ]}
+        value={'' as 'gogus'}
+        onPick={(k) => proOnly(() => toggleTat(k))()}
+      />
+      {lockMsg && !pro ? <Text style={[cs.proNote, { color: C.gold }]}>{L("Bu seçenek Şampiyon Paketi ile açılır. Menüdeki Şampiyon Paketi kartından alabilirsin.")}</Text> : null}
       <View style={{ marginTop: 12 }}>
         <Button
           label={L("Rastgele")}
@@ -584,7 +603,7 @@ function LookPicker({ look, onChange }: { look: Appearance; onChange: (g: Appear
             onChange({
               ten: Math.floor(Math.random() * SKIN_TONES.length),
               sac: rnd(HAIR_STYLES).key,
-              sacRenk: Math.floor(Math.random() * (HAIR_COLORS.length - 1)),
+              sacRenk: Math.floor(Math.random() * (NATURAL_HAIR - 1)),
               goz: Math.floor(Math.random() * EYE_COLORS.length),
               sakal: rnd(BEARDS).key,
               yara: Math.random() < 0.25,
@@ -613,6 +632,7 @@ function Field({ label, value, onChange, placeholder }: { label: string; value: 
 }
 
 const cs = StyleSheet.create({
+  proNote: { color: C.faint, fontFamily: F.body, fontSize: 11, marginTop: 4 },
   challenge: { backgroundColor: '#2a0a0f', borderWidth: 1, borderColor: C.red, borderRadius: 12, padding: 12, gap: 2, marginBottom: 12 },
   challengeKicker: { color: C.red, fontFamily: F.semi, fontSize: 10, letterSpacing: 2 },
   challengeName: { color: C.text, fontFamily: F.display, fontSize: 17 },

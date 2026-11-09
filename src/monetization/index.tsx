@@ -11,16 +11,26 @@ import { AD_IDS } from './ids';
 import { grant, isAdFree, isPremium, owns } from './premium';
 import { ALL_SKUS, PREMIUM_SKU } from './skus';
 
+import { initRevenueCat, rcRecordPurchase, rcSync } from './revenuecat';
+import { noteRewardedWatched } from './offers';
 import { noteAdShown } from './upsell';
-export { isAdFree, isPremium, owns, useAdFree, useOwned, usePremium } from './premium';
+export { hasAll, isAdFree, isPremium, owns, useAdFree, useOwned, usePremium } from './premium';
 
 /** Bu platformda reklam ve satın alma var mı? */
 export const MONETIZATION = true;
 /** Uygulama içi satın almalar (Şampiyon Paketi, Reklamsız Paket): her iki platformda açık. */
 export const PURCHASES = true;
-/** Dolaptaki kozmetik paket mağazası. iPhone'da şimdilik kapalı (yalnızca reklam kaldıran ürünler satılır). */
-export const PACK_STORE = Platform.OS !== 'ios';
+/** Dolaptaki tek tek kozmetik paket mağazası kapalı; kozmetikler Şampiyon + Koleksiyon ile gelir (iPhone ve Android aynı). */
+export const PACK_STORE = false;
+/** Efsaneler Paketi, Şampiyon + Koleksiyon ve kilitli efsanelerin 1. bölüm denemesi (iPhone ve Android). */
+export const LEGENDS_STORE = true;
+/** Antrenör Modu (antrenor_modu) — iPhone ve Android. */
+export const COACH_STORE = true;
+/** Hakem Modu (hakem_modu) — iPhone ve Android. */
+export const REF_STORE = true;
 export { dismissUpsell, useUpsellDue } from './upsell';
+export { closeShop, currentDeal, dealSeen, fmtLeft, markDealSeen, maybeStartBeltDeal, maybeStartWelcome, openShop, useDeal, useNow, useShop, type Deal, type DealKind } from './deals';
+export { closeNudge, closeOffer, milestoneOffer, noteInterstitialShown, openOffer, rewardedCount, useNudge, useOffer, type OfferReason } from './offers';
 
 // ---------- Reklamlar ----------
 
@@ -58,33 +68,82 @@ export async function initMonetization() {
   if (!isAdFree()) loadInterstitial();
 }
 
+// Yükleme: aynı anda tek istek; başarısız olursa bekleme her seferinde ikiye katlanır (1 → 2 → 4 … en fazla 10 dk),
+// başarıda sıfırlanır. Oyuncu uygulamaya dönünce ya da reklam anı gelip reklam hazır değilse bekleme atlanır.
+type Slot = { loading: boolean; fails: number; timer: ReturnType<typeof setTimeout> | null };
+const rSlot: Slot = { loading: false, fails: 0, timer: null };
+const iSlot: Slot = { loading: false, fails: 0, timer: null };
+const backoff = (fails: number) => Math.min(600_000, 60_000 * 2 ** Math.max(0, fails - 1));
+
+function retryLater(slot: Slot, load: () => void) {
+  slot.loading = false;
+  slot.fails++;
+  if (slot.timer) clearTimeout(slot.timer);
+  slot.timer = setTimeout(() => {
+    slot.timer = null;
+    load();
+  }, backoff(slot.fails));
+}
+
+/** Bekleyen denemeyi iptal edip hemen yükler (hazır değilse ve şu an yüklenmiyorsa). */
+function loadNow(slot: Slot, ready: boolean, load: () => void) {
+  if (ready || slot.loading || !started || !canAds) return;
+  if (slot.timer) clearTimeout(slot.timer);
+  slot.timer = null;
+  load();
+}
+
 function loadRewarded() {
+  if (rSlot.loading) return;
   try {
+    rSlot.loading = true;
     const ad = RewardedAd.createForAdRequest(AD_IDS.rewarded);
     rewarded = ad;
     rewardedReady = false;
-    ad.addAdEventListener(RewardedAdEventType.LOADED, () => (rewardedReady = true));
+    ad.addAdEventListener(RewardedAdEventType.LOADED, () => {
+      rewardedReady = true;
+      rSlot.loading = false;
+      rSlot.fails = 0;
+    });
     ad.addAdEventListener(AdEventType.ERROR, () => {
-      rewardedReady = false;
-      setTimeout(loadRewarded, 45_000);
+      // Gösterim sırasındaki hata showRewarded'da ele alınır; burada yalnızca yükleme hatası yeniden denenir
+      if (rewardedReady) return;
+      retryLater(rSlot, loadRewarded);
     });
     ad.load();
-  } catch {}
+  } catch {
+    retryLater(rSlot, loadRewarded);
+  }
 }
 
 function loadInterstitial() {
+  if (iSlot.loading || isAdFree()) return;
   try {
+    iSlot.loading = true;
     const ad = InterstitialAd.createForAdRequest(AD_IDS.interstitial);
     interstitial = ad;
     interstitialReady = false;
-    ad.addAdEventListener(AdEventType.LOADED, () => (interstitialReady = true));
+    ad.addAdEventListener(AdEventType.LOADED, () => {
+      interstitialReady = true;
+      iSlot.loading = false;
+      iSlot.fails = 0;
+    });
     ad.addAdEventListener(AdEventType.ERROR, () => {
-      interstitialReady = false;
-      setTimeout(loadInterstitial, 60_000);
+      if (interstitialReady) return;
+      retryLater(iSlot, loadInterstitial);
     });
     ad.load();
-  } catch {}
+  } catch {
+    retryLater(iSlot, loadInterstitial);
+  }
 }
+
+// Uygulamaya dönüldüğünde hazır olmayan reklamlar beklemeden yeniden istenir.
+AppState.addEventListener('change', (st) => {
+  if (st !== 'active') return;
+  loadNow(rSlot, rewardedReady, loadRewarded);
+  loadNow(iSlot, interstitialReady, loadInterstitial);
+});
 
 /**
  * Ödüllü reklam. Şampiyon Paketi sahiplerine ödül reklamsız ve anında verilir.
@@ -94,7 +153,7 @@ export function showRewarded(): Promise<'odul' | 'iptal' | 'yok'> {
   if (isPremium()) return Promise.resolve('odul');
   const ad = rewarded;
   if (!ad || !rewardedReady) {
-    if (started && canAds && !rewardedReady) loadRewarded();
+    loadNow(rSlot, rewardedReady, loadRewarded);
     track('rewarded_ad', { sonuc: 'yok' });
     return Promise.resolve('yok');
   }
@@ -108,6 +167,7 @@ export function showRewarded(): Promise<'odul' | 'iptal' | 'yok'> {
       rewardedReady = false;
       loadRewarded();
       track('rewarded_ad', { sonuc: r });
+      if (r === 'odul') noteRewardedWatched();
       resolve(r);
     };
     offs.push(ad.addAdEventListener(RewardedAdEventType.EARNED_REWARD, () => (earned = true)));
@@ -138,7 +198,11 @@ export async function maybeInterstitial(careerFights: number, afterLoss = false)
   fightsSinceAd++;
   if (afterLoss || careerFights < 5 || fightsSinceAd < 4 || Date.now() - lastAdAt < 360_000) return false;
   const ad = interstitial;
-  if (!ad || !interstitialReady) return false;
+  if (!ad || !interstitialReady) {
+    // Reklam anı geldi ama hazır değil: bir sonraki an için hemen dene
+    loadNow(iSlot, interstitialReady, loadInterstitial);
+    return false;
+  }
   await new Promise<void>((resolve) => {
     const unmute = pushScene('off');
     const offs: (() => void)[] = [];
@@ -163,6 +227,8 @@ export async function maybeInterstitial(careerFights: number, afterLoss = false)
 
 type BuyResult = 'ok' | 'iptal' | 'hata';
 let prices: Record<string, string> = {};
+/** Sayısal fiyat ve para birimi ("ayrı ayrı alsan" toplamı ve indirim oranı için) */
+let amounts: Record<string, { n: number; cur: string }> = {};
 const priceSubs = new Set<() => void>();
 let buyFn: ((sku: string) => Promise<unknown>) | null = null;
 let fetchFn: (() => Promise<unknown>) | null = null;
@@ -188,6 +254,19 @@ export function usePrice(sku: string): string | null {
 }
 export const usePremiumPrice = () => usePrice(PREMIUM_SKU);
 
+/** Ürünlerin sayısal fiyatı (yüklenmediyse null). Bileşen başına bir kez çağrılır: hepsi gelince dolar. */
+export function useAmounts(skus: string[]): ({ n: number; cur: string } | null)[] {
+  const key = useSyncExternalStore(
+    (f) => {
+      priceSubs.add(f);
+      return () => void priceSubs.delete(f);
+    },
+    () => skus.map((k) => (amounts[k] ? `${amounts[k].n}${amounts[k].cur}` : '')).join('|'),
+    () => '',
+  );
+  return key.split('|').map((_, i) => amounts[skus[i]] ?? null);
+}
+
 export function buy(sku: string): Promise<BuyResult> {
   if (!buyFn) return Promise.resolve('hata');
   settle('iptal');
@@ -205,6 +284,7 @@ export const buyPremium = () => buy(PREMIUM_SKU);
 export async function restorePurchases(): Promise<boolean> {
   if (!restoreFn) return false;
   await restoreFn().catch(() => undefined);
+  void rcSync();
   // Liste durum güncellemesiyle gelir; bir sonraki çizimde işlenmesini bekle.
   await new Promise((r) => setTimeout(r, 400));
   return ALL_SKUS.some(owns);
@@ -216,11 +296,25 @@ export function PremiumManager() {
   return PURCHASES ? <StoreManager /> : null;
 }
 
+/** App Store'daki öne çıkan satın almaya dokunulduysa mağaza bağlanınca satın alma başlatılır (iOS). */
+let promotedSku: string | null = null;
+const startPromoted = () => {
+  if (!promotedSku || !buyFn) return;
+  const sku = promotedSku;
+  promotedSku = null;
+  if (ALL_SKUS.includes(sku)) void buyFn(sku).catch(() => undefined);
+};
+
 function StoreManager() {
   const { connected, products, availablePurchases, fetchProducts, requestPurchase, finishTransaction, getAvailablePurchases } = useIAP({
+    onPromotedProductIOS: (product) => {
+      promotedSku = product.id;
+      startPromoted();
+    },
     onPurchaseSuccess: async (purchase) => {
       if (!ALL_SKUS.includes(purchase.productId)) return;
       grant(purchase.productId);
+      await rcRecordPurchase(purchase.productId);
       // Onaylanmayan satın alımlar 3 gün sonra iade edilir.
       await finishTransaction({ purchase, isConsumable: false }).catch(() => undefined);
       if (pending?.sku === purchase.productId) settle('ok');
@@ -231,6 +325,7 @@ function StoreManager() {
   // Ürünler gelene kadar artan aralıklarla yeniden istenir; uygulama öne gelince de tekrar denenir.
   // (Tek istek boş dönerse fiyatlar hiç görünmüyor, satın alma düğmeleri çalışmıyordu.)
   const loaded = products.length > 0;
+  useEffect(initRevenueCat, []);
   useEffect(() => {
     if (!connected) return;
     void getAvailablePurchases().catch(() => undefined);
@@ -266,6 +361,7 @@ function StoreManager() {
   const key = products.map((p) => `${p.id}=${p.displayPrice}`).join('|');
   useEffect(() => {
     prices = Object.fromEntries(products.map((p) => [p.id, p.displayPrice]));
+    amounts = Object.fromEntries(products.filter((p) => typeof p.price === 'number' && p.price > 0).map((p) => [p.id, { n: p.price as number, cur: p.currency }]));
     priceSubs.forEach((f) => f());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
@@ -274,6 +370,7 @@ function StoreManager() {
     buyFn = connected ? (sku) => requestPurchase({ request: { google: { skus: [sku] }, apple: { sku } }, type: 'in-app' }) : null;
     restoreFn = connected ? () => getAvailablePurchases() : null;
     fetchFn = connected ? () => fetchProducts({ skus: ALL_SKUS, type: 'in-app' }) : null;
+    startPromoted();
   }, [connected, requestPurchase, getAvailablePurchases, fetchProducts]);
 
   return null;

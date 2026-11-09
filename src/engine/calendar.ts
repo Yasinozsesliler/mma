@@ -26,7 +26,8 @@ const pop = (s: GameState, d: number) => {
 export function leadWeeks(s: GameState, o: Opponent, kisa: boolean): number {
   if (kisa) return randInt(2, 4);
   // İlk amatör maç kısa tutulur: yeni oyuncu kafese çabuk girsin.
-  if (s.stage === 'amator') return s.amator.g + s.amator.m + s.amator.b === 0 ? 4 : randInt(5, 8);
+  // Amatör Ligi'nde maçlar sık: lig uzadı, bekleme kısaldı.
+  if (s.stage === 'amator') return s.amator.g + s.amator.m + s.amator.b === 0 ? 4 : s.amLig && !s.efsane && !s.meydan ? randInt(3, 5) : randInt(5, 8);
   const champ = o.champion || s.sampiyon;
   if (!champ) return randInt(7, 11);
   const savunma = (s.kemerler ?? []).filter((b) => b.aktif).reduce((a, b) => a + b.savunma, 0);

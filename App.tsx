@@ -19,6 +19,8 @@ import { ErrorBoundary } from './src/ui/ErrorBoundary';
 import { installErrorLog } from './src/errorLog';
 import { installImmersive } from './src/immersive';
 import { GymScreen } from './src/ui/GymScreen';
+import { CoachScreen } from './src/ui/CoachScreen';
+import { createCoachGame } from './src/engine/coachMode';
 import { warmAnnouncer } from './src/announcer';
 import { CreateScreen } from './src/ui/CreateScreen';
 import { FightScreen } from './src/ui/FightScreen';
@@ -33,6 +35,11 @@ import {
 } from './src/ui/GameScreens';
 import { MenuScreen } from './src/ui/MenuScreen';
 import { DailyScreen } from './src/ui/DailyScreen';
+import { DreamScreen } from './src/ui/DreamScreen';
+import { GhostScreen } from './src/ui/GhostScreen';
+import { RefereeScreen } from './src/ui/RefereeScreen';
+import { readGhostFromUrl } from './src/ghost';
+import { SeasonScreen } from './src/ui/SeasonScreen';
 import { ShopScreen } from './src/ui/ShopScreen';
 import { ArcadeScreen } from './src/ui/ArcadeScreen';
 import { SocialScreen } from './src/ui/SocialScreen';
@@ -47,6 +54,9 @@ import { PodcastScreen } from './src/ui/PodcastScreen';
 import { AwardsCeremony } from './src/ui/AwardsCeremony';
 import { challengeOnRetire, type ChallengeId } from './src/engine/challenges';
 import { markChallenge } from './src/challengePrefs';
+import { createLegendGame, currentChapter, legendStars } from './src/engine/legendRun';
+import { saveLegendBest } from './src/legendPrefs';
+import { clearCheckpoints, loadCheckpoints, noteCheckpoint } from './src/legendCheckpoint';
 import { MerchScreen } from './src/ui/MerchScreen';
 import { CrossoverScreen } from './src/ui/CrossoverScreen';
 import { StreamScreen } from './src/ui/StreamScreen';
@@ -71,6 +81,10 @@ import { ensureSpecial } from './src/engine/specialEvent';
 import { popToFollowers } from './src/engine/fame';
 import { useSoundScene, type Scene } from './src/audio';
 import { initMonetization, PremiumManager } from './src/monetization';
+import { PremiumNudge, PremiumOfferModal } from './src/ui/PremiumCard';
+import { ShopModal } from './src/ui/ShopSheet';
+import { milestoneOffer } from './src/monetization';
+import { addSeasonXp } from './src/season';
 import { applyHeritage, heritageOf, type Heritage } from './src/engine/dynasty';
 import { unlockCtx } from './src/engine/cosmetics';
 import { refreshUnlocks } from './src/cosmetics';
@@ -80,6 +94,7 @@ import { dayNumber } from './src/engine/daily';
 import { initAnalytics, track, trackScreen } from './src/analytics';
 
 readChallengeFromUrl();
+readGhostFromUrl();
 import { onNotificationOpen, rescheduleNotifications } from './src/notify';
 import { loadDaily } from './src/ui/DailyScreen';
 import { socialWelcome } from './src/engine/social';
@@ -103,6 +118,7 @@ const PHASE_LABELS: Record<Phase, string> = {
   gece: L("Gece Hayatı"),
   basarimlar: L("Başarımlar"),
   salon: L("Salonum"),
+  antrenor: L("Antrenör Modu"),
   album: L("Kart Albümü"),
   podcast: L("Podcast"),
   odul: L("Ödül Töreni"),
@@ -125,7 +141,7 @@ const PHASE_LABELS: Record<Phase, string> = {
   memleket: L("Memleketim"),
 };
 
-type View_ = 'loading' | 'menu' | 'create' | 'game' | 'daily' | 'locker';
+type View_ = 'loading' | 'menu' | 'create' | 'game' | 'daily' | 'dream' | 'ghost' | 'referee' | 'locker' | 'season';
 
 installErrorLog();
 installImmersive();
@@ -166,6 +182,7 @@ export default function App() {
     slotRef.current = x;
     setSlotState(x);
     setActiveSlot(x);
+    void loadCheckpoints(x);
   };
   const putSave = (x: Slot, g: GameState | null) => setSaves((cur) => cur.map((v, i) => (i === x - 1 ? g : v)));
   // act her zaman en güncel duruma bakar; gecikmeli çağrılar (ör. blackjack) eski durumu ezmesin.
@@ -193,6 +210,7 @@ export default function App() {
       slotRef.current = active;
       setSlotState(active);
       setGame(all[active - 1]);
+      void loadCheckpoints(active);
       // Meydan okuma bağlantısıyla gelindiyse ve bugünkü dövüş oynanmadıysa doğrudan Günün Dövüşü.
       const gun = dayNumber();
       setView(challengeFor(gun) && !loadDaily().kayit[gun] ? 'daily' : 'menu');
@@ -213,12 +231,40 @@ export default function App() {
       setTimeout(() => setHata(null), 4000);
       return;
     }
+    // Antrenör Modu: dövüşçü kariyerine ait başarım, olay, hedef ve tören kontrolleri çalışmaz
+    if (next.antrenor) {
+      setGame(next);
+      saveGame(next, slotRef.current);
+      putSave(slotRef.current, next);
+      return;
+    }
+    // Kilometre taşı teklifleri (her biri bir kez, yalnızca galibiyetten sonra ya da emeklilikte)
+    if (next.phase === 'hub' && cur.phase !== 'hub' && next.gecmis[0]?.sonuc === 'G' && next.gecmis.length > (cur.gecmis.length || 0) - 1) {
+      if (next.stage !== 'amator' && next.rekor.g >= 10) milestoneOffer('galibiyet10', 'yol_teklif_g10');
+      else if (next.stage === 'ufc') milestoneOffer('ucc', 'yol_teklif_ucc');
+    }
+    if (next.phase === 'emeklilik' && cur.phase !== 'emeklilik') milestoneOffer('emeklilik', 'yol_teklif_emekli', 1500);
     // Olaylar, sosyal medya, gece hayatı…: popülerlik değişimi takipçiye yansır (maç sonucu kendi hesabını yapar).
     if (!(cur.phase === 'dovus' && next.phase === 'dovusSonrasi') && next.populerlik !== cur.populerlik) popToFollowers(next, next.populerlik - cur.populerlik);
     // Kafes dışındaki başarımlar da (ev, araba, sevgili…) anında açılır.
     const yeni = next.phase === 'emeklilik' ? [] : checkAchievements(next);
     if (next.phase === 'emeklilik') challengeOnRetire(next);
     if (next.meydan?.durum === 'basarili') markChallenge(next.meydan.id);
+    // Sezon Kemeri puanı: oynanan maç (galibiyet, bitiriş) ve biten efsane bölümü
+    if (next.gecmis.length > cur.gecmis.length) {
+      const f = next.gecmis[0];
+      addSeasonXp('mac');
+      if (f.sonuc === 'G') {
+        addSeasonXp('galibiyet');
+        if (f.yontem === 'KO' || f.yontem === 'TKO' || f.yontem === 'SUB') addSeasonXp('bitiris');
+      }
+    }
+    if (next.efsane && cur.efsane?.id === next.efsane.id && next.efsane.bolum > cur.efsane.bolum) addSeasonXp('bolum', next.efsane.bolum - cur.efsane.bolum);
+    if (next.efsane) {
+      saveLegendBest(next.efsane.id, legendStars(next.efsane), !!next.efsane.bitti);
+      if (next.efsane.bolum > (cur.efsane?.bolum ?? 0)) track('legend_chapter', { efsane: next.efsane.id, bolum: next.efsane.bolum, yildiz: legendStars(next.efsane) });
+      if (next.phase === 'hub') noteCheckpoint(slotRef.current, next);
+    }
     if (next.phase === 'hub') {
       refreshStaleGoals(next);
       // Yeni yıla girildiyse ödül töreni
@@ -263,12 +309,14 @@ export default function App() {
   useEffect(() => {
     if (view !== 'menu') return;
     const g = saves[slotRef.current - 1];
-    void rescheduleNotifications(loadDaily(), g && g.phase !== 'emeklilik' ? g.fighter.lakap || g.fighter.ad : undefined);
+    const ch = g && g.phase !== 'emeklilik' ? currentChapter(g) : null;
+    void rescheduleNotifications(loadDaily(), g && g.phase !== 'emeklilik' ? g.fighter.lakap || g.fighter.ad : undefined, ch && g?.efsane ? { bolum: g.efsane.bolum + 1, baslik: ch.baslik() } : null);
   }, [view, saves]);
   useEffect(
     () =>
       onNotificationOpen((hedef) => {
         if (hedef === 'gunluk') setView('daily');
+        else if (hedef === 'hayali') setView('dream');
         else if (gameRef.current && gameRef.current.phase !== 'emeklilik') setView('game');
       }),
     [],
@@ -281,7 +329,7 @@ export default function App() {
   // Android geri tuşu: oyundan ve karakter oluşturmadan menüye döner; menüdeyse uygulamadan çıkar.
   useEffect(() => {
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
-      if (view === 'game' || view === 'create' || view === 'daily' || view === 'locker') {
+      if (view === 'game' || view === 'create' || view === 'daily' || view === 'dream' || view === 'ghost' || view === 'referee' || view === 'locker' || view === 'season') {
         setView('menu');
         return true;
       }
@@ -312,6 +360,30 @@ export default function App() {
         active={slot}
         onNew={(x) => newCareer(x)}
         onChallenge={(id, x) => newCareer(x, id)}
+        onLegend={(id, isim, x, deneme) => {
+          const s = createLegendGame(id, isim, deneme);
+          socialWelcome(s);
+          ensureGoals(s);
+          ensureEvent(s);
+          track('legend_start', { efsane: id, yuva: x, deneme });
+          setSlot(x);
+          clearCheckpoints(x);
+          noteCheckpoint(x, s);
+          setGame(s);
+          void deleteGame(x).then(() => saveGame(s, x));
+          putSave(x, s);
+          setView('game');
+        }}
+        onCoach={(isim, x, deneme) => {
+          const s = createCoachGame(isim, deneme);
+          track('coach_start', { yuva: x, deneme });
+          setSlot(x);
+          clearCheckpoints(x);
+          setGame(s);
+          void deleteGame(x).then(() => saveGame(s, x));
+          putSave(x, s);
+          setView('game');
+        }}
         onContinue={continueSlot}
         onDelete={removeSlot}
         onDaily={() => {
@@ -319,6 +391,22 @@ export default function App() {
           setView('daily');
         }}
         onLocker={() => setView('locker')}
+        onSeason={() => {
+          track('season_open');
+          setView('season');
+        }}
+        onDream={() => {
+          track('dream_fight_open');
+          setView('dream');
+        }}
+        onGhost={() => {
+          track('ghost_open');
+          setView('ghost');
+        }}
+        onReferee={() => {
+          track('referee_open');
+          setView('referee');
+        }}
         onImport={(x, g) => {
           void deleteGame(x).then(() => saveGame(g, x));
           putSave(x, g);
@@ -337,6 +425,14 @@ export default function App() {
     content = <LockerScreen look={g?.fighter.gorunum} onExit={() => setView('menu')} />;
   } else if (view === 'daily') {
     content = <DailyScreen onExit={() => setView('menu')} />;
+  } else if (view === 'dream') {
+    content = <DreamScreen onExit={() => setView('menu')} />;
+  } else if (view === 'ghost') {
+    content = <GhostScreen saves={saves} onExit={() => setView('menu')} />;
+  } else if (view === 'referee') {
+    content = <RefereeScreen onExit={() => setView('menu')} />;
+  } else if (view === 'season') {
+    content = <SeasonScreen look={(saves[slot - 1] ?? game)?.fighter.gorunum} onExit={() => setView('menu')} />;
   } else if (view === 'create') {
     content = (
       <CreateScreen
@@ -409,6 +505,9 @@ export default function App() {
         break;
       case 'salon':
         content = <GymScreen {...props} />;
+        break;
+      case 'antrenor':
+        content = <CoachScreen {...props} />;
         break;
       case 'album':
         content = <AlbumScreen {...props} />;
@@ -489,11 +588,14 @@ export default function App() {
     }
   }
 
-  const topLabel = view === 'locker' ? L("Dolap") : view === 'daily' ? L("Günün Dövüşü") : view === 'create' ? L("Karakter Oluşturma") : view === 'game' && game ? PHASE_LABELS[game.phase] : null;
+  const topLabel = view === 'locker' ? L("Dolap") : view === 'daily' ? L("Günün Dövüşü") : view === 'dream' ? L("Hayalî Maçlar") : view === 'ghost' ? L("Hayalet Maç") : view === 'referee' ? L("Hakem Modu") : view === 'season' ? L("Sezon Kemeri") : view === 'create' ? L("Karakter Oluşturma") : view === 'game' && game ? PHASE_LABELS[game.phase] : null;
 
   return (
     <SafeAreaProvider>
       <PremiumManager />
+      <PremiumOfferModal />
+      <ShopModal />
+      <PremiumNudge />
       <View style={{ flex: 1, backgroundColor: C.bg }}>
         {/* Tarayıcıda telefon genişliğinde ortalanır */}
         <View style={{ flex: 1, width: '100%', maxWidth: 560, alignSelf: 'center' }}>

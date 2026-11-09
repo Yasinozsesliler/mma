@@ -15,6 +15,7 @@ import { activeBelts, champLabel } from '../engine/legacy';
 import type { GameState } from '../engine/types';
 import { Belt } from './Belt';
 import { Button, Screen, SLANT } from './components';
+import { BeltOffer } from './PremiumCard';
 import { FighterAvatar } from './FighterAvatar';
 import type { Act } from './GameScreens';
 import { C, F } from './theme';
@@ -134,6 +135,7 @@ export function CelebrationScreen({ s, act }: { s: GameState; act: Act }) {
           {L("Profesyonel karne:")}{' '}{s.rekor.g}-{s.rekor.m}-{s.rekor.b} · {s.fighter.yas} {L("yaş")}
         </Text>
       </LinearGradient>
+      {k.org === 'ufc' && k.tur !== 'savunma' ? <BeltOffer /> : null}
     </Screen>
   );
 }

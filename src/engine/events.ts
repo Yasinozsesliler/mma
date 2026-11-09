@@ -1,5 +1,6 @@
 import { L, LOC } from '../i18n';
 import { addStat } from './character';
+import { ligAcik } from './amateurLeague';
 import { randomInjury } from './camp';
 import { AGENTS, JOURNALISTS } from './data';
 import { gymsFor } from './gyms';
@@ -30,6 +31,101 @@ const pop = (s: GameState, d: number) => (s.populerlik = clamp(s.populerlik + d,
 const BRANDS = [L("Kuvvet Protein"), L("Arslan Enerji İçeceği"), L("Kafes Giyim"), L("Nokta Bahis (!)"), L("Demir Spor Ekipmanları"), L("Yıldız Döner")];
 
 const EVENTS: Record<string, EventDef> = {
+  amKulup: {
+    kosul: (s) => ligAcik(s) && s.gecmis.length >= 1 && !s.amLig!.kulup,
+    agirlik: 6,
+    kur: () => ({
+      baslik: L("🥋 Hangi Kulüp?"),
+      metin: L("Şehir Ligi'nde adın duyuldu. Üç kulüp seni antrenmana çağırıyor. Yerin belli olsun, sonrası kolay."),
+      secenekler: [L("Mahalle salonu: herkes tanır"), L("Güreş kulübü: minderde ter"), L("Kick boks kulübü: ayakta keskinlik")],
+      params: {},
+    }),
+    uygula: (s, i) => {
+      s.amLig!.kulup = true;
+      if (i === 0) {
+        pop(s, 3);
+        return L("Mahalle arkana geçti. Popülerlik +3.");
+      }
+      const k = i === 1 ? 'gures' : 'vurus';
+      addStat(s.fighter.stats, k, 2);
+      return i === 1 ? L("Her gün minderdesin. Güreş +2.") : L("Eller hızlandı. Vuruş +2.");
+    },
+  },
+  amIs: {
+    kosul: (s) => ligAcik(s) && s.gecmis.length >= 2 && s.gecmis.length - (s.amLig!.isSon ?? -9) >= 4 && s.para < 2500,
+    agirlik: 3,
+    kur: () => ({
+      baslik: L("🧰 Yarı Zamanlı İş"),
+      metin: L("Amatörde para yok, fatura var. Bir tanıdık bu ay gece vardiyası öneriyor."),
+      secenekler: [L("Vardiyayı al: +$700, biraz yorgunluk"), L("Antrenmanda kal: +1 gelişim puanı")],
+      params: {},
+    }),
+    uygula: (s, i) => {
+      s.amLig!.isSon = s.gecmis.length;
+      if (i === 0) {
+        s.para += 700;
+        s.saglik = clamp(s.saglik - 6, 0, 100);
+        return L("Vardiyalar zor ama kasa doldu. +$700, sağlık -6.");
+      }
+      s.puan += 1;
+      return L("Salondan çıkmadın. +1 gelişim puanı.");
+    },
+  },
+  amMilli: {
+    kosul: (s) => ligAcik(s) && s.amLig!.basamak >= 1 && !s.amLig!.milli,
+    agirlik: 4,
+    kur: () => ({
+      baslik: L("🎽 Milli Takım Daveti"),
+      metin: L("Federasyon seni milli takım kampına çağırdı. Sert bir hafta, ama herkesin gözü üstünde olacak."),
+      secenekler: [L("Kampa git: popülerlik ve tecrübe"), L("Lige odaklan: dinlen")],
+      params: {},
+    }),
+    uygula: (s, i) => {
+      s.amLig!.milli = true;
+      if (i === 0) {
+        pop(s, 4);
+        addStat(s.fighter.stats, 'iq', 2);
+        s.saglik = clamp(s.saglik - 8, 0, 100);
+        return L("Forma sırtında! Popülerlik +4, IQ +2, sağlık -8.");
+      }
+      s.saglik = clamp(s.saglik + 8, 0, 100);
+      return L("Daveti kibarca geri çevirdin. Sağlık +8.");
+    },
+  },
+  amTarti: {
+    kosul: (s) => ligAcik(s) && s.gecmis.length >= 3 && !s.amLig!.tarti,
+    agirlik: 2,
+    kur: () => ({
+      baslik: L("⚖️ Lig Tartısı"),
+      metin: L("Lig hakemi habersiz tartı yaptı: 600 gram fazlan var. Saunaya mı girersin, cezayı mı ödersin?"),
+      secenekler: [L("Sauna: sağlık -5"), L("Ceza öde: -$200")],
+      params: {},
+    }),
+    uygula: (s, i) => {
+      s.amLig!.tarti = true;
+      if (i === 0) {
+        s.saglik = clamp(s.saglik - 5, 0, 100);
+        return L("Terledin ve kiloyu verdin. Sağlık -5.");
+      }
+      s.para -= 200;
+      return L("Cezayı ödedin, kiloyu da unutmadın. -$200.");
+    },
+  },
+  amGazete: {
+    kosul: (s) => ligAcik(s) && s.amator.g >= 2 && !s.amLig!.gazete,
+    agirlik: 2,
+    kur: () => ({
+      baslik: L("📰 Yerel Gazete"),
+      metin: L("Şehrin gazetesi seni yazmak istiyor. Fotoğrafçı kapıda."),
+      secenekler: [L("Kendinden emin konuş"), L("Alçakgönüllü kal")],
+      params: {},
+    }),
+    uygula: (s, i) => {
+      s.amLig!.gazete = true;
+      pop(s, i === 0 ? 3 : 2);
+      return i === 0 ? L("Manşet: \"Hedefim UCC.\" Popülerlik +3.") : L("Herkes seni sevdi. Popülerlik +2.");
+    },
+  },
   doping: {
     kosul: (s) => !dopingActive(s) && !banned(s) && s.para >= dopingCost(s),
     agirlik: 1.2,

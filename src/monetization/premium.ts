@@ -1,7 +1,17 @@
 // Satın alınan ürünler (tüm platformlar). Satın alma yerelde doğrulanır ve cihazda saklanır; mağazadan geri yüklenebilir.
 import { useSyncExternalStore } from 'react';
 import { getPref, setPref } from '../prefs';
-import { ADFREE_SKU, PREMIUM_SKU } from './skus';
+import { ADFREE_SKU, BUNDLE_SKU, DEAL_SKU, PREMIUM_SKU, ULTIMATE_SKU } from './skus';
+
+/** Tam Paket Fırsatı = Tam Paket; Tam Paket (Şampiyon + Koleksiyon) içerdiği ürünleri de verir (diğer kontroller değişmeden çalışsın). */
+const expand = (set: Set<string>) => {
+  if (set.has(DEAL_SKU)) set.add(ULTIMATE_SKU);
+  if (set.has(ULTIMATE_SKU)) {
+    set.add(PREMIUM_SKU);
+    set.add(BUNDLE_SKU);
+  }
+  return set;
+};
 
 const LEGACY_KEY = 'yol_premium';
 const KEY = 'yol_satinalim';
@@ -12,7 +22,7 @@ function load(): ReadonlySet<string> {
     for (const x of JSON.parse(getPref(KEY) || '[]') as string[]) set.add(x);
   } catch {}
   if (getPref(LEGACY_KEY) === '1') set.add(PREMIUM_SKU);
-  return set;
+  return expand(set);
 }
 
 let owned = load();
@@ -20,14 +30,16 @@ const subs = new Set<() => void>();
 
 export const owns = (sku: string) => owned.has(sku);
 export const isPremium = () => owned.has(PREMIUM_SKU);
+/** Tam Paket (ya da fırsat fiyatıyla alınmışı) sahibi mi? */
+export const hasAll = () => owned.has(ULTIMATE_SKU);
 /** Geçiş reklamları kapalı mı? (Şampiyon Paketi ya da Reklamsız Paket) */
 export const isAdFree = () => owned.has(PREMIUM_SKU) || owned.has(ADFREE_SKU);
 
 export function grant(sku: string) {
   if (owned.has(sku)) return;
-  owned = new Set([...owned, sku]);
+  owned = expand(new Set([...owned, sku]));
   setPref(KEY, JSON.stringify([...owned]));
-  if (sku === PREMIUM_SKU) setPref(LEGACY_KEY, '1');
+  if (owned.has(PREMIUM_SKU)) setPref(LEGACY_KEY, '1');
   subs.forEach((f) => f());
 }
 

@@ -33,14 +33,44 @@ const STYLE_WEIGHTS: [Background, number][] = [
 // Rakip gücünde oyuncunun payı: üst basamaklarda rakipler oyuncuya daha yakın (zirvede kolay maç olmaz).
 const PLAYER_W: Record<Stage, number> = { amator: 0.45, bolgesel: 0.45, buyuk: 0.5, ufc: 0.62 };
 // Şampiyonun fazladan gücü: bölgesel kemer ulaşılabilir bir sınav, UCC kemeri en zoru.
-const CHAMP_BONUS: Record<Stage, number> = { amator: 12, bolgesel: 11, buyuk: 16, ufc: 19 };
+const CHAMP_BONUS: Record<Stage, number> = { amator: 12, bolgesel: 11, buyuk: 18, ufc: 19 };
+const AM_ZOR = [7, 12, 16];
+// Amatör Ligi'nden daha güçlü gelen oyuncu için bölgesel basamak da denk kalsın.
+const AM_SONRASI_BOLGESEL = 6;
 
 /** Oyuncunun referans gücü: kariyerindeki en yüksek güç. Yaşlanan oyuncuya göre rakipler zayıflamaz. */
 export function refPower(s: GameState) {
   const pa = statAverage(s.fighter.stats);
-  if (pa > (s.zirveGuc ?? 0)) s.zirveGuc = pa;
+  if (pa > (s.zirveGuc ?? 0)) {
+    s.zirveGuc = pa;
+    s.zirveStats = { ...s.fighter.stats };
+  }
   return Math.max(pa, s.zirveGuc ?? 0);
 }
+
+/** Tek yanını fulleyen oyuncu: en güçlü istatistiği ortalamasının çok üstündeyse rakipler o ölçüde sert gelir. */
+export function specBonus(s: GameState) {
+  const st = s.fighter.stats;
+  const top = Math.max(...STAT_KEYS.map((k) => st[k]));
+  return Math.max(0, top - statAverage(st) - 10) * 0.2;
+}
+
+/** Form: uzun galibiyet serisinde rakipler hafifçe sertleşir, üst üste yenilgide hafifçe yumuşar (hissettirmeden). */
+export function formBonus(s: GameState) {
+  let w = 0;
+  let l = 0;
+  for (const h of s.gecmis) {
+    if (h.sonuc === 'G' && !l) w++;
+    else if (h.sonuc === 'M' && !w) l++;
+    else break;
+  }
+  if (w >= 4) return Math.min(3, (w - 3) * 0.75);
+  if (l >= 2) return -Math.min(3.5, (l - 1) * 1.5);
+  return 0;
+}
+
+/** Kemer savunması: her savunmada sıradaki nesil biraz daha güçlü gelir (kemeri almak bir sınav, tutmak başka). */
+export const defenseBonus = (s: GameState, org: OrgId) => (s.sampiyon && currentOrg(s) === org ? Math.min(6, (s.savunma ?? 0) * 1.2) : 0);
 
 /** Bu basamaktaki rakibin hedef gücü (rastgelelik olmadan). Sıralamadaki dövüşçüler de buna doğru gelişir. */
 export function targetLevel(s: GameState, org: OrgId, zorluk: number, rank: number | null, champion: boolean) {
@@ -49,13 +79,16 @@ export function targetLevel(s: GameState, org: OrgId, zorluk: number, rank: numb
   const L = ORGS[org].merdiven;
   if (rank != null && L > 0) tb += ((L - rank) / L) * 14;
   if (champion) tb += CHAMP_BONUS[stage];
+  // Amatör Ligi: ilk iki maç tanışma, sonra basamak basamak sertleşir.
+  if (org === 'amator' && s.amLig && !s.efsane && !s.meydan) tb += s.gecmis.length < 2 ? 0 : AM_ZOR[s.amLig.basamak] ?? 0;
+  if (stage === 'bolgesel' && s.amLig && !s.efsane && !s.meydan) tb += AM_SONRASI_BOLGESEL;
   const w = PLAYER_W[stage];
   const ref = refPower(s);
   // Oyuncu güçlendikçe rakipler de güçlenir: rekabet hep canlı kalır.
   let lvl = tb * (1 - w) + ref * w;
   // UCC dünyanın zirvesi: oyuncu ne kadar güçlenirse güçlensin sıralamanın üstü ve şampiyon ona denk kalır.
-  if (stage === 'ufc') lvl = Math.max(lvl, champion ? ref + 5.5 : rank != null && L > 0 ? ref - 1.5 + ((L - rank) / L) * 3 : ref - 3);
-  return lvl - 2.5 + zorluk * 5 + diffOf(s).rakip;
+  if (stage === 'ufc') lvl = Math.max(lvl, champion ? ref + 6.5 : rank != null && L > 0 ? ref - 1.5 + ((L - rank) / L) * 3 : ref - 3);
+  return lvl - 2.5 + zorluk * 5 + diffOf(s).rakip + specBonus(s) + formBonus(s) + defenseBonus(s, org);
 }
 
 function levelFor(s: GameState, org: OrgId, zorluk: number, rank: number | null, champion: boolean) {
@@ -79,16 +112,18 @@ function recordFor(org: OrgId, rank: number | null, champion: boolean) {
   };
 }
 
-/** Bu kariyerde kullanılmış isimler: aynı isimli iki farklı rakip çıkmasın. */
+/** Bu kariyerde kullanılmış isimler: aynı isim, soyad ya da lakapla yeni rakip çıkmasın (havuz biterse yalnızca tam isim korunur). */
 function usedNames(s: GameState, extra: Opponent[] = []) {
+  const known = [...s.rakipler, ...(s.bolum?.liste ?? []), ...(s.bolum?.sampiyon ? [s.bolum.sampiyon] : []), ...(s.amLig?.liste ?? []), ...extra];
   const names = new Set(s.gecmis.map((h) => h.rakip));
-  s.rakipler.forEach((r) => names.add(`${r.ad} ${r.soyad}`));
-  extra.forEach((r) => names.add(`${r.ad} ${r.soyad}`));
-  const nicks = new Set([...s.rakipler, ...extra].map((r) => r.lakap));
+  known.forEach((r) => names.add(`${r.ad} ${r.soyad}`));
+  const surnames = new Set([...names].map((n) => n.split(' ').pop()));
+  const nicks = new Set(known.map((r) => r.lakap));
+  s.gecmis.forEach((h) => h.rakipLakap && nicks.add(h.rakipLakap));
   // Rakip, oyuncunun kendi lakabını ve ezeli rakibin lakabını taşımasın.
   if (s.fighter.lakap) nicks.add(s.fighter.lakap);
   if (s.ezeli) nicks.add(s.ezeli.lakap);
-  return { names, nicks };
+  return { names, surnames, nicks };
 }
 
 export function generateOpponent(
@@ -105,12 +140,12 @@ export function generateOpponent(
   const nameOf = (p: (typeof NAME_POOLS)[number]) => ({ ad: pick(kadin ? p.kadin : p.ad), soyad: kadin && p.slav ? femSurname(pick(p.soyad)) : pick(p.soyad) });
   let pool = pick(NAME_POOLS);
   let { ad, soyad } = nameOf(pool);
-  for (let i = 0; i < 30 && used.names.has(`${ad} ${soyad}`); i++) {
+  for (let i = 0; i < 60 && (used.names.has(`${ad} ${soyad}`) || (i < 40 && used.surnames.has(soyad))); i++) {
     pool = pick(NAME_POOLS);
     ({ ad, soyad } = nameOf(pool));
   }
   let lakap = pick(NICKNAMES);
-  for (let i = 0; i < 10 && used.nicks.has(lakap); i++) lakap = pick(NICKNAMES);
+  for (let i = 0; i < 40 && used.nicks.has(lakap); i++) lakap = pick(NICKNAMES);
   let stil = weighted(STYLE_WEIGHTS);
   let uyruk = pool.ulke;
   // UCC: kadrodaki yıldızlar (şampiyon ve üst sıralar en tanınmışlar)

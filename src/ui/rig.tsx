@@ -107,7 +107,7 @@ function Head({ c, ang, look, skin, ref, hasar = 0 }: { c: { x: number; y: numbe
       {/* Kulak */}
       <Ellipse cx={c.x - 3} cy={c.y + 1} rx={2} ry={2.8} fill={dark} />
       {/* Saç */}
-      {s === 'kisa' || s === 'topuz' || s === 'uzun' || s === 'orgu' || s === 'atkuyrugu' ? <Path d={L("M{0} {1} q1 -11 10 -10.5 q6 1 7 6 q-7 -3 -13 1 q-1 1 -4 3.5 z", [c.x - 8.4, c.y - 1])} fill={hair} /> : null}
+      {s === 'kisa' || s === 'yanayrik' || s === 'topuz' || s === 'uzun' || s === 'orgu' || s === 'atkuyrugu' ? <Path d={L("M{0} {1} q1 -11 10 -10.5 q6 1 7 6 q-7 -3 -13 1 q-1 1 -4 3.5 z", [c.x - 8.4, c.y - 1])} fill={hair} /> : null}
       {s === 'kazik' ? <Path d={L("M{0} {1} q1 -9 9.5 -9.3 q6 0.5 7 5 q-8 -2 -16.5 4.3 z", [c.x - 8.2, c.y - 2])} fill={hair} opacity={0.55} /> : null}
       {s === 'mohawk' ? <Path d={L("M{0} {1} q5 -9 12 -4 l-2 3 q-5 -3 -10 1 z", [c.x - 6, c.y - 6])} fill={hair} /> : null}
       {/* Kaş, göz, burun */}
@@ -181,8 +181,8 @@ export function Figure({ p, look, kit, hasar = 0 }: { p: Pose; look: Appearance;
       <Glove at={j.wrR} dir={p.aR1 + p.aR2} color={shade(kit.glove, -25)} bare={ref || kit.bare} skin={skinD} />
 
       {/* Gövde */}
-      <Path d={torsoPath} fill={shade(ref ? '#15161a' : skin, -70)} opacity={0.5} transform="translate(0.6 0.6)" />
-      <Path d={torsoPath} fill={ref ? '#15161a' : `url(#${gT})`} />
+      <Path d={torsoPath} fill={shade(ref ? kit.shorts : skin, -70)} opacity={0.5} transform="translate(0.6 0.6)" />
+      <Path d={torsoPath} fill={ref ? kit.shorts : `url(#${gT})`} />
       <Path d={backPath} fill={ref ? '#000' : skinD} opacity={ref ? 0.4 : 0.55} />
       {!ref ? (
         <>
@@ -234,7 +234,7 @@ export function Figure({ p, look, kit, hasar = 0 }: { p: Pose; look: Appearance;
           <Line x1={pt(shortsTop, 9).x} y1={pt(shortsTop, 9).y + 3} x2={pt(shortsTop, -9).x} y2={pt(shortsTop, -9).y + 3} stroke={kit.trim} strokeWidth={1.2} opacity={0.8} />
         </>
       ) : null}
-      <Limb a={j.shL} b={j.elL} w={8} color={ref ? '#15161a' : armC} />
+      <Limb a={j.shL} b={j.elL} w={8} color={ref ? kit.shorts : armC} />
       {!ref && look.dovmeler?.includes('kol') ? (
         <Line x1={j.shL.x + (j.elL.x - j.shL.x) * 0.2} y1={j.shL.y + (j.elL.y - j.shL.y) * 0.2} x2={j.shL.x + (j.elL.x - j.shL.x) * 0.85} y2={j.shL.y + (j.elL.y - j.shL.y) * 0.85} stroke="#1d1d1d" strokeWidth={2.6} strokeDasharray="2 1.5" opacity={0.5} />
       ) : null}

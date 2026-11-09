@@ -1,6 +1,6 @@
 // Kendi salonun: salonu aç / büyüt, öğrenci yetiştir, maçlarında köşede dur.
 import { LinearGradient } from 'expo-linear-gradient';
-import { useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { announce } from '../announcer';
 import { sfx } from '../audio';
@@ -12,7 +12,10 @@ import {
   CORNER_CALLS,
   boutPlans,
   describeStyle,
-  finishBout,
+  cornerCall,
+  OPP_TIPS,
+  temperOf,
+  TEMPERS,
   GYM_LEVELS,
   gymLevel,
   gymName,
@@ -38,19 +41,20 @@ import { fmtFollowers, followers } from '../engine/fame';
 import { WEIGHT_CLASSES } from '../engine/data';
 import { PLANS } from '../engine/fight';
 import { lookFor } from '../engine/tale';
-import type { GameState, PlanKey } from '../engine/types';
+import type { FightState, GameState, PlanKey } from '../engine/types';
 import { buzz } from '../haptics';
 import { L, LOC } from '../i18n';
 import { Bar, Button, Card, Choice, Icon, P, Pill, Screen, Section, SLANT, type IconName } from './components';
+import { CageView } from './CageView';
 import { FighterAvatar } from './FighterAvatar';
 import type { Act } from './GameScreens';
 import { C, F, R } from './theme';
 
-const TIER_COLOR = { amator: C.dim, bolgesel: C.blue, buyuk: C.orange, ucc: C.gold } as const;
+export const TIER_COLOR = { amator: C.dim, bolgesel: C.blue, buyuk: C.orange, ucc: C.gold } as const;
 
-const studentLook = (x: Student) => lookFor({ id: x.id, uyruk: x.uyruk, kadin: x.kadin });
+export const studentLook = (x: Pick<Student, 'id' | 'uyruk' | 'kadin'>) => lookFor({ id: x.id, uyruk: x.uyruk, kadin: x.kadin });
 
-function Stars({ n, of = 5, color = C.gold }: { n: number; of?: number; color?: string }) {
+export function Stars({ n, of = 5, color = C.gold }: { n: number; of?: number; color?: string }) {
   return (
     <View style={{ flexDirection: 'row', gap: 1 }}>
       {Array.from({ length: of }, (_, i) => (
@@ -120,12 +124,12 @@ function OpenGym({ s, act }: { s: GameState; act: Act }) {
 
 // ---------- Öğrenci kartı ----------
 
-function StudentCard({ st, onRelease }: { st: Student; onRelease?: () => void }) {
+export function StudentCard({ st, onRelease, extra, onOpen }: { st: Student; onRelease?: () => void; extra?: ReactNode; onOpen?: () => void }) {
   const [sure, setSure] = useState(false);
   const pw = power(st.stats);
   return (
     <View style={gy.student}>
-      <View style={gy.row}>
+      <Pressable disabled={!onOpen} onPress={onOpen} style={gy.row}>
         <FighterAvatar look={studentLook(st)} size={50} ring={TIER_COLOR[st.seviye]} />
         <View style={{ flex: 1 }}>
           <Text style={gy.nick}>“{st.lakap.toLocaleUpperCase(LOC)}”</Text>
@@ -142,7 +146,8 @@ function StudentCard({ st, onRelease }: { st: Student; onRelease?: () => void })
             {st.rekor.g}-{st.rekor.m}-{st.rekor.b}
           </Text>
         </View>
-      </View>
+        {onOpen ? <Icon name="chevron-right" size={20} color={C.faint} /> : null}
+      </Pressable>
       <Bar value={pw} color={C.green} label={L("GÜÇ {0}", [pw])} />
       <View style={[gy.row, { justifyContent: 'space-between', marginTop: 2 }]}>
         <View style={[gy.row, { gap: 6 }]}>
@@ -154,6 +159,7 @@ function StudentCard({ st, onRelease }: { st: Student; onRelease?: () => void })
         </Text>
       </View>
       <Bar value={st.moral} color={st.moral < 30 ? C.red : st.moral < 60 ? C.orange : C.blue} label={L("MORAL")} />
+      {extra}
       {onRelease ? (
         sure ? (
           <View style={[gy.row, { gap: 8, marginTop: 6 }]}>
@@ -176,27 +182,82 @@ function StudentCard({ st, onRelease }: { st: Student; onRelease?: () => void })
 
 // ---------- Köşede dur ----------
 
-type BoutView = { st: Student; rakip: NonNullable<Student['mac']>['rakip']; plans: PlanKey[] };
+export type BoutView = { st: Student; rakip: NonNullable<Student['mac']>['rakip']; plans: PlanKey[] };
 
-function BoutModal({ s, view, act, onClose }: { s: GameState; view: BoutView; act: Act; onClose: () => void }) {
+const RED_KIT = { shorts: '#b5121b', trim: '#ffffff', glove: '#c1121f' };
+const methodCode = (y: string) => (y === L("Submission") ? 'SUB' : y === L("Karar") ? 'UD' : y === 'KO' ? 'KO' : 'TKO');
+
+/** Köşe ekranında son rauntun kafes sahnesi: satırlar sırayla oynar, sonunda raunt arası ya da maçın sonu. */
+function CornerCage({ st, rakipAd, rakipLook, lines, raunt, hasar, rHasar, end }: { st: Student; rakipAd: string; rakipLook: ReturnType<typeof lookFor>; lines: string[]; raunt: number; hasar: number; rHasar: number; end?: { kazandi: boolean; yontem: string } }) {
+  const [shown, setShown] = useState(0);
+  useEffect(() => {
+    if (shown >= lines.length) return;
+    const t = setTimeout(() => setShown((n) => n + 1), 850);
+    return () => clearTimeout(t);
+  }, [shown, lines.length]);
+  const done = shown >= lines.length;
+  const fs = {
+    pAd: st.soyad,
+    oAd: rakipAd,
+    raunt,
+    pHasar: hasar,
+    oHasar: rHasar,
+    log: lines,
+    durum: done ? (end ? 'bitti' : 'rauntSonu') : 'canli',
+    kritik: null,
+    subAdi: '',
+    sonuc: end ? { kazanan: end.kazandi ? 'p' : 'o', yontem: methodCode(end.yontem) } : undefined,
+  } as unknown as FightState;
+  return (
+    <View>
+      <CageView fs={fs} shown={shown} pLook={studentLook(st)} oLook={rakipLook} pKitOverride={RED_KIT} noReplay />
+      {!done ? (
+        <View style={gy.cageLog}>
+          <Text style={gy.cageLine} numberOfLines={2}>
+            {lines[Math.max(0, shown - 1)] ?? ''}
+          </Text>
+          <Pressable onPress={() => setShown(lines.length)} hitSlop={8}>
+            <Text style={gy.link}>{L("Hızlı geç")}</Text>
+          </Pressable>
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
+function Side({ label, sag, hasar }: { label: string; sag: number; hasar: number }) {
+  return (
+    <View style={{ flex: 1, gap: 2 }}>
+      <Text style={gy.sideLabel}>{label}</Text>
+      <Bar value={sag} color={sag < 35 ? C.orange : C.blue} label={L("NEFES")} />
+      <Bar value={hasar} color={C.red} label={L("HASAR")} />
+    </View>
+  );
+}
+
+export function BoutModal({ s, view, act, onClose }: { s: GameState; view: BoutView; act: Act; onClose: () => void }) {
   const { st, rakip, plans } = view;
   const live = s.salon?.ogrenciler.find((x) => x.id === st.id);
-  const r1 = live?.mac?.r1;
+  const b = live?.mac;
+  const k = b?.kose;
   const [out, setOut] = useState<BoutOutcome | null>(null);
-  const step = out ? 'sonuc' : r1 ? 'kose' : 'plan';
+  const step = out ? 'sonuc' : k ? 'kose' : 'plan';
   const rakipLook = lookFor({ id: st.id + rakip.soyad, uyruk: rakip.uyruk, kadin: rakip.kadin });
+  const temper = temperOf(live ?? st);
 
-  const finish = (call: CornerCall) => {
-    const box: { r: BoutOutcome | null } = { r: null };
-    act((x) => {
-      box.r = finishBout(x, st.id, call);
-    });
-    const res = box.r;
+  const done = (res: BoutOutcome | null) => {
     if (!res) return;
     setOut(res);
     sfx(res.kazandi ? 'win' : 'lose');
     buzz(res.kazandi ? 'basari' : 'hata');
     if (res.kazandi) void announce(L("Kazanan… {0}!", [`${st.ad}, "${st.lakap}", ${st.soyad}`]));
+  };
+  const call = (c: CornerCall) => {
+    const box: { r: BoutOutcome | null } = { r: null };
+    act((x) => {
+      box.r = cornerCall(x, st.id, c);
+    });
+    done(box.r);
   };
 
   return (
@@ -226,27 +287,57 @@ function BoutModal({ s, view, act, onClose }: { s: GameState; view: BoutView; ac
           </View>
           <Text style={gy.tier}>{TIERS[st.seviye].ad.toLocaleUpperCase(LOC)} · {WEIGHT_CLASSES[st.siklet].ad.toLocaleUpperCase(LOC)}</Text>
 
+          {step === 'kose' && k?.anim?.length ? (
+            <CornerCage key={`${st.id}-${k.rauntlar.length}`} st={st} rakipAd={rakip.soyad} rakipLook={rakipLook} lines={k.anim} raunt={k.rauntlar.length} hasar={k.hasar} rHasar={k.rHasar} end={k.bitis ? { kazandi: k.bitis.kazandi, yontem: k.bitis.yontem } : undefined} />
+          ) : null}
+          {out?.anim?.length ? <CornerCage key={`${st.id}-son`} st={st} rakipAd={rakip.soyad} rakipLook={rakipLook} lines={out.anim} raunt={out.rauntlar?.length ?? 1} hasar={0} rHasar={0} end={{ kazandi: out.kazandi, yontem: out.yontem }} /> : null}
           {step === 'plan' ? (
             <>
               <Card accent={C.blue}>
                 <Text style={gy.cardKicker}>{L("KEŞİF RAPORU")}</Text>
                 <Text style={gy.cardText}>{describeStyle(rakip)}</Text>
+                {b?.tipRapor ? <Text style={[gy.cardText, gy.divider]}>{L("Eski maçlarına bakılırsa: {0}", [OPP_TIPS[b.tipRapor]()])}</Text> : null}
+                <Text style={[gy.cardText, gy.divider]}>{L("{0}: {1}", [L("Öğrencin"), `${TEMPERS[temper].ad()} · ${TEMPERS[temper].aciklama()}`])}</Text>
               </Card>
               <Text style={gy.q}>{L("Oyun planını sen belirle:")}</Text>
               {plans.map((p) => (
                 <Choice key={p} icon={PLANS[p].ikon as IconName} label={PLANS[p].ad} desc={PLANS[p].aciklama} tone="gold" onPress={() => act((x) => startBout(x, st.id, p))} />
               ))}
             </>
-          ) : step === 'kose' && r1 ? (
+          ) : step === 'kose' && k ? (
             <>
-              <Card accent={r1.onde ? C.green : C.red}>
-                <Text style={gy.cardKicker}>{L("RAUNT ARASI")}</Text>
-                <Text style={gy.cardText}>{r1.metin}</Text>
+              <View style={gy.rounds}>
+                {Array.from({ length: k.toplam }, (_, i) => {
+                  const r = k.rauntlar[i];
+                  return (
+                    <View key={i} style={[gy.roundDot, r != null && { backgroundColor: r > 0 ? '#12351f' : '#3a1216', borderColor: r > 0 ? C.green : C.red }]}>
+                      <Text style={[gy.roundNo, r != null && { color: r > 0 ? C.green : C.red }]}>{r == null ? i + 1 : r > 0 ? '✓' : '✗'}</Text>
+                    </View>
+                  );
+                })}
+              </View>
+              <View style={{ flexDirection: 'row', gap: 12 }}>
+                <Side label={st.soyad.toLocaleUpperCase(LOC)} sag={k.sag} hasar={k.hasar} />
+                <Side label={rakip.soyad.toLocaleUpperCase(LOC)} sag={k.rSag} hasar={k.rHasar} />
+              </View>
+              <Card accent={k.rauntlar[k.rauntlar.length - 1] > 0 ? C.green : C.red}>
+                <Text style={gy.cardKicker}>{k.bitis ? L("MAÇ BİTTİ") : L("RAUNT ARASI · {0}/{1}", [k.rauntlar.length, k.toplam])}</Text>
+                {k.metin.split('\n').map((l, i) => (
+                  <Text key={i} style={[gy.cardText, i > 0 && gy.divider]}>
+                    {l}
+                  </Text>
+                ))}
               </Card>
-              <Text style={gy.q}>{L("{0} köşede sana bakıyor. Talimatın ne?", [st.ad])}</Text>
-              {(Object.keys(CORNER_CALLS) as CornerCall[]).map((c) => (
-                <Choice key={c} icon={CORNER_CALLS[c].ikon as IconName} label={CORNER_CALLS[c].ad} desc={CORNER_CALLS[c].aciklama} onPress={() => finish(c)} />
-              ))}
+              {k.bitis ? (
+                <Button label={L("Sonucu gör")} icon="flag-checkered" tone="gold" onPress={() => call('sakin')} />
+              ) : (
+                <>
+                  <Text style={gy.q}>{L("{0} köşede sana bakıyor. Talimatın ne?", [st.ad])}</Text>
+                  {k.secenek.map((c) => (
+                    <Choice key={c} icon={CORNER_CALLS[c].ikon as IconName} label={CORNER_CALLS[c].ad} desc={CORNER_CALLS[c].aciklama} onPress={() => call(c)} />
+                  ))}
+                </>
+              )}
             </>
           ) : out ? (
             <>
@@ -274,7 +365,7 @@ function BoutModal({ s, view, act, onClose }: { s: GameState; view: BoutView; ac
 
 // ---------- Salon sıralaması ----------
 
-function RankTable({ rows, sira, puan }: { rows: RankRow[]; sira: number; puan: number }) {
+export function RankTable({ rows, sira, puan }: { rows: RankRow[]; sira: number; puan: number }) {
   const [all, setAll] = useState(false);
   // Kısa görünüm: ilk 5 ve senin çevren (bir üst, bir alt).
   const show = all ? rows.map((_, i) => i) : [...new Set([0, 1, 2, 3, 4, sira - 2, sira - 1, sira].filter((i) => i >= 0 && i < rows.length))].sort((a, b) => a - b);
@@ -315,20 +406,18 @@ function RankTable({ rows, sira, puan }: { rows: RankRow[]; sira: number; puan: 
 
 // ---------- Salon ----------
 
-export function GymScreen({ s, act }: { s: GameState; act: Act }) {
+/** Antrenör Modu aynı ekranı kullanır: üst bölüm, alt çubuk ve öğrenci kartı ekleri dışarıdan gelir. */
+export function GymScreen({ s, act, top, footer, studentExtra }: { s: GameState; act: Act; top?: ReactNode; footer?: ReactNode; studentExtra?: (st: Student) => ReactNode }) {
   const [bout, setBout] = useState<BoutView | null>(null);
   const g = s.salon;
   if (!g) return <OpenGym s={s} act={act} />;
   const lv = gymLevel(g);
-  const next = GYM_LEVELS[g.seviye];
   const net = weeklyGymNet(g);
-  const full = g.ogrenciler.length >= lv.kapasite;
   const bouts = g.ogrenciler.filter((x) => x.mac);
-  const yeniAday = Math.max(0, 8 - (s.hafta - (g.adaylar?.hafta ?? s.hafta)));
   const rank = gymRanking(s);
 
   return (
-    <Screen footer={<Button label={L("Ana ekrana dön")} icon="arrow-left" tone="ghost" onPress={() => act((x) => (x.phase = 'hub'))} />}>
+    <Screen footer={footer ?? <Button label={L("Ana ekrana dön")} icon="arrow-left" tone="ghost" onPress={() => act((x) => (x.phase = 'hub'))} />}>
       <LinearGradient colors={['#2a1d06', '#0e0c07', '#08090b']} style={gy.hero}>
         <Text style={gy.kicker}>{lv.ad.toLocaleUpperCase(LOC)}</Text>
         <Text style={[gy.title, SLANT]} numberOfLines={2} adjustsFontSizeToFit>
@@ -355,6 +444,8 @@ export function GymScreen({ s, act }: { s: GameState; act: Act }) {
           </Text>
         ) : null}
       </LinearGradient>
+
+      {top}
 
       {bouts.length ? (
         <>
@@ -385,11 +476,30 @@ export function GymScreen({ s, act }: { s: GameState; act: Act }) {
 
       <Section>{L("ÖĞRENCİLER ({0}/{1})", [g.ogrenciler.length, lv.kapasite])}</Section>
       {g.ogrenciler.length ? (
-        g.ogrenciler.map((st) => <StudentCard key={st.id} st={{ ...st, macHafta: st.macHafta - s.hafta }} onRelease={() => act((x) => releaseStudent(x, st.id))} />)
+        g.ogrenciler.map((st) => <StudentCard key={st.id} st={{ ...st, macHafta: st.macHafta - s.hafta }} onRelease={() => act((x) => releaseStudent(x, st.id))} extra={studentExtra?.(st)} />)
       ) : (
         <P dim>{L("Henüz öğrencin yok. Aşağıdaki yetenek avından ilk öğrencini seç.")}</P>
       )}
 
+      <Scouting s={s} act={act} />
+      <GymUpgrade s={s} act={act} />
+      <RecentBouts s={s} />
+
+      {bout ? <BoutModal s={s} view={bout} act={act} onClose={() => setBout(null)} /> : null}
+    </Screen>
+  );
+}
+
+
+// ---------- Yetenek avı, salonu büyütme, son maçlar (Antrenör Modu da kullanır) ----------
+
+export function Scouting({ s, act }: { s: GameState; act: Act }) {
+  const g = s.salon!;
+  const lv = gymLevel(g);
+  const full = g.ogrenciler.length >= lv.kapasite;
+  const yeniAday = Math.max(0, 8 - (s.hafta - (g.adaylar?.hafta ?? s.hafta)));
+  return (
+    <>
       <Section>{L("YETENEK AVI")}</Section>
       {full ? <P dim>{L("Salon dolu. Daha fazla öğrenci için salonu büyüt.")}</P> : null}
       {(g.adaylar?.list ?? []).map((c) => {
@@ -420,6 +530,16 @@ export function GymScreen({ s, act }: { s: GameState; act: Act }) {
       })}
       <Text style={gy.hint}>{L("Yıldızlar hocanın gözüyle potansiyel. Yeni adaylar {0} hafta sonra.", [yeniAday])}</Text>
 
+    </>
+  );
+}
+
+export function GymUpgrade({ s, act }: { s: GameState; act: Act }) {
+  const g = s.salon!;
+  const lv = gymLevel(g);
+  const next = GYM_LEVELS[g.seviye];
+  return (
+    <>
       {next ? (
         <>
           <Section>{L("SALONU BÜYÜT")}</Section>
@@ -431,6 +551,14 @@ export function GymScreen({ s, act }: { s: GameState; act: Act }) {
         </>
       ) : null}
 
+    </>
+  );
+}
+
+export function RecentBouts({ s }: { s: GameState }) {
+  const g = s.salon!;
+  return (
+    <>
       {g.sonuclar.length ? (
         <>
           <Section>{L("SON MAÇLAR")}</Section>
@@ -445,8 +573,7 @@ export function GymScreen({ s, act }: { s: GameState; act: Act }) {
         </>
       ) : null}
 
-      {bout ? <BoutModal s={s} view={bout} act={act} onClose={() => setBout(null)} /> : null}
-    </Screen>
+    </>
   );
 }
 
@@ -474,6 +601,8 @@ const gy = StyleSheet.create({
   boutTitle: { color: C.text, fontFamily: F.display, fontSize: 16 },
   boutBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: C.gold, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8 },
   boutBtnText: { color: '#1f1605', fontFamily: F.display, fontSize: 12, letterSpacing: 1 },
+  cageLog: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: -4, marginBottom: 4 },
+  cageLine: { flex: 1, color: C.dim, fontFamily: F.body, fontSize: 12.5, lineHeight: 17 },
   rankPill: { flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1, borderColor: C.goldDeep, borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4, marginTop: 4 },
   rankPillText: { color: C.gold, fontFamily: F.display, fontSize: 11, letterSpacing: 1 },
   table: { backgroundColor: C.card, borderRadius: R, borderWidth: 1, borderColor: C.border, padding: 8, marginBottom: 4 },
@@ -494,6 +623,10 @@ const gy = StyleSheet.create({
   cardText: { color: C.text, fontFamily: F.body, fontSize: 14, lineHeight: 20, paddingVertical: 4 },
   divider: { borderTopWidth: 1, borderTopColor: C.border },
   q: { color: C.text, fontFamily: F.display, fontSize: 16, marginTop: 4 },
+  rounds: { flexDirection: 'row', justifyContent: 'center', gap: 8 },
+  roundDot: { width: 34, height: 34, borderRadius: 17, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center', backgroundColor: '#0d0f13' },
+  roundNo: { color: C.faint, fontFamily: F.display, fontSize: 14 },
+  sideLabel: { color: C.dim, fontFamily: F.display, fontSize: 11, letterSpacing: 1 },
   result: { borderRadius: R + 4, padding: 18, alignItems: 'center' },
   resultTitle: { fontFamily: F.display, fontSize: 40 },
 });

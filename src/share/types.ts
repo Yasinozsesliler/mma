@@ -18,6 +18,8 @@ export type ShareCardData = {
   alt: string;
   look?: Appearance;
   kemer?: { org: OrgId; siklet: WeightClass };
+  /** Kart şablonu (Şampiyon Paketi şablonları; yoksa klasik) */
+  tema?: import('./themes').CardThemeId;
   /** Paylaşım menüsünde gönderiye eklenecek metin */
   mesaj: string;
   /** Kafespedia kartı: giriş paragrafı ve bilgi kutusu satırları */

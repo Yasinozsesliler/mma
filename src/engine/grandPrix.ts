@@ -1,6 +1,7 @@
 // Yükseliş Grand Prix'i: amatörde 2. maçtan sonra (kariyerde bir kez) gelen 8 kişilik eleme turnuvası (çeyrek final,
 // yarı final, final). Profesyonelliğe giden yolda vitrin: şampiyon ve finalist doğrudan profesyonel teklif alır.
 // Oyuncunun maçları normal dövüş akışında oynanır; diğer eşleşmeler güç ortalamasına göre simüle edilir.
+import { gpKapisi, ligAcik } from './amateurLeague';
 import { L as tL, LOC } from '../i18n';
 import { currentOrg, statAverage } from './character';
 import { ORGS, WEIGHT_CLASSES } from './data';
@@ -35,13 +36,13 @@ const YUKSELIS_ODUL = 5000;
 
 export const ROUND_NAME = () => [tL("ÇEYREK FİNAL"), tL("YARI FİNAL"), tL("FİNAL")];
 
-/** Dövüşten sonra: amatörde 2. maçtan sonra Yükseliş Grand Prix'i daveti (kariyerde bir kez; davet bir maç geçerli). */
+/** Dövüşten sonra: amatörde (Amatör Ligi'nde ilk madalyadan, eski kayıtlarda 2. maçtan) sonra Yükseliş Grand Prix'i daveti (kariyerde bir kez; davet bir maç geçerli). */
 export function maybeGpInvite(s: GameState) {
   if (s.gp && !s.gp.bitti) return;
   if (s.gpDavet && s.gpDavet.dovus === s.gecmis.length) return;
   s.gpDavet = undefined;
   if (s.stage !== 'amator' || s.gpTeklif || s.gpSon != null) return;
-  if (s.amator.g + s.amator.m + s.amator.b < 2) return;
+  if (ligAcik(s) ? !gpKapisi(s) : s.amator.g + s.amator.m + s.amator.b < 2) return;
   s.gpTeklif = true;
   s.gpDavet = { dovus: s.gecmis.length, odul: YUKSELIS_ODUL };
   s.haberler.unshift(tL("🏆 Yükseliş Grand Prix'i daveti geldi! 8 amatör, tek kupa: şampiyon ve finalist profesyonel kapıyı açar."));

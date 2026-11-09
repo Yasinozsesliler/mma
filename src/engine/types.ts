@@ -35,7 +35,7 @@ export type Stage = 'amator' | 'bolgesel' | 'buyuk' | 'ufc';
 
 export interface Appearance {
   ten: number; // SKIN_TONES indeksi
-  sac: 'kazik' | 'kisa' | 'mohawk' | 'uzun' | 'topuz' | 'afro' | 'orgu' | 'kel' | 'atkuyrugu';
+  sac: 'kazik' | 'kisa' | 'mohawk' | 'uzun' | 'topuz' | 'afro' | 'orgu' | 'kel' | 'atkuyrugu' | 'yanayrik';
   sacRenk: number;
   goz: number;
   sakal: 'yok' | 'kirli' | 'tam' | 'keci' | 'biyik';
@@ -89,6 +89,9 @@ export interface Opponent {
   sehir?: string;
   /** Memlekette ana maç (hometown.ts) */
   memleket?: boolean;
+  /** Amatör Ligi: tablodaki sıra ve final maçı (amateurLeague.ts) */
+  ligSira?: number;
+  amFinal?: boolean;
   id: string;
   ad: string;
   soyad: string;
@@ -104,6 +107,8 @@ export interface Opponent {
   rivalry: number;
   karsilasma: number;
   kadin?: boolean;
+  /** Hazır görünüm (efsaneler); yoksa id'den üretilir */
+  gorunum?: Appearance;
   /** Oyuncunun kaçıncı dövüşünde en son karşılaştılar (tekrarı sınırlamak için) */
   sonDovus?: number;
   stage?: Stage;
@@ -216,6 +221,12 @@ export interface NightBout {
   sure: string;
   /** Gecenin Performansı için puan */
   puan: number;
+  /** Tahmin kartı bilgisi: karneler, tarzlar ve A'nın kazanma olasılığı (eski kayıtlarda yok) */
+  ra?: string;
+  rb?: string;
+  sa?: Background;
+  sb?: Background;
+  pa?: number;
 }
 export interface FightNight {
   ad: string;
@@ -227,11 +238,15 @@ export interface FightNight {
   sonra: NightBout[];
   seyirci: number;
   yaris?: { aday: string; adayYontem: string; adayPuan: number; benim: number; kazandi: boolean };
+  /** Oyuncunun tahminleri: maç anahtarı → seçilen köşe ve bitiriş mi */
+  tahmin?: Record<string, { k: 0 | 1; bit?: boolean }>;
+  tahminSonuc?: { dogru: number; yontem: number; toplam: number; para: number; kahin: boolean; /** Ödüllü reklamla ikiye katlandı */ katlandi?: boolean };
 }
 
 export interface FightHistory {
   rakip: string;
   rakipId?: string;
+  rakipLakap?: string;
   org: OrgId;
   sonuc: 'G' | 'M' | 'B';
   yontem: string;
@@ -264,6 +279,9 @@ export interface CampState {
   /** Basın toplantısı sahnesi (pressConf.ts) ve iddialı söz sayısı */
   basinSahne?: import('./pressConf').PressScene;
   iddia?: number;
+  /** Efsane Yolu: tarihî basın sözü tutturuldu; viral klip (reklam) alındı */
+  efsaneSoz?: boolean;
+  viral?: boolean;
   step: 'basinsahne' | 'hoca' | 'planla' | 'sure' | 'takvim' | 'yer' | 'focus' | 'plan' | 'intensity' | 'kilo' | 'basin' | 'haftalik' | 'sakatlik' | 'ozet' | 'tarti' | 'yuzyuze' | 'duello' | 'kesim';
   pKilo?: number;
   oKilo?: number;
@@ -273,6 +291,8 @@ export interface CampState {
   rakipHamle?: string;
   /** Face to face sonucu: animasyon ve kimin üstün geldiği */
   yuzyuzeSonuc?: { anim: string; kazanan: 'p' | 'o' | null; baslik: string; etkiler: string[] };
+  /** İki turlu face-off: ilk turun sonucu (rakip karşılık verince ikinci tur gelir) */
+  yuzyuzeIlk?: { metin: string; baslik: string; kazanan: 'p' | 'o' | null; etkiler: string[]; anim: string };
   yer?: string;
   hafta: number;
   focus?: StatKey;
@@ -294,6 +314,8 @@ export interface CampState {
   hypeLog?: string[];
   belgesel?: boolean;
   ozet: string[];
+  /** Rakip analizi: rakip son maçlarını izleyip senin silahına karşı çalıştı (scouting.ts) */
+  analiz?: { silah: 'gures' | 'vurus'; v: number; metin: string };
   tartiMetni?: string;
   sakatlik?: Injury;
   kisaHaber?: boolean;
@@ -418,6 +440,8 @@ export interface FightState {
   oyuncuTaktikGecmisi?: Tactic[];
   /** Bu raunt için okunma cezası (0 = yok). */
   okunma?: number;
+  /** Oyuncunun bu maçtaki takedown denemesi (arttıkça rakip çözer). */
+  tdDeneme?: number;
   taktikBasari: Partial<Record<Tactic, number>>;
   log: string[];
   /** Maçın öne çıkan anları (bütün rauntlar; maç sonu "en iyi 3 an") */
@@ -465,6 +489,8 @@ export interface GameEventState {
 export interface PostFight {
   /** Ödüllü sponsor reklam çekiminden kazanılan (bir kez) */
   reklamCekimi?: number;
+  /** Ödüllü galibiyet priminden kazanılan (yalnızca galibiyette, bir kez) */
+  galibiyetPrimi?: number;
   satirlar: string[];
   roportajSecenekleri: string[];
   roportaj?: { id: string; text: string }[];
@@ -521,6 +547,7 @@ export type Phase =
   | 'gece'
   | 'basarimlar'
   | 'salon'
+  | 'antrenor'
   | 'album'
   | 'podcast'
   | 'odul'
@@ -757,6 +784,10 @@ export interface GameState {
   acilanlar?: string[];
   /** Kariyerdeki en yüksek ortalama güç: rakipler buna göre seçilir, yaşlanınca rakipler de zayıflamaz. */
   zirveGuc?: number;
+  /** Son maçlarda hangi silaha yaslandığı (0-1); rakipler buna göre kamp yapar (scouting.ts) */
+  tarz?: { gures: number; vurus: number };
+  /** Zirve gücüne ulaşıldığı andaki istatistikler (Efsanelerim için) */
+  zirveStats?: Stats;
   /** İlan edilen veda maçı (35 yaş sonrası); oynanınca emeklilik gelir. */
   veda?: import('./farewell').Farewell;
   /** Bu hafta izlenen hikâyeler (sosyal medya ana sayfası) */
@@ -779,6 +810,14 @@ export interface GameState {
   /** Canlı yayın (stream.ts) */
   yayin?: import('./stream').Stream;
   yayinSon?: number;
+  /** Efsane Yolu hikâye modu (legendRun.ts) */
+  efsane?: import('./legendRun').LegendRun;
+  /** Amatör Ligi (amateurLeague.ts). Eski kayıtlarda yok: eski kural geçerli */
+  amLig?: import('./amateurLeague').AmatorLig;
+  /** Son görülen soru/olay kimlikleri (variety.ts; tekrar önleme) */
+  tekrar?: Record<string, string[]>;
+  /** Antrenör Modu kariyeri (coachMode.ts) */
+  antrenor?: import('./coachMode').CoachRun;
   /** Zorluk seviyesi ve meydan okuma modu (challenges.ts) */
   zorluk?: import('./challenges').Difficulty;
   meydan?: import('./challenges').Challenge;
@@ -803,6 +842,8 @@ export interface GameState {
   seri: number; // + galibiyet serisi, - mağlubiyet serisi
   orgMaglubiyet: number;
   reddedilen: number;
+  /** Bir önceki teklifteki rakipler: aynı isimler üst üste gösterilmesin */
+  sonTeklif?: string[];
   motivasyon: number; // -2..+2, bir sonraki kampı etkiler
   trashTalk: boolean;
   kisaHaber: boolean;

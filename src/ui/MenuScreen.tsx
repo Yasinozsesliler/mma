@@ -1,10 +1,19 @@
 import { L, LOC } from '../i18n';
 import { ChallengeList } from './ChallengeList';
+import { LegendList, useLegendUnlocked, type LegendName } from './LegendScreens';
+import { takeLegendRequest } from '../legendNav';
+import { MyLegendLink } from './StudioScreen';
+import { SeasonBanner } from './SeasonScreen';
+import { loadDream } from './DreamScreen';
+import { pendingGhost, useGhosts } from '../ghost';
+import { albumProgress, triesLeft } from '../engine/dreamFight';
+import { LEGEND_IDS, LEGENDS, type LegendId } from '../engine/legendRun';
+import { useLegendBest } from '../legendPrefs';
 import type { ChallengeId } from '../engine/challenges';
 import { useCosmetics, useFrame } from '../cosmetics';
 import { ExportButton } from './CareerTransfer';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Defs, Ellipse, LinearGradient as SvgLinear, Polygon, RadialGradient, Stop } from 'react-native-svg';
@@ -15,12 +24,18 @@ import { loadDaily } from './DailyScreen';
 import { STAGE_LABELS } from '../engine/career';
 import { WEIGHT_CLASSES } from '../engine/data';
 import { slotsFor, type Slot } from '../storage';
-import { PremiumCard } from './PremiumCard';
+import { PremiumCard, SlotsFullOffer } from './PremiumCard';
 import { SettingsSheet } from './SettingsSheet';
-import { usePremium } from '../monetization';
+import { COACH_STORE, REF_STORE, LEGENDS_STORE, maybeStartWelcome, milestoneOffer, openOffer, PURCHASES, usePremium, usePrice } from '../monetization';
+import { DEAL_SKU } from '../monetization/skus';
+import { careerFights } from '../engine/rewards';
+import { DealPopup } from './ShopSheet';
+import { useSeason } from '../season';
+import { seasonDaysLeft, seasonRewards, tierOf } from '../engine/season';
+import { CoachStart } from './CoachScreen';
 import { FighterAvatar } from './FighterAvatar';
 import { BACKGROUNDS } from '../engine/data';
-import type { Background, GameState } from '../engine/types';
+import type { Appearance, Background, GameState } from '../engine/types';
 import { Button, Card, Icon, Logo, Pill, Screen, Section, SLANT, upName, type IconName } from './components';
 import { useOfflineStatus } from './offline';
 import { C, F, R } from './theme';
@@ -108,14 +123,25 @@ function SlotCard({ n, save, active, onNew, onContinue, onDelete, onDynasty }: {
           <Text style={[ms.slotName, SLANT]} numberOfLines={1}>
             {upName(`${f.ad} ${f.soyad}`, f.uyruk)}
           </Text>
-          <Text style={ms.slotMeta} numberOfLines={1}>
-            {f.yas} {L("yaş ·")}{' '}{WEIGHT_CLASSES[f.siklet].ad} · {STAGE_LABELS[save.stage].replace(/^Aşama \d · /, '')}
-          </Text>
-          <Text style={ms.slotRec}>
-            {pro ? '' : L("Amatör ")}
-            {r.g}-{r.m}-{r.b}
-            {belts ? `  ·  🏆 ${belts}` : ''}
-          </Text>
+          {save.antrenor ? (
+            <>
+              <Text style={ms.slotMeta} numberOfLines={1}>
+                {L("🧢 Antrenör · {0}", [save.salon?.ad ?? ''])}
+              </Text>
+              <Text style={ms.slotRec}>{L("Seviye {0} · {1} öğrenci{2}", [save.antrenor.seviye, save.salon?.ogrenciler.length ?? 0, save.antrenor.oduller.length ? `  ·  🏆 ${save.antrenor.oduller.length}` : ''])}</Text>
+            </>
+          ) : (
+            <>
+              <Text style={ms.slotMeta} numberOfLines={1}>
+                {f.yas} {L("yaş ·")}{' '}{WEIGHT_CLASSES[f.siklet].ad} · {STAGE_LABELS[save.stage].replace(/^Aşama \d · /, '')}
+              </Text>
+              <Text style={ms.slotRec}>
+                {pro ? '' : L("Amatör ")}
+                {r.g}-{r.m}-{r.b}
+                {belts ? `  ·  🏆 ${belts}` : ''}
+              </Text>
+            </>
+          )}
         </View>
       </View>
       {sure ? (
@@ -155,11 +181,60 @@ function SlotCard({ n, save, active, onNew, onContinue, onDelete, onDynasty }: {
           </Pressable>
         </View>
       )}
+      {retired && !sure ? <MyLegendLink s={save} /> : null}
     </LinearGradient>
   );
 }
 
-type Sheet = 'ayarlar' | 'meydan' | 'rehber' | null;
+type Sheet = 'ayarlar' | 'meydan' | 'efsane' | 'rehber' | 'antrenor' | null;
+
+/** Menünün üstündeki efsane vitrini: yüzler yan yana, dokununca o efsanenin ayrıntısı açılır. */
+function LegendShowcase({ onOpen }: { onOpen: (id?: LegendId) => void }) {
+  const best = useLegendBest();
+  const unlocked = useLegendUnlocked();
+  const total = Object.values(best).reduce((a, b) => a + b.yildiz, 0);
+  const chapters = LEGEND_IDS.reduce((n, id) => n + LEGENDS[id].bolumler.length, 0);
+  return (
+    <View style={ms.show}>
+      <Pressable onPress={() => onOpen()} style={ms.showHead} hitSlop={6}>
+        <Icon name="book-open-variant" size={16} color={C.gold} />
+        <Text style={[ms.showTitle, SLANT]}>{L("Efsane Yolları").toLocaleUpperCase(LOC)}</Text>
+        <Text style={ms.showMeta}>{L("{0} hikâye · {1} bölüm", [LEGEND_IDS.length, chapters])}</Text>
+        {total ? <Text style={ms.showStars}>{total}★</Text> : null}
+        <Icon name="chevron-right" size={18} color={C.faint} />
+      </Pressable>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={ms.showRow}>
+        {LEGEND_IDS.map((id) => {
+          const d = LEGENDS[id];
+          const b = best[id];
+          const open = unlocked(id);
+          return (
+            <Pressable key={id} onPress={() => onOpen(id)} style={({ pressed }) => [ms.lgCard, { borderColor: pressed ? d.renk : d.renk + '55' }]}>
+              <LinearGradient colors={[d.renk + '30', '#0c0d10']} style={ms.lgIn}>
+                <FighterAvatar look={d.gorunum} size={64} ring={d.renk} />
+                <Text style={[ms.lgName, SLANT]} numberOfLines={1}>
+                  {upName(d.soyad, d.uyruk)}
+                </Text>
+                <Text style={[ms.lgNick, { color: d.renk }]} numberOfLines={1}>
+                  {d.lakap()}
+                </Text>
+                {b ? (
+                  <Text style={ms.lgBadge}>{b.bitti ? '✅ ' : ''}{L("{0}/{1}★", [b.yildiz, d.bolumler.length * 3])}</Text>
+                ) : d.ucretsiz ? (
+                  <Text style={[ms.lgBadge, { color: C.green }]}>{L("ÜCRETSİZ")}</Text>
+                ) : !open ? (
+                  <Text style={ms.lgBadge}>{LEGENDS_STORE ? L("1. BÖLÜM ÜCRETSİZ") : L("👑 TAM SÜRÜM")}</Text>
+                ) : (
+                  <Text style={ms.lgBadge}>{L("{0} bölüm", [d.bolumler.length])}</Text>
+                )}
+              </LinearGradient>
+            </Pressable>
+          );
+        })}
+      </ScrollView>
+    </View>
+  );
+}
 
 /** Alttan açılan pencere: ayarlar, meydan okumalar ve rehber ana ekranı kalabalıklaştırmasın. */
 function MenuSheet({ title, icon, onClose, children }: { title: string; icon: IconName; onClose: () => void; children: ReactNode }) {
@@ -209,9 +284,15 @@ export function MenuScreen({
   active,
   onNew,
   onChallenge,
+  onLegend,
+  onCoach,
   onContinue,
   onDelete,
   onDaily,
+  onDream,
+  onGhost,
+  onReferee,
+  onSeason,
   onDynasty,
   onLocker,
   onImport,
@@ -220,20 +301,44 @@ export function MenuScreen({
   active: Slot;
   onNew: (slot: Slot) => void;
   onChallenge: (id: ChallengeId, slot: Slot) => void;
+  onLegend: (id: LegendId, isim: LegendName, slot: Slot, deneme: boolean) => void;
+  onCoach: (isim: { ad: string; soyad: string; lakap: string; uyruk: string; gorunum?: Appearance }, slot: Slot, deneme: boolean) => void;
   onContinue: (slot: Slot) => void;
   onDelete: (slot: Slot) => void;
   onDynasty: (slot: Slot) => void;
   onDaily: () => void;
+  onDream: () => void;
+  onGhost: () => void;
+  onReferee: () => void;
+  onSeason: () => void;
   onLocker: () => void;
   onImport: (slot: Slot, g: GameState) => void;
 }) {
   const any = saves.some(Boolean);
   const [open, setOpen] = useState<number | null>(any ? null : 0);
-  const [sheet, setSheet] = useState<Sheet>(null);
+  // Hayalî Maçlar'dan "bu efsanenin hikâyesi" isteği: menü Efsane Yolları açık gelir
+  const [req] = useState(takeLegendRequest);
+  const [sheet, setSheet] = useState<Sheet>(req ? 'efsane' : null);
+  const [legendOpen, setLegendOpen] = useState<LegendId | undefined>(req && req !== true ? req : undefined);
+  const openLegends = (id?: LegendId) => {
+    setLegendOpen(id);
+    setSheet('efsane');
+  };
   const off = useOfflineStatus();
   const cur = saves[active - 1];
   const canContinue = !!cur && cur.phase !== 'emeklilik';
   const premium = usePremium();
+  // Sezonun son 3 günü: Şampiyon sırasında alınabilecek ödül varsa sezon başına bir kez hatırlat
+  const season = useSeason();
+  useEffect(() => {
+    if (premium || seasonDaysLeft() > 3) return;
+    const t = tierOf(season.xp);
+    if (seasonRewards(season.idx).some((r) => r.pro && r.basamak <= t && !season.alinan.includes(r.id))) milestoneOffer('sezon', `yol_teklif_sezon_${season.idx}`, 1200);
+  }, [premium, season]);
+  // Hoş Geldin Fırsatı: 3. maçtan sonra 72 saat, bir kez (fırsat ürünü mağazada varsa)
+  const dealReady = !!usePrice(DEAL_SKU);
+  const fights = cur && !cur.antrenor ? careerFights(cur) : 0;
+  useEffect(() => maybeStartWelcome(fights, dealReady), [fights, dealReady]);
   const SLOTS = slotsFor(premium);
   const firstEmpty = SLOTS.find((x) => !saves[x - 1]);
   const yeniKoz = useCosmetics().yeni.length;
@@ -242,6 +347,10 @@ export function MenuScreen({
   const gun = dayNumber();
   const daily = loadDaily();
   const seri = liveStreak(daily, gun);
+  const dream = loadDream();
+  const ghostCount = useGhosts().length;
+  const dreamLeft = triesLeft(dream, gun) > 0;
+  const dreamProg = albumProgress(dream);
   // Dolu yuvalar (son oynanan önde), boşlar küçük "yeni kariyer" düğmesi olarak
   const filled = SLOTS.filter((x) => saves[x - 1]).sort((x, y) => (x === active ? -1 : y === active ? 1 : x - y));
   const empty = SLOTS.filter((x) => !saves[x - 1]);
@@ -297,6 +406,8 @@ export function MenuScreen({
         ) : null}
       </View>
 
+      <LegendShowcase onOpen={openLegends} />
+
       {/* Kariyerler */}
       {filled.length ? <Section>{L("KARİYERLERİN")}</Section> : null}
       {filled.map((x) => (
@@ -310,6 +421,17 @@ export function MenuScreen({
           <Text style={[ms.intro, { color: C.text, fontFamily: F.bold, marginBottom: 0 }]}>{L("Bu senin hikâyen. Her yumruk, her karar, her hata senin.")}</Text>
         </LinearGradient>
       ) : null}
+      {!any ? (
+        <Pressable onPress={() => openLegends('kral')} style={({ pressed }) => [ms.firstLegend, pressed && { borderColor: C.gold }]}>
+          <FighterAvatar look={LEGENDS.kral.gorunum} size={44} ring={LEGENDS.kral.renk} />
+          <View style={{ flex: 1 }}>
+            <Text style={ms.firstTitle}>{L("Ya da bir efsaneyi yaşa")}</Text>
+            <Text style={ms.firstSub}>{L("{0}: Dublin'den çifte şampiyonluğa, rehberli 9 bölüm. Ücretsiz.", [`${LEGENDS.kral.ad} ${LEGENDS.kral.soyad}`])}</Text>
+          </View>
+          <Icon name="chevron-right" size={20} color={C.gold} />
+        </Pressable>
+      ) : null}
+      {!firstEmpty ? <SlotsFullOffer /> : null}
       {empty.length && any ? (
         <View style={ms.newRow}>
           {empty.map((x) => (
@@ -320,9 +442,21 @@ export function MenuScreen({
           ))}
         </View>
       ) : null}
+      {/* Şampiyon Paketi'nin 4. ve 5. yuvası: kilitli olarak görünür, dokununca teklif açılır */}
+      {any && !premium && PURCHASES ? (
+        <View style={ms.newRow}>
+          {[4, 5].map((x) => (
+            <Pressable key={x} onPress={() => openOffer('yuva5', true)} style={({ pressed }) => [ms.newChip, ms.lockChip, pressed && { borderColor: C.gold }]}>
+              <Icon name="lock" size={14} color={C.goldDeep} />
+              <Text style={[ms.newChipText, { color: C.dim }]}>{L("Yuva {0} · 👑 Şampiyon", [x])}</Text>
+            </Pressable>
+          ))}
+        </View>
+      ) : null}
 
       {/* Modlar */}
       <Section>{L("OYUN MODLARI")}</Section>
+      <SeasonBanner onPress={onSeason} />
       {/* Meydan okumalar: geniş afiş, ilerleme çubuğu ve son kategoriler */}
       <Pressable onPress={() => setSheet('meydan')} style={({ pressed }) => [ms.chBanner, pressed && { transform: [{ scale: 0.99 }], borderColor: C.red }]}>
         <LinearGradient colors={['#3a0b14', '#160a0d', '#0c0d10']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={ms.chIn}>
@@ -356,11 +490,30 @@ export function MenuScreen({
           badge={seri ? `🔥 ${seri}` : undefined}
           onPress={onDaily}
         />
+        <ModeTile
+          icon="star-four-points"
+          color={C.gold}
+          title={L("Hayalî Maçlar")}
+          sub={dreamLeft ? L("Bugünün efsane eşleşmesi seni bekliyor") : L("Bugün oynandı · yarın yeni eşleşme")}
+          badge={L("📒 {0}/{1}", [dreamProg.got, dreamProg.max])}
+          onPress={onDream}
+        />
+        <ModeTile
+          icon="ghost"
+          color={C.blue}
+          title={L("Hayalet Maç")}
+          sub={pendingGhost() ? L("Bir arkadaşın sana meydan okudu!") : L("Arkadaşının dövüşçüsüyle kapış, kodunu paylaş")}
+          badge={pendingGhost() ? L("YENİ") : ghostCount ? `👻 ${ghostCount}` : L("YENİ")}
+          onPress={onGhost}
+        />
+        {REF_STORE ? <ModeTile icon="hand-back-left" color={C.red} title={L("Hakem Modu")} sub={L("Kafesin içindeki karar senin: durdur, devam ettir, puanla")} badge={L("YENİ")} onPress={onReferee} /> : null}
+        {COACH_STORE ? <ModeTile icon="whistle" color={C.blue} title={L("Antrenör Modu")} sub={L("Bu sefer hoca sensin: salonunu kur, şampiyon yetiştir")} badge={L("YENİ")} onPress={() => setSheet('antrenor')} /> : null}
         <ModeTile icon="hanger" color={C.gold} title={L("Dolap")} sub={L("Şort, eldiven, çerçeve, kemer ve giriş müziği")} badge={yeniKoz ? L("{0} YENİ", [yeniKoz]) : undefined} onPress={onLocker} />
         <ModeTile icon="book-open-variant" color={C.blue} title={L("Rehber")} sub={L("Nasıl oynanır, gelişim, branşlar")} onPress={() => setSheet('rehber')} />
       </View>
 
       <PremiumCard />
+      <DealPopup />
 
       {sheet === 'meydan' ? (
         <MenuSheet title={L("Meydan Okumalar")} icon="sword-cross" onClose={() => setSheet(null)}>
@@ -369,6 +522,31 @@ export function MenuScreen({
             onStart={(id) => {
               setSheet(null);
               if (firstEmpty) onChallenge(id, firstEmpty);
+            }}
+          />
+        </MenuSheet>
+      ) : null}
+
+      {sheet === 'antrenor' ? (
+        <MenuSheet title={L("Antrenör Modu")} icon="whistle" onClose={() => setSheet(null)}>
+          <CoachStart
+            canStart={!!firstEmpty}
+            onStart={(isim, deneme) => {
+              setSheet(null);
+              if (firstEmpty) onCoach(isim, firstEmpty, deneme);
+            }}
+          />
+        </MenuSheet>
+      ) : null}
+
+      {sheet === 'efsane' ? (
+        <MenuSheet title={L("Efsane Yolları")} icon="book-open-variant" onClose={() => setSheet(null)}>
+          <LegendList
+            canStart={!!firstEmpty}
+            initial={legendOpen}
+            onStart={(id, isim, deneme) => {
+              setSheet(null);
+              if (firstEmpty) onLegend(id, isim, firstEmpty, deneme);
             }}
           />
         </MenuSheet>
@@ -431,9 +609,24 @@ const ms = StyleSheet.create({
   hero: { alignItems: 'center', paddingTop: 30, paddingBottom: 22, paddingHorizontal: 16, marginHorizontal: -16, marginTop: -16, marginBottom: 8, overflow: 'hidden' },
   heroLine: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 1, backgroundColor: C.gold + '55' },
   gear: { position: 'absolute', top: 14, right: 16, width: 40, height: 40, borderRadius: 20, borderWidth: 1, borderColor: '#ffffff22', backgroundColor: '#00000055', alignItems: 'center', justifyContent: 'center' },
+  show: { marginTop: 4, marginBottom: 8 },
+  showHead: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 },
+  showTitle: { color: C.gold, fontFamily: F.display, fontSize: 16, letterSpacing: 0.6 },
+  showMeta: { color: C.faint, fontFamily: F.medium, fontSize: 11, flex: 1 },
+  showStars: { color: C.gold, fontFamily: F.display, fontSize: 13 },
+  showRow: { gap: 8, paddingRight: 4 },
+  lgCard: { width: 112, borderRadius: 14, borderWidth: 1, overflow: 'hidden' },
+  lgIn: { alignItems: 'center', paddingVertical: 10, paddingHorizontal: 6, gap: 2 },
+  lgName: { color: C.text, fontFamily: F.display, fontSize: 14, marginTop: 6, maxWidth: '100%' },
+  lgNick: { fontFamily: F.semi, fontSize: 10.5, maxWidth: '100%' },
+  lgBadge: { color: C.gold, fontFamily: F.semi, fontSize: 9.5, letterSpacing: 0.5, marginTop: 4, textAlign: 'center' },
+  firstLegend: { flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 1, borderColor: C.gold + '66', borderRadius: 14, padding: 12, marginBottom: 8, backgroundColor: '#15110a' },
+  firstTitle: { color: C.gold, fontFamily: F.bold, fontSize: 14 },
+  firstSub: { color: C.dim, fontFamily: F.body, fontSize: 12, lineHeight: 16, marginTop: 2 },
   story: { borderRadius: 14, borderWidth: 1, borderColor: C.goldDeep, padding: 14, marginTop: 6, marginBottom: 6 },
   newRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 6 },
   newChip: { flexGrow: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderWidth: 1, borderStyle: 'dashed', borderColor: '#4a4d55', borderRadius: 12, paddingVertical: 12, paddingHorizontal: 12, backgroundColor: '#0a0b0d' },
+  lockChip: { borderStyle: 'dashed', borderColor: '#4a3810' },
   newChipText: { color: C.text, fontFamily: F.display, fontSize: 13, letterSpacing: 0.8 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 12 },
   chBanner: { borderRadius: 16, borderWidth: 1, borderColor: '#4a1a22', overflow: 'hidden', marginBottom: 10 },
@@ -445,6 +638,7 @@ const ms = StyleSheet.create({
   chFill: { height: '100%', backgroundColor: C.gold, borderRadius: 3 },
   chCount: { color: C.gold, fontFamily: F.display, fontSize: 22 },
   chCountAll: { color: C.faint, fontSize: 13 },
+  newBadge: { color: '#111', backgroundColor: C.gold, fontFamily: F.semi, fontSize: 9, letterSpacing: 1, borderRadius: 5, paddingHorizontal: 5, paddingVertical: 1, overflow: 'hidden' },
   tile: { width: '48%', flexGrow: 1, borderRadius: 14, borderWidth: 1, overflow: 'hidden' },
   tileIn: { padding: 12, minHeight: 124, gap: 4 },
   tileTop: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 6 },

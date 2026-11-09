@@ -305,7 +305,7 @@ export function FightScreen({ s, act }: { s: GameState; act: Act }) {
           {fs.durum !== 'bitti' && shown <= 1 ? <RoundBanner key={fs.raunt} raunt={fs.raunt} max={fs.maxRaunt} /> : null}
         </View>
       )}
-      {intro && kulis ? <FightNightIntro s={s} onDone={() => setKulis(false)} /> : null}
+      {intro && kulis ? <FightNightIntro s={s} onDone={() => setKulis(false)} onPredict={(p) => act((x) => x.pending.gece && (x.pending.gece.tahmin = p))} /> : null}
       {intro && !kulis ? <WalkoutScene s={s} onDone={() => setIntro(false)} /> : null}
       {fresh ? <CoachTip s={s} act={act} id="dovus" /> : null}
       {!fresh ? <Momentum fs={view} shown={shown} logLen={fs.log.length} /> : null}

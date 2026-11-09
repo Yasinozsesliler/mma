@@ -1,7 +1,9 @@
 import { L, LOC } from '../i18n';
 import { askReview } from '../review';
-import { maybeInterstitial } from '../monetization';
-import { adShootAmount, careerFights, claimAdShoot } from '../engine/rewards';
+import { maybeInterstitial, maybeStartWelcome, noteInterstitialShown, usePrice } from '../monetization';
+import { DEAL_SKU } from '../monetization/skus';
+import { DealPopup } from './ShopSheet';
+import { adShootAmount, canWinBonus, careerFights, claimAdShoot, claimWinBonus, winBonusAmount } from '../engine/rewards';
 import { AdOffer } from './AdOffer';
 import { FullVersionNudge } from './PremiumCard';
 import { NightResults } from './FightNight';
@@ -152,6 +154,7 @@ export function PostFightScreen({ s, act }: { s: GameState; act: Act }) {
             {key === 'win' && !s.kutlama ? <ShareButton data={winCard(s)} label={L("Zaferini paylaş")} /> : null}
             <Button label={s.kutlama ? L("Kutlamaya geç") : L("Devam")} icon={s.kutlama ? 'trophy' : 'arrow-right'} tone={s.kutlama || key === 'win' ? 'gold' : 'red'} onPress={async () => {
                 const reklam = await maybeInterstitial(careerFights(s), key === 'loss');
+                if (reklam) noteInterstitialShown();
                 act(continueAfterPost);
                 // Mutlu an: en az 3 maçlık galibiyet serisi (reklamın hemen ardından değil).
                 if (!reklam && key === 'win' && !s.kutlama && s.seri >= 3 && careerFights(s) >= 6) void askReview();
@@ -222,6 +225,12 @@ export function PostFightScreen({ s, act }: { s: GameState; act: Act }) {
         </View>
       ) : null}
 
+      {/* Galibiyet primi: yalnızca galibiyette, bir kez (ödüllü reklam; Şampiyon Paketi'nde anında) */}
+      {canWinBonus(s) ? (
+        <AdOffer icon="cash-plus" title={L("Galibiyet primi")} desc={L("Organizasyon bu geceki performansını ödüllendiriyor: +{0}", [money(winBonusAmount(s))])} onReward={() => act((x) => void claimWinBonus(x))} />
+      ) : null}
+      {ps.galibiyetPrimi ? <Text style={pf.shootDone}>{L("💰 Galibiyet primi: +{0}", [money(ps.galibiyetPrimi)])}</Text> : null}
+
       {/* Röportaj: gecenin tek kararı, hemen sonucun altında */}
       {ps.roportajSonucu ? (
         <LinearGradient colors={['#1a1509', '#0d0d10']} style={pf.micDone}>
@@ -250,6 +259,7 @@ export function PostFightScreen({ s, act }: { s: GameState; act: Act }) {
       )}
 
       {ps.roportajSonucu ? <FullVersionNudge /> : null}
+      {ps.roportajSonucu && key === 'win' ? <WelcomeDeal fights={careerFights(s)} /> : null}
 
       {ps.roportajSonucu && s.puan > 0 ? (
         gelisim ? (
@@ -274,7 +284,7 @@ export function PostFightScreen({ s, act }: { s: GameState; act: Act }) {
       ) : null}
       {ps.reklamCekimi ? <Text style={pf.shootDone}>{L("🎬 Reklam çekimi: +{0}", [money(ps.reklamCekimi)])}</Text> : null}
 
-      {ps.roportajSonucu ? <NightResults s={s} /> : null}
+      {ps.roportajSonucu ? <NightResults s={s} act={act} /> : null}
 
       {rows.length ? (
         <>
@@ -358,3 +368,10 @@ const pf = StyleSheet.create({
   quoteMark: { fontFamily: F.display, fontSize: 28, lineHeight: 30, marginTop: -2 },
   quoteText: { flex: 1, color: C.text, fontFamily: F.medium, fontSize: 14, lineHeight: 20, fontStyle: 'italic' },
 });
+
+/** Galibiyetten sonra: 3. maçla Hoş Geldin Fırsatı penceresi açılır ve duyurusu bir kez çıkar. */
+function WelcomeDeal({ fights }: { fights: number }) {
+  const ready = !!usePrice(DEAL_SKU);
+  useEffect(() => maybeStartWelcome(fights, ready), [fights, ready]);
+  return <DealPopup />;
+}

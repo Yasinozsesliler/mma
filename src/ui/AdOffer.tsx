@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { sfx } from '../audio';
 import { L } from '../i18n';
-import { MONETIZATION, showRewarded, usePremium } from '../monetization';
+import { MONETIZATION, PURCHASES, showRewarded, usePremium } from '../monetization';
 import { Icon, type IconName } from './components';
 import { C, F } from './theme';
 
@@ -35,6 +35,7 @@ export function AdOffer({ icon, title, desc, onReward }: { icon: IconName; title
         <Text style={st.title}>{title}</Text>
         <Text style={st.desc}>{desc}</Text>
         {msg ? <Text style={st.msg}>{msg}</Text> : null}
+        {PURCHASES && !premium ? <Text style={st.note}>{L("👑 Şampiyon Paketi ile reklamsız, anında")}</Text> : null}
       </View>
       <View style={st.pill}>
         <Icon name={premium ? 'crown' : 'play-circle'} size={14} color="#1f1605" />
@@ -50,6 +51,7 @@ const st = StyleSheet.create({
   title: { color: C.gold, fontFamily: F.bold, fontSize: 13 },
   desc: { color: C.dim, fontFamily: F.body, fontSize: 12, marginTop: 1 },
   msg: { color: C.faint, fontFamily: F.semi, fontSize: 11, marginTop: 3 },
+  note: { color: C.faint, fontFamily: F.body, fontSize: 10, marginTop: 3, opacity: 0.8 },
   pill: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: C.gold, borderRadius: 20, paddingHorizontal: 10, paddingVertical: 5 },
   pillText: { color: '#1f1605', fontFamily: F.bold, fontSize: 11 },
 });

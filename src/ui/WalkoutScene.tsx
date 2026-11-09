@@ -21,9 +21,11 @@ import { Logo, upName } from './components';
 import { DEFAULT_LOOK } from './FighterAvatar';
 import { Figure, HIP_H, lerpPose, POSES, type Kit, type Pose } from './rig';
 import { FLAGS } from './StatusPanel';
+import { Belt } from './Belt';
+import { chants, crowdMood, moodLine, walkoutTier } from '../engine/walkout';
 import { C, F } from './theme';
 
-type Card = { kicker: string; lines: string[]; name?: string; nick?: string; side?: 'p' | 'o'; ms: number; say?: string; vs?: boolean };
+type Card = { kicker: string; lines: string[]; name?: string; nick?: string; side?: 'p' | 'o'; ms: number; say?: string; vs?: boolean; /** Kemeri taşıyan şampiyon girişi */ belt?: boolean; /** Hakem talimatı: iki köşe karşı karşıya, VS yok */ yuzyuze?: boolean };
 
 /** Spikerin okuyacağı isim: ad, "lakap", soyad. */
 const spoken = (x: { ad: string; soyad: string; lakap?: string }) => [x.ad, x.lakap ? `"${x.lakap}"` : '', x.soyad].filter(Boolean).join(', ');
@@ -47,12 +49,18 @@ function script(s: GameState): Card[] {
     name: upName(`${f.ad} ${f.soyad}`, f.uyruk),
     side: 'p',
     ms: 4200,
-    say: veda ? L("Ve kırmızı köşede! Son kez… {0}!", [spoken(f)]) : !big ? L("Kırmızı köşede! {0}!", [spoken(f)]) : r.g + r.m === 0 ? L("Ve kırmızı köşede! İlk maçına çıkıyor… {0}!", [spoken(f)]) : L("Ve kırmızı köşede! {0} galibiyet, {1} mağlubiyet… {2}!", [r.g, r.m, spoken(f)]),
+    belt: s.sampiyon && !o.champion,
+    say: s.sampiyon && big && !veda ? L("Ve kırmızı köşede! Hâlâ ve tartışmasız {0} sıklet şampiyonu… {1}!", [WEIGHT_CLASSES[f.siklet].ad, spoken(f)]) : veda ? L("Ve kırmızı köşede! Son kez… {0}!", [spoken(f)]) : !big ? L("Kırmızı köşede! {0}!", [spoken(f)]) : r.g + r.m === 0 ? L("Ve kırmızı köşede! İlk maçına çıkıyor… {0}!", [spoken(f)]) : L("Ve kırmızı köşede! {0} galibiyet, {1} mağlubiyet… {2}!", [r.g, r.m, spoken(f)]),
   };
   const crowd = walkoutCrowd(s, isAway(s, o.sehir));
   const fanCard: Card[] = crowd ? [{ kicker: L("TRİBÜNLER AYAKTA…"), lines: [crowd.baslik.toLocaleUpperCase(LOC), crowd.satirlar[crowd.satirlar.length - 1]], ms: 2400, say: crowd.soz }] : [];
   const kulup = s.kulup;
   if (kulup?.sarki != null && fanLevel(s) >= UNLOCKS.sarki) pCard.lines = [...pCard.lines, `🎵 ${SONGS()[kulup.sarki]}`];
+  if (s.sampiyon && big) pCard.kicker = L("VE HÂLÂ ŞAMPİYON…");
+  if (pro) pCard.lines = [...pCard.lines, moodLine(crowdMood(s, 'p'))];
+  const tier = walkoutTier(s);
+  const hakem: Card[] =
+    tier >= 2 ? [{ kicker: L("HAKEM SON TALİMATLARI VERİYOR"), lines: [L("Kendinizi her an koruyun."), L("Eldivenlere dokunun… ve geri çekilin.")], ms: 2200, say: L("Kendinizi her an koruyun. Eldivenlere dokunun!"), yuzyuze: true }] : [];
   if (!big) return [...fanCard, pCard, { kicker: L("KURALLAR BELLİ. DÖVÜŞÜN!"), lines: [], ms: 1800, say: L("Kurallar belli. Dövüşün!"), vs: true }];
   const baslik = veda
     ? L("Veda maçı · {0} raunt", [fs.maxRaunt])
@@ -64,13 +72,14 @@ function script(s: GameState): Card[] {
   return [
     { kicker: L("BAYANLAR VE BAYLAR…"), lines: [org.ad.toLocaleUpperCase(LOC), baslik], ms: 2600, say: L("Bayanlar ve baylar! {0}. {1}!", [org.ad, baslik.replace(/ · /g, ', ')]) },
     {
-      kicker: L("MAVİ KÖŞEDE…"),
-      lines: [L("Rekor: {0}", [oppRecord(o)]), o.uyruk],
+      kicker: o.champion ? L("MAVİ KÖŞEDE… ŞAMPİYON") : L("MAVİ KÖŞEDE…"),
+      lines: [L("Rekor: {0}", [oppRecord(o)]), o.uyruk, moodLine(crowdMood(s, 'o'))],
       nick: o.lakap,
       name: upName(`${o.ad} ${o.soyad}`, o.uyruk),
       side: 'o',
       ms: 3200,
-      say: L("Mavi köşede! {0}!", [spoken(o)]),
+      belt: o.champion,
+      say: o.champion ? L("Mavi köşede! {0} sıklet şampiyonu… {1}!", [WEIGHT_CLASSES[f.siklet].ad, spoken(o)]) : L("Mavi köşede! {0}!", [spoken(o)]),
     },
     ...fanCard,
     ...(veda
@@ -84,6 +93,7 @@ function script(s: GameState): Card[] {
         ]
       : []),
     pCard,
+    ...hakem,
     { kicker: L("HAYDİ BAŞLAYALIM!"), lines: [], ms: 2000, say: L("Haydi başlayalım!"), vs: true },
   ];
 }
@@ -213,6 +223,89 @@ function Flashes({ w, h, n = 10 }: { w: number; h: number; n?: number }) {
   );
 }
 
+/** Rampanın iki yanında yükselen ateş sütunları (büyük maçlarda, oyuncu girerken). */
+function Pyro({ w, h }: { w: number; h: number }) {
+  const [v] = useState(() => new Animated.Value(0));
+  useEffect(() => {
+    const burst = () => Animated.sequence([Animated.timing(v, { toValue: 1, duration: 160, useNativeDriver: true }), Animated.timing(v, { toValue: 0, duration: 650, easing: Easing.in(Easing.quad), useNativeDriver: true })]);
+    const a = Animated.sequence([burst(), Animated.delay(250), burst(), Animated.delay(900), burst()]);
+    a.start();
+    return () => a.stop();
+  }, [v]);
+  const colH = h * 0.32;
+  const base = h * 0.62;
+  return (
+    <>
+      {[0.16, 0.84].map((x) => (
+        <Animated.View
+          key={x}
+          pointerEvents="none"
+          style={{ position: 'absolute', left: w * x - 18, top: base - colH, width: 36, height: colH, opacity: v, transformOrigin: 'bottom', transform: [{ scaleY: v }] }}
+        >
+          <LinearGradient colors={['rgba(255,240,180,0)', 'rgba(255,170,60,0.85)', '#ffdf8a']} style={{ flex: 1, borderRadius: 18 }} />
+        </Animated.View>
+      ))}
+    </>
+  );
+}
+
+/** Tribünden yükselen tezahürat baloncukları. */
+function Chants({ items, w, h, color }: { items: string[]; w: number; h: number; color: string }) {
+  const [vals] = useState(() => items.map(() => new Animated.Value(0)));
+  useEffect(() => {
+    // Kart ekranda kaldıkça tezahürat sürer: her baloncuk kendi aralığıyla yeniden yükselir.
+    const a = Animated.parallel(
+      vals.map((v, i) =>
+        Animated.sequence([
+          Animated.delay(i * 260),
+          Animated.loop(Animated.sequence([Animated.timing(v, { toValue: 1, duration: 1900, easing: Easing.out(Easing.quad), useNativeDriver: true }), Animated.timing(v, { toValue: 0, duration: 0, useNativeDriver: true }), Animated.delay(400 + hash(i + 33) * 1400)])),
+        ]),
+      ),
+    );
+    a.start();
+    return () => a.stop();
+  }, [vals]);
+  return (
+    <>
+      {items.map((t, i) => {
+        const left = i % 2 === 0;
+        const x = left ? 8 + hash(i + 900) * w * 0.26 : w - 8 - w * 0.26 + hash(i + 900) * w * 0.26 - 70;
+        const y = h * (0.5 + hash(i + 950) * 0.25);
+        const v = vals[i];
+        return (
+          <Animated.View
+            key={i}
+            pointerEvents="none"
+            style={[
+              st.chant,
+              { left: Math.max(4, Math.min(w - 120, x)), top: y, borderColor: color, opacity: v.interpolate({ inputRange: [0, 0.15, 0.75, 1], outputRange: [0, 1, 1, 0] }), transform: [{ translateY: v.interpolate({ inputRange: [0, 1], outputRange: [0, -h * 0.14] }) }] },
+            ]}
+          >
+            <Text style={st.chantT} numberOfLines={1}>
+              {t}
+            </Text>
+          </Animated.View>
+        );
+      })}
+    </>
+  );
+}
+
+/** Şampiyon kemeri havaya kaldırır (hafifçe sallanarak). */
+function RaisedBelt({ s, width }: { s: GameState; width: number }) {
+  const [v] = useState(() => new Animated.Value(0));
+  useEffect(() => {
+    const loop = Animated.loop(Animated.sequence([Animated.timing(v, { toValue: 1, duration: 700, easing: Easing.inOut(Easing.sin), useNativeDriver: true }), Animated.timing(v, { toValue: 0, duration: 700, easing: Easing.inOut(Easing.sin), useNativeDriver: true })]));
+    loop.start();
+    return () => loop.stop();
+  }, [v]);
+  return (
+    <Animated.View pointerEvents="none" style={{ alignItems: 'center', marginBottom: -width * 0.12, transform: [{ translateY: v.interpolate({ inputRange: [0, 1], outputRange: [0, -6] }) }, { rotate: v.interpolate({ inputRange: [0, 1], outputRange: ['-4deg', '4deg'] }) }] }}>
+      <Belt org={currentOrg(s)} siklet={s.fighter.siklet} width={width} />
+    </Animated.View>
+  );
+}
+
 // ---------- Dövüşçü ----------
 
 const WALK_A: Partial<Pose> = { lL1: 24, lL2: 8, lR1: -20, lR2: 26, aL1: -10, aL2: 40, aR1: 18, aR2: 40, torso: 4, head: 0 };
@@ -275,6 +368,8 @@ export function WalkoutScene({ s, onDone: finish }: { s: GameState; onDone: () =
   const [arrived, setArrived] = useState(-1);
   const [pKit] = useState(playerKit);
   const [fx] = useState(walkoutFxNow);
+  const [tier] = useState(() => walkoutTier(s));
+  const [crowd] = useState(() => ({ p: chants(s, 'p'), o: chants(s, 'o') }));
   const card = cards[i];
   const walking = !!card.side && arrived !== i;
 
@@ -319,7 +414,9 @@ export function WalkoutScene({ s, onDone: finish }: { s: GameState; onDone: () =
   const pLook = s.fighter.gorunum ?? DEFAULT_LOOK;
   const look = card.side === 'p' ? pLook : oLook;
   const kit = card.side === 'p' ? pKit : BLUE_KIT;
-  const color = card.side === 'p' ? C.red : card.side === 'o' ? C.blue : C.gold;
+  const color = card.belt ? C.gold : card.side === 'p' ? C.red : card.side === 'o' ? C.blue : C.gold;
+  // Sahne gücü arttıkça daha çok spot (0: iki spot … 3: yedi spot)
+  const spots = [0.25, 0.75, ...(tier >= 1 ? [0.5] : []), ...(tier >= 2 ? [0.08, 0.92] : []), ...(tier >= 3 ? [0.37, 0.63] : [])];
   const org = ORGS[currentOrg(s)];
   const figSize = Math.min(W * 0.62, 260);
 
@@ -327,9 +424,12 @@ export function WalkoutScene({ s, onDone: finish }: { s: GameState; onDone: () =
     <Modal transparent animationType="fade" onRequestClose={onDone}>
       <Pressable style={st.back} onPress={onDone}>
         <Arena w={W} h={Hh} color={color} />
-        <Spot x={W * 0.25} h={Hh * 0.8} color={card.side === 'o' ? '#9ec5ff' : '#fff1d6'} delay={0} wide={W * 0.5} />
-        <Spot x={W * 0.75} h={Hh * 0.8} color={card.side === 'p' ? '#ffb3b8' : '#fff1d6'} delay={1300} wide={W * 0.5} />
-        <Flashes w={W} h={Hh} />
+        {spots.map((x, k) => (
+          <Spot key={x} x={W * x} h={Hh * 0.8} color={card.belt ? '#ffe3a3' : card.side === 'o' && k % 2 === 0 ? '#9ec5ff' : card.side === 'p' && k % 2 === 1 ? '#ffb3b8' : '#fff1d6'} delay={(k * 650) % 2600} wide={W * (tier >= 2 ? 0.42 : 0.5)} />
+        ))}
+        <Flashes key={`fl${tier}`} w={W} h={Hh} n={[5, 10, 16, 26][tier]} />
+        {card.side === 'p' && tier >= 2 ? <Pyro key={`py${i}`} w={W} h={Hh} /> : null}
+        {card.side ? <Chants key={`ch${i}`} items={crowd[card.side]} w={W} h={Hh} color={crowdMood(s, card.side) === 'yuh' ? C.red : color} /> : null}
         {/* Oyuncunun kozmetik giriş efekti (yürürken) */}
         {card.side === 'p' && fx ? <WalkoutFx kind={fx} w={W} h={Hh} /> : null}
         <Text style={[st.led, { top: Hh * 0.36 - Hh * 0.16 + 4, color }]} numberOfLines={1}>
@@ -350,13 +450,14 @@ export function WalkoutScene({ s, onDone: finish }: { s: GameState; onDone: () =
               },
             ]}
           >
+            {card.belt ? <RaisedBelt s={s} width={figSize * 0.62} /> : null}
             <Walker look={look} kit={kit} flip={card.side === 'o'} walking={walking} size={figSize} />
           </Animated.View>
-        ) : card.vs ? (
+        ) : card.vs || card.yuzyuze ? (
           <Animated.View style={[st.vsRow, { top: Hh * 0.3, opacity: fade }]}>
             <Walker look={pLook} kit={pKit} flip={false} walking={false} size={W * 0.44} />
             <Walker look={oLook} kit={BLUE_KIT} flip walking={false} size={W * 0.44} />
-            <Animated.Text style={[st.vs, { transform: [{ scale: slam.interpolate({ inputRange: [0, 1], outputRange: [2.6, 1] }) }, { skewX: '-10deg' }], opacity: slam }]}>VS</Animated.Text>
+            {card.vs ? <Animated.Text style={[st.vs, { transform: [{ scale: slam.interpolate({ inputRange: [0, 1], outputRange: [2.6, 1] }) }, { skewX: '-10deg' }], opacity: slam }]}>VS</Animated.Text> : null}
           </Animated.View>
         ) : (
           <Animated.View style={[st.center, { top: Hh * 0.38, opacity: slam, transform: [{ scale: slam.interpolate({ inputRange: [0, 1], outputRange: [1.8, 1] }) }] }]}>
@@ -422,5 +523,7 @@ const st = StyleSheet.create({
   bigKicker: { fontFamily: F.display, fontSize: 30, letterSpacing: 3, textAlign: 'center', textShadowColor: '#000', textShadowRadius: 14, transform: [{ skewX: '-8deg' }] },
   line: { color: '#e4e6eb', fontFamily: F.semi, fontSize: 16, textAlign: 'center', marginTop: 4 },
   bottomFade: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 140 },
+  chant: { position: 'absolute', backgroundColor: 'rgba(8,9,12,0.8)', borderWidth: 1, borderRadius: 14, paddingHorizontal: 10, paddingVertical: 4, maxWidth: 160 },
+  chantT: { color: '#fff', fontFamily: F.display, fontSize: 13, letterSpacing: 0.5 },
   skip: { position: 'absolute', bottom: 30, left: 0, right: 0, textAlign: 'center', color: C.faint, fontFamily: F.semi, fontSize: 12 },
 });
