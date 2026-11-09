@@ -27,6 +27,9 @@ const TABS: { slot: CosSlot; ad: string; ikon: IconName }[] = [
   { slot: 'kemer', ad: L("Kemer"), ikon: 'trophy' },
   { slot: 'giris', ad: L("Giriş müziği"), ikon: 'music' },
   { slot: 'efekt', ad: L("Giriş efekti"), ikon: 'creation' },
+  { slot: 'unvan', ad: L("Unvan"), ikon: 'medal' },
+  { slot: 'kafes', ad: L("Kafes"), ikon: 'octagon' },
+  { slot: 'kart', ad: L("Paylaşım kartı"), ikon: 'image-frame' },
 ];
 
 const FX_ICON: Record<FxKind, IconName> = { ates: 'fire', duman: 'weather-fog', konfeti: 'party-popper', simsek: 'flash', kar: 'snowflake' };
@@ -60,6 +63,14 @@ export function Swatch({ x, look }: { x: Cosmetic; look: Appearance }) {
   if (x.slot === 'eldiven') return <KitPreview look={look} x={PLAIN} eldiven={x.renk[0]} size={64} />;
   if (x.slot === 'cerceve') return <FighterAvatar look={look} size={62} ring={x.renk[0] ?? C.red} />;
   if (x.slot === 'kemer') return <Belt org="ufc" width={110} skin={x.renk.length ? x.renk : null} />;
+  if (x.slot === 'unvan' || x.slot === 'kafes' || x.slot === 'kart') {
+    const on = x.renk.length > 0;
+    return (
+      <View style={[ls.music, on && { borderColor: x.renk[0], borderWidth: 2, backgroundColor: (x.renk[1] ?? x.renk[0]) + '33' }]}>
+        <Icon name={x.slot === 'unvan' ? 'medal' : x.slot === 'kafes' ? 'octagon-outline' : 'image-frame'} size={30} color={on ? x.renk[0] : C.faint} />
+      </View>
+    );
+  }
   const icon: IconName = x.slot === 'efekt' ? (x.fx ? FX_ICON[x.fx] : 'cancel') : x.giris ? 'music' : 'account-group';
   const on = x.slot === 'efekt' ? !!x.fx : !!x.giris;
   return (

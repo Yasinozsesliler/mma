@@ -8,6 +8,7 @@ import { L } from '../i18n';
 import { Button, Icon } from '../ui/components';
 import { C, F } from '../ui/theme';
 import { CardPreview } from './CardPreview';
+import { seasonCardNow, titleNow } from '../cosmetics';
 import type { CardHandle, ShareCardData } from './types';
 
 export function ShareButton({ data, label, tone = 'ghost', render }: { data: ShareCardData | null; label?: string; tone?: 'red' | 'gold' | 'ghost'; /** Özel görünüm (ör. profil kutucuğu) */ render?: (open: () => void) => ReactNode }) {
@@ -28,7 +29,8 @@ function ShareModal({ data: raw, onClose }: { data: ShareCardData; onClose: () =
   const pro = premium || !PURCHASES;
   const themable = raw.tur !== 'afis' && raw.tur !== 'wiki';
   const [tema, setTema] = useState<CardThemeId>(() => (pro ? savedCardTheme() : 'klasik'));
-  const data = useMemo(() => (themable ? { ...raw, tema } : raw), [raw, tema, themable]);
+  const data = useMemo(() => (themable ? { ...raw, tema, unvan: titleNow() ?? undefined } : raw), [raw, tema, themable]);
+  const temalar = CARD_THEME_IDS.filter((t) => t !== 'sezon' || !!seasonCardNow());
   const pickTheme = (t: CardThemeId) => {
     if (CARD_THEMES[t].pro && !pro) return setMsg(L("👑 Bu şablon Şampiyon Paketi ile açılır."));
     sfx('click');
@@ -60,7 +62,7 @@ function ShareModal({ data: raw, onClose }: { data: ShareCardData; onClose: () =
           </View>
           {themable ? (
             <View style={sm.themes}>
-              {CARD_THEME_IDS.map((t) => (
+              {temalar.map((t) => (
                 <Pressable key={t} onPress={() => pickTheme(t)} style={[sm.theme, { borderColor: tema === t ? CARD_THEMES[t].serit : C.border }]}>
                   <View style={[sm.themeDot, { backgroundColor: CARD_THEMES[t].serit }]} />
                   <Text style={[sm.themeText, tema === t && { color: C.text }]}>

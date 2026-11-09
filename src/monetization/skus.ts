@@ -31,4 +31,7 @@ export const REF_SKU = 'hakem_modu';
  *  ilk alım için 1-5 $ aralığının ortası. */
 export const DEAL_SKU = 'tam_paket_firsat';
 
-export const ALL_SKUS: string[] = [PREMIUM_SKU, ADFREE_SKU, ...COSMETIC_SKUS, BUNDLE_SKU, LEGENDS_SKU, ULTIMATE_SKU, COACH_SKU, REF_SKU, DEAL_SKU];
+/** Tam Paket'e Yükseltme: yalnızca Şampiyon Paketi sahibine sunulur, Tam Paket'in kalanını verir. Önerilen 2,99 $. */
+export const UPGRADE_SKU = 'tam_paket_yukseltme';
+
+export const ALL_SKUS: string[] = [PREMIUM_SKU, ADFREE_SKU, ...COSMETIC_SKUS, BUNDLE_SKU, LEGENDS_SKU, ULTIMATE_SKU, COACH_SKU, REF_SKU, DEAL_SKU, UPGRADE_SKU];

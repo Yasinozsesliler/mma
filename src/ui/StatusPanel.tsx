@@ -6,6 +6,8 @@ import { StyleSheet, Text, View } from 'react-native';
 import Svg, { Polygon } from 'react-native-svg';
 import { money, rankLabel, STAGE_LABELS } from '../engine/career';
 import { KIMLIK } from '../engine/identity';
+import { titleNow } from '../cosmetics';
+import { seasonBadges } from '../season';
 import { fmtFollowers, followers, followerTier } from '../engine/fame';
 import { currentOrg, statAverage } from '../engine/character';
 import { BACKGROUNDS, COUNTRIES, ORGS, WEIGHT_CLASSES } from '../engine/data';
@@ -113,6 +115,8 @@ export function StatusPanel({ s, compact }: { s: GameState; compact?: boolean })
         <Info icon="brain" label={L("Beyin hasarı")} value={`${brainOf(s)}/100 · ${brainLabel(brainOf(s))}`} color={brainOf(s) >= 30 ? brainColor(brainOf(s)) : undefined} />
         <Info icon="file-sign" label={L("Kontrat")} value={s.contract ? L("{0} dövüş kaldı", [s.contract.kalan]) : L("Yok")} />
         <Info icon="stairs-up" label={L("Aşama")} value={STAGE_LABELS[s.stage].replace(/^Aşama \d · /, '')} />
+        {titleNow() ? <Info wide icon="medal" label={L("Unvan")} value={titleNow()!} color={C.gold} /> : null}
+        {seasonBadges().length ? <Info wide icon="trophy-variant" label={L("Sezon Şampiyonu rozeti")} value={`🏅 × ${seasonBadges().length}`} color={C.gold} /> : null}
         <Info wide icon="sword-cross" label={L("Dövüş kimliği")} value={s.kimlik?.id ? `${KIMLIK[s.kimlik.id].ikon} ${KIMLIK[s.kimlik.id].ad()}` : L("Henüz oluşmadı · Nasıl dövüştüğünle doğar")} />
       </View>
 

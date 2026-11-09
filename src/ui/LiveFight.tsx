@@ -1,6 +1,7 @@
 // Canlı dövüş ekranı: bir raunt gerçek zamanlı oynanır (motor: engine/liveFight.ts). Rakip ⚠️ ile saldırı hazırlar;
 // küçülen halka vuruş anını gösterir. KAÇ ile sıyrıl ve kontra penceresinde vur, DİREKT/TEKME ile hazırlığı kes,
 // GARD ile hasarı azalt. Raunt bitince sonuç dövüşe işlenir.
+import { cageTintNow } from '../cosmetics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { memo, useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Modal, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
@@ -64,6 +65,7 @@ const FANS = Array.from({ length: 90 }, (_, i) => ({ row: i % 3, u: hash(i), s: 
 
 /** Sabit arka plan: tribün, LED pano, kafes teli, yastıklı ray, dokulu kanvas, spotlar (her karede yeniden çizilmez). */
 const ArenaBg = memo(function ArenaBg() {
+  const tint = cageTintNow();
   return (
     <Svg width="100%" height="100%" viewBox={VIEW} preserveAspectRatio="xMidYMid meet" style={StyleSheet.absoluteFill}>
       <Defs>
@@ -154,6 +156,7 @@ const ArenaBg = memo(function ArenaBg() {
       <Rect x={1.5} y={10} width={3} height={8} fill={C.red} />
       <Rect x={195.5} y={10} width={3} height={8} fill={C.blue} />
       <Rect x={0} y={0} width={VB_W} height={VB_H} fill="url(#lfVig)" />
+      {tint ? <Rect x={0} y={0} width={VB_W} height={VB_H} fill={tint[0]} opacity={0.1} /> : null}
     </Svg>
   );
 });

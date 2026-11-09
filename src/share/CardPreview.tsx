@@ -73,6 +73,7 @@ export function CardPreview({ data, onReady }: { data: ShareCardData; onReady: (
           {up(data.baslik)}
         </Text>
         <View style={[st.bar, { backgroundColor: accent }]} />
+        {data.unvan ? <Text style={[st.sub, { color: accent }]}>{up(data.unvan)}</Text> : null}
 
         <View style={{ alignItems: 'center', marginTop: 20 }}>
           <FighterAvatar look={data.look} size={aS} ring={data.tur === 'kemer' ? C.gold : C.red} />

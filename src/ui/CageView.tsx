@@ -4,7 +4,7 @@ import { announce } from '../announcer';
 import { sfx, type Sfx } from '../audio';
 import { buzz } from '../haptics';
 import { lowPerf, paintMs } from '../perfPref';
-import { playerKit } from '../cosmetics';
+import { cageTintNow, playerKit } from '../cosmetics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { memo, useEffect, useRef, useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
@@ -111,24 +111,26 @@ const Crowd = memo(function Crowd({ w, hp, t }: { w: number; hp: number; t: numb
 });
 
 /** Tavan spotları, arka kafes ve kanvas */
-const CageBack = memo(function CageBack({ w }: { w: number }) {
+const CageBack = memo(function CageBack({ w, tint }: { w: number; tint?: string[] | null }) {
   const cx = w / 2;
+  const vurgu = tint?.[0] ?? C.red;
+  const tel = tint?.[1];
   return (
     <>
       <Polygon points={`${w * 0.36},0 ${w * 0.44},0 ${w * 0.62},${H * 0.86} ${w * 0.18},${H * 0.86}`} fill="url(#cone)" />
       <Polygon points={`${w * 0.56},0 ${w * 0.64},0 ${w * 0.82},${H * 0.86} ${w * 0.38},${H * 0.86}`} fill="url(#cone)" />
-      <Polygon points={`${w * 0.08},${H * 0.72} ${w * 0.18},${H * 0.18} ${w * 0.82},${H * 0.18} ${w * 0.92},${H * 0.72}`} fill="none" stroke="#2c2f37" strokeWidth={2} />
+      <Polygon points={`${w * 0.08},${H * 0.72} ${w * 0.18},${H * 0.18} ${w * 0.82},${H * 0.18} ${w * 0.92},${H * 0.72}`} fill="none" stroke={tel ?? "#2c2f37"} strokeWidth={2} />
       {Array.from({ length: 15 }, (_, i) => {
         const x = w * 0.18 + (w * 0.64 * i) / 14;
-        return <Line key={i} x1={x} y1={H * 0.18} x2={x} y2={H * 0.68} stroke="#1d2027" strokeWidth={1} />;
+        return <Line key={i} x1={x} y1={H * 0.18} x2={x} y2={H * 0.68} stroke={tel ?? "#1d2027"} strokeWidth={1} />;
       })}
       {Array.from({ length: 7 }, (_, i) => (
-        <Line key={`h${i}`} x1={w * 0.16} y1={H * 0.22 + i * 15} x2={w * 0.84} y2={H * 0.22 + i * 15} stroke="#1a1c22" strokeWidth={1} />
+        <Line key={`h${i}`} x1={w * 0.16} y1={H * 0.22 + i * 15} x2={w * 0.84} y2={H * 0.22 + i * 15} stroke={tel ?? "#1a1c22"} strokeWidth={1} />
       ))}
       <Ellipse cx={cx} cy={H * 0.8} rx={w * 0.49} ry={H * 0.17} fill="#d6d6d9" />
       <Ellipse cx={cx} cy={H * 0.8} rx={w * 0.49} ry={H * 0.17} fill="url(#cspot)" />
-      <Ellipse cx={cx} cy={H * 0.8} rx={w * 0.13} ry={H * 0.045} fill="none" stroke={C.red} strokeWidth={2} opacity={0.6} />
-      <SvgText x={cx} y={H * 0.81 + 3} fill={C.red} opacity={0.35} fontSize={9} fontWeight="bold" textAnchor="middle" letterSpacing={3}>
+      <Ellipse cx={cx} cy={H * 0.8} rx={w * 0.13} ry={H * 0.045} fill="none" stroke={vurgu} strokeWidth={2} opacity={0.6} />
+      <SvgText x={cx} y={H * 0.81 + 3} fill={vurgu} opacity={0.35} fontSize={9} fontWeight="bold" textAnchor="middle" letterSpacing={3}>
         YOL
       </SvgText>
     </>
@@ -167,6 +169,7 @@ export function CageView({
   /** Hakem gömleği rengi (Hakem Modu kıyafeti) */
   rShirt?: string;
 }) {
+  const [tint] = useState(() => cageTintNow());
   const [pKit] = useState(() => pKitOverride ?? playerKit());
   const [w, setW] = useState(340);
   const k = Math.max(0.95, Math.min(1.3, w / 300));
@@ -636,7 +639,7 @@ export function CageView({
             {/* Sabit katmanlar yalnızca genişlik değişince yeniden çizilir; seyirci yalnızca coşku anlarında hareket eder */}
             <Stands w={w} />
             <Crowd w={w} hp={low ? 0 : hp} t={!low && hp ? tNow : 0} />
-            <CageBack w={w} />
+            <CageBack w={w} tint={tint} />
             {stains.current.map((s2, i) => (
               <Ellipse key={`s${i}`} cx={s2.x} cy={s2.y} rx={s2.r * 1.4} ry={s2.r * 0.5} fill="#7a0d12" opacity={s2.o} />
             ))}
