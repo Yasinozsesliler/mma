@@ -17,6 +17,7 @@ import {
   fmtLeft,
   markDealSeen,
   openShop,
+  PACK_STORE,
   PURCHASES,
   restorePurchases,
   useAmounts,
@@ -45,7 +46,8 @@ function money(n: number, cur: string): string | null {
 
 /** Tam Paket'in içindekileri ayrı ayrı alsan ne ödersin (hepsinin fiyatı aynı para biriminde geldiyse). */
 function useSeparateTotal(): { total: number; cur: string; text: string } | null {
-  const parts = useAmounts([PREMIUM_SKU, COACH_SKU, REF_SKU, BUNDLE_SKU]);
+  // Kozmetik paketleri satışta değilse (PACK_STORE) toplama girmez: yalnızca gerçekten alınabilenler sayılır
+  const parts = useAmounts(PACK_STORE ? [PREMIUM_SKU, COACH_SKU, REF_SKU, BUNDLE_SKU] : [PREMIUM_SKU, COACH_SKU, REF_SKU]);
   if (parts.some((p) => !p) || new Set(parts.map((p) => p!.cur)).size !== 1) return null;
   const total = parts.reduce((a, p) => a + p!.n, 0);
   const text = money(total, parts[0]!.cur);
@@ -228,7 +230,7 @@ function CompleteCard({ owned }: { owned: ReadonlySet<string> }) {
       [COACH_SKU, 'clipboard-account', L("Antrenör Modu")],
       [BUNDLE_SKU, 'tshirt-crew', L("Efsane Koleksiyonu (6 kozmetik paket)")],
     ] as [string, IconName, string][]
-  ).filter(([k]) => !owned.has(k));
+  ).filter(([k]) => !owned.has(k) && (k !== BUNDLE_SKU || PACK_STORE));
   const amts = useAmounts([...parts.map(([k]) => k), ULTIMATE_SKU]);
   const full = amts[amts.length - 1];
   const partSum = amts.slice(0, -1).every((a) => a && full && a.cur === full.cur) ? amts.slice(0, -1).reduce((t, a) => t + a!.n, 0) : 0;
