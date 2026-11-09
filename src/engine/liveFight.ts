@@ -189,6 +189,9 @@ const side = (hp: number): LiveSide => ({ hp, sta: 100, busyUntil: 0, landed: 0,
 export function liveCreate(fs: FightState, oStats: Stats, t0: number, dur = ROUND_MS, special?: { kind: SpecialKind; imza: boolean }): LiveSim {
   const cfg = liveConfig(pStatsOf(fs), oStats, fs.taktik ?? 'mesafe', fs.rakipTaktik ?? 'mesafe');
   cfg.edge += habitEdge(fs, fs.taktik ?? 'mesafe');
+  if (fs.mods.kimlik === 'nakavtci') cfg.pPow *= 1.03;
+  if (fs.mods.kimlik === 'bogucu') cfg.gr += 3;
+  if (fs.mods.kimlik === 'taktisyen') cfg.edge += 0.01;
   cfg.oBacakCarpan = hasHabit(fs, 'bacakZayif') ? 1.5 : 1;
   cfg.oGovdeCarpan = hasHabit(fs, 'govdeHassas') ? 1.5 : 1;
   return {

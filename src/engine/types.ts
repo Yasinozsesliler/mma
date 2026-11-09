@@ -384,6 +384,8 @@ export interface FightMods {
   teknik?: Record<string, number>;
   /** İmza hareketi: anlatımda kendi adıyla geçer */
   imza?: { id: string; ad: string };
+  /** Dövüş kimliğinin küçük avantajı (identity.ts) */
+  kimlik?: import('./identity').KimlikId;
 }
 
 export interface FightResult {
@@ -826,6 +828,9 @@ export interface GameState {
   yayinSon?: number;
   /** Efsane Yolu hikâye modu (legendRun.ts) */
   efsane?: import('./legendRun').LegendRun;
+  /** Tüm zamanlar rekorları (records.ts) ve dövüş kimliği (identity.ts) */
+  rekorTablo?: import('./records').RekorTablo;
+  kimlik?: import('./identity').Kimlik;
   /** Amatör Ligi (amateurLeague.ts). Eski kayıtlarda yok: eski kural geçerli */
   amLig?: import('./amateurLeague').AmatorLig;
   /** Son görülen soru/olay kimlikleri (variety.ts; tekrar önleme) */

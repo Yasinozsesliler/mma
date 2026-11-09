@@ -334,6 +334,7 @@ function rockCheck(fs: FightState, victim: Side, dmg: number, beat: number): boo
   // Gövde planı: geç rauntlarda düşen eller, sarsılan rakip.
   if (victim === 'o' && fs.mods.plan === 'govde' && fs.raunt >= 2) p *= fs.mods.planUyum ? 1.25 : 1.12;
   if (victim === 'o' && fs.mods.plan === 'puan') p *= 0.85;
+  if (victim === 'o' && fs.mods.kimlik === 'nakavtci') p *= 1.05;
   if (!chance(p)) return false;
   const att = other(victim);
   const kd = chance(0.5);
@@ -379,6 +380,7 @@ function groundPhase(fs: FightState, top: Side, beat: number): boolean {
   if (top === 'p' && fs.mods.plan === 'yer') subP += fs.mods.planUyum ? 0.14 : 0.08;
   if (top === 'p') subP += bestLevel(fs.mods.teknik, 'sub') * 0.006;
   if (top === 'p' && hasHabit(fs, 'yerdeZayif')) subP += 0.05;
+  if (top === 'p' && fs.mods.kimlik === 'bogucu') subP += 0.015;
   if (chance(subP * SC)) {
     setCritical(fs, top === 'p' ? 'subFirsat' : 'subTehlike');
     return true;
@@ -897,7 +899,7 @@ export function chooseTactic(prev: FightState, t: Tactic): FightState {
   fs.rakipTaktik = oppTactic(fs);
   const hist = fs.oyuncuTaktikGecmisi ?? [];
   const rep = streak(hist, t);
-  fs.okunma = rep * 0.045;
+  fs.okunma = rep * 0.045 * (fs.mods.kimlik === 'taktisyen' ? 0.7 : 1);
   hist.push(t);
   fs.oyuncuTaktikGecmisi = hist;
   fs.taktik = t;
@@ -1174,7 +1176,7 @@ function endRound(fs: FightState) {
   fs.oKondisyon = clamp(Math.min(fs.oKondisyon + 3 + oStats(fs).kondisyon * 0.08, tavan(oStats(fs).kondisyon)), 5, 100);
   fs.kose = cornerAdvice(fs, diff);
   // Köşe rakibi izler: işe yarayan huy önce fark edilir.
-  const fark = hileli ? 0.7 : 0.3;
+  const fark = (hileli ? 0.7 : 0.3) + (fs.mods.kimlik === 'taktisyen' ? 0.2 : 0);
   if (chance(fark)) {
     const not = revealInFight(fs, hileli);
     if (not) fs.kose += `\n${fs.koseAdi}: ${not}`;

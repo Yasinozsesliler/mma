@@ -10,6 +10,7 @@ import { Icon, SLANT, upName } from './components';
 import { FighterAvatar } from './FighterAvatar';
 import type { Act } from './GameScreens';
 import { RankingList } from './HubParts';
+import { RecordsList } from './RecordsPanel';
 import { C, F, R } from './theme';
 
 function P4PList({ s, act }: { s: GameState; act: Act }) {
@@ -66,14 +67,15 @@ function P4PList({ s, act }: { s: GameState; act: Act }) {
 }
 
 export function RankingsTab({ s, act }: { s: GameState; act: Act }) {
-  const [tab, setTab] = useState<'siklet' | 'p4p'>('siklet');
+  const [tab, setTab] = useState<'siklet' | 'p4p' | 'rekor'>('siklet');
   return (
     <>
       <View style={pw.switch}>
         {(
           [
             ['siklet', L("SIKLETİM"), 'podium'],
-            ['p4p', L("POUND FOR POUND"), 'earth'],
+            ['p4p', 'P4P', 'earth'],
+            ['rekor', L("REKORLAR"), 'trophy'],
           ] as const
         ).map(([k, l, ic]) => (
           <Pressable key={k} onPress={() => setTab(k)} style={[pw.swBtn, tab === k && (k === 'p4p' ? pw.swGold : pw.swRed)]}>
@@ -82,7 +84,7 @@ export function RankingsTab({ s, act }: { s: GameState; act: Act }) {
           </Pressable>
         ))}
       </View>
-      {tab === 'siklet' ? <RankingList s={s} /> : <P4PList s={s} act={act} />}
+      {tab === 'siklet' ? <RankingList s={s} /> : tab === 'rekor' ? <RecordsList s={s} /> : <P4PList s={s} act={act} />}
     </>
   );
 }

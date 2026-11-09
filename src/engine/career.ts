@@ -31,6 +31,8 @@ import { ORGS, WEIGHT_CLASSES, WEIGHT_MODS } from './data';
 import { methodLabel, topMoments } from './fight';
 import { maybeEvent } from './events';
 import { ensureHabits } from './habits';
+import { recordsAfterFight } from './records';
+import { identityAfterFight, identityRivalNews } from './identity';
 import { ligAcik, ligAfterFight, ligBitisMetni, ligBitti } from './amateurLeague';
 import { ensureDivision, syncDivision } from './division';
 import { imposedOpponent, opponentChoices } from './matchmaking';
@@ -135,6 +137,7 @@ export function findNextFight(s: GameState) {
 export function pickOpponent(s: GameState, idx: number) {
   s.pending.rakip = s.pending.secenekler![idx];
   ensureHabits(s, s.pending.rakip);
+  identityRivalNews(s, s.pending.rakip);
   s.pending.secenekler = undefined;
   s.reddedilen = 0;
   startCamp(s);
@@ -342,6 +345,7 @@ export function finishFight(s: GameState) {
   if (won && opp.champion) pop += 10;
   if (won && opp.rivalry >= 2) pop += 3;
   pop += (fs.sov ?? 0) * (won ? 2 : -1);
+  if (won && fs.mods.kimlik === 'sovmen') pop += 1;
   pop = prAdjust(s, Math.round(pop * exposure)) + (won ? perkWinPop(s) : 0);
   s.populerlik = clamp(s.populerlik + pop, 0, 100);
   lines.push(tL("🔥 Popülerlik {0}{1} → {2}/100", [pop >= 0 ? '+' : '', pop, s.populerlik]));
@@ -386,6 +390,8 @@ export function finishFight(s: GameState) {
   const rankNote = caught ? null : updateRank(s, opp, won, draw);
   if (rankNote) lines.push(rankNote);
   if (!caught) lines.push(...ligAfterFight(s, opp, won, draw, finishMethod));
+  if (!caught) lines.push(...recordsAfterFight(s, org, won, r.yontem));
+  if (!caught) lines.push(...identityAfterFight(s, fs, won, r.yontem));
   const divNotes = syncDivision(s, opp, won, draw, won && opp.champion, wasChampion && !won && !draw);
   if (org === 'ufc') {
     const p4pNote = updateP4P(s);

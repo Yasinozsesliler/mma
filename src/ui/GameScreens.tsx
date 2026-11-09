@@ -68,6 +68,7 @@ import { FatigueCard } from './FatigueCard';
 import { perkPointsFree } from '../engine/perks';
 import { SpecialEventCard } from './SpecialEventCard';
 import { LeagueCard } from './LeagueCard';
+import { RecordChase } from './RecordsPanel';
 import { chooseTreatment, treatmentCostText, treatmentOptions } from '../engine/treatment';
 import { ContractTablePanel } from './ContractTablePanel';
 import { openTable } from '../engine/contractTable';
@@ -352,6 +353,7 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
           />
           <FarewellCard s={s} act={act} />
           <LeagueCard s={s} compact />
+          <RecordChase s={s} />
           <FirstStepsCard s={s} act={act} />
           {featureOpen(s, 'etkinlik') ? <SpecialEventCard s={s} act={act} /> : null}
           {featureOpen(s, 'etkinlik') ? <EventCard s={s} act={act} /> : null}

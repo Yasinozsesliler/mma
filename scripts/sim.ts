@@ -48,6 +48,7 @@ import { chance, pick, randInt, setSeed } from '../src/engine/rng';
 import type { Background, GameState, PlanKey, Tactic } from '../src/engine/types';
 import { STAT_KEYS } from '../src/engine/types';
 const krizStat: Record<string, number> = {};
+const rekorStat = { n: 0, gecilen: 0, bir: 0, bos: 0, kimlik: {} as Record<string, number> };
 const amStat = { n: 0, para: [] as number[], mac: [] as number[], yas: [] as number[], madalya: [] as number[] };
 const cesit = { teklif: 0, tekrarTeklif: 0, oncekiListe: 0, dovus: {} as Record<string, number>, tekrar: {} as Record<string, number>, soyad: 0, lakap: 0, kisi: 0 };
 const podcastStat = { n: 0 };
@@ -404,6 +405,9 @@ function playCareer() {
   finalize();
 
   function finalize() {
+    const kk = s.kimlik?.id ?? 'yok';
+    rekorStat.kimlik[kk] = (rekorStat.kimlik[kk] ?? 0) + 1;
+    if (s.rekorTablo) { const gg = Object.values(s.rekorTablo.gecilen) as number[]; const top = gg.reduce((x, y) => x + y, 0); rekorStat.n++; rekorStat.gecilen += top; rekorStat.bir += gg.filter((x) => x === 3).length; if (!top) rekorStat.bos++; }
     brainStat.toplam += s.beyin ?? 0; if (s.beyinEmekli) brainStat.emekli++;
     if (s.geriDonus?.sonuc === 'G') cbStat.g++;
     if (s.kulup) { fanStat.kurulan++; fanStat.sadakat += s.kulup.sadakat; fanStat['L' + fanLevel(s)] = (fanStat['L' + fanLevel(s)] ?? 0) + 1; }
@@ -527,6 +531,7 @@ console.log(`UFC'ye kadar ortalama dövüş: ${avg.toFixed(1)}`);
 console.log('Geçmişe göre galibiyet:', Object.entries(stats.byBg).map(([k, v]) => `${k} ${pct(v.w, v.w + v.l)}`).join(', '));
 console.log('Aşama başına ortalama dövüş:', Object.entries(stats.stageFights).map(([k, v]) => `${k} ${(v / (stats.stageCareers[k] ?? N)).toFixed(1)}`).join(', '));
 console.log(`Amatör Ligi: profesyonele geçişte maç ort. ${mean(amStat.mac)} (min ${Math.min(...amStat.mac)}, maks ${Math.max(...amStat.mac)}, ≥16: ${pct(amStat.mac.filter((x) => x >= 16).length, amStat.n)}), yaş artışı ${mean(amStat.yas)}, madalya ${mean(amStat.madalya)}, para ort. ${mean(amStat.para)} (eksi: ${pct(amStat.para.filter((x) => x < 0).length, amStat.n)})`);
+console.log(`Rekorlar (UCC'ye çıkan kariyer başına): geçilen ${(rekorStat.gecilen / Math.max(1, rekorStat.n)).toFixed(1)}/18, tüm zamanlar 1 numarası ${(rekorStat.bir / Math.max(1, rekorStat.n)).toFixed(2)}, hiç geçemeyen ${pct(rekorStat.bos, rekorStat.n)} · Kimlik: ${Object.entries(rekorStat.kimlik).map(([k, v]) => `${k} ${pct(v, N)}`).join(', ')}`);
 console.log(`Rakip çeşitliliği: teklif edilenin ${pct(cesit.tekrarTeklif, cesit.teklif)} daha önce teklif edilmiş, ${pct(cesit.oncekiListe, cesit.teklif)} bir önceki listede · tekrar dövüş ${Object.entries(cesit.dovus).map(([k, v]) => `${k} ${pct(cesit.tekrar[k] ?? 0, v)}`).join(', ')} · yeni rakiplerde aynı soyad ${pct(cesit.soyad, cesit.kisi)}, aynı lakap ${pct(cesit.lakap, cesit.kisi)}`);
 console.log(`Tekrar rakip: ${pct(stats.repeatFights, stats.fights)} dövüş, aynı rakiple en fazla: ${stats.maxSame}, farklı kişi ama aynı isim: ${pct(stats.sameName, stats.fights)}`);
 console.log(`Ezeli rakip: ${pct(stats.nem, N)} kariyerde (${pct(stats.nemYenilgi, stats.nem)} ilk yenilgiden), karşılaşma ort. ${mean(stats.nemMac)} (maks ${Math.max(0, ...stats.nemMac)}), rekabeti bitiren ${pct(stats.nemBitti, stats.nem)}`);
