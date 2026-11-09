@@ -47,6 +47,7 @@ import { chance, pick, randInt, setSeed } from '../src/engine/rng';
 import type { Background, GameState, PlanKey, Tactic } from '../src/engine/types';
 import { STAT_KEYS } from '../src/engine/types';
 const krizStat: Record<string, number> = {};
+const cesit = { teklif: 0, tekrarTeklif: 0, oncekiListe: 0, dovus: {} as Record<string, number>, tekrar: {} as Record<string, number>, soyad: 0, lakap: 0, kisi: 0 };
 const podcastStat = { n: 0 };
 const hypeStat = { n: 0, top: 0 };
 const cutStat = { n: 0, kacti: 0, iri: 0 };
@@ -160,6 +161,10 @@ function playCareer() {
   const seen = new Set<string>();
   const metIds = new Map<string, number>();
   const metNames = new Map<string, string>();
+  const offered = new Set<string>();
+  let lastOffer = new Set<string>();
+  const metSur = new Map<string, string>();
+  const metNick = new Map<string, string>();
   const spendAll = () => {
     for (;;) {
       const k = STAT_KEYS.filter((x) => canSpend(s, x)).sort((a, b) => s.fighter.stats[a] - s.fighter.stats[b])[0];
@@ -240,6 +245,13 @@ function playCareer() {
         else closeEvent(s);
         break;
       case 'rakipSecimi':
+        for (const o of s.pending.secenekler ?? []) {
+          cesit.teklif++;
+          if (offered.has(o.id)) cesit.tekrarTeklif++;
+          if (lastOffer.has(o.id)) cesit.oncekiListe++;
+          offered.add(o.id);
+        }
+        lastOffer = new Set((s.pending.secenekler ?? []).map((o) => o.id));
         pickOpponent(s, s.pending.dayatma ? 0 : randInt(0, 2));
         break;
       case 'kamp': {
@@ -313,6 +325,15 @@ function playCareer() {
         const n = (metIds.get(o.id) ?? 0) + 1;
         metIds.set(o.id, n);
         if (n > 1) stats.repeatFights++;
+        cesit.dovus[s.stage] = (cesit.dovus[s.stage] ?? 0) + 1;
+        if (n > 1) cesit.tekrar[s.stage] = (cesit.tekrar[s.stage] ?? 0) + 1;
+        if (n === 1) {
+          cesit.kisi++;
+          if (metSur.has(o.soyad)) cesit.soyad++;
+          if (metNick.has(o.lakap)) cesit.lakap++;
+          metSur.set(o.soyad, o.id);
+          metNick.set(o.lakap, o.id);
+        }
         if (n === 5 && process.env.DEBUG_REPEAT) console.log("5. karşılaşma:", o.etiket, "rank", o.rank, "champ", o.champion, "stage", s.stage, "rivalry", o.rivalry);
         stats.maxSame = Math.max(stats.maxSame, n);
         const full = `${o.ad} ${o.soyad}`;
@@ -495,6 +516,7 @@ const avg = stats.fightsToUfc.reduce((a, b) => a + b, 0) / Math.max(1, stats.fig
 console.log(`UFC'ye kadar ortalama dövüş: ${avg.toFixed(1)}`);
 console.log('Geçmişe göre galibiyet:', Object.entries(stats.byBg).map(([k, v]) => `${k} ${pct(v.w, v.w + v.l)}`).join(', '));
 console.log('Aşama başına ortalama dövüş:', Object.entries(stats.stageFights).map(([k, v]) => `${k} ${(v / (stats.stageCareers[k] ?? N)).toFixed(1)}`).join(', '));
+console.log(`Rakip çeşitliliği: teklif edilenin ${pct(cesit.tekrarTeklif, cesit.teklif)} daha önce teklif edilmiş, ${pct(cesit.oncekiListe, cesit.teklif)} bir önceki listede · tekrar dövüş ${Object.entries(cesit.dovus).map(([k, v]) => `${k} ${pct(cesit.tekrar[k] ?? 0, v)}`).join(', ')} · yeni rakiplerde aynı soyad ${pct(cesit.soyad, cesit.kisi)}, aynı lakap ${pct(cesit.lakap, cesit.kisi)}`);
 console.log(`Tekrar rakip: ${pct(stats.repeatFights, stats.fights)} dövüş, aynı rakiple en fazla: ${stats.maxSame}, farklı kişi ama aynı isim: ${pct(stats.sameName, stats.fights)}`);
 console.log(`Ezeli rakip: ${pct(stats.nem, N)} kariyerde (${pct(stats.nemYenilgi, stats.nem)} ilk yenilgiden), karşılaşma ort. ${mean(stats.nemMac)} (maks ${Math.max(0, ...stats.nemMac)}), rekabeti bitiren ${pct(stats.nemBitti, stats.nem)}`);
 console.log(`Kayıt boyutu (kariyer sonu): ort. ${Math.round(kayit.boyut.reduce((a, b) => a + b, 0) / kayit.boyut.length / 1024)} KB, maks ${Math.round(Math.max(...kayit.boyut) / 1024)} KB · en büyük alanlar: ${Object.entries(kayit.alan).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([k, v]) => `${k} ${Math.round(v / N / 1024)}KB`).join(', ')}`);

@@ -243,6 +243,7 @@ export interface FightNight {
 export interface FightHistory {
   rakip: string;
   rakipId?: string;
+  rakipLakap?: string;
   org: OrgId;
   sonuc: 'G' | 'M' | 'B';
   yontem: string;
@@ -836,6 +837,8 @@ export interface GameState {
   seri: number; // + galibiyet serisi, - mağlubiyet serisi
   orgMaglubiyet: number;
   reddedilen: number;
+  /** Bir önceki teklifteki rakipler: aynı isimler üst üste gösterilmesin */
+  sonTeklif?: string[];
   motivasyon: number; // -2..+2, bir sonraki kampı etkiler
   trashTalk: boolean;
   kisaHaber: boolean;

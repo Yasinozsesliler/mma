@@ -28,7 +28,7 @@ export type Nemesis = {
 
 /** Karşılaşmalar arasında en az kaç dövüş olsun; toplam en fazla kaç karşılaşma. */
 const ARA = 5;
-const MAKS = 5;
+const MAKS = 4;
 
 const fights = (s: GameState) => s.gecmis.length;
 const handle = (n: Nemesis) => `@${`${n.ad}${n.soyad}`.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 14) || 'rakip'}`;

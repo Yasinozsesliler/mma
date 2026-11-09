@@ -106,16 +106,18 @@ function recordFor(org: OrgId, rank: number | null, champion: boolean) {
   };
 }
 
-/** Bu kariyerde kullanılmış isimler: aynı isimli iki farklı rakip çıkmasın. */
+/** Bu kariyerde kullanılmış isimler: aynı isim, soyad ya da lakapla yeni rakip çıkmasın (havuz biterse yalnızca tam isim korunur). */
 function usedNames(s: GameState, extra: Opponent[] = []) {
+  const known = [...s.rakipler, ...(s.bolum?.liste ?? []), ...(s.bolum?.sampiyon ? [s.bolum.sampiyon] : []), ...extra];
   const names = new Set(s.gecmis.map((h) => h.rakip));
-  s.rakipler.forEach((r) => names.add(`${r.ad} ${r.soyad}`));
-  extra.forEach((r) => names.add(`${r.ad} ${r.soyad}`));
-  const nicks = new Set([...s.rakipler, ...extra].map((r) => r.lakap));
+  known.forEach((r) => names.add(`${r.ad} ${r.soyad}`));
+  const surnames = new Set([...names].map((n) => n.split(' ').pop()));
+  const nicks = new Set(known.map((r) => r.lakap));
+  s.gecmis.forEach((h) => h.rakipLakap && nicks.add(h.rakipLakap));
   // Rakip, oyuncunun kendi lakabını ve ezeli rakibin lakabını taşımasın.
   if (s.fighter.lakap) nicks.add(s.fighter.lakap);
   if (s.ezeli) nicks.add(s.ezeli.lakap);
-  return { names, nicks };
+  return { names, surnames, nicks };
 }
 
 export function generateOpponent(
@@ -132,12 +134,12 @@ export function generateOpponent(
   const nameOf = (p: (typeof NAME_POOLS)[number]) => ({ ad: pick(kadin ? p.kadin : p.ad), soyad: kadin && p.slav ? femSurname(pick(p.soyad)) : pick(p.soyad) });
   let pool = pick(NAME_POOLS);
   let { ad, soyad } = nameOf(pool);
-  for (let i = 0; i < 30 && used.names.has(`${ad} ${soyad}`); i++) {
+  for (let i = 0; i < 60 && (used.names.has(`${ad} ${soyad}`) || (i < 40 && used.surnames.has(soyad))); i++) {
     pool = pick(NAME_POOLS);
     ({ ad, soyad } = nameOf(pool));
   }
   let lakap = pick(NICKNAMES);
-  for (let i = 0; i < 10 && used.nicks.has(lakap); i++) lakap = pick(NICKNAMES);
+  for (let i = 0; i < 40 && used.nicks.has(lakap); i++) lakap = pick(NICKNAMES);
   let stil = weighted(STYLE_WEIGHTS);
   let uyruk = pool.ulke;
   // UCC: kadrodaki yıldızlar (şampiyon ve üst sıralar en tanınmışlar)

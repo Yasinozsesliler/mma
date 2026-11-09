@@ -126,6 +126,7 @@ export function findNextFight(s: GameState) {
   }
   assignCities(s, s.pending.secenekler, currentOrg(s));
   s.pending.secenekler.forEach((o) => (o.macHafta = leadWeeks(s, o, s.kisaHaber)));
+  s.sonTeklif = s.pending.secenekler.map((o) => o.id);
   s.phase = 'rakipSecimi';
 }
 
@@ -236,6 +237,7 @@ export function finishFight(s: GameState) {
   s.gecmis.unshift({
     rakip: `${opp.ad} ${opp.soyad}`,
     rakipId: opp.id,
+    rakipLakap: opp.lakap,
     org,
     sonuc: won ? 'G' : draw ? 'B' : 'M',
     yontem: methodLabel(r.yontem),

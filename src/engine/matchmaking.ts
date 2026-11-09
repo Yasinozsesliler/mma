@@ -2,7 +2,7 @@
 import { L as tL } from '../i18n';
 import { currentOrg } from './character';
 import { ORGS } from './data';
-import { divisionChampion, ensureDivision, rankedOpponent } from './division';
+import { divisionChampion, ensureDivision, freshenRank, rankedOpponent } from './division';
 import { generateOpponent, riskText } from './opponents';
 import { maybeNemesisOffer } from './nemesis';
 import { chance, clamp, randInt } from './rng';
@@ -11,10 +11,12 @@ import type { GameState, Opponent } from './types';
 /** Sıralamadaki r. dövüşçü; liste yoksa aynı seviyede yeni bir rakip üretilir. */
 function ranked(s: GameState, r: number | null, z: -1 | 0 | 1, exclude: Opponent[] = []): Opponent {
   if (r != null) {
-    const o = rankedOpponent(s, r);
-    if (o && !exclude.some((x) => x.id === o.id)) return { ...o, zorluk: z };
+    const o = rankedOpponent(s, r, exclude);
+    if (o) return { ...o, zorluk: z };
   }
-  return generateOpponent(s, { zorluk: z, rank: r }, exclude);
+  const yeni = generateOpponent(s, { zorluk: z, rank: r }, exclude);
+  if (r != null) freshenRank(s, r, yeni);
+  return yeni;
 }
 
 function titleFight(s: GameState): Opponent {
@@ -33,19 +35,20 @@ function calledOut(s: GameState): Opponent | null {
   if (s.bolum.sampiyon?.id === id) return titleBlocked(s) ? null : titleFight(s);
   const idx = s.bolum.liste.findIndex((x) => x.id === id);
   if (idx < 0) return null;
-  const o = rankedOpponent(s, idx + 1 + (s.rank != null && s.rank <= idx + 1 ? 1 : 0));
-  if (!o || o.id !== id) return null;
+  // Meydan okuma rövanş da olabilir; yalnızca son rakibe art arda olmaz.
+  if (s.gecmis[0]?.rakipId === id) return null;
+  const o: Opponent = { ...s.bolum.liste[idx], rank: idx + 1 + (s.rank != null && s.rank <= idx + 1 ? 1 : 0), champion: false };
   return { ...o, zorluk: 1, etiket: tL("🎤 MEYDAN OKUDUĞUN İSİM"), riskMetni: tL("Mikrofonu aldın ve adını söyledin. Organizasyon bu maçı yaptı. Şimdi sözlerinin arkasında dur.") };
 }
 
-/** Aynı şampiyonla 3 kez karşılaşıldıysa önce eleme maçı gerekir (sonsuz rövanş olmasın). */
+/** Aynı şampiyonla 3 kez karşılaşıldıysa kemer el değiştirmeden yeni unvan maçı yok; 2 maçtan sonra da araya 3 maç girer (sonsuz rövanş olmasın). */
 function titleBlocked(s: GameState) {
   const c = s.bolum?.sampiyon;
   if (!c) return false;
   const n = s.gecmis.filter((h) => h.rakipId === c.id).length;
   const since = s.gecmis.findIndex((h) => h.rakipId === c.id); // son karşılaşmadan bu yana dövüş sayısı
-  if (n >= 4) return true;
-  return n >= 2 && since >= 0 && since < 2;
+  if (n >= 3) return true;
+  return n >= 2 && since >= 0 && since < 3;
 }
 
 const avoid = (s: GameState, r: number) => (s.rank != null && r === s.rank ? (r > 1 ? r - 1 : r + 1) : r);
