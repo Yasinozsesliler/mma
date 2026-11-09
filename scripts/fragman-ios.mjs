@@ -15,7 +15,7 @@ import puppeteer from 'puppeteer-core';
 
 const FF = process.argv[2];
 const RICH = process.argv[3];
-const VIDEO = ['taktik', 'yasam', 'insta'].includes(process.argv[4]) ? process.argv[4] : 'ana';
+const VIDEO = ['taktik', 'yasam', 'insta', 'modlar'].includes(process.argv[4]) ? process.argv[4] : 'ana';
 const MODE = process.argv.slice(4).includes('yayinda') ? 'yayinda' : 'yakinda';
 if (!FF || !existsSync(FF)) throw new Error('ffmpeg yolu gerekli');
 if (!RICH || !existsSync(RICH)) throw new Error('zengin kariyer kaydı (json) gerekli');
@@ -84,6 +84,20 @@ const VIDEOS = {
     ['c4', 'kart', 'AMA KEMER KAFESTE KAZANILIR.', '', 1.8],
     ['belt', 'kayit', 'TARİHE GEÇ', 'DÜNYA ŞAMPİYONU', 3.0],
   ],
+  // 1.1.0 güncellemesi: Hakem Modu ve Antrenör Modu
+  modlar: [
+    ['c1', 'kart', 'YOL GÜNCELLENDİ!', '', 1.4],
+    ['c2', 'kart', 'ARTIK SADECE DÖVÜŞÇÜ DEĞİLSİN.', '', 1.9],
+    ['hakem1', 'kayit', 'YENİ: HAKEM MODU', 'KAFESİN İÇİNDEKİ ÜÇÜNCÜ KİŞİ SENSİN', 3.0],
+    ['hakem2', 'kayit', 'FAULDE KARARI SEN VER', 'UYARI · PUAN DÜŞ · DİSKALİFİYE', 3.2],
+    ['hakem3', 'kayit', 'PUAN KARTINI DOLDUR', '10-9 MU, 10-8 Mİ?', 2.7],
+    ['coach1', 'kayit', 'YENİ: ANTRENÖR MODU', 'KENDİ SALONUNU KUR', 2.8],
+    ['coach2', 'kayit', 'ŞAMPİYONUNU YETİŞTİR', 'ÖĞRENCİ SEÇ · KAMP KUR', 2.8],
+    ['coach3', 'kayit', 'OYUN PLANINI ÇİZ', 'KEŞİF RAPORU · RAKİBİ OKU', 3.0],
+    ['coach4', 'kayit', 'KÖŞEDE SEN VARSIN', 'RAUNT ARASI TALİMAT VER', 3.3],
+    ['c3', 'kart', 'DÖVÜŞ. YARGILA. YETİŞTİR.', '', 1.7],
+    ['c4', 'kart', 'İKİ YENİ MOD · ÜCRETSİZ DENE', '', 1.9],
+  ],
 };
 let SCENES = VIDEOS[VIDEO];
 const END_SEC = 3.8;
@@ -105,7 +119,7 @@ await page.evaluateOnNewDocument((taktik) => {
   localStorage.setItem('yol_spiker', '0');
   localStorage.setItem('yol_ipucu', '0');
   localStorage.setItem('yol_canli_rehber', '1'); // canlı dövüş öğreticisi görülmüş
-  localStorage.setItem('yol_satinalim', JSON.stringify(['paket_altin']));
+  localStorage.setItem('yol_satinalim', JSON.stringify(['paket_altin', 'hakem_modu', 'antrenor_modu']));
   localStorage.setItem('yol_kozmetik', JSON.stringify({ equip: { sort: 'sort_altin', eldiven: 'eld_altin', cerceve: 'cer_altin', kemer: 'kem_altin', giris: 'gir_epik' }, acik: [], yeni: [] }));
   if (taktik) localStorage.setItem('yol_canli', '0'); // dövüş taktik modunda: raunt planı, akış, kritik anlar
 }, VIDEO === 'taktik');
@@ -487,6 +501,164 @@ if (VIDEO === 'ana') {
     if (mk.qte != null && mk.son != null) break;
     console.log('↺ kritik an ya da nakavt yok, yeniden deneniyor', deneme);
   }
+} else if (VIDEO === 'modlar') {
+  // ---------- 1.1.0: Hakem Modu ve Antrenör Modu ----------
+  const tap = async (k, { exact = false } = {}) => {
+    const box = await page.evaluate((k, exact) => {
+      const up = (s) => (s || '').trim().toLocaleUpperCase('tr');
+      const els = [...document.querySelectorAll('[tabindex="0"],[aria-label]')];
+      let el = els.find((e) => up(e.getAttribute('aria-label')) === up(k));
+      el ??= els.find((e) => (exact ? up(e.innerText).split('\n').includes(up(k)) : up(e.innerText).includes(up(k))));
+      if (!el) return null;
+      el.scrollIntoView({ block: 'nearest' });
+      const r = el.getBoundingClientRect();
+      return { x: r.x + r.width / 2, y: r.y + r.height / 2 };
+    }, k, exact);
+    if (!box) return false;
+    await page.mouse.click(box.x, box.y);
+    await sleep(200);
+    return true;
+  };
+  /** Ekrandaki ilk çok satırlı seçenek kartına gerçek dokunuş (menü/sekme düğmeleri hariç). */
+  const tapChoice = async (after = '') => {
+    const box = await page.evaluate((after) => {
+      const up = (s) => (s || '').toLocaleUpperCase('tr');
+      const els = [...document.querySelectorAll('[tabindex="0"]')];
+      let start = 0;
+      if (after) {
+        const anchor = [...document.querySelectorAll('div')].filter((d) => up(d.innerText).includes(up(after))).pop();
+        if (anchor) start = els.findIndex((e) => anchor.compareDocumentPosition(e) & Node.DOCUMENT_POSITION_FOLLOWING);
+      }
+      const el = els.slice(Math.max(0, start)).find((e) => e.innerText.trim().split('\n').length >= 2 && !/MENÜ|İLERLET|KÖŞEDE SENİ/.test(up(e.innerText)) && e.getBoundingClientRect().height > 30);
+      if (!el) return null;
+      el.scrollIntoView({ block: 'nearest' });
+      const r = el.getBoundingClientRect();
+      return { x: r.x + r.width / 2, y: r.y + r.height / 2 };
+    }, after);
+    if (!box) return false;
+    await page.mouse.click(box.x, box.y);
+    await sleep(250);
+    return true;
+  };
+  const tapOffer = async () => {
+    const box = await page.evaluate(() => {
+      const el = [...document.querySelectorAll('[tabindex="0"]')].find((e) => /\$\s?\d/.test(e.innerText));
+      if (!el) return null;
+      el.scrollIntoView({ block: 'nearest' });
+      const r = el.getBoundingClientRect();
+      return { x: r.x + r.width / 2, y: r.y + r.height / 2 };
+    });
+    if (!box) return false;
+    await page.mouse.click(box.x, box.y);
+    return true;
+  };
+  const fill = async (a, c) => {
+    const inp = await page.$$('input');
+    if (inp[0]) await inp[0].type(a);
+    if (inp[1]) await inp[1].type(c);
+  };
+  const T = async () => up(await body());
+  // Hakem Modu
+  await page.goto('http://localhost:8088/', { waitUntil: 'networkidle0' });
+  await sleep(1100);
+  await tap('Hakem Modu');
+  await sleep(900);
+  await fill('Deniz', 'Kaya');
+  if (!(await tap('Hakemliğe başla'))) await tap('Ücretsiz dene');
+  await sleep(1300);
+  await rec('hakem1', async () => {
+    await sleep(1000);
+    await tapOffer();
+    await sleep(3400);
+  });
+  let gotK = false;
+  let gotP = false;
+  for (let i = 0; i < 1500 && !(gotK && gotP); i++) {
+    const t = await T();
+    const bs = await buttons();
+    if (t.includes('KARAR ANI') && bs.some((x) => up(x).includes('PUAN DÜŞ'))) {
+      if (!gotK) {
+        await rec('hakem2', async () => {
+          await sleep(1500);
+          await tap('PUAN DÜŞ');
+          await sleep(2200);
+        });
+        gotK = true;
+      } else await tap('SÖZLÜ UYARI');
+      await sleep(400);
+      continue;
+    }
+    if (t.includes('KARAR ANI') && !bs.some((x) => /^10-/.test(x.trim()))) {
+      // durdurma/doktor gibi başka karar anları: ilk seçenek
+      const k = bs.findIndex((x, j) => j > 1 && x.trim() && !/MENÜ|HIZLI/.test(up(x)));
+      if (k >= 0) await (await page.$$('[tabindex="0"]'))[k].click().catch(() => undefined);
+      await sleep(400);
+      continue;
+    }
+    if (bs.some((x) => /^10-9/.test(x.trim()))) {
+      if (!gotP) {
+        await rec('hakem3', async () => {
+          await sleep(1300);
+          await tap('10-9 Kırmızı');
+          await sleep(1700);
+        });
+        gotP = true;
+      } else await tap('10-9 Kırmızı');
+      await sleep(300);
+      continue;
+    }
+    if (await click('Maçı bitir')) { await sleep(900); continue; }
+    if (await click('Hızlı geç')) { await sleep(250); continue; }
+    if (bs.some((x) => /\$\s?\d/.test(x))) { await tapChoice('BASIN KAPIDA') || await tapChoice('KOMİSYON'); await tapOffer(); await sleep(900); continue; }
+    if (!(await click('Devam'))) { await tapChoice(); await sleep(400); }
+  }
+  console.log('hakem: karar', gotK, 'puan', gotP);
+  // Antrenör Modu
+  await page.goto('http://localhost:8088/', { waitUntil: 'networkidle0' });
+  await sleep(1100);
+  await tap('Antrenör Modu');
+  await sleep(900);
+  await fill('Ali', 'Demir');
+  await tap('Salonu aç');
+  await sleep(1400);
+  await rec('coach1', async () => {
+    await sleep(1100);
+    await tap('Savaşçı Okulu');
+    await sleep(2200);
+  });
+  await rec('coach2', async () => {
+    await sleep(400);
+    await tap('Öğrenciler', { exact: true });
+    await sleep(1300);
+    await tap('Kaydet ·');
+    await sleep(900);
+    await tap('Kaydet ·');
+    await sleep(1300);
+  });
+  await tap('Salon', { exact: true });
+  await sleep(600);
+  for (let w = 0; w < 90; w++) {
+    if (await tap('KÖŞEDE SENİ BEKLİYOR')) break;
+    if ((await T()).includes('SALONDA BİR DURUM VAR')) { await tapChoice('SALONDA BİR DURUM VAR'); await sleep(400); continue; }
+    if (!(await tap('Haftayı ilerlet'))) await sleep(300);
+    await sleep(250);
+  }
+  await sleep(1300);
+  await rec('coach3', async () => {
+    await sleep(1600);
+    await tapChoice('Oyun planını sen belirle');
+    await sleep(2600);
+  });
+  for (let i = 0; i < 200; i++) {
+    const t = await T();
+    if (t.includes('TALİMATIN NE')) break;
+    if (!(await click('Hızlı geç'))) await sleep(300);
+  }
+  await rec('coach4', async () => {
+    await sleep(1500);
+    console.log('talimat:', await tapChoice('Talimatın ne'));
+    await sleep(1700);
+  });
 } else if (VIDEO === 'insta') {
   // ---------- Kafesgram (Instagram modu): akış, hikâye, fotoğraf, profil, DM, trash talk, sıralama ----------
   // Dokunuş: etiket (aria-label) ya da yazıyla bulunur, ortasına gerçek fare tıklaması yapılır
@@ -722,7 +894,7 @@ for (const [name, tur, , , d, clip, st] of SCENES) {
     execFileSync(FF, ['-y', '-loop', '1', '-t', String(d), '-i', `${tmp}/card-${name}.png`, '-filter_complex', `[0:v]scale=1080:1920,scale=w='trunc(1080*(1.06+0.06*t/${d})/2)*2':h=-2:eval=frame,crop=1080:1920,format=yuv420p[v]`, '-map', '[v]', '-t', String(d), ...enc, out], { stdio: 'ignore' });
   } else {
     // Instagram videosu: kaydın tamamı sahneye sığacak kadar hızlandırılır (dokunuşlar arası bekleme kısalır)
-    const fit = VIDEO === 'insta' && name !== 'belt';
+    const fit = (VIDEO === 'insta' || VIDEO === 'modlar') && name !== 'belt';
     const ss = fit ? 0.15 : Math.min(st ? Math.max(0, st(segs[src].marks)) : startOf(src, d), Math.max(0, segs[src].sn - d));
     const speed = fit ? Math.max(1, (segs[src].sn - ss) / d) : 1;
     execFileSync(FF, [
@@ -791,6 +963,16 @@ if (VIDEO === 'ana') {
   cue('ko', 0.05, 'heavy', 0.9);
   cue('ko', 0.3, 'roar', 0.8);
   cue('finish', 0.2, 'applause', 0.6);
+} else if (VIDEO === 'modlar') {
+  cue('hakem1', 0.7, 'tap', 0.7);
+  cue('hakem2', 1.0, 'slam', 0.6);
+  cue('hakem3', 1.2, 'tap', 0.7);
+  cue('coach1', 0.9, 'tap', 0.7);
+  cue('coach1', 1.1, 'chime', 0.5);
+  cue('coach2', 0.9, 'cash', 0.4);
+  cue('coach3', 1.1, 'tap', 0.7);
+  cue('coach4', 1.2, 'tap', 0.7);
+  cue('coach4', 1.4, 'swell', 0.5);
 } else if (VIDEO === 'insta') {
   cue('story', 0.45, 'whoosh', 0.5);
   [0.7, 1.25, 1.8, 2.3].forEach((x) => cue('photo', x, 'tap', 0.7));
