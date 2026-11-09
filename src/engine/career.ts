@@ -30,6 +30,7 @@ import { campCost, randomInjury, startCamp } from './camp';
 import { ORGS, WEIGHT_CLASSES, WEIGHT_MODS } from './data';
 import { methodLabel, topMoments } from './fight';
 import { maybeEvent } from './events';
+import { ensureHabits } from './habits';
 import { ligAcik, ligAfterFight, ligBitisMetni, ligBitti } from './amateurLeague';
 import { ensureDivision, syncDivision } from './division';
 import { imposedOpponent, opponentChoices } from './matchmaking';
@@ -133,6 +134,7 @@ export function findNextFight(s: GameState) {
 
 export function pickOpponent(s: GameState, idx: number) {
   s.pending.rakip = s.pending.secenekler![idx];
+  ensureHabits(s, s.pending.rakip);
   s.pending.secenekler = undefined;
   s.reddedilen = 0;
   startCamp(s);

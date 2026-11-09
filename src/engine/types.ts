@@ -89,6 +89,11 @@ export interface Opponent {
   sehir?: string;
   /** Memlekette ana maç (hometown.ts) */
   memleket?: boolean;
+  /** Gizli alışkanlıklar ve oyuncunun öğrendikleri (habits.ts) */
+  huylar?: import('./habits').HabitId[];
+  huyBilinen?: import('./habits').HabitId[];
+  videoIzlendi?: boolean;
+  partnerTutuldu?: boolean;
   /** Amatör Ligi: tablodaki sıra ve final maçı (amateurLeague.ts) */
   ligSira?: number;
   amFinal?: boolean;
@@ -413,6 +418,11 @@ export interface FightMoment {
   biz: boolean;
 }
 
+export interface Bolge {
+  govde: number;
+  bacak: number;
+}
+
 export interface FightState {
   opp: Opponent;
   pStats: Stats;
@@ -461,6 +471,10 @@ export interface FightState {
   /** Her andan sonraki durum fotoğrafı: ekran, akışın gösterildiği noktaya kadar olan durumu çizer (sonucu önceden göstermez). */
   anlar?: FightSnap[];
   kesik: boolean;
+  /** Bölgesel hasar: gövde ve bacak (baş hasarı pHasar/oHasar) */
+  pBolge?: Bolge;
+  oBolge?: Bolge;
+  oKesik?: boolean;
   /** Raunt arası köşe anı: nefes alınan raunt ve kesik bakımı (bir sonraki doktor kontrolünde risk yarıya iner) */
   nefesRaunt?: number;
   nefesQ?: number;

@@ -1,5 +1,6 @@
 // Kamp planı: süre, yer, odak, oyun planı, yoğunluk, kilo ve basın tek ekranda.
 // Varsayılan: son kampta seçtiklerin (ilk kezse hocanın önerisi); çoğu zaman tek dokunuşla "Kampa başla".
+import { canSpar, canStudy, HABITS, hireLookalike, partnerCost, studyVideo } from '../engine/habits';
 import { PosterCard } from './PosterCard';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useMemo, useState, type ReactNode } from 'react';
@@ -93,6 +94,29 @@ function Meter({ label, value, color }: { label: string; value: number; color: s
   );
 }
 
+/** Rakip dosyası: video ve benzer partnerle gizli alışkanlıkları açar. */
+function RivalFile({ s, act }: { s: GameState; act: Act }) {
+  const o = s.pending.rakip!;
+  const huylar = o.huylar ?? [];
+  if (!huylar.length) return null;
+  const bilinen = o.huyBilinen ?? [];
+  const bedel = partnerCost(s);
+  return (
+    <Block title={L("RAKİP DOSYASI")} right={<Text style={cp.blockNote}>{bilinen.length}/{huylar.length}</Text>}>
+      {huylar.map((h) => (
+        <Text key={h} style={cp.note}>{bilinen.includes(h) ? `🎯 ${HABITS[h].ad()}: ${HABITS[h].ipucu()}` : L("❓ Henüz çözülmedi")}</Text>
+      ))}
+      {bilinen.length < huylar.length ? (
+        <View style={[cp.row, { marginTop: 8 }]}>
+          <Chip on={false} label={L("🎥 VİDEO İZLE")} sub={o.videoIzlendi ? L("İzlendi") : L("Ücretsiz")} disabled={!canStudy(o)} onPress={() => act(studyVideo)} />
+          <Chip on={false} label={L("🥊 BENZER PARTNER")} sub={o.partnerTutuldu ? L("Tutuldu") : money(bedel)} disabled={!canSpar(s, o)} onPress={() => act(hireLookalike)} />
+        </View>
+      ) : null}
+      {bilinen.length < huylar.length ? <Text style={cp.note}>{L("Çözülmeyenleri köşen maç sırasında fark edebilir.")}</Text> : null}
+    </Block>
+  );
+}
+
 export function CampPlanner({ s, act, choose, steps }: { s: GameState; act: Act; choose: (v: string) => void; steps: ReactNode }) {
   const k = s.pending.kamp!;
   const o = s.pending.rakip!;
@@ -150,6 +174,7 @@ export function CampPlanner({ s, act, choose, steps }: { s: GameState; act: Act;
           <OvrBadge value={d.guc} size={44} />
         </LinearGradient>
         <PosterCard s={s} act={act} />
+        <RivalFile s={s} act={act} />
 
         <Pressable onPress={() => setP(coach)} style={({ pressed }) => [cp.coachBtn, isCoach && cp.coachOn, pressed && { opacity: 0.85 }]}>
           <Icon name={isCoach ? 'check-decagram' : 'whistle'} size={18} color={isCoach ? '#111' : C.gold} />

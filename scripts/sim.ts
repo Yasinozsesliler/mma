@@ -42,6 +42,7 @@ import { createLegendGame, currentChapter, LEGENDS, legendStars, startBonus, unl
 import { chooseEvent, closeEvent } from '../src/engine/events';
 import { chooseTactic, nextRound, resolveCritical, resolveDecision } from '../src/engine/fight';
 import { weakest } from '../src/engine/opponents';
+import { habitEdge } from '../src/engine/habits';
 import { canSpend, spendPoint } from '../src/engine/progression';
 import { chance, pick, randInt, setSeed } from '../src/engine/rng';
 import type { Background, GameState, PlanKey, Tactic } from '../src/engine/types';
@@ -138,6 +139,13 @@ const stats = {
 const PLAN_FOR: Record<string, PlanKey> = { vurus: 'ayakta', cene: 'ayakta', hiz: 'ayakta', gures: 'gures', yer: 'yer', kondisyon: 'tempo', iq: 'kontra' };
 
 function smartTactic(s: GameState): Tactic {
+  // EXPLOIT=1: bot, köşenin bulduğu huyu ve videoyu kullanan dikkatli oyuncu gibi oynar (zaaf üstünlüğünün üst sınırı)
+  const fs = s.pending.dovus;
+  if (process.env.EXPLOIT && fs) {
+    const tum: Tactic[] = ['baski', 'kontra', 'takedown', 'clinch', 'mesafe'];
+    const best = tum.reduce((a, b) => (habitEdge(fs, b) > habitEdge(fs, a) ? b : a));
+    if (habitEdge(fs, best) > 0 && fs.oyuncuTaktikGecmisi?.at(-1) !== best) return best;
+  }
   const st = s.fighter.stats;
   const best = st.vurus >= st.gures && st.vurus >= st.yer ? 'baski' : 'takedown';
   return pick<Tactic>([best, best, 'mesafe', 'kontra', 'clinch']);
