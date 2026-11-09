@@ -15,7 +15,7 @@ import puppeteer from 'puppeteer-core';
 
 const FF = process.argv[2];
 const RICH = process.argv[3];
-const VIDEO = ['taktik', 'yasam', 'insta', 'modlar'].includes(process.argv[4]) ? process.argv[4] : 'ana';
+const VIDEO = ['taktik', 'yasam', 'insta', 'modlar', 'pedia'].includes(process.argv[4]) ? process.argv[4] : 'ana';
 const MODE = process.argv.slice(4).includes('yayinda') ? 'yayinda' : 'yakinda';
 if (!FF || !existsSync(FF)) throw new Error('ffmpeg yolu gerekli');
 if (!RICH || !existsSync(RICH)) throw new Error('zengin kariyer kaydı (json) gerekli');
@@ -98,10 +98,21 @@ const VIDEOS = {
     ['c3', 'kart', 'DÖVÜŞ. YARGILA. YETİŞTİR.', '', 1.7],
     ['c4', 'kart', 'İKİ YENİ MOD · ÜCRETSİZ DENE', '', 1.9],
   ],
+  // Kafespedia: "bu sayfa bir dövüşçüye ait… o dövüşçü sensin" (tam ekran açılış, belgesel, lüks, Kafesgram, stil)
+  // 'tam' sahne: telefon çerçevesi yok; t = alttaki büyük yazı ("üst|alt"), s = üstteki sarı etiket
+  pedia: [
+    ['hook1', 'tam', 'BU SAYFA|BİR DÖVÜŞÇÜYE AİT', '', 2.0, 'wiki', () => 0.2],
+    ['hook2', 'tam', 'O DÖVÜŞÇÜ|SENSİN', '', 1.7, 'wiki', (m) => m.kay ?? 2.2],
+    ['pedia', 'kayit', 'KARİYERİN SATIR SATIR YAZILIYOR', 'KAFESPEDIA', 2.7, 'wiki2', () => 0.2],
+    ['doc', 'tam', '', 'KARİYER BELGESELİN', 5.6, 'doc', () => 0.15],
+    ['lux', 'kayit', 'SÜPER ARABA, YAT, JET', 'ŞAMPİYON GİBİ YAŞA', 2.6],
+    ['gram', 'kayit', 'MİLYONLARCA TAKİPÇİ', 'KAFESGRAM PROFİLİN', 2.5],
+    ['stil', 'kayit', 'SAÇ, SAKAL, DÖVME', 'TARZINI SEN SEÇ', 2.7],
+  ],
 };
 let SCENES = VIDEOS[VIDEO];
 const END_SEC = 3.8;
-const END_TXT = ["APP STORE'DA ŞİMDİ", 'ÜCRETSİZ İNDİR'];
+const END_TXT = VIDEO === 'pedia' ? ['APP STORE · GOOGLE PLAY', 'ÜCRETSİZ İNDİR'] : ["APP STORE'DA ŞİMDİ", 'ÜCRETSİZ İNDİR'];
 
 const browser = await puppeteer.launch({ executablePath: process.env.CHROME, headless: true, args: ['--no-sandbox'] });
 const page = await browser.newPage();
@@ -501,6 +512,83 @@ if (VIDEO === 'ana') {
     if (mk.qte != null && mk.son != null) break;
     console.log('↺ kritik an ya da nakavt yok, yeniden deneniyor', deneme);
   }
+} else if (VIDEO === 'pedia') {
+  // ---------- Kafespedia, belgesel, lüks, Kafesgram, stil (tek bir şampiyonun kariyeri) ----------
+  const tap = async (k, { exact = false } = {}) => {
+    const box = await page.evaluate((k, exact) => {
+      const up = (s) => (s || '').trim().toLocaleUpperCase('tr');
+      const els = [...document.querySelectorAll('[tabindex="0"],[aria-label]')];
+      let el = els.find((e) => up(e.getAttribute('aria-label')) === up(k));
+      el ??= els.find((e) => (exact ? up(e.innerText).split('\n').includes(up(k)) : up(e.innerText).includes(up(k))));
+      if (!el) return null;
+      el.scrollIntoView({ block: 'nearest' });
+      const r = el.getBoundingClientRect();
+      return { x: r.x + r.width / 2, y: r.y + r.height / 2 };
+    }, k, exact);
+    if (!box) return console.log('⚠️ bulunamadı:', k), false;
+    await page.mouse.click(box.x, box.y);
+    return true;
+  };
+  // Kafespedia: önce tam ekran (bilgi kutusu → kayarak içerik), sonra telefonda dövüş kaydına kadar
+  await page.goto('http://localhost:8088/', { waitUntil: 'networkidle0' });
+  await sleep(700);
+  await show('hub');
+  await tap('Profil');
+  await sleep(900);
+  await tap('Kafespedia');
+  await sleep(1300);
+  await rec('wiki', async (now) => {
+    await sleep(1900);
+    const kay = now();
+    await smoothScroll(520, 1800);
+    await sleep(300);
+    return { kay };
+  });
+  await rec('wiki2', async () => {
+    await sleep(300);
+    await smoothScroll(1700, 2700);
+    await sleep(300);
+  });
+  // Belgesel: açılış sahnesi, sonra seçili bölümler (aradaki sahneler hızla geçilir)
+  await show('belgesel', "s.pending.sonrakiFaz = 'hub';");
+  const docTo = async (title) => {
+    for (let i = 0; i < 30; i++) {
+      if ((await body()).includes(title)) return true;
+      await page.mouse.click(270, 520);
+      await sleep(70);
+    }
+    return console.log('⚠️ belgesel sahnesi yok:', title), false;
+  };
+  await rec('doc', async () => {
+    await sleep(800);
+    for (const tt of ['Profesyonel oldu', 'Dergi kapağı', "UCC'ye ilk adım", '10 maçlık seri']) {
+      await docTo(tt);
+      await sleep(1050);
+    }
+  });
+  await show('luks');
+  await rec('lux', async () => {
+    await sleep(350);
+    await smoothScroll(560, 2000);
+    await sleep(300);
+  });
+  await show('sosyal');
+  await tap('Profil');
+  await sleep(900);
+  await rec('gram', async () => {
+    await sleep(500);
+    await smoothScroll(480, 2000);
+    await sleep(300);
+  });
+  await show('stil');
+  await rec('stil', async () => {
+    await sleep(400);
+    for (const k of ['Mohawk', 'Gür sakal', 'Kol (tribal)', 'Topuz', 'Keçi sakalı']) {
+      await tap(k, { exact: true });
+      await sleep(520);
+    }
+    await sleep(300);
+  });
 } else if (VIDEO === 'modlar') {
   // ---------- 1.1.0: Hakem Modu ve Antrenör Modu ----------
   const tap = async (k, { exact = false } = {}) => {
@@ -815,7 +903,7 @@ if (VIDEO === 'ana') {
 
 // Başlangıcı bir işarete bağlı olup o an yaşanmayan sahneler çıkarılır
 SCENES = SCENES.filter(([name, tur, , , , clip, st]) => {
-  if (tur !== 'kayit') return true;
+  if (tur !== 'kayit' && tur !== 'tam') return true;
   const sg = segs[clip ?? name];
   if (!sg) return console.log('⚠️ kayıt yok, sahne çıkarıldı:', name), false;
   if (st && st(sg.marks) == null) return console.log('⚠️ an yaşanmadı, sahne çıkarıldı:', name), false;
@@ -839,6 +927,20 @@ const CSS = `${FONTS}
 .s{font-size:20px;line-height:24px;color:#111;background:#f2c14e;padding:3px 12px;transform:skewX(-8deg);letter-spacing:1px}
 .ph{position:absolute;left:${PH.x / 2 - 6}px;top:${PH.y / 2 - 6}px;width:${PH.w / 2 + 12}px;height:${PH.h / 2 + 12}px;border-radius:30px;background:#000;box-shadow:0 0 0 2px #3a1a20,0 20px 60px rgba(0,0,0,.8),0 0 60px rgba(230,57,70,.35)}
 .logo{position:absolute;left:18px;top:20px;display:flex;align-items:center;gap:8px;font-size:18px;letter-spacing:3px;color:#e63946}.logo img{width:30px}`;
+// Kapanış konfetisi (sabit tohumlu dağılım: her çalıştırmada aynı)
+const CONFETTI = (() => {
+  let r = 7;
+  const rnd = () => ((r = (r * 9301 + 49297) % 233280) / 233280);
+  const cols = ['#f2c14e', '#e63946', '#ffffff', '#ffd98a'];
+  let h = '';
+  for (let i = 0; i < 70; i++) {
+    const x = Math.round(rnd() * 540);
+    const y = Math.round(rnd() * 960);
+    if (y > 250 && y < 760 && x > 90 && x < 450) continue;
+    h += `<i style="position:absolute;left:${x}px;top:${y}px;width:${4 + Math.round(rnd() * 5)}px;height:${8 + Math.round(rnd() * 8)}px;background:${cols[i % 4]};opacity:${(0.55 + rnd() * 0.45).toFixed(2)};transform:rotate(${Math.round(rnd() * 180)}deg)"></i>`;
+  }
+  return h;
+})();
 const shot = async (html, file, transparent = false) => {
   await page.setViewport({ width: 540, height: 960, deviceScaleFactor: 2 });
   await page.setContent(html, { waitUntil: 'load' });
@@ -854,6 +956,17 @@ body{background:#030304}.k{position:absolute;inset:0;display:flex;flex-direction
 .k i{display:block;width:90px;height:5px;background:#e63946}</style></head><body><div class="k"><b>${t}</b><i></i></div></body></html>`, `${tmp}/card-${name}.png`);
     continue;
   }
+  if (tur === 'tam') {
+    const [l1, l2] = (t || '').split('|');
+    await shot(`<html><head><style>${CSS} body{background:transparent!important}
+.g{position:absolute;left:0;right:0;bottom:0;height:470px;background:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,.55) 40%,rgba(0,0,0,.88))}
+.gt{position:absolute;left:0;right:0;top:0;height:160px;background:linear-gradient(0deg,rgba(0,0,0,0),rgba(0,0,0,.6))}
+.c{position:absolute;left:0;right:0;bottom:150px;display:flex;flex-direction:column;align-items:center;transform:skewX(-8deg)}
+.c b{font-size:48px;line-height:54px;color:#fff;text-shadow:0 4px 24px rgba(0,0,0,.8)}.c u{text-decoration:none;white-space:nowrap;font-size:56px;line-height:64px;color:#f2c14e;text-shadow:0 4px 30px rgba(0,0,0,.8),0 0 40px rgba(242,193,78,.35)}
+.tag{position:absolute;left:0;right:0;top:92px;display:flex;justify-content:center}.tag span{font-size:22px;letter-spacing:2px;color:#111;background:#f2c14e;padding:4px 16px;border-radius:30px;box-shadow:0 6px 24px rgba(0,0,0,.6)}
+</style></head><body>${l1 ? '<div class="g"></div>' : ''}${s ? `<div class="gt"></div><div class="tag"><span>${s}</span></div>` : ''}${l1 ? `<div class="c"><b>${l1}</b>${l2 ? `<u>${l2}</u>` : ''}</div>` : ''}</body></html>`, `${tmp}/title-${name}.png`, true);
+    continue;
+  }
   await shot(`<html><head><style>${CSS}</style></head><body><div class="grid"></div><div class="beam"></div><div class="logo"><img src="data:image/png;base64,${ICON}"/>YOL</div><div class="ph"></div></body></html>`, `${tmp}/bg-${name}.png`);
   await shot(`<html><head><style>${CSS} body{background:transparent!important}</style></head><body><div class="top"><div class="t">${t}</div>${s ? `<div class="s">${s}</div>` : ''}</div></body></html>`, `${tmp}/title-${name}.png`, true);
 }
@@ -863,7 +976,7 @@ await shot(`<html><head><style>${CSS}
 .c img{width:230px;filter:drop-shadow(0 0 40px rgba(230,57,70,.7))}.y{font-size:110px;color:#e63946;letter-spacing:14px;transform:skewX(-8deg);line-height:1;margin-top:4px}
 .u{font-size:40px;color:#fff;transform:skewX(-8deg);margin-top:6px;letter-spacing:2px}.p{margin-top:40px;font-size:44px;color:#111;background:#f2c14e;padding:6px 22px;transform:skewX(-8deg)}
 .f{margin-top:16px;display:flex;align-items:center;gap:10px;font-size:24px;color:#fff;border:2px solid #fff;border-radius:14px;padding:8px 18px;background:#000}.m{margin-top:16px;font-family:In;font-size:17px;color:#d9dbe0;letter-spacing:2px}
-</style></head><body><div class="grid"></div><div class="beam" style="left:120px"></div><div class="c"><img src="data:image/png;base64,${ICON}"/><div class="y">YOL</div><div class="u">KAFESTEN KEMERE</div><div class="p">${END_TXT[0]}</div><div class="f">${END_TXT[1]}</div><div class="m">MMA KARİYER OYUNU</div></div></body></html>`, `${tmp}/end.png`);
+</style></head><body><div class="grid"></div><div class="beam" style="left:120px"></div><div class="c"><img src="data:image/png;base64,${ICON}"/><div class="y">YOL</div><div class="u">KAFESTEN KEMERE</div><div class="p"${VIDEO === 'pedia' ? ' style="font-size:34px"' : ''}>${END_TXT[0]}</div><div class="f">${END_TXT[1]}</div><div class="m">MMA KARİYER OYUNU</div></div>${VIDEO === 'pedia' ? CONFETTI : ''}</body></html>`, `${tmp}/end.png`);
 await browser.close();
 if (errors.length) console.log('Sayfa hataları:', errors);
 
@@ -892,9 +1005,22 @@ for (const [name, tur, , , d, clip, st] of SCENES) {
   if (tur === 'kart') {
     // Yavaş yakınlaşma
     execFileSync(FF, ['-y', '-loop', '1', '-t', String(d), '-i', `${tmp}/card-${name}.png`, '-filter_complex', `[0:v]scale=1080:1920,scale=w='trunc(1080*(1.06+0.06*t/${d})/2)*2':h=-2:eval=frame,crop=1080:1920,format=yuv420p[v]`, '-map', '[v]', '-t', String(d), ...enc, out], { stdio: 'ignore' });
+  } else if (tur === 'tam') {
+    // Tam ekran kayıt: yavaş yakınlaşma, alttaki yazı kısa bir gecikmeyle belirir
+    // Belgesel: tüm bölümler sahneye sığacak kadar hızlanır
+    const ss = Math.min(st ? Math.max(0, st(segs[src].marks)) : 0.15, Math.max(0, segs[src].sn - d));
+    const speed = name === 'doc' ? Math.max(1, (segs[src].sn - ss) / d) : 1;
+    execFileSync(FF, [
+      '-y', '-ss', ss.toFixed(2), '-t', String(d * speed), '-i', `${tmp}/${src}.mp4`,
+      '-loop', '1', '-t', String(d), '-i', `${tmp}/title-${name}.png`,
+      '-filter_complex',
+      `[0:v]setpts=PTS/${speed.toFixed(3)},fps=30,scale=1080:1920:flags=lanczos,setsar=1,scale=w='trunc(1080*(1+0.05*t/${d})/2)*2':h=-2:eval=frame,crop=1080:1920,format=rgba[base];` +
+        `[1:v]scale=1080:1920,format=rgba,fade=t=in:st=0.18:d=0.3:alpha=1[tt];[base][tt]overlay=0:0:shortest=1,format=yuv420p[v]`,
+      '-map', '[v]', '-t', String(d), ...enc, out,
+    ], { stdio: 'ignore' });
   } else {
     // Instagram videosu: kaydın tamamı sahneye sığacak kadar hızlandırılır (dokunuşlar arası bekleme kısalır)
-    const fit = (VIDEO === 'insta' || VIDEO === 'modlar') && name !== 'belt';
+    const fit = (VIDEO === 'insta' || VIDEO === 'modlar' || VIDEO === 'pedia') && name !== 'belt';
     const ss = fit ? 0.15 : Math.min(st ? Math.max(0, st(segs[src].marks)) : startOf(src, d), Math.max(0, segs[src].sn - d));
     const speed = fit ? Math.max(1, (segs[src].sn - ss) / d) : 1;
     execFileSync(FF, [
@@ -924,6 +1050,8 @@ const trans = (k) => {
   const b = all[k][1];
   if (b === 'son') return 'circleopen';
   if (a === 'kart' || b === 'kart') return 'fadeblack';
+  if (a === 'tam' && b === 'tam') return 'fade';
+  if (a === 'tam' || b === 'tam') return 'zoomin';
   return ['slideleft', 'slideup', 'slideright', 'slidedown'][k % 4];
 };
 const at = [];
@@ -938,7 +1066,7 @@ const snd = (n) => `${root}/assets/sounds/${n}.wav`;
 const audio = [];
 const add = (file, startSec, vol = 1, loop = false) => audio.push({ file, startSec, vol, loop });
 const cue = (name, off, file, vol = 1) => idx(name) >= 0 && add(snd(file), at[idx(name)] + off, vol);
-const firstRec = all.findIndex((x) => x[1] === 'kayit');
+const firstRec = all.findIndex((x) => x[1] === 'kayit' || x[1] === 'tam');
 // Açılış: kartlarda darbeler; ilk oyun sahnesiyle giriş müziği, sonra tempolu müzik
 add(snd('swell'), 0, 0.6);
 cue('c1', 0.05, 'heavy', 0.8);
@@ -963,6 +1091,13 @@ if (VIDEO === 'ana') {
   cue('ko', 0.05, 'heavy', 0.9);
   cue('ko', 0.3, 'roar', 0.8);
   cue('finish', 0.2, 'applause', 0.6);
+} else if (VIDEO === 'pedia') {
+  cue('hook2', 0.15, 'heavy', 0.9);
+  [1.1, 2.15, 3.25, 4.35].forEach((x) => cue('doc', x, 'whoosh', 0.45));
+  cue('lux', 0.5, 'cash', 0.5);
+  cue('gram', 0.5, 'chime', 0.5);
+  [0.45, 0.95, 1.45, 1.95].forEach((x) => cue('stil', x, 'tap', 0.7));
+  cue('end', 0.3, 'applause', 0.5);
 } else if (VIDEO === 'modlar') {
   cue('hakem1', 0.7, 'tap', 0.7);
   cue('hakem2', 1.0, 'slam', 0.6);
@@ -1016,7 +1151,7 @@ const af = audio
   })
   .join(';');
 const mix = `${audio.map((_, i) => `[a${i}]`).join('')}amix=inputs=${audio.length}:duration=longest:normalize=0,afade=t=out:st=${(total - 1).toFixed(2)}:d=1,alimiter=limit=0.95[aout]`;
-const out = `${root}/store/video/ios-reklam-${VIDEO}.mp4`;
+const out = VIDEO === 'pedia' ? `${root}/store/video/reklam-kafespedia.mp4` : `${root}/store/video/ios-reklam-${VIDEO}.mp4`;
 writeFileSync(`${tmp}/filtre.txt`, `${vprep}${vchain};${af};${mix}`);
 const r = spawnSync(FF, [...args, '-filter_complex_script', `${tmp}/filtre.txt`, '-map', '[vout]', '-map', '[aout]', '-t', total.toFixed(2), '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-preset', 'medium', '-crf', '19', '-r', '30', '-c:a', 'aac', '-b:a', '192k', '-movflags', '+faststart', out], { encoding: 'utf8' });
 if (r.status !== 0) throw new Error('ffmpeg: ' + (r.stderr ?? '').split(String.fromCharCode(10)).slice(-8).join(' | '));
