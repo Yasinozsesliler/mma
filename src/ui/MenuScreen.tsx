@@ -30,6 +30,7 @@ import { COACH_STORE, REF_STORE, LEGENDS_STORE, maybeStartWelcome, milestoneOffe
 import { DEAL_SKU } from '../monetization/skus';
 import { careerFights } from '../engine/rewards';
 import { DealPopup } from './ShopSheet';
+import { ChampionHourCard } from './ChampionHourCard';
 import { useSeason } from '../season';
 import { seasonDaysLeft, seasonRewards, tierOf } from '../engine/season';
 import { CoachStart } from './CoachScreen';
@@ -512,6 +513,7 @@ export function MenuScreen({
         <ModeTile icon="book-open-variant" color={C.blue} title={L("Rehber")} sub={L("Nasıl oynanır, gelişim, branşlar")} onPress={() => setSheet('rehber')} />
       </View>
 
+      <ChampionHourCard />
       <PremiumCard />
       <DealPopup />
 

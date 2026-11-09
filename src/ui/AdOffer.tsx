@@ -4,12 +4,14 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { sfx } from '../audio';
 import { L } from '../i18n';
-import { MONETIZATION, PURCHASES, showRewarded, usePremium } from '../monetization';
+import { hourActive, MONETIZATION, PURCHASES, showRewarded, useHour, usePremium } from '../monetization';
 import { Icon, type IconName } from './components';
 import { C, F } from './theme';
 
 export function AdOffer({ icon, title, desc, onReward }: { icon: IconName; title: string; desc: string; onReward: () => void }) {
-  const premium = usePremium();
+  useHour();
+  const premium = usePremium() || hourActive();
+
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
   if (!MONETIZATION) return null;

@@ -9,6 +9,7 @@ export const COACH_STORE = true;
 /** Hakem Modu şimdilik yalnızca iPhone'da (Play'de ürünü yok). */
 export const REF_STORE = true;
 export { dismissUpsell, useUpsellDue } from './upsell';
+export { HOUR_GOAL, hourActive, startHour, takeHourEndOffer, useHour } from './hour';
 export { closeShop, currentDeal, dealSeen, fmtLeft, markDealSeen, maybeStartBeltDeal, maybeStartWelcome, openShop, useDeal, useNow, useShop, type Deal, type DealKind } from './deals';
 export { closeNudge, closeOffer, milestoneOffer, noteInterstitialShown, openOffer, rewardedCount, useNudge, useOffer, type OfferReason } from './offers';
 

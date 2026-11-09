@@ -4,6 +4,7 @@
 import { useSyncExternalStore } from 'react';
 import { getPref, setPref } from '../prefs';
 import { isPremium } from './premium';
+import { noteHourAd } from './hour';
 
 export type OfferReason = 'reklam' | 'reklam10' | 'yuva' | 'yuva5' | 'kemer' | 'galibiyet10' | 'ucc' | 'emeklilik' | 'sezon';
 
@@ -46,6 +47,8 @@ export function milestoneOffer(reason: OfferReason, key: string, delay = 900) {
 /** Ödüllü reklam izlendi: oturumdaki 3. reklamdan sonra bir kez; ayrıca 10 reklamda bir (en fazla haftada bir). */
 export function noteRewardedWatched() {
   sessionAds++;
+  // Şampiyon Saati bu reklamla kazanıldıysa araya satış penceresi girmesin.
+  if (noteHourAd()) return;
   const n = Number(getPref('yol_odullu_sayac') || 0) + 1;
   setPref('yol_odullu_sayac', String(n));
   const weekly = n >= 10 && Date.now() - Number(getPref('yol_teklif_reklam10') || 0) > 7 * DAY;

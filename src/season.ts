@@ -42,6 +42,8 @@ export function useSeason(): SeasonState {
   );
 }
 
+export const currentSeasonXp = () => current().xp;
+
 export function addSeasonXp(kind: keyof typeof SEASON_XP, times = 1) {
   const s = current();
   commit({ ...s, xp: s.xp + SEASON_XP[kind] * times });

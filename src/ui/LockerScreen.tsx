@@ -9,7 +9,7 @@ import { clearNew, equip, useCosmetics, useUnlocked } from '../cosmetics';
 import { COSMETICS, packOwned, PACKS, RARITY, rarityOf, type Cosmetic, type CosSlot, type FxKind, type Rarity } from '../engine/cosmetics';
 import type { Appearance } from '../engine/types';
 import { L, LOC } from '../i18n';
-import { buy, MONETIZATION, PACK_STORE, PURCHASES, restorePurchases, useOwned, usePrice } from '../monetization';
+import { buy, MONETIZATION, openShop, PACK_STORE, PURCHASES, restorePurchases, useOwned, usePrice } from '../monetization';
 import { BUNDLE_SKU } from '../monetization/skus';
 import { seasonIndex } from '../engine/season';
 import { Belt } from './Belt';
@@ -36,7 +36,7 @@ function lockText(x: Cosmetic) {
   const k = x.kaynak;
   if (k.tur === 'basari') return k.aciklama;
   if (k.tur === 'sampiyon') return L("Şampiyon Paketi ile gelir");
-  if (k.tur === 'paket') return L("{0} paketinde", [PACK_NAME[k.sku]]);
+  if (k.tur === 'paket') return PACK_STORE ? L("{0} paketinde", [PACK_NAME[k.sku]]) : L("Tam Paket'te");
   if (k.tur === 'sezon') return k.pro ? L("Sezon Kemeri · {0}. basamak (Şampiyon)", [k.basamak]) : L("Sezon Kemeri · {0}. basamak", [k.basamak]);
   return '';
 }
@@ -223,8 +223,10 @@ export function LockerScreen({ look = DEFAULT_LOOK, onExit }: { look?: Appearanc
   };
 
   const heroW = W - 32;
+  const lockedPrev = !!prev && (Object.values(prev) as unknown[]).some((v) => typeof v === 'object' && v && 'kaynak' in (v as object) && ['paket', 'sampiyon'].includes((v as Cosmetic).kaynak.tur) && !unlocked(v as Cosmetic));
   // Paket mağazası kapalıyken (iPhone) yalnızca oynayarak açılan parçalar listelenir
-  const items = COSMETICS.filter((x) => x.slot === tab && visible(x) && (PACK_STORE || (x.kaynak.tur !== 'paket' && x.kaynak.tur !== 'sampiyon') || unlocked(x))).sort((a, b) => RARITY[rarityOf(a)].sira - RARITY[rarityOf(b)].sira);
+  // Tam Paket'teki kozmetikler de listelenir: oyuncu ne aldığını görsün, üstünde denesin.
+  const items = COSMETICS.filter((x) => x.slot === tab && visible(x) && (PACK_STORE || PURCHASES || (x.kaynak.tur !== 'paket' && x.kaynak.tur !== 'sampiyon') || unlocked(x))).sort((a, b) => RARITY[rarityOf(a)].sira - RARITY[rarityOf(b)].sira);
 
   return (
     <Screen footer={<Button label={L("Ana menü")} icon="arrow-left" tone="ghost" onPress={onExit} />}>
@@ -275,6 +277,14 @@ export function LockerScreen({ look = DEFAULT_LOOK, onExit }: { look?: Appearanc
           </View>
         ) : null}
       </View>
+
+      {prev && lockedPrev && !PACK_STORE && PURCHASES ? (
+        <Pressable onPress={() => openShop('dolap')} style={({ pressed }) => [ls.fullCta, pressed && { opacity: 0.85 }]}>
+          <Icon name="crown" size={16} color="#1f1605" />
+          <Text style={ls.fullCtaText}>{L("Tam Paket ile aç")}</Text>
+          <Icon name="chevron-right" size={18} color="#1f1605" />
+        </Pressable>
+      ) : null}
 
       {/* Koleksiyon ilerlemesi */}
       <View style={ls.coll}>
@@ -337,6 +347,8 @@ export function LockerScreen({ look = DEFAULT_LOOK, onExit }: { look?: Appearanc
 }
 
 const ls = StyleSheet.create({
+  fullCta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.gold, borderRadius: 12, paddingVertical: 11, marginTop: 8 },
+  fullCtaText: { color: '#1f1605', fontFamily: F.display, fontSize: 14, letterSpacing: 0.5 },
   hero: { height: 250, borderWidth: 1, borderColor: C.border, borderRadius: 16, overflow: 'hidden', justifyContent: 'center' },
   heroRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, gap: 4 },
   chip: { flexDirection: 'row', alignItems: 'center', gap: 5, borderWidth: 1, borderColor: C.border, backgroundColor: '#00000066', borderRadius: 14, paddingHorizontal: 8, paddingVertical: 4 },
