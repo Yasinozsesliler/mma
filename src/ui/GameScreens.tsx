@@ -67,6 +67,7 @@ import { PerkTree } from './PerkTree';
 import { FatigueCard } from './FatigueCard';
 import { perkPointsFree } from '../engine/perks';
 import { SpecialEventCard } from './SpecialEventCard';
+import { LeagueCard } from './LeagueCard';
 import { chooseTreatment, treatmentCostText, treatmentOptions } from '../engine/treatment';
 import { ContractTablePanel } from './ContractTablePanel';
 import { openTable } from '../engine/contractTable';
@@ -350,6 +351,7 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
             onPress={() => act(findNextFight)}
           />
           <FarewellCard s={s} act={act} />
+          <LeagueCard s={s} compact />
           <FirstStepsCard s={s} act={act} />
           {featureOpen(s, 'etkinlik') ? <SpecialEventCard s={s} act={act} /> : null}
           {featureOpen(s, 'etkinlik') ? <EventCard s={s} act={act} /> : null}
@@ -552,7 +554,7 @@ function OpponentCard({ o, me }: { o: Opponent; me: Stats }) {
     <>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
         {o.etiket ? <Pill text={o.etiket.replace(/^\S+\s/, '')} color={tone} /> : <View />}
-        <Pill text={o.champion ? L("ŞAMPİYON") : o.rank ? `#${o.rank}` : L("Sıralamasız")} icon={o.champion ? 'crown' : 'podium'} color={o.champion ? C.gold : C.dim} />
+        <Pill text={o.champion ? L("ŞAMPİYON") : o.rank ? `#${o.rank}` : o.ligSira ? `#${o.ligSira}` : L("Sıralamasız")} icon={o.champion ? 'crown' : 'podium'} color={o.champion ? C.gold : C.dim} />
       </View>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
         <OvrBadge value={d.guc} size={60} />

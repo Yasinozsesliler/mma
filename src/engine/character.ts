@@ -1,3 +1,4 @@
+import { newLig } from './amateurLeague';
 import { L } from '../i18n';
 import { fatigueTick } from './fatigue';
 import { scarOnHeal } from './body';
@@ -70,6 +71,7 @@ export function createGame(input: NewFighterInput, stats: Stats): GameState {
     fighter,
     rekor: { g: 0, m: 0, b: 0, ko: 0, sub: 0, karar: 0 },
     amator: { g: 0, m: 0, b: 0, ko: 0, sub: 0, karar: 0 },
+    amLig: newLig(),
     gecmis: [],
     stage: 'amator',
     contract: null,

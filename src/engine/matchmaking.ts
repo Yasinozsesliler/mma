@@ -5,6 +5,7 @@ import { ORGS } from './data';
 import { divisionChampion, ensureDivision, freshenRank, rankedOpponent } from './division';
 import { generateOpponent, riskText } from './opponents';
 import { maybeNemesisOffer } from './nemesis';
+import { ligAcik, ligChoices } from './amateurLeague';
 import { chance, clamp, randInt } from './rng';
 import type { GameState, Opponent } from './types';
 
@@ -56,6 +57,7 @@ const avoid = (s: GameState, r: number) => (s.rank != null && r === s.rank ? (r 
 /** Bölgesel ve amatör aşama: oyuncu 3 rakipten birini seçer. */
 export function opponentChoices(s: GameState): Opponent[] {
   ensureDivision(s);
+  if (ligAcik(s)) return ligChoices(s);
   const org = currentOrg(s);
   const L = ORGS[org].merdiven;
   const r = s.rank;

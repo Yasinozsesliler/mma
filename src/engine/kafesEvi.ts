@@ -53,7 +53,7 @@ export function maybeKafesEviInvite(s: GameState) {
     return;
   }
   if (k) return;
-  if (!['amator', 'bolgesel'].includes(s.stage) || proFights(s) > 8 || s.amator.g < 2 || !chance(0.22)) return;
+  if (!['amator', 'bolgesel'].includes(s.stage) || proFights(s) > 8 || s.amator.g < (s.amLig && !s.efsane && !s.meydan ? 5 : 2) || !chance(0.22)) return;
   s.kafesEvi = { durum: 'davet', davetDovus: s.gecmis.length, kisiler: [], rakipler: [], iliski: {}, turlar: [], tur: 0, adim: 'sahne', sahneSay: 0, ekran: 20, odak: 0, gorulen: [] };
   s.haberler.unshift(L("📺 Kafes Evi yapımcıları aradı: yeni sezon için seni istiyorlar! 8 dövüşçü, tek ev, tek şampiyon."));
 }

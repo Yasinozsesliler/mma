@@ -89,6 +89,9 @@ export interface Opponent {
   sehir?: string;
   /** Memlekette ana maç (hometown.ts) */
   memleket?: boolean;
+  /** Amatör Ligi: tablodaki sıra ve final maçı (amateurLeague.ts) */
+  ligSira?: number;
+  amFinal?: boolean;
   id: string;
   ad: string;
   soyad: string;
@@ -809,6 +812,8 @@ export interface GameState {
   yayinSon?: number;
   /** Efsane Yolu hikâye modu (legendRun.ts) */
   efsane?: import('./legendRun').LegendRun;
+  /** Amatör Ligi (amateurLeague.ts). Eski kayıtlarda yok: eski kural geçerli */
+  amLig?: import('./amateurLeague').AmatorLig;
   /** Son görülen soru/olay kimlikleri (variety.ts; tekrar önleme) */
   tekrar?: Record<string, string[]>;
   /** Antrenör Modu kariyeri (coachMode.ts) */

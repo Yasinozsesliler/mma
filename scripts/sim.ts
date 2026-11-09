@@ -47,6 +47,7 @@ import { chance, pick, randInt, setSeed } from '../src/engine/rng';
 import type { Background, GameState, PlanKey, Tactic } from '../src/engine/types';
 import { STAT_KEYS } from '../src/engine/types';
 const krizStat: Record<string, number> = {};
+const amStat = { n: 0, para: [] as number[], mac: [] as number[], yas: [] as number[], madalya: [] as number[] };
 const cesit = { teklif: 0, tekrarTeklif: 0, oncekiListe: 0, dovus: {} as Record<string, number>, tekrar: {} as Record<string, number>, soyad: 0, lakap: 0, kisi: 0 };
 const podcastStat = { n: 0 };
 const hypeStat = { n: 0, top: 0 };
@@ -252,7 +253,7 @@ function playCareer() {
           offered.add(o.id);
         }
         lastOffer = new Set((s.pending.secenekler ?? []).map((o) => o.id));
-        pickOpponent(s, s.pending.dayatma ? 0 : randInt(0, 2));
+        { const fin = s.pending.secenekler?.findIndex((o) => o.amFinal) ?? -1; pickOpponent(s, s.pending.dayatma ? 0 : fin >= 0 ? fin : randInt(0, 2)); }
         break;
       case 'kamp': {
         const k = s.pending.kamp!;
@@ -386,6 +387,7 @@ function playCareer() {
         break;
       }
     }
+    if (s.stage !== 'amator' && !pro) { amStat.n++; amStat.para.push(s.para); amStat.mac.push(s.amator.g + s.amator.m + s.amator.b); amStat.yas.push(s.fighter.yas - input.yas); amStat.madalya.push(s.amLig?.madalya.length ?? 0); }
     if (s.stage !== 'amator') pro = true;
     seen.add(s.stage);
     if (s.stage === 'buyuk') big = true;
@@ -516,6 +518,7 @@ const avg = stats.fightsToUfc.reduce((a, b) => a + b, 0) / Math.max(1, stats.fig
 console.log(`UFC'ye kadar ortalama dövüş: ${avg.toFixed(1)}`);
 console.log('Geçmişe göre galibiyet:', Object.entries(stats.byBg).map(([k, v]) => `${k} ${pct(v.w, v.w + v.l)}`).join(', '));
 console.log('Aşama başına ortalama dövüş:', Object.entries(stats.stageFights).map(([k, v]) => `${k} ${(v / (stats.stageCareers[k] ?? N)).toFixed(1)}`).join(', '));
+console.log(`Amatör Ligi: profesyonele geçişte maç ort. ${mean(amStat.mac)} (min ${Math.min(...amStat.mac)}, maks ${Math.max(...amStat.mac)}, ≥16: ${pct(amStat.mac.filter((x) => x >= 16).length, amStat.n)}), yaş artışı ${mean(amStat.yas)}, madalya ${mean(amStat.madalya)}, para ort. ${mean(amStat.para)} (eksi: ${pct(amStat.para.filter((x) => x < 0).length, amStat.n)})`);
 console.log(`Rakip çeşitliliği: teklif edilenin ${pct(cesit.tekrarTeklif, cesit.teklif)} daha önce teklif edilmiş, ${pct(cesit.oncekiListe, cesit.teklif)} bir önceki listede · tekrar dövüş ${Object.entries(cesit.dovus).map(([k, v]) => `${k} ${pct(cesit.tekrar[k] ?? 0, v)}`).join(', ')} · yeni rakiplerde aynı soyad ${pct(cesit.soyad, cesit.kisi)}, aynı lakap ${pct(cesit.lakap, cesit.kisi)}`);
 console.log(`Tekrar rakip: ${pct(stats.repeatFights, stats.fights)} dövüş, aynı rakiple en fazla: ${stats.maxSame}, farklı kişi ama aynı isim: ${pct(stats.sameName, stats.fights)}`);
 console.log(`Ezeli rakip: ${pct(stats.nem, N)} kariyerde (${pct(stats.nemYenilgi, stats.nem)} ilk yenilgiden), karşılaşma ort. ${mean(stats.nemMac)} (maks ${Math.max(0, ...stats.nemMac)}), rekabeti bitiren ${pct(stats.nemBitti, stats.nem)}`);

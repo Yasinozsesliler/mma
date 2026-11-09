@@ -34,6 +34,9 @@ const STYLE_WEIGHTS: [Background, number][] = [
 const PLAYER_W: Record<Stage, number> = { amator: 0.45, bolgesel: 0.45, buyuk: 0.5, ufc: 0.62 };
 // Şampiyonun fazladan gücü: bölgesel kemer ulaşılabilir bir sınav, UCC kemeri en zoru.
 const CHAMP_BONUS: Record<Stage, number> = { amator: 12, bolgesel: 11, buyuk: 18, ufc: 19 };
+const AM_ZOR = [7, 12, 16];
+// Amatör Ligi'nden daha güçlü gelen oyuncu için bölgesel basamak da denk kalsın.
+const AM_SONRASI_BOLGESEL = 6;
 
 /** Oyuncunun referans gücü: kariyerindeki en yüksek güç. Yaşlanan oyuncuya göre rakipler zayıflamaz. */
 export function refPower(s: GameState) {
@@ -76,6 +79,9 @@ export function targetLevel(s: GameState, org: OrgId, zorluk: number, rank: numb
   const L = ORGS[org].merdiven;
   if (rank != null && L > 0) tb += ((L - rank) / L) * 14;
   if (champion) tb += CHAMP_BONUS[stage];
+  // Amatör Ligi: ilk iki maç tanışma, sonra basamak basamak sertleşir.
+  if (org === 'amator' && s.amLig && !s.efsane && !s.meydan) tb += s.gecmis.length < 2 ? 0 : AM_ZOR[s.amLig.basamak] ?? 0;
+  if (stage === 'bolgesel' && s.amLig && !s.efsane && !s.meydan) tb += AM_SONRASI_BOLGESEL;
   const w = PLAYER_W[stage];
   const ref = refPower(s);
   // Oyuncu güçlendikçe rakipler de güçlenir: rekabet hep canlı kalır.
@@ -108,7 +114,7 @@ function recordFor(org: OrgId, rank: number | null, champion: boolean) {
 
 /** Bu kariyerde kullanılmış isimler: aynı isim, soyad ya da lakapla yeni rakip çıkmasın (havuz biterse yalnızca tam isim korunur). */
 function usedNames(s: GameState, extra: Opponent[] = []) {
-  const known = [...s.rakipler, ...(s.bolum?.liste ?? []), ...(s.bolum?.sampiyon ? [s.bolum.sampiyon] : []), ...extra];
+  const known = [...s.rakipler, ...(s.bolum?.liste ?? []), ...(s.bolum?.sampiyon ? [s.bolum.sampiyon] : []), ...(s.amLig?.liste ?? []), ...extra];
   const names = new Set(s.gecmis.map((h) => h.rakip));
   known.forEach((r) => names.add(`${r.ad} ${r.soyad}`));
   const surnames = new Set([...names].map((n) => n.split(' ').pop()));

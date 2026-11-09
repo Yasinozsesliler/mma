@@ -30,6 +30,7 @@ import { campCost, randomInjury, startCamp } from './camp';
 import { ORGS, WEIGHT_CLASSES, WEIGHT_MODS } from './data';
 import { methodLabel, topMoments } from './fight';
 import { maybeEvent } from './events';
+import { ligAcik, ligAfterFight, ligBitisMetni, ligBitti } from './amateurLeague';
 import { ensureDivision, syncDivision } from './division';
 import { imposedOpponent, opponentChoices } from './matchmaking';
 import { applyInterview, buildInterview, interviewTargets, type InterviewCtx } from './interview';
@@ -382,6 +383,7 @@ export function finishFight(s: GameState) {
   const wasChampion = s.sampiyon;
   const rankNote = caught ? null : updateRank(s, opp, won, draw);
   if (rankNote) lines.push(rankNote);
+  if (!caught) lines.push(...ligAfterFight(s, opp, won, draw, finishMethod));
   const divNotes = syncDivision(s, opp, won, draw, won && opp.champion, wasChampion && !won && !draw);
   if (org === 'ufc') {
     const p4pNote = updateP4P(s);
@@ -658,6 +660,11 @@ export function afterPostFight(s: GameState) {
           : tL("🥈 Finalde kaybettin ama herkes seni izledi. Profesyonel organizasyonlar seni kadrosunda istiyor!"),
       );
       return;
+    } else if (ligAcik(s)) {
+      if (ligBitti(s)) {
+        openOffers(s, 'profesyonel', ligBitisMetni(s));
+        return;
+      }
     } else if (s.amator.g >= 3 && s.amator.g > s.amator.m) {
       openOffers(s, 'profesyonel', tL("Amatörde adın duyuldu. İki bölgesel organizasyon seni profesyonel kadrosuna istiyor!"));
       return;
