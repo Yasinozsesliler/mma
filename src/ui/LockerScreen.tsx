@@ -188,7 +188,7 @@ export function LockerScreen({ look = DEFAULT_LOOK, onExit }: { look?: Appearanc
   const fx = show('efekt').fx;
 
   // Sezon ödülleri: yalnızca bu sezonunkiler ve sahip olunanlar (geçmiş sezonlar dolabı kalabalıklaştırmasın)
-  const visible = (x: Cosmetic) => x.kaynak.tur !== 'sezon' || x.kaynak.sezon === seasonIndex() || unlocked(x);
+  const visible = (x: Cosmetic) => (x.id !== 'eld_karacuma' && (x.kaynak.tur !== 'sezon' || x.kaynak.sezon === seasonIndex())) || unlocked(x);
   const sayilan = COSMETICS.filter((x) => visible(x) && (PACK_STORE || (x.kaynak.tur !== 'paket' && x.kaynak.tur !== 'sampiyon') || unlocked(x)));
   const total = sayilan.length;
   const have = sayilan.filter(unlocked).length;

@@ -1,7 +1,7 @@
 // Tam Paket Fırsatı pencereleri ve Paket Mağazası'nın açık/kapalı durumu.
 // Fırsat ayrı bir üründür (DEAL_SKU) ve yalnızca gerçek süreli pencerelerde satılır; sayaç gerçektir, pencere bitince kapanır:
 //  • Hoş Geldin: oyuncu 3. maçını bitirince (oyunu tanıdıktan sonra) 72 saat, bir kez.
-//  • Kara Cuma: takvimdeki Kara Cuma Gecesi etkinliği boyunca (27-30 Kasım).
+//  • Kara Cuma: Kara Cuma Gecesi etkinliği boyunca; etkinliğin penceresi şimdilik kapalı (specialEvent.ts).
 //  • Şampiyon: ilk UCC kemerinden sonra 24 saat, bir kez (Hoş Geldin bittiyse).
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import { track } from '../analytics';

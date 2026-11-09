@@ -27,7 +27,7 @@ export const COACH_SKU = 'antrenor_modu';
 export const REF_SKU = 'hakem_modu';
 
 /** Tam Paket Fırsatı: Tam Paket'in aynısı, indirimli fiyatla ayrı ürün. Yalnızca süreli pencerelerde satılır
- *  (Hoş Geldin 72 saat, Kara Cuma, ilk UCC kemerinden sonra 24 saat). Önerilen 2,99 $ (bütün ülkelerde aynı):
+ *  (Hoş Geldin 72 saat, ilk UCC kemerinden sonra 24 saat). Önerilen 2,99 $ (bütün ülkelerde aynı):
  *  ilk alım için 1-5 $ aralığının ortası. */
 export const DEAL_SKU = 'tam_paket_firsat';
 
