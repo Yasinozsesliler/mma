@@ -12,7 +12,9 @@ let warn = 0;
 part.forEach(({ k }, i) => {
   const a = (k.match(/\{\w+\}/g) ?? []).sort().join();
   const b = (tr[i].match(/\{\w+\}/g) ?? []).sort().join();
-  if (a !== b) {
+  // Türkçe ek yer tutucuları (’{1}) çeviride olmayabilir; fazladan yer tutucu ise hatadır
+  const fazla = (tr[i].match(/\{\w+\}/g) ?? []).some((x) => !k.includes(x));
+  if (a !== b && (fazla || !/’\{\d\}/.test(k))) {
     warn++;
     console.warn(`⚠ yer tutucu farkı [${i}]: ${k.slice(0, 60)} → ${tr[i].slice(0, 60)}`);
     return;
