@@ -1,4 +1,4 @@
-// Sezon Kemeri: her ay yeni bir sezon (Ekim 2026 = Sezon 1), 20 basamak. Ücretsiz sırada 4, Şampiyon sırasında 6 ödül.
+// Sezon Kemeri: her ay yeni bir sezon (Ekim 2026 = Sezon 1), 20 basamak. Ücretsiz sırada 5, Şampiyon sırasında 9 ödül.
 // Ödüller yalnızca kozmetik (oyun gücü yok). Her sezonun kendi teması ve renk paleti var; 12 tema yıl boyunca döner.
 import { L } from '../i18n';
 import type { Cosmetic, FxKind, Pattern, Rarity } from './cosmetics';
@@ -7,7 +7,16 @@ export const SEASON_TIERS = 20;
 export const TIER_XP = 50;
 
 /** Puan kaynakları (dengeli: düzenli oynayan ay sonuna kadar 20. basamağa ulaşır). */
-export const SEASON_XP = { mac: 6, galibiyet: 6, bitiris: 3, gunluk: 15, hayali: 10, bolum: 25 } as const;
+export const SEASON_XP = { mac: 6, galibiyet: 6, bitiris: 3, gunluk: 15, hayali: 10, bolum: 25, gorev: 40 } as const;
+
+/** Haftalık sezon görevleri: üç görev, üç haftalık döngü. Sayaçlar hangi işin kaç kez yapıldığını tutar. */
+export type GorevKind = 'mac' | 'galibiyet' | 'bitiris' | 'gunluk' | 'hayali';
+export const GOREV_DONGU: { k: GorevKind; n: number }[][] = [
+  [{ k: 'galibiyet', n: 3 }, { k: 'bitiris', n: 2 }, { k: 'gunluk', n: 3 }],
+  [{ k: 'mac', n: 5 }, { k: 'galibiyet', n: 4 }, { k: 'hayali', n: 2 }],
+  [{ k: 'bitiris', n: 3 }, { k: 'mac', n: 4 }, { k: 'gunluk', n: 4 }],
+];
+export const gorevlerOf = (hafta: number) => GOREV_DONGU[((hafta % GOREV_DONGU.length) + GOREV_DONGU.length) % GOREV_DONGU.length];
 
 /** Ekim 2026 → 1, Kasım 2026 → 2 … */
 export const seasonIndex = (d = new Date()) => Math.max(1, (d.getFullYear() - 2026) * 12 + d.getMonth() - 9 + 1);
@@ -48,12 +57,17 @@ export function seasonCosmetics(idx: number): Cosmetic[] {
     it(1, true, { slot: 'eldiven', ad: L("{0} Eldiveni", [n]), renk: [t.c], nadir: 'nadir' }),
     it(3, false, { slot: 'cerceve', ad: L("{0} Çerçevesi", [n]), renk: [t.b], nadir: 'siradan' }),
     it(5, true, { slot: 'sort', ad: L("{0} Şortu", [n]), renk: [t.b, t.a], nadir: 'nadir' }),
+    it(6, true, { slot: 'giris', ad: L("{0} Müziği", [n]), renk: [], giris: (['rock', 'epik', 'trap', 'mehter'] as const)[((idx % 4) + 4) % 4], nadir: 'nadir' }),
     it(7, false, { slot: 'eldiven', ad: L("{0} Bandajı", [n]), renk: [t.b], nadir: 'siradan' }),
     it(9, true, { slot: 'cerceve', ad: L("{0} Halesi", [n]), renk: [t.c], nadir: 'epik' }),
+    it(10, false, { slot: 'unvan', ad: n, renk: [t.c], nadir: 'nadir' }),
+    it(11, true, { slot: 'kafes', ad: L("{0} Kafesi", [n]), renk: [t.b, t.a], nadir: 'epik' }),
     it(12, false, { slot: 'sort', ad: L("{0} Antrenman Şortu", [n]), renk: [t.a, t.b], nadir: 'nadir' }),
     it(13, true, { slot: 'efekt', ad: L("{0} Girişi", [n]), renk: [], fx: t.fx, nadir: 'epik' }),
+    it(14, true, { slot: 'kart', ad: L("{0} Kartı", [n]), renk: [t.a, t.b, t.c], nadir: 'epik' }),
     it(16, true, { slot: 'kemer', ad: L("{0} Kemeri", [n]), renk: [t.c, t.b, '#0b0b0c', t.b], nadir: 'epik' }),
     it(17, false, { slot: 'kemer', ad: L("{0} Kayışı", [n]), renk: ['#f0f0f0', t.b, t.a, t.c], nadir: 'nadir' }),
+    it(19, true, { slot: 'unvan', ad: L("{0} Efsanesi", [n]), renk: [t.c], nadir: 'efsane' }),
     it(20, true, { slot: 'sort', ad: L("{0} Şampiyonu", [n]), renk: [t.a, t.c], desen: t.desen, desenRenk: t.b, nadir: 'efsane' }),
   ];
 }

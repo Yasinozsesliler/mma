@@ -142,7 +142,8 @@ export function PostFightScreen({ s, act }: { s: GameState; act: Act }) {
   }, []);
 
   // Para satırları önce, ardından gecenin olayları; üstte zaten gösterilenler çıkarılır
-  const rest = ps.satirlar.slice(1).filter((l) => !IN_TILES.some((re) => re.test(l)));
+  const rest = ps.satirlar.slice(1).filter((l) => !IN_TILES.some((re) => re.test(l)) && !l.startsWith('🏛️'));
+  const tarih = ps.satirlar.filter((l) => l.startsWith('🏛️'));
   const rows = [...rest.filter((l) => l.includes('$')), ...rest.filter((l) => !l.includes('$'))].map(toRow);
   const shown = hepsi ? rows : rows.slice(0, SHOW);
 
@@ -258,6 +259,11 @@ export function PostFightScreen({ s, act }: { s: GameState; act: Act }) {
         </LinearGradient>
       )}
 
+      {tarih.map((l) => (
+        <LinearGradient key={l} colors={['#4a3508', '#1a1508']} style={pf.tarih}>
+          <Text style={pf.tarihText}>{l}</Text>
+        </LinearGradient>
+      ))}
       {ps.roportajSonucu ? <FullVersionNudge /> : null}
       {ps.roportajSonucu && key === 'win' ? <WelcomeDeal fights={careerFights(s)} /> : null}
 
@@ -313,6 +319,8 @@ export function PostFightScreen({ s, act }: { s: GameState; act: Act }) {
 }
 
 const pf = StyleSheet.create({
+  tarih: { borderRadius: 12, borderWidth: 1, borderColor: C.gold, padding: 14, marginBottom: 10 },
+  tarihText: { color: C.gold, fontFamily: F.semi, fontSize: 14, lineHeight: 20 },
   moments: { backgroundColor: '#111216', borderRadius: R, borderWidth: 1, borderColor: C.border, padding: 12, gap: 8, marginBottom: 12 },
   momentsTitle: { color: C.dim, fontFamily: F.display, fontSize: 11, letterSpacing: 2 },
   moment: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#17181d', borderRadius: 8, borderLeftWidth: 3, paddingVertical: 8, paddingHorizontal: 10 },

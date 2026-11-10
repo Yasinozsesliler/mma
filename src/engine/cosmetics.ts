@@ -9,8 +9,8 @@ import { nemesisBeaten } from './nemesis';
 import type { GameState } from './types';
 import { allSeasonCosmetics } from './season';
 
-export type CosSlot = 'sort' | 'eldiven' | 'cerceve' | 'kemer' | 'giris' | 'efekt';
-export const COS_SLOTS: CosSlot[] = ['sort', 'eldiven', 'cerceve', 'kemer', 'giris', 'efekt'];
+export type CosSlot = 'sort' | 'eldiven' | 'cerceve' | 'kemer' | 'giris' | 'efekt' | 'unvan' | 'kafes' | 'kart';
+export const COS_SLOTS: CosSlot[] = ['sort', 'eldiven', 'cerceve', 'kemer', 'giris', 'efekt', 'unvan', 'kafes', 'kart'];
 
 /** Nadirlik: dolapta çerçeve rengi ve sıralama */
 export type Rarity = 'siradan' | 'nadir' | 'epik' | 'efsane';
@@ -38,7 +38,7 @@ export type Cosmetic = {
   id: string;
   slot: CosSlot;
   ad: string;
-  /** sort: [şort, şerit] · eldiven: [eldiven] · cerceve: [halka] · kemer: [metal açık, metal koyu, kayış, taş] */
+  /** sort: [şort, şerit] · eldiven: [eldiven] · cerceve: [halka] · kemer: [metal açık, metal koyu, kayış, taş] · kafes: [vurgu, tel] · kart: [zemin, şerit, vurgu] */
   renk: string[];
   giris?: Walkout;
   /** Şort deseni ve rengi */
@@ -123,6 +123,9 @@ export const COSMETICS: Cosmetic[] = [
   { id: 'kem_buz', slot: 'kemer', ad: L("Buz Kralı"), renk: ['#f0faff', '#7fb8d8', '#0b2540', '#bfe6ff'], nadir: 'efsane', kaynak: paket('paket_buz') },
   { id: 'kem_bayram', slot: 'kemer', ad: L("Bayram"), renk: ['#e9f5db', '#2d6a4f', '#081c15', '#f2c14e'], kaynak: basari(L("Bayram etkinliği (sınırlı süre)"), (c) => c.ozel.includes('kem_bayram')) },
   // Kafese giriş müziği
+  { id: 'unv_yok', slot: 'unvan', ad: L("Unvansız"), renk: [], kaynak: hazir },
+  { id: 'kfs_klasik', slot: 'kafes', ad: L("Klasik Kafes"), renk: [], kaynak: hazir },
+  { id: 'krt_klasik', slot: 'kart', ad: L("Klasik"), renk: [], kaynak: hazir },
   { id: 'gir_yok', slot: 'giris', ad: L("Seyirci uğultusu"), renk: [], kaynak: hazir },
   { id: 'gir_rock', slot: 'giris', ad: L("Rock"), renk: [], giris: 'rock', kaynak: basari(L("İlk şampiyonluk kemeri"), (c) => c.kemer >= 1) },
   { id: 'gir_epik', slot: 'giris', ad: L("Epik"), renk: [], giris: 'epik', kaynak: paket('paket_altin') },
@@ -137,7 +140,7 @@ export const COSMETICS: Cosmetic[] = [
   { id: 'ef_kar', slot: 'efekt', ad: L("Kar Fırtınası"), renk: [], fx: 'kar', nadir: 'efsane', kaynak: paket('paket_buz') },
 ];
 
-export const DEFAULT_EQUIP: Record<CosSlot, string> = { sort: 'sort_klasik', eldiven: 'eld_klasik', cerceve: 'cer_klasik', kemer: 'kem_klasik', giris: 'gir_yok', efekt: 'ef_yok' };
+export const DEFAULT_EQUIP: Record<CosSlot, string> = { unvan: 'unv_yok', kafes: 'kfs_klasik', kart: 'krt_klasik', sort: 'sort_klasik', eldiven: 'eld_klasik', cerceve: 'cer_klasik', kemer: 'kem_klasik', giris: 'gir_yok', efekt: 'ef_yok' };
 
 export const PACKS: { sku: CosmeticSku; ad: string; aciklama: string; renk: string; nadir: Rarity }[] = [
   { sku: 'paket_ejder', ad: L("Ejderha"), aciklama: L("Alev desenli şort, ateş eldiveni, Ejderha çerçevesi ve kemeri, kafese ATEŞ efektiyle giriş"), renk: '#ff4500', nadir: 'efsane' },

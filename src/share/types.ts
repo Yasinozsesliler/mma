@@ -20,6 +20,8 @@ export type ShareCardData = {
   kemer?: { org: OrgId; siklet: WeightClass };
   /** Kart şablonu (Şampiyon Paketi şablonları; yoksa klasik) */
   tema?: import('./themes').CardThemeId;
+  /** Kuşanılan sezon unvanı */
+  unvan?: string;
   /** Paylaşım menüsünde gönderiye eklenecek metin */
   mesaj: string;
   /** Kafespedia kartı: giriş paragrafı ve bilgi kutusu satırları */

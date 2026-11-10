@@ -48,3 +48,4 @@ store/graphics/*/ham/
 # Apple / EAS kimlik bilgileri (asla depoya girmez)
 credentials/
 credentials.json
+.i18n-*-todo.json

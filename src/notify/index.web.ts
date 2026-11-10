@@ -14,3 +14,4 @@ export async function rescheduleNotifications(_daily: DailyStore, _fighter?: str
 export function onNotificationOpen(_fn: (hedef: 'gunluk' | 'kariyer' | 'hayali') => void) {
   return () => {};
 }
+export function rescheduleLast() {}

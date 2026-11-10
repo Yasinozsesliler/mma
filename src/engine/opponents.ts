@@ -6,6 +6,7 @@ import { currentOrg, statAverage } from './character';
 import { chance, clamp, noise, pick, randInt, uid, weighted } from './rng';
 import type { Background, GameState, Opponent, OrgId, Stage, StatKey } from './types';
 import { STAT_KEYS, STAT_LABELS } from './types';
+import { rollHabits } from './habits';
 
 const TIER_BASE: Record<OrgId, number> = {
   amator: 35,
@@ -169,6 +170,8 @@ export function generateOpponent(
     champion,
     rivalry: 0,
     karsilasma: 0,
+    huylar: rollHabits(org === 'amator' ? 1 : 2),
+    huyBilinen: [],
     zorluk: opts.zorluk,
     ...(kadin ? { kadin: true } : {}),
   };

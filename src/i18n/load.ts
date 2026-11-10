@@ -7,4 +7,7 @@ export function loadLang(): Promise<void> | void {
   else if (LANG === 'pt') setDict(require('./pt').PT);
   else if (LANG === 'ru') setDict(require('./ru').RU);
   else if (LANG === 'pl') setDict(require('./pl').PL);
+  // Yeni diller: çevrilmemiş metinler İngilizce kalır
+  else if (LANG === 'de') setDict({ ...require('./en').EN, ...require('./de').DE });
+  else if (LANG === 'fr') setDict({ ...require('./en').EN, ...require('./fr').FR });
 }

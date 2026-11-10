@@ -31,6 +31,11 @@ function load(): St {
 
 let st = load();
 let shop: string | null = null;
+let onStart: (() => void) | null = null;
+/** Fırsat penceresi açılınca çağrılır (bildirimler yeniden planlansın). */
+export const onDealStart = (f: () => void) => {
+  onStart = f;
+};
 const subs = new Set<() => void>();
 const notify = () => subs.forEach((f) => f());
 function commit(next: St) {
@@ -58,6 +63,7 @@ export function maybeStartWelcome(careerFights: number, ready: boolean) {
   if (!ready || st.hos || careerFights < 3 || hasAll()) return;
   commit({ ...st, hos: Date.now() });
   track('deal_start', { tur: 'hosgeldin' });
+  onStart?.();
 }
 
 /** İlk UCC kemerinden sonra (Hoş Geldin bittiyse) 24 saatlik fırsat, bir kez. */
@@ -65,6 +71,7 @@ export function maybeStartBeltDeal(ready: boolean) {
   if (!ready || st.kemer || hasAll() || currentDeal()) return;
   commit({ ...st, kemer: Date.now() });
   track('deal_start', { tur: 'kemer' });
+  onStart?.();
 }
 
 /** Fırsat penceresi açıldığında bir kez çıkan duyuru gösterildi. */

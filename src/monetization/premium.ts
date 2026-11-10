@@ -1,11 +1,11 @@
 // Satın alınan ürünler (tüm platformlar). Satın alma yerelde doğrulanır ve cihazda saklanır; mağazadan geri yüklenebilir.
 import { useSyncExternalStore } from 'react';
 import { getPref, setPref } from '../prefs';
-import { ADFREE_SKU, BUNDLE_SKU, DEAL_SKU, PREMIUM_SKU, ULTIMATE_SKU } from './skus';
+import { ADFREE_SKU, BUNDLE_SKU, DEAL_SKU, PREMIUM_SKU, ULTIMATE_SKU, UPGRADE_SKU } from './skus';
 
 /** Tam Paket Fırsatı = Tam Paket; Tam Paket (Şampiyon + Koleksiyon) içerdiği ürünleri de verir (diğer kontroller değişmeden çalışsın). */
 const expand = (set: Set<string>) => {
-  if (set.has(DEAL_SKU)) set.add(ULTIMATE_SKU);
+  if (set.has(DEAL_SKU) || set.has(UPGRADE_SKU)) set.add(ULTIMATE_SKU);
   if (set.has(ULTIMATE_SKU)) {
     set.add(PREMIUM_SKU);
     set.add(BUNDLE_SKU);

@@ -7,6 +7,10 @@ import { dayNumber, liveStreak, type DailyStore } from '../engine/daily';
 import { dreamName, dreamSpec } from '../engine/dreamFight';
 import { L } from '../i18n';
 import { getPref, setPref } from '../prefs';
+import { currentDeal, onDealStart } from '../monetization/deals';
+import { hasAll } from '../monetization/premium';
+import { seasonDaysLeft, tierOf } from '../engine/season';
+import { currentSeasonXp } from '../season';
 
 export const NOTIFY = true;
 const KEY = 'yol_bildirim'; // '1' açık, '0' kapalı, yoksa henüz sorulmadı
@@ -80,8 +84,16 @@ async function schedule(date: Date, title: string, body: string, hedef: 'gunluk'
 export type LegendNote = { bolum: number; baslik: string };
 let legendCtx: LegendNote | undefined;
 
+let lastCtx: { daily: DailyStore; fighter?: string } | undefined;
+
+/** Son bilinen bilgilerle yeniden planlar (izin verilince, fırsat açılınca). */
+export function rescheduleLast() {
+  if (lastCtx) void rescheduleNotifications(lastCtx.daily, lastCtx.fighter);
+}
+
 export async function rescheduleNotifications(daily: DailyStore, fighter?: string, efsane?: LegendNote | null) {
   if (efsane !== undefined) legendCtx = efsane ?? undefined;
+  lastCtx = { daily, fighter };
   if (state !== '1') return;
   try {
     await Notifications.cancelAllScheduledNotificationsAsync();
@@ -103,8 +115,14 @@ export async function rescheduleNotifications(daily: DailyStore, fighter?: strin
       const d = dreamSpec(gun + i);
       await schedule(at(i, 12, 30), L("⭐ Bugünün hayalî maçı"), L("{0} ile {1} karşı karşıya. Sence kim kazanır?", [dreamName(d.ben), dreamName(d.rakip)]), 'hayali');
     }
+    // Süreli fırsat bitmeden bir kez, sezon bitmeden bir kez
+    const deal = currentDeal();
+    if (deal && !hasAll()) await schedule(new Date(deal.ends - 6 * 3600 * 1000), L("⏳ Tam Paket fırsatın bitiyor"), L("Son 6 saat. Sonra normal fiyatına döner."), 'kariyer');
+    const sezon = seasonDaysLeft();
+    if (sezon > 2 && tierOf(currentSeasonXp()) > 0) await schedule(at(sezon - 2, 18, 0), L("🏆 Sezon bitiyor"), L("İki gün kaldı: Sezon Kemeri ödüllerini almayı unutma."), 'kariyer');
   } catch {}
 }
+onDealStart(rescheduleLast);
 
 /** Bildirime dokunulunca hangi ekran açılsın. */
 export function onNotificationOpen(fn: (hedef: 'gunluk' | 'kariyer' | 'hayali') => void) {

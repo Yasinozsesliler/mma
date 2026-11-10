@@ -14,6 +14,7 @@ import { ALL_SKUS, PREMIUM_SKU } from './skus';
 import { initRevenueCat, rcRecordPurchase, rcSync } from './revenuecat';
 import { noteRewardedWatched } from './offers';
 import { noteAdShown } from './upsell';
+import { hourActive } from './hour';
 export { hasAll, isAdFree, isPremium, owns, useAdFree, useOwned, usePremium } from './premium';
 
 /** Bu platformda reklam ve satın alma var mı? */
@@ -29,6 +30,7 @@ export const COACH_STORE = true;
 /** Hakem Modu (hakem_modu) — iPhone ve Android. */
 export const REF_STORE = true;
 export { dismissUpsell, useUpsellDue } from './upsell';
+export { HOUR_GOAL, hourActive, startHour, takeHourEndOffer, useHour } from './hour';
 export { closeShop, currentDeal, dealSeen, fmtLeft, markDealSeen, maybeStartBeltDeal, maybeStartWelcome, openShop, useDeal, useNow, useShop, type Deal, type DealKind } from './deals';
 export { closeNudge, closeOffer, milestoneOffer, noteInterstitialShown, openOffer, rewardedCount, useNudge, useOffer, type OfferReason } from './offers';
 
@@ -150,7 +152,7 @@ AppState.addEventListener('change', (st) => {
  * 'odul': ödül kazanıldı · 'iptal': reklam yarıda kapatıldı · 'yok': şu an reklam yok (internet/doluluk)
  */
 export function showRewarded(): Promise<'odul' | 'iptal' | 'yok'> {
-  if (isPremium()) return Promise.resolve('odul');
+  if (isPremium() || hourActive()) return Promise.resolve('odul');
   const ad = rewarded;
   if (!ad || !rewardedReady) {
     loadNow(rSlot, rewardedReady, loadRewarded);
@@ -194,7 +196,7 @@ let lastAdAt = 0;
 /** Maç sonrası geçiş reklamı (oyuncuyu bunaltmadan): ilk 5 dövüş reklamsız, sonra en az 4 dövüşte ve 6 dakikada bir;
  *  mağlubiyetten hemen sonra hiç gösterilmez (kötü anı reklamla bölmeyiz). */
 export async function maybeInterstitial(careerFights: number, afterLoss = false): Promise<boolean> {
-  if (isAdFree() || !canAds) return false;
+  if (isAdFree() || hourActive() || !canAds) return false;
   fightsSinceAd++;
   if (afterLoss || careerFights < 5 || fightsSinceAd < 4 || Date.now() - lastAdAt < 360_000) return false;
   const ad = interstitial;
@@ -236,7 +238,11 @@ let restoreFn: (() => Promise<unknown>) | null = null;
 let pending: { sku: string; resolve: (r: BuyResult) => void } | null = null;
 
 const settle = (r: BuyResult) => {
-  if (pending) track(r === 'ok' ? 'iap_success' : 'iap_fail', { sku: pending.sku, sonuc: r });
+  // Sonuç olay adında: Analytics'te özel boyut tanımlamadan vazgeçme ile hatayı ve ürünü ayırabilmek için
+  if (pending) {
+    track(r === 'ok' ? 'iap_success' : 'iap_fail', { sku: pending.sku, sonuc: r });
+    track(`iap_${r === 'ok' ? 'ok' : r === 'iptal' ? 'cancel' : 'error'}_${pending.sku}`.slice(0, 40));
+  }
   pending?.resolve(r);
   pending = null;
 };

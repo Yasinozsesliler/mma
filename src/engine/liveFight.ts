@@ -5,7 +5,8 @@
 // yer dövüşü submission'ları, kondisyon nefesi, rakibin hız ve zekâsı hazırlık süresini ve çalımları belirler.
 import { chance, clamp, rand } from './rng';
 import type { Background, FightState, Stats, Tactic } from './types';
-import { tacticEdge } from './fight';
+import { pStatsOf, tacticEdge } from './fight';
+import { habitEdge, hasHabit } from './habits';
 
 export type LiveInput = 'jab' | 'direkt' | 'tekme' | 'kac' | 'gard' | 'indir' | 'sub' | 'kalk' | 'ozel';
 /** Tarza özel hamle (geçmişe göre); imza hareketi varsa adı onunla gösterilir ve biraz daha güçlüdür. */
@@ -36,6 +37,9 @@ export interface LiveSide {
   kd: number;
   /** Yerde üstte geçen süre (ms) */
   ctrl: number;
+  /** Bu rauntta gövde ve bacağa alınan hasar */
+  govde: number;
+  bacak: number;
 }
 
 export interface LiveEvent {
@@ -87,6 +91,9 @@ export interface LiveCfg {
   kickRate: number;
   tdRate: number;
   edge: number;
+  /** Rakibin huyuna göre bölgesel hasar çarpanı */
+  oBacakCarpan?: number;
+  oGovdeCarpan?: number;
   /** Rakibin, oyuncu vururken araya kontra sokma ihtimali */
   oCounter: number;
   /** Oyuncunun vuruşunun boşa gitme ihtimali (hız farkı) */
@@ -177,10 +184,16 @@ export function liveConfig(p: Stats, o: Stats, pt: Tactic, ot: Tactic): LiveCfg 
   };
 }
 
-const side = (hp: number): LiveSide => ({ hp, sta: 100, busyUntil: 0, landed: 0, thrown: 0, dealt: 0, kd: 0, ctrl: 0 });
+const side = (hp: number): LiveSide => ({ hp, sta: 100, busyUntil: 0, landed: 0, thrown: 0, dealt: 0, kd: 0, ctrl: 0, govde: 0, bacak: 0 });
 
 export function liveCreate(fs: FightState, oStats: Stats, t0: number, dur = ROUND_MS, special?: { kind: SpecialKind; imza: boolean }): LiveSim {
-  const cfg = liveConfig(fs.pStats, oStats, fs.taktik ?? 'mesafe', fs.rakipTaktik ?? 'mesafe');
+  const cfg = liveConfig(pStatsOf(fs), oStats, fs.taktik ?? 'mesafe', fs.rakipTaktik ?? 'mesafe');
+  cfg.edge += habitEdge(fs, fs.taktik ?? 'mesafe');
+  if (fs.mods.kimlik === 'nakavtci') cfg.pPow *= 1.03;
+  if (fs.mods.kimlik === 'bogucu') cfg.gr += 3;
+  if (fs.mods.kimlik === 'taktisyen') cfg.edge += 0.01;
+  cfg.oBacakCarpan = hasHabit(fs, 'bacakZayif') ? 1.5 : 1;
+  cfg.oGovdeCarpan = hasHabit(fs, 'govdeHassas') ? 1.5 : 1;
   return {
     t: t0,
     dur,
@@ -465,7 +478,10 @@ export function liveInput(s: LiveSim, k: LiveInput) {
     if (s.over) return;
   }
   if (counter) ev(s, { kind: 'counter' });
-  if (k === 'tekme') o.sta = clamp(o.sta - 7, 0, 100);
+  if (k === 'tekme') {
+    o.sta = clamp(o.sta - 7, 0, 100);
+    o.bacak += dmg * 2.4 * (s.cfg.oBacakCarpan ?? 1);
+  } else if (k === 'direkt' && chance(0.3)) o.govde += dmg * 2 * (s.cfg.oGovdeCarpan ?? 1);
   damage(s, 'o', dmg, heavy || counter);
   if (!s.over && (o.state as OState) !== 'rocked') {
     o.state = 'hurt';
@@ -725,6 +741,8 @@ export function liveStep(s: LiveSim, t: number) {
         ev(s, { kind: 'blocked', side: 'p' });
         return;
       }
+      if (o.attack === 'kick') p.bacak += dmg * 2.4;
+      else if (o.attack === 'power' && chance(0.3)) p.govde += dmg * 2;
       damage(s, 'p', dmg, o.attack !== 'jab');
       return;
     }
@@ -837,6 +855,10 @@ export interface LiveRoundResult {
   bitis: { kazanan: 'p' | 'o'; yontem: 'KO' | 'TKO' | 'SUB' } | null;
   /** Maç boyunca kaçırılan kilitler (sonraki raunda taşınır) */
   subFails: number;
+  pGovde: number;
+  pBacak: number;
+  oGovde: number;
+  oBacak: number;
 }
 
 export function liveResult(s: LiveSim): LiveRoundResult {
@@ -856,5 +878,9 @@ export function liveResult(s: LiveSim): LiveRoundResult {
     oran: liveElapsed(s) / s.dur,
     bitis: s.over ? { kazanan: s.over.kazanan, yontem: s.over.yontem } : null,
     subFails: s.subFails,
+    pGovde: s.p.govde,
+    pBacak: s.p.bacak,
+    oGovde: s.o.govde,
+    oBacak: s.o.bacak,
   };
 }

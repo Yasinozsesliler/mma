@@ -1,6 +1,7 @@
 import { L, LOC } from '../i18n';
 import { SUBMISSIONS } from './data';
 import type { LiveRoundResult } from './liveFight';
+import { exploited, habitEdge, HABITS, hasHabit, revealInFight } from './habits';
 import { bestLevel, bestSpecial, pickTech, TECHNIQUES, techById, type TechDef } from './techniques';
 import { CRITICAL_INTRO, evenLine, groundLine, strikeLine, TACTICS, tdLine } from './narration';
 import { chance, clamp, fill, noise, pick, rand, randInt, weighted } from './rng';
@@ -14,8 +15,7 @@ import type {
   Opponent,
   PlanKey,
   Stats,
-  Tactic,
-} from './types';
+  Tactic, Bolge } from './types';
 import { STAT_KEYS, STAT_LABELS } from './types';
 
 type Side = 'p' | 'o';
@@ -171,18 +171,63 @@ export function startFight(opts: {
   };
 }
 
+/** Bölgesel hasarın etkisi: sakat bacak hızı ve takedown savunmasını, gövde kondisyonu düşürür (en fazla -10). */
+function bolgeCeza(st: Stats, b?: Bolge) {
+  if (!b) return st;
+  const leg = Math.min(10, Math.max(0, b.bacak - 25) * 0.18);
+  const gut = Math.min(10, Math.max(0, b.govde - 25) * 0.18);
+  if (leg) {
+    st.hiz = Math.max(1, st.hiz - leg);
+    st.gures = Math.max(1, st.gures - leg * 0.6);
+  }
+  if (gut) st.kondisyon = Math.max(1, st.kondisyon - gut);
+  return st;
+}
+
 const oStats = (fs: FightState) => {
   const st = withMods(fs.opp.stats, fs.mods.oppStats);
   // Bacak tekmesi planı: rakibin hızı raunt raunt düşer.
   if (fs.mods.plan === 'bacak') st.hiz = Math.max(1, st.hiz - (fs.raunt - 1) * (fs.mods.planUyum ? 5 : 3));
-  return st;
+  return bolgeCeza(st, fs.oBolge);
 };
+/** Oyuncunun o anki istatistikleri (bölgesel hasar dahil). */
+export const pStatsOf = (fs: FightState) => bolgeCeza({ ...fs.pStats }, fs.pBolge);
+
+/** Vuruşun gövde ve bacağa düşen payı: plan, taktik ve huya göre. Eşikte öne çıkan an yazar. */
+function addRegion(fs: FightState, victim: Side, dmg: number, t: Tactic) {
+  const planli = victim === 'o' ? fs.mods.plan : null;
+  const bacakPay = planli === 'bacak' ? 0.65 : t === 'mesafe' ? 0.3 : 0.12;
+  const govdePay = planli === 'govde' ? 0.65 : t === 'clinch' ? 0.45 : t === 'baski' ? 0.2 : 0.1;
+  const b: Bolge = (victim === 'o' ? fs.oBolge : fs.pBolge) ?? { govde: 0, bacak: 0 };
+  const once = { ...b };
+  const h = (x: 'bacakZayif' | 'govdeHassas') => (victim === 'o' && hasHabit(fs, x) ? 1.5 : 1);
+  b.bacak = clamp(b.bacak + dmg * bacakPay * 1.6 * SC * h('bacakZayif'), 0, 100);
+  b.govde = clamp(b.govde + dmg * govdePay * 1.6 * SC * h('govdeHassas'), 0, 100);
+  if (victim === 'o') fs.oBolge = b;
+  else fs.pBolge = b;
+  noteRegion(fs, victim, once, b);
+}
+
+function noteRegion(fs: FightState, victim: Side, once: Bolge, b: Bolge) {
+  if (once.bacak < 35 && b.bacak >= 35) {
+    if (victim === 'o') {
+      fs.log.push(L("🦵 {0} topallamaya başladı! Ön bacağı artık taşımıyor.", [fs.oAd]));
+      moment(fs, '🦵', L("{0} rakibinin bacağını söktün, maçın gidişatı değişti.", [fs.oAd]), 5, true);
+    } else fs.log.push(L("🦵 Ön bacağın sızlıyor, ağırlığını veremiyorsun."));
+  }
+  if (once.govde < 35 && b.govde >= 35) {
+    if (victim === 'o') {
+      fs.log.push(L("🫁 {0} gövdesini tutuyor, nefesi kesildi!", [fs.oAd]));
+      moment(fs, '🫁', L("Gövde vuruşlarıyla {0} rakibinin nefesini kestin.", [fs.oAd]), 4, true);
+    } else fs.log.push(L("🫁 Gövdene inenler nefesini kesiyor."));
+  }
+}
 const names = (fs: FightState): Record<Side, string> => ({ p: fs.pAd, o: fs.oAd });
 const clone = (fs: FightState): FightState => JSON.parse(JSON.stringify(fs));
 
 function sideDom(fs: FightState, s: Side) {
   return s === 'p'
-    ? domains(fs.pStats, fs.pKondisyon, fs.pHasar)
+    ? domains(pStatsOf(fs), fs.pKondisyon, fs.pHasar)
     : domains(oStats(fs), fs.oKondisyon, fs.oHasar);
 }
 
@@ -198,6 +243,11 @@ function addDmg(fs: FightState, victim: Side, d0: number) {
     fs.kesik = true;
     fs.log.push(L("🩸 Kaşının üstünde kesik açıldı! Kan gözüne akıyor."));
     moment(fs, '🩸', L("Kaşın açıldı, gözüne akan kanla dövüşmeye devam ettin."), 3, false);
+  }
+  if (victim === 'o' && !fs.oKesik && fs.oHasar > 35 && chance(0.05)) {
+    fs.oKesik = true;
+    fs.log.push(L("🩸 {0} kaşından kan akıyor! Doktor gözünü ayırmıyor.", [fs.oAd]));
+    moment(fs, '🩸', L("{0} rakibinin kaşını açtın.", [fs.oAd]), 3, true);
   }
 }
 
@@ -220,8 +270,13 @@ function addPts(fs: FightState, s: Side, v0: number) {
 }
 
 function drain(fs: FightState, s: Side, t: Tactic, extra = 0) {
-  const st = s === 'p' ? fs.pStats : oStats(fs);
+  const st = s === 'p' ? pStatsOf(fs) : oStats(fs);
   let d = (DRAIN[t] + extra) * (1.45 - st.kondisyon / 100) * SC;
+  // Geç yorulan rakip: 2. rauntla birlikte nefesi daha çabuk biter.
+  if (s === 'o' && fs.raunt >= 2 && hasHabit(fs, 'gecYorulur')) d *= 1.1;
+  if (s === 'o' && fs.raunt === 1 && hasHabit(fs, 'gecYorulur')) d *= 0.95;
+  if (s === 'o' && fs.raunt >= 2 && hasHabit(fs, 'hizliBaslar')) d *= 1.06;
+  if (s === 'o' && fs.raunt === 1 && hasHabit(fs, 'hizliBaslar')) d *= 0.95;
   if (s === 'o' && fs.mods.plan === 'tempo') d *= fs.mods.planUyum ? 1.3 : 1.15;
   if (s === 'o' && fs.mods.plan === 'govde') d *= fs.mods.planUyum ? 1.18 : 1.08;
   if (s === 'o' && fs.mods.plan === 'kafes' && t === 'clinch') d *= 1.1;
@@ -279,6 +334,7 @@ function rockCheck(fs: FightState, victim: Side, dmg: number, beat: number): boo
   // Gövde planı: geç rauntlarda düşen eller, sarsılan rakip.
   if (victim === 'o' && fs.mods.plan === 'govde' && fs.raunt >= 2) p *= fs.mods.planUyum ? 1.25 : 1.12;
   if (victim === 'o' && fs.mods.plan === 'puan') p *= 0.85;
+  if (victim === 'o' && fs.mods.kimlik === 'nakavtci') p *= 1.05;
   if (!chance(p)) return false;
   const att = other(victim);
   const kd = chance(0.5);
@@ -323,6 +379,8 @@ function groundPhase(fs: FightState, top: Side, beat: number): boolean {
   let subP = clamp(0.1 + (T.grappling - B.grappling) / 110, 0.03, 0.4);
   if (top === 'p' && fs.mods.plan === 'yer') subP += fs.mods.planUyum ? 0.14 : 0.08;
   if (top === 'p') subP += bestLevel(fs.mods.teknik, 'sub') * 0.006;
+  if (top === 'p' && hasHabit(fs, 'yerdeZayif')) subP += 0.05;
+  if (top === 'p' && fs.mods.kimlik === 'bogucu') subP += 0.015;
   if (chance(subP * SC)) {
     setCritical(fs, top === 'p' ? 'subFirsat' : 'subTehlike');
     return true;
@@ -345,7 +403,7 @@ function takedownBeat(fs: FightState, shooter: Side, beat: number): boolean {
   if (shooter === 'p') {
     // Aynı maçta dalışlar arttıkça rakip zamanlamayı çözer, sprawl'a hazır bekler.
     const n = (fs.tdDeneme = (fs.tdDeneme ?? 0) + 1);
-    p += planBonus(fs.mods, 'takedown', fs.raunt) - (fs.okunma ?? 0) * 1.5 + anlik(fs) * 1.5 - Math.min(0.2, Math.max(0, n - 3) * 0.022);
+    p += planBonus(fs.mods, 'takedown', fs.raunt) - (fs.okunma ?? 0) * 1.5 + anlik(fs) * 1.5 - Math.min(0.2, Math.max(0, n - 3) * 0.022) + habitEdge(fs, 'takedown') * 1.5;
     if (n === 6) fs.log.push(L("🧠 {0} dalışlarını çözmeye başladı; kalçası hep geride, sprawl’a hazır.", [fs.oAd]));
   }
   p = clamp(p, 0.08, 0.78);
@@ -367,7 +425,7 @@ function clinchBeat(fs: FightState, beat: number): boolean {
   const O = sideDom(fs, 'o');
   const pc = P.striking * 0.5 + P.wrestling * 0.5;
   const oc = O.striking * 0.5 + O.wrestling * 0.5;
-  let r = pc / (pc + oc) + ADV[fs.taktik!][fs.rakipTaktik!] - (fs.okunma ?? 0) + anlik(fs) + noise(0.09);
+  let r = pc / (pc + oc) + ADV[fs.taktik!][fs.rakipTaktik!] - (fs.okunma ?? 0) + anlik(fs) + habitEdge(fs, fs.taktik!) + noise(0.09);
   if (fs.taktik === 'clinch') r += planBonus(fs.mods, 'clinch', fs.raunt);
   const w: Side = r >= 0.5 ? 'p' : 'o';
   drain(fs, 'p', 'clinch');
@@ -382,6 +440,7 @@ function clinchBeat(fs: FightState, beat: number): boolean {
   fs.log.push(strikeLine(w, 'clinch', names(fs)));
   const dmg = (4 + W.power / 25) * (0.7 + Math.abs(r - 0.5) * 3);
   addDmg(fs, other(w), dmg);
+  addRegion(fs, other(w), dmg, 'clinch');
   addPts(fs, w, 1 + dmg / 14);
   return rockCheck(fs, other(w), dmg, beat);
 }
@@ -391,7 +450,7 @@ function strikeBeat(fs: FightState, beat: number): boolean {
   const O = sideDom(fs, 'o');
   const pt = fs.taktik!;
   const ot = fs.rakipTaktik!;
-  let r = P.striking / (P.striking + O.striking) + ADV[pt][ot] + planBonus(fs.mods, pt, fs.raunt) - (fs.okunma ?? 0) + anlik(fs) + noise(0.1);
+  let r = P.striking / (P.striking + O.striking) + ADV[pt][ot] + planBonus(fs.mods, pt, fs.raunt) - (fs.okunma ?? 0) + anlik(fs) + habitEdge(fs, pt) + noise(0.1);
   drain(fs, 'p', pt);
   drain(fs, 'o', ot);
   // Hakemler kafesi kontrol eden, ileri yürüyen tarafı ödüllendirir.
@@ -412,6 +471,7 @@ function strikeBeat(fs: FightState, beat: number): boolean {
   const war = pt === 'baski' && ot === 'baski' ? 1.3 : 1;
   const dmg = base * war * (0.6 + (W.power / 100) * 0.8) * (0.7 + margin * 3);
   addDmg(fs, other(w), dmg);
+  addRegion(fs, other(w), dmg, wt);
   addDmg(fs, w, base * 0.3 * war * (0.6 + (L.power / 100) * 0.8));
   addPts(fs, w, 1 + dmg / 12);
   addPts(fs, other(w), 0.3);
@@ -723,6 +783,25 @@ const DECISIONS: DecDef[] = [
     ],
   },
   {
+    tip: 'bacak_sok',
+    agirlik: (fs) => ((fs.oBolge?.bacak ?? 0) >= 25 ? 3 : 0),
+    metin: (fs) => pick([L("🦵 {0} ön bacağına basamıyor, her low kick'te yüzü buruşuyor.", [fs.oAd]), L("🦵 {0} topallıyor. Köşen bağırıyor: \"Bacak, bacak!\"", [fs.oAd])]),
+    secenekler: () => [
+      { ad: L("Bacağa devam"), aciklama: L("Sök gitsin. Yavaş ama sağlam."), apply: (fs) => (setTac(fs, 'mesafe'), (fs.oBolge = { govde: fs.oBolge?.govde ?? 0, bacak: clamp((fs.oBolge?.bacak ?? 0) + 14, 0, 100) }), L("Aynı noktaya bir tekme daha. Bacağı titriyor.")) },
+      { ad: L("Yere indir"), aciklama: L("Sakat bacak takedown savunamaz."), apply: (fs) => (setTac(fs, 'takedown'), boost(fs, 0.05, 2), L("Zayıf bacağa daldın.")) },
+      { ad: L("Kafaya sür"), aciklama: L("Yavaşladı, bitirmeye git. Açık da verirsin."), apply: (fs) => (setTac(fs, 'baski'), boost(fs, 0.05, 2), tired(fs, -5), L("Üstüne yürüdün, yumruklar kafaya.")) },
+    ],
+  },
+  {
+    tip: 'kes_zorla',
+    agirlik: (fs) => (fs.oKesik ? 2.5 : 0),
+    metin: (fs) => L("🩸 {0} kaşından kan akıyor, gözünü kırpıştırıyor.", [fs.oAd]),
+    secenekler: () => [
+      { ad: L("Kesiği hedefle"), aciklama: L("Dirsek ve jab: doktor durdurabilir, ama gardın açılır."), apply: (fs) => ((fs.oHasar = clamp(fs.oHasar + 7, 0, 100)), (fs.pHasar = clamp(fs.pHasar + 3, 0, 100)), L("Kaşa üst üste vurdun. Sen de bir tane yedin.")) },
+      { ad: L("Planına devam"), aciklama: L("Kan kendi işini görsün."), apply: (fs) => (boost(fs, 0.02, 2), L("Sakin kaldın.")) },
+    ],
+  },
+  {
     tip: 'rakip_yorgun',
     agirlik: (fs) => (fs.oKondisyon < 50 ? 4 : 0),
     metin: (fs) => pick([L("😮‍💨 {0} ağzı açık nefes alıyor, elleri düştü!", [fs.oAd]), L("😮‍💨 {0} yavaşladı. Tank boşalıyor!", [fs.oAd])]),
@@ -820,7 +899,7 @@ export function chooseTactic(prev: FightState, t: Tactic): FightState {
   fs.rakipTaktik = oppTactic(fs);
   const hist = fs.oyuncuTaktikGecmisi ?? [];
   const rep = streak(hist, t);
-  fs.okunma = rep * 0.045;
+  fs.okunma = rep * 0.045 * (fs.mods.kimlik === 'taktisyen' ? 0.7 : 1);
   hist.push(t);
   fs.oyuncuTaktikGecmisi = hist;
   fs.taktik = t;
@@ -859,6 +938,19 @@ export function applyLiveRound(prev: FightState, r: LiveRoundResult): FightState
   fs.pKondisyon = clamp(r.pSta, 5, 100);
   fs.oKondisyon = clamp(r.oSta, 5, 100);
   fs.pSubFail = r.subFails;
+  // Bölgesel hasar: canlı rauntta biriken gövde ve bacak
+  for (const [v, govde, bacak] of [['p', r.pGovde, r.pBacak], ['o', r.oGovde, r.oBacak]] as [Side, number, number][]) {
+    const once: Bolge = (v === 'o' ? fs.oBolge : fs.pBolge) ?? { govde: 0, bacak: 0 };
+    const b: Bolge = { govde: clamp(once.govde + govde, 0, 100), bacak: clamp(once.bacak + bacak, 0, 100) };
+    if (v === 'o') fs.oBolge = b;
+    else fs.pBolge = b;
+    noteRegion(fs, v, once, b);
+  }
+  if (!fs.oKesik && fs.oHasar > 35 && r.oDealt > 8 && chance(0.2)) {
+    fs.oKesik = true;
+    fs.log.push(L("🩸 {0} kaşından kan akıyor! Doktor gözünü ayırmıyor.", [fs.oAd]));
+    moment(fs, '🩸', L("{0} rakibinin kaşını açtın.", [fs.oAd]), 3, true);
+  }
   fs.pPuan = r.pLanded * 0.25 + r.pDealt * 0.18 + r.oKd * 3 + r.pCtrl * 0.12;
   fs.oPuan = r.oLanded * 0.25 + r.oDealt * 0.18 + r.pKd * 3 + r.oCtrl * 0.12;
   fs.vurusSira = BEATS;
@@ -1063,11 +1155,32 @@ function endRound(fs: FightState) {
     finish(fs, 'p', 'TKO', L("🏳️ {0} köşesi havlu attı! Rakip raunda çıkamıyor. TKO!", [fs.oAd]), 2);
     return;
   }
+  // Bölgesel durdurmalar: açılan kaş ve taşımayan bacak
+  if (fs.oKesik && fs.oHasar > 70 && chance(0.15)) {
+    finish(fs, 'p', 'TKO', L("🩺 Doktor {0} kaşına baktı ve başını salladı. Maç durduruldu, TKO!", [fs.oAd]), 2);
+    return;
+  }
+  if ((fs.oBolge?.bacak ?? 0) >= 75 && chance(0.15)) {
+    finish(fs, 'p', 'TKO', L("🦵 {0} ayağa kalkamıyor, bacağı taşımıyor. Hakem maçı bitirdi, TKO!", [fs.oAd]), 2);
+    return;
+  }
+  if ((fs.pBolge?.bacak ?? 0) >= 75 && chance(0.15)) {
+    finish(fs, 'o', 'TKO', L("🦵 Bacağın artık taşımıyor. Köşen doktorla konuştu, maç durduruldu."), 2);
+    return;
+  }
+  const hileli = exploited(fs);
+  if (hileli && (fs.taktikBasari[fs.taktik!] ?? 0) > 0 && !fs.opp.huyBilinen?.includes(hileli)) moment(fs, '🎯', L("{0} zaafını buldun: {1}.", [fs.oAd, HABITS[hileli].ad().toLocaleLowerCase(LOC)]), 4, true);
   // Raunt arası dinlenme: kısmi toparlanma. Yorgunluk birikir, her rauntta tavan düşer.
   const tavan = (k: number) => 100 - fs.raunt * (9 - k / 20);
   fs.pKondisyon = clamp(Math.min(fs.pKondisyon + 3 + fs.pStats.kondisyon * 0.08, tavan(fs.pStats.kondisyon)), 5, 100);
   fs.oKondisyon = clamp(Math.min(fs.oKondisyon + 3 + oStats(fs).kondisyon * 0.08, tavan(oStats(fs).kondisyon)), 5, 100);
   fs.kose = cornerAdvice(fs, diff);
+  // Köşe rakibi izler: işe yarayan huy önce fark edilir.
+  const fark = (hileli ? 0.7 : 0.3) + (fs.mods.kimlik === 'taktisyen' ? 0.2 : 0);
+  if (chance(fark)) {
+    const not = revealInFight(fs, hileli);
+    if (not) fs.kose += `\n${fs.koseAdi}: ${not}`;
+  }
   fs.durum = 'rauntSonu';
 }
 

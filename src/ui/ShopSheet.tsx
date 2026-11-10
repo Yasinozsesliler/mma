@@ -28,7 +28,7 @@ import {
   useShop,
   type Deal,
 } from '../monetization';
-import { BUNDLE_SKU, COACH_SKU, DEAL_SKU, PREMIUM_SKU, REF_SKU, ULTIMATE_SKU } from '../monetization/skus';
+import { BUNDLE_SKU, COACH_SKU, DEAL_SKU, PREMIUM_SKU, REF_SKU, ULTIMATE_SKU, UPGRADE_SKU } from '../monetization/skus';
 import { Icon, type IconName } from './components';
 import { PremiumCompare } from './PremiumCard';
 import { C, F } from './theme';
@@ -235,12 +235,13 @@ function CompleteCard({ owned }: { owned: ReadonlySet<string> }) {
   const full = amts[amts.length - 1];
   const partSum = amts.slice(0, -1).every((a) => a && full && a.cur === full.cur) ? amts.slice(0, -1).reduce((t, a) => t + a!.n, 0) : 0;
   const fullPrice = usePrice(ULTIMATE_SKU);
+  const upgradePrice = usePrice(UPGRADE_SKU);
   const allInOne = parts.length > 1 && full && partSum > full.n;
   return (
     <LinearGradient colors={['#2e2206', '#0e0c07']} style={[s.card, { borderColor: C.gold }]}>
       <Text style={s.cardTitle}>{L("EKSİKLERİNİ TAMAMLA")}</Text>
       <Text style={s.lead}>{L("Şampiyon Paketi sende. Tam Paket'e giden yolda yalnızca bunlar kaldı:")}</Text>
-      {allInOne ? <PartRow sku={ULTIMATE_SKU} icon="crown" title={L("Hepsi birden (Tam Paket) · parça parça {0}", [money(partSum, full!.cur) ?? ''])} price={fullPrice} /> : null}
+      {upgradePrice ? <PartRow sku={UPGRADE_SKU} icon="crown" title={L("Tam Paket'e yükselt: Hakem + Antrenör Modu ve 6 kozmetik paket")} /> : allInOne ? <PartRow sku={ULTIMATE_SKU} icon="crown" title={L("Hepsi birden (Tam Paket) · parça parça {0}", [money(partSum, full!.cur) ?? ''])} price={fullPrice} /> : null}
       {parts.map(([sku, ic, t]) => (
         <PartRow key={sku} sku={sku} icon={ic} title={t} />
       ))}

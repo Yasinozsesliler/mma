@@ -98,6 +98,22 @@ export function useBeltSkin(): string[] | null {
   return x.renk.length ? x.renk : null;
 }
 
+/** Kuşanılan sezon unvanı (yoksa null). */
+export function titleNow(): string | null {
+  const x = equipped('unvan', ownedSet());
+  return x.renk.length ? x.ad : null;
+}
+/** Kafes rengi: [vurgu, tel] ya da null. */
+export function cageTintNow(): string[] | null {
+  const x = equipped('kafes', ownedSet());
+  return x.renk.length ? x.renk : null;
+}
+/** Paylaşım kartı sezon şablonu: [zemin, şerit, vurgu] ya da null. */
+export function seasonCardNow(): string[] | null {
+  const x = equipped('kart', ownedSet());
+  return x.renk.length ? x.renk : null;
+}
+
 export function walkoutNow() {
   return equipped('giris', ownedSet()).giris ?? null;
 }

@@ -22,7 +22,8 @@ import { CornerMoment } from './CornerMoment';
 import { speakCoach, stopAnnounce } from '../announcer';
 import { CRITICAL_OPTIONS, TACTICS } from '../engine/narration';
 import { oppRecord } from '../engine/opponents';
-import type { CriticalKind, FightState, GameState, Tactic } from '../engine/types';
+import type { Bolge, CriticalKind, FightState, GameState, Tactic } from '../engine/types';
+import { HABITS, knownEdge } from '../engine/habits';
 import type { Act } from './GameScreens';
 import { CageView } from './CageView';
 import { ResultReveal, RoundBanner } from './FightFx';
@@ -63,6 +64,20 @@ function Corner({ side, name, sub }: { side: 'red' | 'blue'; name: string; sub: 
   );
 }
 
+/** Gövde ve bacak hasarı belirginleşince görünür. */
+function RegionChips({ b }: { b?: Bolge }) {
+  const g = Math.round(b?.govde ?? 0);
+  const l = Math.round(b?.bacak ?? 0);
+  if (g < 15 && l < 15) return null;
+  return (
+    <Text style={sb.cut}>
+      {l >= 15 ? `🦵 ${l}` : ''}
+      {l >= 15 && g >= 15 ? '  ' : ''}
+      {g >= 15 ? `🫁 ${g}` : ''}
+    </Text>
+  );
+}
+
 function Scoreboard({ fs, org, pUyruk }: { fs: FightState; org: string; pUyruk: string }) {
   return (
     <View style={{ marginBottom: 12 }}>
@@ -87,11 +102,14 @@ function Scoreboard({ fs, org, pUyruk }: { fs: FightState; org: string; pUyruk: 
           <Bar value={100 - fs.pHasar} color={fs.pHasar > 60 ? C.orange : C.green} label={L("Sağlık")} right={`${Math.round(100 - fs.pHasar)}`} />
           <Bar value={fs.pKondisyon} color={C.gold} label={L("Kondisyon")} right={`${Math.round(fs.pKondisyon)}`} />
           {fs.kesik ? <Text style={sb.cut}>{L("🩸 Kesik var")}</Text> : null}
+          <RegionChips b={fs.pBolge} />
         </View>
         <View style={{ width: 14 }} />
         <View style={{ flex: 1 }}>
           <Bar value={100 - fs.oHasar} color={fs.oHasar > 60 ? C.orange : C.green} label={L("Sağlık")} right={`${Math.round(100 - fs.oHasar)}`} />
           <Bar value={fs.oKondisyon} color={C.gold} label={L("Kondisyon")} right={`${Math.round(fs.oKondisyon)}`} />
+          {fs.oKesik ? <Text style={sb.cut}>{L("🩸 Kesik var")}</Text> : null}
+          <RegionChips b={fs.oBolge} />
         </View>
       </View>
     </View>
@@ -216,16 +234,31 @@ function ModeSwitch() {
 
 function TacticList({ fs, onPick, title }: { fs: FightState; onPick: (t: Tactic) => void; title: string }) {
   const last = fs.oyuncuTaktikGecmisi?.at(-1);
+  // Liste raunt arasında da açılır: not sıradaki raunda göre yazılır.
+  const sira = fs.durum === 'rauntSonu' ? fs.raunt + 1 : fs.raunt;
+  const bilinen = fs.opp.huyBilinen ?? [];
+  const not = (t: Tactic) => {
+    const e = knownEdge(fs, t, sira);
+    return e > 0 ? L("\n🎯 Bildiğin zaafına uyuyor.") : e < 0 ? L("\n⚠️ Bu raunt ona uygun.") : '';
+  };
   return (
     <>
       <Section>{title}</Section>
       <ModeSwitch />
+      {bilinen.length ? (
+        <Card accent={C.blue}>
+          <Text style={sb.habitHead}>{L("BİLDİĞİN ZAAFLAR")}</Text>
+          {bilinen.map((h) => (
+            <Text key={h} style={sb.habit}>• {HABITS[h].ad()}: {HABITS[h].ipucu()}</Text>
+          ))}
+        </Card>
+      ) : null}
       {(Object.keys(TACTICS) as Tactic[]).map((t) => (
         <Choice
           key={t}
           icon={TACTIC_ICONS[t]}
           label={TACTICS[t].ad}
-          desc={TACTICS[t].aciklama + (last === t ? L("\n⚠️ Geçen raunt bunu yaptın. Rakip bekliyor olabilir.") : '')}
+          desc={TACTICS[t].aciklama + (last === t ? L("\n⚠️ Geçen raunt bunu yaptın. Rakip bekliyor olabilir.") : '') + not(t)}
           tone={last === t ? 'plain' : 'red'}
           onPress={() => onPick(t)}
         />
@@ -398,6 +431,8 @@ export function FightScreen({ s, act }: { s: GameState; act: Act }) {
 }
 
 const sb = StyleSheet.create({
+  habitHead: { color: C.blue, fontFamily: F.display, fontSize: 12, letterSpacing: 1, marginBottom: 4 },
+  habit: { color: C.text, fontFamily: F.body, fontSize: 12, lineHeight: 17 },
   row: { flexDirection: 'row', alignItems: 'stretch' },
   corner: { flex: 1, paddingVertical: 10, paddingHorizontal: 12, justifyContent: 'center' },
   cornerSub: { color: 'rgba(255,255,255,0.7)', fontFamily: F.display, fontSize: 9, letterSpacing: 1.5 },

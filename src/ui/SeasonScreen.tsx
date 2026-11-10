@@ -1,4 +1,6 @@
 // Sezon Kemeri: bu ayın 20 basamaklı ödül yolu. Ücretsiz sırada 4, Şampiyon sırasında 6 kozmetik; oynadıkça puan.
+import { claimWeeklyTask, seasonBadges, weeklyTasks } from '../season';
+import type { GorevKind } from '../engine/season';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { sfx } from '../audio';
@@ -13,6 +15,14 @@ import { DEFAULT_LOOK } from './FighterAvatar';
 import { Swatch } from './LockerScreen';
 import { BuyPremium } from './PremiumCard';
 import { C, F } from './theme';
+
+const GOREV_METIN: Record<GorevKind, (n: number) => string> = {
+  mac: (n) => L("{0} maç yap", [n]),
+  galibiyet: (n) => L("{0} galibiyet al", [n]),
+  bitiris: (n) => L("{0} maçı bitirişle kazan", [n]),
+  gunluk: (n) => L("{0} kez Günün Dövüşü oyna", [n]),
+  hayali: (n) => L("{0} Hayalî Maç tahmin et", [n]),
+};
 
 const useProTrack = () => {
   const premium = usePremium();
@@ -63,6 +73,34 @@ export function SeasonScreen({ look, onExit }: { look?: Appearance; onExit: () =
           {L("Puan: maç +{0}, galibiyet +{1}, bitiriş +{2}, Günün Dövüşü +{3}, Hayalî Maç +{4}, efsane bölümü +{5}", [SEASON_XP.mac, SEASON_XP.galibiyet, SEASON_XP.bitiris, SEASON_XP.gunluk, SEASON_XP.hayali, SEASON_XP.bolum])}
         </Text>
       </LinearGradient>
+
+      <View style={st.weekly}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+          <Text style={st.weeklyTitle}>{L("BU HAFTANIN GÖREVLERİ")}</Text>
+          <Text style={st.weeklyNote}>{L("Her biri +{0} puan", [SEASON_XP.gorev])}</Text>
+        </View>
+        {weeklyTasks(s).map((g) => (
+          <View key={g.i} style={st.task}>
+            <Text style={[st.taskText, g.alindi && { color: C.faint, textDecorationLine: 'line-through' }]} numberOfLines={2}>
+              {GOREV_METIN[g.k](g.n)} · {g.say}/{g.n}
+            </Text>
+            {g.alindi ? (
+              <Icon name="check-circle" size={20} color={C.green} />
+            ) : g.say >= g.n ? (
+              <Pressable
+                onPress={() => {
+                  claimWeeklyTask(g.i);
+                  sfx('chime');
+                }}
+                style={st.claim}
+              >
+                <Text style={st.claimText}>{L("AL")}</Text>
+              </Pressable>
+            ) : null}
+          </View>
+        ))}
+        {seasonBadges().length ? <Text style={st.weeklyNote}>{L("🏅 Sezon Şampiyonu rozetlerin: {0}", [seasonBadges().length])}</Text> : <Text style={st.weeklyNote}>{L("20. basamağı bitiren kalıcı Sezon Şampiyonu rozeti kazanır.")}</Text>}
+      </View>
 
       {PURCHASES && !premium ? (
         <LinearGradient colors={['#2a1d05', '#0c0d10']} style={st.pro}>
@@ -153,6 +191,11 @@ export function SeasonBanner({ onPress }: { onPress: () => void }) {
 }
 
 const st = StyleSheet.create({
+  weekly: { backgroundColor: C.card, borderRadius: 12, borderWidth: 1, borderColor: C.border, padding: 12, gap: 8, marginBottom: 10 },
+  weeklyTitle: { color: C.gold, fontFamily: F.display, fontSize: 13, letterSpacing: 1 },
+  weeklyNote: { color: C.dim, fontFamily: F.body, fontSize: 11.5 },
+  task: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 28 },
+  taskText: { flex: 1, color: C.text, fontFamily: F.body, fontSize: 13 },
   hero: { borderRadius: 16, borderWidth: 1, padding: 16, marginBottom: 12 },
   kicker: { fontFamily: F.semi, fontSize: 11, letterSpacing: 1.5 },
   title: { color: C.text, fontFamily: F.display, fontSize: 26, marginTop: 4 },

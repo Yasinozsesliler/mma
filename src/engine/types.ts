@@ -89,6 +89,11 @@ export interface Opponent {
   sehir?: string;
   /** Memlekette ana maç (hometown.ts) */
   memleket?: boolean;
+  /** Gizli alışkanlıklar ve oyuncunun öğrendikleri (habits.ts) */
+  huylar?: import('./habits').HabitId[];
+  huyBilinen?: import('./habits').HabitId[];
+  videoIzlendi?: boolean;
+  partnerTutuldu?: boolean;
   /** Amatör Ligi: tablodaki sıra ve final maçı (amateurLeague.ts) */
   ligSira?: number;
   amFinal?: boolean;
@@ -379,6 +384,8 @@ export interface FightMods {
   teknik?: Record<string, number>;
   /** İmza hareketi: anlatımda kendi adıyla geçer */
   imza?: { id: string; ad: string };
+  /** Dövüş kimliğinin küçük avantajı (identity.ts) */
+  kimlik?: import('./identity').KimlikId;
 }
 
 export interface FightResult {
@@ -411,6 +418,11 @@ export interface FightMoment {
   puan: number;
   /** Oyuncu lehine mi */
   biz: boolean;
+}
+
+export interface Bolge {
+  govde: number;
+  bacak: number;
 }
 
 export interface FightState {
@@ -461,6 +473,10 @@ export interface FightState {
   /** Her andan sonraki durum fotoğrafı: ekran, akışın gösterildiği noktaya kadar olan durumu çizer (sonucu önceden göstermez). */
   anlar?: FightSnap[];
   kesik: boolean;
+  /** Bölgesel hasar: gövde ve bacak (baş hasarı pHasar/oHasar) */
+  pBolge?: Bolge;
+  oBolge?: Bolge;
+  oKesik?: boolean;
   /** Raunt arası köşe anı: nefes alınan raunt ve kesik bakımı (bir sonraki doktor kontrolünde risk yarıya iner) */
   nefesRaunt?: number;
   nefesQ?: number;
@@ -812,6 +828,9 @@ export interface GameState {
   yayinSon?: number;
   /** Efsane Yolu hikâye modu (legendRun.ts) */
   efsane?: import('./legendRun').LegendRun;
+  /** Tüm zamanlar rekorları (records.ts) ve dövüş kimliği (identity.ts) */
+  rekorTablo?: import('./records').RekorTablo;
+  kimlik?: import('./identity').Kimlik;
   /** Amatör Ligi (amateurLeague.ts). Eski kayıtlarda yok: eski kural geçerli */
   amLig?: import('./amateurLeague').AmatorLig;
   /** Son görülen soru/olay kimlikleri (variety.ts; tekrar önleme) */

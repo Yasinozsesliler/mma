@@ -3,7 +3,7 @@
 // derlemeye girmez; bu durumda her çağrı sessizce hiçbir şey yapmaz, oyun etkilenmez.
 // Oyuncu Ayarlar › Gizlilik'ten istatistik paylaşımını kapatabilir.
 import { useSyncExternalStore } from 'react';
-import { NativeModules, TurboModuleRegistry } from 'react-native';
+import { NativeModules, Platform, TurboModuleRegistry } from 'react-native';
 import { getPref, setPref } from './prefs';
 
 type Params = Record<string, string | number | boolean | undefined>;
@@ -25,7 +25,9 @@ function nativeLinked() {
 function fa() {
   if (!triedLoad) {
     triedLoad = true;
-    if (!nativeLinked()) return null;
+    // Android'de modül bağlıyken bile bu kontrol yanlış "yok" diyebiliyor (Analytics'te Android'den hiç özel olay gelmedi).
+    // Android derlemesine Firebase her zaman giriyor (google-services.json depoda); yükleme hatası aşağıda yakalanır.
+    if (Platform.OS !== 'android' && !nativeLinked()) return null;
     try {
       mod = require('@react-native-firebase/analytics') as FA;
       inst = mod.getAnalytics();
