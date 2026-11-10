@@ -8,9 +8,8 @@ export const LANGS: { id: Lang; ad: string; bayrak: string; hazir: boolean }[] =
   { id: 'pt', ad: 'Português', bayrak: '🇧🇷', hazir: true },
   { id: 'ru', ad: 'Русский', bayrak: '🇷🇺', hazir: true },
   { id: 'pl', ad: 'Polski', bayrak: '🇵🇱', hazir: true },
-  // Çeviri sürüyor: hazır olunca açılır. Eksik metinler İngilizce görünür (bkz. load.ts).
-  { id: 'de', ad: 'Deutsch', bayrak: '🇩🇪', hazir: false },
-  { id: 'fr', ad: 'Français', bayrak: '🇫🇷', hazir: false },
+  { id: 'de', ad: 'Deutsch', bayrak: '🇩🇪', hazir: true },
+  { id: 'fr', ad: 'Français', bayrak: '🇫🇷', hazir: true },
 ];
 
 export const LANG_KEY = 'yol_dil';

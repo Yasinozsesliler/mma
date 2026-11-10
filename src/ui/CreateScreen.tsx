@@ -22,7 +22,7 @@ import { C, F, R } from './theme';
 const STEPS = 9;
 
 /** Dile göre varsayılan ülke: oyuncu kendi ülkesiyle başlasın. */
-const LANG_COUNTRY: Record<string, string> = { tr: 'tr', en: 'us', es: 'mx', pt: 'br', ru: 'ru', pl: 'pl' };
+const LANG_COUNTRY: Record<string, string> = { tr: 'tr', en: 'us', es: 'mx', pt: 'br', ru: 'ru', pl: 'pl', de: 'de', fr: 'fr' };
 const rnd = <T,>(a: readonly T[]) => a[Math.floor(Math.random() * a.length)];
 
 function randomName(uyruk: string, kadin = false) {
