@@ -238,7 +238,11 @@ let restoreFn: (() => Promise<unknown>) | null = null;
 let pending: { sku: string; resolve: (r: BuyResult) => void } | null = null;
 
 const settle = (r: BuyResult) => {
-  if (pending) track(r === 'ok' ? 'iap_success' : 'iap_fail', { sku: pending.sku, sonuc: r });
+  // Sonuç olay adında: Analytics'te özel boyut tanımlamadan vazgeçme ile hatayı ve ürünü ayırabilmek için
+  if (pending) {
+    track(r === 'ok' ? 'iap_success' : 'iap_fail', { sku: pending.sku, sonuc: r });
+    track(`iap_${r === 'ok' ? 'ok' : r === 'iptal' ? 'cancel' : 'error'}_${pending.sku}`.slice(0, 40));
+  }
   pending?.resolve(r);
   pending = null;
 };
