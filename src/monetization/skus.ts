@@ -26,6 +26,9 @@ export const COACH_SKU = 'antrenor_modu';
 /** Hakem Modu: ayrı mod (kafesin içindeki hakem olarak oyna). Şampiyon Paketi'ne dahil değil. Önerilen ≈ 1,99 $ */
 export const REF_SKU = 'hakem_modu';
 
+/** Menajer Modu: ayrı mod (dövüşçülerin menajeri olarak oyna). Tam Paket'e dahil. Önerilen ≈ 2,99 $ */
+export const MGR_SKU = 'menajer_modu';
+
 /** Tam Paket Fırsatı: Tam Paket'in aynısı, indirimli fiyatla ayrı ürün. Yalnızca süreli pencerelerde satılır
  *  (Hoş Geldin 72 saat, ilk UCC kemerinden sonra 24 saat). Önerilen 2,99 $ (bütün ülkelerde aynı):
  *  ilk alım için 1-5 $ aralığının ortası. */
@@ -34,4 +37,4 @@ export const DEAL_SKU = 'tam_paket_firsat';
 /** Tam Paket'e Yükseltme: yalnızca Şampiyon Paketi sahibine sunulur, Tam Paket'in kalanını verir. Önerilen 2,99 $. */
 export const UPGRADE_SKU = 'tam_paket_yukseltme';
 
-export const ALL_SKUS: string[] = [PREMIUM_SKU, ADFREE_SKU, ...COSMETIC_SKUS, BUNDLE_SKU, LEGENDS_SKU, ULTIMATE_SKU, COACH_SKU, REF_SKU, DEAL_SKU, UPGRADE_SKU];
+export const ALL_SKUS: string[] = [PREMIUM_SKU, ADFREE_SKU, ...COSMETIC_SKUS, BUNDLE_SKU, LEGENDS_SKU, ULTIMATE_SKU, COACH_SKU, REF_SKU, MGR_SKU, DEAL_SKU, UPGRADE_SKU];
