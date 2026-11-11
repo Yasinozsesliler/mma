@@ -187,6 +187,8 @@ export type RefRun = {
   /** Bu maç arasında seminer alındı */
   seminer?: boolean;
   teklifler?: RefOffer[];
+  /** Ödüllü teklif yenileme bu maç sayısında kullanıldı (maç başına bir kez) */
+  teklifYenile?: number;
   olay?: RefEvent | null;
   akis?: RefPost[];
   rakipler?: RefRival[];

@@ -9389,4 +9389,12 @@ export const RU: Record<string, string> = {
   "{0} kez Günün Dövüşü oyna": "Сыграй Бой дня раз: {0}",
   "{0} Hayalî Maç tahmin et": "Сделай прогноз на бои мечты: {0}",
   "Tam Paket'e yükselt: Hakem + Antrenör Modu ve 6 kozmetik paket": "Улучшить до Полного набора: режимы рефери и тренера и 6 косметических наборов",
+  "📊 Piyasa araştırması: ücrette en fazla %{0}, galibiyet bonusunda en fazla %{1} artışa razı olurlar.": "📊 Анализ рынка: на гонорар они согласятся максимум на +{0}%, на бонус за победу — на +{1}%.",
+  "Yeni adaylar": "Новые кандидаты",
+  "Gözcün bu dönem bir tur daha atsın: üç yeni aday gelsin.": "Пусть скаут сделает ещё один обход в этот период: придут три новых кандидата.",
+  "Piyasa araştırması": "Анализ рынка",
+  "Menajerin piyasayı tarasın: ücrette ve bonusta nereye kadar esneyeceklerini kesin öğren.": "Менеджер изучит рынок: узнай точно, насколько они уступят по гонорару и бонусу.",
+  "Teklifleri yenile": "Обновить предложения",
+  "Birkaç telefon aç: organizasyonları kırmadan yeni maç teklifleri gelsin.": "Сделай пару звонков: новые предложения боёв без обид для организаций.",
+  "📞 Birkaç telefon açtın: masada yeni maç teklifleri var.": "📞 Пара звонков — и на столе новые предложения боёв.",
 };

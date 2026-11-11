@@ -16,6 +16,8 @@ export interface ContractTable {
   ruh: 'sicak' | 'gergin' | 'kizgin' | 'son';
   kozKullanildi?: boolean;
   ipucu?: string;
+  /** Ödüllü piyasa araştırması yapıldı (kesin tavan ipucu) */
+  arastirma?: boolean;
 }
 
 const r100 = (n: number) => Math.round(n / 100) * 100;

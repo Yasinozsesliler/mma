@@ -547,3 +547,13 @@ function rivalPost(r: RefRun): RefPost {
 
 export const TIER_COLOR: Record<RefTier, string> = { amator: '#8a8f9c', bolgesel: '#3ccf6e', buyuk: '#4cc9f0', ucc: '#ffc22e' };
 export const nextTier = (t: RefTier): RefTier | null => TIER_ORDER[TIER_ORDER.indexOf(t) + 1] ?? null;
+
+// ---------- Ödüllü: teklifleri yenile (maç başına bir kez, organizasyon ilişkilerini bozmaz) ----------
+
+export const canRefreshRefOffers = (r: RefRun) => !r.aktif && !!r.teklifler?.length && r.teklifYenile !== r.mac;
+export function refreshRefOffers(r: RefRun) {
+  if (!canRefreshRefOffers(r)) return;
+  r.teklifler = makeOffers(r);
+  r.teklifYenile = r.mac;
+  r.sonMesaj = L("📞 Birkaç telefon açtın: masada yeni maç teklifleri var.");
+}

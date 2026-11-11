@@ -33,6 +33,7 @@ import {
   type RefRun,
 } from '../engine/referee';
 import {
+  canRefreshRefOffers,
   chooseEvent,
   closeCeremony,
   DEFAULT_REF_LOOK,
@@ -45,6 +46,7 @@ import {
   skillCost,
   skillLvl,
   restWeek,
+  refreshRefOffers,
   takeSeminar,
   TIER_COLOR,
   upgradeSkill,
@@ -83,6 +85,7 @@ import { buy, PURCHASES, restorePurchases, useOwned, usePrice } from '../monetiz
 import { REF_SKU, ULTIMATE_SKU } from '../monetization/skus';
 import { actRef, retireRef, setRun, useHall, useRefRun } from '../refereeStore';
 import { CageView } from './CageView';
+import { AdOffer } from './AdOffer';
 import { Bar, Button, CageBg, Card, Choice, Icon, Screen, SLANT, type IconName } from './components';
 import { LookPicker } from './CreateScreen';
 import { FullPackLink } from './ShopSheet';
@@ -330,6 +333,9 @@ function CareerTab({ r, unlocked, onExit }: { r: RefRun; unlocked: boolean; onEx
           actRef((x) => startBout(x, i));
         }} />
       ))}
+      {!kilit && !r.olay && canRefreshRefOffers(r) ? (
+        <AdOffer yer="hakem_teklif" icon="phone-refresh" title={L("Teklifleri yenile")} desc={L("Birkaç telefon aç: organizasyonları kırmadan yeni maç teklifleri gelsin.")} onReward={() => actRef(refreshRefOffers)} />
+      ) : null}
       {r.olay ? <Text style={rs.small}>{L("Önce bekleyen durumu çöz.")}</Text> : null}
       <Button
         label={L("Bu hafta dinlen · yorgunluk -45")}

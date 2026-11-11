@@ -38,6 +38,7 @@ import { DailyScreen } from './src/ui/DailyScreen';
 import { DreamScreen } from './src/ui/DreamScreen';
 import { GhostScreen } from './src/ui/GhostScreen';
 import { RefereeScreen } from './src/ui/RefereeScreen';
+import { ManagerScreen } from './src/ui/ManagerScreen';
 import { readGhostFromUrl } from './src/ghost';
 import { SeasonScreen } from './src/ui/SeasonScreen';
 import { ShopScreen } from './src/ui/ShopScreen';
@@ -141,7 +142,7 @@ const PHASE_LABELS: Record<Phase, string> = {
   memleket: L("Memleketim"),
 };
 
-type View_ = 'loading' | 'menu' | 'create' | 'game' | 'daily' | 'dream' | 'ghost' | 'referee' | 'locker' | 'season';
+type View_ = 'loading' | 'menu' | 'create' | 'game' | 'daily' | 'dream' | 'ghost' | 'referee' | 'manager' | 'locker' | 'season';
 
 installErrorLog();
 installImmersive();
@@ -329,7 +330,7 @@ export default function App() {
   // Android geri tuşu: oyundan ve karakter oluşturmadan menüye döner; menüdeyse uygulamadan çıkar.
   useEffect(() => {
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
-      if (view === 'game' || view === 'create' || view === 'daily' || view === 'dream' || view === 'ghost' || view === 'referee' || view === 'locker' || view === 'season') {
+      if (view === 'game' || view === 'create' || view === 'daily' || view === 'dream' || view === 'ghost' || view === 'referee' || view === 'manager' || view === 'locker' || view === 'season') {
         setView('menu');
         return true;
       }
@@ -407,6 +408,10 @@ export default function App() {
           track('referee_open');
           setView('referee');
         }}
+        onManager={() => {
+          track('manager_open');
+          setView('manager');
+        }}
         onImport={(x, g) => {
           void deleteGame(x).then(() => saveGame(g, x));
           putSave(x, g);
@@ -431,6 +436,8 @@ export default function App() {
     content = <GhostScreen saves={saves} onExit={() => setView('menu')} />;
   } else if (view === 'referee') {
     content = <RefereeScreen onExit={() => setView('menu')} />;
+  } else if (view === 'manager') {
+    content = <ManagerScreen onExit={() => setView('menu')} />;
   } else if (view === 'season') {
     content = <SeasonScreen look={(saves[slot - 1] ?? game)?.fighter.gorunum} onExit={() => setView('menu')} />;
   } else if (view === 'create') {
@@ -588,7 +595,7 @@ export default function App() {
     }
   }
 
-  const topLabel = view === 'locker' ? L("Dolap") : view === 'daily' ? L("Günün Dövüşü") : view === 'dream' ? L("Hayalî Maçlar") : view === 'ghost' ? L("Hayalet Maç") : view === 'referee' ? L("Hakem Modu") : view === 'season' ? L("Sezon Kemeri") : view === 'create' ? L("Karakter Oluşturma") : view === 'game' && game ? PHASE_LABELS[game.phase] : null;
+  const topLabel = view === 'locker' ? L("Dolap") : view === 'daily' ? L("Günün Dövüşü") : view === 'dream' ? L("Hayalî Maçlar") : view === 'ghost' ? L("Hayalet Maç") : view === 'referee' ? L("Hakem Modu") : view === 'manager' ? L("Menajer Modu") : view === 'season' ? L("Sezon Kemeri") : view === 'create' ? L("Karakter Oluşturma") : view === 'game' && game ? PHASE_LABELS[game.phase] : null;
 
   return (
     <SafeAreaProvider>

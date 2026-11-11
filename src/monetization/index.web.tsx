@@ -8,15 +8,17 @@ export const LEGENDS_STORE = true;
 export const COACH_STORE = true;
 /** Hakem Modu şimdilik yalnızca iPhone'da (Play'de ürünü yok). */
 export const REF_STORE = true;
+export const MGR_STORE = true;
 export { dismissUpsell, useUpsellDue } from './upsell';
 export { HOUR_GOAL, hourActive, startHour, takeHourEndOffer, useHour } from './hour';
 export { closeShop, currentDeal, dealSeen, fmtLeft, markDealSeen, maybeStartBeltDeal, maybeStartWelcome, openShop, useDeal, useNow, useShop, type Deal, type DealKind } from './deals';
 export { closeNudge, closeOffer, milestoneOffer, noteInterstitialShown, openOffer, rewardedCount, useNudge, useOffer, type OfferReason } from './offers';
 
 export async function initMonetization() {}
-export function showRewarded(): Promise<'odul' | 'iptal' | 'yok'> {
+export function showRewarded(_yer?: string): Promise<'odul' | 'iptal' | 'yok'> {
   return Promise.resolve('yok');
 }
+export function noteRewardedOffer(_yer: string) {}
 export const rewardedAvailable = () => false;
 export const adPrivacyRequired = () => false;
 export async function showAdPrivacyOptions() {}
