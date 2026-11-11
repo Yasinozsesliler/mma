@@ -1,0 +1,62 @@
+# iOS üretim derlemesi GitHub'ın Mac sunucusunda (EAS yerel derleme): Expo'nun aylık bulut derleme hakkını kullanmaz.
+# Çalıştırma: ios-build dalına push (ya da Actions › "iOS derlemesi" › Run workflow).
+# Derleme bitince IPA doğrudan App Store Connect'e (TestFlight) yüklenir; sürüm sonra API ile incelemeye gönderilir.
+# Gerekli gizli anahtarlar:
+#   EXPO_TOKEN            expo.dev › Account settings › Access tokens (Android derlemesiyle aynı)
+#   IOS_CREDENTIALS_B64   credentials.json + imza sertifikası + profil + App Store Connect API anahtarı (tar.gz, base64)
+name: iOS derlemesi
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ios-build]
+
+jobs:
+  ios:
+    runs-on: macos-26
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: En güncel Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: İmza dosyaları
+        env:
+          IOS_CREDENTIALS_B64: ${{ secrets.IOS_CREDENTIALS_B64 }}
+        run: |
+          if [ -z "$IOS_CREDENTIALS_B64" ]; then echo "IOS_CREDENTIALS_B64 gizli anahtarı eksik"; exit 1; fi
+          echo "$IOS_CREDENTIALS_B64" | base64 --decode | tar xzf -
+          ls credentials.json credentials/ > /dev/null
+
+      - name: Bağımlılıklar
+        run: npm ci
+
+      - name: Derle (IPA)
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          EAS_BUILD_NO_EXPO_GO_WARNING: 'true'
+        run: npx --yes eas-cli@latest build -p ios --profile production --local --non-interactive --output ./YOL-ios.ipa 2>&1 | tee build.log; exit ${PIPESTATUS[0]}
+
+      - name: App Store Connect'e yükle
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: npx --yes eas-cli@latest submit -p ios --profile production --path ./YOL-ios.ipa --non-interactive 2>&1 | tee -a build.log; exit ${PIPESTATUS[0]}
+
+      # İmza dosyalarını sunucuda bırakma
+      - if: always()
+        run: rm -rf credentials credentials.json
+
+      - if: failure()
+        run: |
+          echo '### Derleme günlüğünün son satırları' >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          tail -n 80 build.log >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || echo 'build.log yok' >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
