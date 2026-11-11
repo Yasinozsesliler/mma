@@ -37,6 +37,8 @@ import {
   type Student,
 } from '../engine/academy';
 import { money } from '../engine/career';
+import { canNewCandidates, claimNewCandidates } from '../engine/rewards';
+import { AdOffer } from './AdOffer';
 import { fmtFollowers, followers } from '../engine/fame';
 import { WEIGHT_CLASSES } from '../engine/data';
 import { PLANS } from '../engine/fight';
@@ -528,6 +530,9 @@ export function Scouting({ s, act }: { s: GameState; act: Act }) {
           </View>
         );
       })}
+      {!full && canNewCandidates(s) ? (
+        <AdOffer yer="aday" icon="account-search" title={L("Yeni adaylar")} desc={L("Gözcün bu dönem bir tur daha atsın: üç yeni aday gelsin.")} onReward={() => act(claimNewCandidates)} />
+      ) : null}
       <Text style={gy.hint}>{L("Yıldızlar hocanın gözüyle potansiyel. Yeni adaylar {0} hafta sonra.", [yeniAday])}</Text>
 
     </>

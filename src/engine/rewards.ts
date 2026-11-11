@@ -2,7 +2,9 @@
 // Her teklif yalnızca ilgili anda ve kendi döngüsünde bir kez alınabilir.
 import { counterOf, STYLE_TACTICS } from './fight';
 import { deck } from './nightlife';
-import type { GameState, Opponent, Stage, Tactic } from './types';
+import type { GameState, Offer, Opponent, Stage, Tactic } from './types';
+import { refreshCandidates } from './academy';
+import { L } from '../i18n';
 
 // ---------- Sponsor reklam çekimi (maç sonrası) ----------
 
@@ -110,4 +112,33 @@ export function claimProfiles(s: GameState) {
   s.adaylar = undefined;
   deck(s);
   s.odul = { ...s.odul, profilHafta: s.hafta };
+}
+
+// ---------- Menajer piyasa araştırması (pazarlık masası, teklif başına bir kez) ----------
+
+export const canMarketResearch = (o: Offer) => !!o.masa && !o.masa.arastirma && o.masa.ruh !== 'son';
+
+/** Organizasyonun gizli tavanını kesin söyler (bilgi; ücreti kendisi artırmaz). */
+export function claimMarketResearch(s: GameState, id: string) {
+  const t = s.pending.teklifler?.find((x) => x.id === id)?.masa;
+  if (!t || t.arastirma) return;
+  const pct = (k: number) => Math.max(0, Math.floor(((k - 1) * 100) / 5) * 5);
+  t.arastirma = true;
+  t.ipucu = L("📊 Piyasa araştırması: ücrette en fazla %{0}, galibiyet bonusunda en fazla %{1} artışa razı olurlar.", [pct(t.tavan), pct(t.tavan + 0.35)]);
+}
+
+// ---------- Yeni adaylar (salon / Antrenör Modu yetenek avı, aday dönemi başına bir kez) ----------
+
+export const canNewCandidates = (s: GameState) => {
+  const a = s.salon?.adaylar;
+  return !!a && !a.yenilendi && s.hafta - a.hafta < 8;
+};
+
+/** Üç yeni aday gelir; doğal yenilenme takvimi (8 hafta) değişmez. */
+export function claimNewCandidates(s: GameState) {
+  const g = s.salon;
+  if (!g?.adaylar || !canNewCandidates(s)) return;
+  const hafta = g.adaylar.hafta;
+  refreshCandidates(s, true);
+  g.adaylar = { ...g.adaylar, hafta, yenilendi: true };
 }

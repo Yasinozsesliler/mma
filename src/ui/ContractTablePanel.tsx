@@ -2,9 +2,11 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { leaveTable, leverageOf, tableAsk } from '../engine/contractTable';
 import { ORGS } from '../engine/data';
+import { canMarketResearch, claimMarketResearch } from '../engine/rewards';
 import type { GameState, Offer } from '../engine/types';
 import { buzz } from '../haptics';
 import { L } from '../i18n';
+import { AdOffer } from './AdOffer';
 import { Icon } from './components';
 import { C, F } from './theme';
 
@@ -33,6 +35,9 @@ export function ContractTablePanel({ s, o, act, setMsg }: { s: GameState; o: Off
         <Text style={st.bubbleText}>{t.mesaj}</Text>
       </View>
       {t.ipucu ? <Text style={st.hint}>{t.ipucu}</Text> : null}
+      {canMarketResearch(o) ? (
+        <AdOffer yer="piyasa" icon="chart-box-outline" title={L("Piyasa araştırması")} desc={L("Menajerin piyasayı tarasın: ücrette ve bonusta nereye kadar esneyeceklerini kesin öğren.")} onReward={() => act((x) => claimMarketResearch(x, o.id))} />
+      ) : null}
       {t.ruh !== 'son' ? (
         <View style={st.row}>
           <Pressable style={({ pressed }) => [st.btn, pressed && { opacity: 0.7 }]} onPress={() => ask('ucret')}>

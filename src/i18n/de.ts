@@ -9342,4 +9342,12 @@ export const DE: Record<string, string> = {
   "{0} kez Günün Dövüşü oyna": "Spiel {0} Mal den Kampf des Tages",
   "{0} Hayalî Maç tahmin et": "Tippe {0} Traumkämpfe",
   "Tam Paket'e yükselt: Hakem + Antrenör Modu ve 6 kozmetik paket": "Upgrade auf das Komplettpaket: Ringrichter- + Trainer-Modus und 6 Kosmetikpakete",
+  "📊 Piyasa araştırması: ücrette en fazla %{0}, galibiyet bonusunda en fazla %{1} artışa razı olurlar.": "📊 Marktanalyse: Sie akzeptieren höchstens +{0} % bei der Gage und +{1} % beim Siegbonus.",
+  "Yeni adaylar": "Neue Talente",
+  "Gözcün bu dönem bir tur daha atsın: üç yeni aday gelsin.": "Lass deinen Scout in dieser Phase noch eine Runde drehen: Drei neue Talente kommen.",
+  "Piyasa araştırması": "Marktanalyse",
+  "Menajerin piyasayı tarasın: ücrette ve bonusta nereye kadar esneyeceklerini kesin öğren.": "Dein Manager prüft den Markt: Erfahre genau, wie weit sie bei Gage und Bonus gehen.",
+  "Teklifleri yenile": "Angebote erneuern",
+  "Birkaç telefon aç: organizasyonları kırmadan yeni maç teklifleri gelsin.": "Ein paar Anrufe: neue Kampfangebote, ohne eine Organisation zu verärgern.",
+  "📞 Birkaç telefon açtın: masada yeni maç teklifleri var.": "📞 Du hast ein paar Anrufe gemacht: Neue Kampfangebote liegen auf dem Tisch.",
 };

@@ -61,7 +61,8 @@ export interface Gym {
   uye: number;
   acilis: number;
   ogrenciler: Student[];
-  adaylar?: { hafta: number; list: Student[] };
+  /** yenilendi: bu dönem ödüllü "yeni adaylar" kullanıldı */
+  adaylar?: { hafta: number; list: Student[]; yenilendi?: boolean };
   sonuclar: GymResult[];
   /** Salonun toplam kazancı (aidat + maç payları − kira) */
   kasa: number;
