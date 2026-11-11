@@ -415,7 +415,7 @@ export function CreateScreen({
               label={premium ? L("👑 Bir zar hakkı daha") : L("📺 Reklam izle: bir zar hakkı daha")}
               tone="gold"
               onPress={async () => {
-                if ((await showRewarded()) === 'odul') {
+                if ((await showRewarded('zar')) === 'odul') {
                   setBonusRolls(bonusRolls + 1);
                   setRerolls(1);
                 }

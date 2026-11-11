@@ -14,9 +14,10 @@ export { closeShop, currentDeal, dealSeen, fmtLeft, markDealSeen, maybeStartBelt
 export { closeNudge, closeOffer, milestoneOffer, noteInterstitialShown, openOffer, rewardedCount, useNudge, useOffer, type OfferReason } from './offers';
 
 export async function initMonetization() {}
-export function showRewarded(): Promise<'odul' | 'iptal' | 'yok'> {
+export function showRewarded(_yer?: string): Promise<'odul' | 'iptal' | 'yok'> {
   return Promise.resolve('yok');
 }
+export function noteRewardedOffer(_yer: string) {}
 export const rewardedAvailable = () => false;
 export const adPrivacyRequired = () => false;
 export async function showAdPrivacyOptions() {}

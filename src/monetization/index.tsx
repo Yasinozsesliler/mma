@@ -151,13 +151,46 @@ AppState.addEventListener('change', (st) => {
  * Ödüllü reklam. Şampiyon Paketi sahiplerine ödül reklamsız ve anında verilir.
  * 'odul': ödül kazanıldı · 'iptal': reklam yarıda kapatıldı · 'yok': şu an reklam yok (internet/doluluk)
  */
-export function showRewarded(): Promise<'odul' | 'iptal' | 'yok'> {
-  if (isPremium() || hourActive()) return Promise.resolve('odul');
+/** Reklam hazır değilse yüklenmesini en fazla `ms` bekler (yükleme hata verirse erken bırakır). */
+function waitRewarded(ms: number): Promise<boolean> {
+  loadNow(rSlot, rewardedReady, loadRewarded);
+  const end = Date.now() + ms;
+  return new Promise((resolve) => {
+    const tick = () => {
+      if (rewardedReady) return resolve(true);
+      if (!rSlot.loading || Date.now() > end) return resolve(false);
+      setTimeout(tick, 250);
+    };
+    tick();
+  });
+}
+
+/** Hangi teklifin sonuçlandığını olay adında taşır (GA'da özel boyut tanımlamadan kırılım). */
+const rwTrack = (yer: string, r: 'odul' | 'iptal' | 'yok' | 'gor') => {
+  const y = yer.replace(/[^a-z0-9]/gi, '_').slice(0, 24);
+  track(`rw_${r}_${y}`);
+};
+const seenOffers = new Set<string>();
+/** Teklif ekranda göründü (oturumda yer başına bir kez sayılır). */
+export function noteRewardedOffer(yer: string) {
+  if (!canAds || isPremium() || seenOffers.has(yer)) return;
+  seenOffers.add(yer);
+  rwTrack(yer, 'gor');
+}
+
+export async function showRewarded(yer = 'genel'): Promise<'odul' | 'iptal' | 'yok'> {
+  if (isPremium() || hourActive()) return 'odul';
+  // Hazır değilse hemen "reklam yok" demek yerine birkaç saniye yüklenmesini bekle
+  if ((!rewarded || !rewardedReady) && canAds && started && !(await waitRewarded(8000))) {
+    track('rewarded_ad', { sonuc: 'yok', yer });
+    rwTrack(yer, 'yok');
+    return 'yok';
+  }
   const ad = rewarded;
   if (!ad || !rewardedReady) {
-    loadNow(rSlot, rewardedReady, loadRewarded);
-    track('rewarded_ad', { sonuc: 'yok' });
-    return Promise.resolve('yok');
+    track('rewarded_ad', { sonuc: 'yok', yer });
+    rwTrack(yer, 'yok');
+    return 'yok';
   }
   return new Promise((resolve) => {
     let earned = false;
@@ -168,7 +201,8 @@ export function showRewarded(): Promise<'odul' | 'iptal' | 'yok'> {
       unmute();
       rewardedReady = false;
       loadRewarded();
-      track('rewarded_ad', { sonuc: r });
+      track('rewarded_ad', { sonuc: r, yer });
+      rwTrack(yer, r);
       if (r === 'odul') noteRewardedWatched();
       resolve(r);
     };

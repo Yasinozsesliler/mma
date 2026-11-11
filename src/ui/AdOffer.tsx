@@ -1,26 +1,31 @@
 // Tek bir ödüllü teklif: "Reklam izle → ödül". Şampiyon Paketi sahiplerine ücretsiz ve anında.
 // İlgili ekranın içinde, ihtiyaç anında gösterilir. Web sürümünde (reklamsız) hiç görünmez.
-import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { sfx } from '../audio';
 import { L } from '../i18n';
-import { hourActive, MONETIZATION, PURCHASES, showRewarded, useHour, usePremium } from '../monetization';
+import { hourActive, MONETIZATION, noteRewardedOffer, PURCHASES, showRewarded, useHour, usePremium } from '../monetization';
 import { Icon, type IconName } from './components';
 import { C, F } from './theme';
 
-export function AdOffer({ icon, title, desc, onReward }: { icon: IconName; title: string; desc: string; onReward: () => void }) {
+/** `yer`: ölçüm için teklifin kimliği (verilmezse simge adı). */
+export function AdOffer({ icon, title, desc, onReward, yer }: { icon: IconName; title: string; desc: string; onReward: () => void; yer?: string }) {
   useHour();
   const premium = usePremium() || hourActive();
+  const id = yer ?? icon;
 
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
+  useEffect(() => {
+    if (MONETIZATION && !premium) noteRewardedOffer(id);
+  }, [id, premium]);
   if (!MONETIZATION) return null;
 
   const claim = async () => {
     if (busy) return;
     setBusy(true);
     setMsg('');
-    const r = await showRewarded();
+    const r = await showRewarded(id);
     setBusy(false);
     if (r === 'odul') {
       sfx('chime');
@@ -40,7 +45,7 @@ export function AdOffer({ icon, title, desc, onReward }: { icon: IconName; title
         {PURCHASES && !premium ? <Text style={st.note}>{L("👑 Şampiyon Paketi ile reklamsız, anında")}</Text> : null}
       </View>
       <View style={st.pill}>
-        <Icon name={premium ? 'crown' : 'play-circle'} size={14} color="#1f1605" />
+        {busy ? <ActivityIndicator size="small" color="#1f1605" /> : <Icon name={premium ? 'crown' : 'play-circle'} size={14} color="#1f1605" />}
         <Text style={st.pillText}>{premium ? L("AL") : L("İZLE")}</Text>
       </View>
     </Pressable>
