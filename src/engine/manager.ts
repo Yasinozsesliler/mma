@@ -1368,13 +1368,33 @@ export function answer(r: MgrRun, id: string, k: string) {
 
 // ---------- Hafta ----------
 
-export const canAdvance = (r: MgrRun) => !bekleyen(r).length && !trialOver(r) && !r.emekli;
+export const canAdvance = (r: MgrRun) => !trialOver(r) && !r.emekli;
+
+/** Cevapsız kalan mesajlar hafta bitince kapanır: dövüşçü biraz kırılır, başka bir şey olmaz. */
+function expirePending(r: MgrRun) {
+  for (const m of bekleyen(r)) {
+    m.cevap = L("(cevap vermedin)");
+    m.okundu = true;
+    const f = m.fid ? r.kadro.find((x) => x.id === m.fid) : undefined;
+    if (m.tip === 'catisma') {
+      const org = (m.veri?.org as OrgId) ?? 'amator';
+      bumpOrg(r, org, -3);
+      m.sonuc = L("Cevap gelmeyince organizasyon eşleşmeden vazgeçti.");
+    } else if (f && m.rol === 'dovuscu' && m.tip !== 'kose_notu') {
+      addTrust(r, f, -2);
+      m.sonuc = L("Mesajı görüldü bıraktın. Biraz kırıldı.");
+    } else m.sonuc = L("Fırsat kaçtı.");
+  }
+}
 
 function weeklyEvents(r: MgrRun) {
+  // Telefonu boğmamak için: haftada en fazla bir olay, dövüş haftasında ya da bekleyen mesaj varken daha seyrek
+  const busy = r.kadro.some((f) => f.mac?.hafta === r.hafta) || bekleyen(r).length > 0;
+  if (!chance(busy ? 0.35 : 0.7)) return;
   const keys = Object.keys(EVENTS).sort(() => rand() - 0.5);
   let n = 0;
   for (const k of keys) {
-    if (n >= 2) break;
+    if (n >= 1) break;
     const m = EVENTS[k].make(r);
     if (m) {
       msg(r, { ...m, tip: k });
@@ -1432,6 +1452,7 @@ function checkGoal(r: MgrRun, rapor: string[]) {
 export function advanceWeek(r: MgrRun) {
   if (!canAdvance(r)) return;
   ensureMgr(r);
+  expirePending(r);
   // Meydan okuma: her hafta herkes için aynı zar (sonuç yine de kararlara bağlı)
   if (r.meydan) setSeed(hashStr(`mnj-${r.meydan.kod}-${r.hafta}`));
   const rapor: string[] = [];
@@ -1637,8 +1658,8 @@ function fightWeekMessages(r: MgrRun) {
   for (const f of r.kadro) {
     const mc = f.mac;
     if (!mc || mc.hafta !== r.hafta || mc.ic) continue;
-    const buyuk = !!mc.unvan || !!mc.super || f.tier === 'buyuk' || f.tier === 'ucc';
-    if (buyuk && chance(0.75))
+    const buyuk = !!mc.unvan || !!mc.super;
+    if (buyuk && chance(0.8))
       msg(r, {
         rol: 'basin',
         kim: L("{0} basın toplantısı", [orgName(mc.org)]),
@@ -1654,7 +1675,7 @@ function fightWeekMessages(r: MgrRun) {
           { ad: L("Az konuş. Cevabı kafeste verecek."), k: 'sessiz' },
         ],
       });
-    if (chance(buyuk ? 0.45 : 0.2))
+    if (buyuk && chance(0.3))
       msg(r, {
         rol: 'org',
         kim: L("Tartı salonu"),

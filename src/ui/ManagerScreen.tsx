@@ -257,17 +257,21 @@ function MgrHero({ r, goPhone }: { r: MgrRun; goPhone: () => void }) {
       ) : (
         <View style={{ marginTop: 10 }}>
           <Button
-            label={wait ? L("Önce {0} mesajı cevapla", [wait]) : L("Haftayı bitir")}
-            icon={wait ? 'cellphone-message' : 'calendar-arrow-right'}
-            tone={wait ? 'ghost' : 'gold'}
+            label={L("Haftayı bitir")}
+            icon="calendar-arrow-right"
+            tone="gold"
             onPress={() => {
-              if (wait) return goPhone();
               sfx('bell');
               actMgr(advanceWeek);
               goPhone();
             }}
-            disabled={!wait && !canAdvance(r)}
+            disabled={!canAdvance(r)}
           />
+          {wait ? (
+            <Pressable onPress={goPhone} hitSlop={6} style={{ alignSelf: 'center', marginTop: 6 }}>
+              <Text style={ms.waitHint}>{L("📱 {0} mesaj cevabını bekliyor (cevaplamazsan kendiliğinden kapanır)", [wait])}</Text>
+            </Pressable>
+          ) : null}
         </View>
       )}
     </LinearGradient>
@@ -914,6 +918,7 @@ const ms = StyleSheet.create({
   rankNo: { width: 22, color: C.dim, fontFamily: F.display, fontSize: 14 },
   rankName: { flex: 1, color: C.text, fontFamily: F.semi, fontSize: 13 },
   rankPts: { color: C.dim, fontFamily: F.display, fontSize: 13 },
+  waitHint: { color: C.gold, fontFamily: F.semi, fontSize: 12, textAlign: 'center' },
   challenge: { borderRadius: R + 2, borderWidth: 1, borderColor: C.goldDeep, padding: 14, gap: 6, marginBottom: 12 },
   cmpBtn: { borderWidth: 1, borderColor: C.gold, borderRadius: R, paddingHorizontal: 12, paddingVertical: 10 },
   score: { color: C.gold, fontFamily: F.display, fontSize: 56, lineHeight: 64 },
