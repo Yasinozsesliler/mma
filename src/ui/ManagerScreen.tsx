@@ -9,7 +9,6 @@ import {
   advanceWeek,
   agencyRanking,
   answer,
-  ARC,
   createMeydan,
   kapali,
   MEYDAN_HAFTA,
@@ -41,6 +40,8 @@ import {
   openTable,
   orgName,
   rekorOf,
+  rkSoyad,
+  type MKayit,
   releaseFighter,
   SENARYO,
   signCandidate,
@@ -59,7 +60,6 @@ import {
   type Teklif,
 } from '../engine/manager';
 import type { OrgId } from '../engine/types';
-import { lookFor } from '../engine/tale';
 import { WEIGHT_CLASSES } from '../engine/data';
 import { L, LOC } from '../i18n';
 import { buy, PURCHASES, restorePurchases, useOwned, usePrice } from '../monetization';
@@ -67,13 +67,13 @@ import { MGR_SKU, ULTIMATE_SKU } from '../monetization/skus';
 import { actMgr, closeAgency, meydanBest, peekRun, saveMeydanBest, setMgrRun, setMgrSlot, useMgrHall, useMgrRun, useMgrSlot } from '../managerStore';
 import { Bar, Button, CageBg, Card, Choice, Icon, Screen, SLANT, type IconName } from './components';
 import { FighterAvatar } from './FighterAvatar';
+import { FaceOffModal, FormPills, MgrDossier, MgrWatch, mLook, rLook, TIER_COLOR } from './ManagerViews';
 import { HubNav, type NavItem } from './HubNav';
 import { FullPackLink } from './ShopSheet';
 import { C, F, R } from './theme';
 
 const $ = (n: number) => `${n < 0 ? '-' : ''}$${Math.abs(Math.round(n)).toLocaleString(LOC)}`;
-const look = (f: Pick<MFighter, 'id' | 'ulke' | 'kadin'>) => lookFor({ id: f.id, uyruk: f.ulke, kadin: f.kadin });
-const TIER_COLOR = { amator: C.dim, bolgesel: C.blue, buyuk: C.orange, ucc: C.gold } as const;
+const look = mLook;
 
 export function useMgrUnlocked() {
   const owned = useOwned();
@@ -249,6 +249,7 @@ function MgrHero({ r, goPhone }: { r: MgrRun; goPhone: () => void }) {
         <Meter label={L("KADRO")} value={`${r.kadro.length}/${ofisOf(r).kapasite}`} />
         <Meter label={L("KEMER")} value={String(r.sampiyonluk)} color={C.gold} />
       </View>
+      <ThisWeek r={r} />
       <View style={{ marginTop: 8 }}>
         <Bar value={r.itibar} color={C.gold} label={L("İtibar")} right={String(r.itibar)} />
       </View>
@@ -275,6 +276,25 @@ function MgrHero({ r, goPhone }: { r: MgrRun; goPhone: () => void }) {
         </View>
       )}
     </LinearGradient>
+  );
+}
+
+function ThisWeek({ r }: { r: MgrRun }) {
+  const [face, setFace] = useState<MFighter | null>(null);
+  const fs = r.kadro.filter((f) => f.mac?.hafta === r.hafta);
+  if (!fs.length) return null;
+  const big = fs.find((f) => f.mac!.unvan || f.mac!.super) ?? fs[0];
+  return (
+    <>
+      <Pressable onPress={() => setFace(big)} style={({ pressed }) => [ms.banner, pressed && { opacity: 0.8 }]}>
+        <Icon name="movie-open" size={16} color={C.gold} />
+        <Text style={ms.bannerText} numberOfLines={2}>
+          {fs.length > 1 ? L("Bu hafta maç gecesi: {0} dövüşçün kafeste. Face-off'u izle", [fs.length]) : L("Bu hafta maç gecesi: {0} – {1}. Face-off'u izle", [big.soyad, rkSoyad(big.mac!.rakip)])}
+        </Text>
+        <Icon name="chevron-right" size={16} color={C.gold} />
+      </Pressable>
+      {face?.mac ? <FaceOffModal f={face} rk={face.mac.rakip} org={face.mac.org} unvan={face.mac.unvan} sup={!!face.mac.super} onClose={() => setFace(null)} /> : null}
+    </>
   );
 }
 
@@ -310,12 +330,16 @@ function PhoneTab({ r }: { r: MgrRun }) {
       return () => clearTimeout(t);
     }
   }, [r]);
+  const night = r.kadro.filter((f) => f.maclar?.[0]?.h === r.hafta - 1);
+  // Maç sonuçları gece kartında (izlemeden önce sonucu görmemek için) gösterilir
+  const rapor = night.length ? (r.rapor ?? []).filter((l, i, a) => !/^(✅|❌) /.test(l) && !(l.startsWith('   ') && a.slice(0, i).reverse().find((x) => !x.startsWith('   '))?.match(/^(✅|❌) /))) : (r.rapor ?? []);
   return (
     <>
-      {r.rapor?.length ? (
+      {night.length ? <FightNight r={r} fs={night} /> : null}
+      {rapor.length ? (
         <Card accent={C.gold}>
           <Text style={ms.kicker}>{L("GEÇEN HAFTA")}</Text>
-          {r.rapor.map((l, i) => (
+          {rapor.map((l, i) => (
             <Text key={i} style={[ms.small, { color: l.startsWith('   ') ? C.dim : C.text }]}>
               {l.trim()}
             </Text>
@@ -325,6 +349,61 @@ function PhoneTab({ r }: { r: MgrRun }) {
       <Text style={ms.section}>{L("MESAJLAR")}</Text>
       {r.mesajlar.length ? r.mesajlar.slice(0, 25).map((m) => <Bubble key={m.id} m={m} />) : <Text style={ms.small}>{L("Telefon şimdilik sessiz.")}</Text>}
     </>
+  );
+}
+
+/** Geçen haftanın maç gecesi: her maç izlenebilir ya da sonucu doğrudan açılabilir */
+function FightNight({ r, fs }: { r: MgrRun; fs: MFighter[] }) {
+  const [watch, setWatch] = useState<{ f: MFighter; m: MKayit } | null>(null);
+  const [seen, setSeen] = useState<Record<string, boolean>>({});
+  return (
+    <LinearGradient colors={['#1f1705', '#0c0d10', '#08090b']} locations={[0, 0.5, 1]} style={ms.night}>
+      <CageBg opacity={0.05} />
+      <Text style={ms.kicker}>{L("🥊 MAÇ GECESİ · {0}. HAFTA", [r.hafta - 1])}</Text>
+      {fs.map((f) => {
+        const m = f.maclar![0];
+        const open = seen[m.id];
+        return (
+          <View key={m.id} style={ms.nightRow}>
+            <FighterAvatar look={mLook(f)} size={40} ring={open ? (m.w ? C.green : C.red) : C.red} />
+            <View style={{ flex: 1 }}>
+              <Text style={ms.fName} numberOfLines={1}>
+                {f.soyad} <Text style={{ color: C.gold }}>vs</Text> {rkSoyad(m.rk)}
+              </Text>
+              {open ? (
+                <Text style={[ms.fMeta, { color: m.w ? C.green : C.red }]} numberOfLines={2}>
+                  {m.w ? L("✅ Kazandı · {0}, {1}. raunt", [m.y, m.ra]) : L("❌ Kaybetti · {0}, {1}. raunt", [m.y, m.ra])} · {$(m.kom)}
+                </Text>
+              ) : (
+                <Pressable onPress={() => setSeen({ ...seen, [m.id]: true })} hitSlop={6}>
+                  <Text style={ms.link}>{m.unvan ? L("Ünvan maçı · sonucu göster") : L("Sonucu göster")}</Text>
+                </Pressable>
+              )}
+            </View>
+            <Pressable
+              onPress={() => {
+                sfx('click');
+                setWatch({ f, m });
+              }}
+              style={({ pressed }) => [ms.nightBtn, pressed && { opacity: 0.8 }]}
+            >
+              <Icon name="play" size={14} color="#1f1605" />
+              <Text style={ms.nightBtnText}>{L("İzle")}</Text>
+            </Pressable>
+          </View>
+        );
+      })}
+      {watch ? (
+        <MgrWatch
+          f={watch.f}
+          m={watch.m}
+          onClose={() => {
+            setSeen({ ...seen, [watch.m.id]: true });
+            setWatch(null);
+          }}
+        />
+      ) : null}
+    </LinearGradient>
   );
 }
 
@@ -372,90 +451,149 @@ function Bubble({ m }: { m: Mesaj }) {
 
 function SquadTab({ r }: { r: MgrRun }) {
   const [open, setOpen] = useState<string | null>(null);
+  const [face, setFace] = useState<string | null>(null);
+  const sel = r.kadro.find((f) => f.id === open);
+  const faceF = r.kadro.find((f) => f.id === face);
   if (!r.kadro.length)
     return (
       <Card>
         <Text style={ms.text}>{L("Kadron boş. Teklifler sekmesindeki yetenek avından ilk dövüşçünü imzala.")}</Text>
       </Card>
     );
+  const fixtures = r.kadro.filter((f) => f.mac).sort((a, b) => a.mac!.hafta - b.mac!.hafta);
   return (
     <>
-      <Text style={ms.section}>{L("DÖVÜŞÇÜLERİN")}</Text>
+      {fixtures.length ? (
+        <>
+          <Text style={ms.section}>{L("FİKSTÜR")}</Text>
+          {fixtures.map((f) => (
+            <FixtureRow key={f.id} f={f} hafta={r.hafta} onPress={() => setFace(f.id)} />
+          ))}
+        </>
+      ) : null}
+      <Text style={[ms.section, fixtures.length ? { marginTop: 10 } : null]}>{L("DÖVÜŞÇÜLERİN")}</Text>
       {r.kadro.map((f) => (
-        <FighterCard key={f.id} f={f} hafta={r.hafta} open={open === f.id} onToggle={() => setOpen(open === f.id ? null : f.id)} />
+        <FighterCard key={f.id} f={f} onPress={() => setOpen(f.id)} />
       ))}
+      {sel ? <MgrDossier f={sel} hafta={r.hafta} onClose={() => setOpen(null)} actions={<FighterActions f={sel} hafta={r.hafta} onReleased={() => setOpen(null)} />} /> : null}
+      {faceF?.mac ? <FaceOffModal f={faceF} rk={faceF.mac.rakip} org={faceF.mac.org} unvan={faceF.mac.unvan} sup={!!faceF.mac.super} onClose={() => setFace(null)} /> : null}
     </>
   );
 }
 
-function FighterCard({ f, open, onToggle, hafta }: { f: MFighter; open: boolean; onToggle: () => void; hafta: number }) {
+function FixtureRow({ f, hafta, onPress }: { f: MFighter; hafta: number; onPress: () => void }) {
+  const mc = f.mac!;
+  const big = mc.unvan || mc.super;
+  const now = mc.hafta === hafta;
+  return (
+    <Pressable onPress={onPress} style={({ pressed }) => [ms.fixture, big && { borderColor: C.goldDeep }, pressed && { opacity: 0.75 }]}>
+      <LinearGradient colors={big ? ['#2a2108', '#0c0d10'] : ['#121a26', '#0c0d10']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={ms.fixtureInner}>
+        <View style={ms.fixWeek}>
+          <Text style={[ms.fixWeekNo, now && { color: C.gold }]}>{now ? L("BU") : mc.hafta - hafta}</Text>
+          <Text style={ms.fixWeekLabel}>{now ? L("HAFTA") : L("HAFTA SONRA")}</Text>
+        </View>
+        <FighterAvatar look={mLook(f)} size={38} ring={C.red} />
+        <Text style={[ms.fixVs, SLANT]}>VS</Text>
+        <FighterAvatar look={rLook(mc.rakip, f.kadin)} size={38} ring={C.blue} />
+        <View style={{ flex: 1 }}>
+          <Text style={ms.fName} numberOfLines={1}>
+            {f.soyad} – {rkSoyad(mc.rakip)}
+          </Text>
+          <Text style={[ms.fMeta, big && { color: C.gold }]} numberOfLines={1}>
+            {mc.unvan ? L("🏆 Ünvan · {0}", [orgName(mc.org)]) : mc.super ? L("⭐ Süper dövüş · {0}", [orgName(mc.org)]) : orgName(mc.org)}
+          </Text>
+        </View>
+        <Icon name="movie-open" size={18} color={C.gold} />
+      </LinearGradient>
+    </Pressable>
+  );
+}
+
+function FighterCard({ f, onPress }: { f: MFighter; onPress: () => void }) {
+  const tc = f.sampiyon ? C.gold : TIER_COLOR[f.tier];
+  const status = f.sakat ? { t: L("🩹 Sakat · {0} hafta", [f.sakat]), c: C.orange } : f.guven < 30 ? { t: L("😠 Güveni düşük"), c: C.red } : f.hasar >= 60 ? { t: L("🩺 Hasar yüksek"), c: C.red } : f.mac ? { t: L("🥊 {0} ile maçı var", [rkSoyad(f.mac.rakip)]), c: C.text } : f.bosHafta >= 4 ? { t: L("⏳ {0} haftadır maç bekliyor", [f.bosHafta]), c: C.orange } : { t: L("✅ Hazır"), c: C.green };
+  return (
+    <Pressable onPress={onPress} style={({ pressed }) => [ms.fighter, { borderColor: tc + (f.sampiyon ? 'aa' : '44') }, pressed && { opacity: 0.8 }]}>
+      <LinearGradient colors={f.sampiyon ? ['#221b08', '#0c0d10'] : ['#11151c', '#0c0d10']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={ms.fighterInner}>
+        <View style={ms.row}>
+          <FighterAvatar look={mLook(f)} size={58} ring={tc} />
+          <View style={{ flex: 1 }}>
+            <Text style={ms.fName} numberOfLines={1}>
+              {f.sampiyon ? '🏆 ' : ''}
+              {fullName(f)}
+            </Text>
+            <Text style={ms.fMeta} numberOfLines={1}>
+              {rekorOf(f)} · {WEIGHT_CLASSES[f.siklet].ad} · {f.ulke}
+            </Text>
+            <Text style={[ms.fMeta, { color: tc }]} numberOfLines={1}>
+              {f.sozlesme ? `${orgName(f.sozlesme.org)} · #${f.sira}` : L("{0} · sözleşmesiz", [M_TIER_NAME[f.tier]()])}
+            </Text>
+          </View>
+          <View style={{ alignItems: 'flex-end' }}>
+            <Text style={ms.power}>{f.guc}</Text>
+            <Text style={ms.powerLabel}>{L("GÜÇ")}</Text>
+          </View>
+        </View>
+        <View style={[ms.row, { marginTop: 10, justifyContent: 'space-between' }]}>
+          <FormPills f={f} n={5} size={18} />
+          <View style={ms.miniBars}>
+            <MiniBar icon="handshake" value={f.guven} color={f.guven < 30 ? C.red : f.guven < 55 ? C.orange : C.green} />
+            <MiniBar icon="heart-pulse" value={100 - f.hasar} color={f.hasar >= 60 ? C.red : C.blue} />
+          </View>
+        </View>
+        <View style={[ms.row, { marginTop: 8, justifyContent: 'space-between' }]}>
+          <Text style={[ms.status, { color: status.c }]} numberOfLines={1}>
+            {status.t}
+          </Text>
+          <Text style={ms.open}>{L("Dosya ›")}</Text>
+        </View>
+      </LinearGradient>
+    </Pressable>
+  );
+}
+
+function MiniBar({ icon, value, color }: { icon: IconName; value: number; color: string }) {
+  return (
+    <View style={ms.miniBar}>
+      <Icon name={icon} size={12} color={color} />
+      <View style={ms.miniTrack}>
+        <View style={{ width: `${Math.max(0, Math.min(100, value))}%`, height: '100%', borderRadius: 3, backgroundColor: color }} />
+      </View>
+    </View>
+  );
+}
+
+function FighterActions({ f, hafta, onReleased }: { f: MFighter; hafta: number; onReleased: () => void }) {
   const [sure, setSure] = useState(false);
   const [note, setNote] = useState('');
   const cool = f.kiskirt ? 4 - (hafta - f.kiskirt) : 0;
-  const tc = TIER_COLOR[f.tier];
   return (
-    <Pressable onPress={onToggle} style={[ms.fighter, f.sampiyon && { borderColor: C.gold }]}>
-      <View style={ms.row}>
-        <FighterAvatar look={look(f)} size={48} ring={f.sampiyon ? C.gold : tc} />
-        <View style={{ flex: 1 }}>
-          <Text style={ms.fName} numberOfLines={1}>
-            {f.sampiyon ? '🏆 ' : ''}
-            {fullName(f)}
-          </Text>
-          <Text style={ms.fMeta} numberOfLines={1}>
-            {f.yas} · {WEIGHT_CLASSES[f.siklet].ad} · {f.ulke} · {rekorOf(f)}
-          </Text>
-          <Text style={[ms.fMeta, { color: tc }]} numberOfLines={1}>
-            {f.sozlesme ? `${orgName(f.sozlesme.org)} · #${f.sira}` : L("{0} · sözleşmesiz", [M_TIER_NAME[f.tier]()])}
-          </Text>
-        </View>
-        <View style={{ alignItems: 'flex-end' }}>
-          <Text style={ms.power}>{f.guc}</Text>
-          <Text style={ms.powerLabel}>{L("GÜÇ")}</Text>
-        </View>
-      </View>
-      <View style={{ marginTop: 6 }}>
-        <Bar value={f.guven} color={f.guven < 30 ? C.red : f.guven < 55 ? C.orange : C.green} label={L("Sana güveni")} right={String(f.guven)} />
-        <Bar value={f.hasar} color={f.hasar >= 60 ? C.red : C.dim} label={L("Birikmiş hasar")} right={String(f.hasar)} />
-        <Bar value={f.un ?? 0} color={C.gold} label={L("Şöhret")} right={String(f.un ?? 0)} />
-      </View>
-      {f.hikaye && f.hikaye.adim >= 0 ? <Text style={[ms.next, { color: C.gold }]}>{L("📖 Hikâye: {0}", [ARC[f.hikaye.tip].ad()])}</Text> : null}
-      {f.mac ? <Text style={ms.next}>{L("🗓️ {0}. hafta: {1} ({2}) · {3}", [f.mac.hafta, f.mac.rakip.ad, f.mac.rakip.rekor, orgName(f.mac.org)])}{f.mac.unvan ? L(" · ÜNVAN MAÇI") : ''}</Text> : null}
-      {f.sakat ? <Text style={[ms.next, { color: C.orange }]}>{L("🩹 Sakat: {0} hafta", [f.sakat])}</Text> : null}
-      {f.riskli ? <Text style={[ms.next, { color: C.red }]}>{L("⚠️ Doktor uyarısına rağmen dövüşüyor")}</Text> : null}
-      {open ? (
-        <View style={ms.detail}>
-          <Text style={ms.small}>
-            {L("Kişilik: {0}. {1}", [KISILIK[f.kisilik].ad(), KISILIK[f.kisilik].aciklama()])}
-          </Text>
-          <Text style={ms.small}>{L("Potansiyel (senin tahminin): {0} · Komisyon: %{1} · Kariyer kazancı: {2}", ['★'.repeat(starsOf(f.pot)), f.kom, $(f.kazanc)])}</Text>
-          {f.sozlesme ? (
-            <Text style={ms.small}>
-              {L("Sözleşme: {0} · {1} maç kaldı · maç başı {2} + {3} bonus", [orgName(f.sozlesme.org), f.sozlesme.kalan, $(f.sozlesme.ucret), $(f.sozlesme.bonus)])}
-              {f.sozlesme.maddeler.length ? `\n${L("Maddeler")}: ${f.sozlesme.maddeler.map((m) => MADDE[m].ad()).join(' · ')}` : ''}
-            </Text>
-          ) : null}
-          <View style={{ marginTop: 8 }}>
-            <Button label={cool > 0 ? L("Meydan okuma {0} hafta sonra", [cool]) : L("Sosyal medyada meydan okut")} icon="bullhorn" tone="ghost" disabled={cool > 0} onPress={() => setNote(actMgr((x) => provoke(x, f.id)) ?? '')} />
-            {note ? <Text style={[ms.small, { color: C.gold }]}>{note}</Text> : null}
+    <>
+      <Text style={ms.kicker}>{L("MENAJER İŞLERİ")}</Text>
+      <Button label={cool > 0 ? L("Meydan okuma {0} hafta sonra", [cool]) : L("Sosyal medyada meydan okut")} icon="bullhorn" tone="ghost" disabled={cool > 0} onPress={() => setNote(actMgr((x) => provoke(x, f.id)) ?? '')} />
+      {note ? <Text style={[ms.small, { color: C.gold }]}>{note}</Text> : null}
+      {sure ? (
+        <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
+          <View style={{ flex: 1 }}>
+            <Button
+              label={L("Evet, bırak")}
+              tone="red"
+              onPress={() => {
+                actMgr((x) => releaseFighter(x, f.id));
+                onReleased();
+              }}
+            />
           </View>
-          {sure ? (
-            <View style={{ flexDirection: 'row', gap: 8, marginTop: 6 }}>
-              <View style={{ flex: 1 }}>
-                <Button label={L("Evet, bırak")} tone="red" onPress={() => actMgr((x) => releaseFighter(x, f.id))} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Button label={L("Vazgeç")} tone="ghost" onPress={() => setSure(false)} />
-              </View>
-            </View>
-          ) : (
-            <Pressable onPress={() => setSure(true)} style={{ alignSelf: 'flex-start', marginTop: 6 }} hitSlop={6}>
-              <Text style={ms.link}>{L("Serbest bırak")}</Text>
-            </Pressable>
-          )}
+          <View style={{ flex: 1 }}>
+            <Button label={L("Vazgeç")} tone="ghost" onPress={() => setSure(false)} />
+          </View>
         </View>
-      ) : null}
-    </Pressable>
+      ) : (
+        <Pressable onPress={() => setSure(true)} style={{ alignSelf: 'flex-start', marginTop: 10 }} hitSlop={6}>
+          <Text style={ms.link}>{L("Serbest bırak")}</Text>
+        </Pressable>
+      )}
+    </>
   );
 }
 
@@ -892,7 +1030,25 @@ const ms = StyleSheet.create({
   answeredMe: { color: C.gold, fontFamily: F.semi, fontSize: 12.5, alignSelf: 'flex-end', textAlign: 'right' },
   answeredRes: { color: C.dim, fontFamily: F.body, fontSize: 12.5, lineHeight: 18 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  fighter: { borderWidth: 1, borderColor: C.border, borderRadius: R + 2, padding: 12, marginBottom: 8, backgroundColor: C.card },
+  fighter: { borderWidth: 1, borderColor: C.border, borderRadius: R + 4, marginBottom: 10, overflow: 'hidden' },
+  fighterInner: { padding: 12 },
+  miniBars: { gap: 4, width: 110 },
+  miniBar: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  miniTrack: { flex: 1, height: 5, borderRadius: 3, backgroundColor: '#ffffff14', overflow: 'hidden' },
+  status: { flex: 1, fontFamily: F.semi, fontSize: 12 },
+  open: { color: C.gold, fontFamily: F.semi, fontSize: 12 },
+  fixture: { borderWidth: 1, borderColor: '#1d3a5a', borderRadius: R + 2, marginBottom: 8, overflow: 'hidden' },
+  fixtureInner: { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 10 },
+  fixWeek: { width: 46, alignItems: 'center' },
+  fixWeekNo: { color: C.text, fontFamily: F.display, fontSize: 18 },
+  fixWeekLabel: { color: C.faint, fontFamily: F.display, fontSize: 7.5, letterSpacing: 1, textAlign: 'center' },
+  fixVs: { color: C.gold, fontFamily: F.display, fontSize: 12 },
+  night: { borderRadius: R + 4, borderWidth: 1, borderColor: C.goldDeep, padding: 14, marginBottom: 12, overflow: 'hidden' },
+  nightRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 8, borderTopWidth: 1, borderTopColor: '#ffffff12' },
+  nightBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 6, backgroundColor: C.gold },
+  nightBtnText: { color: '#1f1605', fontFamily: F.bold, fontSize: 12 },
+  banner: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 10, borderWidth: 1, borderColor: C.goldDeep, borderRadius: R, paddingHorizontal: 10, paddingVertical: 8, backgroundColor: '#1a1508' },
+  bannerText: { flex: 1, color: C.gold, fontFamily: F.semi, fontSize: 12.5 },
   fName: { color: C.text, fontFamily: F.bold, fontSize: 15 },
   fMeta: { color: C.dim, fontFamily: F.body, fontSize: 12, marginTop: 1 },
   power: { color: C.text, fontFamily: F.display, fontSize: 22 },

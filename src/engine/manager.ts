@@ -5,7 +5,7 @@
 import { L, LOC } from '../i18n';
 import { NAME_POOLS, ORGS, femSurname } from './data';
 import { chance, clamp, pick, rand, randInt, setSeed, uid, weighted } from './rng';
-import type { Background, OrgId, WeightClass } from './types';
+import type { Background, Method, OrgId, WeightClass } from './types';
 
 // ---------- Temel tipler ----------
 
@@ -124,6 +124,28 @@ export interface MFighter {
   kiskirt?: number;
   /** Kişisel hikâye yayı */
   hikaye?: { tip: ArcKey; adim: number; bitis: number };
+  /** Maç geçmişi (en yenisi başta, en fazla 20) */
+  maclar?: MKayit[];
+}
+
+/** Bir maçın kaydı: dosyada listelenir, kafes sahnesi bu kayıttan yeniden oynatılır */
+export interface MKayit {
+  id: string;
+  h: number;
+  org: OrgId;
+  rk: Rakip;
+  w: boolean;
+  /** Yöntem metni ve kodu, bitiş raundu, toplam raunt */
+  y: string;
+  kod: Method;
+  ra: number;
+  top: number;
+  unvan?: boolean;
+  sup?: boolean;
+  /** Dövüşçünün maçtaki gücü, ajansın komisyonu, sonuç satırları */
+  guc: number;
+  kom: number;
+  satir: string[];
 }
 
 /** Yetenek avı adayı: gerçek potansiyel gizli, menajerin tahmini yıldızla görünür */
@@ -789,6 +811,7 @@ function resolveFight(r: MgrRun, f: MFighter, rapor: string[], forced?: boolean)
     ppvLine = L("📺 PPV: {0} satış · dövüşçünün payı {1}", [satis.toLocaleString(LOC), $(gelir)]);
   } else if (hype > 0) brut += r100((mc.ucret * hype) / 200);
   const pay = earn(r, f, brut);
+  const gucOnce = f.guc;
   f.un = clamp(f.un + (won ? (mc.unvan ? 6 : mc.super ? 5 : 2) : -2) + Math.round(hype / 12), 0, 100);
   f.hasar = clamp(f.hasar + (koLoss ? 22 : won ? randInt(3, 9) : randInt(8, 15)) + (f.riskli ? 10 : 0), 0, 100);
   f.bosHafta = 0;
@@ -831,6 +854,8 @@ function resolveFight(r: MgrRun, f: MFighter, rapor: string[], forced?: boolean)
       lines.push(L("📜 Rövanş maddesi: {0} ile rövanş teklifi masada.", [rk.ad]));
     }
   }
+  const kod: Method = fin ? (YONTEM_SUB.some((y) => y() === yontem) ? 'SUB' : yontem === L("nakavt") ? 'KO' : 'TKO') : yontem === L("oybirliğiyle karar") ? 'UD' : 'SD';
+  f.maclar = [{ id: uid(), h: r.hafta, org: mc.org, rk, w: won, y: yontem, kod, ra: raunt, top: mc.unvan ? 5 : 3, unvan: mc.unvan || undefined, sup: mc.super || undefined, guc: gucOnce, kom: pay, satir: lines }, ...(f.maclar ?? [])].slice(0, 20);
   rapor.push(`${won ? '✅' : '❌'} ${fullName(f)} – ${rk.ad} (${orgName(mc.org)}) · ${L("komisyon")} ${$(pay)}`, ...lines.map((l) => '   ' + l));
   f.riskli = false;
   f.mac = undefined;
@@ -1958,4 +1983,88 @@ export function readMeydan(code: string): { kod: string; skor: number } | null {
   const m = code.trim().toUpperCase().match(/^YOL-MNJ-(\d{4}-\d{2})-(\d+)-([0-9A-Z]{2})$/);
   if (!m) return null;
   return check(m[1], Number(m[2])) === m[3] ? { kod: m[1], skor: Number(m[2]) } : null;
+}
+
+// =====================================================================================================
+// 3. aşama: maç kayıtları, izlenebilir maçlar, face-off
+// =====================================================================================================
+
+/** Rakibin soyadı (kafes sahnesi isimden aktörü bulur) */
+export const rkSoyad = (rk: Rakip) => rk.ad.split(' ').slice(-1)[0];
+
+/** Oyunun ana zarını bozmayan yerel zar: aynı kayıt her izlendiğinde aynı maç oynar */
+function localRng(seed: number) {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/** Kayıttan raunt raunt maç anlatımı (kafes sahnesinin anladığı satırlar). Raunt başları "— N. raunt" ile başlar. */
+export function fightBeats(f: Pick<MFighter, 'soyad' | 'stil'>, k: MKayit): string[] {
+  const rnd = localRng(hashStr(`${k.id}-${k.h}`));
+  const pk = <T,>(a: T[]) => a[Math.floor(rnd() * a.length)];
+  const P = f.soyad;
+  const O = rkSoyad(k.rk);
+  const W = k.w ? P : O;
+  const Lo = k.w ? O : P;
+  const gW = GRAPPLE.includes(k.w ? f.stil : k.rk.stil);
+  const gL = GRAPPLE.includes(k.w ? k.rk.stil : f.stil);
+  const strike = (X: string, Y: string) =>
+    pk([
+      L("{0} sert bir sağ el yerleştirdi.", [X]),
+      L("{0} jab ile mesafeyi kontrol ediyor.", [X]),
+      L("{0} kroşeyle isabet buldu.", [X]),
+      L("{0} aparkatla {1}'in çenesini kaldırdı.", [X, Y]),
+      L("{0} üçlü kombinasyon vurdu.", [X]),
+      L("{0} kontra bir sol el ile karşılık verdi.", [X]),
+    ]);
+  const kick = (X: string, Y: string) =>
+    pk([L("{0} bacağa sert bir low kick vurdu.", [X]), L("{0} gövdeye tekme gömdü.", [X]), L("{0} yüksek tekme denedi, {1} bloke etti.", [X, Y])]);
+  const grap = (X: string, Y: string) =>
+    pk([L("{0} bacaklarına daldı ve {1}'i yere indirdi.", [X, Y]), L("{0} üstten yumruk yağdırıyor.", [X]), L("{0} yere indirmeye çalıştı, {1} sprawl ile savundu.", [X, Y]), L("{0} rakibini kafese yasladı, dizler çalışıyor.", [X])]);
+  const beat = (X: string, Y: string, g: boolean) => {
+    const v = rnd();
+    return g && v < 0.45 ? grap(X, Y) : v < 0.75 ? strike(X, Y) : v < 0.92 ? kick(X, Y) : L("{0} rakibini kafese yasladı.", [X]);
+  };
+  const out: string[] = [];
+  for (let i = 1; i <= k.ra; i++) {
+    out.push(L("— {0}. raunt", [i]));
+    const last = i === k.ra;
+    // Kazananın raundu mu? Kararla biten maçta kaybeden bir raunt alabilir.
+    const winRound = last || rnd() < (k.kod === 'SD' ? 0.55 : 0.72);
+    const A = winRound ? W : Lo;
+    const D = winRound ? Lo : W;
+    const gA = winRound ? gW : gL;
+    const n = 3 + Math.floor(rnd() * 2);
+    for (let j = 0; j < n; j++) out.push(rnd() < 0.72 ? beat(A, D, gA) : beat(D, A, winRound ? gL : gW));
+    if (!last && rnd() < 0.25) out.push(L("{0} sarsıldı! {1} bastırıyor.", [D, A]));
+    if (last) {
+      if (k.kod === 'SUB') out.push(L("{0} sırtını aldı…", [W]), L("{0} {1} kilidini kapattı!", [W, k.y]), L("{0} tap attı! Bitti!", [Lo]));
+      else if (k.kod === 'KO' || k.kod === 'TKO') {
+        out.push(L("{0} sarsıldı! {1} bastırıyor.", [Lo, W]));
+        out.push(k.kod === 'KO' ? L("{0} kroşeyi patlattı, {1} yere yığıldı! Nakavt!", [W, Lo]) : L("{0} üstten yumruk yağdırıyor, hakem durdurdu! TKO!", [W]));
+      } else out.push(L("Gong çaldı. Karar jüri kartlarında."), L("Kartlar okundu: {0}. Kazanan {1}!", [k.y, W]));
+    }
+  }
+  return out;
+}
+
+/** Face-off sahnesinde dövüşçünün ve rakibin cümlesi */
+export function faceOffLines(f: MFighter, unvan: boolean): [string, string] {
+  const rnd = localRng(hashStr(`${f.id}-${f.mac?.hafta ?? 0}-fo`));
+  const pk = <T,>(a: T[]) => a[Math.floor(rnd() * a.length)];
+  const own: Record<Kisilik, string[]> = {
+    hirsli: [L("Bu gece senin kariyerini bitireceğim."), L("Herkes beni konuşacak, sen de dahil."), unvan ? L("O kemer zaten benim, sadece takacağım.") : L("Sen sadece bir basamaksın.")],
+    sadik: [L("Ekibim arkamda. Hazırım."), L("Saygım var ama o kafeste kardeş yok."), L("Köşemi dinleyeceğim, gerisi gelir.")],
+    tembel: [L("Erken bitireceğim, akşam yemeğine yetişmem lazım."), L("Antrenman mı? Yeteneğim yeter."), L("Uzatmayalım şu işi.")],
+    medya: [L("Kameralar hazır mı? Bu an viral olacak."), L("Seni yarın herkes benim videomdan tanıyacak."), L("Gülümse, bu fotoğraf manşette.")],
+    paragoz: [L("Bu maç benim maaşımı ikiye katlayacak."), L("Sponsorlarım bakıyor, iyi görünmem lazım."), L("Ödemeyi aldım, şimdi şovu izle.")],
+  };
+  const rk = [L("Yanlış kapıyı çaldın."), L("Gözlerinde korku görüyorum."), L("Üçüncü raunda kalmazsın."), L("Menajerin seni kurbanlığa getirmiş."), L("Bu gece ışıkları söndüreceğim.")];
+  return [pk(own[f.kisilik] ?? own.sadik), pk(rk)];
 }
