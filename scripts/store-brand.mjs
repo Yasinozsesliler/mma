@@ -126,6 +126,8 @@ const BANNER = {
   pt: ['DO OCTÓGONO AO CINTURÃO', 'Das ruas a campeão mundial.', 'Cada escolha é sua.'],
   ru: ['ИЗ КЛЕТКИ К ПОЯСУ', 'С улицы до чемпиона мира.', 'Каждое решение за тобой.'],
   pl: ['Z KLATKI DO PASA', 'Z ulicy do mistrzostwa świata.', 'Każdy wybór należy do ciebie.'],
+  de: ['VOM KÄFIG ZUM GÜRTEL', 'Von der Straße zum Weltmeister.', 'Jede Entscheidung liegt bei dir.'],
+  fr: ['DE LA CAGE À LA CEINTURE', 'De la rue au titre mondial.', 'Chaque choix t’appartient.'],
 };
 
 const featureHtml = (lang) => {
@@ -171,6 +173,10 @@ const featureHtml = (lang) => {
 </div></body></html>`;
 };
 
+if (process.argv[2] === 'app') {
+  await appIcons();
+  process.exit(0);
+}
 const browser = await puppeteer.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true, args: ['--no-sandbox'] });
 const page = await browser.newPage();
 for (const size of [512, 1024]) {
@@ -195,3 +201,33 @@ for (const l of langs) {
 }
 await browser.close();
 console.log('tamam:', OUT);
+
+// ---------- Uygulama ikonları (node scripts/store-brand.mjs app) ----------
+// Tek renkli ikonlar (android-icon-monochrome, notification-icon) make-icons.mjs'teki sade siluette kalır.
+export async function appIcons() {
+  const b = await puppeteer.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true, args: ['--no-sandbox'] });
+  const pg = await b.newPage();
+  // frac: amblemin kenardan kenara kapladığı oran; bg: koyu zemin
+  const jobs = [
+    ['assets/icon.png', 1024, 0.86, true],
+    ['assets/android-icon-foreground.png', 1024, 0.6, false],
+    ['assets/splash-icon.png', 1024, 0.9, false],
+    ['assets/favicon.png', 48, 0.94, true],
+    ['public/icon-192.png', 192, 0.92, true],
+    ['public/icon-512.png', 512, 0.92, true],
+    ['public/icon-maskable-512.png', 512, 0.7, true],
+    ['public/apple-touch-icon.png', 180, 0.86, true],
+  ];
+  for (const [path, size, frac, bg] of jobs) {
+    const k = frac / 0.82;
+    const html = `<!doctype html><html><body style="margin:0;background:transparent">
+<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 1024 1024">
+${bg ? '<rect width="1024" height="1024" fill="url(#abg)"/><rect width="1024" height="1024" fill="url(#aspot)"/>' : ''}
+<g transform="translate(512 512) scale(${k}) translate(-512 -512)">${emblem('a', { bg: false })}</g></svg></body></html>`;
+    await pg.setViewport({ width: size, height: size });
+    await pg.setContent(html, { waitUntil: 'load' });
+    await pg.screenshot({ path, clip: { x: 0, y: 0, width: size, height: size }, omitBackground: !bg });
+    console.log('ikon', path);
+  }
+  await b.close();
+}
