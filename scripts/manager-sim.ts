@@ -27,7 +27,7 @@ for (let i = 0; i < N; i++) {
         openTable(r, t.id);
         tableAsk(r, t.id, 'ucret');
       }
-      if (r.teklifler.some((x) => x.id === t.id)) acceptOffer(r, t.id);
+      if (r.teklifler.some((x) => x.id === t.id)) acceptOffer(r, t.id, t.super && Math.random() < 0.5 ? 'ppv' : undefined);
     }
     advanceWeek(r);
   }

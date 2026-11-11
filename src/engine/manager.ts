@@ -4,7 +4,7 @@
 // dövüşçünün kişiliğine, güvenine ve duruma göre değişir (tek doğru cevap yok).
 import { L, LOC } from '../i18n';
 import { NAME_POOLS, ORGS, femSurname } from './data';
-import { chance, clamp, pick, rand, randInt, uid, weighted } from './rng';
+import { chance, clamp, pick, rand, randInt, setSeed, uid, weighted } from './rng';
 import type { Background, OrgId, WeightClass } from './types';
 
 // ---------- Temel tipler ----------
@@ -69,6 +69,12 @@ export interface Mac {
   /** Kadrodaki başka bir dövüşçüye karşı (çıkar çatışması) */
   ic?: string;
   rovans?: boolean;
+  /** Dövüş haftası: ilgi (bilet/PPV satışını artırır) ve köşe notunun etkisi */
+  hype?: number;
+  kose?: number;
+  /** Süper dövüş; ppv: sabit ücret yerine pay-per-view geliri payı */
+  super?: boolean;
+  ppv?: boolean;
 }
 
 export interface MFighter {
@@ -112,6 +118,12 @@ export interface MFighter {
   soz?: number;
   /** Doktor uyarısından sonra dinlendirilmedi */
   riskli?: boolean;
+  /** Şöhret (0-100): süper dövüş ve PPV satışını belirler */
+  un: number;
+  /** Son meydan okuma paylaşımı (haftası) */
+  kiskirt?: number;
+  /** Kişisel hikâye yayı */
+  hikaye?: { tip: ArcKey; adim: number; bitis: number };
 }
 
 /** Yetenek avı adayı: gerçek potansiyel gizli, menajerin tahmini yıldızla görünür */
@@ -150,6 +162,8 @@ export interface Teklif {
   son: number;
   masa?: Masa;
   pazarlik?: boolean;
+  /** Süper dövüş: sabit ücret ya da PPV payı seçilir */
+  super?: boolean;
 }
 
 export type Rol = 'dovuscu' | 'org' | 'basin' | 'rakip' | 'doktor' | 'aile' | 'sponsor' | 'sistem' | 'ag';
@@ -216,6 +230,12 @@ export interface MgrRun {
   /** Bu hafta sonucu (son sonuç kartı) */
   rapor?: string[];
   ayrilan: number;
+  /** Menajer tarzı eksenleri (kararlardan birikir) */
+  tarz: Record<TarzKey, number>;
+  /** Yaşayan pazar: organizasyon bütçe çarpanı / kapanış */
+  pazar: Partial<Record<OrgId, { carpan: number; bitis: number; kapali?: boolean; ad?: string }>>;
+  /** Haftalık meydan okuma */
+  meydan?: { kod: string; bitis: number; skor?: number };
 }
 
 // ---------- Ofis ----------
@@ -291,6 +311,7 @@ export function makeFighter(o: { tier?: MTier; guc?: number; pot?: number; yas?:
     katilis: o.hafta ?? 0,
     bosHafta: 0,
     kazanc: 0,
+    un: UN0[tier] + randInt(0, 6),
   };
 }
 
@@ -351,6 +372,8 @@ export function createMgrRun(ad: string, soyad: string, ajans: string, senaryo: 
     sampiyonluk: 0,
     deneme,
     ayrilan: 0,
+    tarz: { kopek: 0, baba: 0, mimar: 0 },
+    pazar: {},
   };
   const pool = (u: string) => NAME_POOLS.find((p) => p.ulke === u);
   if (senaryo === 'sifir') {
@@ -403,6 +426,7 @@ export function createMgrRun(ad: string, soyad: string, ajans: string, senaryo: 
   for (const f of r.kadro) {
     if (!f.sozlesme && f.tier !== 'amator') f.sozlesme = { org: pick(TIER_ORGS[f.tier]), ucret: payFor(f), bonus: r100(payFor(f) * 0.6), kalan: randInt(2, 4), maddeler: [] };
   }
+  for (const f of r.kadro) assignArc(r, f, senaryo === 'yildiz' && f.sampiyon ? 'son_sans' : undefined);
   refreshCandidates(r, true);
   weeklyOffers(r);
   return r;
@@ -421,9 +445,10 @@ export function bumpOrg(r: MgrRun, o: OrgId, d: number) {
 }
 export const karaListe = (r: MgrRun, o: OrgId) => iliskiOf(r, o) <= -30;
 
-function addTrust(f: MFighter, d: number) {
-  // Sadık dövüşçü iyiye hızlı, kötüye yavaş tepki verir; paragöz tersine
-  const k = d > 0 ? (f.kisilik === 'sadik' ? 1.3 : f.kisilik === 'paragoz' ? 0.7 : 1) : f.kisilik === 'sadik' ? 0.7 : f.kisilik === 'paragoz' ? 1.3 : 1;
+function addTrust(r: MgrRun, f: MFighter, d: number) {
+  // Sadık dövüşçü iyiye hızlı, kötüye yavaş tepki verir; paragöz tersine. Tarz: Baba'ya kırgınlık az, Köpekbalığı'na ısınma yavaş.
+  const tarz = tarzOf(r);
+  const k = (d > 0 ? (f.kisilik === 'sadik' ? 1.3 : f.kisilik === 'paragoz' ? 0.7 : 1) : f.kisilik === 'sadik' ? 0.7 : f.kisilik === 'paragoz' ? 1.3 : 1) * (d < 0 && tarz === 'baba' ? 0.7 : d > 0 && tarz === 'kopek' ? 0.8 : 1);
   f.guven = clamp(Math.round(f.guven + d * k), 0, 100);
 }
 
@@ -459,7 +484,7 @@ export function refreshCandidates(r: MgrRun, force = false) {
   r.adaylar = Array.from({ length: n }, (_, i) => {
     const f = makeFighter({ tier: tiers[i], hafta: r.hafta });
     // Menajerin gözü: itibar arttıkça tahmin netleşir
-    const err = Math.round((rand() - 0.5) * (30 - r.itibar / 4));
+    const err = Math.round((rand() - 0.5) * (30 - r.itibar / 4) * (tarzOf(r) === 'mimar' ? 0.5 : 1));
     const imza = r100(SIGN_BASE[f.tier] * (0.6 + (f.pot - 50) / 50));
     return { ...f, imza, tahmin: clamp(f.pot + err, 40, 98) };
   });
@@ -484,6 +509,10 @@ export function signCandidate(r: MgrRun, id: string, kom: number): string {
   delete (f as Partial<Aday>).imza;
   delete (f as Partial<Aday>).tahmin;
   r.kadro.push(f);
+  if (kom >= 20) tz(r, 'kopek', 3);
+  if (kom <= 10) tz(r, 'baba', 2);
+  if (f.tier === 'amator') tz(r, 'mimar', 2);
+  assignArc(r, f);
   r.gecmis.unshift(L("Hafta {0}: {1} kadroya katıldı (%{2}).", [r.hafta, fullName(f), kom]));
   return L("✍️ {0} ajansına katıldı!", [fullName(f)]);
 }
@@ -493,7 +522,7 @@ export function releaseFighter(r: MgrRun, id: string) {
   if (!f) return;
   r.kadro = r.kadro.filter((x) => x.id !== id);
   r.teklifler = r.teklifler.filter((t) => t.fid !== id);
-  for (const o of r.kadro) addTrust(o, -3);
+  for (const o of r.kadro) addTrust(r, o, -3);
   r.gecmis.unshift(L("Hafta {0}: {1} ile yollar ayrıldı.", [r.hafta, fullName(f)]));
 }
 
@@ -509,10 +538,10 @@ export function upgradeOffice(r: MgrRun) {
 
 function offerFight(r: MgrRun, f: MFighter, kind: 'kolay' | 'denk' | 'zor' | 'unvan') {
   const org = f.sozlesme?.org ?? pick(TIER_ORGS[f.tier]);
-  if (karaListe(r, org)) return;
+  if (karaListe(r, org) || kapali(r, org)) return;
   const d = { kolay: -7, denk: 0, zor: 6, unvan: 8 }[kind];
   const rakip = makeRakip(f.guc + d + (rand() - 0.5) * 6);
-  const base = f.sozlesme?.ucret ?? payFor(f);
+  const base = f.sozlesme?.ucret ?? payFor(f) * carpanOf(r, org);
   const k = { kolay: 0.85, denk: 1, zor: 1.25, unvan: 1.8 }[kind];
   r.teklifler.push({
     id: uid(),
@@ -529,9 +558,9 @@ function offerFight(r: MgrRun, f: MFighter, kind: 'kolay' | 'denk' | 'zor' | 'un
 
 function offerContract(r: MgrRun, f: MFighter, tier: MTier, org?: OrgId) {
   const o = org ?? pick(TIER_ORGS[tier].filter((x) => !karaListe(r, x)).concat(TIER_ORGS[tier]));
-  if (karaListe(r, o)) return;
+  if (karaListe(r, o) || kapali(r, o)) return;
   const tmp = { ...f, tier, sira: tier === f.tier ? f.sira : 12 };
-  const ucret = r100(payFor(tmp) * (1 + iliskiOf(r, o) / 150));
+  const ucret = r100(payFor(tmp) * (1 + iliskiOf(r, o) / 150) * carpanOf(r, o));
   r.teklifler.push({ id: uid(), fid: f.id, tip: 'sozlesme', org: o, ucret, bonus: r100(ucret * 0.6), macSayisi: randInt(3, 5), maddeler: [], orgIster: chance(0.35) ? 'munhasir' : undefined, son: r.hafta + 3 });
 }
 
@@ -548,6 +577,7 @@ function weeklyOffers(r: MgrRun) {
       if (!has.some((t) => t.tip === 'sozlesme') && chance(0.45 + r.itibar / 300)) offerContract(r, f, up ? M_TIERS[M_TIERS.indexOf(f.tier) + 1] : f.tier === 'amator' ? 'bolgesel' : f.tier);
       continue;
     }
+    if ((f.tier === 'buyuk' || f.tier === 'ucc') && (f.sampiyon || f.un >= 60) && chance(0.012 + f.un / 2500)) superOffer(r, f);
     if (has.some((t) => t.tip === 'mac') || f.bosHafta < 1) continue;
     if (!chance(0.5 + f.bosHafta * 0.12)) continue;
     if (f.sira <= 2 && !f.sampiyon && chance(0.45)) offerFight(r, f, 'unvan');
@@ -560,7 +590,7 @@ function weeklyOffers(r: MgrRun) {
 }
 
 /** Teklifi kabul et: maç ayarlanır ya da sözleşme imzalanır. */
-export function acceptOffer(r: MgrRun, id: string): string {
+export function acceptOffer(r: MgrRun, id: string, mod?: 'ppv'): string {
   const t = r.teklifler.find((x) => x.id === id);
   const f = t && r.kadro.find((x) => x.id === t.fid);
   if (!t || !f) return '';
@@ -588,21 +618,23 @@ export function acceptOffer(r: MgrRun, id: string): string {
       f.tier = tierOfOrg(t.org);
       f.sira = randInt(10, 14);
       f.sampiyon = false;
-      addTrust(f, 10);
+      addTrust(r, f, 10);
       r.itibar = clamp(r.itibar + 2, 0, 100);
       msg(r, { rol: 'dovuscu', kim: fullName(f), fid: f.id, metin: pick([L("{0}! Rüya gibi. Bunu sana borçluyum.", [orgName(t.org)]), L("Annemi aradım, ağladı. {0} sözleşmesi, inanamıyorum.", [orgName(t.org)]), L("Daha yeni başlıyoruz. {0}'de herkes adımı öğrenecek.", [orgName(t.org)])]) });
-    } else addTrust(f, 4);
+    } else addTrust(r, f, 4);
     bumpOrg(r, t.org, 3);
     r.gecmis.unshift(L("Hafta {0}: {1} için {2} ile {3} maçlık sözleşme ({4}/maç).", [r.hafta, fullName(f), orgName(t.org), f.sozlesme.kalan, $(f.sozlesme.ucret)]));
     return L("📝 {0} artık {1} dövüşçüsü.", [fullName(f), orgName(t.org)]);
   }
-  f.mac = { hafta: r.hafta + randInt(2, 4), org: t.org, rakip: t.rakip!, ucret: t.ucret, bonus: t.bonus, unvan: !!t.unvan };
+  const ppv = !!t.super && mod === 'ppv';
+  f.mac = { hafta: r.hafta + randInt(2, 4), org: t.org, rakip: t.rakip!, ucret: ppv ? r100(t.ucret * 0.25) : t.ucret, bonus: t.bonus, unvan: !!t.unvan, super: t.super, ppv };
+  if (ppv) tz(r, 'kopek', 2);
   f.soz = undefined;
   bumpOrg(r, t.org, 1);
   // Kişilik: hırslı zor maçı sever, paragöz parayı
   const zor = t.rakip!.guc - f.guc;
-  if (f.kisilik === 'hirsli' && zor > 3) addTrust(f, 3);
-  if (f.kisilik === 'paragoz' && t.ucret > payFor(f) * 1.1) addTrust(f, 3);
+  if (f.kisilik === 'hirsli' && zor > 3) addTrust(r, f, 3);
+  if (f.kisilik === 'paragoz' && t.ucret > payFor(f) * 1.1) addTrust(r, f, 3);
   return L("🗓️ {0} – {1} maçı {2}. haftada.", [fullName(f), t.rakip!.ad, f.mac.hafta]);
 }
 
@@ -613,7 +645,7 @@ export function declineOffer(r: MgrRun, id: string) {
   if (t.unvan) {
     bumpOrg(r, t.org, -6);
     const f = r.kadro.find((x) => x.id === t.fid);
-    if (f?.kisilik === 'hirsli') addTrust(f, -8);
+    if (f?.kisilik === 'hirsli') addTrust(r, f, -8);
   } else bumpOrg(r, t.org, -1);
 }
 
@@ -624,7 +656,7 @@ export function openTable(r: MgrRun, id: string) {
   if (!t || t.masa || t.pazarlik) return;
   const f = r.kadro.find((x) => x.id === t.fid);
   const deger = f ? (f.sampiyon ? 0.15 : 0) + (15 - f.sira) / 100 : 0;
-  const tavan = 1.06 + r.itibar / 400 + iliskiOf(r, t.org) / 250 + deger + rand() * 0.16;
+  const tavan = 1.06 + r.itibar / 400 + iliskiOf(r, t.org) / 250 + deger + rand() * 0.16 + (tarzOf(r) === 'kopek' ? 0.07 : 0);
   const sabir = 3 + (r.itibar >= 50 ? 1 : 0);
   t.masa = { tavan, sabir, sabirMax: sabir, uk: 1, bk: 1, baz: { ucret: t.ucret, bonus: t.bonus }, mesaj: L("{0}: “Teklifimiz ortada. Dinliyoruz.”", [orgName(t.org)]), ruh: 'sicak' };
 }
@@ -658,6 +690,7 @@ export function tableAsk(r: MgrRun, id: string, ne: 'ucret' | 'bonus' | Madde): 
   if (!t || !m || m.ruh === 'son') return null;
   const org = orgName(t.org);
   if (ne === 'ucret') {
+    tz(r, 'kopek', 1);
     const ask = m.uk + 0.15;
     if (ask <= m.tavan) {
       m.uk = ask;
@@ -738,7 +771,7 @@ function fightLines(f: MFighter, rk: Rakip, won: boolean, yontem: string, raunt:
 function resolveFight(r: MgrRun, f: MFighter, rapor: string[], forced?: boolean) {
   const mc = f.mac!;
   const rk = mc.rakip;
-  let edge = (f.guc - rk.guc) / 7 - f.hasar / 60 - (f.riskli ? 0.6 : 0) + (f.kisilik === 'tembel' ? (rand() - 0.5) * 1.5 : 0);
+  let edge = (mc.kose ?? 0) + (f.guc - rk.guc) / 7 - f.hasar / 60 - (f.riskli ? 0.6 : 0) + (f.kisilik === 'tembel' ? (rand() - 0.5) * 1.5 : 0);
   const p = 1 / (1 + Math.exp(-edge));
   const won = forced ?? chance(p);
   const fin = chance(0.45);
@@ -746,19 +779,30 @@ function resolveFight(r: MgrRun, f: MFighter, rapor: string[], forced?: boolean)
   const yontem = fin ? (grap && chance(0.6) ? pick(YONTEM_SUB)() : pick(YONTEM_KO)()) : chance(0.75) ? L("oybirliğiyle karar") : L("ayrık karar");
   const raunt = fin ? randInt(1, mc.unvan ? 5 : 3) : mc.unvan ? 5 : 3;
   const koLoss = !won && fin && !YONTEM_SUB.some((y) => y() === yontem);
-  const brut = mc.ucret + (won ? mc.bonus : 0);
+  const hype = mc.hype ?? 0;
+  let brut = mc.ucret + (won ? mc.bonus : 0);
+  let ppvLine = '';
+  if (mc.ppv) {
+    const satis = ppvSales(f, hype);
+    const gelir = r100(satis * PPV_FIYAT * PPV_PAY);
+    brut += gelir;
+    ppvLine = L("📺 PPV: {0} satış · dövüşçünün payı {1}", [satis.toLocaleString(LOC), $(gelir)]);
+  } else if (hype > 0) brut += r100((mc.ucret * hype) / 200);
   const pay = earn(r, f, brut);
+  f.un = clamp(f.un + (won ? (mc.unvan ? 6 : mc.super ? 5 : 2) : -2) + Math.round(hype / 12), 0, 100);
   f.hasar = clamp(f.hasar + (koLoss ? 22 : won ? randInt(3, 9) : randInt(8, 15)) + (f.riskli ? 10 : 0), 0, 100);
   f.bosHafta = 0;
   if (f.sozlesme) f.sozlesme.kalan = Math.max(0, f.sozlesme.kalan - 1);
   const lines = fightLines(f, rk, won, yontem, raunt);
+  if (ppvLine) lines.push(ppvLine);
   if (won) {
     f.g++;
     f.seri = Math.max(1, f.seri + 1);
     f.sira = Math.max(1, f.sira - randInt(2, 4) - (rk.guc > f.guc ? 1 : 0));
     f.guc = clamp(f.guc + (f.guc < f.pot ? 1 : 0), 30, 96);
-    addTrust(f, 4);
-    r.itibar = clamp(r.itibar + (mc.unvan ? 3 : chance(0.35) ? 1 : 0), 0, 100);
+    addTrust(r, f, 4);
+    // Kemer savunması da itibar getirir ama yeni şampiyonluk kadar değil
+    r.itibar = clamp(r.itibar + (mc.unvan ? (f.sampiyon ? 1 : 3) : chance(0.3) ? 1 : 0), 0, 100);
     if (mc.unvan) {
       if (!f.sampiyon) {
         f.sampiyon = true;
@@ -777,7 +821,7 @@ function resolveFight(r: MgrRun, f: MFighter, rapor: string[], forced?: boolean)
       f.sampiyon = false;
       lines.push(L("💔 {0} kemerini kaybetti.", [fullName(f)]));
     }
-    addTrust(f, mc.ic ? -12 : -3);
+    addTrust(r, f, mc.ic ? -12 : -3);
     if (koLoss && chance(0.35)) {
       f.sakat = randInt(3, 8);
       lines.push(L("🩹 {0} hafta sahalardan uzak.", [f.sakat]));
@@ -841,16 +885,17 @@ export const EVENTS: Record<string, EventDef> = {
       if (!f) return '';
       if (k === 'soz') {
         f.soz = r.hafta + 3;
-        addTrust(f, 4);
+        addTrust(r, f, 4);
         return L("Söz verdin. 3 hafta içinde maç ayarlanmazsa güveni sarsılacak.");
       }
       if (k === 'sabir') {
-        addTrust(f, f.kisilik === 'hirsli' ? -7 : f.kisilik === 'sadik' ? 3 : -2);
+        addTrust(r, f, f.kisilik === 'hirsli' ? -7 : f.kisilik === 'sadik' ? 3 : -2);
         return f.kisilik === 'hirsli' ? L("“Sabır sabır… Hep aynı şey.” Hiç hoşuna gitmedi.") : L("“Tamam. Sana güveniyorum.”");
       }
+      tz(r, 'mimar', 1);
       const gelis = f.kisilik === 'tembel' ? 0 : 1;
       f.guc = clamp(f.guc + gelis, 30, Math.max(f.guc, f.pot));
-      addTrust(f, f.kisilik === 'tembel' ? -4 : 1);
+      addTrust(r, f, f.kisilik === 'tembel' ? -4 : 1);
       return f.kisilik === 'tembel' ? L("Kampa gitti ama ilk gün kaytardı. Antrenör seni aradı, sinirli.") : L("Kampa gömüldü. Antrenörü ‘formunun zirvesinde’ diyor. (Güç +1)");
     },
   },
@@ -875,25 +920,26 @@ export const EVENTS: Record<string, EventDef> = {
       if (k === 'zorla') {
         if (chance(0.7)) {
           f.hasar = clamp(f.hasar + 6, 0, 100);
-          addTrust(f, -2);
+          addTrust(r, f, -2);
           return L("Kiloyu son anda verdi, ama tükenmiş görünüyor. Maçta kondisyonu düşük olabilir.");
         }
         const ceza = r100(f.mac.ucret * 0.2);
         f.mac.ucret -= ceza;
         f.hasar = clamp(f.hasar + 8, 0, 100);
-        addTrust(f, -6);
+        addTrust(r, f, -6);
         bumpOrg(r, f.mac.org, -3);
         return L("Tartıyı geçemedi. Ücretinden {0} ceza kesildi, maç yine de yapılacak.", [$(ceza)]);
       }
       if (k === 'arakilo') {
         f.mac.ucret = r100(f.mac.ucret * 0.85);
         bumpOrg(r, f.mac.org, -3);
-        addTrust(f, 4);
+        addTrust(r, f, 4);
         return L("Organizasyon kabul etti ama ücret %15 düştü. Dövüşçün sana minnettar.");
       }
       const org = f.mac.org;
+      tz(r, 'baba', 2);
       bumpOrg(r, org, -9);
-      addTrust(f, f.kisilik === 'hirsli' ? -4 : 8);
+      addTrust(r, f, f.kisilik === 'hirsli' ? -4 : 8);
       f.mac = undefined;
       return L("Maç iptal. {0} çok kızgın, ama dövüşçün sağlığını önemsediğini gördü.", [orgName(org)]);
     },
@@ -920,20 +966,22 @@ export const EVENTS: Record<string, EventDef> = {
       if (!f) return '';
       const riv = r.rakipler.find((x) => x.ad === m.veri?.riv) ?? r.rakipler[0];
       if (k === 'indir') {
+        tz(r, 'baba', 3);
         f.kom = Math.max(5, f.kom - 3);
-        addTrust(f, 14);
+        addTrust(r, f, 14);
         return L("Komisyon %{0}. “Bunu yapmana gerek yoktu… ama sağ ol.” Kaldı.", [f.kom]);
       }
       if (k === 'konus') {
         const p = f.guven / 100 + (f.kisilik === 'sadik' ? 0.3 : f.kisilik === 'paragoz' ? -0.25 : 0);
         if (chance(p + 0.2)) {
-          addTrust(f, 10);
+          addTrust(r, f, 10);
           return L("Saatlerce konuştunuz. “Sen beni kimse tanımazken buldun.” Kaldı.");
         }
         return leave(r, f, riv);
       }
+      tz(r, 'kopek', 1);
       if (f.guven < 40 || f.kisilik === 'paragoz') return leave(r, f, riv);
-      addTrust(f, 6);
+      addTrust(r, f, 6);
       return L("Bu duruşun hoşuna gitti. “Kimse beni satın alamaz” dedi ve kaldı.");
     },
   },
@@ -960,7 +1008,7 @@ export const EVENTS: Record<string, EventDef> = {
           r.itibar = clamp(r.itibar - 4, 0, 100);
           return L("Ertesi gün antrenmandan bandajlı fotoğrafları sızdı. Basın seni yalancılıkla suçluyor. (İtibar -4)");
         }
-        addTrust(f, 3);
+        addTrust(r, f, 3);
         return L("Haber sönük kaldı. Dövüşçün arkasında durduğun için memnun.");
       }
       if (k === 'yumusak') return L("Dürüst ama sakin bir cevap. Kimse üstünde durmadı.");
@@ -986,6 +1034,7 @@ export const EVENTS: Record<string, EventDef> = {
     resolve: (r, m, k, f) => {
       if (!f) return '';
       if (k === 'dinlen') {
+        tz(r, 'baba', 3);
         f.sakat = 12;
         f.hasar = clamp(f.hasar - 35, 0, 100);
         r.teklifler = r.teklifler.filter((t) => t.fid !== f.id || t.tip !== 'mac');
@@ -993,22 +1042,23 @@ export const EVENTS: Record<string, EventDef> = {
           bumpOrg(r, f.mac.org, -6);
           f.mac = undefined;
         }
-        addTrust(f, f.kisilik === 'hirsli' ? -3 : 8);
+        addTrust(r, f, f.kisilik === 'hirsli' ? -3 : 8);
         return f.kisilik === 'hirsli' ? L("Çok kızdı, ama yıllar sonra bu kararına teşekkür edecek.") : L("“Beni para makinesi gibi görmediğin için sağ ol.”");
       }
       if (k === 'devam') {
+        tz(r, 'kopek', 3);
         f.riskli = true;
         r.gecmis.unshift(L("Hafta {0}: Doktor uyarısına rağmen {1} dövüşmeye devam etti.", [r.hafta, fullName(f)]));
         return L("Doktor başını iki yana salladı. Bir sonraki maçta nakavt riski çok yüksek.");
       }
       if (f.kisilik === 'hirsli' || f.kisilik === 'paragoz') {
         f.riskli = true;
-        addTrust(f, 5);
+        addTrust(r, f, 5);
         return L("“Ben iyiyim, dövüşeceğim.” Kararı o verdi, ama sorumluluk hâlâ sende.");
       }
       f.sakat = 10;
       f.hasar = clamp(f.hasar - 30, 0, 100);
-      addTrust(f, 6);
+      addTrust(r, f, 6);
       return L("Uzun süre sessiz kaldı, sonra “dinleneceğim” dedi. Sana dürüst olduğun için teşekkür etti.");
     },
   },
@@ -1034,16 +1084,17 @@ export const EVENTS: Record<string, EventDef> = {
       if (!f) return '';
       const n = Number(m.veri?.n ?? 2000);
       if (k === 'ver') {
+        tz(r, 'baba', 3);
         r.para -= n;
-        addTrust(f, 16);
+        addTrust(r, f, 16);
         return L("{0} gönderildi. “Bunu hiç unutmayacağım.”", [$(n)]);
       }
       if (k === 'yari') {
         r.para -= Math.round(n / 2);
-        addTrust(f, 7);
+        addTrust(r, f, 7);
         return L("Yarısını gönderdin. Kalanını başka yerden buldu, sana minnettar.");
       }
-      addTrust(f, f.kisilik === 'sadik' ? -4 : -9);
+      addTrust(r, f, f.kisilik === 'sadik' ? -4 : -9);
       return L("“Anlıyorum.” Ama sesi soğudu.");
     },
   },
@@ -1069,20 +1120,21 @@ export const EVENTS: Record<string, EventDef> = {
       if (!f) return '';
       const big = Number(m.veri?.big ?? 5000);
       if (k === 'kabul') {
+        tz(r, 'kopek', 1);
         earn(r, f, big);
         if (f.mac) f.hasar = clamp(f.hasar + 3, 0, 100);
-        addTrust(f, f.kisilik === 'tembel' ? 2 : f.kisilik === 'medya' || f.kisilik === 'paragoz' ? 6 : 1);
+        addTrust(r, f, f.kisilik === 'tembel' ? 2 : f.kisilik === 'medya' || f.kisilik === 'paragoz' ? 6 : 1);
         return L("Anlaşma tamam. Komisyonun hesabına geçti. Kamp biraz aksadı.");
       }
       if (k === 'sart') {
         if (chance(0.6)) {
           earn(r, f, r100(big * 0.85));
-          addTrust(f, 4);
+          addTrust(r, f, 4);
           return L("Kabul ettiler, ücret biraz düştü ama kamp bozulmadı.");
         }
         return L("“Takvimimiz esnek değil.” Teklifi geri çektiler.");
       }
-      addTrust(f, f.kisilik === 'paragoz' || f.kisilik === 'medya' ? -6 : 3);
+      addTrust(r, f, f.kisilik === 'paragoz' || f.kisilik === 'medya' ? -6 : 3);
       return f.kisilik === 'paragoz' ? L("“O para bizimdi!” Hiç memnun değil.") : L("Dövüşçün odaklanmaya değer verdiğin için memnun.");
     },
   },
@@ -1108,19 +1160,19 @@ export const EVENTS: Record<string, EventDef> = {
       if (!f) return '';
       const org = (m.veri?.org as OrgId) ?? 'amator';
       if (k === 'sil') {
-        addTrust(f, f.kisilik === 'medya' ? -8 : -2);
+        addTrust(r, f, f.kisilik === 'medya' ? -8 : -2);
         bumpOrg(r, org, 3);
         return L("Video silindi. Patron memnun, dövüşçün susturulduğunu düşünüyor.");
       }
       if (k === 'arka') {
-        addTrust(f, 8);
+        addTrust(r, f, 8);
         bumpOrg(r, org, -8);
         f.sira = Math.max(1, f.sira - 1);
         return L("Gündem oldu! Taraftarlar onu seviyor, sıralamada bir basamak yükseldi. Patron ise seni artık sevmiyor.");
       }
       if (chance(0.5 + r.itibar / 200)) {
         bumpOrg(r, org, 2);
-        addTrust(f, 2);
+        addTrust(r, f, 2);
         return L("Patronla güldünüz: “Şov iyidir, ama ölçüyü kaçırmasın.” Kriz çözüldü.");
       }
       bumpOrg(r, org, -3);
@@ -1178,6 +1230,7 @@ export const EVENTS: Record<string, EventDef> = {
     },
     resolve: (r, m, k) => {
       if (k !== 'git') return L("Belki bir dahaki sefere.");
+      tz(r, 'mimar', 2);
       r.para -= 800;
       const f = makeFighter({ tier: 'amator', guc: randInt(42, 50), pot: chance(0.6) ? randInt(82, 94) : randInt(60, 72), yas: randInt(18, 21), hafta: r.hafta });
       r.adaylar.unshift({ ...f, imza: 500, tahmin: clamp(f.pot + randInt(-6, 6), 40, 98) });
@@ -1203,13 +1256,13 @@ export const EVENTS: Record<string, EventDef> = {
     resolve: (r, m, k, f) => {
       if (!f) return '';
       if (k === 'devam') {
-        addTrust(f, f.kisilik === 'hirsli' ? 6 : -4);
+        addTrust(r, f, f.kisilik === 'hirsli' ? 6 : -4);
         f.riskli = f.hasar >= 70;
         return L("“Tamam. Bir sezon daha.”");
       }
       if (k === 'veda') {
         offerFight(r, f, 'kolay');
-        addTrust(f, 10);
+        addTrust(r, f, 10);
         r.itibar = clamp(r.itibar + 2, 0, 100);
         return L("Veda maçı teklifi masada. Herkes onu son kez görmek isteyecek.");
       }
@@ -1275,9 +1328,10 @@ function resolveConflict(r: MgrRun, m: Mesaj, k: string): string {
     b.mac = { hafta: h, org, ucret, bonus: r100(ucret * 0.4), unvan, ic: a.id, rakip: { ad: fullName(a), ulke: a.ulke, stil: a.stil, guc: a.guc, rekor: rekorOf(a) } };
   };
   if (k === 'kabul') {
+    tz(r, 'kopek', 3);
     book();
-    addTrust(a, a.kisilik === 'hirsli' ? 2 : -8);
-    addTrust(b, b.kisilik === 'hirsli' ? 2 : -8);
+    addTrust(r, a, a.kisilik === 'hirsli' ? 2 : -8);
+    addTrust(r, b, b.kisilik === 'hirsli' ? 2 : -8);
     bumpOrg(r, org, 6);
     return L("Maç {0}. haftada. Salonda ikisi artık birbirine selam vermiyor.", [r.hafta + 3]);
   }
@@ -1290,12 +1344,13 @@ function resolveConflict(r: MgrRun, m: Mesaj, k: string): string {
       return L("İkisi de “Varım” dedi. Kararı onlar verdi; güvenleri sağlam. Maç {0}. haftada.", [r.hafta + 3]);
     }
     const hayir = evetA ? b : a;
-    addTrust(hayir, 6);
+    addTrust(r, hayir, 6);
     bumpOrg(r, org, -6);
     return L("{0} “Arkadaşımla dövüşmem” dedi. Maç olmadı; organizasyon bozuldu ama dövüşçülerin sana daha çok güveniyor.", [fullName(hayir)]);
   }
-  addTrust(a, 6);
-  addTrust(b, 6);
+  tz(r, 'baba', 3);
+  addTrust(r, a, 6);
+  addTrust(r, b, 6);
   bumpOrg(r, org, -12);
   return L("Reddettin. {0} öfkeli: “Bunu unutmayacağız.” Dövüşçülerin ise seninle gurur duyuyor.", [orgName(org)]);
 }
@@ -1329,7 +1384,8 @@ function weeklyEvents(r: MgrRun) {
 }
 
 function rivalsTick(r: MgrRun) {
-  for (const a of r.rakipler) a.puan += randInt(1, 6);
+  // Rakipler güçlü bir ajansa karşı daha agresif büyür
+  for (const a of r.rakipler) a.puan += Math.round(randInt(1, 6) * (1 + r.itibar / 120));
 }
 
 export function agencyScore(r: MgrRun) {
@@ -1375,6 +1431,9 @@ function checkGoal(r: MgrRun, rapor: string[]) {
 
 export function advanceWeek(r: MgrRun) {
   if (!canAdvance(r)) return;
+  ensureMgr(r);
+  // Meydan okuma: her hafta herkes için aynı zar (sonuç yine de kararlara bağlı)
+  if (r.meydan) setSeed(hashStr(`mnj-${r.meydan.kod}-${r.hafta}`));
   const rapor: string[] = [];
   // Maçlar (bu haftaya ayarlı olanlar); iç eşleşmede tek sonuç
   const done = new Set<string>();
@@ -1413,14 +1472,14 @@ export function advanceWeek(r: MgrRun) {
     }
     f.hasar = clamp(f.hasar - (f.sakat > 0 ? 3 : 1), 0, 100);
     // Gelişim: genç ve potansiyelin altındaysa yavaşça büyür
-    const gelisP = (f.kisilik === 'tembel' ? 0.06 : 0.11) * (f.yas <= 26 ? 1 : f.yas <= 31 ? 0.6 : 0.2);
+    const gelisP = (f.kisilik === 'tembel' ? 0.06 : 0.11) * (f.yas <= 26 ? 1 : f.yas <= 31 ? 0.6 : 0.2) * (tarzOf(r) === 'mimar' ? 1.35 : 1);
     if (f.guc < f.pot && chance(gelisP)) f.guc++;
     if (f.yas >= 33 && chance(0.04)) f.guc = Math.max(30, f.guc - 1);
     // Söz tutulmadı
     if (f.soz && r.hafta > f.soz) {
       f.soz = undefined;
       if (!f.mac) {
-        addTrust(f, -12);
+        addTrust(r, f, -12);
         msg(r, { rol: 'dovuscu', kim: fullName(f), fid: f.id, metin: pick([L("Söz vermiştin. Maç yok. Senin sözüne bir daha nasıl güveneyim?"), L("3 hafta dedin. Takvime baktım, hiçbir şey yok.")]) });
       }
     }
@@ -1434,14 +1493,26 @@ export function advanceWeek(r: MgrRun) {
     rapor.push(L("🏦 Banka ajansın hesaplarını dondurdu. Ajans kapandı."));
   }
   rivalsTick(r);
-  checkGoal(r, rapor);
+  marketTick(r, rapor);
+  arcTick(r, rapor);
+  if (!r.meydan) checkGoal(r, rapor);
   if (r.hafta % 52 === 0) yearEnd(r, rapor);
   r.hafta++;
+  if (r.meydan && r.hafta > r.meydan.bitis) {
+    r.meydan.skor = meydanSkor(r);
+    r.emekli = true;
+    rapor.push(L("🏁 Meydan okuma bitti! Skorun: {0}", [r.meydan.skor]));
+    r.rapor = rapor;
+    setSeed(Date.now() >>> 0);
+    return;
+  }
   refreshCandidates(r);
   weeklyOffers(r);
   conflictCheck(r);
+  fightWeekMessages(r);
   weeklyEvents(r);
   r.rapor = rapor;
+  if (r.meydan) setSeed(Date.now() >>> 0);
 }
 
 /** İç eşleşme: sonucu önceden belirlenmiş maçı normal akışla işler (kazanan gerçekten kazanır). */
@@ -1455,3 +1526,415 @@ export function retireMgr(r: MgrRun) {
 }
 
 export type MgrHall = { ad: string; ajans: string; hafta: number; sampiyonluk: number; gelir: number; oduller: number; tarih: number };
+
+// =====================================================================================================
+// 2. aşama: menajer tarzı, yaşayan pazar, dövüş haftası, süper dövüş + PPV, hikâye yayları, meydan okuma
+// =====================================================================================================
+
+// ---------- Eski kayıtlar ----------
+
+const UN0: Record<MTier, number> = { amator: 4, bolgesel: 14, buyuk: 30, ucc: 48 };
+export function ensureMgr(r: MgrRun): MgrRun {
+  r.tarz ??= { kopek: 0, baba: 0, mimar: 0 };
+  r.pazar ??= {};
+  for (const f of r.kadro) f.un ??= UN0[f.tier] + (f.sampiyon ? 20 : 0);
+  for (const a of r.adaylar) a.un ??= UN0[a.tier];
+  return r;
+}
+
+// ---------- Menajer tarzı ----------
+
+export type TarzKey = 'kopek' | 'baba' | 'mimar';
+export const TARZ: Record<TarzKey, { ad: () => string; aciklama: () => string; ikon: string }> = {
+  kopek: { ad: () => L("Köpekbalığı"), aciklama: () => L("Masada en sert sensin: organizasyonlar sana daha çok öder. Ama dövüşçülerin sana kolay ısınmaz."), ikon: 'shark-fin' },
+  baba: { ad: () => L("Baba"), aciklama: () => L("Dövüşçülerin aileden biri: kötü kararlarını daha kolay affeder, rakip ajanslara kulak asmazlar."), ikon: 'account-heart' },
+  mimar: { ad: () => L("Mimar"), aciklama: () => L("Ham yeteneği şekillendirirsin: gençler senin elinde daha hızlı gelişir, gözün daha keskindir."), ikon: 'chess-knight' },
+};
+export const TARZ_ESIK = 12;
+export function tarzOf(r: MgrRun): TarzKey | null {
+  const t = r.tarz ?? { kopek: 0, baba: 0, mimar: 0 };
+  const sorted = (Object.entries(t) as [TarzKey, number][]).sort((a, b) => b[1] - a[1]);
+  const [k, v] = sorted[0];
+  return v >= TARZ_ESIK && v >= sorted[1][1] + 3 ? k : null;
+}
+function tz(r: MgrRun, k: TarzKey, n: number) {
+  r.tarz ??= { kopek: 0, baba: 0, mimar: 0 };
+  r.tarz[k] += n;
+}
+
+// ---------- Yaşayan pazar ----------
+
+export const carpanOf = (r: MgrRun, o: OrgId) => {
+  const p = r.pazar?.[o];
+  return p && p.bitis >= r.hafta && !p.kapali ? p.carpan : 1;
+};
+export const kapali = (r: MgrRun, o: OrgId) => {
+  const p = r.pazar?.[o];
+  return !!p && !!p.kapali && p.bitis >= r.hafta;
+};
+const YATIRIMCI = [() => L("Körfez sermayeli bir fon"), () => L("Bir teknoloji milyarderi"), () => L("Bir yayın devi"), () => L("Bir enerji şirketi")];
+
+function marketTick(r: MgrRun, rapor: string[]) {
+  r.pazar ??= {};
+  for (const [o, p] of Object.entries(r.pazar) as [OrgId, { bitis: number; kapali?: boolean }][]) {
+    if (p.bitis < r.hafta) {
+      delete r.pazar[o];
+      if (p.kapali) msg(r, { rol: 'basin', kim: L("MMA Gündem"), metin: L("{0} yeni sahipleriyle geri dönüyor! Kadro kurmak için menajerleri arıyorlar.", [orgName(o)]) });
+    }
+  }
+  if (!chance(0.025)) return;
+  const adaylar = (['cfc', 'oktagon', 'pfl', 'one', 'mvp'] as OrgId[]).filter((o) => !r.pazar[o]);
+  if (!adaylar.length) return;
+  const o = pick(adaylar);
+  const kind = weighted<'batis' | 'zengin' | 'tv'>([
+    ['batis', 1],
+    ['zengin', 1.2],
+    ['tv', 1.5],
+  ]);
+  if (kind === 'batis') {
+    r.pazar[o] = { carpan: 0, bitis: r.hafta + 26, kapali: true };
+    r.teklifler = r.teklifler.filter((t) => t.org !== o);
+    const etk: string[] = [];
+    for (const f of r.kadro) {
+      if (f.mac?.org === o) f.mac = undefined;
+      if (f.sozlesme?.org === o) {
+        f.sozlesme = undefined;
+        etk.push(fullName(f));
+      }
+    }
+    msg(r, { rol: 'basin', kim: L("MMA Gündem"), metin: L("SON DAKİKA: {0} iflas etti! Bütün sözleşmeler feshedildi, etkinlikler iptal.", [orgName(o)]) + (etk.length ? ' ' + L("Senin dövüşçülerin artık serbest: {0}.", [etk.join(', ')]) : '') });
+    rapor.push(L("📉 {0} battı.", [orgName(o)]));
+  } else if (kind === 'zengin') {
+    const kim = pick(YATIRIMCI)();
+    r.pazar[o] = { carpan: 1.5, bitis: r.hafta + 30, ad: kim };
+    msg(r, { rol: 'basin', kim: L("MMA Gündem"), metin: L("{0}, {1}'i satın aldı! Ücretler %50 artıyor, yıldız transferi için çek defterleri açık.", [kim, orgName(o)]) });
+    rapor.push(L("💰 {0} zenginleşti: ücretler %50 yukarıda.", [orgName(o)]));
+    // Transfer savaşı: münhasır olmayan iyi dövüşçülere teklif
+    for (const f of r.kadro) if (tierOfOrg(o) === f.tier && f.sozlesme?.org !== o && !f.sozlesme?.maddeler.includes('munhasir') && f.sira <= 8 && chance(0.6)) offerContract(r, f, f.tier, o);
+  } else {
+    r.pazar[o] = { carpan: 1.2, bitis: r.hafta + 26 };
+    msg(r, { rol: 'basin', kim: L("MMA Gündem"), metin: L("{0} yeni bir yayın anlaşması imzaladı. Dövüşçü ücretleri %20 artıyor.", [orgName(o)]) });
+  }
+}
+
+// ---------- Dövüş haftası ----------
+
+const GRAPPLERS: Background[] = ['gures', 'bjj', 'judo', 'sambo'];
+const STIL_AD: Record<Background, () => string> = {
+  boks: () => L("boksör, elleri çok hızlı"),
+  muaythai: () => L("Muay Thai dövüşçüsü, dirsek ve dizleri tehlikeli"),
+  kickboks: () => L("kick boksör, uzun mesafeden tekmeler"),
+  gures: () => L("güreşçi, seni yere indirmek isteyecek"),
+  judo: () => L("judocu, clinch'te fırlatır"),
+  bjj: () => L("jiu-jitsucu, yerde boğaz kilidi arar"),
+  sambo: () => L("sambocu, bacak kilitlerinde usta"),
+  kyokushin: () => L("karateci, tek vuruşla bitirebilir"),
+  sokak: () => L("sokak dövüşçüsü, ne yapacağı belli olmaz"),
+};
+const bestCall = (f: MFighter, rk: Rakip) => (GRAPPLERS.includes(rk.stil) ? 'ayakta' : GRAPPLERS.includes(f.stil) ? 'yer' : 'baski');
+
+function fightWeekMessages(r: MgrRun) {
+  for (const f of r.kadro) {
+    const mc = f.mac;
+    if (!mc || mc.hafta !== r.hafta || mc.ic) continue;
+    const buyuk = !!mc.unvan || !!mc.super || f.tier === 'buyuk' || f.tier === 'ucc';
+    if (buyuk && chance(0.75))
+      msg(r, {
+        rol: 'basin',
+        kim: L("{0} basın toplantısı", [orgName(mc.org)]),
+        fid: f.id,
+        tip: 'basin_toplanti',
+        metin: pick([
+          L("Kameralar açık, salon dolu. {0} mikrofonu aldı, gözü {1} üzerinde. Ne konuşsun?", [fullName(f), mc.rakip.ad]),
+          L("Bir muhabir soruyor: “{0} senin için sadece bir basamak mı?” {1} sana bakıyor.", [mc.rakip.ad, f.ad]),
+        ]),
+        secenekler: [
+          { ad: L("Sert konuş. Herkes bu maçı konuşsun."), k: 'sert' },
+          { ad: L("Saygılı ol, profesyonel görün."), k: 'saygi' },
+          { ad: L("Az konuş. Cevabı kafeste verecek."), k: 'sessiz' },
+        ],
+      });
+    if (chance(buyuk ? 0.45 : 0.2))
+      msg(r, {
+        rol: 'org',
+        kim: L("Tartı salonu"),
+        fid: f.id,
+        tip: 'yuzyuze',
+        metin: pick([L("Yüz yüze gelirken {0} ile {1} burun buruna geldi, biri ittirdi! Güvenlik bekliyor.", [f.ad, mc.rakip.ad]), L("{0}, {1} hakkında ağır bir laf etti. {1} kudurdu, sahneye doğru yürüyor.", [mc.rakip.ad, f.ad])]),
+        secenekler: [
+          { ad: L("Araya gir, ayır."), k: 'ayir' },
+          { ad: L("Bırak, şov olsun."), k: 'birak' },
+          { ad: L("Dövüşçünü kenara çek, sakinleştir."), k: 'sakin' },
+        ],
+      });
+    msg(r, {
+      rol: 'dovuscu',
+      kim: L("{0} · maç gecesi", [f.ad]),
+      fid: f.id,
+      tip: 'kose_notu',
+      metin: L("Soyunma odasındayız. Rakip {0}: {1}. Raunt arasında köşeye tek bir not iletebilirsin. Ne diyelim?", [mc.rakip.ad, STIL_AD[mc.rakip.stil]()]),
+      secenekler: [
+        { ad: L("Ayakta kal, mesafeyi koru."), k: 'ayakta' },
+        { ad: L("Onu yere indir."), k: 'yer' },
+        { ad: L("Baskı kur, nefesini kes."), k: 'baski' },
+      ],
+    });
+  }
+}
+
+EVENTS.basin_toplanti = {
+  make: () => null,
+  resolve: (r, m, k, f) => {
+    if (!f?.mac) return '';
+    const mc = f.mac;
+    if (k === 'sert') {
+      mc.hype = (mc.hype ?? 0) + 25;
+      mc.kose = (mc.kose ?? 0) - 0.15;
+      if (f.kisilik === 'medya') addTrust(r, f, 5);
+      tz(r, 'kopek', 1);
+      return pick([L("Salon karıştı, klip milyonlarca izlendi. Bilet satışları uçtu, ama rakip artık çok hırslı."), L("Manşetlerdesiniz. Rakip kampı “onu susturacağız” dedi.")]);
+    }
+    if (k === 'saygi') {
+      mc.hype = (mc.hype ?? 0) + 8;
+      bumpOrg(r, mc.org, 2);
+      return L("Patron memnun: “Böyle dövüşçüleri severiz.”");
+    }
+    mc.kose = (mc.kose ?? 0) + 0.12;
+    if (f.kisilik === 'medya') addTrust(r, f, -3);
+    return L("Kısa cevaplar, soğuk bakışlar. Dövüşçün tamamen maça odaklı.");
+  },
+};
+EVENTS.yuzyuze = {
+  make: () => null,
+  resolve: (r, m, k, f) => {
+    if (!f?.mac) return '';
+    const mc = f.mac;
+    if (k === 'ayir') return L("Araya girdin, kriz büyümedi. Fotoğraflar yine de olay oldu.");
+    if (k === 'birak') {
+      mc.hype = (mc.hype ?? 0) + 18;
+      if (chance(0.3)) {
+        const ceza = r100(mc.ucret * 0.1);
+        mc.ucret -= ceza;
+        bumpOrg(r, mc.org, -2);
+        return L("Şov oldu, ama komisyon {0} para cezası kesti.", [$(ceza)]);
+      }
+      return L("Görüntüler her yerde. Herkes cumartesiyi bekliyor.");
+    }
+    mc.kose = (mc.kose ?? 0) + 0.1;
+    mc.hype = Math.max(0, (mc.hype ?? 0) - 5);
+    if (f.kisilik === 'medya' || f.kisilik === 'hirsli') addTrust(r, f, -3);
+    return L("Omzundan tutup kenara çektin. Gözleri hâlâ yanıyor, ama artık kontrol sende.");
+  },
+};
+EVENTS.kose_notu = {
+  make: () => null,
+  resolve: (r, m, k, f) => {
+    if (!f?.mac) return '';
+    const mc = f.mac;
+    if (k === bestCall(f, mc.rakip)) {
+      mc.kose = (mc.kose ?? 0) + 0.5;
+      return pick([L("Köşe başını salladı: “Tam düşündüğümüz şey.”"), L("Antrenör notu okuyup gülümsedi. Plan net.")]);
+    }
+    if (k === 'yer' && GRAPPLERS.includes(mc.rakip.stil)) {
+      mc.kose = (mc.kose ?? 0) - 0.3;
+      return L("Antrenör kaşlarını çattı: “Onunla yerde mi? Emin misin?”");
+    }
+    return L("Köşe notu aldı. Fena bir plan değil, ama en iyisi de değil.");
+  },
+};
+
+// ---------- Süper dövüş ----------
+
+const SUPER_YILDIZ = [() => L("eski boks dünya şampiyonu"), () => L("bir üst sikletin şampiyonu"), () => L("sosyal medyanın en ünlü dövüşçüsü"), () => L("emeklilikten dönen efsane")];
+
+function superOffer(r: MgrRun, f: MFighter) {
+  if (f.mac || f.sakat || f.sozlesme?.maddeler.includes('munhasir') || r.teklifler.some((t) => t.fid === f.id && t.super)) return;
+  const org: OrgId = f.tier === 'ucc' ? 'ufc' : (f.sozlesme?.org ?? 'mvp');
+  if (kapali(r, org)) return;
+  const n = makeName();
+  const rakip: Rakip = { ad: `${n.ad} ${n.soyad}`, ulke: n.ulke, stil: chance(0.4) ? 'boks' : weighted(STYLES), guc: clamp(f.guc + randInt(-4, 6), 50, 95), rekor: `${randInt(18, 30)}-${randInt(1, 5)}-0` };
+  const kim = pick(SUPER_YILDIZ)();
+  r.teklifler.push({ id: uid(), fid: f.id, tip: 'mac', org, ucret: r100(payFor(f) * 2.2 * carpanOf(r, org)), bonus: r100(payFor(f) * 0.8 * carpanOf(r, org)), rakip, super: true, son: r.hafta + 3 });
+  msg(r, { rol: 'org', kim: L("{0} patronu", [orgName(org)]), fid: f.id, metin: L("Büyük oynayalım: {0} karşısında {1} ({2}). Sabit ücret mi, yoksa PPV satışlarından pay mı? Teklifler sekmesinde.", [fullName(f), rakip.ad, kim]) });
+}
+
+export const PPV_FIYAT = 70;
+export const PPV_PAY = 0.25;
+/** PPV satışı: şöhret ve ilgiyle, geniş bir belirsizlikle */
+export function ppvSales(f: MFighter, hype: number) {
+  return Math.round((f.un * 300 + hype * 220) * (0.4 + rand() * 1.2));
+}
+/** PPV payının beklenen geliri (gösterim için) */
+export const ppvEstimate = (f: MFighter) => r100((f.un * 300 + 20 * 220) * PPV_FIYAT * PPV_PAY);
+
+/** Sosyal medyada meydan okut: şöhret ve maç ilgisi artar, süper dövüş şansı doğar. 4 haftada bir. */
+export function provoke(r: MgrRun, id: string): string {
+  const f = r.kadro.find((x) => x.id === id);
+  if (!f || (f.kiskirt && r.hafta - f.kiskirt < 4)) return '';
+  f.kiskirt = r.hafta;
+  f.un = clamp(f.un + randInt(4, 9), 0, 100);
+  if (f.mac) f.mac.hype = (f.mac.hype ?? 0) + 10;
+  tz(r, 'kopek', 1);
+  if (f.kisilik === 'medya') addTrust(r, f, 4);
+  else if (f.kisilik === 'sadik') addTrust(r, f, -2);
+  if (f.sozlesme && chance(0.25)) bumpOrg(r, f.sozlesme.org, -2);
+  if ((f.tier === 'buyuk' || f.tier === 'ucc') && f.un >= 45 && chance(0.25 + f.un / 300)) {
+    superOffer(r, f);
+    return L("Paylaşım patladı! Telefonun çalıyor: süper dövüş teklifi geldi.");
+  }
+  return pick([L("Paylaşım gündem oldu. Şöhreti arttı."), L("Video yayıldı, yorumlar ikiye bölündü. Ama herkes onu konuşuyor.")]);
+}
+
+// ---------- Hikâye yayları ----------
+
+export type ArcKey = 'son_sans' | 'baba' | 'dahi';
+export const ARC: Record<ArcKey, { ad: () => string }> = {
+  son_sans: { ad: () => L("Son şans") },
+  baba: { ad: () => L("Kızı için kemer") },
+  dahi: { ad: () => L("Sokaktan gelen dâhi") },
+};
+
+function assignArc(r: MgrRun, f: MFighter, force?: ArcKey) {
+  if (f.hikaye) return;
+  const k: ArcKey | null = force ?? (f.yas >= 30 && chance(0.5) ? 'son_sans' : f.yas <= 22 && f.pot >= 80 && chance(0.5) ? 'dahi' : f.yas >= 24 && !f.kadin && chance(0.25) ? 'baba' : null);
+  if (!k) return;
+  if (k === 'son_sans') {
+    f.hikaye = { tip: k, adim: 0, bitis: r.hafta + 104 };
+    msg(r, { rol: 'dovuscu', kim: fullName(f), fid: f.id, metin: L("Sana açık konuşayım: {0} yaşındayım. İki yıl içinde kemer yoksa eldivenleri asacağım. Bu benim son şansım.", [f.yas]) });
+  } else if (k === 'baba') {
+    f.hikaye = { tip: k, adim: 0, bitis: r.hafta + 60 };
+    msg(r, { rol: 'dovuscu', kim: fullName(f), fid: f.id, metin: L("Kızım her gece soruyor: “Baba, kemer ne zaman?” Ona söz verdim. Bir yıl içinde bir kemer getireceğim, hangi ligde olursa olsun.") });
+  } else f.hikaye = { tip: k, adim: 0, bitis: r.hafta + 120 };
+}
+
+function arcTick(r: MgrRun, rapor: string[]) {
+  for (const f of [...r.kadro]) {
+    const h = f.hikaye;
+    if (!h || h.adim < 0) continue;
+    if (h.tip === 'son_sans' || h.tip === 'baba') {
+      if (h.adim === 0 && f.seri >= 2) {
+        h.adim = 1;
+        msg(r, { rol: 'dovuscu', kim: fullName(f), fid: f.id, metin: h.tip === 'son_sans' ? L("Herkes beni bitti sanıyordu. Yaşlı kurt hâlâ ısırıyor, değil mi?") : L("Kızım son maçımı okulda arkadaşlarına izletmiş. Öğretmeni aradı, gülmekten öldük.") });
+      }
+      if (f.sampiyon) {
+        h.adim = -1;
+        addTrust(r, f, 30);
+        r.itibar = clamp(r.itibar + 5, 0, 100);
+        msg(r, { rol: 'dovuscu', kim: fullName(f), fid: f.id, metin: h.tip === 'son_sans' ? L("Yaptık. Kimse inanmazken sen inandın. Bu kemer ikimizin, ortak.") : L("Kemeri kızımın beline taktım. Ona bol geldi, ama gözleri… Bunu sana borçluyum.") });
+        rapor.push(L("📖 Hikâye tamamlandı: {0} ({1}) · itibar +5", [fullName(f), ARC[h.tip].ad()]));
+        r.gecmis.unshift(L("Hafta {0}: 📖 {1}: “{2}” hikâyesi mutlu sonla bitti.", [r.hafta, fullName(f), ARC[h.tip].ad()]));
+      } else if (r.hafta > h.bitis) {
+        h.adim = -1;
+        if (h.tip === 'son_sans') {
+          msg(r, { rol: 'dovuscu', kim: fullName(f), fid: f.id, metin: L("Söz sözdür. Eldivenleri asıyorum. Kemer olmadı, ama yanımda sen vardın. Teşekkürler.") });
+          retireFighter(r, f);
+          rapor.push(L("📖 {0} kemersiz veda etti.", [fullName(f)]));
+        } else {
+          addTrust(r, f, -10);
+          msg(r, { rol: 'dovuscu', kim: fullName(f), fid: f.id, metin: L("Bir yıl geçti. Kızım artık sormuyor. Bu daha kötü.") });
+        }
+      }
+    } else {
+      if (h.adim === 0 && r.hafta - f.katilis >= 6 && chance(0.2)) {
+        h.adim = 1;
+        msg(r, {
+          rol: 'ag',
+          kim: L("{0} için antrenörü", [f.ad]),
+          fid: f.id,
+          tip: 'dahi_ev',
+          metin: L("{0} yine antrenmana gelmedi. Mahalledeki eski arkadaşlarıyla takılıyor, evde kavga bitmiyor. Bu çocuk kaybolacak.", [f.ad]),
+          secenekler: [
+            { ad: L("Salonun yanına oda tut, oraya taşınsın ({0}).", [$(3_000)]), k: 'oda' },
+            { ad: L("Oturup ailesiyle konuşacağım."), k: 'aile' },
+            { ad: L("Bu onun özel hayatı, karışmam."), k: 'karisma' },
+          ],
+        });
+      }
+      if (h.adim === 1 && (f.tier === 'buyuk' || f.tier === 'ucc')) {
+        h.adim = -1;
+        r.itibar = clamp(r.itibar + 4, 0, 100);
+        addTrust(r, f, 15);
+        msg(r, { rol: 'dovuscu', kim: fullName(f), fid: f.id, metin: L("Sen olmasan o sokaklarda kaybolup giderdim. Şimdi büyük ligdeyim. Annem ilk kez maçımı izleyecek.") });
+        rapor.push(L("📖 {0} sokaktan büyük lige uzandı · itibar +4", [fullName(f)]));
+      }
+    }
+  }
+}
+
+EVENTS.dahi_ev = {
+  make: () => null,
+  resolve: (r, m, k, f) => {
+    if (!f) return '';
+    if (k === 'oda') {
+      r.para -= 3_000;
+      f.guc = clamp(f.guc + 2, 30, Math.max(f.guc, f.pot));
+      addTrust(r, f, 12);
+      tz(r, 'mimar', 2);
+      tz(r, 'baba', 1);
+      return L("Yeni odasına taşındı. İlk hafta her sabah ilk o geldi. (Güç +2)");
+    }
+    if (k === 'aile') {
+      if (chance(0.6)) {
+        addTrust(r, f, 8);
+        tz(r, 'baba', 2);
+        return L("Annesi ağladı, babası elini sıktı. Ev sakinleşti, çocuk salona döndü.");
+      }
+      addTrust(r, f, -2);
+      return L("Babası kapıyı yüzüne kapattı. Çocuk arada kaldı.");
+    }
+    if (chance(0.45)) {
+      f.guc = Math.max(30, f.guc - 3);
+      f.pot = Math.max(f.guc, f.pot - 4);
+      if (f.hikaye) f.hikaye.adim = -1;
+      return L("İki hafta sonra bir gece kavgasından karakola düştü. Eskisi gibi değil artık.");
+    }
+    return L("Bir süre kayboldu, sonra kendiliğinden döndü. Şanslısın.");
+  },
+};
+
+// ---------- Haftalık meydan okuma ----------
+
+export const MEYDAN_HAFTA = 26;
+function hashStr(s: string) {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619);
+  return h >>> 0;
+}
+/** Bu takvim haftasının kodu (ISO hafta; herkes için aynı) */
+export function meydanKodu(now = Date.now()) {
+  const d = new Date(now);
+  const t = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+  const day = (new Date(t).getUTCDay() + 6) % 7;
+  const thu = t - day * 864e5 + 3 * 864e5;
+  const y = new Date(thu).getUTCFullYear();
+  const w = Math.floor((thu - Date.UTC(y, 0, 1)) / (7 * 864e5)) + 1;
+  return `${y}-${String(w).padStart(2, '0')}`;
+}
+export const meydanSenaryo = (kod: string): Senaryo => (['sifir', 'yurtdisi', 'batik', 'yildiz'] as Senaryo[])[hashStr(kod) % 4];
+
+export function createMeydan(ad: string, soyad: string, ajans: string): MgrRun {
+  const kod = meydanKodu();
+  setSeed(hashStr(`mnj-${kod}`));
+  const r = createMgrRun(ad, soyad, ajans, meydanSenaryo(kod), false);
+  r.meydan = { kod, bitis: MEYDAN_HAFTA };
+  r.hedef = undefined;
+  setSeed(Date.now() >>> 0);
+  return r;
+}
+
+export function meydanSkor(r: MgrRun) {
+  return Math.max(0, Math.round(agencyScore(r) + r.para / 500 + r.gelir / 1000));
+}
+const check = (kod: string, s: number) => (hashStr(`${kod}:${s}:yol`) % 1296).toString(36).toUpperCase().padStart(2, '0');
+/** Paylaşım kodu: YOL-MNJ-<hafta>-<skor>-<kontrol> */
+export function meydanPaylas(r: MgrRun) {
+  const s = r.meydan?.skor ?? meydanSkor(r);
+  const kod = r.meydan?.kod ?? meydanKodu();
+  return `YOL-MNJ-${kod}-${s}-${check(kod, s)}`;
+}
+/** Arkadaşının kodunu doğrular */
+export function readMeydan(code: string): { kod: string; skor: number } | null {
+  const m = code.trim().toUpperCase().match(/^YOL-MNJ-(\d{4}-\d{2})-(\d+)-([0-9A-Z]{2})$/);
+  if (!m) return null;
+  return check(m[1], Number(m[2])) === m[3] ? { kod: m[1], skor: Number(m[2]) } : null;
+}

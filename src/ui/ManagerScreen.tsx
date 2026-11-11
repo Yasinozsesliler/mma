@@ -1,7 +1,7 @@
 // Menajer Modu ekranı: telefon (mesajlar ve kararlar), kadro, teklifler + yetenek avı, ajans.
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, Share, StyleSheet, Text, TextInput, View } from 'react-native';
 import { track } from '../analytics';
 import { sfx } from '../audio';
 import {
@@ -9,6 +9,21 @@ import {
   advanceWeek,
   agencyRanking,
   answer,
+  ARC,
+  createMeydan,
+  kapali,
+  MEYDAN_HAFTA,
+  meydanKodu,
+  meydanPaylas,
+  meydanSenaryo,
+  meydanSkor,
+  ppvEstimate,
+  provoke,
+  readMeydan,
+  TARZ,
+  TARZ_ESIK,
+  tarzOf,
+  type TarzKey,
   bekleyen,
   canAdvance,
   createMgrRun,
@@ -49,7 +64,7 @@ import { WEIGHT_CLASSES } from '../engine/data';
 import { L, LOC } from '../i18n';
 import { buy, PURCHASES, restorePurchases, useOwned, usePrice } from '../monetization';
 import { MGR_SKU, ULTIMATE_SKU } from '../monetization/skus';
-import { actMgr, closeAgency, setMgrRun, useMgrHall, useMgrRun } from '../managerStore';
+import { actMgr, closeAgency, meydanBest, peekRun, saveMeydanBest, setMgrRun, setMgrSlot, useMgrHall, useMgrRun, useMgrSlot } from '../managerStore';
 import { Bar, Button, CageBg, Card, Choice, Icon, Screen, SLANT, type IconName } from './components';
 import { FighterAvatar } from './FighterAvatar';
 import { HubNav, type NavItem } from './HubNav';
@@ -100,13 +115,21 @@ function MgrPack({ lead }: { lead?: string }) {
 
 export function ManagerScreen({ onExit }: { onExit: () => void }) {
   const r = useMgrRun();
+  const slot = useMgrSlot();
   const unlocked = useMgrUnlocked();
+  const exit = () => {
+    setMgrSlot('kariyer');
+    onExit();
+  };
   useEffect(() => {
     if (r?.deneme && unlocked) actMgr((x) => (x.deneme = false));
   }, [r?.deneme, unlocked]);
-  if (!r) return <MgrStart unlocked={unlocked} onExit={onExit} />;
-  if (r.emekli) return <ClosedView r={r} onExit={onExit} />;
-  return <MgrHub r={r} onExit={onExit} />;
+  useEffect(() => {
+    if (!r && slot === 'meydan') setMgrSlot('kariyer');
+  }, [r, slot]);
+  if (!r) return <MgrStart unlocked={unlocked} onExit={exit} />;
+  if (r.emekli) return r.meydan ? <MeydanEnd r={r} /> : <ClosedView r={r} onExit={exit} />;
+  return <MgrHub r={r} onExit={exit} />;
 }
 
 // ---------- Başlangıç ----------
@@ -156,6 +179,7 @@ function MgrStart({ unlocked, onExit }: { unlocked: boolean; onExit: () => void 
           </View>
         ))}
       </View>
+      <MeydanCard ad={ad} soyad={soyad} ajans={ajans} />
       <Card>
         <Text style={ms.label}>{L("MENAJERİN ADI")}</Text>
         <View style={{ flexDirection: 'row', gap: 8 }}>
@@ -218,6 +242,7 @@ function MgrHero({ r, goPhone }: { r: MgrRun; goPhone: () => void }) {
       <Text style={[ms.name, SLANT]} numberOfLines={1} adjustsFontSizeToFit>
         {r.ajans.toLocaleUpperCase(LOC)}
       </Text>
+      {r.meydan ? <Text style={[ms.heroSub, { color: C.gold }]}>{L("MEYDAN OKUMA {0} · {1}/{2}. hafta · skor {3}", [r.meydan.kod, r.hafta, MEYDAN_HAFTA, meydanSkor(r)])}</Text> : null}
       <Text style={ms.heroSub}>{L("{0} · {1}. yıl, {2}. hafta", [`${r.ad} ${r.soyad}`.trim(), Math.floor((r.hafta - 1) / 52) + 1, ((r.hafta - 1) % 52) + 1])}</Text>
       <View style={ms.meters}>
         <Meter label={L("KASA")} value={$(r.para)} color={r.para < 0 ? C.red : C.green} />
@@ -353,14 +378,16 @@ function SquadTab({ r }: { r: MgrRun }) {
     <>
       <Text style={ms.section}>{L("DÖVÜŞÇÜLERİN")}</Text>
       {r.kadro.map((f) => (
-        <FighterCard key={f.id} f={f} open={open === f.id} onToggle={() => setOpen(open === f.id ? null : f.id)} />
+        <FighterCard key={f.id} f={f} hafta={r.hafta} open={open === f.id} onToggle={() => setOpen(open === f.id ? null : f.id)} />
       ))}
     </>
   );
 }
 
-function FighterCard({ f, open, onToggle }: { f: MFighter; open: boolean; onToggle: () => void }) {
+function FighterCard({ f, open, onToggle, hafta }: { f: MFighter; open: boolean; onToggle: () => void; hafta: number }) {
   const [sure, setSure] = useState(false);
+  const [note, setNote] = useState('');
+  const cool = f.kiskirt ? 4 - (hafta - f.kiskirt) : 0;
   const tc = TIER_COLOR[f.tier];
   return (
     <Pressable onPress={onToggle} style={[ms.fighter, f.sampiyon && { borderColor: C.gold }]}>
@@ -386,7 +413,9 @@ function FighterCard({ f, open, onToggle }: { f: MFighter; open: boolean; onTogg
       <View style={{ marginTop: 6 }}>
         <Bar value={f.guven} color={f.guven < 30 ? C.red : f.guven < 55 ? C.orange : C.green} label={L("Sana güveni")} right={String(f.guven)} />
         <Bar value={f.hasar} color={f.hasar >= 60 ? C.red : C.dim} label={L("Birikmiş hasar")} right={String(f.hasar)} />
+        <Bar value={f.un ?? 0} color={C.gold} label={L("Şöhret")} right={String(f.un ?? 0)} />
       </View>
+      {f.hikaye && f.hikaye.adim >= 0 ? <Text style={[ms.next, { color: C.gold }]}>{L("📖 Hikâye: {0}", [ARC[f.hikaye.tip].ad()])}</Text> : null}
       {f.mac ? <Text style={ms.next}>{L("🗓️ {0}. hafta: {1} ({2}) · {3}", [f.mac.hafta, f.mac.rakip.ad, f.mac.rakip.rekor, orgName(f.mac.org)])}{f.mac.unvan ? L(" · ÜNVAN MAÇI") : ''}</Text> : null}
       {f.sakat ? <Text style={[ms.next, { color: C.orange }]}>{L("🩹 Sakat: {0} hafta", [f.sakat])}</Text> : null}
       {f.riskli ? <Text style={[ms.next, { color: C.red }]}>{L("⚠️ Doktor uyarısına rağmen dövüşüyor")}</Text> : null}
@@ -402,6 +431,10 @@ function FighterCard({ f, open, onToggle }: { f: MFighter; open: boolean; onTogg
               {f.sozlesme.maddeler.length ? `\n${L("Maddeler")}: ${f.sozlesme.maddeler.map((m) => MADDE[m].ad()).join(' · ')}` : ''}
             </Text>
           ) : null}
+          <View style={{ marginTop: 8 }}>
+            <Button label={cool > 0 ? L("Meydan okuma {0} hafta sonra", [cool]) : L("Sosyal medyada meydan okut")} icon="bullhorn" tone="ghost" disabled={cool > 0} onPress={() => setNote(actMgr((x) => provoke(x, f.id)) ?? '')} />
+            {note ? <Text style={[ms.small, { color: C.gold }]}>{note}</Text> : null}
+          </View>
           {sure ? (
             <View style={{ flexDirection: 'row', gap: 8, marginTop: 6 }}>
               <View style={{ flex: 1 }}>
@@ -462,11 +495,11 @@ function OfferCard({ r, t, f, setNote }: { r: MgrRun; t: Teklif; f: MFighter; se
   const zor = fark >= 5 ? L("Zor") : fark <= -5 ? L("Kolay") : L("Denk");
   const maddeler: Madde[] = ['rovans', 'cikis', 'sakatlik', 'munhasir'];
   return (
-    <View style={[ms.offer, t.unvan && { borderColor: C.gold }, t.tip === 'sozlesme' && { borderColor: C.blue }]}>
+    <View style={[ms.offer, (t.unvan || t.super) && { borderColor: C.gold }, t.tip === 'sozlesme' && { borderColor: C.blue }]}>
       <View style={ms.row}>
         <View style={{ flex: 1 }}>
           <Text style={ms.offerKind}>
-            {t.tip === 'sozlesme' ? L("SÖZLEŞME · {0} MAÇ", [t.macSayisi ?? 3]) : t.unvan ? L("ÜNVAN MAÇI") : L("MAÇ TEKLİFİ")} · {L("{0}. haftaya kadar", [t.son])}
+            {t.tip === 'sozlesme' ? L("SÖZLEŞME · {0} MAÇ", [t.macSayisi ?? 3]) : t.super ? L("⭐ SÜPER DÖVÜŞ") : t.unvan ? L("ÜNVAN MAÇI") : L("MAÇ TEKLİFİ")} · {L("{0}. haftaya kadar", [t.son])}
           </Text>
           <Text style={ms.offerOrg}>{orgName(t.org)}</Text>
           {t.rakip ? (
@@ -512,10 +545,16 @@ function OfferCard({ r, t, f, setNote }: { r: MgrRun; t: Teklif; f: MFighter; se
           </Pressable>
         </View>
       ) : null}
+      {t.super ? (
+        <View style={{ marginTop: 8, gap: 6 }}>
+          <Text style={ms.small}>{L("PPV payı: garanti {0} + satışlardan %25. Tahmini {1}, ama satış düşük de olabilir, çok yüksek de.", [$(t.ucret * 0.25), $(ppvEstimate(f))])}</Text>
+          <Button label={L("PPV payını al")} tone="gold" icon="television-play" onPress={() => actMgr((x) => setNote(acceptOffer(x, t.id, 'ppv')))} />
+        </View>
+      ) : null}
       <View style={[ms.row, { marginTop: 8, gap: 6 }]}>
         <View style={{ flex: 1 }}>
           <Button
-            label={t.tip === 'sozlesme' ? L("İmzala") : L("Kabul")}
+            label={t.tip === 'sozlesme' ? L("İmzala") : t.super ? L("Sabit ücret") : L("Kabul")}
             tone="gold"
             onPress={() => {
               sfx('chime');
@@ -596,6 +635,8 @@ function AgencyTab({ r, onExit }: { r: MgrRun; onExit: () => void }) {
           <Text style={ms.small}>{r.hedef.tamam ? L("✅ Tamamlandı") : r.hedef.basarisiz ? L("❌ Süre doldu") : L("Son hafta: {0}", [r.hedef.bitis])}</Text>
         </Card>
       ) : null}
+      <StyleCard r={r} />
+      <MarketCard r={r} />
       <Card>
         <Text style={ms.kicker}>{L("OFİS")}</Text>
         <Text style={ms.text}>{L("{0} · {1} dövüşçü kapasitesi · haftalık kira {2}", [ofisOf(r).ad(), ofisOf(r).kapasite, $(ofisOf(r).kira)])}</Text>
@@ -652,6 +693,7 @@ function AgencyTab({ r, onExit }: { r: MgrRun; onExit: () => void }) {
         </View>
       ) : (
         <View style={{ gap: 8 }}>
+          {r.meydan ? <Button label={L("Meydan okumayı kaydet ve çık")} icon="content-save" tone="ghost" onPress={() => setMgrSlot('kariyer')} /> : <MeydanCard ad={r.ad} soyad={r.soyad} ajans={r.ajans} />}
           <Button label={L("Menüye dön")} icon="arrow-left" tone="ghost" onPress={onExit} />
           <Pressable onPress={() => setSure(true)} style={{ alignSelf: 'center' }} hitSlop={8}>
             <Text style={ms.link}>{L("Ajansı kapat ve emekli ol")}</Text>
@@ -659,6 +701,124 @@ function AgencyTab({ r, onExit }: { r: MgrRun; onExit: () => void }) {
         </View>
       )}
     </>
+  );
+}
+
+// ---------- Menajer tarzı ve pazar ----------
+
+function StyleCard({ r }: { r: MgrRun }) {
+  const cur = tarzOf(r);
+  return (
+    <Card accent={cur ? C.gold : undefined}>
+      <Text style={ms.kicker}>{L("MENAJER TARZIN")}</Text>
+      <Text style={ms.text}>{cur ? L("Herkes seni “{0}” olarak tanıyor.", [TARZ[cur].ad()]) : L("Tarzın kararlarınla şekillenecek. Bir eksen {0} puana ulaşıp öne geçince oturur.", [TARZ_ESIK])}</Text>
+      {(Object.keys(TARZ) as TarzKey[]).map((k) => (
+        <View key={k} style={{ marginBottom: 4 }}>
+          <Bar value={Math.min(100, ((r.tarz?.[k] ?? 0) / (TARZ_ESIK * 2)) * 100)} color={cur === k ? C.gold : C.dim} label={TARZ[k].ad()} right={String(r.tarz?.[k] ?? 0)} />
+          {cur === k ? <Text style={ms.small}>{TARZ[k].aciklama()}</Text> : null}
+        </View>
+      ))}
+    </Card>
+  );
+}
+
+function MarketCard({ r }: { r: MgrRun }) {
+  const items = (Object.entries(r.pazar ?? {}) as [OrgId, { carpan: number; bitis: number; kapali?: boolean; ad?: string }][]).filter(([, p]) => p.bitis >= r.hafta);
+  if (!items.length) return null;
+  return (
+    <Card>
+      <Text style={ms.kicker}>{L("PAZAR")}</Text>
+      {items.map(([o, p]) => (
+        <Text key={o} style={[ms.small, { color: kapali(r, o) ? C.red : C.green }]}>
+          {kapali(r, o) ? L("📉 {0} kapalı ({1}. haftaya kadar)", [orgName(o), p.bitis]) : L("💰 {0}: ücretler %{1} yukarıda ({2}. haftaya kadar)", [orgName(o), Math.round((p.carpan - 1) * 100), p.bitis])}
+        </Text>
+      ))}
+    </Card>
+  );
+}
+
+// ---------- Haftalık meydan okuma ----------
+
+function MeydanCard({ ad, soyad, ajans }: { ad: string; soyad: string; ajans: string }) {
+  const kod = meydanKodu();
+  const sen = meydanSenaryo(kod);
+  const cur = peekRun('meydan');
+  const mine = cur?.meydan?.kod === kod ? cur : null;
+  const best = meydanBest();
+  const [code, setCode] = useState('');
+  const [cmp, setCmp] = useState('');
+  const start = () => {
+    track('manager_challenge', { kod });
+    setMgrRun(createMeydan(ad, soyad, ajans), 'meydan');
+    setMgrSlot('meydan');
+  };
+  return (
+    <LinearGradient colors={['#2a2006', '#0e0c07']} style={ms.challenge}>
+      <View style={ms.row}>
+        <Icon name="flag-checkered" size={20} color={C.gold} />
+        <Text style={[ms.kicker, { flex: 1, marginBottom: 0 }]}>{L("HAFTALIK MEYDAN OKUMA · {0}", [kod])}</Text>
+      </View>
+      <Text style={ms.text}>{L("Bu hafta herkes aynı ajansla başlıyor: “{0}”. {1} haftada en yüksek skoru yap, kodunu arkadaşlarınla paylaş. Ücretsiz.", [SENARYO[sen].ad(), MEYDAN_HAFTA])}</Text>
+      {best?.kod === kod ? <Text style={[ms.small, { color: C.gold }]}>{L("Bu haftaki en iyi skorun: {0}", [best.skor])}</Text> : null}
+      {mine && !mine.emekli ? (
+        <Button label={L("Devam et ({0}. hafta)", [mine.hafta])} tone="gold" icon="play" onPress={() => setMgrSlot('meydan')} />
+      ) : (
+        <Button label={mine ? L("Yeniden dene") : L("Meydan okumaya başla")} tone="gold" icon="flag-checkered" onPress={start} />
+      )}
+      <View style={[ms.row, { marginTop: 8, gap: 6 }]}>
+        <TextInput value={code} onChangeText={setCode} placeholder={L("Arkadaşının kodu")} placeholderTextColor={C.faint} autoCapitalize="characters" style={[ms.input, { flex: 1, minWidth: 0, width: 0, paddingVertical: 8 }]} />
+        <Pressable
+          onPress={() => {
+            const x = readMeydan(code);
+            if (!x) return setCmp(L("Kod geçersiz."));
+            const my = meydanBest();
+            const mineS = my?.kod === x.kod ? my.skor : null;
+            setCmp(x.kod !== kod ? L("Bu kod {0} haftasından: skor {1}.", [x.kod, x.skor]) : mineS == null ? L("Arkadaşın {0} yaptı. Sıra sende!", [x.skor]) : mineS > x.skor ? L("Sen {0}, arkadaşın {1}. Kazandın! 🏆", [mineS, x.skor]) : mineS === x.skor ? L("Berabere: {0}.", [x.skor]) : L("Arkadaşın {0}, sen {1}. Rövanş zamanı.", [x.skor, mineS]));
+          }}
+          style={ms.cmpBtn}
+        >
+          <Text style={ms.chipText}>{L("Karşılaştır")}</Text>
+        </Pressable>
+      </View>
+      {cmp ? <Text style={[ms.small, { color: C.text }]}>{cmp}</Text> : null}
+    </LinearGradient>
+  );
+}
+
+function MeydanEnd({ r }: { r: MgrRun }) {
+  const skor = r.meydan?.skor ?? meydanSkor(r);
+  const kod = meydanPaylas(r);
+  useEffect(() => {
+    if (r.meydan) saveMeydanBest(r.meydan.kod, skor);
+  }, [r.meydan, skor]);
+  return (
+    <Screen
+      footer={
+        <View style={{ gap: 8 }}>
+          <Button label={L("Skorumu paylaş")} tone="gold" icon="share-variant" onPress={() => void Share.share({ message: L("YOL Menajer Modu haftalık meydan okumada {0} puan yaptım. Geçebilir misin? Kodum: {1}", [skor, kod]) }).catch(() => undefined)} />
+          <Button
+            label={L("Ajansıma dön")}
+            tone="ghost"
+            icon="arrow-left"
+            onPress={() => setMgrSlot('kariyer')}
+          />
+        </View>
+      }
+    >
+      <LinearGradient colors={['#2a2006', '#08090b']} style={ms.hero}>
+        <Icon name="flag-checkered" size={36} color={C.gold} />
+        <Text style={[ms.heroTitle, SLANT]}>{L("MEYDAN OKUMA BİTTİ")}</Text>
+        <Text style={[ms.score]}>{skor}</Text>
+        <Text style={ms.heroText}>{L("{0} haftada {1} komisyon, {2} şampiyonluk.", [MEYDAN_HAFTA, $(r.gelir), r.sampiyonluk])}</Text>
+        <Text selectable style={ms.code}>{kod}</Text>
+        <Text style={ms.small}>{L("Arkadaşların bu kodu Menajer Modu'ndaki meydan okuma kartına yazarak skorunu görebilir.")}</Text>
+      </LinearGradient>
+      {r.rapor?.map((l, i) => (
+        <Text key={i} style={ms.small}>
+          {l.trim()}
+        </Text>
+      ))}
+    </Screen>
   );
 }
 
@@ -754,4 +914,8 @@ const ms = StyleSheet.create({
   rankNo: { width: 22, color: C.dim, fontFamily: F.display, fontSize: 14 },
   rankName: { flex: 1, color: C.text, fontFamily: F.semi, fontSize: 13 },
   rankPts: { color: C.dim, fontFamily: F.display, fontSize: 13 },
+  challenge: { borderRadius: R + 2, borderWidth: 1, borderColor: C.goldDeep, padding: 14, gap: 6, marginBottom: 12 },
+  cmpBtn: { borderWidth: 1, borderColor: C.gold, borderRadius: R, paddingHorizontal: 12, paddingVertical: 10 },
+  score: { color: C.gold, fontFamily: F.display, fontSize: 56, lineHeight: 64 },
+  code: { color: C.text, fontFamily: F.display, fontSize: 18, letterSpacing: 1, marginTop: 6 },
 });
