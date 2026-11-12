@@ -271,7 +271,7 @@ const priceSubs = new Set<() => void>();
 let buyFn: ((sku: string) => Promise<unknown>) | null = null;
 let fetchFn: (() => Promise<unknown>) | null = null;
 let restoreFn: (() => Promise<unknown>) | null = null;
-let pending: { sku: string; resolve: (r: BuyResult) => void } | null = null;
+let pending: { sku: string; resolve: (r: BuyResult) => void; retried?: boolean } | null = null;
 
 const settle = (r: BuyResult) => {
   // Sonuç olay adında: Analytics'te özel boyut tanımlamadan vazgeçme ile hatayı ve ürünü ayırabilmek için
@@ -282,6 +282,39 @@ const settle = (r: BuyResult) => {
   pending?.resolve(r);
   pending = null;
 };
+
+/** Mağaza hata kodu (expo-iap ErrorCode: already-owned, sku-not-found, billing-unavailable …) */
+const errCode = (e: unknown) =>
+  String((e as { code?: unknown } | null)?.code ?? 'unknown')
+    .replace(/[^a-z0-9]+/gi, '_')
+    .toLowerCase();
+/** Bağlantı / ürün listesi kaynaklı, bir kez yeniden denemeye değer hatalar */
+const RETRY = new Set(['sku_not_found', 'not_prepared', 'service_disconnected', 'item_unavailable', 'service_error', 'network_error']);
+
+/** Satın alma hatası: iptal mi, kurtarılabilir mi, gerçek hata mı? Kod olay adına yazılır (Analytics'te özel boyut gerekmez). */
+async function failPurchase(e: unknown) {
+  if (isUserCancelledError(e)) return settle('iptal');
+  const code = errCode(e);
+  track(`iap_e_${code}`.slice(0, 40), { sku: pending?.sku ?? '', platform: Platform.OS });
+  const cur = pending;
+  if (!cur) return;
+  // Mağaza "zaten sahipsin" diyorsa: daha önce alınmış ama açılmamış → geri yükle ve aç
+  if (code === 'already_owned') {
+    await restoreFn?.().catch(() => undefined);
+    grant(cur.sku);
+    void rcSync();
+    return settle('ok');
+  }
+  // Mağaza bağlantısı / ürün listesi henüz hazır değilse: ürünleri yeniden iste, bir kez daha dene
+  if (RETRY.has(code) && !cur.retried && buyFn) {
+    cur.retried = true;
+    await (fetchFn?.() ?? Promise.resolve()).catch(() => undefined);
+    await new Promise((r) => setTimeout(r, 800));
+    if (pending !== cur) return;
+    return void buyFn(cur.sku).catch((x) => void failPurchase(x));
+  }
+  settle('hata');
+}
 
 /** Ürünün mağazadaki yerel fiyatı (yüklenmediyse null). */
 export function usePrice(sku: string): string | null {
@@ -317,7 +350,7 @@ export function buy(sku: string): Promise<BuyResult> {
     pending = { sku, resolve };
     // Ürün listesi henüz gelmediyse önce yeniden istenir (mağaza ilk açılışta geç cevap verebiliyor)
     const go = prices[sku] ? Promise.resolve() : (fetchFn?.() ?? Promise.resolve()).catch(() => undefined);
-    void go.then(() => buyFn!(sku)).catch(() => settle('hata'));
+    void go.then(() => buyFn!(sku)).catch((e) => void failPurchase(e));
   });
 }
 export const buyPremium = () => buy(PREMIUM_SKU);
@@ -361,7 +394,7 @@ function StoreManager() {
       await finishTransaction({ purchase, isConsumable: false }).catch(() => undefined);
       if (pending?.sku === purchase.productId) settle('ok');
     },
-    onPurchaseError: (error) => settle(isUserCancelledError(error) ? 'iptal' : 'hata'),
+    onPurchaseError: (error) => void failPurchase(error),
   });
 
   // Ürünler gelene kadar artan aralıklarla yeniden istenir; uygulama öne gelince de tekrar denenir.
