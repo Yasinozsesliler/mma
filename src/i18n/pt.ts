@@ -9892,4 +9892,12 @@ export const PT: Record<string, string> = {
   "+{0} ile Tam Paket: Hakem, Antrenör, Menajer Modu ve 6 kozmetik paket de gelsin": "Pacote Completo por +{0}: leve também o Modo Árbitro, Treinador e Empresário e 6 pacotes cosméticos",
   "Tam Paket'e yükselt: Hakem, Antrenör, Menajer Modu ve 6 kozmetik paket": "Atualize para o Pacote Completo: Modo Árbitro, Treinador e Empresário e 6 pacotes cosméticos",
   "Menajer Modu: kendi ajansın, kendi şampiyonların": "Modo Empresário: sua própria agência, seus próprios campeões",
+  "Kabus": "Pesadelo",
+  "Oyunu kolay bulanlar için. Rakipler çok güçlü ve taktiğini çabuk okur, ücretler %40 az, gelişim yavaş, sakatlıklar kalıcı iz bırakabilir. Efsane puanın 1,5 kat sayılır.": "Para quem acha o jogo fácil. Os adversários são muito fortes e leem sua tática rápido, as bolsas são 40% menores, a evolução é lenta e as lesões podem deixar marcas permanentes. Sua pontuação de lenda vale 1,5x.",
+  "Kabustan Uyanan": "Acordou do Pesadelo",
+  "Kabus zorluğunda herhangi bir kemer kazan.": "Conquiste qualquer cinturão na dificuldade Pesadelo.",
+  "Kabusun Efendisi": "Mestre do Pesadelo",
+  "Kabus zorluğunda UCC kemerini kazan.": "Conquiste o cinturão do UCC na dificuldade Pesadelo.",
+  "💀 Kabus: {0} kalıcı iz bıraktı. {1} -1.": "💀 Pesadelo: {0} deixou uma marca permanente. {1} -1.",
+  "Nakavt olmak çenende derin iz bıraktı. Çene -{0}.": "O nocaute deixou uma marca profunda no seu queixo. Queixo -{0}.",
 };

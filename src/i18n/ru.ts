@@ -9930,4 +9930,12 @@ export const RU: Record<string, string> = {
   "+{0} ile Tam Paket: Hakem, Antrenör, Menajer Modu ve 6 kozmetik paket de gelsin": "Полный набор за +{0}: режимы рефери, тренера и менеджера и 6 косметических наборов в придачу",
   "Tam Paket'e yükselt: Hakem, Antrenör, Menajer Modu ve 6 kozmetik paket": "Перейти на Полный набор: режимы рефери, тренера и менеджера и 6 косметических наборов",
   "Menajer Modu: kendi ajansın, kendi şampiyonların": "Режим менеджера: своё агентство, свои чемпионы",
+  "Kabus": "Кошмар",
+  "Oyunu kolay bulanlar için. Rakipler çok güçlü ve taktiğini çabuk okur, ücretler %40 az, gelişim yavaş, sakatlıklar kalıcı iz bırakabilir. Efsane puanın 1,5 kat sayılır.": "Для тех, кому игра кажется лёгкой. Соперники очень сильны и быстро читают твою тактику, гонорары на 40% ниже, прогресс медленный, травмы могут оставить след навсегда. Очки наследия считаются ×1,5.",
+  "Kabustan Uyanan": "Проснувшийся от кошмара",
+  "Kabus zorluğunda herhangi bir kemer kazan.": "Выиграй любой пояс на сложности «Кошмар».",
+  "Kabusun Efendisi": "Повелитель кошмара",
+  "Kabus zorluğunda UCC kemerini kazan.": "Выиграй пояс UCC на сложности «Кошмар».",
+  "💀 Kabus: {0} kalıcı iz bıraktı. {1} -1.": "💀 Кошмар: {0} оставила след навсегда. {1} -1.",
+  "Nakavt olmak çenende derin iz bıraktı. Çene -{0}.": "Нокаут оставил глубокий след на твоём подбородке. Подбородок -{0}.",
 };

@@ -9884,4 +9884,12 @@ export const FR: Record<string, string> = {
   "+{0} ile Tam Paket: Hakem, Antrenör, Menajer Modu ve 6 kozmetik paket de gelsin": "Pack Complet pour +{0} : les modes Arbitre, Entraîneur et Manager et 6 packs cosmétiques en plus",
   "Tam Paket'e yükselt: Hakem, Antrenör, Menajer Modu ve 6 kozmetik paket": "Passer au Pack Complet : modes Arbitre, Entraîneur et Manager et 6 packs cosmétiques",
   "Menajer Modu: kendi ajansın, kendi şampiyonların": "Mode Manager : ta propre agence, tes propres champions",
+  "Kabus": "Cauchemar",
+  "Oyunu kolay bulanlar için. Rakipler çok güçlü ve taktiğini çabuk okur, ücretler %40 az, gelişim yavaş, sakatlıklar kalıcı iz bırakabilir. Efsane puanın 1,5 kat sayılır.": "Pour ceux qui trouvent le jeu facile. Les adversaires sont très forts et lisent vite ta tactique, les bourses sont 40 % plus basses, la progression est lente et les blessures peuvent laisser des séquelles. Ton score de légende compte x1,5.",
+  "Kabustan Uyanan": "Sorti du Cauchemar",
+  "Kabus zorluğunda herhangi bir kemer kazan.": "Remporte une ceinture en difficulté Cauchemar.",
+  "Kabusun Efendisi": "Maître du Cauchemar",
+  "Kabus zorluğunda UCC kemerini kazan.": "Remporte la ceinture UCC en difficulté Cauchemar.",
+  "💀 Kabus: {0} kalıcı iz bıraktı. {1} -1.": "💀 Cauchemar : {0} a laissé une séquelle. {1} -1.",
+  "Nakavt olmak çenende derin iz bıraktı. Çene -{0}.": "Le KO a laissé une marque profonde sur ton menton. Menton -{0}.",
 };

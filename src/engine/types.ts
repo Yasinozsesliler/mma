@@ -386,6 +386,8 @@ export interface FightMods {
   imza?: { id: string; ad: string };
   /** Dövüş kimliğinin küçük avantajı (identity.ts) */
   kimlik?: import('./identity').KimlikId;
+  /** Zorluk: rakibin tekrar eden taktiği okuma çarpanı (Kabus) */
+  okunma?: number;
 }
 
 export interface FightResult {

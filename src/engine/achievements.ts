@@ -127,6 +127,8 @@ export const ACHIEVEMENTS: Achievement[] = [
   a({ id: 'hanedan', ad: L("Hanedan"), aciklama: L("Toplam 12 kemer savunması."), ikon: 'castle', kat: 'kemer', tier: 'efsane', get: sumDef, hedef: 12 }),
   a({ id: 'uc_org', ad: L("Gezgin Şampiyon"), aciklama: L("Üç farklı organizasyonda kemer kazan."), ikon: 'earth', kat: 'kemer', tier: 'altin', get: (s) => new Set(belts(s).map((b) => b.org)).size, hedef: 3 }),
   a({ id: 'ufc_kemer', ad: L("UCC Şampiyonu"), aciklama: L("UCC kemerini kazan."), ikon: 'trophy-award', kat: 'kemer', tier: 'efsane', hof: true, check: (s) => belts(s).some((b) => b.org === 'ufc') }),
+  a({ id: 'kabus_kemer', ad: L("Kabustan Uyanan"), aciklama: L("Kabus zorluğunda herhangi bir kemer kazan."), ikon: 'skull', kat: 'kemer', tier: 'altin', check: (s) => s.zorluk === 'kabus' && belts(s).length > 0 }),
+  a({ id: 'kabus_ucc', ad: L("Kabusun Efendisi"), aciklama: L("Kabus zorluğunda UCC kemerini kazan."), ikon: 'skull-crossbones', kat: 'kemer', tier: 'efsane', check: (s) => s.zorluk === 'kabus' && belts(s).some((b) => b.org === 'ufc') }),
   a({ id: 'yerel_kemer', ad: L("Yerel Kahraman"), aciklama: L("Bölgesel bir organizasyonda kemer kazan."), ikon: 'map-marker-star', kat: 'kemer', tier: 'bronz', check: (s) => belts(s).some((b) => b.org === 'cfc' || b.org === 'oktagon') }),
   a({ id: 'buyuk_kemer', ad: L("Dünya Sahnesi"), aciklama: L("PFC, ZEN ya da VIP kemeri kazan."), ikon: 'earth-arrow-right', kat: 'kemer', tier: 'gumus', check: (s) => belts(s).some((b) => ['pfl', 'one', 'mvp'].includes(b.org)) }),
   a({ id: 'unvan5', ad: L("Büyük Maç Oyuncusu"), aciklama: L("5 unvan maçına çık."), ikon: 'spotlight-beam', kat: 'kemer', tier: 'altin', get: (s) => I(s).unvanMaci, hedef: 5 }),

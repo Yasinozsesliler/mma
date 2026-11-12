@@ -1,4 +1,5 @@
 import { brainMods } from './brain';
+import { diffOf } from './challenges';
 import { scoutMods, scoutRival } from './scouting';
 import { L, LOC } from '../i18n';
 import { addHype, initHype } from './hype';
@@ -386,6 +387,7 @@ function runCamp(s: GameState) {
       (2 + rand() * 1.4) *
       intensity.carpan *
       growthMultiplier(f.yas) *
+      (diffOf(s).gelisim ?? 1) *
       (0.7 + coachQ * 0.06) *
       site.carpan *
       (k.focus === site.bonusStat ? 1.3 : 1) *
@@ -646,7 +648,7 @@ function beginFight(s: GameState) {
     pAd: s.fighter.lakap || s.fighter.soyad,
     koseAdi: s.takim.antrenor,
     opp,
-    mods: { stats: mods, plan: k.plan ?? 'ayakta', planUyum: !!k.planUyum, oppStats: k.oppMods, kimlik: s.kimlik?.id, cutman: staffCutman(s), teknik: techLevels(s), imza: s.imza ? { id: s.imza.teknik, ad: s.imza.ad } : undefined },
+    mods: { stats: mods, plan: k.plan ?? 'ayakta', planUyum: !!k.planUyum, oppStats: k.oppMods, kimlik: s.kimlik?.id, cutman: staffCutman(s), teknik: techLevels(s), imza: s.imza ? { id: s.imza.teknik, ad: s.imza.ad } : undefined, okunma: diffOf(s).okunma },
     maxRaunt: unvan || anaMac ? 5 : 3,
     unvanMaci: unvan,
     anaMac,

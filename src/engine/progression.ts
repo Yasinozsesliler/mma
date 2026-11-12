@@ -1,4 +1,5 @@
 // Gelişim puanı: kamp ve dövüşlerden kazanılır, istatistik yükseltmeye harcanır.
+import { diffOf } from './challenges';
 import { ageCap, growthMultiplier } from './character';
 import { clamp } from './rng';
 import type { GameState, Intensity, StatKey } from './types';
@@ -33,6 +34,7 @@ export function campPoints(s: GameState, intensity: Intensity, kisaHaber: boolea
   const p =
     CAMP_BASE[intensity] *
     growthMultiplier(s.fighter.yas) *
+    (diffOf(s).gelisim ?? 1) *
     (0.8 + s.takim.antrenorKalite * 0.04) *
     (1 + s.motivasyon * 0.1);
   return clamp(Math.round(p), 1, 2);

@@ -60,7 +60,7 @@ import { homelandTick } from './homeland';
 import { bondAfterFight } from './coachBond';
 import { storyRival } from './stories';
 import { generateOpponent } from './opponents';
-import type { GameState, Offer, Opponent, OrgId, StatKey, WeightClass } from './types';
+import { STAT_LABELS, type GameState, type Offer, type Opponent, type OrgId, type StatKey, type WeightClass } from './types';
 
 export const STAGE_LABELS = {
   amator: tL("Aşama 1 · Amatör"),
@@ -372,10 +372,16 @@ export function finishFight(s: GameState) {
     s.sakatliklar.push(inj);
     if (needsTreatment(inj)) s.tedavi = { ...inj };
     lines.push(tL("🩹 Dövüşten {0} ile çıktın ({1} hafta).", [inj.ad, inj.hafta]));
+    // Kabus: bazı sakatlıklar iyileşse de iz bırakır
+    if (diffOf(s).kalici && chance(0.4)) {
+      addStat(s.fighter.stats, inj.stat, -1);
+      lines.push(tL("💀 Kabus: {0} kalıcı iz bıraktı. {1} -1.", [inj.ad, STAT_LABELS[inj.stat]]));
+    }
   }
   if (!won && r.yontem === 'KO') {
-    addStat(s.fighter.stats, 'cene', -1);
-    lines.push(tL("Nakavt olmak çenende iz bıraktı. Çene -1."));
+    const iz = diffOf(s).kalici ? 2 : 1;
+    addStat(s.fighter.stats, 'cene', -iz);
+    lines.push(iz > 1 ? tL("Nakavt olmak çenende derin iz bıraktı. Çene -{0}.", [iz]) : tL("Nakavt olmak çenende iz bıraktı. Çene -1."));
   }
 
   // Tecrübe

@@ -9871,4 +9871,12 @@ export const PL: Record<string, string> = {
   "+{0} ile Tam Paket: Hakem, Antrenör, Menajer Modu ve 6 kozmetik paket de gelsin": "Pełny Pakiet za +{0}: dostajesz też Tryb Sędziego, Trenera i Menedżera oraz 6 pakietów kosmetycznych",
   "Tam Paket'e yükselt: Hakem, Antrenör, Menajer Modu ve 6 kozmetik paket": "Przejdź na Pełny Pakiet: Tryb Sędziego, Trenera i Menedżera oraz 6 pakietów kosmetycznych",
   "Menajer Modu: kendi ajansın, kendi şampiyonların": "Tryb Menedżera: własna agencja, własni mistrzowie",
+  "Kabus": "Koszmar",
+  "Oyunu kolay bulanlar için. Rakipler çok güçlü ve taktiğini çabuk okur, ücretler %40 az, gelişim yavaş, sakatlıklar kalıcı iz bırakabilir. Efsane puanın 1,5 kat sayılır.": "Dla tych, którym gra wydaje się łatwa. Rywale są bardzo silni i szybko czytają twoją taktykę, gaże są o 40% niższe, rozwój powolny, a kontuzje mogą zostawić trwały ślad. Punkty legendy liczą się x1,5.",
+  "Kabustan Uyanan": "Przebudzony z Koszmaru",
+  "Kabus zorluğunda herhangi bir kemer kazan.": "Zdobądź dowolny pas na poziomie Koszmar.",
+  "Kabusun Efendisi": "Pan Koszmaru",
+  "Kabus zorluğunda UCC kemerini kazan.": "Zdobądź pas UCC na poziomie Koszmar.",
+  "💀 Kabus: {0} kalıcı iz bıraktı. {1} -1.": "💀 Koszmar: {0} zostawiła trwały ślad. {1} -1.",
+  "Nakavt olmak çenende derin iz bıraktı. Çene -{0}.": "Nokaut zostawił głęboki ślad na twojej szczęce. Szczęka -{0}.",
 };

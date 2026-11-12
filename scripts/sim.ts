@@ -161,7 +161,7 @@ function playCareer() {
   if (process.env.CH === 'sonsans') input.yas = 35;
   if (process.env.CH === 'sokak') (input as { gecmis: Background }).gecmis = 'sokak';
   const s = process.env.LEGEND ? createLegendGame(process.env.LEGEND as LegendId, undefined, !!process.env.TRIAL) : createGame(input, rollStartingStats(input));
-  if (process.env.DIFF) s.zorluk = process.env.DIFF as 'kolay' | 'efsane';
+  if (process.env.DIFF) s.zorluk = process.env.DIFF as 'kolay' | 'efsane' | 'kabus';
   if (process.env.CH) s.meydan = { id: process.env.CH as 'yenilmez', durum: 'devam' };
   stats.careers++;
   stats.byBg[bg] ??= { w: 0, l: 0 };

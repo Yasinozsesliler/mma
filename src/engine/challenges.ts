@@ -4,12 +4,39 @@ import { L } from '../i18n';
 import { followers } from './fame';
 import type { Background, GameState, WeightClass } from './types';
 
-export type Difficulty = 'kolay' | 'normal' | 'efsane';
+export type Difficulty = 'kolay' | 'normal' | 'efsane' | 'kabus';
 
-export const DIFFICULTIES: Record<Difficulty, { ad: () => string; aciklama: () => string; rakip: number; ucret: number; sakatlik: number }> = {
+type DiffDef = {
+  ad: () => string;
+  aciklama: () => string;
+  rakip: number;
+  ucret: number;
+  sakatlik: number;
+  /** Kamp gelişimi çarpanı */
+  gelisim?: number;
+  /** Rakibin tekrar eden taktiği okuma hızı */
+  okunma?: number;
+  /** Sakatlıklar kalıcı iz bırakabilir, nakavt çeneyi daha çok yıpratır */
+  kalici?: boolean;
+  /** Efsane puanı çarpanı (zor kariyer tarihte daha değerli) */
+  miras?: number;
+};
+
+export const DIFFICULTIES: Record<Difficulty, DiffDef> = {
   kolay: { ad: () => L("Kolay"), aciklama: () => L("Rakipler biraz zayıf, ücretler %20 fazla, sakatlık nadir."), rakip: -4, ucret: 1.2, sakatlik: 0.7 },
   normal: { ad: () => L("Normal"), aciklama: () => L("Oyunun dengeli hâli."), rakip: 0, ucret: 1, sakatlik: 1 },
   efsane: { ad: () => L("Efsane"), aciklama: () => L("Rakipler güçlü, ücretler %20 az, sakatlıklar sık. Gerçek bir sınav."), rakip: 4, ucret: 0.8, sakatlik: 1.4 },
+  kabus: {
+    ad: () => L("Kabus"),
+    aciklama: () => L("Oyunu kolay bulanlar için. Rakipler çok güçlü ve taktiğini çabuk okur, ücretler %40 az, gelişim yavaş, sakatlıklar kalıcı iz bırakabilir. Efsane puanın 1,5 kat sayılır."),
+    rakip: 8,
+    ucret: 0.6,
+    sakatlik: 1.8,
+    gelisim: 0.8,
+    okunma: 1.6,
+    kalici: true,
+    miras: 1.5,
+  },
 };
 
 export const diffOf = (s: GameState) => DIFFICULTIES[s.zorluk ?? 'normal'];

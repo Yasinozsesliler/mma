@@ -9884,4 +9884,12 @@ export const DE: Record<string, string> = {
   "+{0} ile Tam Paket: Hakem, Antrenör, Menajer Modu ve 6 kozmetik paket de gelsin": "Komplettpaket für +{0}: dazu Ringrichter-, Trainer- und Manager-Modus und 6 Kosmetikpakete",
   "Tam Paket'e yükselt: Hakem, Antrenör, Menajer Modu ve 6 kozmetik paket": "Upgrade aufs Komplettpaket: Ringrichter-, Trainer- und Manager-Modus und 6 Kosmetikpakete",
   "Menajer Modu: kendi ajansın, kendi şampiyonların": "Manager-Modus: deine eigene Agentur, deine eigenen Champions",
+  "Kabus": "Albtraum",
+  "Oyunu kolay bulanlar için. Rakipler çok güçlü ve taktiğini çabuk okur, ücretler %40 az, gelişim yavaş, sakatlıklar kalıcı iz bırakabilir. Efsane puanın 1,5 kat sayılır.": "Für alle, denen das Spiel zu leicht ist. Die Gegner sind sehr stark und lesen deine Taktik schnell, die Gagen sind 40 % niedriger, die Entwicklung ist langsam und Verletzungen können bleibende Spuren hinterlassen. Dein Legendenwert zählt 1,5-fach.",
+  "Kabustan Uyanan": "Aus dem Albtraum erwacht",
+  "Kabus zorluğunda herhangi bir kemer kazan.": "Gewinne einen beliebigen Gürtel auf Albtraum.",
+  "Kabusun Efendisi": "Herr des Albtraums",
+  "Kabus zorluğunda UCC kemerini kazan.": "Gewinne den UCC-Gürtel auf Albtraum.",
+  "💀 Kabus: {0} kalıcı iz bıraktı. {1} -1.": "💀 Albtraum: {0} hat eine bleibende Spur hinterlassen. {1} -1.",
+  "Nakavt olmak çenende derin iz bıraktı. Çene -{0}.": "Der K.o. hat tiefe Spuren an deinem Kinn hinterlassen. Kinn -{0}.",
 };

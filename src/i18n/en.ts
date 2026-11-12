@@ -9884,4 +9884,12 @@ export const EN: Record<string, string> = {
   "+{0} ile Tam Paket: Hakem, Antrenör, Menajer Modu ve 6 kozmetik paket de gelsin": "Full Pack for +{0}: get Referee, Coach and Manager Mode plus 6 cosmetic packs too",
   "Tam Paket'e yükselt: Hakem, Antrenör, Menajer Modu ve 6 kozmetik paket": "Upgrade to Full Pack: Referee, Coach and Manager Mode and 6 cosmetic packs",
   "Menajer Modu: kendi ajansın, kendi şampiyonların": "Manager Mode: your own agency, your own champions",
+  "Kabus": "Nightmare",
+  "Oyunu kolay bulanlar için. Rakipler çok güçlü ve taktiğini çabuk okur, ücretler %40 az, gelişim yavaş, sakatlıklar kalıcı iz bırakabilir. Efsane puanın 1,5 kat sayılır.": "For those who find the game easy. Opponents are very strong and read your tactics fast, purses are 40% lower, progress is slow, and injuries can leave permanent marks. Your legacy score counts 1.5x.",
+  "Kabustan Uyanan": "Woke from the Nightmare",
+  "Kabus zorluğunda herhangi bir kemer kazan.": "Win any belt on Nightmare difficulty.",
+  "Kabusun Efendisi": "Master of the Nightmare",
+  "Kabus zorluğunda UCC kemerini kazan.": "Win the UCC belt on Nightmare difficulty.",
+  "💀 Kabus: {0} kalıcı iz bıraktı. {1} -1.": "💀 Nightmare: {0} left a permanent mark. {1} -1.",
+  "Nakavt olmak çenende derin iz bıraktı. Çene -{0}.": "Getting knocked out left a deep mark on your chin. Chin -{0}.",
 };
