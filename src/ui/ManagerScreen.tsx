@@ -523,7 +523,7 @@ function FighterCard({ f, onPress }: { f: MFighter; onPress: () => void }) {
               {fullName(f)}
             </Text>
             <Text style={ms.fMeta} numberOfLines={1}>
-              {rekorOf(f)} · {WEIGHT_CLASSES[f.siklet].ad} · {f.ulke}
+              {rekorOf(f)} · {WEIGHT_CLASSES[f.siklet].ad} · {L(f.ulke)}
             </Text>
             <Text style={[ms.fMeta, { color: tc }]} numberOfLines={1}>
               {f.sozlesme ? `${orgName(f.sozlesme.org)} · #${f.sira}` : L("{0} · sözleşmesiz", [M_TIER_NAME[f.tier]()])}
@@ -737,7 +737,7 @@ function CandidateCard({ r, a, setNote }: { r: MgrRun; a: Aday; setNote: (s: str
             {fullName(a)}
           </Text>
           <Text style={ms.fMeta} numberOfLines={1}>
-            {a.yas} · {WEIGHT_CLASSES[a.siklet].ad} · {a.ulke} · {rekorOf(a)}
+            {a.yas} · {WEIGHT_CLASSES[a.siklet].ad} · {L(a.ulke)} · {rekorOf(a)}
           </Text>
           <Text style={ms.fMeta}>
             {M_TIER_NAME[a.tier]()} · {KISILIK[a.kisilik].ad()} · {'★'.repeat(starsOf(a.tahmin))}

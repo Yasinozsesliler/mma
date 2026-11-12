@@ -37,7 +37,7 @@ export function PremiumCard() {
         <Icon name="crown" size={20} color={C.gold} />
         <View style={{ flex: 1 }}>
           <Text style={st.ownedText}>{L("Şampiyon Paketi aktif · Teşekkürler!")}</Text>
-          <Text style={st.nudgeSub}>{L("Hakem ve Antrenör Modu ile Tam Paket'i tamamla")}</Text>
+          <Text style={st.nudgeSub}>{L("Hakem, Antrenör ve Menajer Modu ile Tam Paket'i tamamla")}</Text>
         </View>
         <Icon name="chevron-right" size={18} color={C.gold} />
       </Pressable>
@@ -64,7 +64,7 @@ export function PremiumCard() {
           </View>
           <Text style={st.popular}>{L("EN İYİ DEĞER")}</Text>
         </View>
-        <Text style={st.lead}>{L("Hakem + Antrenör Modu, bütün efsaneler, reklamsız oyun ve 6 kozmetik paket.")}</Text>
+        <Text style={st.lead}>{L("Hakem, Antrenör ve Menajer Modu, bütün efsaneler, reklamsız oyun ve 6 kozmetik paket.")}</Text>
         <View pointerEvents="none">
           <Button label={fullPrice ? L("Tam Paket · {0}", [fullPrice]) : L("Paketleri gör")} icon="crown" tone="gold" onPress={() => undefined} />
         </View>

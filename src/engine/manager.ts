@@ -2,7 +2,7 @@
 // ve kazançlarından komisyon alırsın. Oyun telefonun üzerinden akar: dövüşçüler, patronlar, gazeteciler ve rakip
 // menajerler mesaj atar; kararlarını cevap seçerek verirsin. Her kararın birden çok makul cevabı vardır, sonuçları
 // dövüşçünün kişiliğine, güvenine ve duruma göre değişir (tek doğru cevap yok).
-import { L, LOC } from '../i18n';
+import { L, L as Lx, LOC } from '../i18n';
 import { NAME_POOLS, ORGS, femSurname } from './data';
 import { chance, clamp, pick, rand, randInt, setSeed, uid, weighted } from './rng';
 import type { Background, Method, OrgId, WeightClass } from './types';
@@ -2004,8 +2004,11 @@ function localRng(seed: number) {
   };
 }
 
-/** Kayıttan raunt raunt maç anlatımı (kafes sahnesinin anladığı satırlar). Raunt başları "— N. raunt" ile başlar. */
-export function fightBeats(f: Pick<MFighter, 'soyad' | 'stil'>, k: MKayit): string[] {
+/** Çeviri yapmadan yer tutucuları doldurur (kafes sahnesi Türkçe anlatımdan hareket okur; her dilde aynı animasyon) */
+export const rawL = (t: string, v?: readonly unknown[]) => (v ? t.replace(/\{(\d+)\}/g, (m, i) => (v[Number(i)] !== undefined ? String(v[Number(i)]) : m)) : t);
+
+/** Kayıttan raunt raunt maç anlatımı (kafes sahnesinin anladığı satırlar). Raunt başları "— N. raunt" ile başlar. tr verilirse o çevirmenle yazılır (aynı kayıt hep aynı anları üretir). */
+export function fightBeats(f: Pick<MFighter, 'soyad' | 'stil'>, k: MKayit, L: (t: string, v?: readonly unknown[]) => string = Lx): string[] {
   const rnd = localRng(hashStr(`${k.id}-${k.h}`));
   const pk = <T,>(a: T[]) => a[Math.floor(rnd() * a.length)];
   const P = f.soyad;

@@ -30,7 +30,7 @@ export const COACH_STORE = true;
 /** Hakem Modu (hakem_modu) — iPhone ve Android. */
 export const REF_STORE = true;
 /** Menajer Modu (menajer_modu): mağaza ürünleri açılana kadar mobilde kapalı (web'de açık). */
-export const MGR_STORE = false;
+export const MGR_STORE = true;
 export { dismissUpsell, useUpsellDue } from './upsell';
 export { HOUR_GOAL, hourActive, startHour, takeHourEndOffer, useHour } from './hour';
 export { closeShop, currentDeal, dealSeen, fmtLeft, markDealSeen, maybeStartBeltDeal, maybeStartWelcome, openShop, useDeal, useNow, useShop, type Deal, type DealKind } from './deals';
