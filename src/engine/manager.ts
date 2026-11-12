@@ -5,7 +5,8 @@
 import { L, L as Lx, LOC } from '../i18n';
 import { NAME_POOLS, ORGS, femSurname } from './data';
 import { chance, clamp, pick, rand, randInt, setSeed, uid, weighted } from './rng';
-import type { Background, Method, OrgId, WeightClass } from './types';
+import type { Appearance, Background, Method, OrgId, WeightClass } from './types';
+import { evrenPick, noteEvren } from './universe';
 
 // ---------- Temel tipler ----------
 
@@ -57,6 +58,9 @@ export interface Rakip {
   stil: Background;
   guc: number;
   rekor: string;
+  /** YOL Evreni: kariyer modundaki dövüşçün (görünümüyle) */
+  evren?: 'kariyer';
+  look?: Appearance;
 }
 
 export interface Mac {
@@ -563,6 +567,9 @@ function offerFight(r: MgrRun, f: MFighter, kind: 'kolay' | 'denk' | 'zor' | 'un
   if (karaListe(r, org) || kapali(r, org)) return;
   const d = { kolay: -7, denk: 0, zor: 6, unvan: 8 }[kind];
   const rakip = makeRakip(f.guc + d + (rand() - 0.5) * 6);
+  // YOL Evreni: kariyer modundaki dövüşçün bu sıklette rakip olarak teklif edilebilir (güç maçın seviyesinde kalır)
+  const ev = kind !== 'kolay' ? evrenPick('kariyer', f.siklet, f.kadin, 0.12) : null;
+  if (ev) Object.assign(rakip, { ad: `${ev.ad} ${ev.soyad}`, ulke: ev.uyruk, stil: ev.stil, rekor: ev.rekor, evren: 'kariyer', look: ev.look });
   const base = f.sozlesme?.ucret ?? payFor(f) * carpanOf(r, org);
   const k = { kolay: 0.85, denk: 1, zor: 1.25, unvan: 1.8 }[kind];
   r.teklifler.push({
@@ -812,6 +819,7 @@ function resolveFight(r: MgrRun, f: MFighter, rapor: string[], forced?: boolean)
   } else if (hype > 0) brut += r100((mc.ucret * hype) / 200);
   const pay = earn(r, f, brut);
   const gucOnce = f.guc;
+  if (rk.evren) noteEvren(L("Menajer: {0}, kariyer modundaki dövüşçün {1} ile karşılaştı ve {2}.", [fullName(f), rk.ad, won ? L("kazandı") : L("kaybetti")]), won);
   f.un = clamp(f.un + (won ? (mc.unvan ? 6 : mc.super ? 5 : 2) : -2) + Math.round(hype / 12), 0, 100);
   f.hasar = clamp(f.hasar + (koLoss ? 22 : won ? randInt(3, 9) : randInt(8, 15)) + (f.riskli ? 10 : 0), 0, 100);
   f.bosHafta = 0;

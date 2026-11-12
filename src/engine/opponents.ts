@@ -1,6 +1,7 @@
 import { L } from '../i18n';
 import { diffOf } from './challenges';
 import { pickStar } from './uccRoster';
+import { evrenPick } from './universe';
 import { BACKGROUNDS, NAME_POOLS, NICKNAMES, ORGS, PERSONALITIES, baseStatsFor, femSurname } from './data';
 import { currentOrg, statAverage } from './character';
 import { chance, clamp, noise, pick, randInt, uid, weighted } from './rng';
@@ -152,12 +153,18 @@ export function generateOpponent(
   // UCC: kadrodaki yıldızlar (şampiyon ve üst sıralar en tanınmışlar)
   const star = org === 'ufc' ? pickStar(s, s.fighter.siklet, kadin, rank, champion, used.names) : null;
   if (star) ({ ad, soyad, lakap, uyruk, stil } = star);
+  // YOL Evreni: büyük ligde ve UCC'de Menajer Modu'ndaki dövüşçülerin ara sıra karşına çıkar
+  const ev = !star && !champion && (s.stage === 'buyuk' || s.stage === 'ufc') && org !== 'amator' ? evrenPick('menajer', s.fighter.siklet, kadin, 0.12, used.names) : null;
+  if (ev) {
+    ({ ad, soyad, uyruk, stil } = ev);
+    if (ev.lakap) lakap = ev.lakap;
+  }
   const level = levelFor(s, org, opts.zorluk, rank, champion);
   const stats = baseStatsFor(stil, level);
   STAT_KEYS.forEach((k) => (stats[k] = Math.round(clamp(stats[k] + noise(4), 12, 96))));
   return {
     // Kadro yıldızlarının kimliği sabit: sıralamaya geri dönen aynı kişi sayılır.
-    id: star ? `ucc-${star.ad}-${star.soyad}`.toLowerCase().replace(/[^a-z0-9-]/g, '') : uid(),
+    id: star ? `ucc-${star.ad}-${star.soyad}`.toLowerCase().replace(/[^a-z0-9-]/g, '') : ev ? `evren-${ev.id}` : uid(),
     ad,
     soyad,
     lakap,
@@ -174,6 +181,7 @@ export function generateOpponent(
     huyBilinen: [],
     zorluk: opts.zorluk,
     ...(kadin ? { kadin: true } : {}),
+    ...(ev ? { evren: 'menajer' as const } : {}),
   };
 }
 

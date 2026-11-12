@@ -16,7 +16,7 @@ import { C, F, R } from './theme';
 
 const $ = (n: number) => `${n < 0 ? '-' : ''}$${Math.abs(Math.round(n)).toLocaleString(LOC)}`;
 export const mLook = (f: Pick<MFighter, 'id' | 'ulke' | 'kadin'>) => lookFor({ id: f.id, uyruk: f.ulke, kadin: f.kadin });
-export const rLook = (rk: Rakip, kadin: boolean) => lookFor({ id: `rk-${rk.ad}`, uyruk: rk.ulke, kadin });
+export const rLook = (rk: Rakip, kadin: boolean) => rk.look ?? lookFor({ id: `rk-${rk.ad}`, uyruk: rk.ulke, kadin });
 export const TIER_COLOR = {
   amator: C.dim,
   bolgesel: C.blue,

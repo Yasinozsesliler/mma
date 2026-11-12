@@ -4,6 +4,7 @@ import { fatigue, fatigueAfterFight } from './fatigue';
 import { dmAfterFight } from './dm';
 import { ppvPayout } from './hype';
 import { challengeCheck, challengeOnRetire, diffOf } from './challenges';
+import { noteEvren } from './universe';
 import { legendCheck, legendHoldsUcc, legendOffer, legendRivals } from './legendRun';
 import { offerAppeal } from './appeal';
 import { maybeCrossover } from './crossover';
@@ -205,6 +206,7 @@ export function finishFight(s: GameState) {
   const orgInfo = ORGS[org];
   const won = r.kazanan === 'p';
   const draw = r.kazanan === 'berabere';
+  if (opp.evren === 'menajer' && !draw) noteEvren(tL("Kariyer: {0}, Menajer Modu'ndaki dövüşçün {1} ile karşılaştı ve {2}.", [`${s.fighter.ad} ${s.fighter.soyad}`, `${opp.ad} ${opp.soyad}`, won ? tL("kazandı") : tL("kaybetti")]), won);
   const finishMethod = r.yontem === 'KO' || r.yontem === 'TKO' || r.yontem === 'SUB';
   const lines: string[] = [];
   const pro = org !== 'amator';

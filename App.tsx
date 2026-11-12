@@ -39,6 +39,9 @@ import { DreamScreen } from './src/ui/DreamScreen';
 import { GhostScreen } from './src/ui/GhostScreen';
 import { RefereeScreen } from './src/ui/RefereeScreen';
 import { ManagerScreen } from './src/ui/ManagerScreen';
+import { UniverseScreen } from './src/ui/UniverseScreen';
+import { refreshEvren } from './src/universe';
+import { peekRun } from './src/managerStore';
 import { readGhostFromUrl } from './src/ghost';
 import { SeasonScreen } from './src/ui/SeasonScreen';
 import { ShopScreen } from './src/ui/ShopScreen';
@@ -142,7 +145,7 @@ const PHASE_LABELS: Record<Phase, string> = {
   memleket: L("Memleketim"),
 };
 
-type View_ = 'loading' | 'menu' | 'create' | 'game' | 'daily' | 'dream' | 'ghost' | 'referee' | 'manager' | 'locker' | 'season';
+type View_ = 'loading' | 'menu' | 'create' | 'game' | 'daily' | 'dream' | 'ghost' | 'referee' | 'manager' | 'locker' | 'season' | 'evren';
 
 installErrorLog();
 installImmersive();
@@ -186,6 +189,14 @@ export default function App() {
     void loadCheckpoints(x);
   };
   const putSave = (x: Slot, g: GameState | null) => setSaves((cur) => cur.map((v, i) => (i === x - 1 ? g : v)));
+  // YOL Evreni: kayıtlar ya da görünüm değişince modlar arası dövüşçü listesi yenilenir (aktif kariyer güncel hâliyle)
+  useEffect(() => {
+    refreshEvren(
+      saves.map((v, i) => (game && i === slot - 1 ? game : v)),
+      peekRun('kariyer'),
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [saves, view]);
   // act her zaman en güncel duruma bakar; gecikmeli çağrılar (ör. blackjack) eski durumu ezmesin.
   const gameRef = useRef<GameState | null>(null);
   const setGame = (g: GameState | null) => {
@@ -330,7 +341,7 @@ export default function App() {
   // Android geri tuşu: oyundan ve karakter oluşturmadan menüye döner; menüdeyse uygulamadan çıkar.
   useEffect(() => {
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
-      if (view === 'game' || view === 'create' || view === 'daily' || view === 'dream' || view === 'ghost' || view === 'referee' || view === 'manager' || view === 'locker' || view === 'season') {
+      if (view === 'game' || view === 'create' || view === 'daily' || view === 'dream' || view === 'ghost' || view === 'referee' || view === 'manager' || view === 'locker' || view === 'season' || view === 'evren') {
         setView('menu');
         return true;
       }
@@ -412,6 +423,10 @@ export default function App() {
           track('manager_open');
           setView('manager');
         }}
+        onUniverse={() => {
+          track('evren_open');
+          setView('evren');
+        }}
         onImport={(x, g) => {
           void deleteGame(x).then(() => saveGame(g, x));
           putSave(x, g);
@@ -438,6 +453,8 @@ export default function App() {
     content = <RefereeScreen onExit={() => setView('menu')} />;
   } else if (view === 'manager') {
     content = <ManagerScreen onExit={() => setView('menu')} />;
+  } else if (view === 'evren') {
+    content = <UniverseScreen onExit={() => setView('menu')} />;
   } else if (view === 'season') {
     content = <SeasonScreen look={(saves[slot - 1] ?? game)?.fighter.gorunum} onExit={() => setView('menu')} />;
   } else if (view === 'create') {
@@ -595,7 +612,7 @@ export default function App() {
     }
   }
 
-  const topLabel = view === 'locker' ? L("Dolap") : view === 'daily' ? L("Günün Dövüşü") : view === 'dream' ? L("Hayalî Maçlar") : view === 'ghost' ? L("Hayalet Maç") : view === 'referee' ? L("Hakem Modu") : view === 'manager' ? L("Menajer Modu") : view === 'season' ? L("Sezon Kemeri") : view === 'create' ? L("Karakter Oluşturma") : view === 'game' && game ? PHASE_LABELS[game.phase] : null;
+  const topLabel = view === 'locker' ? L("Dolap") : view === 'daily' ? L("Günün Dövüşü") : view === 'dream' ? L("Hayalî Maçlar") : view === 'ghost' ? L("Hayalet Maç") : view === 'referee' ? L("Hakem Modu") : view === 'manager' ? L("Menajer Modu") : view === 'evren' ? L("YOL Evreni") : view === 'season' ? L("Sezon Kemeri") : view === 'create' ? L("Karakter Oluşturma") : view === 'game' && game ? PHASE_LABELS[game.phase] : null;
 
   return (
     <SafeAreaProvider>
