@@ -9938,4 +9938,9 @@ export const RU: Record<string, string> = {
   "Kabus zorluğunda UCC kemerini kazan.": "Выиграй пояс UCC на сложности «Кошмар».",
   "💀 Kabus: {0} kalıcı iz bıraktı. {1} -1.": "💀 Кошмар: {0} оставила след навсегда. {1} -1.",
   "Nakavt olmak çenende derin iz bıraktı. Çene -{0}.": "Нокаут оставил глубокий след на твоём подбородке. Подбородок -{0}.",
+  "Kabus zorluğunda bir kemer kazan": "Выиграй пояс на сложности «Кошмар»",
+  "Kabus zorluğunda UCC kemerini kazan": "Выиграй пояс UCC на сложности «Кошмар»",
+  "Kabus Kafesi": "Клетка кошмара",
+  "Kabus Kartı": "Карточка кошмара",
+  "Kabus Dumanı": "Дым кошмара",
 };

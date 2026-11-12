@@ -9892,4 +9892,9 @@ export const FR: Record<string, string> = {
   "Kabus zorluğunda UCC kemerini kazan.": "Remporte la ceinture UCC en difficulté Cauchemar.",
   "💀 Kabus: {0} kalıcı iz bıraktı. {1} -1.": "💀 Cauchemar : {0} a laissé une séquelle. {1} -1.",
   "Nakavt olmak çenende derin iz bıraktı. Çene -{0}.": "Le KO a laissé une marque profonde sur ton menton. Menton -{0}.",
+  "Kabus zorluğunda bir kemer kazan": "Remporte une ceinture en difficulté Cauchemar",
+  "Kabus zorluğunda UCC kemerini kazan": "Remporte la ceinture UCC en difficulté Cauchemar",
+  "Kabus Kafesi": "Cage Cauchemar",
+  "Kabus Kartı": "Carte Cauchemar",
+  "Kabus Dumanı": "Fumée du Cauchemar",
 };

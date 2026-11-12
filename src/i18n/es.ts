@@ -9903,4 +9903,9 @@ export const ES: Record<string, string> = {
   "Kabus zorluğunda UCC kemerini kazan.": "Gana el cinturón de UCC en dificultad Pesadilla.",
   "💀 Kabus: {0} kalıcı iz bıraktı. {1} -1.": "💀 Pesadilla: {0} dejó una secuela permanente. {1} -1.",
   "Nakavt olmak çenende derin iz bıraktı. Çene -{0}.": "El nocaut dejó una marca profunda en tu mentón. Mentón -{0}.",
+  "Kabus zorluğunda bir kemer kazan": "Gana un cinturón en dificultad Pesadilla",
+  "Kabus zorluğunda UCC kemerini kazan": "Gana el cinturón de UCC en dificultad Pesadilla",
+  "Kabus Kafesi": "Jaula Pesadilla",
+  "Kabus Kartı": "Carta Pesadilla",
+  "Kabus Dumanı": "Humo de Pesadilla",
 };
