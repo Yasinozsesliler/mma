@@ -28,7 +28,7 @@ import {
   useShop,
   type Deal,
 } from '../monetization';
-import { BUNDLE_SKU, COACH_SKU, DEAL_SKU, MGR_SKU, PREMIUM_SKU, REF_SKU, ULTIMATE_SKU, UPGRADE_SKU } from '../monetization/skus';
+import { BUNDLE_SKU, COACH_SKU, DEAL_SKU, MGR_SKU, PATRON_SKU, PREMIUM_SKU, REF_SKU, ULTIMATE_SKU, UPGRADE_SKU } from '../monetization/skus';
 import { Icon, type IconName } from './components';
 import { PremiumCompare } from './PremiumCard';
 import { C, F } from './theme';
@@ -47,7 +47,7 @@ function money(n: number, cur: string): string | null {
 /** Tam Paket'in içindekileri ayrı ayrı alsan ne ödersin (hepsinin fiyatı aynı para biriminde geldiyse). */
 function useSeparateTotal(): { total: number; cur: string; text: string } | null {
   // Kozmetik paketleri satışta değilse (PACK_STORE) toplama girmez: yalnızca gerçekten alınabilenler sayılır
-  const parts = useAmounts(PACK_STORE ? [PREMIUM_SKU, COACH_SKU, REF_SKU, MGR_SKU, BUNDLE_SKU] : [PREMIUM_SKU, COACH_SKU, REF_SKU, MGR_SKU]);
+  const parts = useAmounts(PACK_STORE ? [PREMIUM_SKU, COACH_SKU, REF_SKU, MGR_SKU, PATRON_SKU, BUNDLE_SKU] : [PREMIUM_SKU, COACH_SKU, REF_SKU, MGR_SKU, PATRON_SKU]);
   if (parts.some((p) => !p) || new Set(parts.map((p) => p!.cur)).size !== 1) return null;
   const total = parts.reduce((a, p) => a + p!.n, 0);
   const text = money(total, parts[0]!.cur);
@@ -87,6 +87,7 @@ const FULL_ITEMS = (): [IconName, string][] => [
   ['crown', L("Şampiyon Paketi'nin tamamı: reklamsız, ödüller anında, 5 kariyer yuvası")],
   ['whistle', L("Hakem Modu: sınırsız hakemlik kariyeri")],
   ['clipboard-account', L("Antrenör Modu: kendi salonun, kendi şampiyonların")],
+  ['crown', L("Patron Modu: kendi organizasyonun, kendi kemerlerin")],
   ['briefcase', L("Menajer Modu: kendi ajansın, kendi şampiyonların")],
   ['star-circle', L("{0} efsanenin bütün hikâyeleri (gelecek efsaneler dahil)", [LEGEND_IDS.length])],
   ['tshirt-crew', L("6 kozmetik paket: {0} şort, eldiven, kemer, çerçeve ve giriş", [COSMETICS.filter((c) => c.kaynak.tur === 'paket').length])],
@@ -153,7 +154,7 @@ export function DealCard({ deal, compact, onBought }: { deal: Deal; compact?: bo
         {off >= 10 ? <Text style={s.off}>{L("%{0} İNDİRİM", [off])}</Text> : null}
       </View>
       {!compact ? <Text style={s.lead}>{DEAL_LEAD[deal.kind]()}</Text> : null}
-      {!compact ? <Items items={FULL_ITEMS()} /> : <Text style={s.lead}>{L("Hakem, Antrenör ve Menajer Modu, bütün efsaneler, reklamsız oyun ve 6 kozmetik paket.")}</Text>}
+      {!compact ? <Items items={FULL_ITEMS()} /> : <Text style={s.lead}>{L("Patron, Menajer, Antrenör ve Hakem Modu, bütün efsaneler, reklamsız oyun ve 6 kozmetik paket.")}</Text>}
       <View style={s.priceRow}>
         {was ? <Text style={s.was}>{was}</Text> : sep ? <Text style={s.was}>{sep.text}</Text> : null}
         <Text style={s.now}>{price}</Text>
@@ -204,7 +205,7 @@ function ChampionCard({ onBought }: { onBought?: () => void }) {
         <Text style={[s.cardTitle, { fontSize: 17, flex: 1 }]}>{L("ŞAMPİYON PAKETİ")}</Text>
         <Text style={s.side}>{price ?? ''}</Text>
       </View>
-      <Text style={s.lead}>{L("Reklamsız oyun, ödüller anında, 5 kariyer yuvası, bütün efsaneler ve Altın Seri. Hakem, Antrenör ve Menajer Modu dahil değil.")}</Text>
+      <Text style={s.lead}>{L("Reklamsız oyun, ödüller anında, 5 kariyer yuvası, bütün efsaneler ve Altın Seri. Patron, Menajer, Antrenör ve Hakem Modu dahil değil.")}</Text>
       <Pressable onPress={() => setOpen((x) => !x)} hitSlop={8}>
         <Text style={s.link}>{open ? L("Karşılaştırmayı gizle") : L("Ücretsiz ile karşılaştır")}</Text>
       </Pressable>
@@ -215,7 +216,7 @@ function ChampionCard({ onBought }: { onBought?: () => void }) {
       {diff ? (
         <Pressable disabled={busy} onPress={() => go(ULTIMATE_SKU)} style={({ pressed }) => [s.upsell, pressed && { borderColor: C.gold }]}>
           <Icon name="arrow-up-bold-circle" size={18} color={C.gold} />
-          <Text style={s.upsellT}>{L("+{0} ile Tam Paket: Hakem, Antrenör, Menajer Modu ve 6 kozmetik paket de gelsin", [diff])}</Text>
+          <Text style={s.upsellT}>{L("+{0} ile Tam Paket: Patron, Menajer, Antrenör, Hakem Modu ve 6 kozmetik paket de gelsin", [diff])}</Text>
         </Pressable>
       ) : null}
       {msg ? <Text style={s.msg}>{msg}</Text> : null}
@@ -229,6 +230,7 @@ function CompleteCard({ owned }: { owned: ReadonlySet<string> }) {
     [
       [REF_SKU, 'whistle', L("Hakem Modu")],
       [COACH_SKU, 'clipboard-account', L("Antrenör Modu")],
+      [PATRON_SKU, 'crown', L("Patron Modu")],
       [MGR_SKU, 'briefcase', L("Menajer Modu")],
       [BUNDLE_SKU, 'tshirt-crew', L("Efsane Koleksiyonu (6 kozmetik paket)")],
     ] as [string, IconName, string][]
@@ -243,7 +245,7 @@ function CompleteCard({ owned }: { owned: ReadonlySet<string> }) {
     <LinearGradient colors={['#2e2206', '#0e0c07']} style={[s.card, { borderColor: C.gold }]}>
       <Text style={s.cardTitle}>{L("EKSİKLERİNİ TAMAMLA")}</Text>
       <Text style={s.lead}>{L("Şampiyon Paketi sende. Tam Paket'e giden yolda yalnızca bunlar kaldı:")}</Text>
-      {upgradePrice ? <PartRow sku={UPGRADE_SKU} icon="crown" title={L("Tam Paket'e yükselt: Hakem, Antrenör, Menajer Modu ve 6 kozmetik paket")} /> : allInOne ? <PartRow sku={ULTIMATE_SKU} icon="crown" title={L("Hepsi birden (Tam Paket) · parça parça {0}", [money(partSum, full!.cur) ?? ''])} price={fullPrice} /> : null}
+      {upgradePrice ? <PartRow sku={UPGRADE_SKU} icon="crown" title={L("Tam Paket'e yükselt: Patron, Menajer, Antrenör, Hakem Modu ve 6 kozmetik paket")} /> : allInOne ? <PartRow sku={ULTIMATE_SKU} icon="crown" title={L("Hepsi birden (Tam Paket) · parça parça {0}", [money(partSum, full!.cur) ?? ''])} price={fullPrice} /> : null}
       {parts.map(([sku, ic, t]) => (
         <PartRow key={sku} sku={sku} icon={ic} title={t} />
       ))}
@@ -363,7 +365,7 @@ export function FullPackLink({ kaynak, text }: { kaynak: string; text?: string }
           {deal && dealPrice ? `🔥 ${DEAL_TITLE[deal.kind]()}` : L("YA DA TAM PAKET")}
           {p ? ` · ${p}` : ''}
         </Text>
-        <Text style={s.small}>{text ?? L("Hakem, Antrenör ve Menajer Modu, bütün efsaneler, reklamsız oyun ve 6 kozmetik paket.")}</Text>
+        <Text style={s.small}>{text ?? L("Patron, Menajer, Antrenör ve Hakem Modu, bütün efsaneler, reklamsız oyun ve 6 kozmetik paket.")}</Text>
       </View>
       <Icon name="chevron-right" size={18} color={C.gold} />
     </Pressable>

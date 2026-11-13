@@ -267,7 +267,7 @@ const tm = (x: Animated.Value, to: number, ms = 300, e = Easing.out(Easing.cubic
     useNativeDriver: true,
   });
 
-function FaceOffScene({ f, rk, org, unvan, sup, onDone }: { f: MFighter; rk: Rakip; org: OrgId; unvan: boolean; sup: boolean; onDone?: () => void }) {
+function FaceOffScene({ f, rk, org, unvan, sup, onDone, orgAd }: { f: MFighter; rk: Rakip; org: OrgId; unvan: boolean; sup: boolean; onDone?: () => void; orgAd?: string }) {
   const [a] = useState(() => ({
     bars: new Animated.Value(0),
     title: new Animated.Value(0),
@@ -375,7 +375,7 @@ function FaceOffScene({ f, rk, org, unvan, sup, onDone }: { f: MFighter; rk: Rak
       />
       <View style={{ flex: 1, justifyContent: 'center' }}>
         <Animated.View style={[{ alignItems: 'center' }, fade(a.title, -10)]}>
-          <Text style={v.sceneKicker}>{orgName(org).toLocaleUpperCase(LOC)}</Text>
+          <Text style={v.sceneKicker}>{(orgAd ?? orgName(org)).toLocaleUpperCase(LOC)}</Text>
           <Text style={[v.sceneTitle, SLANT, { color: unvan || sup ? C.gold : C.text }]}>{unvan ? L("ÜNVAN MAÇI") : sup ? L("SÜPER DÖVÜŞ") : L("YÜZ YÜZE")}</Text>
         </Animated.View>
         <View style={v.faceRow}>
@@ -441,11 +441,11 @@ function FaceOffScene({ f, rk, org, unvan, sup, onDone }: { f: MFighter; rk: Rak
   );
 }
 
-export function FaceOffModal({ f, rk, org, unvan, sup, onClose }: { f: MFighter; rk: Rakip; org: OrgId; unvan: boolean; sup: boolean; onClose: () => void }) {
+export function FaceOffModal({ f, rk, org, unvan, sup, onClose, orgAd }: { f: MFighter; rk: Rakip; org: OrgId; unvan: boolean; sup: boolean; onClose: () => void; orgAd?: string }) {
   return (
     <Modal visible animationType="fade" onRequestClose={onClose}>
       <View style={{ flex: 1, backgroundColor: '#000' }}>
-        <FaceOffScene f={f} rk={rk} org={org} unvan={unvan} sup={sup} />
+        <FaceOffScene f={f} rk={rk} org={org} unvan={unvan} sup={sup} orgAd={orgAd} />
         <View style={v.sceneBtns}>
           <Button label={L("Kapat")} icon="close" tone="ghost" onPress={onClose} />
         </View>
@@ -456,7 +456,7 @@ export function FaceOffModal({ f, rk, org, unvan, sup, onClose }: { f: MFighter;
 
 // ---------- Maçı izle ----------
 
-export function MgrWatch({ f, m, onClose }: { f: MFighter; m: MKayit; onClose: () => void }) {
+export function MgrWatch({ f, m, onClose, orgAd }: { f: MFighter; m: MKayit; onClose: () => void; orgAd?: string }) {
   const [step, setStep] = useState<'face' | 'mac' | 'sonuc'>('face');
   const lines = useMemo(() => fightBeats(f, m), [f, m]);
   // Kafes sahnesi hareketleri Türkçe anlatımdan okur; ekrandaki yazı seçili dilde
@@ -499,7 +499,7 @@ export function MgrWatch({ f, m, onClose }: { f: MFighter; m: MKayit; onClose: (
     <Modal visible animationType="fade" onRequestClose={onClose}>
       <View style={{ flex: 1, backgroundColor: '#000' }}>
         {step === 'face' ? (
-          <FaceOffScene f={f} rk={m.rk} org={m.org} unvan={!!m.unvan} sup={!!m.sup} onDone={() => (sfx('bell'), setStep('mac'))} />
+          <FaceOffScene f={f} rk={m.rk} org={m.org} unvan={!!m.unvan} sup={!!m.sup} orgAd={orgAd} onDone={() => (sfx('bell'), setStep('mac'))} />
         ) : (
           <ScrollView contentContainerStyle={{ padding: 16, paddingTop: 40, gap: 12 }}>
             <View style={v.watchHead}>
@@ -510,7 +510,7 @@ export function MgrWatch({ f, m, onClose }: { f: MFighter; m: MKayit; onClose: (
                 <Text style={v.faint}>{rekorOf(f)}</Text>
               </View>
               <View style={{ alignItems: 'center' }}>
-                <Text style={v.sceneKicker}>{orgName(m.org).toLocaleUpperCase(LOC)}</Text>
+                <Text style={v.sceneKicker}>{(orgAd ?? orgName(m.org)).toLocaleUpperCase(LOC)}</Text>
                 <Text style={[v.roundText, SLANT]}>{L("{0}. RAUNT", [raunt])}</Text>
               </View>
               <View style={{ flex: 1, alignItems: 'flex-end' }}>
@@ -551,14 +551,14 @@ export function MgrWatch({ f, m, onClose }: { f: MFighter; m: MKayit; onClose: (
               </View>
             ) : (
               <LinearGradient colors={m.w ? ['#0f2a18', '#08090b'] : ['#2a0a0f', '#08090b']} style={[v.result, { borderColor: m.w ? C.green : C.red }]}>
-                <Text style={[v.resultTitle, SLANT, { color: m.w ? C.green : C.red }]}>{m.w ? L("KAZANDI!") : L("KAYBETTİ")}</Text>
+                <Text style={[v.resultTitle, SLANT, { color: orgAd ? C.gold : m.w ? C.green : C.red }]}>{orgAd ? L("{0} KAZANDI!", [(m.w ? f.soyad : rkSoyad(m.rk)).toLocaleUpperCase(LOC)]) : m.w ? L("KAZANDI!") : L("KAYBETTİ")}</Text>
                 <Text style={v.resultSub}>{L("{0} · {1}. raunt", [m.y, m.ra])}</Text>
                 {m.satir.map((l, i) => (
                   <Text key={i} style={v.line}>
                     {l}
                   </Text>
                 ))}
-                <Text style={[v.line, { color: C.green }]}>{L("Ajansın komisyonu: {0}", [$(m.kom)])}</Text>
+                {m.kom ? <Text style={[v.line, { color: C.green }]}>{L("Ajansın komisyonu: {0}", [$(m.kom)])}</Text> : null}
               </LinearGradient>
             )}
             <Button label={step === 'sonuc' ? L("Kapat") : L("Çık")} icon="close" tone={step === 'sonuc' ? 'gold' : 'ghost'} onPress={onClose} />

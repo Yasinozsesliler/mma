@@ -294,6 +294,7 @@ export function MenuScreen({
   onGhost,
   onReferee,
   onManager,
+  onPatron,
   onUniverse,
   onEditor,
   onSeason,
@@ -315,6 +316,7 @@ export function MenuScreen({
   onGhost: () => void;
   onReferee: () => void;
   onManager: () => void;
+  onPatron: () => void;
   onUniverse: () => void;
   onEditor: () => void;
   onSeason: () => void;
@@ -513,6 +515,7 @@ export function MenuScreen({
           badge={pendingGhost() ? L("YENİ") : ghostCount ? `👻 ${ghostCount}` : L("YENİ")}
           onPress={onGhost}
         />
+        <ModeTile icon="crown" color={C.gold} title={L("Patron Modu")} sub={L("Kendi organizasyonunu kur: kartı sen kur, kemerleri sen ver, UCC'yi geç")} badge={L("YENİ")} onPress={onPatron} />
         {MGR_STORE ? <ModeTile icon="briefcase" color={C.gold} title={L("Menajer Modu")} sub={L("Dövüşçülerin kariyeri telefonunda: pazarlık yap, şampiyon çıkar")} badge={L("YENİ")} onPress={onManager} /> : null}
         {MGR_STORE ? <ModeTile icon="earth" color={C.blue} title={L("YOL Evreni")} sub={L("Bütün modların aynı dünyada: dövüşçülerin birbirinin karşısına çıkar")} badge={L("YENİ")} onPress={onUniverse} /> : null}
         <ModeTile icon="pencil-ruler" color={C.gold} title={L("Editör")} sub={L("Organizasyonları ve UCC kadrosunu istediğin gibi adlandır, kodla paylaş")} badge={L("YENİ")} onPress={onEditor} />
