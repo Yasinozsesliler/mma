@@ -796,6 +796,8 @@ export interface GameState {
   beyinUyari?: 30 | 55 | 75 | 90;
   /** Doktor tavsiyesiyle emekli oldu */
   beyinEmekli?: boolean;
+  /** Editörde istatistikleri düzenlendi: başarımlar ve oynayarak açılan ödüller kapanır */
+  editlendi?: boolean;
   /** Emeklilikten dönüş (comeback.ts): kaç yıl sonra, döndüğü andaki dövüş sayısı, dönüş maçı sonucu */
   geriDonus?: { yil: number; dovus: number; sonuc?: 'G' | 'M' };
   /** Taraftar kulübü (fanClub.ts) */

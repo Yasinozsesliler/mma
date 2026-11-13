@@ -164,7 +164,7 @@ export function generateOpponent(
   STAT_KEYS.forEach((k) => (stats[k] = Math.round(clamp(stats[k] + noise(4), 12, 96))));
   return {
     // Kadro yıldızlarının kimliği sabit: sıralamaya geri dönen aynı kişi sayılır.
-    id: star ? `ucc-${star.ad}-${star.soyad}`.toLowerCase().replace(/[^a-z0-9-]/g, '') : ev ? `evren-${ev.id}` : uid(),
+    id: star ? (star.key ?? `ucc-${star.ad}-${star.soyad}`.toLowerCase().replace(/[^a-z0-9-]/g, '')) : ev ? `evren-${ev.id}` : uid(),
     ad,
     soyad,
     lakap,
