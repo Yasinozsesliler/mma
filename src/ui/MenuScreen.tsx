@@ -294,6 +294,7 @@ export function MenuScreen({
   onGhost,
   onReferee,
   onManager,
+  onUniverse,
   onSeason,
   onDynasty,
   onLocker,
@@ -313,6 +314,7 @@ export function MenuScreen({
   onGhost: () => void;
   onReferee: () => void;
   onManager: () => void;
+  onUniverse: () => void;
   onSeason: () => void;
   onLocker: () => void;
   onImport: (slot: Slot, g: GameState) => void;
@@ -510,6 +512,7 @@ export function MenuScreen({
           onPress={onGhost}
         />
         {MGR_STORE ? <ModeTile icon="briefcase" color={C.gold} title={L("Menajer Modu")} sub={L("Dövüşçülerin kariyeri telefonunda: pazarlık yap, şampiyon çıkar")} badge={L("YENİ")} onPress={onManager} /> : null}
+        {MGR_STORE ? <ModeTile icon="earth" color={C.blue} title={L("YOL Evreni")} sub={L("Bütün modların aynı dünyada: dövüşçülerin birbirinin karşısına çıkar")} badge={L("YENİ")} onPress={onUniverse} /> : null}
         {REF_STORE ? <ModeTile icon="hand-back-left" color={C.red} title={L("Hakem Modu")} sub={L("Kafesin içindeki karar senin: durdur, devam ettir, puanla")} badge={L("YENİ")} onPress={onReferee} /> : null}
         {COACH_STORE ? <ModeTile icon="whistle" color={C.blue} title={L("Antrenör Modu")} sub={L("Bu sefer hoca sensin: salonunu kur, şampiyon yetiştir")} badge={L("YENİ")} onPress={() => setSheet('antrenor')} /> : null}
         <ModeTile icon="hanger" color={C.gold} title={L("Dolap")} sub={L("Şort, eldiven, çerçeve, kemer ve giriş müziği")} badge={yeniKoz ? L("{0} YENİ", [yeniKoz]) : undefined} onPress={onLocker} />

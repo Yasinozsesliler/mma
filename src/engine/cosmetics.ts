@@ -24,7 +24,7 @@ export type Pattern = 'alev' | 'simsek' | 'kaplan' | 'yildiz';
 export type FxKind = 'ates' | 'duman' | 'konfeti' | 'simsek' | 'kar';
 
 /** Açılma koşullarının okunduğu özet: bütün kariyerlerin ve günlük dövüşün en iyileri. */
-export type UnlockCtx = { galibiyet: number; ko: number; sub: number; kemer: number; savunma: number; hof: boolean; nesil: number; gunlukSeri: number; intikam: boolean; ozel: string[] };
+export type UnlockCtx = { galibiyet: number; ko: number; sub: number; kemer: number; savunma: number; hof: boolean; nesil: number; gunlukSeri: number; intikam: boolean; ozel: string[]; kabusKemer?: number; kabusUcc?: boolean };
 
 type Source =
   | { tur: 'hazir' }
@@ -151,6 +151,18 @@ export const PACKS: { sku: CosmeticSku; ad: string; aciklama: string; renk: stri
   { sku: 'paket_sultan', ad: L("Sultan"), aciklama: L("Bordo-altın şort, bordo eldiven, Sultan çerçevesi ve kemeri, Mehter giriş müziği"), renk: '#9b2335', nadir: 'epik' },
 ];
 
+// Kabus zorluğunun ödülleri (yalnızca oynayarak; satılmaz)
+const kabus = (aciklama: string, ucc: boolean): Source => basari(aciklama, (c) => (ucc ? !!c.kabusUcc : (c.kabusKemer ?? 0) >= 1));
+COSMETICS.push(
+  { id: 'sort_kabus', slot: 'sort', ad: L("Kabus"), renk: ['#0a0a0c', '#b0001e'], desen: 'alev', desenRenk: '#ff1f3d', nadir: 'efsane', kaynak: kabus(L("Kabus zorluğunda bir kemer kazan"), false) },
+  { id: 'eld_kabus', slot: 'eldiven', ad: L("Kabus"), renk: ['#3d0008'], nadir: 'efsane', kaynak: kabus(L("Kabus zorluğunda bir kemer kazan"), false) },
+  { id: 'cer_kabus', slot: 'cerceve', ad: L("Kabus"), renk: ['#ff1f3d'], nadir: 'efsane', kaynak: kabus(L("Kabus zorluğunda bir kemer kazan"), false) },
+  { id: 'kfs_kabus', slot: 'kafes', ad: L("Kabus Kafesi"), renk: ['#ff1f3d', '#2a0008'], nadir: 'efsane', kaynak: kabus(L("Kabus zorluğunda UCC kemerini kazan"), true) },
+  { id: 'krt_kabus', slot: 'kart', ad: L("Kabus Kartı"), renk: ['#0a0a0c', '#b0001e', '#ff1f3d'], nadir: 'efsane', kaynak: kabus(L("Kabus zorluğunda UCC kemerini kazan"), true) },
+  { id: 'unv_kabus', slot: 'unvan', ad: L("Kabusun Efendisi"), renk: ['#ff1f3d'], nadir: 'efsane', kaynak: kabus(L("Kabus zorluğunda UCC kemerini kazan"), true) },
+  { id: 'ef_kabus', slot: 'efekt', ad: L("Kabus Dumanı"), renk: [], fx: 'duman', nadir: 'efsane', kaynak: kabus(L("Kabus zorluğunda UCC kemerini kazan"), true) },
+);
+
 // Sezon Kemeri ödülleri (her ay temaya göre üretilir)
 COSMETICS.push(...allSeasonCosmetics());
 
@@ -172,6 +184,10 @@ export function unlockCtx(saves: (GameState | null)[], daily: DailyStore): Unloc
     c.nesil = Math.max(c.nesil, s.nesil ?? 1);
     c.intikam ||= nemesisBeaten(s.ezeli);
     c.ozel = [...new Set([...c.ozel, ...(s.ozelKozmetik ?? [])])];
+    if (s.zorluk === 'kabus') {
+      c.kabusKemer = Math.max(c.kabusKemer ?? 0, (s.kemerler ?? []).length);
+      c.kabusUcc ||= (s.kemerler ?? []).some((b) => b.org === 'ufc');
+    }
     for (const a of s.hanedan ?? []) {
       c.galibiyet = Math.max(c.galibiyet, a.rekor.g);
       c.kemer = Math.max(c.kemer, a.kemer);

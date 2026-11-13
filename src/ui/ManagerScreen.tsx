@@ -523,7 +523,7 @@ function FighterCard({ f, onPress }: { f: MFighter; onPress: () => void }) {
               {fullName(f)}
             </Text>
             <Text style={ms.fMeta} numberOfLines={1}>
-              {rekorOf(f)} · {WEIGHT_CLASSES[f.siklet].ad} · {f.ulke}
+              {rekorOf(f)} · {WEIGHT_CLASSES[f.siklet].ad} · {L(f.ulke)}
             </Text>
             <Text style={[ms.fMeta, { color: tc }]} numberOfLines={1}>
               {f.sozlesme ? `${orgName(f.sozlesme.org)} · #${f.sira}` : L("{0} · sözleşmesiz", [M_TIER_NAME[f.tier]()])}
@@ -647,6 +647,7 @@ function OfferCard({ r, t, f, setNote }: { r: MgrRun; t: Teklif; f: MFighter; se
           {t.rakip ? (
             <Text style={ms.offerSub}>
               {L("Rakip: {0} ({1}) · güç {2} · {3}", [t.rakip.ad, t.rakip.rekor, t.rakip.guc, zor])}
+              {t.rakip.evren ? `\n${L("🌐 YOL Evreni: kariyer modundaki dövüşçün!")}` : ''}
             </Text>
           ) : null}
           {t.orgIster ? <Text style={[ms.offerSub, { color: C.gold }]}>{L("Organizasyon istiyor: {0}", [MADDE[t.orgIster].ad()])}</Text> : null}
@@ -737,7 +738,7 @@ function CandidateCard({ r, a, setNote }: { r: MgrRun; a: Aday; setNote: (s: str
             {fullName(a)}
           </Text>
           <Text style={ms.fMeta} numberOfLines={1}>
-            {a.yas} · {WEIGHT_CLASSES[a.siklet].ad} · {a.ulke} · {rekorOf(a)}
+            {a.yas} · {WEIGHT_CLASSES[a.siklet].ad} · {L(a.ulke)} · {rekorOf(a)}
           </Text>
           <Text style={ms.fMeta}>
             {M_TIER_NAME[a.tier]()} · {KISILIK[a.kisilik].ad()} · {'★'.repeat(starsOf(a.tahmin))}

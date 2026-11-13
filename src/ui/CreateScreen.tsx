@@ -192,8 +192,11 @@ export function CreateScreen({
             {(Object.keys(DIFFICULTIES) as Difficulty[]).map((d) => {
               const on = zorluk === d;
               return (
-                <Pressable key={d} onPress={() => setZorluk(d)} style={[cs.gender, on && cs.genderOn]}>
-                  <Text style={[cs.genderText, on && { color: '#000' }]}>{DIFFICULTIES[d].ad().toLocaleUpperCase(LOC)}</Text>
+                <Pressable key={d} onPress={() => setZorluk(d)} style={[cs.gender, on && cs.genderOn, d === 'kabus' && { borderColor: C.red }, on && d === 'kabus' && { backgroundColor: C.red }]}>
+                  <Text style={[cs.genderText, on && { color: d === 'kabus' ? '#fff' : '#000' }, d === 'kabus' && !on && { color: C.red }]} numberOfLines={1} adjustsFontSizeToFit>
+                    {d === 'kabus' ? '💀 ' : ''}
+                    {DIFFICULTIES[d].ad().toLocaleUpperCase(LOC)}
+                  </Text>
                 </Pressable>
               );
             })}

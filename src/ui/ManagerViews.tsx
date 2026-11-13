@@ -5,7 +5,7 @@ import Svg, { Defs, Ellipse, RadialGradient, Stop } from 'react-native-svg';
 import { Animated, Easing, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { sfx } from '../audio';
 import { BACKGROUNDS, WEIGHT_CLASSES } from '../engine/data';
-import { ARC, faceOffLines, fightBeats, fullName, KISILIK, M_TIER_NAME, MADDE, orgName, rekorOf, rkSoyad, starsOf, type MFighter, type MKayit, type Rakip } from '../engine/manager';
+import { ARC, faceOffLines, fightBeats, fullName, KISILIK, M_TIER_NAME, MADDE, orgName, rawL, rekorOf, rkSoyad, starsOf, type MFighter, type MKayit, type Rakip } from '../engine/manager';
 import { lookFor } from '../engine/tale';
 import type { FightState, OrgId } from '../engine/types';
 import { L, LOC } from '../i18n';
@@ -16,7 +16,7 @@ import { C, F, R } from './theme';
 
 const $ = (n: number) => `${n < 0 ? '-' : ''}$${Math.abs(Math.round(n)).toLocaleString(LOC)}`;
 export const mLook = (f: Pick<MFighter, 'id' | 'ulke' | 'kadin'>) => lookFor({ id: f.id, uyruk: f.ulke, kadin: f.kadin });
-export const rLook = (rk: Rakip, kadin: boolean) => lookFor({ id: `rk-${rk.ad}`, uyruk: rk.ulke, kadin });
+export const rLook = (rk: Rakip, kadin: boolean) => rk.look ?? lookFor({ id: `rk-${rk.ad}`, uyruk: rk.ulke, kadin });
 export const TIER_COLOR = {
   amator: C.dim,
   bolgesel: C.blue,
@@ -162,7 +162,7 @@ export function MgrDossier({
               {fullName(f).toLocaleUpperCase(LOC)}
             </Text>
             <Text style={v.sub}>
-              {f.yas} · {WEIGHT_CLASSES[f.siklet].ad} · {f.ulke} · {bg}
+              {f.yas} · {WEIGHT_CLASSES[f.siklet].ad} · {L(f.ulke)} · {bg}
             </Text>
             <View style={[v.tierBadge, { borderColor: tc }]}>
               <Text style={[v.tierText, { color: tc }]}>
@@ -325,7 +325,7 @@ function FaceOffScene({ f, rk, org, unvan, sup, onDone }: { f: MFighter; rk: Rak
     [rekorOf(f), L("REKOR"), rk.rekor],
     [String(f.guc), L("GÜÇ"), String(rk.guc)],
     [BACKGROUNDS[f.stil]?.ad ?? f.stil, L("STİL"), BACKGROUNDS[rk.stil]?.ad ?? rk.stil],
-    [f.ulke, L("ÜLKE"), rk.ulke],
+    [L(f.ulke), L("ÜLKE"), L(rk.ulke)],
   ];
   return (
     <View style={v.scene}>
@@ -459,6 +459,8 @@ export function FaceOffModal({ f, rk, org, unvan, sup, onClose }: { f: MFighter;
 export function MgrWatch({ f, m, onClose }: { f: MFighter; m: MKayit; onClose: () => void }) {
   const [step, setStep] = useState<'face' | 'mac' | 'sonuc'>('face');
   const lines = useMemo(() => fightBeats(f, m), [f, m]);
+  // Kafes sahnesi hareketleri Türkçe anlatımdan okur; ekrandaki yazı seçili dilde
+  const cageLines = useMemo(() => fightBeats(f, m, rawL), [f, m]);
   const [shown, setShown] = useState(0);
   const playing = step === 'mac' && shown < lines.length;
   useEffect(() => {
@@ -486,7 +488,7 @@ export function MgrWatch({ f, m, onClose }: { f: MFighter; m: MKayit; onClose: (
     maxRaunt: m.top,
     pHasar: Math.round(prog * (m.w ? 30 : 75)),
     oHasar: Math.round(prog * (m.w ? 75 : 30)),
-    log: lines,
+    log: cageLines,
     durum: done ? 'bitti' : 'canli',
     kritik: null,
     subAdi: '',

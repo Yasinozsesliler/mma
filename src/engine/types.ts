@@ -114,6 +114,8 @@ export interface Opponent {
   kadin?: boolean;
   /** Hazır görünüm (efsaneler); yoksa id'den üretilir */
   gorunum?: Appearance;
+  /** YOL Evreni: oyuncunun başka moddaki dövüşçüsü (universe.ts) */
+  evren?: import('./universe').EvrenKaynak;
   /** Oyuncunun kaçıncı dövüşünde en son karşılaştılar (tekrarı sınırlamak için) */
   sonDovus?: number;
   stage?: Stage;
@@ -386,6 +388,8 @@ export interface FightMods {
   imza?: { id: string; ad: string };
   /** Dövüş kimliğinin küçük avantajı (identity.ts) */
   kimlik?: import('./identity').KimlikId;
+  /** Zorluk: rakibin tekrar eden taktiği okuma çarpanı (Kabus) */
+  okunma?: number;
 }
 
 export interface FightResult {

@@ -71,7 +71,7 @@ export function HubHero({ s }: { s: GameState }) {
           </View>
           {s.meydan || (s.zorluk && s.zorluk !== 'normal') ? (
             <View style={hh.chips}>
-              {s.zorluk && s.zorluk !== 'normal' ? <Text style={[hh.chip, { color: s.zorluk === 'efsane' ? C.red : C.green }]}>{DIFFICULTIES[s.zorluk].ad().toLocaleUpperCase(LOC)}</Text> : null}
+              {s.zorluk && s.zorluk !== 'normal' ? <Text style={[hh.chip, { color: s.zorluk === 'kabus' ? '#ff4d6d' : s.zorluk === 'efsane' ? C.red : C.green }]}>{s.zorluk === 'kabus' ? '💀 ' : ''}{DIFFICULTIES[s.zorluk].ad().toLocaleUpperCase(LOC)}</Text> : null}
               {s.meydan ? (
                 <Text style={[hh.chip, { color: s.meydan.durum === 'basarili' ? C.gold : s.meydan.durum === 'basarisiz' ? C.faint : C.orange }]}>
                   {s.meydan.durum === 'basarili' ? '🏅 ' : s.meydan.durum === 'basarisiz' ? '✖ ' : '⚔️ '}

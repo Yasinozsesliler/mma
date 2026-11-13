@@ -1,4 +1,5 @@
 // Miras: kemerler, başarımlar ve efsane puanı. Uzun vadeli hedefler buradan gelir.
+import { diffOf } from './challenges';
 import { L } from '../i18n';
 import { ORGS, WEIGHT_CLASSES } from './data';
 import { ACHIEVEMENTS, HOF_ACHIEVEMENTS, HOF_PILLARS, HOF_SCORE } from './achievements';
@@ -94,7 +95,7 @@ export function legacyScore(s: GameState) {
   const kemer = (s.kemerler ?? []).reduce((a, b) => a + (b.org === 'ufc' ? 60 : 25) + b.savunma * (b.org === 'ufc' ? 15 : 6), 0);
   // 100 başarım var; toplam puanı dengelemek için yarısı sayılır.
   const bas = Math.round((s.basarimlar ?? []).reduce((a, id) => a + (ACHIEVEMENTS.find((x) => x.id === id)?.puan ?? 0), 0) * 0.5);
-  return Math.max(0, r.g * 3 + (r.ko + r.sub) * 2 - r.m * 2 + kemer + bas + Math.round(s.populerlik / 2));
+  return Math.round(Math.max(0, r.g * 3 + (r.ko + r.sub) * 2 - r.m * 2 + kemer + bas + Math.round(s.populerlik / 2)) * (diffOf(s).miras ?? 1));
 }
 
 export function legacyTier(score: number) {

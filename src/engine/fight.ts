@@ -899,7 +899,7 @@ export function chooseTactic(prev: FightState, t: Tactic): FightState {
   fs.rakipTaktik = oppTactic(fs);
   const hist = fs.oyuncuTaktikGecmisi ?? [];
   const rep = streak(hist, t);
-  fs.okunma = rep * 0.045 * (fs.mods.kimlik === 'taktisyen' ? 0.7 : 1);
+  fs.okunma = rep * 0.045 * (fs.mods.kimlik === 'taktisyen' ? 0.7 : 1) * (fs.mods.okunma ?? 1);
   hist.push(t);
   fs.oyuncuTaktikGecmisi = hist;
   fs.taktik = t;

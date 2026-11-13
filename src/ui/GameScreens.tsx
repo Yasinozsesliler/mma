@@ -567,6 +567,7 @@ function OpponentCard({ o, me }: { o: Opponent; me: Stats }) {
         <View style={{ flex: 1 }}>
           <Text style={gs.nick}>“{o.lakap}”</Text>
           <Text style={gs.oppName}>{upName(`${o.ad} ${o.soyad}`, o.uyruk)}</Text>
+          {o.evren ? <Text style={[gs.meta, { color: C.blue }]}>{L("🌐 YOL Evreni: Menajer Modu'ndaki dövüşçün!")}</Text> : null}
           <Text style={gs.meta}>
             {o.uyruk} · {oppRecord(o)} · {d.stil} · {o.kisilik}
           </Text>

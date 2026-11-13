@@ -49,3 +49,7 @@ store/graphics/*/ham/
 credentials/
 credentials.json
 .i18n-*-todo.json
+
+# graphify bilgi grafiği (yerelde üretilir)
+graphify-out/
+.claude/settings.json.graphify-bak
