@@ -1044,7 +1044,7 @@ function runNight(r: PatronRun): GeceRapor {
   if (chance(0.05) && sonuclar.length) {
     const x = pick(sonuclar);
     const w = fighterById(r, x.w === 'a' ? x.a : x.b);
-    if (w) msg(r, { rol: 'doktor', kimden: L("Doping kontrol birimi"), olay: 'doping', p: { id: w.id, gece: no }, metin: L("{0}'in gece sonrası testi pozitif çıktı. Sonucu açıklarsak galibiyeti iptal edilir. Ne yapıyoruz?", [pFullName(w)]), secenekler: [{ k: 'acikla', t: L("Açıkla, cezayı ver"), ipucu: L("İtibar korunur, dövüşçü öfkelenir") }, { k: 'ort', t: L("Sessiz kal"), ipucu: L("Risk: sızarsa büyük skandal") }], son: r.hafta + 2 });
+    if (w) msg(r, { rol: 'doktor', kimden: L("Doping kontrol birimi"), olay: 'doping', p: { id: w.id, gece: no }, metin: L("Gece sonrası testte {0} pozitif çıktı. Sonucu açıklarsak galibiyeti iptal edilir. Ne yapıyoruz?", [pFullName(w)]), secenekler: [{ k: 'acikla', t: L("Açıkla, cezayı ver"), ipucu: L("İtibar korunur, dövüşçü öfkelenir") }, { k: 'ort', t: L("Sessiz kal"), ipucu: L("Risk: sızarsa büyük skandal") }], son: r.hafta + 2 });
   }
   // Veda maçına çıkanlar emekli olur
   for (const f of r.kadro.filter((x) => x.veda && x.maclar[0]?.gece === no)) {
@@ -1249,7 +1249,7 @@ export function yaziFikir(r: PatronRun, k: YaziKat): string[] {
   switch (k) {
     case 'duyuru':
       return a && b
-        ? [L("RESMİ: {0} vs {1}, {2} hafta sonra {3}'da! Biletler satışta. 🎟️", [a.soyad, b.soyad, Math.max(0, r.plan!.hafta - r.hafta), sehir]), L("Ana maç belli oldu: {0} ile {1} kafeste karşılaşıyor. Kaçırma!", [pFullName(a), pFullName(b)])]
+        ? [L("RESMİ: {0} vs {1}, {2} hafta sonra, {3}! Biletler satışta. 🎟️", [a.soyad, b.soyad, Math.max(0, r.plan!.hafta - r.hafta), sehir]), L("Ana maç belli oldu: {0} ile {1} kafeste karşılaşıyor. Kaçırma!", [pFullName(a), pFullName(b)])]
         : [L("Büyük bir duyuru geliyor… Takipte kalın. 👀"), L("Yeni gece için şehir seçildi: {0}. Kart çok yakında!", [sehir])];
     case 'kizistir':
       return a && b ? [L("{0}, {1} için “sıradan” dedi. {1}, cevabın?", [a.soyad, b.soyad]), L("Biri bu gece sözlerini yutacak. {0} mi {1} mi? 🔥", [a.soyad, b.soyad])] : [L("Kim kimi çağırıyor? Kafes konuşulanları kaldırmaz. 🔥")];
@@ -1497,7 +1497,7 @@ const H: Record<string, Handler> = {
     if (chance(0.35)) {
       r.itibar = clamp(r.itibar - 12, 0, 100);
       r.gram.takipci = Math.round(r.gram.takipci * 0.9);
-      gramPost(r, { tur: 'medya', yazar: 'MMA Gündem', kullanici: '@mmagundem', metin: L("SKANDAL: {0}, {1}'in pozitif doping testini gizledi!", [r.org.ad, pFullName(f)]) });
+      gramPost(r, { tur: 'medya', yazar: 'MMA Gündem', kullanici: '@mmagundem', metin: L("SKANDAL: {0} bir doping testini gizledi! Testi pozitif çıkan isim: {1}.", [r.org.ad, pFullName(f)]) });
       return L("Haber sızdı! Büyük skandal: itibar -12, takipçiler gidiyor.");
     }
     return L("Şimdilik kimse duymadı…");
@@ -1589,8 +1589,8 @@ const H: Record<string, Handler> = {
     dropFighter(r, f);
     const ro = r.rakipler.find((x) => x.id === o);
     if (ro) ro.itibar = clamp(ro.itibar + (f.un >= 50 ? 2 : 1), 0, 99);
-    gramPost(r, { tur: 'medya', yazar: 'MMA Gündem', kullanici: '@mmagundem', metin: L("{0}, {1}'dan ayrılıp {2} ile imzaladı.", [pFullName(f), r.org.ad, orgAdi(o)]) });
-    return L("{0} {1}'a gitti.", [pFullName(f), orgAdi(o)]);
+    gramPost(r, { tur: 'medya', yazar: 'MMA Gündem', kullanici: '@mmagundem', metin: L("{0}, {1} kadrosundan ayrılıp {2} ile imzaladı.", [pFullName(f), r.org.ad, orgAdi(o)]) });
+    return L("{0} gitti, yeni adresi {1}.", [pFullName(f), orgAdi(o)]);
   },
   yenile: (r, m, k) => {
     const f = fighterById(r, String(m.p?.id));
@@ -1626,7 +1626,7 @@ const H: Record<string, Handler> = {
     }
     r.yayin = { id, gece, min: d.min, basla: r.hafta, bitis: r.hafta + 52, yapilan: 0 };
     r.itibar = clamp(r.itibar + 2, 0, 100);
-    gramPost(r, { tur: 'organizasyon', yazar: r.org.ad, kullanici: orgHandle(r), metin: L("RESMİ: Gecelerimiz artık {0}'nda! 📺", [d.ad()]) });
+    gramPost(r, { tur: 'organizasyon', yazar: r.org.ad, kullanici: orgHandle(r), metin: L("RESMİ: Gecelerimiz artık {0} ekranlarında! 📺", [d.ad()]) });
     return L("Anlaşma imzalandı: gece başı {0}, yılda en az {1} gece.", [$(gece), d.min]);
   },
   sponsorTeklif: (r, m, k) => {
@@ -1648,7 +1648,7 @@ const H: Record<string, Handler> = {
     if (k === 'soz') {
       f.soz = r.hafta + 6;
       f.mutlu = clamp(f.mutlu + 8, 0, 100);
-      return L("{0}'e 6 hafta içinde maç sözü verdin.", [f.soyad]);
+      return L("Söz verdin: {0} 6 hafta içinde maç yapacak.", [f.soyad]);
     }
     if (k === 'serbest') return releaseFighter(r, f.id);
     f.mutlu = clamp(f.mutlu - 10, 0, 100);
@@ -1659,7 +1659,7 @@ const H: Record<string, Handler> = {
     const p = ensurePlan(r);
     p.sehir = String(m.p?.sehir);
     p.tesvik = Number(m.p?.para);
-    return L("Gelecek gece {0}'da. Şehir {1} teşvik ödeyecek.", [cityById(p.sehir).ad, $(p.tesvik)]);
+    return L("Gelecek gecenin şehri: {0}. Şehir {1} teşvik ödeyecek.", [cityById(p.sehir).ad, $(p.tesvik)]);
   },
   rakipGece: (r, m, k) => {
     const p = r.plan;
@@ -1690,7 +1690,7 @@ const H: Record<string, Handler> = {
     }
     r.satis = Number(m.p?.para);
     r.kapandi = 'satis';
-    return L("Organizasyonu {0}'a sattın. Efsane bir hikâye.", [$(r.satis)]);
+    return L("Organizasyonu sattın: {0}. Efsane bir hikâye.", [$(r.satis)]);
   },
   emeklilik: (r, m, k) => {
     const f = fighterById(r, String(m.p?.id));
@@ -1724,7 +1724,7 @@ const H: Record<string, Handler> = {
       d.sampiyon = undefined;
       d.savunma = 0;
       f.mutlu = clamp(f.mutlu - 30, 0, 100);
-      return L("{0}'in kemeri elinden alındı. Kemer boşta: iki üst sıradaki dövüşçüyü eşle.", [f.soyad]);
+      return L("{0} artık şampiyon değil: kemer elinden alındı. İki üst sıradaki dövüşçüyü kemer maçında eşle.", [f.soyad]);
     }
     f.soz = r.hafta + 8;
     d.sonUnvan = r.hafta - 10;
@@ -1798,13 +1798,13 @@ function weeklyEvents(r: PatronRun) {
       const ucret = r100(f.ucret * (1.3 + rand() * 0.3));
       if (f.kisilik === 'sadik' && f.mutlu >= 50) msg(r, { rol: 'dovuscu', kimden: pFullName(f), metin: L("{0} bana {1} teklif etti. Reddettim, ben buradayım. 🤝", [orgAdi(o.id), $(ucret)]) });
       else
-        msg(r, { rol: 'rakip', kimden: orgAdi(o.id), olay: 'rakipTeklif', p: { id: f.id, org: o.id, ucret }, metin: L("{0}, {1}'dan maç başı {2} teklif aldı. Eşlemezsen gidiyor.", [pFullName(f), orgAdi(o.id), $(ucret)]), secenekler: [{ k: 'esle', t: L("Teklifi eşle ({0})", [$(ucret)]) }, { k: 'birak', t: L("Gitsin") }], son: r.hafta + 2 });
+        msg(r, { rol: 'rakip', kimden: orgAdi(o.id), olay: 'rakipTeklif', p: { id: f.id, org: o.id, ucret }, metin: L("{0}, {1} organizasyonundan maç başı {2} teklif aldı. Eşlemezsen gidiyor.", [pFullName(f), orgAdi(o.id), $(ucret)]), secenekler: [{ k: 'esle', t: L("Teklifi eşle ({0})", [$(ucret)]) }, { k: 'birak', t: L("Gitsin") }], son: r.hafta + 2 });
     }
   }
   // Sözleşmesi biten dövüşçü
   for (const f of r.kadro.filter((x) => x.kalan === 0 && !busy(r, x.id) && !bekleyen(r).some((m) => m.olay === 'yenile' && m.p?.id === x.id))) {
     const ucret = r100(Math.max(f.ucret * 1.05, feeOf(f.guc, f.un) * orgPay(r)) * (1 + (f.kisilik === 'paragoz' ? 0.15 : 0) + (f.sampiyon ? 0.2 : 0)));
-    msg(r, { rol: 'menajer', kimden: L("{0}'in menajeri", [f.soyad]), olay: 'yenile', p: { id: f.id, ucret }, metin: L("Sözleşmesi bitti. 4 maçlık yeni sözleşme için maç başı {0} istiyoruz (şu an {1}).", [$(ucret), $(f.ucret)]), secenekler: [{ k: 'kabul', t: L("Kabul") }, { k: 'pazarlik', t: L("Ortada buluşalım") }, { k: 'birak', t: L("Yollar ayrılsın") }], son: r.hafta + 3 });
+    msg(r, { rol: 'menajer', kimden: L("Menajer ({0})", [f.soyad]), olay: 'yenile', p: { id: f.id, ucret }, metin: L("Sözleşmesi bitti. 4 maçlık yeni sözleşme için maç başı {0} istiyoruz (şu an {1}).", [$(ucret), $(f.ucret)]), secenekler: [{ k: 'kabul', t: L("Kabul") }, { k: 'pazarlik', t: L("Ortada buluşalım") }, { k: 'birak', t: L("Yollar ayrılsın") }], son: r.hafta + 3 });
   }
   // Aktif olmayan dövüşçü şikâyeti
   const bekleyenF = r.kadro.filter((f) => f.bosHafta >= (f.istek === 'aktif' ? 10 : 16) && !busy(r, f.id) && !f.sakat && !f.soz && !bekleyen(r).some((m) => m.p?.id === f.id));
@@ -1831,7 +1831,7 @@ function weeklyEvents(r: PatronRun) {
   if (chance(0.06) && r.itibar >= 15) {
     const c = pick(CITIES.filter((x) => x.id !== r.sehir));
     const para = r100(10_000 + r.itibar * 900);
-    msg(r, { rol: 'sehir', kimden: L("{0} turizm ofisi", [c.ad]), olay: 'sehirTeklif', p: { sehir: c.id, para }, metin: L("Bir sonraki gecenizi {0}'da yapın, {1} teşvik ödeyelim.", [c.ad, $(para)]), secenekler: [{ k: 'kabul', t: L("Gece {0}'da", [c.ad]) }, { k: 'red', t: L("Reddet") }], son: r.hafta + 2 });
+    msg(r, { rol: 'sehir', kimden: L("{0} turizm ofisi", [c.ad]), olay: 'sehirTeklif', p: { sehir: c.id, para }, metin: L("Bir sonraki geceniz şehrimizde olsun ({0}): {1} teşvik ödeyelim.", [c.ad, $(para)]), secenekler: [{ k: 'kabul', t: L("Gece: {0}", [c.ad]) }, { k: 'red', t: L("Reddet") }], son: r.hafta + 2 });
   }
   // Menajer yıldız getirir
   if (chance(0.05) && r.itibar >= 20) {
@@ -1901,7 +1901,7 @@ export function advanceWeek(r: PatronRun): GeceRapor | null {
     if (f.soz && r.hafta > f.soz && !busy(r, f.id)) {
       f.mutlu = clamp(f.mutlu - 20, 0, 100);
       f.soz = undefined;
-      rapor.push(L("😠 {0}'e verdiğin söz tutulmadı.", [f.soyad]));
+      rapor.push(L("😠 Sözün tutulmadı: {0} hâlâ maç bekliyor.", [f.soyad]));
     }
     if (f.yas <= 28 && f.guc < f.pot && chance(0.12 + r.tesis.performans * 0.04)) f.guc++;
     if (f.yas >= 33 && chance(0.06)) f.guc = Math.max(30, f.guc - 1);
@@ -1935,8 +1935,8 @@ export function advanceWeek(r: PatronRun): GeceRapor | null {
   for (const o of r.rakipler)
     if (r.itibar > o.itibar && !r.gecilen.includes(o.id)) {
       r.gecilen.push(o.id);
-      rapor.push(L("📈 {0} artık {1}'dan daha büyük!", [r.org.ad, orgAdi(o.id)]));
-      gramPost(r, { tur: 'medya', yazar: 'MMA Gündem', kullanici: '@mmagundem', metin: o.id === 'ufc' ? L("TARİHİ AN: {0}, UCC'yi geçerek dünyanın bir numaralı organizasyonu oldu! 🌍👑", [r.org.ad]) : L("{0}, {1}'ı geride bıraktı. Yükseliş sürüyor.", [r.org.ad, orgAdi(o.id)]) });
+      rapor.push(L("📈 {0} artık {1} organizasyonundan daha büyük!", [r.org.ad, orgAdi(o.id)]));
+      gramPost(r, { tur: 'medya', yazar: 'MMA Gündem', kullanici: '@mmagundem', metin: o.id === 'ufc' ? L("TARİHİ AN: {0}, UCC'yi geçerek dünyanın bir numaralı organizasyonu oldu! 🌍👑", [r.org.ad]) : L("{0}, {1} organizasyonunu geride bıraktı. Yükseliş sürüyor.", [r.org.ad, orgAdi(o.id)]) });
     }
   // UCC satın alma teklifi
   if (r.itibar >= 80 && r.uccTeklif !== yilOf(r) && chance(0.08)) {
