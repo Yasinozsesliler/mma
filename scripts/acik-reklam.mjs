@@ -136,31 +136,32 @@ if (VIDEO === 'dunya') {
 
 // Antrenör Modu: köşedeki hoca. Malzeme: scripts/acik-antrenor-kayit.mjs (kafes kareleri: kose.mp4'ten kırpılmış)
 let END_KICK = '';
+// Ortak sahne parçaları (antrenör, menajer)
+const GREEN = '#1f9d55';
+const OCT = 'polygon(29.3% 0,70.7% 0,100% 29.3%,100% 70.7%,70.7% 100%,29.3% 100%,0 70.7%,0 29.3%)';
+// Kafes kartı: oyunun gerçek köşe maçı kaydı
+const cage = (top, w, start, t0 = 0, rate = 1, extra = '', inner = '', KAF = `${src}/kafes`) => {
+  const KMAX = readdirSync(KAF).length;
+  const h = Math.round(((w - 24) * 504) / 1016) + 24;
+  return `<div class="card" style="left:${(1080 - w) / 2}px;top:${top}px;width:${w}px;height:${h}px;background:#000;${extra}"><img data-seq="${KAF}" data-start="${start}" data-t0="${t0}" data-rate="${rate}" data-max="${KMAX}" style="width:100%;height:100%;object-fit:cover"/>${inner}</div>`;
+};
+const av = (file, size, ring) => `<div style="width:${size}px;height:${size}px;clip-path:${OCT};background:${ring};padding:${Math.round(size * 0.05)}px"><div style="width:100%;height:100%;clip-path:${OCT};overflow:hidden;background:#1d2733"><img src="file://${src}/${file}" style="width:118%;margin:-9%"/></div></div>`;
+// Parmakla dokunuş: belirip basar, halka yayılır
+const tapAt = (x, y, at) => `<div style="position:absolute;left:${x - 60}px;top:${y - 60}px;width:120px;height:120px;border-radius:50%;border:6px solid ${RED};opacity:0;z-index:45;animation:ripple .55s ${at + 0.18}s ease-out both"></div>
+  <div style="position:absolute;left:${x - 22}px;top:${y - (VIDEO === 'antrenor' ? 8 : 60)}px;font-size:110px;z-index:46;opacity:0;animation:finger .7s ${at - 0.3}s ease-out both">👆</div>`;
+const TAPCSS = `@keyframes ripple{0%{opacity:.9;transform:scale(.3)}100%{opacity:0;transform:scale(1.6)}}
+  @keyframes finger{0%{opacity:0;transform:translate(60px,90px)}45%{opacity:1;transform:translate(0,0)}60%{transform:translate(0,0) scale(.88)}80%,100%{opacity:1;transform:translate(0,0) scale(1)}}
+  @keyframes pick{0%,40%{background:#fff;transform:none}55%{transform:scale(.96)}75%,100%{background:#fff3c4;transform:scale(1.03);border-color:${RED}}}
+  @keyframes stamp{0%{opacity:0;transform:scale(2.6) rotate(-12deg)}55%{opacity:1;transform:scale(.92) rotate(-8deg)}100%{opacity:1;transform:scale(1) rotate(-8deg)}}
+  @keyframes slam{0%{opacity:0;transform:scale(3) skewX(-7deg)}50%{opacity:1;transform:scale(.94) skewX(-7deg)}100%{opacity:1;transform:scale(1) skewX(-7deg)}}
+  @keyframes shake{0%,100%{transform:none}20%{transform:translate(-14px,6px)}40%{transform:translate(12px,-8px)}60%{transform:translate(-8px,4px)}80%{transform:translate(5px,-3px)}}
+  .opt{position:absolute;left:70px;right:70px;height:150px;border-radius:30px;background:#fff;border:5px solid #e3d6bd;display:flex;align-items:center;gap:30px;padding:0 40px;box-shadow:0 18px 40px rgba(60,30,10,.12)}
+  .opt b{font-family:InB;font-weight:normal;font-size:46px;color:${INK}}.opt s{text-decoration:none;font-family:In;font-size:28px;color:#8a7a66;display:block;margin-top:6px}
+  .ic{width:84px;height:84px;border-radius:24px;display:flex;align-items:center;justify-content:center;font-size:48px;flex:none}`;
+
+
 if (VIDEO === 'antrenor') {
   END_KICK = 'ANTRENÖR MODU';
-  const KAF = `${src}/kafes`;
-  const KMAX = readdirSync(KAF).length;
-  const GREEN = '#1f9d55';
-  const OCT = 'polygon(29.3% 0,70.7% 0,100% 29.3%,100% 70.7%,70.7% 100%,29.3% 100%,0 70.7%,0 29.3%)';
-  // Kafes kartı: oyunun gerçek köşe maçı kaydı
-  const cage = (top, w, start, t0 = 0, rate = 1, extra = '', inner = '') => {
-    const h = Math.round(((w - 24) * 504) / 1016) + 24;
-    return `<div class="card" style="left:${(1080 - w) / 2}px;top:${top}px;width:${w}px;height:${h}px;background:#000;${extra}"><img data-seq="${KAF}" data-start="${start}" data-t0="${t0}" data-rate="${rate}" data-max="${KMAX}" style="width:100%;height:100%;object-fit:cover"/>${inner}</div>`;
-  };
-  const av = (file, size, ring) => `<div style="width:${size}px;height:${size}px;clip-path:${OCT};background:${ring};padding:${Math.round(size * 0.05)}px"><div style="width:100%;height:100%;clip-path:${OCT};overflow:hidden;background:#1d2733"><img src="file://${src}/${file}" style="width:118%;margin:-9%"/></div></div>`;
-  // Parmakla dokunuş: belirip basar, halka yayılır
-  const tapAt = (x, y, at) => `<div style="position:absolute;left:${x - 60}px;top:${y - 60}px;width:120px;height:120px;border-radius:50%;border:6px solid ${RED};opacity:0;z-index:45;animation:ripple .55s ${at + 0.18}s ease-out both"></div>
-    <div style="position:absolute;left:${x - 22}px;top:${y - 8}px;font-size:110px;z-index:46;opacity:0;animation:finger .7s ${at - 0.3}s ease-out both">👆</div>`;
-  const TAPCSS = `@keyframes ripple{0%{opacity:.9;transform:scale(.3)}100%{opacity:0;transform:scale(1.6)}}
-    @keyframes finger{0%{opacity:0;transform:translate(60px,90px)}45%{opacity:1;transform:translate(0,0)}60%{transform:translate(0,0) scale(.88)}80%,100%{opacity:1;transform:translate(0,0) scale(1)}}
-    @keyframes pick{0%,40%{background:#fff;transform:none}55%{transform:scale(.96)}75%,100%{background:#fff3c4;transform:scale(1.03);border-color:${RED}}}
-    @keyframes stamp{0%{opacity:0;transform:scale(2.6) rotate(-12deg)}55%{opacity:1;transform:scale(.92) rotate(-8deg)}100%{opacity:1;transform:scale(1) rotate(-8deg)}}
-    @keyframes slam{0%{opacity:0;transform:scale(3) skewX(-7deg)}50%{opacity:1;transform:scale(.94) skewX(-7deg)}100%{opacity:1;transform:scale(1) skewX(-7deg)}}
-    @keyframes shake{0%,100%{transform:none}20%{transform:translate(-14px,6px)}40%{transform:translate(12px,-8px)}60%{transform:translate(-8px,4px)}80%{transform:translate(5px,-3px)}}
-    .opt{position:absolute;left:70px;right:70px;height:150px;border-radius:30px;background:#fff;border:5px solid #e3d6bd;display:flex;align-items:center;gap:30px;padding:0 40px;box-shadow:0 18px 40px rgba(60,30,10,.12)}
-    .opt b{font-family:InB;font-weight:normal;font-size:46px;color:${INK}}.opt s{text-decoration:none;font-family:In;font-size:28px;color:#8a7a66;display:block;margin-top:6px}
-    .ic{width:84px;height:84px;border-radius:24px;display:flex;align-items:center;justify-content:center;font-size:48px;flex:none}`;
-
   // 1-2) Kanca: kafes, sonra "köşedesin"
   SCENES.push({ name: 'hook', d: 2.3, html: page0(head(300, 'ANTRENÖR MODU', 'BU SEFER', 'KAFESTE DEĞİLSİN', -0.35) + cage(840, 1000, 1.0, 0, 1, 'transform:rotate(-1.5deg)'), TAPCSS) });
   SCENES.push({
@@ -270,6 +271,153 @@ if (VIDEO === 'antrenor') {
   });
 }
 
+// Menajer Modu: telefonundaki şampiyon. Malzeme: scripts/menajer-kayit.ts + scripts/menajer-yakala.mjs
+// Mesajlar, seçenekler, sözler ve sonuç oyunun o kayıttaki gerçek metinleridir.
+if (VIDEO === 'menajer') {
+  END_KICK = 'YENİ · MENAJER MODU';
+  const KF = `${src}/kafesk`;
+  const BLUE = '#2f7cf6';
+  const PCSS = `.ph{position:absolute;left:110px;width:860px;border-radius:64px;background:#fff;border:14px solid #16120f;box-shadow:0 50px 100px rgba(60,30,10,.3);overflow:hidden}
+    .ph .top{display:flex;align-items:center;gap:22px;padding:34px 36px 26px;border-bottom:2px solid #eee;background:#fafafa}
+    .ph .top b{font-family:InB;font-weight:normal;font-size:40px;color:${INK};display:block}.ph .top s{text-decoration:none;font-family:In;font-size:26px;color:#8e8e93}
+    .ph .chat{background:#f2f2f7;padding:30px 30px 34px;display:flex;flex-direction:column;gap:22px}
+    .bub{align-self:flex-start;max-width:86%;background:#fff;border-radius:34px 34px 34px 10px;padding:24px 30px;font-family:In;font-size:37px;line-height:1.35;color:${INK};box-shadow:0 4px 12px rgba(0,0,0,.06)}
+    .bub b{font-family:InB;font-weight:normal}.me{align-self:flex-end;background:${BLUE};color:#fff;border-radius:34px 34px 10px 34px}
+    .rep{border:4px solid ${BLUE};color:${BLUE};background:#fff;border-radius:28px;padding:18px 26px;font-family:InB;font-size:32px}
+    .typing{align-self:flex-start;background:#fff;border-radius:30px;padding:22px 30px;display:flex;gap:10px}.typing i{width:16px;height:16px;border-radius:50%;background:#b8b8bf;animation:dot .9s infinite}
+    @keyframes dot{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+    @keyframes bub{0%{opacity:0;transform:translateY(30px) scale(.9)}100%{opacity:1;transform:none}}
+    @keyframes gone{to{opacity:0;height:0;padding:0;margin:0}}
+    @keyframes picked{0%,40%{background:#fff;color:${BLUE}}70%,100%{background:${BLUE};color:#fff}}`;
+  const phTop = (who, sub) => `<div class="top">${av('vs-biz.png', 92, RED)}<div><b>${who}</b><s>${sub}</s></div><div style="margin-left:auto;font-size:44px">📞</div></div>`;
+  const bub = (txt, at, cls = '') => `<div class="bub ${cls}" style="animation:bub .35s ${at}s both">${txt}</div>`;
+  const typing = (from, to) => `<div class="typing" style="animation:bub .2s ${from}s both,gone .01s ${to}s forwards"><i></i><i style="animation-delay:.15s"></i><i style="animation-delay:.3s"></i></div>`;
+  const WHO = 'Davit Lomidze 🏆';
+  const SUB = 'UCC Horoz Sıklet Şampiyonu';
+  const M1 = 'Sözleşmem bir maç sonra bitiyor. Telefonum susmuyor, herkes beni istiyor.';
+  const M2 = 'Sana açık konuşayım: 32 yaşındayım. İki yıl içinde kemer yoksa eldivenleri asacağım. <b>Bu benim son şansım.</b>';
+  // 1) Kanca: şampiyondan mesaj
+  SCENES.push({
+    name: 'hook', d: 2.5,
+    html: page0(head(190, 'GECE 03:12', 'BU MESAJ', 'BİR ŞAMPİYONDAN GELDİ', -0.4) + `<div class="ph" style="top:620px">${phTop(WHO, SUB)}<div class="chat" style="min-height:560px">${typing(-0.2, 0.35)}${bub(M1, 0.35)}${typing(1.4, 1.95)}</div></div>`, PCSS + TAPCSS + '.l2{font-size:86px}'),
+  });
+  SCENES.push({
+    name: 'hook2', d: 2.6,
+    html: page0(
+      `<div class="h" style="top:190px"><div class="l1" style="animation:pop .4s .0s both">ÇÜNKÜ MENAJERİ</div><div class="l2" style="font-size:150px;animation:slam .45s .25s both">SENSİN.</div></div>` +
+        `<div class="ph" style="top:620px">${phTop(WHO, SUB)}<div class="chat" style="min-height:560px">${bub(M1, -1)}${bub(M2, 0.15)}</div></div>`,
+      PCSS + TAPCSS,
+    ),
+  });
+  // 2) Pazarlık masası: UCC ünvan maçı teklifi
+  SCENES.push({
+    name: 'masa', d: 2.7,
+    html: page0(
+      head(200, 'PAZARLIK MASASI', 'MAAŞINI', 'SEN KONUŞ', 0.0) +
+        `<div class="card" style="left:90px;top:600px;width:900px;padding:34px 40px;border:none;animation:fadeUp .4s .1s both">
+          <div style="font-family:InB;font-size:28px;letter-spacing:6px;color:#8a7a66">UCC · ÜNVAN MAÇI</div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:16px"><span style="font-family:In;font-size:34px;color:#8a7a66">Ücret</span>
+            <span style="position:relative;font-size:96px;color:${INK}"><span style="position:absolute;right:0;animation:out1 .15s 1.25s both">$162.000</span><span style="opacity:0;color:${GREEN};animation:in1 .3s 1.35s both">$186.300</span></span></div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-family:In;font-size:34px;color:#8a7a66">Bonus</span><span style="font-size:64px">+$90.000</span></div>
+          <div style="font-family:InB;font-size:26px;color:#8a7a66;margin-top:20px">SABIR</div>
+          <div style="height:18px;border-radius:9px;background:#eadfca;overflow:hidden;margin-top:8px"><div style="height:100%;width:100%;background:#f2b233;transform-origin:0 50%;animation:sabir .4s 1.3s both"></div></div>
+          <div style="margin-top:26px;background:#f2f2f7;border-radius:26px;padding:20px 26px;font-family:In;font-size:32px;color:${INK};position:relative;height:96px">
+            <span style="position:absolute;animation:out1 .15s 1.3s both">UCC: “Teklifimiz ortada. Dinliyoruz.”</span><span style="opacity:0;animation:in1 .3s 1.45s both">UCC: “Kazanırsa hak eder.”</span></div></div>` +
+        `<div class="opt" style="top:1250px;left:90px;right:560px;height:130px;justify-content:center;animation:fadeUp .3s .4s both,pick .6s 1.0s both"><b style="font-size:44px">Ücret +%15</b></div>
+        <div class="opt" style="top:1250px;left:560px;right:90px;height:130px;justify-content:center;animation:fadeUp .3s .5s both"><b style="font-size:44px">Bonus +%30</b></div>
+        <div class="opt" style="top:1410px;left:90px;right:90px;height:130px;justify-content:center;background:${INK};border-color:${INK};animation:fadeUp .3s .6s both"><b style="font-size:48px;color:#fff">İMZALA</b></div>` +
+        tapAt(320, 1310, 1.0) + tapAt(540, 1470, 2.0) +
+        `<div style="position:absolute;left:300px;top:840px;z-index:47;font-size:96px;color:${GREEN};border:9px solid ${GREEN};border-radius:22px;padding:4px 34px;background:rgba(255,255,255,.92);opacity:0;animation:stamp .4s 2.2s both">İMZALANDI</div>
+        <style>@keyframes sabir{to{transform:scaleX(.62)}}@keyframes out1{to{opacity:0}}@keyframes in1{0%{opacity:0;transform:scale(1.4)}100%{opacity:1;transform:none}}</style>`,
+      TAPCSS,
+    ),
+  });
+  // 3) Basın toplantısı
+  SCENES.push({
+    name: 'basin', d: 2.4,
+    html: page0(
+      head(190, 'BASIN TOPLANTISI', 'MİKROFON', 'SENDE', 0.0) +
+        `<div class="ph" style="top:600px"><div class="top"><div style="width:92px;height:92px;border-radius:50%;background:#ffe1d6;display:flex;align-items:center;justify-content:center;font-size:50px">🎙️</div><div><b>UCC basın toplantısı</b><s>8. hafta</s></div></div>
+          <div class="chat">${bub('Bir muhabir soruyor: “Yerlan Tokayev senin için sadece bir basamak mı?” <b>Davit sana bakıyor.</b>', 0.15)}
+          <div class="rep" style="animation:bub .3s .5s both,picked .5s 1.35s both">Sert konuş. Herkes bu maçı konuşsun.</div>
+          <div class="rep" style="animation:bub .3s .6s both">Saygılı ol, profesyonel görün.</div>
+          <div class="rep" style="animation:bub .3s .7s both">Az konuş. Cevabı kafeste verecek.</div></div></div>` +
+        tapAt(760, 1080, 1.35),
+      PCSS + TAPCSS,
+    ),
+  });
+  // 4) Face-off (oyunun sinematik face-off'undaki gerçek bilgiler)
+  const row = (a, k, b, hi = false) => `<div style="display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:2px solid #efe5d2"><span style="font-size:52px;width:220px">${a}</span><span style="font-family:InB;font-size:26px;letter-spacing:6px;color:#8a7a66">${k}</span><span style="font-size:52px;width:220px;text-align:right;color:${hi ? RED : INK}">${b}</span></div>`;
+  SCENES.push({
+    name: 'face', d: 2.7,
+    html: page0(
+      head(170, 'UCC · ÜNVAN MAÇI', 'FACE-OFF', '', -0.2) +
+        `<div style="position:absolute;left:0;right:0;top:470px;display:flex;justify-content:center;align-items:center;gap:30px;z-index:5">
+          <div style="text-align:center;animation:inL .45s .05s both">${av('vs-biz.png', 290, RED)}<div style="font-size:70px;margin-top:16px;transform:skewX(-7deg)">LOMİDZE</div></div>
+          <div style="font-size:140px;color:#f2b233;transform:skewX(-10deg);animation:slam .4s .35s both">VS</div>
+          <div style="text-align:center;animation:inR .45s .05s both">${av('vs-rakip.png', 290, BLUE)}<div style="font-size:70px;margin-top:16px;transform:skewX(-7deg)">TOKAYEV</div></div></div>
+        <div style="position:absolute;left:80px;top:960px;max-width:640px;background:#fff;border-left:10px solid ${RED};border-radius:20px;padding:20px 28px;font-family:In;font-size:34px;font-style:italic;box-shadow:0 14px 30px rgba(60,30,10,.12);animation:fadeUp .35s .7s both">“Bu maç benim maaşımı ikiye katlayacak.”</div>
+        <div style="position:absolute;right:80px;top:1090px;max-width:640px;background:#fff;border-right:10px solid ${BLUE};border-radius:20px;padding:20px 28px;font-family:In;font-size:34px;font-style:italic;text-align:right;box-shadow:0 14px 30px rgba(60,30,10,.12);animation:fadeUp .35s 1.0s both">“Bu gece ışıkları söndüreceğim.”</div>
+        <div style="position:absolute;left:110px;right:110px;top:1250px;animation:fadeUp .35s 1.3s both">${row('23-3-0', 'REKOR', '11-0-0')}${row('87', 'GÜÇ', '94', true)}${row('Muay Thai', 'STİL', 'Boks')}</div>
+        <div style="position:absolute;left:0;right:0;top:1570px;display:flex;justify-content:center"><div style="font-family:InB;font-size:36px;color:#fff;background:${RED};padding:12px 30px;border-radius:40px;animation:pop .35s 1.8s both">⚠️ Rakip daha güçlü</div></div>`,
+      `${TAPCSS}@keyframes inL{from{opacity:0;transform:translateX(-300px)}to{opacity:1;transform:none}}@keyframes inR{from{opacity:0;transform:translateX(300px)}to{opacity:1;transform:none}}`,
+    ),
+  });
+  // 5) Soyunma odası: köşeye tek not
+  SCENES.push({
+    name: 'not', d: 2.4,
+    html: page0(
+      head(190, 'MAÇ GECESİ', 'KÖŞEYE', 'TEK NOT', 0.0) +
+        `<div class="ph" style="top:600px">${phTop('Davit · maç gecesi', 'çevrimiçi')}<div class="chat">
+          ${bub('Soyunma odasındayız. Rakip Yerlan Tokayev: boksör, elleri çok hızlı. <b>Ne diyelim?</b>', 0.15)}
+          <div class="rep" style="animation:bub .3s .45s both,picked .5s 1.3s both">Ayakta kal, mesafeyi koru.</div>
+          <div class="rep" style="animation:bub .3s .55s both">Onu yere indir.</div>
+          <div class="rep" style="animation:bub .3s .65s both">Baskı kur, nefesini kes.</div></div></div>` +
+        tapAt(700, 1020, 1.3),
+      PCSS + TAPCSS,
+    ),
+  });
+  // 6) Kafes: ünvan maçının gerçek kaydı
+  SCENES.push({
+    name: 'kafes', d: 2.9,
+    html: page0(head(200, 'UCC · 5 RAUNT', 'KAFESTE', 'SÖZ ONUN', -0.2) + cage(620, 1030, 1.5, 0, 2.2, 'transform:rotate(-1deg)', '', KF) +
+      `<div style="position:absolute;left:0;right:0;top:1230px;text-align:center;font-family:InB;font-size:40px;color:${INK};animation:fadeUp .35s 1.2s both">“Davit zor anlardan sakin çıktı.”</div>`, TAPCSS),
+  });
+  // 7) Sonuç
+  SCENES.push({
+    name: 'kemer', d: 2.6,
+    html: page0(
+      `<div style="position:absolute;left:0;right:0;top:260px;display:flex;flex-direction:column;align-items:center;z-index:5">
+        <img src="${ICON}" style="width:420px;filter:drop-shadow(0 30px 50px rgba(242,178,51,.55));animation:pop .5s .05s both"/>
+        <div style="font-size:150px;line-height:1;color:${INK};transform:skewX(-7deg);margin-top:20px;animation:slam .45s .3s both">KEMERİNİ</div>
+        <div style="font-size:150px;line-height:1.05;color:${RED};transform:skewX(-7deg);animation:slam .45s .45s both">KORUDU!</div>
+        <div style="font-family:InB;font-size:38px;color:#8a7a66;margin-top:20px;animation:fadeUp .35s .8s both">5. raunt · oybirliğiyle karar</div>
+        <div style="margin-top:50px;font-size:96px;color:#fff;background:${GREEN};padding:6px 46px 14px;border-radius:26px;box-shadow:0 30px 70px rgba(31,157,85,.4);opacity:0;animation:stamp .4s 1.2s both">+$40.845</div>
+        <div style="font-family:InB;font-size:34px;letter-spacing:6px;color:${GREEN};margin-top:22px;animation:fadeUp .3s 1.5s both">SENİN KOMİSYONUN</div></div>`,
+      TAPCSS,
+    ),
+  });
+  // 8) Duygusal kapanış mesajı
+  SCENES.push({
+    name: 'son', d: 2.7,
+    html: page0(
+      head(190, '', 'BU KEMER', 'İKİNİZİN', 0.05) +
+        `<div class="ph" style="top:620px">${phTop(WHO, 'şimdi')}<div class="chat" style="min-height:460px">${typing(0.0, 0.5)}${bub('Yaptık. Kimse inanmazken sen inandın. <b>Bu kemer ikimizin, ortak.</b>', 0.5)}${bub('❤️🏆', 1.4, 'me')}</div></div>`,
+      PCSS + TAPCSS,
+    ),
+  });
+  // 9) Güncellemede daha fazlası
+  SCENES.push({
+    name: 'yeni', d: 2.6,
+    html: page0(
+      head(210, 'YENİ GÜNCELLEME', 'DAHA FAZLASI', 'GELDİ', 0.0) +
+        [['💀', 'KABUS ZORLUĞU', 'Rakipler daha güçlü, sakatlıklar iz bırakır. Ödülleri satılmaz, kazanılır.', '#2a1414', '#fff'], ['🌐', 'YOL EVRENİ', "Menajerliğini yaptığın dövüşçü, kariyerinde karşına çıkar.", '#dbe9ff', INK], ['🎙️', 'MENAJER MODU', 'Telefon, pazarlık, basın, kemer. Hepsi sende.', '#ffe1d6', INK]]
+          .map(([ic, ad, q, bg], i) => `<div class="opt" style="top:${620 + i * 270}px;height:240px;animation:fadeUp .4s ${0.25 + i * 0.25}s both"><div class="ic" style="background:${bg};width:120px;height:120px;font-size:68px">${ic}</div><div><b style="font-size:52px">${ad}</b><s style="font-size:30px;line-height:1.35">${q}</s></div></div>`).join(''),
+      TAPCSS,
+    ),
+  });
+}
+
 // Kapanış: krem zemin, logo, mağazalar, düşen konfeti
 const CONF = (() => {
   let r = 11;
@@ -363,7 +511,7 @@ let t = 0;
 SCENES.forEach((s, i) => { at.push(t); t += s.d - (i < SCENES.length - 1 ? XF : 0); });
 const total = t;
 const idx = (n) => SCENES.findIndex((s) => s.name === n);
-const TR = { pas2: 'smoothup', sehir: 'slideleft', mem0: 'fade', evr: 'fade', heykel: 'fade', end: 'circleopen', kose: 'fade', salon: 'slideleft', ogrenci: 'slideleft', vs: 'zoomin', plan: 'slideleft', talimat: 'slideup', zafer: 'fade', sira: 'slideleft' };
+const TR = { pas2: 'smoothup', sehir: 'slideleft', mem0: 'fade', evr: 'fade', heykel: 'fade', end: 'circleopen', kose: 'fade', salon: 'slideleft', ogrenci: 'slideleft', vs: 'zoomin', plan: 'slideleft', talimat: 'slideup', zafer: 'fade', sira: 'slideleft', hook2: 'fade', masa: 'slideleft', basin: 'slideleft', face: 'zoomin', not: 'slideleft', kafes: 'fade', kemer: 'fadewhite', son: 'fade', yeni: 'slideleft' };
 const snd = (n) => `${root}/assets/sounds/${n}.wav`;
 const audio = [];
 const add = (file, startSec, vol = 1, loop = false) => audio.push({ file, startSec, vol, loop });
@@ -393,6 +541,34 @@ if (VIDEO === 'antrenor') {
   cue('zafer', 2.05, 'roar', 0.6);
   cue('sira', 1.2, 'whoosh', 0.6);
   cue('sira', 1.85, 'fanfare', 0.5);
+} else if (VIDEO === 'menajer') {
+  add(snd('giris_trap'), 0, 0.7);
+  add(snd('music_hub'), 10, 0.45, true);
+  cue('hook', 0.35, 'chime', 0.8);
+  cue('hook2', 0.15, 'chime', 0.7);
+  cue('hook2', 0.3, 'slam', 0.8);
+  cue('masa', 1.0, 'tap', 0.8);
+  cue('masa', 1.35, 'cash', 0.6);
+  cue('masa', 2.0, 'tap', 0.8);
+  cue('masa', 2.2, 'lock', 0.7);
+  cue('basin', 0.1, 'flash', 0.6);
+  cue('basin', 1.35, 'tap', 0.8);
+  cue('basin', 1.5, 'ooh', 0.5);
+  cue('face', 0.35, 'slam', 0.7);
+  cue('face', 0.1, 'whoosh', 0.5);
+  cue('not', 0.15, 'chime', 0.6);
+  cue('not', 1.3, 'tap', 0.8);
+  cue('kafes', 0.0, 'bell', 0.7);
+  cue('kafes', 0.0, 'crowd_loop', 0.35);
+  cue('kafes', 0.6, 'punch1', 0.6);
+  cue('kafes', 1.3, 'punch3', 0.6);
+  cue('kafes', 2.0, 'body', 0.6);
+  cue('kemer', 0.3, 'win', 0.8);
+  cue('kemer', 0.35, 'roar', 0.6);
+  cue('kemer', 1.2, 'cash', 0.7);
+  cue('son', 0.5, 'chime', 0.7);
+  cue('son', 0.6, 'swell', 0.4);
+  cue('yeni', 0.25, 'whoosh', 0.5);
 } else {
   add(snd('giris_epik'), 0, 0.8);
   add(snd('music_menu'), 6.4, 0.55, true);
