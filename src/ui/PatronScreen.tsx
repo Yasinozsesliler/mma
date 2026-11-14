@@ -8,6 +8,9 @@ import { WEIGHT_CLASSES } from '../engine/data';
 import type { Kisilik, MFighter, MKayit } from '../engine/manager';
 import {
   addBout,
+  adRefreshMarket,
+  adReplay,
+  adScoutReport,
   advanceWeek,
   answer,
   bekleyen,
@@ -18,6 +21,8 @@ import {
   boutDraw,
   boutNote,
   busy,
+  canAdMarket,
+  canAdReplay,
   canAdvance,
   canRun,
   cityById,
@@ -48,7 +53,9 @@ import {
   P_TRIAL_NIGHTS,
   pFullName,
   pLook,
+  potVisible,
   projectNight,
+  replayPay,
   pRekor,
   rankOf,
   ranking,
@@ -86,16 +93,17 @@ import {
 import { CITIES } from '../engine/worldMap';
 import type { WeightClass } from '../engine/types';
 import { L, LOC } from '../i18n';
-import { buy, PURCHASES, restorePurchases, useOwned, usePrice } from '../monetization';
-import { PATRON_SKU, ULTIMATE_SKU } from '../monetization/skus';
+import { buyErrorText, buy, maybeStartTrialDeal, PURCHASES, restorePurchases, useDeal, useOwned, usePrice } from '../monetization';
+import { DEAL_SKU, PATRON_SKU, ULTIMATE_SKU } from '../monetization/skus';
 import { actPatron, archivePatron, setNightReport, setPatron, useNightReport, usePatron, usePatronHall } from '../patronStore';
 import { Bar, Button, CageBg, Card, Choice, Icon, Screen, SLANT, type IconName } from './components';
+import { AdOffer } from './AdOffer';
 import { OrgLogo } from './OrgLogo';
 import { FighterAvatar } from './FighterAvatar';
 import { HubNav, type NavItem } from './HubNav';
 import { FaceOffModal, MgrWatch } from './ManagerViews';
 import { PatronGram } from './PatronGram';
-import { FullPackLink } from './ShopSheet';
+import { DealCard, FullPackLink } from './ShopSheet';
 import { C, F, R } from './theme';
 
 const $ = money;
@@ -187,14 +195,20 @@ export function PatronScreen({ onExit }: { onExit: () => void }) {
   return <PHub r={r} onExit={onExit} />;
 }
 
-function PatronPack({ lead }: { lead?: string }) {
+function PatronPack({ lead, over }: { lead?: string; over?: boolean }) {
   const price = usePrice(PATRON_SKU);
+  const dealReady = !!usePrice(DEAL_SKU);
+  const deal = useDeal();
+  useEffect(() => {
+    if (over) maybeStartTrialDeal(dealReady, 'patron');
+  }, [over, dealReady]);
   const [busy_, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
   if (!PURCHASES) return null;
   return (
     <LinearGradient colors={['#1d1206', '#08090b']} style={ps.pack}>
       {lead ? <Text style={ps.packLead}>{lead}</Text> : null}
+      {deal ? <DealCard deal={deal} compact /> : null}
       <Text style={ps.packText}>{L("Tek seferlik alım: sınırsız gece, bütün sıkletler, stadyumlar, PPV anlaşmaları ve UCC'yi geçme yolculuğu.")}</Text>
       <Button
         label={price ? L("Patron Modu · {0}", [price]) : L("Patron Modu'nu al")}
@@ -207,7 +221,7 @@ function PatronPack({ lead }: { lead?: string }) {
           const res = await buy(PATRON_SKU);
           setBusy(false);
           if (res === 'ok') sfx('fanfare');
-          else if (res === 'hata') setMsg(L("Satın alma şu an yapılamadı. Biraz sonra tekrar dene."));
+          else if (res === 'hata') setMsg(buyErrorText());
         }}
       />
       <Pressable onPress={async () => setMsg((await restorePurchases()) ? L("Satın alımların geri yüklendi.") : L("Bu hesapta satın alma bulunamadı."))} hitSlop={8} style={{ alignSelf: 'center', marginTop: 8 }}>
@@ -419,7 +433,7 @@ function Hero({ r, goOffice, goCard }: { r: PatronRun; goOffice: () => void; goC
       )}
       {r.kayipHafta > 0 ? <Text style={[ps.small, { color: C.red, marginTop: 6 }]}>{L("⚠️ Kasa ekside: {0}/6 hafta. Düzelmezse iflas.", [r.kayipHafta])}</Text> : null}
       {over ? (
-        <PatronPack lead={L("Deneme bitti: {0} gece yaptın. Organizasyonun seni bekliyor.", [P_TRIAL_NIGHTS])} />
+        <PatronPack lead={L("Deneme bitti: {0} gece yaptın. Organizasyonun seni bekliyor.", [P_TRIAL_NIGHTS])} over />
       ) : (
         <View style={{ marginTop: 10 }}>
           <Button
@@ -534,6 +548,7 @@ function NightReport({ r, g, onClose }: { r: PatronRun; g: GeceRapor; onClose: (
               ))}
             </Card>
           ) : null}
+          {canAdReplay(r, g) ? <AdOffer yer="patron_tekrar" icon="television-play" title={L("Tekrar yayınını sat")} desc={L("Gecenin tekrarını kanallara sat: +{0}", [$(replayPay(g))])} onReward={() => actPatron(adReplay)} /> : null}
           <Text style={ps.section}>{L("KASA")}</Text>
           <Card>
             {rows.map(([k, v]) => (
@@ -1038,7 +1053,7 @@ function Dossier({ r, f, onClose, onMsg }: { r: PatronRun; f: PFighter; onClose:
             <Bar value={f.un} color={C.gold} label={L("Şöhret")} right={String(f.un)} />
             <Bar value={f.mutlu} color={C.green} label={L("Mutluluk")} right={`${moodIcon(f.mutlu)} ${f.mutlu}`} />
             <Bar value={100 - f.hasar} color={C.blue} label={L("Sağlık")} right={f.sakat ? L("{0} hafta sakat", [f.sakat]) : String(100 - f.hasar)} />
-            {r.tesis.scout >= 2 ? <Text style={ps.small}>{L("Gözlemci raporu: potansiyel tavanı {0}", [f.pot])}</Text> : null}
+            {potVisible(r) ? <Text style={ps.small}>{L("Gözlemci raporu: potansiyel tavanı {0}", [f.pot])}</Text> : null}
             <Card>
               <Text style={ps.small}>{P_KISILIK[f.kisilik].aciklama()}</Text>
               <Text style={[ps.small, { color: C.gold }]}>🎯 {ISTEK[f.istek]()}</Text>
@@ -1089,6 +1104,8 @@ function Market({ r, onMsg }: { r: PatronRun; onMsg: (m: string) => void }) {
   return (
     <View style={{ gap: 10 }}>
       <Text style={ps.hint}>{L("Piyasa 4 haftada bir yenilenir. Rakip organizasyonlar da aynı adayların peşinde.")}</Text>
+      {canAdMarket(r) ? <AdOffer yer="patron_piyasa" icon="account-search" title={L("Yeni adaylar")} desc={L("Gözcün bir tur daha atsın: piyasa şimdi yenilensin.")} onReward={() => onMsg(actPatron(adRefreshMarket) ?? '')} /> : null}
+      {!potVisible(r) ? <AdOffer yer="patron_rapor" icon="file-search" title={L("Gözlemci raporu")} desc={L("Bu hafta adayların ve dövüşçülerinin gizli potansiyelini gör.")} onReward={() => onMsg(actPatron(adScoutReport) ?? '')} /> : null}
       <View style={ps.wrap}>
         <Chip label={L("3 maçlık sözleşme")} on={mac === 3} onPress={() => setMac(3)} color={C.blue} />
         <Chip label={L("6 maçlık sözleşme")} on={mac === 6} onPress={() => setMac(6)} color={C.blue} />
@@ -1116,7 +1133,7 @@ function Candidate({ r, a, mac, onMsg }: { r: PatronRun; a: PAday; mac: 3 | 6; o
           </Text>
           <Text style={ps.fSub} numberOfLines={1}>
             {L("güç {0}", [a.guc])} · ⭐{a.un} · {P_KISILIK[a.kisilik].ad()}
-            {r.tesis.scout >= 2 ? ` · ${L("pot. {0}", [a.pot])}` : ''}
+            {potVisible(r) ? ` · ${L("pot. {0}", [a.pot])}` : ''}
           </Text>
         </View>
       </View>

@@ -3,6 +3,7 @@
 //  • Hoş Geldin: oyuncu 3. maçını bitirince (oyunu tanıdıktan sonra) 72 saat, bir kez.
 //  • Kara Cuma: Kara Cuma Gecesi etkinliği boyunca; etkinliğin penceresi şimdilik kapalı (specialEvent.ts).
 //  • Şampiyon: ilk UCC kemerinden sonra 24 saat, bir kez (Hoş Geldin bittiyse).
+//  • Deneme sonu: Patron ya da Menajer Modu'nun ücretsiz denemesi bitince 24 saat, bir kez (başka fırsat açık değilse).
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import { track } from '../analytics';
 import { activeSpecial } from '../engine/specialEvent';
@@ -10,7 +11,7 @@ import { L } from '../i18n';
 import { getPref, setPref } from '../prefs';
 import { hasAll } from './premium';
 
-export type DealKind = 'hosgeldin' | 'karacuma' | 'kemer';
+export type DealKind = 'hosgeldin' | 'karacuma' | 'kemer' | 'deneme';
 export type Deal = { kind: DealKind; ends: number; key: string };
 
 const KEY = 'yol_firsat';
@@ -18,12 +19,12 @@ const H = 3600 * 1000;
 const WELCOME_H = 72;
 const BELT_H = 24;
 
-type St = { hos?: number; kemer?: number; goruldu: string[] };
+type St = { hos?: number; kemer?: number; deneme?: number; goruldu: string[] };
 
 function load(): St {
   try {
     const r = JSON.parse(getPref(KEY) || '{}') as Partial<St>;
-    return { hos: r.hos, kemer: r.kemer, goruldu: r.goruldu ?? [] };
+    return { hos: r.hos, kemer: r.kemer, deneme: r.deneme, goruldu: r.goruldu ?? [] };
   } catch {
     return { goruldu: [] };
   }
@@ -55,6 +56,7 @@ export function currentDeal(now = Date.now()): Deal | null {
   if (sp?.id === 'karacuma') return { kind: 'karacuma', ends: sp.bitis, key: `karacuma-${sp.yil}` };
   if (st.hos && now < st.hos + WELCOME_H * H) return { kind: 'hosgeldin', ends: st.hos + WELCOME_H * H, key: `hos-${st.hos}` };
   if (st.kemer && now < st.kemer + BELT_H * H) return { kind: 'kemer', ends: st.kemer + BELT_H * H, key: `kemer-${st.kemer}` };
+  if (st.deneme && now < st.deneme + BELT_H * H) return { kind: 'deneme', ends: st.deneme + BELT_H * H, key: `deneme-${st.deneme}` };
   return null;
 }
 
@@ -71,6 +73,14 @@ export function maybeStartBeltDeal(ready: boolean) {
   if (!ready || st.kemer || hasAll() || currentDeal()) return;
   commit({ ...st, kemer: Date.now() });
   track('deal_start', { tur: 'kemer' });
+  onStart?.();
+}
+
+/** Patron ya da Menajer Modu denemesi bitince 24 saatlik fırsat, bir kez (başka fırsat açıksa beklemez, hiç açılmaz). */
+export function maybeStartTrialDeal(ready: boolean, mod: string) {
+  if (!ready || st.deneme || hasAll() || currentDeal()) return;
+  commit({ ...st, deneme: Date.now() });
+  track('deal_start', { tur: 'deneme', mod });
   onStart?.();
 }
 

@@ -5,7 +5,7 @@ import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { sfx } from '../audio';
 import { L } from '../i18n';
-import { buyPremium, closeNudge, closeOffer, COACH_STORE, dismissUpsell, LEGENDS_STORE, maybeStartBeltDeal, openOffer, openShop, REF_STORE, rewardedCount, useDeal, useNudge, MONETIZATION, PURCHASES, useOffer, useOwned, usePremium, usePremiumPrice, usePrice, useUpsellDue, type OfferReason } from '../monetization';
+import { buyErrorText, buyPremium, closeNudge, closeOffer, COACH_STORE, dismissUpsell, LEGENDS_STORE, maybeStartBeltDeal, openOffer, openShop, REF_STORE, rewardedCount, useDeal, useNudge, MONETIZATION, PURCHASES, useOffer, useOwned, usePremium, usePremiumPrice, usePrice, useUpsellDue, type OfferReason } from '../monetization';
 import { LEGEND_IDS } from '../engine/legendRun';
 import { getPref, setPref } from '../prefs';
 import { DEAL_SKU, PREMIUM_SKU, ULTIMATE_SKU } from '../monetization/skus';
@@ -201,7 +201,7 @@ export function BuyPremium() {
           if (r === 'ok') {
             sfx('fanfare');
             closeOffer();
-          } else if (r === 'hata') setMsg(L("Satın alma şu an yapılamadı. İnternet bağlantını kontrol edip tekrar dene."));
+          } else if (r === 'hata') setMsg(buyErrorText());
         }}
       />
       {msg ? <Text style={st.msg}>{msg}</Text> : null}

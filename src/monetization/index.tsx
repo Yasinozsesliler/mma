@@ -7,6 +7,7 @@ import { requestTrackingPermissionsAsync } from 'expo-tracking-transparency';
 import mobileAds, { AdEventType, AdsConsent, InterstitialAd, RewardedAd, RewardedAdEventType } from 'react-native-google-mobile-ads';
 import { track } from '../analytics';
 import { pushScene } from '../audio/engine';
+import { L } from '../i18n';
 import { AD_IDS } from './ids';
 import { grant, isAdFree, isPremium, owns } from './premium';
 import { ALL_SKUS, PREMIUM_SKU } from './skus';
@@ -33,7 +34,7 @@ export const REF_STORE = true;
 export const MGR_STORE = true;
 export { dismissUpsell, useUpsellDue } from './upsell';
 export { HOUR_GOAL, hourActive, startHour, takeHourEndOffer, useHour } from './hour';
-export { closeShop, currentDeal, dealSeen, fmtLeft, markDealSeen, maybeStartBeltDeal, maybeStartWelcome, openShop, useDeal, useNow, useShop, type Deal, type DealKind } from './deals';
+export { closeShop, currentDeal, dealSeen, fmtLeft, markDealSeen, maybeStartBeltDeal, maybeStartTrialDeal, maybeStartWelcome, openShop, useDeal, useNow, useShop, type Deal, type DealKind } from './deals';
 export { closeNudge, closeOffer, milestoneOffer, noteInterstitialShown, openOffer, rewardedCount, useNudge, useOffer, type OfferReason } from './offers';
 
 // ---------- Reklamlar ----------
@@ -289,12 +290,21 @@ const errCode = (e: unknown) =>
     .replace(/[^a-z0-9]+/gi, '_')
     .toLowerCase();
 /** Bağlantı / ürün listesi kaynaklı, bir kez yeniden denemeye değer hatalar */
-const RETRY = new Set(['sku_not_found', 'not_prepared', 'service_disconnected', 'item_unavailable', 'service_error', 'network_error']);
+const RETRY = new Set(['sku_not_found', 'not_prepared', 'service_disconnected', 'item_unavailable', 'service_error', 'network_error', 'query_product', 'service_timeout']);
+/** Son başarısız satın almanın hata kodu (oyuncuya doğru mesajı göstermek için) */
+let lastErr = '';
+/** Satın alma hatasında gösterilecek metin: Play faturalandırması yoksa ya da mağazaya ulaşılamıyorsa ne yapılacağını söyler. */
+export function buyErrorText() {
+  if (lastErr === 'billing_unavailable') return L("Google Play ödeme sistemi bu cihazda kullanılamıyor. Play Store'u güncelleyip Google hesabınla giriş yaptığından emin ol, sonra tekrar dene.");
+  if (RETRY.has(lastErr)) return L("Mağazaya şu an ulaşılamadı. İnternet bağlantını kontrol edip birkaç saniye sonra tekrar dene.");
+  return L("Satın alma şu an yapılamadı. Biraz sonra tekrar dene.");
+}
 
 /** Satın alma hatası: iptal mi, kurtarılabilir mi, gerçek hata mı? Kod olay adına yazılır (Analytics'te özel boyut gerekmez). */
 async function failPurchase(e: unknown) {
   if (isUserCancelledError(e)) return settle('iptal');
   const code = errCode(e);
+  lastErr = code;
   track(`iap_e_${code}`.slice(0, 40), { sku: pending?.sku ?? '', platform: Platform.OS });
   const cur = pending;
   if (!cur) return;
@@ -309,7 +319,7 @@ async function failPurchase(e: unknown) {
   if (RETRY.has(code) && !cur.retried && buyFn) {
     cur.retried = true;
     await (fetchFn?.() ?? Promise.resolve()).catch(() => undefined);
-    await new Promise((r) => setTimeout(r, 800));
+    await new Promise((r) => setTimeout(r, code === 'query_product' ? 1800 : 800));
     if (pending !== cur) return;
     return void buyFn(cur.sku).catch((x) => void failPurchase(x));
   }
@@ -348,8 +358,10 @@ export function buy(sku: string): Promise<BuyResult> {
   track('iap_start', { sku });
   return new Promise((resolve) => {
     pending = { sku, resolve };
-    // Ürün listesi henüz gelmediyse önce yeniden istenir (mağaza ilk açılışta geç cevap verebiliyor)
-    const go = prices[sku] ? Promise.resolve() : (fetchFn?.() ?? Promise.resolve()).catch(() => undefined);
+    // Ürün listesi henüz gelmediyse önce yeniden istenir (mağaza ilk açılışta geç cevap verebiliyor). Android'de ürün bilgisi
+    // bağlantı yenilenince düşebiliyor (query_product hatası): satın almadan önce her seferinde tazelenir.
+    lastErr = '';
+    const go = prices[sku] && Platform.OS !== 'android' ? Promise.resolve() : (fetchFn?.() ?? Promise.resolve()).catch(() => undefined);
     void go.then(() => buyFn!(sku)).catch((e) => void failPurchase(e));
   });
 }

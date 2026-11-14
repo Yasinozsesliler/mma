@@ -6,7 +6,9 @@ import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 
 import { fmtFollowers } from '../engine/fame';
 import { PHOTO_FILTERS } from '../engine/gram';
 import {
+  adExtraPhoto,
   answerDm,
+  canAdExtraPhoto,
   dmUnread,
   fighterById,
   followerBoard,
@@ -40,6 +42,7 @@ import { L } from '../i18n';
 import { actPatron } from '../patronStore';
 import { Icon, type IconName } from './components';
 import { FighterAvatar } from './FighterAvatar';
+import { AdOffer } from './AdOffer';
 import { OrgLogo } from './OrgLogo';
 import { PhotoArt } from './PhotoArt';
 import { BLUE_TICK, Measure, StoryRing, VERIFIED } from './SocialPhoto';
@@ -551,6 +554,7 @@ function Composer({ r, onDone }: { r: PatronRun; onDone: (m: string) => void }) 
               ))}
             </ScrollView>
           ) : null}
+          {k !== 'afis' && canAdExtraPhoto(r) ? <AdOffer yer="patron_foto" icon="camera-plus" title={L("Sosyal medya ajansı")} desc={L("Bu hafta bir fotoğraf daha paylaşabilirsin.")} onReward={() => actPatron(adExtraPhoto)} /> : null}
           <View>
             <Measure max={420}>{(w) => <PhotoArt p={sample} size={w} />}</Measure>
             {lock ? (

@@ -12,6 +12,7 @@ import { LEGEND_IDS } from '../engine/legendRun';
 import { L, LOC } from '../i18n';
 import {
   buy,
+  buyErrorText,
   closeShop,
   dealSeen,
   fmtLeft,
@@ -78,7 +79,7 @@ function useBuy(onDone?: () => void) {
     if (r === 'ok') {
       sfx('fanfare');
       onDone?.();
-    } else if (r === 'hata') setMsg(L("Satın alma şu an yapılamadı. İnternet bağlantını kontrol edip tekrar dene."));
+    } else if (r === 'hata') setMsg(buyErrorText());
   };
   return { busy, msg, go };
 }
@@ -121,11 +122,13 @@ const DEAL_TITLE: Record<Deal['kind'], () => string> = {
   hosgeldin: () => L("HOŞ GELDİN FIRSATI"),
   karacuma: () => L("KARA CUMA FIRSATI"),
   kemer: () => L("ŞAMPİYON FIRSATI"),
+  deneme: () => L("DENEME SONU FIRSATI"),
 };
 const DEAL_LEAD: Record<Deal['kind'], () => string> = {
   hosgeldin: () => L("Yeni gelenlere özel, yalnızca bir kez: oyunun her şeyi tek pakette, indirimli."),
   karacuma: () => L("Yılın en büyük indirimi: Tam Paket yalnızca Kara Cuma boyunca bu fiyatta."),
   kemer: () => L("Kemeri kazandın. 24 saat boyunca Tam Paket şampiyonlara özel fiyatla."),
+  deneme: () => L("Denemeyi bitirdin. 24 saat boyunca Tam Paket bu fiyatta: Patron, Menajer ve bütün modlar dahil."),
 };
 
 /** Süreli Tam Paket Fırsatı kartı (mağaza, duyuru ve menüde). */

@@ -9,7 +9,7 @@ import { clearNew, equip, useCosmetics, useUnlocked } from '../cosmetics';
 import { COSMETICS, packOwned, PACKS, RARITY, rarityOf, type Cosmetic, type CosSlot, type FxKind, type Rarity } from '../engine/cosmetics';
 import type { Appearance } from '../engine/types';
 import { L, LOC } from '../i18n';
-import { buy, MONETIZATION, openShop, PACK_STORE, PURCHASES, restorePurchases, useOwned, usePrice } from '../monetization';
+import { buyErrorText, buy, MONETIZATION, openShop, PACK_STORE, PURCHASES, restorePurchases, useOwned, usePrice } from '../monetization';
 import { BUNDLE_SKU } from '../monetization/skus';
 import { seasonIndex } from '../engine/season';
 import { Belt } from './Belt';
@@ -136,7 +136,7 @@ function BuyButton({ sku, big }: { sku: string; big?: boolean }) {
           const r = await buy(sku);
           setBusy(false);
           if (r === 'ok') sfx('fanfare');
-          else if (r === 'hata') setMsg(L("Satın alma şu an yapılamadı. İnternet bağlantını kontrol edip tekrar dene."));
+          else if (r === 'hata') setMsg(buyErrorText());
         }}
       />
       {msg ? <Text style={ls.packNote}>{msg}</Text> : null}

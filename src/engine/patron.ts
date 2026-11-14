@@ -353,6 +353,8 @@ export interface PatronRun {
   /** Rakip organizasyonları geçme bildirimleri */
   gecilen: OrgId[];
   akademiHafta: number;
+  /** Ödüllü reklam teklifleri: kullanıldığı hafta / gece */
+  rw?: { piyasa?: number; rapor?: number; foto?: number; tekrar?: number };
 }
 
 // ---------- Yardımcılar ----------
@@ -2014,3 +2016,39 @@ export function orgRanking(r: PatronRun) {
 }
 
 export type PHall = { ad: string; org: string; hafta: number; gece: number; unvan: number; itibar: number; son: NonNullable<PatronRun['kapandi']>; satis?: number; tarih: number };
+
+// ---------- Ödüllü reklam teklifleri (güç vermez: bilgi, zaman, bağlama uygun küçük para) ----------
+
+/** Gözcü bir tur daha: piyasa 4 haftada bir kez erken yenilenir */
+export const canAdMarket = (r: PatronRun) => r.hafta - r.adayHafta >= 1 && r.hafta - (r.rw?.piyasa ?? -99) >= 4;
+export function adRefreshMarket(r: PatronRun): string {
+  r.rw = { ...r.rw, piyasa: r.hafta };
+  refreshCandidates(r, true);
+  return L("Gözcün yeni bir tur attı: piyasada {0} aday var.", [r.adaylar.length]);
+}
+/** Gözlemci raporu: bu hafta adayların ve dövüşçülerin gizli potansiyeli görünür */
+export const potVisible = (r: PatronRun) => r.tesis.scout >= 2 || r.rw?.rapor === r.hafta;
+export function adScoutReport(r: PatronRun): string {
+  r.rw = { ...r.rw, rapor: r.hafta };
+  return L("Gözlemci raporu geldi: bu hafta potansiyelleri görüyorsun.");
+}
+/** Sosyal medya ajansı: haftada bir ek fotoğraf hakkı */
+export const canAdExtraPhoto = (r: PatronRun) => fotoUsed(r) && r.rw?.foto !== r.hafta;
+export function adExtraPhoto(r: PatronRun): string {
+  r.rw = { ...r.rw, foto: r.hafta };
+  r.gram.sonFoto = undefined;
+  return L("Sosyal medya ajansı devrede: bu hafta bir fotoğraf daha paylaşabilirsin.");
+}
+/** Gecenin tekrar yayını: son gece için bir kez küçük gelir */
+export const replayPay = (g: GeceRapor) => r100(Math.max(1_500, g.seyirci * 3 + g.gelir.tv * 0.15));
+export const canAdReplay = (r: PatronRun, g: GeceRapor) => r.geceler[0]?.no === g.no && r.rw?.tekrar !== g.no;
+export function adReplay(r: PatronRun): string {
+  const g = r.geceler[0];
+  if (!g || r.rw?.tekrar === g.no) return '';
+  r.rw = { ...r.rw, tekrar: g.no };
+  const p = replayPay(g);
+  r.para += p;
+  r.yil.gelir += p;
+  r.toplam.gelir += p;
+  return L("Gecenin tekrar yayını satıldı: +{0}", [$(p)]);
+}

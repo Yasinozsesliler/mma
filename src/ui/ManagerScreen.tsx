@@ -6,7 +6,11 @@ import { track } from '../analytics';
 import { sfx } from '../audio';
 import {
   acceptOffer,
+  adNewCandidates,
   advanceWeek,
+  canAdCandidates,
+  masaArastir,
+  masaTavan,
   agencyRanking,
   answer,
   createMeydan,
@@ -62,14 +66,15 @@ import {
 import type { OrgId } from '../engine/types';
 import { WEIGHT_CLASSES } from '../engine/data';
 import { L, LOC } from '../i18n';
-import { buy, PURCHASES, restorePurchases, useOwned, usePrice } from '../monetization';
-import { MGR_SKU, ULTIMATE_SKU } from '../monetization/skus';
+import { buyErrorText, buy, maybeStartTrialDeal, PURCHASES, restorePurchases, useDeal, useOwned, usePrice } from '../monetization';
+import { DEAL_SKU, MGR_SKU, ULTIMATE_SKU } from '../monetization/skus';
 import { actMgr, closeAgency, meydanBest, peekRun, saveMeydanBest, setMgrRun, setMgrSlot, useMgrHall, useMgrRun, useMgrSlot } from '../managerStore';
 import { Bar, Button, CageBg, Card, Choice, Icon, Screen, SLANT, type IconName } from './components';
 import { FighterAvatar } from './FighterAvatar';
 import { FaceOffModal, FormPills, MgrDossier, MgrWatch, mLook, rLook, TIER_COLOR } from './ManagerViews';
 import { HubNav, type NavItem } from './HubNav';
-import { FullPackLink } from './ShopSheet';
+import { AdOffer } from './AdOffer';
+import { DealCard, FullPackLink } from './ShopSheet';
 import { C, F, R } from './theme';
 
 const $ = (n: number) => `${n < 0 ? '-' : ''}$${Math.abs(Math.round(n)).toLocaleString(LOC)}`;
@@ -81,14 +86,20 @@ export function useMgrUnlocked() {
 }
 
 /** Menajer Modu satın alma kutusu */
-function MgrPack({ lead }: { lead?: string }) {
+function MgrPack({ lead, over }: { lead?: string; over?: boolean }) {
   const price = usePrice(MGR_SKU);
+  const dealReady = !!usePrice(DEAL_SKU);
+  const deal = useDeal();
+  useEffect(() => {
+    if (over) maybeStartTrialDeal(dealReady, 'menajer');
+  }, [over, dealReady]);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
   if (!PURCHASES) return null;
   return (
     <LinearGradient colors={['#0d1a2a', '#08090b']} style={ms.pack}>
       {lead ? <Text style={ms.packLead}>{lead}</Text> : null}
+      {deal ? <DealCard deal={deal} compact /> : null}
       <Text style={ms.packText}>{L("Tek seferlik alım: sınırsız ajans kariyeri, UCC sözleşmeleri, şampiyonlar ve Yılın Menajeri ödülü.")}</Text>
       <Button
         label={price ? L("Menajer Modu · {0}", [price]) : L("Menajer Modu'nu al")}
@@ -101,7 +112,7 @@ function MgrPack({ lead }: { lead?: string }) {
           const r = await buy(MGR_SKU);
           setBusy(false);
           if (r === 'ok') sfx('fanfare');
-          else if (r === 'hata') setMsg(L("Satın alma şu an yapılamadı. Biraz sonra tekrar dene."));
+          else if (r === 'hata') setMsg(buyErrorText());
         }}
       />
       <Pressable onPress={async () => setMsg((await restorePurchases()) ? L("Satın alımların geri yüklendi.") : L("Bu hesapta satın alma bulunamadı."))} hitSlop={8} style={{ alignSelf: 'center', marginTop: 8 }}>
@@ -254,7 +265,7 @@ function MgrHero({ r, goPhone }: { r: MgrRun; goPhone: () => void }) {
         <Bar value={r.itibar} color={C.gold} label={L("İtibar")} right={String(r.itibar)} />
       </View>
       {over ? (
-        <MgrPack lead={L("Deneme bitti. Ajansın seni bekliyor:")} />
+        <MgrPack lead={L("Deneme bitti. Ajansın seni bekliyor:")} over />
       ) : (
         <View style={{ marginTop: 10 }}>
           <Button
@@ -624,6 +635,7 @@ function MarketTab({ r }: { r: MgrRun }) {
       )}
       <Text style={[ms.section, { marginTop: 14 }]}>{L("YETENEK AVI")}</Text>
       {r.adaylar.length ? r.adaylar.map((a) => <CandidateCard key={a.id} r={r} a={a} setNote={setNote} />) : <Text style={ms.small}>{L("Bu dönem aday kalmadı.")}</Text>}
+      {canAdCandidates(r) ? <AdOffer yer="mgr_aday" icon="account-search" title={L("Yeni adaylar")} desc={L("Gözcülerin bir tur daha atsın: yeni adaylar gelsin.")} onReward={() => setNote(actMgr(adNewCandidates) ?? null)} /> : null}
       <Text style={ms.small}>{L("Yeni adaylar {0} hafta sonra. Yıldızlar senin tahminin; itibarın arttıkça gözün keskinleşir.", [Math.max(0, 4 - (r.hafta - r.adayHafta))])}</Text>
     </>
   );
@@ -672,6 +684,7 @@ function OfferCard({ r, t, f, setNote }: { r: MgrRun; t: Teklif; f: MFighter; se
           <View style={[ms.tableBubble, { borderColor: RUH[m.ruh] }]}>
             <Text style={ms.bubbleText}>{m.mesaj}</Text>
           </View>
+          {m.bilgi ? <Text style={[ms.small, { color: C.green }]}>{L("📊 Üst sınır: ücrette yaklaşık {0}", [$(masaTavan(t))])}</Text> : m.ruh !== 'son' ? <AdOffer yer="mgr_arastirma" icon="chart-box-outline" title={L("Piyasa araştırması")} desc={L("Organizasyonun ücrette çıkabileceği üst sınırı öğren.")} onReward={() => setNote(actMgr((x) => masaArastir(x, t.id)) ?? null)} /> : null}
           {m.ruh !== 'son' ? (
             <View style={ms.chips}>
               <Chip label={L("Ücret +%15")} onPress={() => actMgr((x) => setNote(tableAsk(x, t.id, 'ucret')))} />

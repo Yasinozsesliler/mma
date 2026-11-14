@@ -168,6 +168,8 @@ export interface Masa {
   baz: { ucret: number; bonus: number };
   mesaj: string;
   ruh: 'sicak' | 'gergin' | 'kizgin' | 'son';
+  /** Piyasa araştırması (ödüllü reklam): ücret tavanı görünür */
+  bilgi?: boolean;
 }
 
 export interface Teklif {
@@ -230,6 +232,8 @@ export interface Ajans {
 }
 
 export interface MgrRun {
+  /** Yeni adaylar ödüllü teklifinin kullanıldığı hafta */
+  rwAday?: number;
   ad: string;
   soyad: string;
   ajans: string;
@@ -2078,4 +2082,22 @@ export function faceOffLines(f: MFighter, unvan: boolean): [string, string] {
   };
   const rk = [L("Yanlış kapıyı çaldın."), L("Gözlerinde korku görüyorum."), L("Üçüncü raunda kalmazsın."), L("Menajerin seni kurbanlığa getirmiş."), L("Bu gece ışıkları söndüreceğim.")];
   return [pk(own[f.kisilik] ?? own.sadik), pk(rk)];
+}
+
+// ---------- Ödüllü reklam teklifleri (güç vermez: bilgi ve zaman) ----------
+
+/** Piyasa araştırması: pazarlık masasında organizasyonun ücrette çıkabileceği üst sınır görünür */
+export function masaArastir(r: MgrRun, id: string): string {
+  const t = r.teklifler.find((x) => x.id === id);
+  if (!t?.masa) return '';
+  t.masa.bilgi = true;
+  return L("Araştırma tamam: {0} ücrette en fazla yaklaşık {1} verir.", [orgName(t.org), $(masaTavan(t))]);
+}
+export const masaTavan = (t: Teklif) => r100((t.masa?.baz.ucret ?? t.ucret) * (t.masa?.tavan ?? 1));
+/** Yeni adaylar: yetenek avı dört haftada bir kez erken yenilenir */
+export const canAdCandidates = (r: MgrRun) => r.hafta - r.adayHafta >= 1 && r.hafta - (r.rwAday ?? -99) >= 4;
+export function adNewCandidates(r: MgrRun): string {
+  r.rwAday = r.hafta;
+  refreshCandidates(r, true);
+  return L("Gözcülerin bir tur daha attı: {0} yeni aday.", [r.adaylar.length]);
 }
