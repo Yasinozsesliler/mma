@@ -72,7 +72,11 @@ export function formBonus(s: GameState) {
 }
 
 /** Kemer savunması: her savunmada sıradaki nesil biraz daha güçlü gelir (kemeri almak bir sınav, tutmak başka). */
-export const defenseBonus = (s: GameState, org: OrgId) => (s.sampiyon && currentOrg(s) === org ? Math.min(6, (s.savunma ?? 0) * 1.2) : 0);
+export const defenseBonus = (s: GameState, org: OrgId) => {
+  if (!s.sampiyon || currentOrg(s) !== org) return 0;
+  const kolay = s.zorluk === 'kolay';
+  return Math.min(kolay ? 6 : 10, (s.savunma ?? 0) * (kolay ? 1.2 : 1.7));
+};
 
 /** Bu basamaktaki rakibin hedef gücü (rastgelelik olmadan). Sıralamadaki dövüşçüler de buna doğru gelişir. */
 export function targetLevel(s: GameState, org: OrgId, zorluk: number, rank: number | null, champion: boolean) {
@@ -89,7 +93,8 @@ export function targetLevel(s: GameState, org: OrgId, zorluk: number, rank: numb
   // Oyuncu güçlendikçe rakipler de güçlenir: rekabet hep canlı kalır.
   let lvl = tb * (1 - w) + ref * w;
   // UCC dünyanın zirvesi: oyuncu ne kadar güçlenirse güçlensin sıralamanın üstü ve şampiyon ona denk kalır.
-  if (stage === 'ufc') lvl = Math.max(lvl, champion ? ref + 6.5 : rank != null && L > 0 ? ref - 1.5 + ((L - rank) / L) * 3 : ref - 3);
+  // Kolay dışında UCC şampiyonu bir tık daha zorlu: kemere giden yol gerçek bir sınav
+  if (stage === 'ufc') lvl = Math.max(lvl, champion ? ref + (s.zorluk === 'kolay' ? 6.5 : 8) : rank != null && L > 0 ? ref - 1.5 + ((L - rank) / L) * 3 : ref - 3);
   return lvl - 2.5 + zorluk * 5 + diffOf(s).rakip + specBonus(s) + formBonus(s) + defenseBonus(s, org);
 }
 

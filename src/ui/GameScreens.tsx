@@ -71,6 +71,7 @@ import { LeagueCard } from './LeagueCard';
 import { ChampionHourCard } from './ChampionHourCard';
 import { NotifyAsk } from './NotifyAsk';
 import { RecordChase } from './RecordsPanel';
+import { LegacyPath } from './LegacyPath';
 import { chooseTreatment, treatmentCostText, treatmentOptions } from '../engine/treatment';
 import { ContractTablePanel } from './ContractTablePanel';
 import { openTable } from '../engine/contractTable';
@@ -358,6 +359,7 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
           <ChampionHourCard />
           <LeagueCard s={s} compact />
           <RecordChase s={s} />
+          <LegacyPath s={s} />
           <FirstStepsCard s={s} act={act} />
           {featureOpen(s, 'etkinlik') ? <SpecialEventCard s={s} act={act} /> : null}
           {featureOpen(s, 'etkinlik') ? <EventCard s={s} act={act} /> : null}

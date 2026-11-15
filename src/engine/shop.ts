@@ -210,9 +210,13 @@ export function takeVacation(s: GameState, id: string): string {
   if (s.para < v.fiyat) return L("Bu tatil için paran yetmiyor.");
   s.para -= v.fiyat;
   bump(s, 'tatil');
+  // Tatildeyken sponsor etkinliği, maç ve iş yok: bu haftaların net geliri kasaya yazılmaz (giderler işler).
+  const kasa = s.para;
   const notes = advanceWeeks(s, v.hafta);
   lifestylePost(s, `${v.ad.toLocaleLowerCase(LOC)} tatilinde`);
   socialTick(s, v.hafta);
+  const gelir = s.para - kasa;
+  if (gelir > 0) s.para = kasa;
   const gain = Math.round(v.saglik * restMultiplier(s));
   s.saglik = clamp(s.saglik + gain, 0, 100);
   s.motivasyon = Math.max(-2, Math.min(2, s.motivasyon + v.motivasyon));
@@ -225,5 +229,6 @@ export function takeVacation(s: GameState, id: string): string {
   vacationMemento(s, v.id, v.ad);
   s.haberler.unshift(L("🛍️ {0}: {1} hafta tatil. Sağlık {2}/100.{3} {4}", [v.ad, v.hafta, s.saglik, v.populerlik ? L(" Popülerlik +{0}.", [v.populerlik]) : '', notes.join(' ')]).trim());
   const mot = v.motivasyon ? L(", motivasyon {0}{1}", [v.motivasyon > 0 ? '+' : '', v.motivasyon]) : '';
-  return L("{0} bitti. Sağlık +{1}{2}{3}.{4}", [v.ad, gain, mot, v.populerlik ? L(", popülerlik +{0}", [v.populerlik]) : '', kayip.length ? L("\n⚠️ Disiplin bozuldu, form kaybı: {0}.", [kayip.join(', ')]) : '']);
+  const kacan = gelir > 0 ? L("\n💸 Tatildeyken iş yok: {0} hafta gelir kaçtı.", [v.hafta]) : '';
+  return L("{0} bitti. Sağlık +{1}{2}{3}.{4}", [v.ad, gain, mot, v.populerlik ? L(", popülerlik +{0}", [v.populerlik]) : '', kayip.length ? L("\n⚠️ Disiplin bozuldu, form kaybı: {0}.", [kayip.join(', ')]) : '']) + kacan;
 }

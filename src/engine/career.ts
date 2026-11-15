@@ -565,6 +565,8 @@ function updateRank(s: GameState, opp: Opponent, won: boolean, draw: boolean): s
   const L = ORGS[org].merdiven;
   if (!L || draw) return null;
   const before = s.rank;
+  const strict = ORGS[org].stage === 'ufc' && s.zorluk !== 'kolay' && !s.efsane && !s.meydan;
+  if (opp.champion || !won) s.eleme = false;
   if (opp.champion && won) {
     s.sampiyon = true;
     s.rank = null;
@@ -593,10 +595,16 @@ function updateRank(s: GameState, opp: Opponent, won: boolean, draw: boolean): s
     s.rank = randInt(1, 2);
     return tL("💔 Kemeri kaybettin. Yeni sıralaman #{0}.", [s.rank]);
   }
+  if (won && opp.eleme) {
+    s.rank = 1;
+    s.eleme = true;
+    return tL("🥊 Eleme maçını kazandın! Sıradaki maçın kemer maçı. Sıralama: #1");
+  }
   if (won) {
     if (opp.rank != null) {
       const cur = s.rank ?? 99;
-      s.rank = opp.rank < cur ? opp.rank : Math.max(1, cur - 1);
+      // UCC'de sıralamada bir maçta en fazla 3 basamak yükselinir
+      s.rank = opp.rank < cur ? (strict ? Math.max(opp.rank, Math.min(cur, L + 1) - 3) : opp.rank) : Math.max(1, cur - 1);
     } else if (s.rank == null) {
       if (s.seri >= 2 || chance(0.4)) s.rank = L - randInt(0, 2);
     } else {
@@ -968,9 +976,12 @@ export const WOMEN_WEIGHTS: WeightClass[] = ['sinek', 'horoz', 'tuy'];
 export function weightOptions(s: GameState): { siklet: WeightClass; yon: 'yukari' | 'asagi' }[] {
   const WEIGHT_ORDER_ = s.fighter.kadin ? WOMEN_WEIGHTS : WEIGHT_ORDER;
   const i = WEIGHT_ORDER_.indexOf(s.fighter.siklet);
+  // Doğal sıkletin yalnızca bir üstü ve bir altı (efsane yolları hikâyesi gereği serbest)
+  const base = s.efsane ? -1 : WEIGHT_ORDER_.indexOf(s.fighter.dogalSiklet ?? s.fighter.siklet);
+  const ok = (j: number) => base < 0 || Math.abs(j - base) <= 1;
   const out: { siklet: WeightClass; yon: 'yukari' | 'asagi' }[] = [];
-  if (i < WEIGHT_ORDER_.length - 1) out.push({ siklet: WEIGHT_ORDER_[i + 1], yon: 'yukari' });
-  if (i > 0) out.push({ siklet: WEIGHT_ORDER_[i - 1], yon: 'asagi' });
+  if (i < WEIGHT_ORDER_.length - 1 && ok(i + 1)) out.push({ siklet: WEIGHT_ORDER_[i + 1], yon: 'yukari' });
+  if (i > 0 && ok(i - 1)) out.push({ siklet: WEIGHT_ORDER_[i - 1], yon: 'asagi' });
   return out;
 }
 
@@ -988,6 +999,7 @@ export function weightStatDelta(from: WeightClass, to: WeightClass): Partial<Rec
 
 export function changeWeight(s: GameState, to: WeightClass): string {
   const from = s.fighter.siklet;
+  s.fighter.dogalSiklet ??= from;
   const delta = weightStatDelta(from, to);
   Object.entries(delta).forEach(([k, v]) => addStat(s.fighter.stats, k as StatKey, v ?? 0));
   const wasChamp = s.sampiyon;
@@ -997,15 +1009,21 @@ export function changeWeight(s: GameState, to: WeightClass): string {
   s.sampiyon = donus;
   s.savunma = 0;
   // Şampiyon yeni sıklete gelince doğrudan ünvan sırasına alınır (kemeri aktif kalır: double champ şansı); diğerleri sıfırdan başlar.
-  s.rank = donus ? null : wasChamp ? 1 : null;
+  // Şampiyon yeni sıklette doğrudan kemer maçı almaz; çok popülerse organizasyon çift kemer süper maçı yapar.
+  const superMac = wasChamp && !donus && (s.populerlik >= 75 || s.zorluk === 'kolay' || !!s.efsane);
+  const giris = randInt(4, 6);
+  s.rank = donus ? null : superMac ? 1 : wasChamp ? giris : null;
+  s.eleme = superMac;
   s.bolum = null;
   s.rakipler.forEach((r) => (r.champion = false));
   ensureDivision(s);
   legendRivals(s);
   const notes = advanceWeeks(s, 4);
   const yon = WEIGHT_ORDER.indexOf(to) > WEIGHT_ORDER.indexOf(from) ? tL("yükseldi") : tL("düştü");
-  const msg = wasChamp
+  const msg = wasChamp && superMac
     ? tL("{0} kemerini bırakıp {1} sıklete {2}! İlk dövüşü doğrudan ünvan maçı olacak.", [fullName(s.fighter), WEIGHT_CLASSES[to].ad, yon])
+    : wasChamp
+    ? tL("{0} kemerini bırakıp {1} sıklete {2}! Sıralamaya #{3} olarak giriyor; yeni kemer için önce kazanması gerek.", [fullName(s.fighter), WEIGHT_CLASSES[to].ad, yon, giris])
     : tL("{0}, {1} sıklete {2}. Yeni sıklette sıfırdan başlıyor.", [fullName(s.fighter), WEIGHT_CLASSES[to].ad, yon]);
   s.haberler.unshift(`📋 ${msg}`);
   return `${msg} ${notes.join(' ')}`.trim();

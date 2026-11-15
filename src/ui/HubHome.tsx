@@ -13,6 +13,7 @@ import type { GameState } from '../engine/types';
 import { CageBg, Icon, SLANT, upName, type IconName } from './components';
 import { FighterAvatar } from './FighterAvatar';
 import { OvrBadge } from './StatusPanel';
+import { Breathe, StageBackdrop } from './StageBackdrop';
 import { CountText } from './anim';
 import { C, F, R } from './theme';
 
@@ -49,8 +50,11 @@ export function HubHero({ s }: { s: GameState }) {
   return (
     <LinearGradient colors={s.sampiyon ? ['#2e2206', '#0e0c07', '#08090b'] : ['#240710', '#0e0f12', '#08090b']} locations={[0, 0.55, 1]} style={[hh.hero, s.sampiyon && { borderColor: '#4a3810' }]}>
       <CageBg opacity={0.05} />
+      <StageBackdrop stage={s.stage} />
       <View style={hh.heroTop}>
-        <FighterAvatar look={f.gorunum} size={64} ring={frame ?? (s.sampiyon ? C.gold : C.red)} />
+        <Breathe>
+          <FighterAvatar look={f.gorunum} size={64} ring={frame ?? (s.sampiyon ? C.gold : C.red)} />
+        </Breathe>
         <View style={{ flex: 1 }}>
           {f.lakap ? <Text style={hh.nick}>“{f.lakap.toLocaleUpperCase(LOC)}”</Text> : null}
           <Text style={[hh.name, SLANT]} numberOfLines={1} adjustsFontSizeToFit>

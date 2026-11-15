@@ -10,6 +10,7 @@ import { lookFor } from '../engine/tale';
 import type { FightState, OrgId } from '../engine/types';
 import { L, LOC } from '../i18n';
 import { CageView } from './CageView';
+import { arenaForOrg, buildOf, type Arena } from './arena';
 import { Bar, Button, CageBg, Icon, SLANT } from './components';
 import { FighterAvatar } from './FighterAvatar';
 import { C, F, R } from './theme';
@@ -456,7 +457,7 @@ export function FaceOffModal({ f, rk, org, unvan, sup, onClose, orgAd }: { f: MF
 
 // ---------- Maçı izle ----------
 
-export function MgrWatch({ f, m, onClose, orgAd }: { f: MFighter; m: MKayit; onClose: () => void; orgAd?: string }) {
+export function MgrWatch({ f, m, onClose, orgAd, arena }: { f: MFighter; m: MKayit; onClose: () => void; orgAd?: string; arena?: Arena }) {
   const [step, setStep] = useState<'face' | 'mac' | 'sonuc'>('face');
   const lines = useMemo(() => fightBeats(f, m), [f, m]);
   // Kafes sahnesi hareketleri Türkçe anlatımdan okur; ekrandaki yazı seçili dilde
@@ -537,7 +538,7 @@ export function MgrWatch({ f, m, onClose, orgAd }: { f: MFighter; m: MKayit; onC
                 </View>
               ))}
             </View>
-            <CageView fs={fs} shown={shown} pLook={mLook(f)} oLook={rLook(m.rk, f.kadin)} pKitOverride={RED_KIT} noReplay />
+            <CageView fs={fs} shown={shown} pLook={mLook(f)} oLook={rLook(m.rk, f.kadin)} pKitOverride={RED_KIT} noReplay arena={arena ?? arenaForOrg(m.org)} pBuild={buildOf(f.siklet, f.kadin)} oBuild={buildOf(f.siklet, f.kadin)} />
             {step === 'mac' ? (
               <View style={v.caption}>
                 <Text style={v.captionText} numberOfLines={2}>

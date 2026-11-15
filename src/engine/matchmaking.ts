@@ -106,13 +106,29 @@ export function imposedOpponent(s: GameState): Opponent {
   }
   const nem = maybeNemesisOffer(s, !!s.sampiyon);
   if (nem) return nem;
+  const strict = ORGS[org].stage === 'ufc' && s.zorluk !== 'kolay' && !s.efsane && !s.meydan;
   if (s.sampiyon) {
     const o = ranked(s, randInt(1, 3), 1);
+    // Yeni nesil: iki savunmadan sonra yenilgisiz genç yıldızlar sıraya girer
+    if (strict && (s.savunma ?? 0) >= 2 && chance(0.35)) {
+      o.rekor = { g: randInt(11, 17), m: 0, b: 0 };
+      o.etiket = tL("🌟 YENİ NESİL");
+      o.riskMetni = tL("Yenilgisiz, aç ve yıllardır seni izliyor. Kemerin masada.");
+      return o;
+    }
     o.etiket = tL("🏆 UNVAN SAVUNMASI");
     o.riskMetni = tL("Kemerin masada. Kaybedersen tahtın gider.");
     return o;
   }
-  if (s.rank != null && (s.rank === 1 || (s.rank <= 2 && s.seri >= 3)) && !titleBlocked(s)) return titleFight(s);
+  // UCC: kemer maçı için önce eleme maçı (çok popüler yıldızlar hariç)
+  if (s.rank != null && (s.rank === 1 || (s.rank <= 2 && s.seri >= 3)) && !titleBlocked(s) && (!strict || s.eleme || s.populerlik >= 85)) return titleFight(s);
+  if (strict && s.rank != null && s.rank <= 3 && !s.eleme && !titleBlocked(s)) {
+    const o = ranked(s, avoid(s, randInt(1, 3)), 1);
+    o.eleme = true;
+    o.etiket = tL("🥊 ELEME MAÇI");
+    o.riskMetni = tL("Kazanan bir sonraki kemer maçının sahibi olur.");
+    return o;
+  }
   const special = calledOut(s);
   if (special) return special;
   let rank: number | null;

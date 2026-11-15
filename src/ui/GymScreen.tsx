@@ -212,7 +212,7 @@ function CornerCage({ st, rakipAd, rakipLook, lines, raunt, hasar, rHasar, end }
   } as unknown as FightState;
   return (
     <View>
-      <CageView fs={fs} shown={shown} pLook={studentLook(st)} oLook={rakipLook} pKitOverride={RED_KIT} noReplay />
+      <CageView fs={fs} shown={shown} pLook={studentLook(st)} oLook={rakipLook} pKitOverride={RED_KIT} noReplay arena={{ tier: 0 }} />
       {!done ? (
         <View style={gy.cageLog}>
           <Text style={gy.cageLine} numberOfLines={2}>

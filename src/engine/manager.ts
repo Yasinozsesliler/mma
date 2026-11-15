@@ -2074,13 +2074,13 @@ export function faceOffLines(f: MFighter, unvan: boolean): [string, string] {
   const rnd = localRng(hashStr(`${f.id}-${f.mac?.hafta ?? 0}-fo`));
   const pk = <T,>(a: T[]) => a[Math.floor(rnd() * a.length)];
   const own: Record<Kisilik, string[]> = {
-    hirsli: [L("Bu gece senin kariyerini bitireceğim."), L("Herkes beni konuşacak, sen de dahil."), unvan ? L("O kemer zaten benim, sadece takacağım.") : L("Sen sadece bir basamaksın.")],
-    sadik: [L("Ekibim arkamda. Hazırım."), L("Saygım var ama o kafeste kardeş yok."), L("Köşemi dinleyeceğim, gerisi gelir.")],
-    tembel: [L("Erken bitireceğim, akşam yemeğine yetişmem lazım."), L("Antrenman mı? Yeteneğim yeter."), L("Uzatmayalım şu işi.")],
-    medya: [L("Kameralar hazır mı? Bu an viral olacak."), L("Seni yarın herkes benim videomdan tanıyacak."), L("Gülümse, bu fotoğraf manşette.")],
-    paragoz: [L("Bu maç benim maaşımı ikiye katlayacak."), L("Sponsorlarım bakıyor, iyi görünmem lazım."), L("Ödemeyi aldım, şimdi şovu izle.")],
+    hirsli: [L("Sıralamada adın vardı. Cumartesiden sonra olmayacak."), L("Senin için kimse ağlamayacak."), L("Bu gece senin kariyerini bitireceğim."), L("Herkes beni konuşacak, sen de dahil."), unvan ? L("O kemer zaten benim, sadece takacağım.") : L("Sen sadece bir basamaksın.")],
+    sadik: [L("Annem tribünde. Onu utandırmayacağım."), L("Plan basit: çalıştığımı yapacağım."), L("Ekibim arkamda. Hazırım."), L("Saygım var ama o kafeste kardeş yok."), L("Köşemi dinleyeceğim, gerisi gelir.")],
+    tembel: [L("İki raunt yeter de artar."), L("Kamp mı? Uyudum, dinlendim, hazırım."), L("Erken bitireceğim, akşam yemeğine yetişmem lazım."), L("Antrenman mı? Yeteneğim yeter."), L("Uzatmayalım şu işi.")],
+    medya: [L("Bu face-off'un klibi yarın her yerde."), L("Takipçilerim seni yorumlarda bitirdi bile."), L("Kameralar hazır mı? Bu an viral olacak."), L("Seni yarın herkes benim videomdan tanıyacak."), L("Gülümse, bu fotoğraf manşette.")],
+    paragoz: [L("Kazanınca yeni sözleşme masada."), L("Senin bonusun da benim olacak."), L("Bu maç benim maaşımı ikiye katlayacak."), L("Sponsorlarım bakıyor, iyi görünmem lazım."), L("Ödemeyi aldım, şimdi şovu izle.")],
   };
-  const rk = [L("Yanlış kapıyı çaldın."), L("Gözlerinde korku görüyorum."), L("Üçüncü raunda kalmazsın."), L("Menajerin seni kurbanlığa getirmiş."), L("Bu gece ışıkları söndüreceğim.")];
+  const rk = [L("Menajerine söyle, yeni dövüşçü arasın."), L("Seni izledim. Hiçbir şey görmedim."), L("Bu gece eve yürüyerek dönmeyeceksin."), L("Ellerin titriyor, fark ettim."), L("Kemer yolu benden geçiyor, sen yoldan çekil."), L("Yanlış kapıyı çaldın."), L("Gözlerinde korku görüyorum."), L("Üçüncü raunda kalmazsın."), L("Menajerin seni kurbanlığa getirmiş."), L("Bu gece ışıkları söndüreceğim.")];
   return [pk(own[f.kisilik] ?? own.sadik), pk(rk)];
 }
 

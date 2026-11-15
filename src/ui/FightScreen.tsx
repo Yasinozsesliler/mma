@@ -26,6 +26,8 @@ import type { Bolge, CriticalKind, FightState, GameState, Tactic } from '../engi
 import { HABITS, knownEdge } from '../engine/habits';
 import type { Act } from './GameScreens';
 import { CageView } from './CageView';
+import { arenaForOrg, buildOf } from './arena';
+import { BroadcastBar } from './BroadcastBar';
 import { ResultReveal, RoundBanner } from './FightFx';
 import { FightQTE, qteFor, type QteSpec } from './FightQTE';
 import { qteOn } from '../qtePref';
@@ -334,8 +336,9 @@ export function FightScreen({ s, act }: { s: GameState; act: Act }) {
         <View style={{ height: 252, marginBottom: 10 }} />
       ) : (
         <View>
-          <CageView fs={fs} shown={shown} speed={speed} pLook={s.fighter.gorunum} oLook={lookFor(fs.opp)} />
+          <CageView fs={fs} shown={shown} speed={speed} pLook={s.fighter.gorunum} oLook={lookFor(fs.opp)} arena={arenaForOrg(currentOrg(s))} pBuild={buildOf(s.fighter.siklet, s.fighter.kadin)} oBuild={buildOf(s.fighter.siklet, s.fighter.kadin)} />
           {fs.durum !== 'bitti' && shown <= 1 ? <RoundBanner key={fs.raunt} raunt={fs.raunt} max={fs.maxRaunt} /> : null}
+          {!flowing && fs.durum === 'rauntSonu' ? <BroadcastBar key={fs.raunt} fs={fs} org={ORGS[currentOrg(s)].kisa} /> : null}
         </View>
       )}
       {intro && kulis ? <FightNightIntro s={s} onDone={() => setKulis(false)} onPredict={(p) => act((x) => x.pending.gece && (x.pending.gece.tahmin = p))} /> : null}

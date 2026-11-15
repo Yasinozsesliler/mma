@@ -126,7 +126,8 @@ const rkOfF = (f: PFighter) => toRk({ id: f.id, ad: pFullName(f), ulke: f.ulke, 
 function Watch({ r, f, k, onClose }: { r: PatronRun; f: PFighter; k: PKayit; onClose: () => void }) {
   const mf = useMemo(() => toMF(f, k.h), [f, k.h]);
   const mk = useMemo(() => toMK(k), [k]);
-  return <MgrWatch f={mf} m={mk} orgAd={r.org.ad} onClose={onClose} />;
+  const mekan = r.geceler.find((g) => g.no === k.gece)?.mekan ?? 'salon';
+  return <MgrWatch f={mf} m={mk} orgAd={r.org.ad} arena={{ tier: MEKANLAR.indexOf(mekan) as 0 | 1 | 2 | 3, logo: r.org.kisa, renk: r.org.renk }} onClose={onClose} />;
 }
 
 function Meter({ label, value, color = C.text, sub }: { label: string; value: string; color?: string; sub?: string }) {

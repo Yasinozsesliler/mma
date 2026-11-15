@@ -72,6 +72,8 @@ export interface Fighter {
   baslangicYasi: number;
   yas: number;
   siklet: WeightClass;
+  /** Kariyere başlanan sıklet: yalnızca bir üstüne ya da bir altına geçilebilir */
+  dogalSiklet?: WeightClass;
   gecmis: Background;
   hikaye: string;
   hakkinda?: string;
@@ -108,6 +110,8 @@ export interface Opponent {
   rekor: { g: number; m: number; b: number };
   rank: number | null;
   champion: boolean;
+  /** UCC eleme maçı: kazanan kemer maçına gider */
+  eleme?: boolean;
   /** 0 = sıradan, 1+ = kalıcı rakip, 3+ = ezeli rakip */
   rivalry: number;
   karsilasma: number;
@@ -645,6 +649,8 @@ export interface GameState {
   isletmeler?: { id: string; seviye: number }[];
   yatirimlar?: { id: string; deger: number; anapara: number }[];
   kemerler?: Belt[];
+  /** UCC eleme maçını kazandı: sıradaki maç kemer maçı */
+  eleme?: boolean;
   basarimlar?: string[];
   ufcKademe?: number;
   sponsorlar?: SponsorDeal[];

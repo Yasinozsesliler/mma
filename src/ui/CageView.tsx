@@ -10,6 +10,7 @@ import { memo, useEffect, useRef, useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
 import Svg, { Circle, Defs, Ellipse, G, Line, LinearGradient as SvgLinear, Polygon, RadialGradient, Rect, Stop, Text as SvgText } from 'react-native-svg';
 import type { Appearance, FightState } from '../engine/types';
+import type { Arena } from './arena';
 import { DEFAULT_LOOK } from './FighterAvatar';
 import { Figure, HIP_H, joints, lerpPose, POSES, type Kit, type Pose, type PoseName } from './rig';
 import { C, F, R } from './theme';
@@ -78,22 +79,40 @@ function classify(line: string, fs: FightState): Ev {
 const CROWD_TOP = H * 0.05;
 
 /** Tribün ışıkları ve seyirci arkasındaki ışıltı */
-const Stands = memo(function Stands({ w }: { w: number }) {
+const LIGHTS = [5, 12, 18, 26];
+const Stands = memo(function Stands({ w, tier = 2, logo, renk }: { w: number; tier?: number; logo?: string; renk?: string }) {
+  const n = LIGHTS[tier] ?? 18;
   return (
     <>
-      {Array.from({ length: 18 }, (_, i) => (
-        <Circle key={i} cx={(w / 18) * i + 8} cy={H * 0.03 + (i % 3) * 4} r={1.2} fill="#ffffff" opacity={0.15 + (i % 4) * 0.08} />
-      ))}
-      <Rect x={0} y={CROWD_TOP + 4} width={w} height={H * 0.16} fill="url(#crowdGlow)" />
+      {tier === 0
+        ? [0.2, 0.5, 0.8].map((u) => (
+            <G key={u}>
+              <Line x1={w * u} y1={0} x2={w * u} y2={H * 0.07} stroke="#2a2c33" strokeWidth={1} />
+              <Circle cx={w * u} cy={H * 0.075} r={2.4} fill="#ffd27a" opacity={0.8} />
+            </G>
+          ))
+        : Array.from({ length: n }, (_, i) => <Circle key={i} cx={(w / n) * i + 8} cy={H * 0.03 + (i % 3) * 4} r={tier === 3 ? 1.5 : 1.2} fill={tier === 3 && i % 4 === 0 ? '#ffe08a' : '#ffffff'} opacity={0.15 + (i % 4) * 0.08} />)}
+      <Rect x={0} y={CROWD_TOP + 4} width={w} height={H * 0.16} fill="url(#crowdGlow)" opacity={tier === 0 ? 0.4 : 1} />
+      {tier >= 2 && logo ? (
+        <G>
+          <Rect x={0} y={CROWD_TOP - 5} width={w} height={6.5} fill="#07080b" opacity={0.85} />
+          {Array.from({ length: Math.max(3, Math.round(w / 70)) }, (_, i) => (
+            <SvgText key={i} x={35 + i * 70} y={CROWD_TOP} fill={renk ?? '#ffffff'} opacity={0.75} fontSize={5} fontWeight="bold" textAnchor="middle" letterSpacing={1}>
+              {logo}
+            </SvgText>
+          ))}
+        </G>
+      ) : null}
     </>
   );
 });
 
 /** Seyirci: büyük anlarda ayağa kalkar, foto flaşları patlar. hp 0 iken (ve hafif modda) sabit kalır, yeniden çizilmez. */
-const Crowd = memo(function Crowd({ w, hp, t }: { w: number; hp: number; t: number }) {
+const Crowd = memo(function Crowd({ w, hp, t, tier = 2 }: { w: number; hp: number; t: number; tier?: number }) {
   return (
     <>
       {CROWD.map((p, i) => {
+        if ((tier === 0 && i % 3 !== 0) || (tier === 1 && i % 4 === 3)) return null;
         const bounce = hp ? Math.abs(Math.sin(t / 110 + p.ph)) * 5 * hp * p.s : 0;
         const x = w * (0.02 + p.u * 0.96);
         const y = CROWD_TOP + 18 + p.row * 13 - bounce;
@@ -111,7 +130,7 @@ const Crowd = memo(function Crowd({ w, hp, t }: { w: number; hp: number; t: numb
 });
 
 /** Tavan spotları, arka kafes ve kanvas */
-const CageBack = memo(function CageBack({ w, tint }: { w: number; tint?: string[] | null }) {
+const CageBack = memo(function CageBack({ w, tint, tier = 2, logo, renk }: { w: number; tint?: string[] | null; tier?: number; logo?: string; renk?: string }) {
   const cx = w / 2;
   const vurgu = tint?.[0] ?? C.red;
   const tel = tint?.[1];
@@ -119,6 +138,12 @@ const CageBack = memo(function CageBack({ w, tint }: { w: number; tint?: string[
     <>
       <Polygon points={`${w * 0.36},0 ${w * 0.44},0 ${w * 0.62},${H * 0.86} ${w * 0.18},${H * 0.86}`} fill="url(#cone)" />
       <Polygon points={`${w * 0.56},0 ${w * 0.64},0 ${w * 0.82},${H * 0.86} ${w * 0.38},${H * 0.86}`} fill="url(#cone)" />
+      {tier === 3 ? (
+        <>
+          <Polygon points={`${w * 0.05},0 ${w * 0.1},0 ${w * 0.4},${H * 0.86} ${w * 0.18},${H * 0.86}`} fill="#f2c14e" opacity={0.05} />
+          <Polygon points={`${w * 0.9},0 ${w * 0.95},0 ${w * 0.82},${H * 0.86} ${w * 0.6},${H * 0.86}`} fill="#f2c14e" opacity={0.05} />
+        </>
+      ) : null}
       <Polygon points={`${w * 0.08},${H * 0.72} ${w * 0.18},${H * 0.18} ${w * 0.82},${H * 0.18} ${w * 0.92},${H * 0.72}`} fill="none" stroke={tel ?? "#2c2f37"} strokeWidth={2} />
       {Array.from({ length: 15 }, (_, i) => {
         const x = w * 0.18 + (w * 0.64 * i) / 14;
@@ -130,9 +155,12 @@ const CageBack = memo(function CageBack({ w, tint }: { w: number; tint?: string[
       <Ellipse cx={cx} cy={H * 0.8} rx={w * 0.49} ry={H * 0.17} fill="#d6d6d9" />
       <Ellipse cx={cx} cy={H * 0.8} rx={w * 0.49} ry={H * 0.17} fill="url(#cspot)" />
       <Ellipse cx={cx} cy={H * 0.8} rx={w * 0.13} ry={H * 0.045} fill="none" stroke={vurgu} strokeWidth={2} opacity={0.6} />
-      <SvgText x={cx} y={H * 0.81 + 3} fill={vurgu} opacity={0.35} fontSize={9} fontWeight="bold" textAnchor="middle" letterSpacing={3}>
-        YOL
+      <SvgText x={cx} y={H * 0.81 + 3} fill={renk ?? vurgu} opacity={tier >= 1 ? 0.5 : 0.35} fontSize={(logo?.length ?? 3) > 4 ? 7.5 : 9} fontWeight="bold" textAnchor="middle" letterSpacing={3}>
+        {(logo ?? 'YOL').slice(0, 7)}
       </SvgText>
+      {tier >= 2
+        ? [-1, 1].map((d) => <Rect key={d} x={cx + d * w * 0.3 - w * 0.05} y={H * 0.86} width={w * 0.1} height={4.5} rx={2} fill={renk ?? vurgu} opacity={0.22} />)
+        : null}
     </>
   );
 });
@@ -151,6 +179,9 @@ export function CageView({
   pKitOverride,
   noReplay,
   rShirt,
+  arena,
+  pBuild = 0,
+  oBuild = 0,
 }: {
   fs: FightState;
   shown: number;
@@ -168,6 +199,11 @@ export function CageView({
   noReplay?: boolean;
   /** Hakem gömleği rengi (Hakem Modu kıyafeti) */
   rShirt?: string;
+  /** Organizasyonun arenası (verilmezse büyük lig görünümü) */
+  arena?: Arena;
+  /** Sıklete göre vücut yapısı (kırmızı ve mavi köşe) */
+  pBuild?: number;
+  oBuild?: number;
 }) {
   const [tint] = useState(() => cageTintNow());
   const [pKit] = useState(() => pKitOverride ?? playerKit());
@@ -604,7 +640,7 @@ export function CageView({
       <G key={a}>
         <Ellipse cx={X} cy={floorY + 4} rx={20 * k} ry={4 * k} fill="#000" opacity={0.25} />
         <G transform={tL("translate({0} {1}) scale({2} {3}) rotate({4})", [X, Y, f * k, k, ps.rot])}>
-          <Figure p={{ ...ps, rot: 0 }} look={look} kit={kit} hasar={a === 'p' ? fs.pHasar : a === 'o' ? fs.oHasar : 0} />
+          <Figure p={{ ...ps, rot: 0 }} look={look} kit={kit} hasar={a === 'p' ? fs.pHasar : a === 'o' ? fs.oHasar : 0} build={a === 'p' ? pBuild : a === 'o' ? oBuild : 0} />
         </G>
       </G>
     );
@@ -637,9 +673,9 @@ export function CageView({
             </Defs>
             <G transform={sx || sy ? `translate(${sx} ${sy})` : undefined}>
             {/* Sabit katmanlar yalnızca genişlik değişince yeniden çizilir; seyirci yalnızca coşku anlarında hareket eder */}
-            <Stands w={w} />
-            <Crowd w={w} hp={low ? 0 : hp} t={!low && hp ? tNow : 0} />
-            <CageBack w={w} tint={tint} />
+            <Stands w={w} tier={arena?.tier} logo={arena?.logo} renk={arena?.renk} />
+            <Crowd w={w} hp={low ? 0 : hp} t={!low && hp ? tNow : 0} tier={arena?.tier} />
+            <CageBack w={w} tint={tint} tier={arena?.tier} logo={arena?.logo} renk={arena?.renk} />
             {stains.current.map((s2, i) => (
               <Ellipse key={`s${i}`} cx={s2.x} cy={s2.y} rx={s2.r * 1.4} ry={s2.r * 0.5} fill="#7a0d12" opacity={s2.o} />
             ))}
@@ -708,7 +744,7 @@ export function CageView({
         <Modal transparent animationType="fade" onRequestClose={() => setShowReplay(false)}>
           <Pressable style={cv.modal} onPress={() => setShowReplay(false)}>
             <View style={{ width: '100%', maxWidth: 560 }}>
-              <CageView fs={fs} shown={fs.log.length} pLook={pLook} oLook={oLook} replayOnly onReplayEnd={() => setShowReplay(false)} />
+              <CageView fs={fs} shown={fs.log.length} pLook={pLook} oLook={oLook} arena={arena} pBuild={pBuild} oBuild={oBuild} replayOnly onReplayEnd={() => setShowReplay(false)} />
               <Text style={cv.skip}>{tL("Geçmek için dokun")}</Text>
             </View>
           </Pressable>
