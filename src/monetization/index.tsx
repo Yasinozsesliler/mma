@@ -12,7 +12,7 @@ import { AD_IDS } from './ids';
 import { grant, isAdFree, isPremium, owns } from './premium';
 import { ALL_SKUS, PREMIUM_SKU } from './skus';
 
-import { initRevenueCat, rcRecordPurchase, rcSync } from './revenuecat';
+import { initRevenueCat, rcBuyAndroid, rcOwnedAndroid, rcRecordPurchase, rcSync } from './revenuecat';
 import { noteRewardedWatched } from './offers';
 import { noteAdShown } from './upsell';
 import { hourActive } from './hour';
@@ -276,7 +276,7 @@ const priceSubs = new Set<() => void>();
 let buyFn: ((sku: string) => Promise<unknown>) | null = null;
 let fetchFn: (() => Promise<unknown>) | null = null;
 let restoreFn: (() => Promise<unknown>) | null = null;
-let pending: { sku: string; resolve: (r: BuyResult) => void; retried?: boolean } | null = null;
+let pending: { sku: string; resolve: (r: BuyResult) => void; retried?: boolean; rc?: boolean } | null = null;
 
 const settle = (r: BuyResult) => {
   // Sonuç olay adında: Analytics'te özel boyut tanımlamadan vazgeçme ile hatayı ve ürünü ayırabilmek için
@@ -319,6 +319,20 @@ async function failPurchase(e: unknown) {
     void rcSync();
     return settle('ok');
   }
+  // Android: expo-iap Play'e ulaşamadıysa (çoğunlukla query_product) aynı satın alma RevenueCat'in kendi Play bağlantısıyla
+  // bir kez denenir. Oyuncu yalnızca Google'ın ödeme penceresini görür.
+  if (Platform.OS === 'android' && !cur.rc && code !== 'developer_error') {
+    cur.rc = true;
+    track('iap_rc_try', { sku: cur.sku });
+    const r = await rcBuyAndroid(cur.sku);
+    if (pending !== cur) return;
+    track(`iap_rc_${r}`, { sku: cur.sku });
+    if (r === 'ok') {
+      grant(cur.sku);
+      return settle('ok');
+    }
+    return settle(r);
+  }
   // Mağaza bağlantısı / ürün listesi henüz hazır değilse: ürünleri yeniden iste, bir kez daha dene
   if (RETRY.has(code) && !cur.retried && buyFn) {
     cur.retried = true;
@@ -357,7 +371,8 @@ export function useAmounts(skus: string[]): ({ n: number; cur: string } | null)[
 }
 
 export function buy(sku: string): Promise<BuyResult> {
-  if (!buyFn) return Promise.resolve('hata');
+  // Android'de mağaza bağlantısı yoksa da RevenueCat yedek yolu denenir
+  if (!buyFn && Platform.OS !== 'android') return Promise.resolve('hata');
   settle('iptal');
   track('iap_start', { sku });
   return new Promise((resolve) => {
@@ -365,6 +380,7 @@ export function buy(sku: string): Promise<BuyResult> {
     // Ürün listesi henüz gelmediyse önce yeniden istenir (mağaza ilk açılışta geç cevap verebiliyor). Android'de ürün bilgisi
     // bağlantı yenilenince düşebiliyor (query_product hatası): satın almadan önce her seferinde tazelenir.
     lastErr = '';
+    if (!buyFn) return void failPurchase({ code: 'not_prepared' });
     const go = prices[sku] && Platform.OS !== 'android' ? Promise.resolve() : (fetchFn?.() ?? Promise.resolve()).catch(() => undefined);
     void go.then(() => buyFn!(sku)).catch((e) => void failPurchase(e));
   });
@@ -376,6 +392,8 @@ export async function restorePurchases(): Promise<boolean> {
   if (!restoreFn) return false;
   await restoreFn().catch(() => undefined);
   void rcSync();
+  // Android: RevenueCat'in kaydındaki satın almalar da açılır (yedek yoldan alınanlar ve Play'e ulaşılamayan cihazlar)
+  for (const id of await rcOwnedAndroid()) if (ALL_SKUS.includes(id)) grant(id);
   // Liste durum güncellemesiyle gelir; bir sonraki çizimde işlenmesini bekle.
   await new Promise((r) => setTimeout(r, 400));
   return ALL_SKUS.some(owns);
@@ -417,6 +435,10 @@ function StoreManager() {
   // (Tek istek boş dönerse fiyatlar hiç görünmüyor, satın alma düğmeleri çalışmıyordu.)
   const loaded = products.length > 0;
   useEffect(initRevenueCat, []);
+  // Android: RevenueCat yedek yoluyla alınmış ürünler açılışta da açılır (Play listesi gelmese bile)
+  useEffect(() => {
+    void rcOwnedAndroid().then((ids) => ids.forEach((id) => ALL_SKUS.includes(id) && grant(id)));
+  }, []);
   useEffect(() => {
     if (!connected) return;
     void getAvailablePurchases().catch(() => undefined);
