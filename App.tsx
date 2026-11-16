@@ -42,6 +42,7 @@ import { GhostScreen } from './src/ui/GhostScreen';
 import { RefereeScreen } from './src/ui/RefereeScreen';
 import { ManagerScreen } from './src/ui/ManagerScreen';
 import { PatronScreen } from './src/ui/PatronScreen';
+import { onModeRequest } from './src/modeNav';
 import { UniverseScreen } from './src/ui/UniverseScreen';
 import { EditorScreen } from './src/ui/EditorScreen';
 import { refreshEvren } from './src/universe';
@@ -342,6 +343,16 @@ export default function App() {
     initAnalytics(LANG);
     void initMonetization();
   }, []);
+  // Oyun içinden mod geçişi (kariyerdeki kişisel öneri kartı: Patron / Menajer / Efsane Yolları).
+  useEffect(
+    () =>
+      onModeRequest((v) => {
+        if (v === 'manager') track('manager_open', { kaynak: 'oneri' });
+        if (v === 'patron') track('patron_open', { kaynak: 'oneri' });
+        setView(v);
+      }),
+    [],
+  );
   // Android geri tuşu: oyundan ve karakter oluşturmadan menüye döner; menüdeyse uygulamadan çıkar.
   useEffect(() => {
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {

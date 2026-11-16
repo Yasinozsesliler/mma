@@ -11,6 +11,8 @@ import { ageStage } from '../engine/body';
 import { unclaimedSets } from '../engine/cards';
 import { claimScout } from '../engine/rewards';
 import { RewardCard } from './RewardCard';
+import { DailyBox } from './DailyBox';
+import { PersonalOffer } from './PersonalOffer';
 import { CoachTip, type TipId } from './CoachTip';
 import { careerCard } from '../share/build';
 import { ShareButton } from '../share/ShareButton';
@@ -225,6 +227,8 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
         <>
           <CoachTip s={s} act={act} id="hub" />
           <RewardCard s={s} act={act} />
+          <DailyBox s={s} act={act} />
+          <PersonalOffer s={s} />
           <FatigueCard s={s} act={act} />
           {banned(s) ? (
             <Notice color={C.red} icon="cancel" action={<Button label={L("Cezanı çek (zamanı ilerlet)")} icon="timer-sand" tone="ghost" onPress={() => act((x) => { x.haberler.unshift(serveBan(x)); })} />}>

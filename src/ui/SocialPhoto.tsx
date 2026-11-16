@@ -48,6 +48,7 @@ export function PhotoCard({ s, p, foto }: { s: GameState; p: Pick<Post, 'kullani
           <Text style={st.sub} numberOfLines={1}>
             {kind?.ad} · {ago(s, p.hafta)}
             {foto.pro ? L(" · Pro çekim") : ''}
+            {foto.oneCikan ? L(" · Sponsorlu") : ''}
           </Text>
         </View>
         {foto.viral ? (

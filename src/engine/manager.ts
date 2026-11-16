@@ -112,6 +112,8 @@ export interface MFighter {
   /** Birikmiş hasar (0-100): yüksekse doktor uyarır, nakavt riski artar */
   hasar: number;
   sakat: number;
+  /** Bu sakatlıkta ödüllü fizyoterapi kullanıldı (iyileşince sıfırlanır) */
+  fizyo?: boolean;
   mac?: Mac;
   katilis: number;
   /** Son maçından beri geçen hafta (bekletme şikâyeti için) */
@@ -1525,7 +1527,10 @@ export function advanceWeek(r: MgrRun) {
     if (!f.mac) f.bosHafta++;
     if (f.sakat > 0) {
       f.sakat--;
-      if (f.sakat === 0) rapor.push(L("💪 {0} sakatlığını atlattı.", [fullName(f)]));
+      if (f.sakat === 0) {
+        f.fizyo = undefined;
+        rapor.push(L("💪 {0} sakatlığını atlattı.", [fullName(f)]));
+      }
       if (f.sozlesme?.maddeler.includes('sakatlik')) earn(r, f, r100(f.sozlesme.ucret * 0.12));
     }
     f.hasar = clamp(f.hasar - (f.sakat > 0 ? 3 : 1), 0, 100);
@@ -2100,4 +2105,13 @@ export function adNewCandidates(r: MgrRun): string {
   r.rwAday = r.hafta;
   refreshCandidates(r, true);
   return L("Gözcülerin bir tur daha attı: {0} yeni aday.", [r.adaylar.length]);
+}
+/** Fizyoterapi: sakatlık başına bir kez, dövüşçü 2 hafta erken döner (en az 1 hafta kalır) */
+export const canAdPhysio = (f: MFighter) => f.sakat >= 2 && !f.fizyo;
+export function adPhysio(r: MgrRun, id: string): string {
+  const f = r.kadro.find((x) => x.id === id);
+  if (!f || !canAdPhysio(f)) return '';
+  f.sakat = Math.max(1, f.sakat - 2);
+  f.fizyo = true;
+  return L("🩺 Fizyoterapi işe yaradı: {0} {1} hafta sonra dönüyor.", [fullName(f), f.sakat]);
 }

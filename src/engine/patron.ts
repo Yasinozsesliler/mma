@@ -88,6 +88,8 @@ export interface PFighter {
   kisilik: PKisilik;
   istek: Istek;
   sakat: number;
+  /** Bu sakatlıkta ödüllü fizyoterapi kullanıldı (iyileşince sıfırlanır) */
+  fizyo?: boolean;
   hasar: number;
   bosHafta: number;
   sampiyon?: boolean;
@@ -1897,7 +1899,7 @@ export function advanceWeek(r: PatronRun): GeceRapor | null {
   // Dövüşçüler
   for (const f of r.kadro) {
     f.bosHafta++;
-    if (f.sakat > 0) f.sakat--;
+    if (f.sakat > 0 && --f.sakat === 0) f.fizyo = undefined;
     f.hasar = Math.max(0, f.hasar - 1);
     if (f.bosHafta > (f.istek === 'aktif' ? 8 : 14)) f.mutlu = clamp(f.mutlu - 2, 0, 100);
     if (f.soz && r.hafta > f.soz && !busy(r, f.id)) {
@@ -2038,6 +2040,15 @@ export function adExtraPhoto(r: PatronRun): string {
   r.rw = { ...r.rw, foto: r.hafta };
   r.gram.sonFoto = undefined;
   return L("Sosyal medya ajansı devrede: bu hafta bir fotoğraf daha paylaşabilirsin.");
+}
+/** Fizyoterapi: sakatlık başına bir kez, dövüşçü 2 hafta erken döner (en az 1 hafta kalır) */
+export const canAdPhysio = (f: PFighter) => f.sakat >= 2 && !f.fizyo;
+export function adPhysio(r: PatronRun, id: string): string {
+  const f = r.kadro.find((x) => x.id === id);
+  if (!f || !canAdPhysio(f)) return '';
+  f.sakat = Math.max(1, f.sakat - 2);
+  f.fizyo = true;
+  return L("🩺 Fizyoterapi işe yaradı: {0} {1} hafta sonra dönüyor.", [pFullName(f), f.sakat]);
 }
 /** Gecenin tekrar yayını: son gece için bir kez küçük gelir */
 export const replayPay = (g: GeceRapor) => r100(Math.max(1_500, g.seyirci * 3 + g.gelir.tv * 0.15));

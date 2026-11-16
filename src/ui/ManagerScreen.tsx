@@ -22,6 +22,8 @@ import {
   meydanSkor,
   ppvEstimate,
   provoke,
+  adPhysio,
+  canAdPhysio,
   readMeydan,
   TARZ,
   TARZ_ESIK,
@@ -581,6 +583,7 @@ function FighterActions({ f, hafta, onReleased }: { f: MFighter; hafta: number; 
   return (
     <>
       <Text style={ms.kicker}>{L("MENAJER İŞLERİ")}</Text>
+      {canAdPhysio(f) ? <AdOffer yer="mgr_fizyo" icon="medical-bag" title={L("Fizyoterapi seansı")} desc={L("{0} 2 hafta erken iyileşsin.", [f.soyad])} onReward={() => setNote(actMgr((x) => adPhysio(x, f.id)) ?? '')} /> : null}
       <Button label={cool > 0 ? L("Meydan okuma {0} hafta sonra", [cool]) : L("Sosyal medyada meydan okut")} icon="bullhorn" tone="ghost" disabled={cool > 0} onPress={() => setNote(actMgr((x) => provoke(x, f.id)) ?? '')} />
       {note ? <Text style={[ms.small, { color: C.gold }]}>{note}</Text> : null}
       {sure ? (

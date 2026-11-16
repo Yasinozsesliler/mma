@@ -75,14 +75,15 @@ export async function initMonetization() {
 
 // Yükleme: aynı anda tek istek; başarısız olursa bekleme her seferinde ikiye katlanır (1 → 2 → 4 … en fazla 10 dk),
 // başarıda sıfırlanır. Oyuncu uygulamaya dönünce ya da reklam anı gelip reklam hazır değilse bekleme atlanır.
-type Slot = { loading: boolean; fails: number; timer: ReturnType<typeof setTimeout> | null };
-const rSlot: Slot = { loading: false, fails: 0, timer: null };
-const iSlot: Slot = { loading: false, fails: 0, timer: null };
+type Slot = { loading: boolean; fails: number; timer: ReturnType<typeof setTimeout> | null; failAt: number };
+const rSlot: Slot = { loading: false, fails: 0, timer: null, failAt: 0 };
+const iSlot: Slot = { loading: false, fails: 0, timer: null, failAt: 0 };
 const backoff = (fails: number) => Math.min(600_000, 60_000 * 2 ** Math.max(0, fails - 1));
 
 function retryLater(slot: Slot, load: () => void) {
   slot.loading = false;
   slot.fails++;
+  slot.failAt = Date.now();
   if (slot.timer) clearTimeout(slot.timer);
   slot.timer = setTimeout(() => {
     slot.timer = null;
@@ -144,10 +145,13 @@ function loadInterstitial() {
 }
 
 // Uygulamaya dönüldüğünde hazır olmayan reklamlar beklemeden yeniden istenir.
+// Son başarısız denemenin üzerinden 1 dakika geçmediyse beklenir: reklamın az olduğu yerlerde her uygulamaya
+// dönüşte boş dönecek yeni bir istek atılmasın (eşleşme oranını gereksiz düşürür).
+const resumeOk = (slot: Slot) => !slot.fails || Date.now() - slot.failAt > 60_000;
 AppState.addEventListener('change', (st) => {
   if (st !== 'active') return;
-  loadNow(rSlot, rewardedReady, loadRewarded);
-  loadNow(iSlot, interstitialReady, loadInterstitial);
+  if (resumeOk(rSlot)) loadNow(rSlot, rewardedReady, loadRewarded);
+  if (resumeOk(iSlot)) loadNow(iSlot, interstitialReady, loadInterstitial);
 });
 
 /**

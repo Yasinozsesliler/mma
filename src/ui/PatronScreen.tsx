@@ -8,6 +8,8 @@ import { WEIGHT_CLASSES } from '../engine/data';
 import type { Kisilik, MFighter, MKayit } from '../engine/manager';
 import {
   addBout,
+  adPhysio,
+  canAdPhysio,
   adRefreshMarket,
   adReplay,
   adScoutReport,
@@ -1054,6 +1056,7 @@ function Dossier({ r, f, onClose, onMsg }: { r: PatronRun; f: PFighter; onClose:
             <Bar value={f.un} color={C.gold} label={L("Şöhret")} right={String(f.un)} />
             <Bar value={f.mutlu} color={C.green} label={L("Mutluluk")} right={`${moodIcon(f.mutlu)} ${f.mutlu}`} />
             <Bar value={100 - f.hasar} color={C.blue} label={L("Sağlık")} right={f.sakat ? L("{0} hafta sakat", [f.sakat]) : String(100 - f.hasar)} />
+            {canAdPhysio(f) ? <AdOffer yer="patron_fizyo" icon="medical-bag" title={L("Fizyoterapi seansı")} desc={L("{0} 2 hafta erken iyileşsin.", [f.soyad])} onReward={() => onMsg(actPatron((x) => adPhysio(x, f.id)) ?? '')} /> : null}
             {potVisible(r) ? <Text style={ps.small}>{L("Gözlemci raporu: potansiyel tavanı {0}", [f.pot])}</Text> : null}
             <Card>
               <Text style={ps.small}>{P_KISILIK[f.kisilik].aciklama()}</Text>
