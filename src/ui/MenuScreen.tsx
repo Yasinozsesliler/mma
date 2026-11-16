@@ -39,6 +39,8 @@ import { BACKGROUNDS } from '../engine/data';
 import type { Appearance, Background, GameState } from '../engine/types';
 import { Button, Card, Icon, Logo, Pill, Screen, Section, SLANT, upName, type IconName } from './components';
 import { useOfflineStatus } from './offline';
+import { NewMenuTop, type ModeCard } from './NewMenu';
+import { useLook } from '../lookPref';
 import { C, F, R } from './theme';
 
 const GUIDE: { baslik: string; icon: IconName; icerik: string[] }[] = [
@@ -364,18 +366,46 @@ export function MenuScreen({
   const filled = SLOTS.filter((x) => saves[x - 1]).sort((x, y) => (x === active ? -1 : y === active ? 1 : x - y));
   const empty = SLOTS.filter((x) => !saves[x - 1]);
   const busy = off && off.durum !== 'hazir';
+  const look = useLook();
+  const yeni = look === 'yeni';
+  const doneCount = chIds.filter((i) => doneCh.includes(i)).length;
+  const modes: ModeCard[] = [
+    ...(MGR_STORE ? [{ key: 'menajer', icon: 'briefcase' as const, color: C.green, title: L("Menajer Modu"), sub: L("Dövüşçü yönet, pazarlık yap"), onPress: onManager }] : []),
+    { key: 'meydan', icon: 'sword-cross', color: C.red, title: L("Meydan Okumalar"), sub: L("{0}/{1} tamamlandı", [doneCount, chIds.length]), onPress: () => setSheet('meydan') },
+    { key: 'gunun', icon: 'fire', color: C.orange, title: L("Günün Dövüşü"), sub: daily.kayit[gun] ? L("Bugün oynandı") : L("Tek hakkın var"), badge: seri ? `🔥 ${seri}` : undefined, onPress: onDaily },
+    { key: 'hayali', icon: 'star-four-points', color: '#b57bff', title: L("Hayalî Maçlar"), sub: dreamLeft ? L("Bugünün eşleşmesi hazır") : L("Yarın yeni eşleşme"), badge: L("📒 {0}/{1}", [dreamProg.got, dreamProg.max]), onPress: onDream },
+    ...(COACH_STORE ? [{ key: 'antrenor', icon: 'whistle' as const, color: C.blue, title: L("Antrenör Modu"), sub: L("Salonunu kur, şampiyon yetiştir"), onPress: () => setSheet('antrenor') }] : []),
+    ...(REF_STORE ? [{ key: 'hakem', icon: 'hand-back-left' as const, color: C.dim, title: L("Hakem Modu"), sub: L("Kafesin içindeki karar senin"), onPress: onReferee }] : []),
+    { key: 'hayalet', icon: 'ghost', color: C.blue, title: L("Hayalet Maç"), sub: pendingGhost() ? L("Sana meydan okundu!") : L("Arkadaşınla kapış"), badge: pendingGhost() ? L("YENİ") : undefined, onPress: onGhost },
+    ...(MGR_STORE ? [{ key: 'evren', icon: 'earth' as const, color: '#4cc9f0', title: L("YOL Evreni"), sub: L("Bütün modlar aynı dünyada"), onPress: onUniverse }] : []),
+    { key: 'editor', icon: 'pencil-ruler', color: C.gold, title: L("Editör"), sub: L("Organizasyonları adlandır"), onPress: onEditor },
+    { key: 'dolap', icon: 'hanger', color: C.gold, title: L("Dolap"), sub: L("Şort, eldiven, çerçeve"), badge: yeniKoz ? L("{0} YENİ", [yeniKoz]) : undefined, onPress: onLocker },
+    { key: 'rehber', icon: 'book-open-variant', color: C.dim, title: L("Rehber"), sub: L("Nasıl oynanır"), onPress: () => setSheet('rehber') },
+  ];
   return (
     <Screen
       footer={
-        canContinue ? (
+        yeni ? undefined : canContinue ? (
           <Button label={L("Devam et · {0} {1}", [cur!.fighter.ad, cur!.fighter.soyad])} icon="play" tone="gold" onPress={() => onContinue(active)} />
         ) : firstEmpty ? (
           <Button label={L("Yeni kariyer")} icon="plus" onPress={() => onNew(firstEmpty)} />
         ) : undefined
       }
     >
+      {yeni ? (
+        <NewMenuTop
+          cur={cur}
+          canContinue={canContinue}
+          onContinue={() => onContinue(active)}
+          onNewCareer={firstEmpty ? () => onNew(firstEmpty) : undefined}
+          onSettings={() => setSheet('ayarlar')}
+          onLegends={() => openLegends()}
+          onPatron={onPatron}
+          modes={modes}
+        />
+      ) : null}
       {/* Sahne: spot ışıkları altında logo; ayarlar sağ üstte */}
-      <View style={ms.hero}>
+      {yeni ? null : <View style={ms.hero}>
         <LinearGradient colors={['#4a0d16', '#1a070b', '#0a0b0e']} style={StyleSheet.absoluteFill} />
         <Svg style={StyleSheet.absoluteFill} width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none" pointerEvents="none">
           <Defs>
@@ -413,9 +443,9 @@ export function MenuScreen({
             </Text>
           </View>
         ) : null}
-      </View>
+      </View>}
 
-      <LegendShowcase onOpen={openLegends} />
+      {yeni ? null : <LegendShowcase onOpen={openLegends} />}
 
       {/* Kariyerler */}
       {filled.length ? <Section>{L("KARİYERLERİN")}</Section> : null}
@@ -464,8 +494,9 @@ export function MenuScreen({
       ) : null}
 
       {/* Modlar */}
-      <Section>{L("OYUN MODLARI")}</Section>
+      {yeni ? <Section>{L("ÖNERİLEN")}</Section> : <Section>{L("OYUN MODLARI")}</Section>}
       <SeasonBanner onPress={onSeason} />
+      {yeni ? null : (<>
       {/* Meydan okumalar: geniş afiş, ilerleme çubuğu ve son kategoriler */}
       <Pressable onPress={() => setSheet('meydan')} style={({ pressed }) => [ms.chBanner, pressed && { transform: [{ scale: 0.99 }], borderColor: C.red }]}>
         <LinearGradient colors={['#3a0b14', '#160a0d', '#0c0d10']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={ms.chIn}>
@@ -524,6 +555,7 @@ export function MenuScreen({
         <ModeTile icon="hanger" color={C.gold} title={L("Dolap")} sub={L("Şort, eldiven, çerçeve, kemer ve giriş müziği")} badge={yeniKoz ? L("{0} YENİ", [yeniKoz]) : undefined} onPress={onLocker} />
         <ModeTile icon="book-open-variant" color={C.blue} title={L("Rehber")} sub={L("Nasıl oynanır, gelişim, branşlar")} onPress={() => setSheet('rehber')} />
       </View>
+      </>)}
 
       <ChampionHourCard />
       <PremiumCard />
