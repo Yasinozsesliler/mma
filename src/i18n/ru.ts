@@ -10793,4 +10793,7 @@ export const RU: Record<string, string> = {
   "YAŞIN": "ТВОЙ ВОЗРАСТ",
   "YÖNTEM": "СПОСОБ",
   "{0} karşılaşma": "встреч: {0}",
+  "AMATÖR KARNE": "ЛЮБИТЕЛЬСКИЙ РЕКОРД",
+  "MAĞ.": "ПОР.",
+  "{0} KARİYERİ": "КАРЬЕРА В {0}",
 };

@@ -11,9 +11,11 @@ import { cityPin } from '../engine/worldMap';
 import { L, LANG } from '../i18n';
 import { careerCard } from '../share/build';
 import { ShareButton } from '../share/ShareButton';
-import { Icon, SLANT, type IconName } from './components';
-import { FighterAvatar } from './FighterAvatar';
-import { flagOf } from './NewCareer';
+import { CageBg, Icon, SLANT, upName, type IconName } from './components';
+import { DEFAULT_LOOK, FighterAvatar } from './FighterAvatar';
+import { flagOf, Standing } from './NewCareer';
+import { playerKit, useCosmetics } from '../cosmetics';
+import { currentOrg } from '../engine/character';
 import { C, F } from './theme';
 
 type Filter = 'hepsi' | 'pro' | 'amator' | 'G' | 'M';
@@ -46,6 +48,8 @@ export function NewHistory({ s }: { s: GameState }) {
   };
   return (
     <View style={{ marginTop: 8 }}>
+      <CareerPoster s={s} rivalOf={rivalOf} />
+
       {/* Başlık ve karne */}
       <View style={h.head}>
         <Text style={h.title}>
@@ -239,4 +243,102 @@ const h = StyleSheet.create({
   h2hSub: { color: C.dim, fontFamily: F.body, fontSize: 11 },
   more: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10 },
   moreText: { color: C.dim, fontFamily: F.display, fontSize: 12, letterSpacing: 1 },
+});
+
+// ---------- Kariyer afişi: büyük isim, organizasyon karnesi, tam boy dövüşçü ve son rakipler ----------
+
+const METHOD_COLOR = (y: string) => (/KO|TKO/.test(y) ? C.red : /Submission/.test(y) ? '#3aa8ff' : '#2f9e5b');
+
+function CareerPoster({ s, rivalOf }: { s: GameState; rivalOf: (h: FightHistory) => import('../engine/types').Opponent | undefined }) {
+  useCosmetics();
+  const f = s.fighter;
+  // Afişin organizasyonu: sözleşmedeki; yoksa son profesyonel maçın organizasyonu.
+  const cur = currentOrg(s);
+  const orgId = cur !== 'amator' || s.stage === 'amator' ? cur : (s.gecmis.find((g) => g.org !== 'amator')?.org ?? cur);
+  const inOrg = s.gecmis.filter((g) => g.org === orgId);
+  const rec = { g: inOrg.filter((g) => g.sonuc === 'G').length, m: inOrg.filter((g) => g.sonuc === 'M').length, b: inOrg.filter((g) => g.sonuc === 'B').length };
+  const last = inOrg.slice(0, 5);
+  const total = s.stage === 'amator' ? s.amator : s.rekor;
+  const orgName = orgId === 'amator' && s.stage !== 'amator' ? 'PRO' : ORGS[orgId].kisa;
+  const parts = `${f.ad} ${f.soyad}`.trim();
+  return (
+    <View style={pk.wrap}>
+      <LinearGradient colors={['#3a0a10', '#140608', '#060607']} locations={[0, 0.55, 1]} style={StyleSheet.absoluteFill} />
+      <CageBg opacity={0.07} />
+      <View style={pk.glow} />
+      <View style={pk.figure} pointerEvents="none">
+        <Standing look={f.gorunum ?? DEFAULT_LOOK} kit={playerKit()} h={430} flip />
+      </View>
+      <LinearGradient colors={['transparent', '#060607']} locations={[0.7, 1]} style={StyleSheet.absoluteFill} pointerEvents="none" />
+
+      <View style={pk.head}>
+        <Text style={[pk.name, SLANT]} numberOfLines={1} adjustsFontSizeToFit>
+          {upName(parts, f.uyruk)}
+        </Text>
+        <View style={pk.orgRow}>
+          <Text style={pk.orgBox}>{L("{0} KARİYERİ", [orgName])}</Text>
+          <Text style={pk.flag}>{flagOf(f.uyruk)}</Text>
+          <Text style={pk.recBox}>
+            {rec.g}-{rec.m}-{rec.b}
+          </Text>
+        </View>
+        <Text style={pk.total}>
+          {s.stage === 'amator' ? L("AMATÖR KARNE") : L("PROFESYONEL KARNE")}: {total.g}-{total.m}
+          {total.b ? `-${total.b}` : ''}
+        </Text>
+      </View>
+
+      <View style={pk.list}>
+        {last.length === 0 ? <Text style={pk.empty}>{L("Henüz dövüş yok. İlk maçın burada tarihe geçecek.")}</Text> : null}
+        {last.map((x, k) => {
+          const o = rivalOf(x);
+          const look = o ? lookFor(o) : lookFor({ id: x.rakipId ?? x.rakip, uyruk: '' });
+          const frame = x.sonuc === 'G' ? '#2f9e5b' : x.sonuc === 'M' ? '#d62839' : C.gold;
+          const sp = x.rakip.trim().split(/\s+/);
+          const first = sp.length > 1 ? sp.slice(0, -1).join(' ') : '';
+          const lastName = sp[sp.length - 1];
+          return (
+            <View key={k} style={pk.row}>
+              <View style={[pk.av, { borderColor: frame, backgroundColor: frame }]}>
+                <FighterAvatar look={look} size={74} ring={frame} bg={frame} />
+              </View>
+              <View style={{ flexShrink: 1, gap: 2 }}>
+                <Text style={[pk.method, { backgroundColor: METHOD_COLOR(x.yontem) }]}>{x.sonuc === 'M' ? `${L("MAĞ.")} · ${shortMethod(x.yontem)}` : shortMethod(x.yontem)}</Text>
+                {first ? (
+                  <Text style={pk.first} numberOfLines={1}>
+                    {first.toUpperCase()}
+                  </Text>
+                ) : null}
+                <Text style={pk.last} numberOfLines={1}>
+                  {lastName.toUpperCase()}
+                </Text>
+              </View>
+            </View>
+          );
+        })}
+      </View>
+      <Text style={pk.brand}>YOL · {L("KAFESTEN KEMERE")}</Text>
+    </View>
+  );
+}
+
+const pk = StyleSheet.create({
+  wrap: { height: 560, borderRadius: 6, overflow: 'hidden', borderWidth: 1, borderColor: '#3a1a20', marginBottom: 12 },
+  glow: { position: 'absolute', right: -60, top: 80, width: 320, height: 320, borderRadius: 160, backgroundColor: 'rgba(230,57,70,0.14)' },
+  figure: { position: 'absolute', right: -70, bottom: -6 },
+  head: { paddingHorizontal: 14, paddingTop: 14, gap: 5 },
+  name: { color: '#fff', fontFamily: F.display, fontSize: 34, lineHeight: 38, letterSpacing: 0.5, textShadowColor: '#000', textShadowRadius: 8 },
+  orgRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  orgBox: { backgroundColor: '#fff', color: '#040405', fontFamily: F.display, fontSize: 18, letterSpacing: 0.5, paddingHorizontal: 8, paddingVertical: 1, overflow: 'hidden' },
+  flag: { fontSize: 20 },
+  recBox: { backgroundColor: C.red, color: '#fff', fontFamily: F.display, fontSize: 18, paddingHorizontal: 8, paddingVertical: 1, overflow: 'hidden' },
+  total: { color: '#e4e6eb', fontFamily: F.bold, fontSize: 10.5, letterSpacing: 1 },
+  list: { paddingHorizontal: 14, paddingTop: 14, gap: 10, width: '62%' },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  av: { width: 60, height: 66, borderWidth: 3, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  method: { alignSelf: 'flex-start', color: '#fff', fontFamily: F.black, fontSize: 10, letterSpacing: 1, paddingHorizontal: 6, paddingVertical: 2, overflow: 'hidden' },
+  first: { color: '#e4e6eb', fontFamily: F.bold, fontSize: 10.5, letterSpacing: 0.8 },
+  last: { color: '#fff', fontFamily: F.display, fontSize: 15, letterSpacing: 0.5 },
+  empty: { color: C.dim, fontFamily: F.body, fontSize: 12 },
+  brand: { position: 'absolute', left: 14, bottom: 10, color: '#6b7280', fontFamily: F.display, fontSize: 11, letterSpacing: 2 },
 });

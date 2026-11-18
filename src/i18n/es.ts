@@ -10758,4 +10758,7 @@ export const ES: Record<string, string> = {
   "YAŞIN": "TU EDAD",
   "YÖNTEM": "MÉTODO",
   "{0} karşılaşma": "{0} enfrentamientos",
+  "AMATÖR KARNE": "RÉCORD AMATEUR",
+  "MAĞ.": "DERROTA",
+  "{0} KARİYERİ": "CARRERA EN {0}",
 };
