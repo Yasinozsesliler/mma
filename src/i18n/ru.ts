@@ -10830,4 +10830,6 @@ export const RU: Record<string, string> = {
   "KRİTİK AN · HIZLI KARAR!": "КРИТИЧЕСКИЙ МОМЕНТ · БЫСТРЕЕ!",
   "{0} PAKET": "НАБОР: {0}",
   "{0} parça": "предметов: {0}",
+  "KONTRAT TEKLİFİ": "ПРЕДЛОЖЕНИЕ КОНТРАКТА",
+  "MAÇ ÜCRETİ": "ГОНОРАР",
 };

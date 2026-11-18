@@ -10795,4 +10795,6 @@ export const ES: Record<string, string> = {
   "KRİTİK AN · HIZLI KARAR!": "MOMENTO CRÍTICO · ¡DECIDE YA!",
   "{0} PAKET": "PAQUETE {0}",
   "{0} parça": "{0} piezas",
+  "KONTRAT TEKLİFİ": "OFERTA DE CONTRATO",
+  "MAÇ ÜCRETİ": "BOLSA POR PELEA",
 };

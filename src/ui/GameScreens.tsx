@@ -979,6 +979,7 @@ export function OffersScreen({ s, act }: { s: GameState; act: Act }) {
   const [msg, setMsg] = useState<string | null>(null);
   const offers = s.pending.teklifler!;
   const amateur = currentOrg(s) === 'amator';
+  const yeniLook = useLook() === 'yeni';
   return (
     <Screen footer={amateur ? <Button label={L("Şimdilik amatörde kal")} tone="ghost" onPress={() => act(stayAmateur)} /> : undefined}>
       <Title kicker={L("MENAJERİN TELEFONU SUSMUYOR")} sub={s.pending.teklifMetni}>
@@ -993,13 +994,48 @@ export function OffersScreen({ s, act }: { s: GameState; act: Act }) {
       {offers.map((o) => {
         const ufc = o.org === 'ufc' || o.org === 'dwcs';
         return (
-          <LinearGradient key={o.id} colors={ufc ? ['#2e2006', '#0c0d10'] : ['#1f070b', '#0c0d10']} style={[gs.offer, { borderColor: ufc ? C.goldDeep : '#3a1a20' }]}>
-            <Text style={gs.offerOrg}>{ORGS[o.org].ad}</Text>
+          <LinearGradient key={o.id} colors={ufc ? ['#2e2006', '#0c0d10'] : ['#1f070b', '#0c0d10']} style={[gs.offer, { borderColor: ufc ? C.goldDeep : '#3a1a20' }, yeniLook && gs.offerNew]}>
+            {yeniLook ? (
+              <View style={gs.offerHead}>
+                <Text style={[gs.offerBadge, { backgroundColor: ufc ? C.gold : C.red, color: ufc ? '#1f1605' : '#fff' }]}>{ORGS[o.org].kisa}</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={gs.offerKicker}>{L("KONTRAT TEKLİFİ")}</Text>
+                  <Text style={[gs.offerOrg, { marginBottom: 0 }]} numberOfLines={1}>
+                    {ORGS[o.org].ad.toLocaleUpperCase(LOC)}
+                  </Text>
+                </View>
+              </View>
+            ) : (
+              <Text style={gs.offerOrg}>{ORGS[o.org].ad}</Text>
+            )}
             <Text style={gs.meta}>{o.not}</Text>
-            <View style={gs.offerStats}>
+            <View style={[gs.offerStats, yeniLook && { gap: 8 }]}>
+              {yeniLook ? (
+                <>
+                  <View style={gs.offerTile}>
+                    <Text style={gs.offerTileLabel}>{L("DÖVÜŞ")}</Text>
+                    <Text style={gs.offerTileVal}>{o.dovus}</Text>
+                  </View>
+                  <View style={[gs.offerTile, { borderColor: C.gold + '88', flex: 1.4 }]}>
+                    <Text style={[gs.offerTileLabel, { color: C.gold }]}>{L("MAÇ ÜCRETİ")}</Text>
+                    <Text style={[gs.offerTileVal, { color: C.gold }]} numberOfLines={1} adjustsFontSizeToFit>
+                      {money(o.ucret)}
+                    </Text>
+                  </View>
+                  <View style={[gs.offerTile, { flex: 1.3 }]}>
+                    <Text style={[gs.offerTileLabel, { color: C.green }]}>{L("GALİBİYET")}</Text>
+                    <Text style={[gs.offerTileVal, { color: C.green }]} numberOfLines={1} adjustsFontSizeToFit>
+                      +{money(o.bonus)}
+                    </Text>
+                  </View>
+                </>
+              ) : (
+                <>
               <Stat label={L("Dövüş")} value={`${o.dovus}`} />
               <Stat label={L("Ücret")} value={money(o.ucret)} gold />
               <Stat label={L("Galibiyet")} value={`+${money(o.bonus)}`} />
+                </>
+              )}
             </View>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
               <Pill text={o.munhasir ? L("Münhasır") : L("Münhasır değil")} icon="lock" color={o.munhasir ? C.orange : C.green} />
@@ -1085,6 +1121,13 @@ export function RetireScreen({ s, onNew, onDynasty, onComeback, onDoc, onLeague 
 }
 
 const gs = StyleSheet.create({
+  offerNew: { borderRadius: 6, borderWidth: 1.2 },
+  offerHead: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 6 },
+  offerBadge: { fontFamily: F.display, fontSize: 15, paddingHorizontal: 8, paddingVertical: 6, overflow: 'hidden', minWidth: 46, textAlign: 'center' },
+  offerKicker: { color: C.dim, fontFamily: F.black, fontSize: 9.5, letterSpacing: 1.6 },
+  offerTile: { flex: 1, borderWidth: 1, borderColor: '#2a2d34', backgroundColor: 'rgba(4,4,5,0.55)', borderRadius: 4, paddingHorizontal: 8, paddingVertical: 7, gap: 2 },
+  offerTileLabel: { color: '#8b919c', fontFamily: F.black, fontSize: 9, letterSpacing: 1.2 },
+  offerTileVal: { color: C.text, fontFamily: F.display, fontSize: 18 },
   faceAsk: { color: C.faint, fontFamily: F.display, fontSize: 12, letterSpacing: 1.5, marginBottom: 6 },
   date: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 10, backgroundColor: '#1a1407', borderRadius: 8, borderWidth: 1, borderColor: '#4a3810', paddingHorizontal: 10, paddingVertical: 8 },
   dateText: { color: C.gold, fontFamily: F.semi, fontSize: 13 },

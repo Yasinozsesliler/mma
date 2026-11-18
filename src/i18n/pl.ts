@@ -10771,4 +10771,6 @@ export const PL: Record<string, string> = {
   "KRİTİK AN · HIZLI KARAR!": "KRYTYCZNY MOMENT · SZYBKO!",
   "{0} PAKET": "PAKIET {0}",
   "{0} parça": "{0} elementów",
+  "KONTRAT TEKLİFİ": "OFERTA KONTRAKTU",
+  "MAÇ ÜCRETİ": "GAŻA ZA WALKĘ",
 };

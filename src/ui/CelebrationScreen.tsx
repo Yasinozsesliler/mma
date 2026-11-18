@@ -7,7 +7,7 @@ import { sfx } from '../audio';
 import { buzz } from '../haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useMemo, useRef } from 'react';
-import { Animated, Dimensions, StyleSheet, Text, View } from 'react-native';
+import { Animated, Dimensions, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { endCelebration } from '../engine/career';
 import { fullName } from '../engine/character';
 import { ORGS, WEIGHT_CLASSES } from '../engine/data';
@@ -16,7 +16,10 @@ import type { GameState } from '../engine/types';
 import { Belt } from './Belt';
 import { Button, Screen, SLANT } from './components';
 import { BeltOffer } from './PremiumCard';
-import { FighterAvatar } from './FighterAvatar';
+import { DEFAULT_LOOK, FighterAvatar } from './FighterAvatar';
+import { FrontWalker } from './WalkoutFront';
+import { playerKit } from '../cosmetics';
+import { useLook } from '../lookPref';
 import type { Act } from './GameScreens';
 import { C, F } from './theme';
 
@@ -73,6 +76,8 @@ function Piece({ x, delay, dur, color, size, rot }: { x: number; delay: number; 
 
 export function CelebrationScreen({ s, act }: { s: GameState; act: Act }) {
   const k = s.kutlama!;
+  const yeni = useLook() === 'yeni';
+  const { width: W } = useWindowDimensions();
   const scale = useRef(new Animated.Value(0.3)).current;
   useEffect(() => {
     Animated.spring(scale, { toValue: 1, friction: 5, tension: 60, useNativeDriver: true }).start();
@@ -121,9 +126,16 @@ export function CelebrationScreen({ s, act }: { s: GameState; act: Act }) {
         <Text style={cl.kicker}>{ORGS[k.org].kisa} · {L("{0} Sıklet", [WEIGHT_CLASSES[k.siklet].ad]).toLocaleUpperCase(LOC)}</Text>
         <Text style={[cl.title, SLANT]}>{baslik}</Text>
         <Text style={cl.sub}>{alt}</Text>
-        <View style={{ marginVertical: 16 }}>
-          <FighterAvatar look={s.fighter.gorunum} size={150} ring={C.gold} />
-        </View>
+        {yeni ? (
+          <View style={cl.champ}>
+            <LinearGradient colors={['rgba(255,214,120,0.16)', 'rgba(255,214,120,0)']} locations={[0.2, 1]} style={cl.champGlow} />
+            <FrontWalker look={s.fighter.gorunum ?? DEFAULT_LOOK} kit={playerKit()} walking={false} size={Math.min(W * 0.46, 210)} seed={11} />
+          </View>
+        ) : (
+          <View style={{ marginVertical: 16 }}>
+            <FighterAvatar look={s.fighter.gorunum} size={150} ring={C.gold} />
+          </View>
+        )}
         <Text style={[cl.name, SLANT]}>{fullName(s.fighter).toLocaleUpperCase(LOC)}</Text>
         <Animated.View style={{ transform: [{ scale }], marginTop: 18, alignItems: 'center', gap: 10 }}>
           {belts.map((b) => (
@@ -141,6 +153,8 @@ export function CelebrationScreen({ s, act }: { s: GameState; act: Act }) {
 }
 
 const cl = StyleSheet.create({
+  champ: { alignItems: 'center', marginVertical: 10 },
+  champGlow: { position: 'absolute', top: 0, width: 260, height: 260, borderRadius: 130 },
   hero: { alignItems: 'center', paddingVertical: 24, marginHorizontal: -16, marginTop: -16, paddingHorizontal: 16 },
   kicker: { color: C.gold, fontFamily: F.display, fontSize: 13, letterSpacing: 3 },
   title: { color: '#fff', fontFamily: F.display, fontSize: 46, letterSpacing: 1, textAlign: 'center', textShadowColor: C.gold, textShadowRadius: 18 },
