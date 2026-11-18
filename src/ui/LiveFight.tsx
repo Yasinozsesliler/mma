@@ -29,6 +29,23 @@ const P = (n: PoseName, ov: Partial<Pose> = {}): Pose => ({ ...POSES[n], ...ov }
 type Btn = [LiveInput, () => string, string];
 const PURPLE = '#b77dff';
 /** Yeni görünüm: düğme ikonları */
+/** Yeni görünüm: düğme altı kısa açıklama (konum:girdi). Değerler liveFight.ts'deki maliyet ve hasara göre. */
+const PAD_SUB: Record<string, () => string> = {
+  'ayakta:kac': () => L("Sıyrıl"),
+  'ayakta:gard': () => L("Hasarı azalt"),
+  'ayakta:indir': () => L("Yere götür"),
+  'ayakta:jab': () => L("Hızlı · az nefes"),
+  'ayakta:direkt': () => L("Güçlü"),
+  'ayakta:tekme': () => L("En güçlü · yavaş"),
+  'ustte:kalk': () => L("Ayağa kalk"),
+  'ustte:gard': () => L("Pozisyonu tut"),
+  'ustte:sub': () => L("Kilit dene"),
+  'ustte:jab': () => L("Hızlı"),
+  'ustte:direkt': () => L("Güçlü"),
+  'altta:gard': () => L("Hasarı azalt"),
+  'altta:sub': () => L("Kilit dene"),
+  'altta:kac': () => L("Altından çık"),
+};
 const PAD_ICON: Partial<Record<LiveInput, IconName>> = { kac: 'run-fast', gard: 'shield-half-full', indir: 'arrow-down-bold', jab: 'flash', direkt: 'boxing-glove', tekme: 'karate', kalk: 'arrow-up-bold', sub: 'lock' };
 /** Konuma göre düğmeler: üst sıra savunma/özel, alt sıra vuruşlar */
 const BUTTONS: Record<'ayakta' | 'ustte' | 'altta', Btn[][]> = {
@@ -773,16 +790,35 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel }: { fs: FightState; p
                   key={k}
                   {...INSTANT}
                   onPressIn={() => press(k)}
-                  style={({ pressed }) => [np.btn, ri === 1 ? np.big : np.small, { borderColor: col + 'cc' }, pressed && { backgroundColor: col, borderColor: col, transform: [{ scale: 0.96 }] }, k === 'sub' && frame.pos === 'ustte' && frame.gpos < 0.45 && { opacity: 0.4 }, guide && (guide.target === k ? lf.btnGuide : lf.btnDim)]}
+                  style={({ pressed }) => [np.btn, ri === 1 ? np.big : np.small, { borderColor: pressed ? col : col + '66' }, pressed && { backgroundColor: col, transform: [{ skewX: '-8deg' }, { scale: 0.96 }], shadowColor: col, shadowOpacity: 0.9, shadowRadius: 14 }, k === 'sub' && frame.pos === 'ustte' && frame.gpos < 0.45 && { opacity: 0.4 }, guide && (guide.target === k ? lf.btnGuide : lf.btnDim)]}
                 >
                   {({ pressed }) => (
                     <>
-                      {!pressed && !low ? <LinearGradient colors={[col + '40', col + '10', '#0b0c0f']} locations={[0, 0.55, 1]} style={StyleSheet.absoluteFill} pointerEvents="none" /> : null}
-                      {pressed ? null : <View style={[np.shine, { backgroundColor: col }]} pointerEvents="none" />}
-                      {PAD_ICON[k] ? <Icon name={PAD_ICON[k]!} size={ri === 1 ? 24 : 17} color={pressed ? '#0b0c0f' : col} /> : null}
-                      <Text style={[ri === 1 ? np.textBig : np.text, { color: pressed ? '#0b0c0f' : '#f1f2f5' }, label().length > 8 && { fontSize: 12 }]} numberOfLines={1}>
-                        {label()}
-                      </Text>
+                      {!pressed && !low ? (
+                        <>
+                          <LinearGradient colors={['#20232b', '#101217', '#07080a']} locations={[0, 0.5, 1]} style={StyleSheet.absoluteFill} pointerEvents="none" />
+                          <LinearGradient colors={['transparent', col + '55']} locations={[0.35, 1]} style={StyleSheet.absoluteFill} pointerEvents="none" />
+                        </>
+                      ) : null}
+                      {pressed ? null : <View style={np.gloss} pointerEvents="none" />}
+                      {pressed ? null : <View style={[np.edge, { backgroundColor: col }]} pointerEvents="none" />}
+                      <View style={[np.inner, ri === 1 ? np.innerBig : np.innerSmall]}>
+                        {PAD_ICON[k] ? (
+                          <View style={[ri === 1 ? np.badgeBig : np.badge, { borderColor: pressed ? '#0b0c0f' : col, backgroundColor: pressed ? '#0b0c0f22' : col + '24' }]}>
+                            <Icon name={PAD_ICON[k]!} size={ri === 1 ? 20 : 14} color={pressed ? '#0b0c0f' : col} />
+                          </View>
+                        ) : null}
+                        <View style={{ alignItems: ri === 1 ? 'center' : 'flex-start', flexShrink: 1 }}>
+                          <Text style={[ri === 1 ? np.textBig : np.text, { color: pressed ? '#0b0c0f' : '#f6f7f9' }, label().length > 8 && { fontSize: 12 }]} numberOfLines={1}>
+                            {label()}
+                          </Text>
+                          {PAD_SUB[`${frame.pos}:${k}`] ? (
+                            <Text style={[np.sub, { color: pressed ? '#0b0c0fcc' : col }]} numberOfLines={1}>
+                              {PAD_SUB[`${frame.pos}:${k}`]!()}
+                            </Text>
+                          ) : null}
+                        </View>
+                      </View>
                     </>
                   )}
                 </Pressable>
@@ -834,14 +870,21 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel }: { fs: FightState; p
 }
 
 const np = StyleSheet.create({
-  btn: { flex: 1, borderWidth: 1.5, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: '#0b0c0f', overflow: 'hidden' },
-  small: { flexDirection: 'row', gap: 6, paddingVertical: 11 },
-  big: { gap: 3, paddingVertical: 14, minHeight: 74 },
-  shine: { position: 'absolute', left: 10, right: 10, top: 0, height: 2, opacity: 0.8, borderRadius: 1 },
-  text: { fontFamily: F.display, fontSize: 14, letterSpacing: 1.2 },
-  textBig: { fontFamily: F.display, fontSize: 17, letterSpacing: 1.5 },
-  special: { borderRadius: 10, height: 44, borderWidth: 1.5 },
-  specialOn: { shadowColor: C.gold, shadowOpacity: 0.8, shadowRadius: 14, shadowOffset: { width: 0, height: 0 } },
+  btn: { flex: 1, borderWidth: 1.2, borderRadius: 6, backgroundColor: '#0b0c0f', overflow: 'hidden', transform: [{ skewX: '-8deg' }], shadowOffset: { width: 0, height: 0 } },
+  small: { minHeight: 50 },
+  big: { minHeight: 78 },
+  inner: { flex: 1, transform: [{ skewX: '8deg' }], alignItems: 'center', justifyContent: 'center' },
+  innerSmall: { flexDirection: 'row', gap: 8, paddingHorizontal: 8 },
+  innerBig: { gap: 4, paddingVertical: 8 },
+  gloss: { position: 'absolute', left: 0, right: 0, top: 0, height: '42%', backgroundColor: 'rgba(255,255,255,0.05)' },
+  edge: { position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, opacity: 0.9 },
+  badge: { width: 26, height: 26, borderRadius: 13, borderWidth: 1.2, alignItems: 'center', justifyContent: 'center' },
+  badgeBig: { width: 34, height: 34, borderRadius: 17, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center' },
+  text: { fontFamily: F.display, fontSize: 14, letterSpacing: 1.2, lineHeight: 17 },
+  textBig: { fontFamily: F.display, fontSize: 17, letterSpacing: 1.6, lineHeight: 20 },
+  sub: { fontFamily: F.bold, fontSize: 8.5, letterSpacing: 0.6, opacity: 0.95 },
+  special: { borderRadius: 6, height: 46, borderWidth: 1.5, transform: [{ skewX: '-8deg' }] },
+  specialOn: { shadowColor: C.gold, shadowOpacity: 0.8, shadowRadius: 16, shadowOffset: { width: 0, height: 0 } },
   hint: { alignSelf: 'center', backgroundColor: 'rgba(20,22,26,0.9)', borderWidth: 1, borderColor: '#2a2d34', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 4, overflow: 'hidden', color: '#a3a9b5' },
 });
 
