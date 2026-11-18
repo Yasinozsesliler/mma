@@ -637,7 +637,8 @@ export function LookPicker({ look, onChange, only, bare }: { look: Appearance; o
               sac: rnd(HAIR_STYLES).key,
               sacRenk: Math.floor(Math.random() * (NATURAL_HAIR - 1)),
               goz: Math.floor(Math.random() * EYE_COLORS.length),
-              sakal: rnd(BEARDS).key,
+              // Kadın dövüşçüde sakal olmaz
+              sakal: look.kadin ? 'yok' : rnd(BEARDS).key,
               yara: Math.random() < 0.25,
               dovme: Math.random() < 0.3,
               yuz: Math.floor(Math.random() * FACE_SHAPES.length),
@@ -646,6 +647,9 @@ export function LookPicker({ look, onChange, only, bare }: { look: Appearance; o
               dudak: Math.floor(Math.random() * LIPS.length),
               kas: Math.floor(Math.random() * BROWS.length),
               kulak: Math.random() < 0.3 ? 1 : 0,
+              // Cinsiyet ve seçilmiş ek dövmeler (Şampiyon Paketi) rastgeleyle kaybolmaz
+              ...(look.kadin ? { kadin: true } : {}),
+              ...(look.dovmeler ? { dovmeler: look.dovmeler } : {}),
             })
           }
         />
