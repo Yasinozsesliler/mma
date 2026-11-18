@@ -10796,4 +10796,9 @@ export const RU: Record<string, string> = {
   "AMATÖR KARNE": "ЛЮБИТЕЛЬСКИЙ РЕКОРД",
   "MAĞ.": "ПОР.",
   "{0} KARİYERİ": "КАРЬЕРА В {0}",
+  "PERFORMANS": "ВЫСТУПЛЕНИЯ",
+  "TÜM ZAMANLARIN EN İYİSİ": "ВЕЛИЧАЙШИЙ В ИСТОРИИ",
+  "efsane geçildi": "легенд обойдено",
+  "{0} / {1} basamak": "ступеней: {0} / {1}",
+  "{0} BASAMAK KALDI": "ОСТАЛОСЬ: {0}",
 };

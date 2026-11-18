@@ -11,6 +11,8 @@ import { FighterAvatar } from './FighterAvatar';
 import type { Act } from './GameScreens';
 import { RankingList } from './HubParts';
 import { RecordsList } from './RecordsPanel';
+import { NewRecords } from './NewRecords';
+import { useLook } from '../lookPref';
 import { C, F, R } from './theme';
 
 function P4PList({ s, act }: { s: GameState; act: Act }) {
@@ -68,6 +70,7 @@ function P4PList({ s, act }: { s: GameState; act: Act }) {
 
 export function RankingsTab({ s, act }: { s: GameState; act: Act }) {
   const [tab, setTab] = useState<'siklet' | 'p4p' | 'rekor'>('siklet');
+  const yeni = useLook() === 'yeni';
   return (
     <>
       <View style={pw.switch}>
@@ -84,7 +87,7 @@ export function RankingsTab({ s, act }: { s: GameState; act: Act }) {
           </Pressable>
         ))}
       </View>
-      {tab === 'siklet' ? <RankingList s={s} /> : tab === 'rekor' ? <RecordsList s={s} /> : <P4PList s={s} act={act} />}
+      {tab === 'siklet' ? <RankingList s={s} /> : tab === 'rekor' ? (yeni ? <NewRecords s={s} /> : <RecordsList s={s} />) : <P4PList s={s} act={act} />}
     </>
   );
 }

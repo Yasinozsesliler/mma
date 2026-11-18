@@ -8,11 +8,10 @@ import { L } from '../i18n';
 import { Card, Icon } from './components';
 import { C, F } from './theme';
 
-export function LegacyPath({ s }: { s: GameState }) {
-  if (s.stage !== 'ufc' || s.efsane) return null;
+/** Efsanelik Yolu hedefleri (bu kart ve yeni görünümdeki Rekorlar ekranı aynı hesabı kullanır). */
+export function legacyGoals(s: GameState): { ad: string; deger: string; ok: boolean }[] {
   const belts = (s.kemerler ?? []).filter((b) => b.org === 'ufc');
-  if (!belts.length) return null;
-  const sav = Math.max(...belts.map((b) => b.savunma));
+  const sav = belts.length ? Math.max(...belts.map((b) => b.savunma)) : 0;
   const siklet = new Set(belts.map((b) => b.siklet)).size;
   const wins = s.gecmis.filter((h) => h.org === 'ufc' && h.sonuc === 'G').length;
   let p4p: number | null = null;
@@ -22,13 +21,20 @@ export function LegacyPath({ s }: { s: GameState }) {
     p4p = null;
   }
   const rekor = rekorSatirlari(s).reduce((t, r) => t + r.gecilen, 0);
-  const goals: { ad: string; deger: string; ok: boolean }[] = [
+  return [
     { ad: L("5 kemer savunması"), deger: `${Math.min(sav, 5)}/5`, ok: sav >= 5 },
     { ad: L("İki sıklette UCC şampiyonu"), deger: `${Math.min(siklet, 2)}/2`, ok: siklet >= 2 },
     { ad: L("P4P 1 numarası"), deger: p4p ? `#${p4p}` : '–', ok: p4p === 1 },
     { ad: L("UCC'de 20 galibiyet"), deger: `${Math.min(wins, 20)}/20`, ok: wins >= 20 },
     { ad: L("Tüm zamanların bir efsanesini geç"), deger: `${rekor}`, ok: rekor >= 1 },
   ];
+}
+
+export function LegacyPath({ s }: { s: GameState }) {
+  if (s.stage !== 'ufc' || s.efsane) return null;
+  const belts = (s.kemerler ?? []).filter((b) => b.org === 'ufc');
+  if (!belts.length) return null;
+  const goals = legacyGoals(s);
   const done = goals.filter((g) => g.ok).length;
   return (
     <Card accent={C.gold}>

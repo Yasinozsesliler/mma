@@ -10737,4 +10737,9 @@ export const PL: Record<string, string> = {
   "AMATÖR KARNE": "BILANS AMATORSKI",
   "MAĞ.": "PORAŻKA",
   "{0} KARİYERİ": "KARIERA W {0}",
+  "PERFORMANS": "OSIĄGI",
+  "TÜM ZAMANLARIN EN İYİSİ": "NAJLEPSZY W HISTORII",
+  "efsane geçildi": "legend wyprzedzonych",
+  "{0} / {1} basamak": "{0} / {1} stopni",
+  "{0} BASAMAK KALDI": "ZOSTAŁO {0}",
 };
