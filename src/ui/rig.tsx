@@ -1,6 +1,7 @@
 // Eklemli dövüşçü iskeleti (yandan görünüş, sağa bakar). Poz = açılar; çizim ileri kinematikle yapılır.
 // Açı kuralları: kol/bacak açısı "aşağı"dan ölçülür, pozitif = ileri (rakibe doğru). Gövde açısı dikeyden, pozitif = öne eğilme.
 import { L } from '../i18n';
+import { currentLook } from '../lookPref';
 import { Circle, Defs, Ellipse, G, Line, LinearGradient, Path, RadialGradient, Stop } from 'react-native-svg';
 import type { Appearance } from '../engine/types';
 import { HAIR_COLORS, SKIN_TONES } from './FighterAvatar';
@@ -91,6 +92,7 @@ function Head({ c, ang, look, skin, ref, hasar = 0 }: { c: { x: number; y: numbe
   const hair = HAIR_COLORS[look.sacRenk] ?? HAIR_COLORS[0];
   const dark = shade(skin, -35);
   const s = look.sac;
+  const hd = !ref && currentLook() === 'yeni';
   return (
     <G transform={L("rotate({0} {1} {2})", [ang, c.x, c.y])}>
       {s === 'afro' ? <Circle cx={c.x - 1} cy={c.y - 3} r={12.5} fill={hair} /> : null}
@@ -120,6 +122,26 @@ function Head({ c, ang, look, skin, ref, hasar = 0 }: { c: { x: number; y: numbe
       {!look.kadin && look.sakal === 'kirli' ? <Path d={L("M{0} {1} q5 8 10 1", [c.x - 2, c.y + 3])} stroke={hair} strokeWidth={2.4} opacity={0.45} fill="none" /> : null}
       {!look.kadin && look.sakal === 'keci' ? <Path d={L("M{0} {1} q2 5 5 0", [c.x + 3, c.y + 6])} stroke={hair} strokeWidth={2.2} fill="none" /> : null}
       {!look.kadin && look.sakal === 'biyik' ? <Line x1={c.x + 4.4} y1={c.y + 3.6} x2={c.x + 8} y2={c.y + 3.4} stroke={hair} strokeWidth={1.6} strokeLinecap="round" /> : null}
+      {hd ? (
+        <>
+          {/* Yeni görünüm: göz akı ve çukuru, elmacık ışığı, kulak kıvrımı */}
+          <Ellipse cx={c.x + 5.2} cy={c.y - 1} rx={2.4} ry={1.6} fill={shade(skin, -55)} opacity={0.25} />
+          <Ellipse cx={c.x + 5.7} cy={c.y - 0.8} rx={1.5} ry={0.95} fill="#efe9df" />
+          <Circle cx={c.x + 6} cy={c.y - 0.8} r={0.75} fill="#141414" />
+          <Circle cx={c.x + 5.8} cy={c.y - 1.05} r={0.25} fill="#ffffff" />
+          <Path d={`M${c.x + 4} ${c.y - 2.1} q1.8 -0.8 3.4 0`} stroke={shade(skin, -80)} strokeWidth={0.5} fill="none" />
+          <Ellipse cx={c.x + 3.6} cy={c.y + 1.8} rx={2.2} ry={1.2} fill="#ffffff" opacity={0.12} />
+          <Path d={`M${c.x - 3.6} ${c.y - 0.6} q-0.8 1.6 0.2 3`} stroke={shade(skin, -70)} strokeWidth={0.5} fill="none" opacity={0.7} />
+          {/* saç telleri */}
+          {s === 'kisa' || s === 'yanayrik' || s === 'topuz' || s === 'uzun' || s === 'orgu' || s === 'atkuyrugu' ? (
+            <Path d={`M${c.x - 6.5} ${c.y - 4} q3 -5 8 -6 M${c.x - 5} ${c.y - 2.5} q3 -5.5 9 -6.5 M${c.x - 7.4} ${c.y - 1.8} q2 -5 6 -7 M${c.x - 2} ${c.y - 8.6} q4 -1.6 7.5 0.6`} stroke={shade(hair, 45)} strokeWidth={0.45} fill="none" opacity={0.6} />
+          ) : null}
+          {s === 'kazik' || s === 'mohawk' ? <Path d={`M${c.x - 6} ${c.y - 4} l0.3 -0.6 M${c.x - 3.5} ${c.y - 6.5} l0.3 -0.6 M${c.x - 0.5} ${c.y - 8} l0.3 -0.6 M${c.x + 2.5} ${c.y - 8.2} l0.3 -0.6 M${c.x - 6.8} ${c.y - 1} l0.3 -0.6 M${c.x - 4.5} ${c.y - 3.6} l0.3 -0.6 M${c.x - 1.5} ${c.y - 5.6} l0.3 -0.6`} stroke={shade(hair, -20)} strokeWidth={0.5} strokeLinecap="round" opacity={0.7} /> : null}
+          {/* sakal dokusu */}
+          {!look.kadin && look.sakal === 'tam' ? <Path d={`M${c.x - 1} ${c.y + 4} l0.6 2.2 M${c.x + 1.5} ${c.y + 5} l0.5 2.4 M${c.x + 4} ${c.y + 5.6} l0.3 2.2 M${c.x + 6.5} ${c.y + 5} l-0.2 2`} stroke={shade(hair, 40)} strokeWidth={0.4} fill="none" opacity={0.5} /> : null}
+          {!look.kadin && look.sakal === 'kirli' ? <Path d={`M${c.x - 1.5} ${c.y + 3.5} l0.2 0.5 M${c.x} ${c.y + 5} l0.2 0.5 M${c.x + 1.6} ${c.y + 6} l0.2 0.5 M${c.x + 3.4} ${c.y + 6.6} l0.2 0.5 M${c.x + 5.2} ${c.y + 6.4} l0.2 0.5 M${c.x + 6.8} ${c.y + 5.6} l0.2 0.5 M${c.x + 0.5} ${c.y + 3.4} l0.2 0.5 M${c.x + 2.4} ${c.y + 4.4} l0.2 0.5 M${c.x + 4.4} ${c.y + 4.8} l0.2 0.5`} stroke={shade(hair, -10)} strokeWidth={0.55} strokeLinecap="round" opacity={0.75} /> : null}
+        </>
+      ) : null}
       {look.yara ? <Line x1={c.x + 2} y1={c.y - 5} x2={c.x + 4} y2={c.y - 1} stroke="#b04a4a" strokeWidth={0.8} /> : null}
       {/* Hasar: göz altı morluğu, kaşta şişlik, ağır hasarda kaştan süzülen kan */}
       {hasar > 25 ? <Ellipse cx={c.x + 5.2} cy={c.y + 1.4} rx={2.6} ry={1.7} fill="#5b2a6e" opacity={Math.min(0.55, (hasar - 25) / 90)} /> : null}

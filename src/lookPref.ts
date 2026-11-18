@@ -32,5 +32,7 @@ const subscribe = (f: () => void) => {
   return () => void subs.delete(f);
 };
 
+/** Hook olmadan anlık görünüm (animasyon karelerinde çizilen figürler için). */
+export const currentLook = (): Look => look;
 export const useLook = (): Look => useSyncExternalStore(subscribe, () => look, () => look);
 export const useLookIntro = (): boolean => useSyncExternalStore(subscribe, () => !introSeen, () => false);
