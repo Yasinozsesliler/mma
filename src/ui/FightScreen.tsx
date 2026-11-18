@@ -1,4 +1,4 @@
-import { L } from '../i18n';
+import { L, LOC } from '../i18n';
 import { WalkoutScene } from './WalkoutScene';
 import { FightNightIntro } from './FightNight';
 import { CoachTip } from './CoachTip';
@@ -7,7 +7,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import { finishFight } from '../engine/career';
 import { currentOrg, fullName } from '../engine/character';
-import { ORGS } from '../engine/data';
+import { ORGS, WEIGHT_CLASSES } from '../engine/data';
 import { applyLiveRound, chooseTactic, cornerBreath, cornerCut, nextRound, resolveCritical, resolveDecision, startLiveRound } from '../engine/fight';
 import { setLive, useLive } from '../livePref';
 import { LiveFight, SPECIAL_NAMES, type Special } from './LiveFight';
@@ -34,6 +34,8 @@ import { qteOn } from '../qtePref';
 import { lookFor } from '../engine/tale';
 import { Bar, Button, Card, Choice, Icon, P, Screen, Section, upName, type IconName } from './components';
 import { C, F, G, R } from './theme';
+import { orgShort } from './NewCareer';
+import { SLOT_LABEL } from '../engine/fightNight';
 
 const TACTIC_ICONS: Record<Tactic, IconName> = {
   baski: 'boxing-glove',
@@ -371,7 +373,20 @@ export function FightScreen({ s, act }: { s: GameState; act: Act }) {
       {flowing ? <Flowing speed={speed} setSpeed={setSpeed} onSkip={() => setShown(fs.log.length)} /> : null}
 
       {!flowing && fs.durum === 'taktik' && <TacticList fs={fs} title={L("OYUN PLANIN: MAÇA NASIL BAŞLAYACAKSIN?")} onPick={(t) => setFs((f) => begin(f, t))} />}
-      {fs.durum === 'canli' && !intro ? <LiveFight key={fs.raunt} fs={fs} pLook={s.fighter.gorunum} oLook={lookFor(fs.opp)} ozel={specialOf(s)} onEnd={(r) => setFs((f) => applyLiveRound(f, r))} /> : null}
+      {fs.durum === 'canli' && !intro ? <LiveFight
+          key={fs.raunt}
+          fs={fs}
+          pLook={s.fighter.gorunum}
+          oLook={lookFor(fs.opp)}
+          ozel={specialOf(s)}
+          band={{
+            org: orgShort(s),
+            caption: `${WEIGHT_CLASSES[s.fighter.siklet].ad.toLocaleUpperCase(LOC)} · ${fs.unvanMaci ? L("ÜNVAN MAÇI") : fs.anaMac ? L("ANA MAÇ") : s.pending.gece ? SLOT_LABEL[s.pending.gece.konum] : ORGS[currentOrg(s)].ad.toLocaleUpperCase(LOC)}`,
+            pRank: s.sampiyon ? 'C' : s.rank ? String(s.rank) : '',
+            oRank: fs.opp.champion ? 'C' : fs.opp.rank ? String(fs.opp.rank) : '',
+          }}
+          onEnd={(r) => setFs((f) => applyLiveRound(f, r))}
+        /> : null}
 
       {!flowing && fs.durum === 'karar' && fs.karar && (
         <>
