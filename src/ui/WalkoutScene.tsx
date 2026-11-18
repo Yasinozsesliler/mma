@@ -24,6 +24,9 @@ import { FLAGS } from './StatusPanel';
 import { Belt } from './Belt';
 import { chants, crowdMood, moodLine, walkoutTier } from '../engine/walkout';
 import { C, F } from './theme';
+import { useLook } from '../lookPref';
+import { Barricades, FrontWalker } from './WalkoutFront';
+import { flagOf } from './NewCareer';
 
 type Card = { kicker: string; lines: string[]; name?: string; nick?: string; side?: 'p' | 'o'; ms: number; say?: string; vs?: boolean; /** Kemeri taşıyan şampiyon girişi */ belt?: boolean; /** Hakem talimatı: iki köşe karşı karşıya, VS yok */ yuzyuze?: boolean };
 
@@ -419,11 +422,14 @@ export function WalkoutScene({ s, onDone: finish }: { s: GameState; onDone: () =
   const spots = [0.25, 0.75, ...(tier >= 1 ? [0.5] : []), ...(tier >= 2 ? [0.08, 0.92] : []), ...(tier >= 3 ? [0.37, 0.63] : [])];
   const org = ORGS[currentOrg(s)];
   const figSize = Math.min(W * 0.62, 260);
+  const yeni = useLook() === 'yeni';
+  const flag = card.side === 'p' ? flagOf(s.fighter.uyruk) : card.side === 'o' ? flagOf(s.pending.dovus!.opp.uyruk) : '';
 
   return (
     <Modal transparent animationType="fade" onRequestClose={onDone}>
       <Pressable style={st.back} onPress={onDone}>
         <Arena w={W} h={Hh} color={color} />
+        {yeni && card.side ? <Barricades w={W} h={Hh} /> : null}
         {spots.map((x, k) => (
           <Spot key={x} x={W * x} h={Hh * 0.8} color={card.belt ? '#ffe3a3' : card.side === 'o' && k % 2 === 0 ? '#9ec5ff' : card.side === 'p' && k % 2 === 1 ? '#ffb3b8' : '#fff1d6'} delay={(k * 650) % 2600} wide={W * (tier >= 2 ? 0.42 : 0.5)} />
         ))}
@@ -451,7 +457,11 @@ export function WalkoutScene({ s, onDone: finish }: { s: GameState; onDone: () =
             ]}
           >
             {card.belt ? <RaisedBelt s={s} width={figSize * 0.62} /> : null}
-            <Walker look={look} kit={kit} flip={card.side === 'o'} walking={walking} size={figSize} />
+            {yeni ? (
+              <FrontWalker look={look} kit={kit} walking={walking} size={Math.min(W * 0.5, 230)} seed={card.side === 'p' ? 3 : 7} />
+            ) : (
+              <Walker look={look} kit={kit} flip={card.side === 'o'} walking={walking} size={figSize} />
+            )}
           </Animated.View>
         ) : card.vs || card.yuzyuze ? (
           <Animated.View style={[st.vsRow, { top: Hh * 0.3, opacity: fade }]}>
@@ -466,7 +476,29 @@ export function WalkoutScene({ s, onDone: finish }: { s: GameState; onDone: () =
         )}
 
         {/* Yayın bandı / başlık */}
-        {card.side ? (
+        {card.side && yeni ? (
+          <Animated.View style={[nb.wrap, { opacity: band, transform: [{ translateX: band.interpolate({ inputRange: [0, 1], outputRange: [-W, 0] }) }] }]}>
+            <Text style={[nb.kicker, { color }]}>{card.kicker}</Text>
+            <View style={nb.row}>
+              <View style={[nb.flag, { borderColor: color }]}>
+                <Text style={nb.flagText}>{flag || '🏳️'}</Text>
+              </View>
+              <View style={nb.nameBox}>
+                {card.nick ? <Text style={nb.nick} numberOfLines={1}>“{card.nick.toLocaleUpperCase(LOC)}”</Text> : null}
+                <Text style={nb.name} numberOfLines={1} adjustsFontSizeToFit>
+                  {card.name}
+                </Text>
+              </View>
+            </View>
+            <View style={nb.lines}>
+              {card.lines.map((l) => (
+                <Text key={l} style={nb.line} numberOfLines={1}>
+                  {l}
+                </Text>
+              ))}
+            </View>
+          </Animated.View>
+        ) : card.side ? (
           <Animated.View style={[st.band, { opacity: band, transform: [{ translateX: band.interpolate({ inputRange: [0, 1], outputRange: [-W, 0] }) }] }]}>
             <View style={[st.bandAccent, { backgroundColor: color }]} />
             <View style={st.bandBody}>
@@ -502,6 +534,19 @@ export function WalkoutScene({ s, onDone: finish }: { s: GameState; onDone: () =
     </Modal>
   );
 }
+
+const nb = StyleSheet.create({
+  wrap: { position: 'absolute', left: 12, right: 12, bottom: 70, gap: 0 },
+  kicker: { fontFamily: F.display, fontSize: 13, letterSpacing: 3, marginBottom: 4, textShadowColor: '#000', textShadowRadius: 6 },
+  row: { flexDirection: 'row', alignItems: 'stretch' },
+  flag: { width: 48, backgroundColor: 'rgba(8,9,12,0.92)', borderLeftWidth: 4, alignItems: 'center', justifyContent: 'center' },
+  flagText: { fontSize: 24 },
+  nameBox: { flex: 1, backgroundColor: 'rgba(28,30,36,0.94)', paddingHorizontal: 12, paddingVertical: 6, justifyContent: 'center' },
+  nick: { color: C.gold, fontFamily: F.displayMed, fontSize: 13, letterSpacing: 0.5 },
+  name: { color: '#fff', fontFamily: F.display, fontSize: 30, lineHeight: 34, letterSpacing: 0.5 },
+  lines: { backgroundColor: 'rgba(8,9,12,0.88)', paddingHorizontal: 12, paddingVertical: 6, gap: 1 },
+  line: { color: '#cfd2d9', fontFamily: F.semi, fontSize: 12.5 },
+});
 
 const st = StyleSheet.create({
   back: { flex: 1, backgroundColor: '#000', overflow: 'hidden' },

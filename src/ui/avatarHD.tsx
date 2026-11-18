@@ -5,7 +5,7 @@ import Svg, { Circle, ClipPath, Defs, Ellipse, G, LinearGradient, Path, Polygon,
 import type { Appearance } from '../engine/types';
 import { DEFAULT_LOOK, EYE_COLORS, FACE_GEO, facePath, HAIR_COLORS, octPoints, shade, SKIN_TONES } from './avatarCore';
 
-type Props = { look?: Appearance; size?: number; ring?: string; bg?: string; /** 'kare': çerçevesiz kare büst (hazır yüz ızgarası) */ frame?: 'oct' | 'kare' };
+type Props = { look?: Appearance; size?: number; ring?: string; bg?: string; /** 'kare': çerçevesiz kare büst (hazır yüz ızgarası) */ frame?: 'oct' | 'kare' | 'bas' };
 
 /** Sabit tohumlu sözde rastgele: her çizimde aynı doku. */
 function rng(seed: number) {
@@ -167,6 +167,8 @@ function useTextures(look: Appearance, chinY: number) {
 
 export function AvatarHD({ look = DEFAULT_LOOK, size = 72, ring = '#e63946', bg = '#0c0d10', frame = 'oct' }: Props) {
   const sq = frame === 'kare';
+  /** Yalnızca baş ve boyun: önden gövdenin üstüne bindirmek için (arka plan ve gövde yok) */
+  const head = frame === 'bas';
   const skin = SKIN_TONES[look.ten] ?? SKIN_TONES[2];
   const skinL = shade(skin, 24);
   const skinD = shade(skin, -30);
@@ -285,7 +287,7 @@ export function AvatarHD({ look = DEFAULT_LOOK, size = 72, ring = '#e63946', bg 
           <Circle cx={50} cy={35} r={26.5} />
         </ClipPath>
       </Defs>
-      {sq ? (
+      {head ? null : sq ? (
         <Rect x={0} y={0} width={100} height={100} fill={url('bg')} />
       ) : (
         <>
@@ -294,7 +296,7 @@ export function AvatarHD({ look = DEFAULT_LOOK, size = 72, ring = '#e63946', bg 
         </>
       )}
 
-      <G clipPath={url('clip')}>
+      <G clipPath={head ? undefined : url('clip')}>
         {/* Arka saç kütleleri */}
         {s === 'afro' ? (
           <>
@@ -332,6 +334,8 @@ export function AvatarHD({ look = DEFAULT_LOOK, size = 72, ring = '#e63946', bg 
           </>
         ) : null}
 
+        {head ? null : (
+          <>
         {/* Gövde: trapez, omuz, köprücük ve göğüs */}
         <Path d="M4 100 Q6 79 25 74.5 Q36 71.5 41 65.5 L59 65.5 Q64 71.5 75 74.5 Q94 79 96 100 Z" fill={url('body')} />
         <Path d="M25 74.5 Q36 70.5 41 65.5 L43.5 70 Q36 75 27.5 78 Z M75 74.5 Q64 70.5 59 65.5 L56.5 70 Q64 75 72.5 78 Z" fill={skinDD} opacity={0.4} />
@@ -371,6 +375,8 @@ export function AvatarHD({ look = DEFAULT_LOOK, size = 72, ring = '#e63946', bg 
         {look.dovmeler?.includes('boyun') ? <Path d="M56 69 l1.5 -3 l1.5 3 l-3 -1.8 h3 Z" fill="#141418" opacity={0.75} /> : null}
         <Path d="M96 100 Q94 79 75 74.5" stroke={ring} strokeWidth={1.5} fill="none" opacity={0.6} />
 
+          </>
+        )}
         {/* Boyun: gradyan, kas çizgileri, çene altı gölgesi */}
         <Path d="M39.5 57 L60.5 57 L62 70 Q50 75.5 38 70 Z" fill={url('neck')} />
         <Path d="M43 61 L46.5 71.5 M57 61 L53.5 71.5" stroke={skinDD} strokeWidth={1.1} opacity={0.45} />
