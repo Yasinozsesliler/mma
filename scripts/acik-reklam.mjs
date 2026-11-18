@@ -418,6 +418,84 @@ if (VIDEO === 'menajer') {
   });
 }
 
+// Yeni görünüm (1.1.8): kartlı ana menü ve modlar. Malzeme: scripts/yeni-gorunum-yakala.mjs
+if (VIDEO === 'yeni') {
+  END_KICK = 'YENİ GÖRÜNÜM';
+  const MENU = `${src}/menu`;
+  const EFS = `${src}/efsane`;
+  const n = (d) => readdirSync(d).length;
+  // Telefon çerçevesinde oyunun gerçek kaydı
+  const phone = (top, w, dir, start, rate = 1, extra = '') => {
+    const sw = w - 28;
+    const sh = Math.round((sw * 1920) / 1080);
+    return `<div style="position:absolute;left:${(1080 - w) / 2}px;top:${top}px;width:${w}px;height:${sh + 28}px;border-radius:64px;background:#111;padding:14px;box-shadow:0 50px 110px rgba(60,30,10,.35),0 0 0 3px #3a3a3a inset;${extra}">
+      <div style="width:${sw}px;height:${sh}px;border-radius:50px;overflow:hidden;background:#000"><img data-seq="${dir}" data-start="${start}" data-rate="${rate}" data-max="${n(dir)}" style="width:100%;display:block"/></div>
+      <div style="position:absolute;left:50%;top:26px;width:150px;height:34px;margin-left:-75px;border-radius:20px;background:#000"></div></div>`;
+  };
+  const pic = (file, left, top, w, extra = '') => `<img src="file://${src}/${file}" style="position:absolute;left:${left}px;top:${top}px;width:${w}px;border-radius:22px;box-shadow:0 40px 90px rgba(60,30,10,.35);${extra}"/>`;
+  const YCSS = `${TAPCSS}@keyframes rise{from{opacity:0;transform:translateY(500px) rotate(4deg)}to{opacity:1;transform:none}}
+    @keyframes popc{0%{opacity:0;transform:scale(.6) rotate(-6deg)}60%{opacity:1;transform:scale(1.04) rotate(-2.5deg)}100%{opacity:1;transform:rotate(-2deg)}}
+    @keyframes float{from{transform:rotate(-2deg) translateY(0)}to{transform:rotate(-2deg) translateY(-18px)}}
+    @keyframes tile{0%{opacity:0;transform:translateY(80px) scale(.7)}100%{opacity:1;transform:none}}`;
+  // 1) Kanca: YOL yenilendi, telefon yükselir
+  SCENES.push({
+    name: 'hook', d: 2.6,
+    html: page0(head(170, 'YENİ GÖRÜNÜM', 'YOL', 'YENİLENDİ.', -0.4).replace('class="l1"', 'class="l1" style="font-size:150px"') + phone(560, 720, MENU, 0, 1, 'animation:rise .7s cubic-bezier(.2,.8,.2,1) -.15s both'), YCSS + '.l2{font-size:150px}'),
+  });
+  // 2) Kariyer kahraman kartı
+  SCENES.push({
+    name: 'kariyer', d: 2.4,
+    html: page0(
+      head(200, 'KAHRAMAN KART', 'KARİYER', 'MODU', 0.0) +
+        pic('kart-kariyer.png', 60, 640, 960, 'animation:popc .55s .1s both,float 2s .65s ease-in-out both') +
+        `<div style="position:absolute;left:0;right:0;top:1270px;text-align:center;font-family:InB;font-size:46px;line-height:1.35;color:${INK};animation:fadeUp .4s .6s both">Sıfırdan UCC şampiyonluğuna.<br/><span style="color:${RED}">Her karar senin.</span></div>`,
+      YCSS,
+    ),
+  });
+  // 3) Efsane Yolları: kart + gerçek pencere kaydı
+  SCENES.push({
+    name: 'efsane', d: 2.9,
+    html: page0(
+      head(170, 'EFSANE YOLLARI', 'EFSANELERİ', 'YENİDEN YAZ', 0.0) +
+        `<div class="card" style="left:70px;top:720px;width:940px;height:900px;border:10px solid #fff;animation:fadeUp .45s .35s both"><img data-seq="${EFS}" data-start="0.9" data-rate="1.15" data-max="${n(EFS)}" style="width:100%;display:block;margin-top:-150px"/></div>` +
+        pic('kart-efsane.png', 300, 520, 620, 'z-index:20;animation:popc .5s .05s both'),
+      YCSS,
+    ),
+  });
+  // 4) Patron Modu (yeni)
+  const PF = [['🃏', 'Kartı sen kur', 'Kim kiminle dövüşecek, sen seç.', '#dbe9ff'], ['🔥', 'Rakiplik ateşini yak', 'Basın, face-off, sosyal medya kavgaları.', '#ffe1d6'], ['🏆', 'Kendi kemerlerin', 'Şampiyonlar, unvan savunmaları, rövanşlar.', '#fff3c4'], ['🏟️', 'Depodan stadyuma', 'Yerel kanaldan PPV’ye, kasa senin.', '#dff3e4']];
+  SCENES.push({
+    name: 'patron', d: 3.0,
+    html: page0(
+      head(170, 'YENİ MOD', 'PATRON MODU', 'KENDİ ORGANİZASYONUNU KUR', 0.0).replace('class="l2"', 'class="l2" style="font-size:78px"') +
+        pic('kart-patron.png', 230, 520, 620, 'animation:popc .5s .1s both') +
+        PF.map(([ic, ad, q, bg], i) => `<div class="opt" style="top:${960 + i * 175}px;height:155px;animation:fadeUp .35s ${0.55 + i * 0.15}s both"><div class="ic" style="background:${bg}">${ic}</div><div><b>${ad}</b><s>${q}</s></div></div>`).join(''),
+      YCSS,
+    ),
+  });
+  // 5) Mod duvarı: diğer modların gerçek kartları
+  const TW = 236;
+  const TH = Math.round((TW * 312) / 272);
+  SCENES.push({
+    name: 'duvar', d: 3.0,
+    html: page0(
+      head(170, 'HEPSİ BİR ARADA', '11 MOD', 'TEK OYUN', 0.0) +
+        [0, 1, 2, 3, 4, 5, 6, 7].map((k) => {
+          const c = k % 4;
+          const r = Math.floor(k / 4);
+          return `<img src="file://${src}/mod-${k}.png" style="position:absolute;left:${38 + c * (TW + 20)}px;top:${640 + r * (TH + 22)}px;width:${TW}px;border-radius:14px;box-shadow:0 24px 50px rgba(60,30,10,.3);animation:tile .4s ${0.25 + k * 0.12}s cubic-bezier(.2,.9,.3,1.3) both"/>`;
+        }).join('') +
+        `<div style="position:absolute;left:0;right:0;top:${640 + 2 * (TH + 22) + 40}px;text-align:center;font-family:InB;font-size:40px;line-height:1.4;color:${INK};animation:fadeUp .35s 1.4s both">Kariyer · Efsane Yolları · Patron · Menajer<br/>Antrenör · Hakem · Hayalet Maç <span style="color:${RED}">ve dahası</span></div>`,
+      YCSS,
+    ),
+  });
+  // 6) Gerçek kaydırma: telefon
+  SCENES.push({
+    name: 'kaydir', d: 3.0,
+    html: page0(head(170, 'TEK DOKUNUŞ', 'HER ŞEY', 'ELİNİN ALTINDA', -0.2) + phone(560, 720, MENU, 1.8, 2.2), YCSS),
+  });
+}
+
 // Kapanış: krem zemin, logo, mağazalar, düşen konfeti
 const CONF = (() => {
   let r = 11;
@@ -511,7 +589,7 @@ let t = 0;
 SCENES.forEach((s, i) => { at.push(t); t += s.d - (i < SCENES.length - 1 ? XF : 0); });
 const total = t;
 const idx = (n) => SCENES.findIndex((s) => s.name === n);
-const TR = { pas2: 'smoothup', sehir: 'slideleft', mem0: 'fade', evr: 'fade', heykel: 'fade', end: 'circleopen', kose: 'fade', salon: 'slideleft', ogrenci: 'slideleft', vs: 'zoomin', plan: 'slideleft', talimat: 'slideup', zafer: 'fade', sira: 'slideleft', hook2: 'fade', masa: 'slideleft', basin: 'slideleft', face: 'zoomin', not: 'slideleft', kafes: 'fade', kemer: 'fadewhite', son: 'fade', yeni: 'slideleft' };
+const TR = { pas2: 'smoothup', sehir: 'slideleft', mem0: 'fade', evr: 'fade', heykel: 'fade', end: 'circleopen', kose: 'fade', salon: 'slideleft', ogrenci: 'slideleft', vs: 'zoomin', plan: 'slideleft', talimat: 'slideup', zafer: 'fade', sira: 'slideleft', hook2: 'fade', masa: 'slideleft', basin: 'slideleft', face: 'zoomin', not: 'slideleft', kafes: 'fade', kemer: 'fadewhite', son: 'fade', yeni: 'slideleft', kariyer: 'slideup', efsane: 'slideleft', patron: 'slideleft', duvar: 'zoomin', kaydir: 'slideleft' };
 const snd = (n) => `${root}/assets/sounds/${n}.wav`;
 const audio = [];
 const add = (file, startSec, vol = 1, loop = false) => audio.push({ file, startSec, vol, loop });
@@ -569,6 +647,21 @@ if (VIDEO === 'antrenor') {
   cue('son', 0.5, 'chime', 0.7);
   cue('son', 0.6, 'swell', 0.4);
   cue('yeni', 0.25, 'whoosh', 0.5);
+} else if (VIDEO === 'yeni') {
+  add(snd('giris_epik'), 0, 0.8);
+  add(snd('music_menu'), 7, 0.5, true);
+  cue('hook', 0.0, 'whoosh', 0.6);
+  cue('hook', 0.3, 'slam', 0.7);
+  cue('kariyer', 0.1, 'swell', 0.5);
+  cue('kariyer', 0.35, 'heavy', 0.6);
+  cue('efsane', 0.05, 'flash', 0.5);
+  cue('efsane', 0.3, 'chime', 0.5);
+  cue('patron', 0.1, 'slam', 0.6);
+  for (let i = 0; i < 4; i++) cue('patron', 0.55 + i * 0.15, 'tap', 0.4);
+  for (let k = 0; k < 8; k++) cue('duvar', 0.25 + k * 0.12, 'click', 0.45);
+  cue('duvar', 0.05, 'whoosh', 0.5);
+  cue('kaydir', 0.2, 'whoosh', 0.5);
+  cue('kaydir', 1.6, 'whoosh', 0.4);
 } else {
   add(snd('giris_epik'), 0, 0.8);
   add(snd('music_menu'), 6.4, 0.55, true);
