@@ -17,7 +17,7 @@ import { Button, Icon, Section } from './components';
 import type { Act } from './GameScreens';
 import { C, F, R } from './theme';
 import { useLook } from '../lookPref';
-import { VsStage } from './NewCareer';
+import { PosterCard, VsStage } from './NewCareer';
 
 const short = (n: string) => {
   const p = n.split(' ');
@@ -129,7 +129,23 @@ export function FightNightIntro({ s, onDone, onPredict }: { s: GameState; onDone
           </View>}
 
           {tahmin ? <PredictionCard preds={preds} picks={picks} setPicks={setPicks} /> : null}
-          <View style={fn.card}>
+          {yeni ? (
+            <PosterCard
+              s={s}
+              g={g}
+              opp={opp}
+              bitti={bitti}
+              methodText={(b) => `${methodLabel(b.yontem).toLocaleUpperCase(LOC)} · R${b.raunt}`}
+              rows={satirlar.map(({ i, b }) => ({
+                key: i,
+                b,
+                shown: !tahmin && i < n,
+                dim: i >= g.once.length,
+                pick: b ? picks[keyOf(i)] : undefined,
+                head: i === toplam - 1 ? (anaKartBas > 0 ? L("ANA KART") : L("GECENİN KARTI")) : anaKartBas > 0 && i === anaKartBas - 1 ? L("ÖN ELEMELER") : undefined,
+              }))}
+            />
+          ) : <View style={fn.card}>
             {satirlar.map(({ i, b }) => (
               <View key={i}>
                 {i === toplam - 1 ? <Text style={fn.group}>{anaKartBas > 0 ? L("ANA KART") : L("GECENİN KARTI")}</Text> : null}
@@ -151,7 +167,7 @@ export function FightNightIntro({ s, onDone, onPredict }: { s: GameState; onDone
                 )}
               </View>
             ))}
-          </View>
+          </View>}
 
           <View style={fn.backstage}>
             <Text style={fn.bsHead}>{L("KULİS")}</Text>

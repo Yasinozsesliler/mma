@@ -10703,4 +10703,5 @@ export const FR: Record<string, string> = {
   "Üst üste {0} galibiyet": "{0} victoires d'affilée",
   "{0} ÜNVAN SAVUNMASI": "{0} DÉFENSES DU TITRE",
   "{0} RAUNT": "{0} ROUNDS",
+  "{0} MAÇI": "COMBAT {0}",
 };

@@ -8,9 +8,9 @@ import { money } from '../engine/career';
 import { currentOrg, statAverage } from '../engine/character';
 import { ORGS, WEIGHT_CLASSES } from '../engine/data';
 import { fmtFollowers, followers } from '../engine/fame';
-import { SLOT_LABEL } from '../engine/fightNight';
+import { judgePick, SLOT_LABEL } from '../engine/fightNight';
 import { lookFor, physique, playerPhysique } from '../engine/tale';
-import type { Appearance, FightNight, GameState, Opponent } from '../engine/types';
+import type { Appearance, FightNight, GameState, NightBout, Opponent } from '../engine/types';
 import { L, LOC } from '../i18n';
 import { CageBg, Icon, SLANT, upName } from './components';
 import { DEFAULT_LOOK } from './FighterAvatar';
@@ -313,4 +313,123 @@ const v = StyleSheet.create({
   label: { color: '#8b919c', fontFamily: F.bold, fontSize: 10, letterSpacing: 1.5 },
   meta: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 },
   metaText: { color: C.dim, fontFamily: F.body, fontSize: 11.5 },
+});
+
+// ---------- Afiş düzeninde gecenin kartı ----------
+
+/** Ülke adı (seçili dilde ya da Türkçe) veya iki harfli kod → bayrak emojisi. */
+const ISO: [string, string][] = [
+  ['ABD', 'us'], ['Almanya', 'de'], ['Avustralya', 'au'], ['Azerbaycan', 'az'], ['Birleşik Krallık', 'gb'], ['Brezilya', 'br'], ['Çekya', 'cz'], ['Çin', 'cn'],
+  ['Fransa', 'fr'], ['Güney Kore', 'kr'], ['Gürcistan', 'ge'], ['Hollanda', 'nl'], ['İrlanda', 'ie'], ['İsveç', 'se'], ['Japonya', 'jp'], ['Kamerun', 'cm'],
+  ['Kazakistan', 'kz'], ['Küba', 'cu'], ['Meksika', 'mx'], ['Nijerya', 'ng'], ['Polonya', 'pl'], ['Rusya', 'ru'], ['Rusya (Dağıstan)', 'ru'], ['Şili', 'cl'],
+  ['Tayland', 'th'], ['Türkiye', 'tr'],
+];
+let isoMap: Map<string, string> | null = null;
+function isoOf(country: string): string | undefined {
+  if (!isoMap) {
+    isoMap = new Map();
+    for (const [tr, code] of ISO) {
+      isoMap.set(tr.toLocaleLowerCase('tr-TR'), code);
+      isoMap.set(L(tr).toLocaleLowerCase(LOC), code);
+    }
+  }
+  return /^[a-z]{2}$/.test(country) ? country : isoMap.get(country.toLocaleLowerCase(LOC)) ?? isoMap.get(country.toLocaleLowerCase('tr-TR'));
+}
+export function flagOf(country?: string): string {
+  if (!country) return '';
+  const c = isoOf(country);
+  if (!c) return '';
+  return String.fromCodePoint(...[...c.toUpperCase()].map((ch) => 0x1f1e6 + ch.charCodeAt(0) - 65));
+}
+
+export type PosterRow = { key: number; b?: NightBout; shown: boolean; dim: boolean; pick?: { k: 0 | 1; bit?: boolean }; head?: string };
+
+function Corner({ country, name, rec, side, win, lose }: { country?: string; name: string; rec?: string; side: 'l' | 'r'; win?: boolean; lose?: boolean }) {
+  const r = side === 'r';
+  return (
+    <View style={[p.corner, r && { flexDirection: 'row-reverse' }]}>
+      <Text style={p.flag}>{flagOf(country) || '🏳️'}</Text>
+      {rec ? <Text style={p.rec}>{rec}</Text> : null}
+      <Text style={[p.name, r && { textAlign: 'right' }, win && { color: C.gold }, lose && { color: '#6b7a99', textDecorationLine: 'line-through' }]} numberOfLines={1} adjustsFontSizeToFit>
+        {cornerName(name, country)}
+      </Text>
+    </View>
+  );
+}
+
+/** "Yuri Zhukov" → "Y. ZHUKOV"; Türkçe büyük harf yalnızca Türk isimlerinde. */
+function cornerName(name: string, country?: string) {
+  const parts = name.trim().split(/\s+/);
+  const n = parts.length > 1 ? `${parts[0][0]}. ${parts.slice(1).join(' ')}` : name;
+  return country && isoOf(country) === 'tr' && LOC === 'tr-TR' ? n.toLocaleUpperCase('tr-TR') : n.toUpperCase();
+}
+
+/** Gecenin kartı, yayın afişi gibi: organizasyon, "ANA KART", her maçta sıklet etiketi, bayraklar ve karneler. */
+export function PosterCard({ s, g, opp, rows, bitti, methodText }: { s: GameState; g: FightNight; opp: Opponent; rows: PosterRow[]; bitti: boolean; methodText: (b: NightBout) => string }) {
+  const org = ORGS[currentOrg(s)];
+  const f = s.fighter;
+  return (
+    <LinearGradient colors={['#13254d', '#0a1430', '#050a18']} locations={[0, 0.45, 1]} style={p.wrap}>
+      <CageBg opacity={0.05} />
+      <View style={p.head}>
+        <Text style={p.org}>{org.kisa}</Text>
+        <Text style={p.event} numberOfLines={1}>
+          {g.ad.toLocaleUpperCase(LOC)}
+        </Text>
+      </View>
+      {rows.map(({ key, b, shown, dim, pick, head }) => (
+        <View key={key}>
+          {head ? <Text style={p.title}>{head}</Text> : null}
+          {b ? (
+            <View style={[p.bout, dim && { opacity: 0.6 }, pick && { borderColor: C.gold + '88' }]}>
+              <Text style={p.label}>
+                {pick ? (shown ? (judgePick(b, pick).dogru ? '✓ ' : '✗ ') : '🔮 ') : ''}
+                {L("{0} MAÇI", [WEIGHT_CLASSES[b.siklet].ad.toLocaleUpperCase(LOC)])}
+              </Text>
+              <View style={p.line}>
+                <Corner country={b.ua} name={b.a} rec={b.ra} side="l" win={shown && b.kazanan === 0} lose={shown && b.kazanan === 1} />
+                <Text style={p.vs}>vs</Text>
+                <Corner country={b.ub} name={b.b} rec={b.rb} side="r" win={shown && b.kazanan === 1} lose={shown && b.kazanan === 0} />
+              </View>
+              {shown ? <Text style={p.result}>{methodText(b)}</Text> : null}
+            </View>
+          ) : (
+            <LinearGradient colors={['#8f0a17', '#3a0509']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={[p.bout, p.me]}>
+              <Text style={[p.label, { color: bitti ? C.gold : '#ffd9dc' }]}>
+                {SLOT_LABEL[g.konum]} · {bitti ? L("SIRA SENDE") : L("SEN")}
+              </Text>
+              <View style={p.line}>
+                <Corner country={f.uyruk} name={`${f.ad} ${f.soyad}`} rec={`${s.rekor.g}-${s.rekor.m}`} side="l" />
+                <Text style={[p.vs, { color: '#fff' }]}>vs</Text>
+                <Corner country={opp.uyruk} name={`${opp.ad} ${opp.soyad}`} rec={`${opp.rekor.g}-${opp.rekor.m}`} side="r" />
+              </View>
+            </LinearGradient>
+          )}
+        </View>
+      ))}
+      <View style={p.foot}>
+        <Text style={p.footText}>{[g.sehir, L("{0} seyirci", [g.seyirci.toLocaleString(LOC)])].filter(Boolean).join(' · ')}</Text>
+      </View>
+    </LinearGradient>
+  );
+}
+
+const p = StyleSheet.create({
+  wrap: { borderRadius: 6, borderWidth: 1, borderColor: '#24365f', paddingHorizontal: 10, paddingTop: 14, paddingBottom: 10, overflow: 'hidden' },
+  head: { alignItems: 'center', gap: 6, marginBottom: 4 },
+  org: { backgroundColor: C.gold, color: '#1f1605', fontFamily: F.display, fontSize: 18, letterSpacing: 1, paddingHorizontal: 10, paddingVertical: 2, overflow: 'hidden' },
+  event: { color: '#c7d3ee', fontFamily: F.black, fontSize: 10, letterSpacing: 2 },
+  title: { color: C.text, fontFamily: F.display, fontSize: 30, letterSpacing: 1.5, textAlign: 'center', marginTop: 8, marginBottom: 6 },
+  bout: { borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.1)', borderWidth: 1, borderColor: 'transparent', paddingVertical: 7, paddingHorizontal: 4, gap: 3 },
+  me: { borderRadius: 3, borderColor: C.red, marginVertical: 4 },
+  label: { color: C.gold, fontFamily: F.display, fontSize: 10.5, letterSpacing: 1, fontStyle: 'italic', textAlign: 'center' },
+  line: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  corner: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 5, minWidth: 0 },
+  flag: { fontSize: 15 },
+  rec: { backgroundColor: '#f1f2f5', color: '#0a1430', fontFamily: F.black, fontSize: 9, paddingHorizontal: 4, paddingVertical: 1, overflow: 'hidden' },
+  name: { flex: 1, color: C.text, fontFamily: F.display, fontSize: 14, letterSpacing: 0.3 },
+  vs: { color: C.gold, fontFamily: F.display, fontSize: 12, fontStyle: 'italic' },
+  result: { color: '#9fb0d4', fontFamily: F.bold, fontSize: 10, letterSpacing: 1, textAlign: 'center' },
+  foot: { borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.1)', marginTop: 6, paddingTop: 8, alignItems: 'center' },
+  footText: { color: '#9fb0d4', fontFamily: F.semi, fontSize: 11.5 },
 });
