@@ -14,7 +14,7 @@ import type { Appearance, FightNight, GameState, NightBout, Opponent } from '../
 import { L, LOC } from '../i18n';
 import { CageBg, Icon, SLANT, upName } from './components';
 import { DEFAULT_LOOK } from './FighterAvatar';
-import { Figure, HIP_H, POSES, type Kit } from './rig';
+import { Figure, HIP_H, POSES, type Kit, type PoseName } from './rig';
 import { C, F } from './theme';
 
 /** Rozet için organizasyon kısaltması. Profesyonelken sözleşme boşta olsa bile asla "AMATÖR" yazmaz. */
@@ -27,13 +27,13 @@ export function orgShort(s: GameState): string {
 const shortMoney = (n: number) => (Math.abs(n) < 100_000 ? money(n) : `${n < 0 ? '-' : ''}$${fmtFollowers(Math.abs(n))}`);
 
 /** Ayakta duran tam boy dövüşçü. flip: sola bakar. */
-export function Standing({ look, kit, h, flip }: { look: Appearance; kit: Kit; h: number; flip?: boolean }) {
+export function Standing({ look, kit, h, flip, pose = 'stance' }: { look: Appearance; kit: Kit; h: number; flip?: boolean; pose?: PoseName }) {
   const w = h * 0.8;
   return (
     <Svg width={w} height={h} viewBox="0 0 80 100">
       <Ellipse cx={40} cy={96} rx={22} ry={3.5} fill="#000" opacity={0.45} />
       <G transform={`translate(40 ${96 - HIP_H * 0.95}) scale(${flip ? -0.95 : 0.95} 0.95)`}>
-        <Figure p={POSES.stance} look={look} kit={kit} />
+        <Figure p={POSES[pose]} look={look} kit={kit} />
       </G>
     </Svg>
   );

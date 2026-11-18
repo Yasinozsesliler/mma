@@ -26,6 +26,8 @@ import { Button, Icon, Screen, Section, SLANT, upName, type IconName } from './c
 import { FighterAvatar } from './FighterAvatar';
 import type { Act } from './GameScreens';
 import { SkillPanel } from './SkillPanel';
+import { useLook } from '../lookPref';
+import { PostHero } from './NewPostFight';
 import { C, F, R } from './theme';
 
 type Tone = { ana: string; hero: readonly [string, string, string]; kicker: string; baslik: string; ikon: IconName };
@@ -136,6 +138,7 @@ export function PostFightScreen({ s, act }: { s: GameState; act: Act }) {
   const t = TONES[key];
   const opp = s.pending.rakip;
   const pWin = key === 'draw' || key === 'nc' ? null : key === 'win';
+  const yeni = useLook() === 'yeni';
   useEffect(() => {
     sfx(key === 'win' ? 'win' : key === 'loss' ? 'lose' : 'applause');
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -165,6 +168,7 @@ export function PostFightScreen({ s, act }: { s: GameState; act: Act }) {
       }
     >
       <CoachTip s={s} act={act} id="macSonrasi" />
+      {yeni && o ? <PostHero s={s} o={o} pWin={pWin} tone={t.ana} title={t.baslik} /> : (
       <LinearGradient colors={t.hero} style={pf.hero}>
         <Stage color={t.ana} />
         <View style={[pf.glowLine, { backgroundColor: t.ana }]} />
@@ -199,6 +203,7 @@ export function PostFightScreen({ s, act }: { s: GameState; act: Act }) {
           </View>
         ) : null}
       </LinearGradient>
+      )}
 
       {o ? (
         <LinearGradient colors={['#16171c', '#0e0f12']} style={pf.tiles}>
