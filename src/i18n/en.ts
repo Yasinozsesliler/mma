@@ -10774,4 +10774,5 @@ export const EN: Record<string, string> = {
   "Kilit dene": "Go for the lock",
   "Pozisyonu tut": "Hold position",
   "Sıyrıl": "Slip out",
+  "ŞİMDİ KAÇ!": "SLIP NOW!",
 };

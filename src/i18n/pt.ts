@@ -10782,4 +10782,5 @@ export const PT: Record<string, string> = {
   "Kilit dene": "Tente a finalização",
   "Pozisyonu tut": "Segure a posição",
   "Sıyrıl": "Esquive",
+  "ŞİMDİ KAÇ!": "ESQUIVE AGORA!",
 };

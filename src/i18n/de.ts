@@ -10774,4 +10774,5 @@ export const DE: Record<string, string> = {
   "Kilit dene": "Hebel ansetzen",
   "Pozisyonu tut": "Position halten",
   "Sıyrıl": "Ausweichen",
+  "ŞİMDİ KAÇ!": "JETZT AUSWEICHEN!",
 };

@@ -66,6 +66,8 @@ const GUARD: Partial<Pose> = { aL1: 70, aL2: 145, aR1: 62, aR2: 150, torso: 4, h
 const now = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
 /** Rakibin hazırladığı hamlenin uyarı ikonu */
 const ICONS: Record<string, string> = { td: '⬇️', gsub: '🔒', escape: '⤴️', gnp: '👊' };
+/** Yeni görünüm: halkanın ortasındaki rozet ikonu (rakibin hazırladığı hamle) */
+const RING_ICON: Record<string, IconName> = { '⬇️': 'arrow-down-bold', '🔒': 'lock', '⤴️': 'arrow-up-bold', '👊': 'hand-back-right', '⚠️': 'alert', '🛡️': 'shield-half-full' };
 const TUTORIAL_KEY = 'yol_canli_rehber';
 /** Rehberde görülen anlar: raunda sığmazsa kalanı sonraki rauntta sürer. */
 const GUIDE_SEEN_KEY = 'yol_canli_rehber_adim';
@@ -730,6 +732,22 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel, band }: { fs: FightSt
         <View style={[lf.stage, { width: stageW, height: stageW / ASPECT }]} pointerEvents="none">
           <ArenaBg />
           <Svg width="100%" height="100%" viewBox={VIEW} preserveAspectRatio="xMidYMid meet" style={StyleSheet.absoluteFill}>
+            {yeni ? (
+              <Defs>
+                <RadialGradient id="ringRed" cx="50%" cy="50%" r="50%">
+                  <Stop offset="0" stopColor="#ff4d5e" stopOpacity={0.55} />
+                  <Stop offset="1" stopColor="#ff4d5e" stopOpacity={0.05} />
+                </RadialGradient>
+                <RadialGradient id="ringGold" cx="50%" cy="50%" r="50%">
+                  <Stop offset="0" stopColor="#ffd45a" stopOpacity={0.85} />
+                  <Stop offset="1" stopColor="#f2c14e" stopOpacity={0.1} />
+                </RadialGradient>
+                <RadialGradient id="ringGuard" cx="50%" cy="50%" r="50%">
+                  <Stop offset="0" stopColor="#c3c8d1" stopOpacity={0.4} />
+                  <Stop offset="1" stopColor="#c3c8d1" stopOpacity={0.04} />
+                </RadialGradient>
+              </Defs>
+            ) : null}
             <G transform={sx || frame.zoom !== 1 ? `translate(${sx} 0) translate(100 92) scale(${frame.zoom}) translate(-100 -92)` : undefined}>
               {actor('o')}
               {actor('p')}
@@ -746,10 +764,25 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel, band }: { fs: FightSt
                   </G>
                 );
               })}
-              {ring ? (
+              {ring && yeni ? (
+                <G>
+                  {/* Nişangâh: parlayan hedef, dört çentik, ışıltılı küçülen halka; altın anda dalga */}
+                  <Circle cx={131} cy={30} r={11.5} fill={ring.gold ? 'url(#ringGold)' : 'url(#ringRed)'} />
+                  <Circle cx={131} cy={30} r={10} fill="none" stroke={ring.gold ? C.gold : '#ff4d5e'} strokeWidth={0.7} opacity={0.85} />
+                  <Path d="M131 18.2 V21 M131 39 V41.8 M119.2 30 H122 M140 30 H142.8" stroke={ring.gold ? '#ffe7a6' : '#ff8a94'} strokeWidth={1} strokeLinecap="round" />
+                  {low ? null : <Circle cx={131} cy={30} r={ring.r} fill="none" stroke={ring.gold ? C.gold : '#ff4d5e'} strokeWidth={ring.gold ? 6 : 4} opacity={0.22} />}
+                  <Circle cx={131} cy={30} r={ring.r} fill="none" stroke={ring.gold ? '#ffe08a' : '#ff5a66'} strokeWidth={ring.gold ? 2.6 : 1.6} />
+                  {ring.gold ? <Circle cx={131} cy={30} r={ring.r + 3.5 + (t % 300) / 60} fill="none" stroke={C.gold} strokeWidth={0.8} opacity={0.5 - (t % 300) / 700} /> : null}
+                </G>
+              ) : ring ? (
                 <G>
                   <Circle cx={131} cy={30} r={ring.r} fill="none" stroke={ring.gold ? C.gold : '#ff4d5e'} strokeWidth={ring.gold ? 2.2 : 1.2} opacity={0.95} />
                   <Circle cx={131} cy={30} r={10} fill="none" stroke={ring.gold ? C.gold : '#ff4d5e'} strokeWidth={0.6} strokeDasharray="2,2" opacity={0.7} />
+                </G>
+              ) : frame.guard && yeni ? (
+                <G>
+                  <Circle cx={131} cy={30} r={12} fill="url(#ringGuard)" />
+                  <Circle cx={131} cy={30} r={12} fill="none" stroke="#c3c8d1" strokeWidth={1.1} opacity={0.9} />
                 </G>
               ) : frame.guard ? (
                 <Circle cx={131} cy={30} r={12} fill="none" stroke="#9aa3b2" strokeWidth={1} opacity={0.8} />
@@ -758,7 +791,14 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel, band }: { fs: FightSt
           </Svg>
           {frame.flash > 0.01 ? <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: '#fff', opacity: frame.flash }]} /> : null}
           {cine ? <Letterbox /> : null}
-          {frame.icon ? <Text style={lf.icon}>{frame.icon}</Text> : null}
+          {frame.icon && yeni ? (
+            <View pointerEvents="none" style={[rb.wrap, { left: `${((sx + 100 + 31 * frame.zoom - 28) / 144) * 100}%`, top: `${((92 - 62 * frame.zoom - 4) / 128) * 100}%` }]}>
+              <View style={[rb.badge, { borderColor: ring?.gold ? C.gold : ring ? '#ff5a66' : '#c3c8d1', backgroundColor: ring?.gold ? C.gold : 'rgba(8,9,12,0.88)' }]}>
+                <Icon name={RING_ICON[frame.icon] ?? 'alert'} size={15} color={ring?.gold ? '#1f1605' : ring ? '#ff8a94' : '#e4e6eb'} />
+              </View>
+              {ring?.gold ? <Text style={rb.now}>{L("ŞİMDİ KAÇ!")}</Text> : null}
+            </View>
+          ) : frame.icon ? <Text style={lf.icon}>{frame.icon}</Text> : null}
           {counter ? <Text style={lf.counter}>{L("KONTRA PENCERESİ!")}</Text> : null}
         </View>
         </View>
@@ -923,6 +963,12 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel, band }: { fs: FightSt
     </Modal>
   );
 }
+
+const rb = StyleSheet.create({
+  wrap: { position: 'absolute', width: 0, height: 0, alignItems: 'center', justifyContent: 'center', overflow: 'visible' },
+  badge: { position: 'absolute', width: 28, height: 28, borderRadius: 14, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center' },
+  now: { position: 'absolute', top: 40, width: 120, textAlign: 'center', color: C.gold, fontFamily: F.display, fontSize: 14, letterSpacing: 1.5, textShadowColor: '#000', textShadowRadius: 6 },
+});
 
 const sb2 = StyleSheet.create({
   wrap: { marginRight: 38, alignItems: 'stretch' },
