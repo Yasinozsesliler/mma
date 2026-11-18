@@ -10765,4 +10765,9 @@ export const RU: Record<string, string> = {
   "İMZA HAREKET": "КОРОННЫЙ ПРИЁМ",
   "YETENEK AĞACI": "ДРЕВО НАВЫКОВ",
   "{0} PERK PUANI": "ОЧКИ ТАЛАНТОВ: {0}",
+  "+2 SEVİYE": "+2 УРОВНЯ",
+  "2 hafta özel kamp": "2 недели личного лагеря",
+  "DERS ALINDI": "ПРОЙДЕНО",
+  "POPÜLERLİK": "ПОПУЛЯРНОСТЬ",
+  "{0}/{1} DERS": "УРОКОВ: {0}/{1}",
 };

@@ -10730,4 +10730,9 @@ export const ES: Record<string, string> = {
   "İMZA HAREKET": "MOVIMIENTO FIRMA",
   "YETENEK AĞACI": "ÁRBOL DE HABILIDADES",
   "{0} PERK PUANI": "{0} PUNTOS DE TALENTO",
+  "+2 SEVİYE": "+2 NIVELES",
+  "2 hafta özel kamp": "Campamento privado de 2 semanas",
+  "DERS ALINDI": "ENTRENADO",
+  "POPÜLERLİK": "POPULARIDAD",
+  "{0}/{1} DERS": "{0}/{1} LECCIONES",
 };

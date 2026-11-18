@@ -7,15 +7,18 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { ageCap } from '../engine/character';
 import { BRANCHES, canTakePerk, hasPerk, nextPerkAt, perkPointsFree, PERKS, takePerk, type PerkBranch, type PerkId } from '../engine/perks';
 import { buzz } from '../haptics';
+import { LEGENDS, legendCostText, legendStatus, trainWithLegend } from '../engine/legends';
+import { lookFor } from '../engine/tale';
 import { canSpend, spendPoint, statCost } from '../engine/progression';
 import { canSign, SIGNATURE_LEVEL } from '../engine/signature';
-import { canUpgradeTech, MAX_TECH, TECHNIQUES, techCost, techLevel, upgradeTech, xpNeed, type TechDef } from '../engine/techniques';
+import { canUpgradeTech, MAX_TECH, TECHNIQUES, techById, techCost, techLevel, upgradeTech, xpNeed, type TechDef } from '../engine/techniques';
 import type { GameState, StatKey } from '../engine/types';
 import { STAT_LABELS } from '../engine/types';
 import { L, LOC } from '../i18n';
 import { Icon, type IconName } from './components';
 import type { Act } from './GameScreens';
-import { LegendPanel } from './LegendPanel';
+import { FighterAvatar } from './FighterAvatar';
+import { flagOf } from './NewCareer';
 import { HINTS } from './SkillPanel';
 import { TechniquePanel } from './TechniquePanel';
 import { C, F } from './theme';
@@ -117,7 +120,7 @@ export function NewGrowth({ s, act }: { s: GameState; act: Act }) {
       ) : tab === 'yetenek' ? (
         <View style={{ paddingTop: 4 }}>
           <NewPerkTree s={s} act={act} />
-          <LegendPanel s={s} act={act} />
+          <NewLegends s={s} act={act} />
         </View>
       ) : (
         <View style={{ paddingTop: 4 }}>
@@ -404,4 +407,138 @@ const t = StyleSheet.create({
   dText: { color: '#c3c8d1', fontFamily: F.body, fontSize: 12.5, lineHeight: 18 },
   dBtn: { backgroundColor: C.gold, minHeight: 46, borderRadius: 3, alignItems: 'center', justifyContent: 'center' },
   dBtnText: { color: '#1f1605', fontFamily: F.display, fontSize: 15, letterSpacing: 1.5 },
+});
+
+// ---------- Efsane ustalar (yeni görünüm): portreli kartlar, öğrettikleri, şartlar ve ders düğmesi ----------
+
+const STAT_COLOR: Partial<Record<StatKey, string>> = { vurus: C.red, gures: C.blue, yer: '#6d5dfc', hiz: C.orange, kondisyon: C.green, cene: C.gold, iq: '#b388ff' };
+
+function NewLegends({ s, act }: { s: GameState; act: Act }) {
+  const [msg, setMsg] = useState<string | null>(null);
+  if (s.stage === 'amator') return null;
+  const done = (s.ustalar ?? []).length;
+  return (
+    <View style={{ marginBottom: 12 }}>
+      <View style={t.head}>
+        <Text style={t.headTitle}>{L("EFSANE USTALAR")}</Text>
+        <View style={t.free}>
+          <Text style={t.freeText}>{L("{0}/{1} DERS", [done, LEGENDS.length])}</Text>
+        </View>
+      </View>
+      <Text style={t.hint}>{L("İki haftalık özel kamp: ustanın tekniği +2 seviye, uzmanlığı +1. Her usta kariyerde bir kez ders verir.")}</Text>
+      {msg ? <Text style={u.msg}>{msg}</Text> : null}
+      <View style={{ gap: 10 }}>
+        {LEGENDS.map((l) => {
+          const has = (s.ustalar ?? []).includes(l.id);
+          const stt = legendStatus(s, l);
+          const col = STAT_COLOR[l.stat] ?? C.gold;
+          const tech = techById(l.teknik);
+          const popOk = s.populerlik >= l.minPop;
+          return (
+            <LinearGradient key={l.id} colors={has ? ['#0f2a1b', '#0c0d10'] : [col + '22', '#0c0d10', '#08090b']} locations={has ? [0, 1] : [0, 0.5, 1]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[u.card, { borderColor: has ? C.green + '88' : col + '55' }]}>
+              <View style={[u.stripe, { backgroundColor: has ? C.green : col }]} />
+              <View style={u.top}>
+                <View style={[u.portrait, { borderColor: has ? C.green : C.gold }]}>
+                  <FighterAvatar look={lookFor({ id: `efsane-${l.id}`, uyruk: l.uyruk })} size={62} ring={has ? C.green : C.gold} />
+                </View>
+                <View style={{ flex: 1, gap: 2 }}>
+                  <Text style={u.nick}>“{l.lakap.toLocaleUpperCase(LOC)}”</Text>
+                  <Text style={u.name} numberOfLines={1} adjustsFontSizeToFit>
+                    {l.ad.toUpperCase()}
+                  </Text>
+                  <Text style={u.country}>
+                    {flagOf(l.uyruk)} {l.uyruk}
+                  </Text>
+                </View>
+                {has ? (
+                  <View style={u.doneBadge}>
+                    <Icon name="check-bold" size={12} color="#052012" />
+                    <Text style={u.doneText}>{L("DERS ALINDI")}</Text>
+                  </View>
+                ) : null}
+              </View>
+              <Text style={u.quote}>{l.soz()}</Text>
+              <View style={u.teach}>
+                <View style={[u.chip, { borderColor: col + '88' }]}>
+                  <Icon name={(tech?.ikon ?? 'star') as IconName} size={14} color={col} />
+                  <Text style={u.chipText} numberOfLines={1}>
+                    {tech?.ad ?? ''}
+                  </Text>
+                  <Text style={[u.chipPlus, { color: col }]}>{L("+2 SEVİYE")}</Text>
+                </View>
+                <View style={[u.chip2, { borderColor: col + '88' }]}>
+                  <Text style={u.chipText}>{STAT_LABELS[l.stat]}</Text>
+                  <Text style={[u.chipPlus, { color: col }]}>+1</Text>
+                </View>
+              </View>
+              {has ? null : (
+                <>
+                  <View style={{ gap: 3 }}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                      <Text style={u.reqLabel}>{L("POPÜLERLİK")}</Text>
+                      <Text style={[u.reqLabel, { color: popOk ? C.green : C.orange }]}>
+                        {Math.round(s.populerlik)} / {l.minPop}
+                      </Text>
+                    </View>
+                    <View style={u.reqBar}>
+                      <View style={{ width: `${Math.min(100, (s.populerlik / l.minPop) * 100)}%`, height: 4, backgroundColor: popOk ? C.green : C.orange }} />
+                    </View>
+                  </View>
+                  <View style={u.foot}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={u.cost}>{legendCostText(s, l)}</Text>
+                      {!stt.ok && stt.neden ? (
+                        <Text style={u.why} numberOfLines={2}>
+                          {stt.neden}
+                        </Text>
+                      ) : (
+                        <Text style={[u.why, { color: C.dim }]}>{L("2 hafta özel kamp")}</Text>
+                      )}
+                    </View>
+                    <Pressable
+                      disabled={!stt.ok}
+                      onPress={() => {
+                        buzz('basari');
+                        act((x) => setMsg(trainWithLegend(x, l.id)));
+                      }}
+                      style={({ pressed }) => [u.btn, !stt.ok && { backgroundColor: '#23252b' }, pressed && { opacity: 0.8 }]}
+                    >
+                      {!stt.ok ? <Icon name="lock" size={14} color={C.faint} /> : null}
+                      <Text style={[u.btnText, !stt.ok && { color: C.faint }]}>{L("DERS AL")}</Text>
+                    </Pressable>
+                  </View>
+                </>
+              )}
+            </LinearGradient>
+          );
+        })}
+      </View>
+    </View>
+  );
+}
+
+const u = StyleSheet.create({
+  msg: { color: C.gold, fontFamily: F.semi, fontSize: 13, lineHeight: 18, marginBottom: 10, padding: 10, borderWidth: 1, borderColor: C.goldDeep, backgroundColor: '#15110a' },
+  card: { borderWidth: 1, borderRadius: 4, padding: 12, paddingLeft: 16, gap: 10, overflow: 'hidden' },
+  stripe: { position: 'absolute', left: 0, top: 0, bottom: 0, width: 4 },
+  top: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  portrait: { borderRadius: 40 },
+  nick: { color: C.gold, fontFamily: F.black, fontSize: 10, letterSpacing: 1.5 },
+  name: { color: C.text, fontFamily: F.display, fontSize: 19, letterSpacing: 0.5 },
+  country: { color: C.dim, fontFamily: F.semi, fontSize: 11 },
+  doneBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: C.green, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 3, alignSelf: 'flex-start' },
+  doneText: { color: '#052012', fontFamily: F.black, fontSize: 9.5, letterSpacing: 1 },
+  quote: { color: '#c3c8d1', fontFamily: F.body, fontSize: 12, lineHeight: 17, fontStyle: 'italic' },
+  teach: { flexDirection: 'row', gap: 8 },
+  chip: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1, borderRadius: 3, paddingHorizontal: 8, paddingVertical: 6, backgroundColor: 'rgba(0,0,0,0.3)' },
+  chip2: { flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1, borderRadius: 3, paddingHorizontal: 8, paddingVertical: 6, backgroundColor: 'rgba(0,0,0,0.3)' },
+  chipText: { flexShrink: 1, color: C.text, fontFamily: F.semi, fontSize: 12 },
+  chipPlus: { fontFamily: F.display, fontSize: 12, letterSpacing: 0.5 },
+  reqLabel: { color: '#8b919c', fontFamily: F.bold, fontSize: 9.5, letterSpacing: 1.2 },
+  reqBar: { height: 4, backgroundColor: '#1c1f25' },
+  foot: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  cost: { color: C.gold, fontFamily: F.display, fontSize: 17 },
+  why: { color: C.orange, fontFamily: F.semi, fontSize: 11, lineHeight: 15 },
+  btn: { flexDirection: 'row', gap: 6, backgroundColor: C.gold, minHeight: 46, paddingHorizontal: 18, borderRadius: 3, alignItems: 'center', justifyContent: 'center' },
+  btnText: { color: '#1f1605', fontFamily: F.display, fontSize: 15, letterSpacing: 1.5 },
 });

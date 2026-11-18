@@ -10727,4 +10727,9 @@ export const PT: Record<string, string> = {
   "İMZA HAREKET": "GOLPE ASSINATURA",
   "YETENEK AĞACI": "ÁRVORE DE HABILIDADES",
   "{0} PERK PUANI": "{0} PONTOS DE TALENTO",
+  "+2 SEVİYE": "+2 NÍVEIS",
+  "2 hafta özel kamp": "Camp particular de 2 semanas",
+  "DERS ALINDI": "TREINADO",
+  "POPÜLERLİK": "POPULARIDADE",
+  "{0}/{1} DERS": "{0}/{1} AULAS",
 };

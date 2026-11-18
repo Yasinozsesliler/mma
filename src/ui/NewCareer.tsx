@@ -322,7 +322,7 @@ const ISO: [string, string][] = [
   ['ABD', 'us'], ['Almanya', 'de'], ['Avustralya', 'au'], ['Azerbaycan', 'az'], ['Birleşik Krallık', 'gb'], ['Brezilya', 'br'], ['Çekya', 'cz'], ['Çin', 'cn'],
   ['Fransa', 'fr'], ['Güney Kore', 'kr'], ['Gürcistan', 'ge'], ['Hollanda', 'nl'], ['İrlanda', 'ie'], ['İsveç', 'se'], ['Japonya', 'jp'], ['Kamerun', 'cm'],
   ['Kazakistan', 'kz'], ['Küba', 'cu'], ['Meksika', 'mx'], ['Nijerya', 'ng'], ['Polonya', 'pl'], ['Rusya', 'ru'], ['Rusya (Dağıstan)', 'ru'], ['Şili', 'cl'],
-  ['Tayland', 'th'], ['Türkiye', 'tr'],
+  ['Tayland', 'th'], ['Türkiye', 'tr'], ['Kanada', 'ca'], ['Hırvatistan', 'hr'],
 ];
 let isoMap: Map<string, string> | null = null;
 function isoOf(country: string): string | undefined {

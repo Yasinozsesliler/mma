@@ -10719,4 +10719,9 @@ export const EN: Record<string, string> = {
   "İMZA HAREKET": "SIGNATURE MOVE",
   "YETENEK AĞACI": "SKILL TREE",
   "{0} PERK PUANI": "{0} PERK POINTS",
+  "+2 SEVİYE": "+2 LEVELS",
+  "2 hafta özel kamp": "2-week private camp",
+  "DERS ALINDI": "TRAINED",
+  "POPÜLERLİK": "POPULARITY",
+  "{0}/{1} DERS": "{0}/{1} LESSONS",
 };
