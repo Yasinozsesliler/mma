@@ -20,7 +20,7 @@ import { C, F } from './theme';
 const shortMoney = (n: number) => (Math.abs(n) < 100_000 ? money(n) : `${n < 0 ? '-' : ''}$${fmtFollowers(Math.abs(n))}`);
 
 /** Ayakta duran tam boy dövüşçü. flip: sola bakar. */
-function Standing({ look, kit, h, flip }: { look: Appearance; kit: Kit; h: number; flip?: boolean }) {
+export function Standing({ look, kit, h, flip }: { look: Appearance; kit: Kit; h: number; flip?: boolean }) {
   const w = h * 0.8;
   return (
     <Svg width={w} height={h} viewBox="0 0 80 100">

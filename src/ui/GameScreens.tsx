@@ -53,6 +53,7 @@ import { cityPin, visitedCount, visitedKitalar } from '../engine/worldMap';
 import { ActionGrid, ActionTile, FightCTA, HubHero, Notice } from './HubHome';
 import { CareerStage } from './NewCareer';
 import { NewGrowth } from './NewGrowth';
+import { NewOpponentScreen } from './NewOpponent';
 import { useLook } from '../lookPref';
 import { pendingBouts, weeklyGymNet } from '../engine/academy';
 import { ACHIEVEMENTS } from '../engine/achievements';
@@ -615,6 +616,8 @@ function FightDate({ o, s }: { o: Opponent; s: GameState }) {
 }
 
 export function OpponentScreen({ s, act }: { s: GameState; act: Act }) {
+  const yeni = useLook() === 'yeni';
+  if (yeni) return <NewOpponentScreen s={s} act={act} />;
   const list = s.pending.secenekler!;
   const me = s.fighter.stats;
   const myOvr = Math.round(statAverage(me));
