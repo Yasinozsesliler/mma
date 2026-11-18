@@ -21,6 +21,8 @@ import { C, F, R } from './theme';
 import { useLook } from '../lookPref';
 import { playerKit, useCosmetics } from '../cosmetics';
 import { Standing } from './NewCareer';
+import { AvatarHD } from './avatarHD';
+import Svg, { Defs, RadialGradient as SvgRadial, Rect, Stop } from 'react-native-svg';
 
 const STEPS = 9;
 
@@ -692,7 +694,7 @@ function NewLookStep({ inp, set }: { inp: NewFighterInput; set: (p: Partial<NewF
   const kadin = !!inp.kadin;
   const country = COUNTRIES[inp.uyruk]?.ad ?? inp.uyruk;
   /** Hazır yüzler: ülkeye ve cinsiyete uygun on yüz; yenile ile değişir. Gri saç verilmez. */
-  const faces = Array.from({ length: 10 }, (_, i) => {
+  const faces = Array.from({ length: 15 }, (_, i) => {
     const g = { ...lookFor({ id: `hazir-${seed}-${i}`, uyruk: country, kadin }) };
     if (g.sacRenk >= NATURAL_HAIR - 1) g.sacRenk = g.sacRenk % (NATURAL_HAIR - 1);
     return kadin ? { ...g, kadin: true } : g;
@@ -710,7 +712,17 @@ function NewLookStep({ inp, set }: { inp: NewFighterInput; set: (p: Partial<NewF
       <Text style={nl.stepSub}>{L("Kafese girdiğinde herkes bu yüzü görecek.")}</Text>
       {/* Sahne */}
       <View style={nl.stage}>
-        <LinearGradient colors={['#2c2f36', '#0c0d10', '#040405']} locations={[0, 0.55, 1]} style={StyleSheet.absoluteFill} />
+        <LinearGradient colors={['#1a0b07', '#3a1208', '#0a0504']} locations={[0, 0.6, 1]} style={StyleSheet.absoluteFill} />
+        <Svg width="100%" height="100%" style={StyleSheet.absoluteFill} pointerEvents="none">
+          <Defs>
+            <SvgRadial id="lookGlow" cx="50%" cy="78%" r="60%">
+              <Stop offset="0" stopColor="#ff7a2e" stopOpacity={0.55} />
+              <Stop offset="0.45" stopColor="#d1360f" stopOpacity={0.28} />
+              <Stop offset="1" stopColor="#d1360f" stopOpacity={0} />
+            </SvgRadial>
+          </Defs>
+          <Rect x="0" y="0" width="100%" height="100%" fill="url(#lookGlow)" />
+        </Svg>
         <LinearGradient colors={['rgba(255,255,255,0.13)', 'rgba(255,255,255,0)']} style={nl.cone} />
         <CageBg opacity={0.06} />
         <View style={nl.floor} />
@@ -754,8 +766,12 @@ function NewLookStep({ inp, set }: { inp: NewFighterInput; set: (p: Partial<NewF
             const on = same(g);
             return (
               <Pressable key={i} accessibilityLabel={L("Yüz {0}", [i + 1])} onPress={() => pick(g)} style={({ pressed }) => [nl.face, on && nl.faceOn, pressed && { opacity: 0.8 }]}>
-                {on ? <View style={nl.faceBar} /> : null}
-                <FighterAvatar look={g} size={56} ring={on ? C.red : '#2a2d34'} bg="#15171c" />
+                <AvatarHD look={g} size={62} frame="kare" ring={on ? C.red : '#3a3d44'} bg="#24272d" />
+                {on ? (
+                  <View style={nl.faceCheck}>
+                    <Icon name="check-bold" size={10} color="#040405" />
+                  </View>
+                ) : null}
               </Pressable>
             );
           })}
@@ -784,7 +800,9 @@ const nl = StyleSheet.create({
   stepSub: { color: C.dim, fontFamily: F.body, fontSize: 12.5, marginTop: 2, marginBottom: 10 },
   stage: { height: 400, overflow: 'hidden', borderRadius: 4, marginBottom: 10 },
   cone: { position: 'absolute', left: '25%', right: '25%', top: -40, height: 380, transform: [{ scaleX: 1.4 }] },
-  floor: { position: 'absolute', left: -40, right: -40, bottom: -50, height: 130, borderRadius: 200, backgroundColor: '#1b1d22' },
+  floor: { position: 'absolute', left: -40, right: -40, bottom: -50, height: 130, borderRadius: 200, backgroundColor: '#140908' },
+  glow: { position: 'absolute', left: '10%', right: '10%', bottom: 10, height: 220, borderRadius: 200, backgroundColor: 'rgba(255,90,31,0.28)' },
+  glow2: { position: 'absolute', left: '25%', right: '25%', bottom: 40, height: 140, borderRadius: 140, backgroundColor: 'rgba(255,140,60,0.22)' },
   figure: { position: 'absolute', left: '50%', marginLeft: -132, bottom: 14 },
   rail: { position: 'absolute', left: 12, top: 16, gap: 8 },
   railBtn: { width: 46, height: 46, borderRadius: 23, backgroundColor: 'rgba(12,13,16,0.85)', borderWidth: 2, borderColor: '#2a2d34', alignItems: 'center', justifyContent: 'center' },
@@ -799,9 +817,9 @@ const nl = StyleSheet.create({
   refresh: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   refreshText: { color: C.dim, fontFamily: F.semi, fontSize: 11.5 },
   faces: { flexDirection: 'row', flexWrap: 'wrap', gap: 7 },
-  face: { width: '18%', flexGrow: 1, height: 64, borderRadius: 4, borderWidth: 2, borderColor: '#2a2d34', backgroundColor: '#15171c', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  face: { width: '18%', flexGrow: 1, height: 70, borderRadius: 3, borderWidth: 2, borderColor: '#2a2d34', backgroundColor: '#24272d', alignItems: 'center', justifyContent: 'flex-end', overflow: 'hidden' },
   faceOn: { borderColor: C.red },
-  faceBar: { position: 'absolute', left: 0, right: 0, top: 0, height: 3, backgroundColor: C.red, zIndex: 1 },
+  faceCheck: { position: 'absolute', left: 3, top: 3, width: 16, height: 16, borderRadius: 3, backgroundColor: C.green, alignItems: 'center', justifyContent: 'center' },
   random: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, minHeight: 48, borderWidth: 1, borderColor: '#2a2d34', backgroundColor: '#14161a', borderRadius: 3, marginBottom: 4 },
   randomText: { color: C.text, fontFamily: F.display, fontSize: 15, letterSpacing: 1.5 },
 });
