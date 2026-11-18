@@ -10786,4 +10786,5 @@ export const DE: Record<string, string> = {
   "{0} parça": "{0} Teile",
   "KONTRAT TEKLİFİ": "VERTRAGSANGEBOT",
   "MAÇ ÜCRETİ": "KAMPFBÖRSE",
+  "beğeni": "Likes",
 };

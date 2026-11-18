@@ -10832,4 +10832,5 @@ export const RU: Record<string, string> = {
   "{0} parça": "предметов: {0}",
   "KONTRAT TEKLİFİ": "ПРЕДЛОЖЕНИЕ КОНТРАКТА",
   "MAÇ ÜCRETİ": "ГОНОРАР",
+  "beğeni": "лайков",
 };

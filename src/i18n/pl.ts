@@ -10773,4 +10773,5 @@ export const PL: Record<string, string> = {
   "{0} parça": "{0} elementów",
   "KONTRAT TEKLİFİ": "OFERTA KONTRAKTU",
   "MAÇ ÜCRETİ": "GAŻA ZA WALKĘ",
+  "beğeni": "polubień",
 };

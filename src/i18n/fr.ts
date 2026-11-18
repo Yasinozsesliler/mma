@@ -10786,4 +10786,5 @@ export const FR: Record<string, string> = {
   "{0} parça": "{0} pièces",
   "KONTRAT TEKLİFİ": "OFFRE DE CONTRAT",
   "MAÇ ÜCRETİ": "BOURSE",
+  "beğeni": "j'aime",
 };

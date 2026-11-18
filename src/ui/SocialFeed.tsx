@@ -2,9 +2,9 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { fmtFollowers } from '../engine/fame';
+import { fmtFollowers, followers } from '../engine/fame';
 import { markStorySeen, storiesFor, storySeen, toggleLike, type Story } from '../engine/feed';
-import { handleOf, REPLY_TONES, replyToPost } from '../engine/social';
+import { handleOf, playerHandle, REPLY_TONES, replyToPost } from '../engine/social';
 import { lookFor } from '../engine/tale';
 import type { Appearance, GameState, Opponent, Post } from '../engine/types';
 import { L } from '../i18n';
@@ -14,6 +14,7 @@ import type { Act } from './GameScreens';
 import { PhotoArt } from './PhotoArt';
 import { BLUE_TICK, Measure, StoryRing } from './SocialPhoto';
 import { C, F } from './theme';
+import { useLook } from '../lookPref';
 
 const ago = (s: GameState, h: number) => (s.hafta - h <= 0 ? L("bu hafta") : L("{0} hf", [s.hafta - h]));
 
@@ -221,11 +222,59 @@ function StoryViewer({ s, act, list, start, onClose }: { s: GameState; act: Act;
 
 const PAGE = 12;
 
+/** Yeni görünüm: profil şeridi (portre, ad, kullanıcı adı, takipçi, gönderi ve toplam beğeni). */
+function ProfileStrip({ s }: { s: GameState }) {
+  const mine = (s.sosyal ?? []).filter((p) => p.tur === 'oyuncu');
+  const likes = mine.reduce((a, p) => a + (p.begeni ?? 0), 0);
+  const stats: [string, string][] = [
+    [fmtFollowers(followers(s)), L("takipçi")],
+    [String(mine.length), L("gönderi")],
+    [fmtFollowers(likes), L("beğeni")],
+  ];
+  return (
+    <LinearGradient colors={['#2a0a12', '#0c0d10']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={ps.wrap}>
+      <LinearGradient colors={[C.red, C.gold]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={ps.ring}>
+        <View style={ps.ringIn}>
+          <FighterAvatar look={s.fighter.gorunum} size={58} ring="#0c0d10" />
+        </View>
+      </LinearGradient>
+      <View style={{ flex: 1, gap: 6 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+          <Text style={ps.name} numberOfLines={1}>
+            {s.fighter.ad} {s.fighter.soyad}
+          </Text>
+          {followers(s) >= 100000 ? <Icon name="check-decagram" size={15} color={BLUE_TICK} /> : null}
+        </View>
+        <Text style={ps.handle}>{playerHandle(s)}</Text>
+        <View style={{ flexDirection: 'row', gap: 14 }}>
+          {stats.map(([v, l]) => (
+            <View key={l}>
+              <Text style={ps.val}>{v}</Text>
+              <Text style={ps.lab}>{l}</Text>
+            </View>
+          ))}
+        </View>
+      </View>
+    </LinearGradient>
+  );
+}
+
+const ps = StyleSheet.create({
+  wrap: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: 10, borderWidth: 1, borderColor: '#3a1a20', padding: 12, marginTop: 4 },
+  ring: { width: 70, height: 70, borderRadius: 35, alignItems: 'center', justifyContent: 'center' },
+  ringIn: { width: 64, height: 64, borderRadius: 32, backgroundColor: '#0c0d10', alignItems: 'center', justifyContent: 'center' },
+  name: { color: C.text, fontFamily: F.bold, fontSize: 16, flexShrink: 1 },
+  handle: { color: C.dim, fontFamily: F.body, fontSize: 12, marginTop: -4 },
+  val: { color: C.text, fontFamily: F.bold, fontSize: 15 },
+  lab: { color: C.faint, fontFamily: F.body, fontSize: 11 },
+});
+
 export function FeedHome({ s, act, onMsg, onNew, onDm, unread }: { s: GameState; act: Act; onMsg: (m: string) => void; onNew: () => void; onDm: () => void; unread: number }) {
   const [story, setStory] = useState<number | null>(null);
   const [n, setN] = useState(PAGE);
   const list = storiesFor(s);
   const posts = s.sosyal ?? [];
+  const yeni = useLook() === 'yeni';
   return (
     <View>
       <View style={st.top}>
@@ -243,6 +292,7 @@ export function FeedHome({ s, act, onMsg, onNew, onDm, unread }: { s: GameState;
           ) : null}
         </Pressable>
       </View>
+      {yeni ? <ProfileStrip s={s} /> : null}
       <StoriesRow s={s} list={list} onOpen={setStory} onNew={onNew} />
       <View style={st.divider} />
       {posts.length === 0 ? <Text style={st.empty}>{L("Akış henüz sessiz. İlk maçından sonra herkes seni konuşacak.")}</Text> : null}
