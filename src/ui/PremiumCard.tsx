@@ -5,7 +5,7 @@ import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { sfx } from '../audio';
 import { L } from '../i18n';
-import { buyPremium, closeNudge, closeOffer, COACH_STORE, dismissUpsell, LEGENDS_STORE, maybeStartBeltDeal, openOffer, openShop, REF_STORE, rewardedCount, useDeal, useNudge, MONETIZATION, PURCHASES, useOffer, useOwned, usePremium, usePremiumPrice, usePrice, useUpsellDue, type OfferReason } from '../monetization';
+import { buyErrorText, buyPremium, closeNudge, closeOffer, COACH_STORE, dismissUpsell, LEGENDS_STORE, maybeStartBeltDeal, openOffer, openShop, REF_STORE, rewardedCount, useDeal, useNudge, MONETIZATION, PURCHASES, useOffer, useOwned, usePremium, usePremiumPrice, usePrice, useUpsellDue, type OfferReason } from '../monetization';
 import { LEGEND_IDS } from '../engine/legendRun';
 import { getPref, setPref } from '../prefs';
 import { DEAL_SKU, PREMIUM_SKU, ULTIMATE_SKU } from '../monetization/skus';
@@ -37,7 +37,7 @@ export function PremiumCard() {
         <Icon name="crown" size={20} color={C.gold} />
         <View style={{ flex: 1 }}>
           <Text style={st.ownedText}>{L("Şampiyon Paketi aktif · Teşekkürler!")}</Text>
-          <Text style={st.nudgeSub}>{L("Hakem, Antrenör ve Menajer Modu ile Tam Paket'i tamamla")}</Text>
+          <Text style={st.nudgeSub}>{L("Patron, Menajer, Antrenör ve Hakem Modu ile Tam Paket'i tamamla")}</Text>
         </View>
         <Icon name="chevron-right" size={18} color={C.gold} />
       </Pressable>
@@ -64,7 +64,7 @@ export function PremiumCard() {
           </View>
           <Text style={st.popular}>{L("EN İYİ DEĞER")}</Text>
         </View>
-        <Text style={st.lead}>{L("Hakem, Antrenör ve Menajer Modu, bütün efsaneler, reklamsız oyun ve 6 kozmetik paket.")}</Text>
+        <Text style={st.lead}>{L("Patron, Menajer, Antrenör ve Hakem Modu, bütün efsaneler, reklamsız oyun ve 6 kozmetik paket.")}</Text>
         <View pointerEvents="none">
           <Button label={fullPrice ? L("Tam Paket · {0}", [fullPrice]) : L("Paketleri gör")} icon="crown" tone="gold" onPress={() => undefined} />
         </View>
@@ -201,7 +201,7 @@ export function BuyPremium() {
           if (r === 'ok') {
             sfx('fanfare');
             closeOffer();
-          } else if (r === 'hata') setMsg(L("Satın alma şu an yapılamadı. İnternet bağlantını kontrol edip tekrar dene."));
+          } else if (r === 'hata') setMsg(buyErrorText());
         }}
       />
       {msg ? <Text style={st.msg}>{msg}</Text> : null}

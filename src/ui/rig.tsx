@@ -132,8 +132,11 @@ function Head({ c, ang, look, skin, ref, hasar = 0 }: { c: { x: number; y: numbe
 }
 
 /** Dövüşçü (ya da hakem) figürü. Koordinatlar: kalça merkezi (0,0). */
-export function Figure({ p, look, kit, hasar = 0 }: { p: Pose; look: Appearance; kit: Kit; hasar?: number }) {
+/** build: vücut yapısı (-1 ince … 0 orta … 1 iri); sıklete göre gövde ve uzuv kalınlığı */
+export function Figure({ p, look, kit, hasar = 0, build = 0 }: { p: Pose; look: Appearance; kit: Kit; hasar?: number; build?: number }) {
   const j = joints(p);
+  const bw = 1 + build * 0.16;
+  const lw = 1 + build * 0.12;
   const skin = SKIN_TONES[look.ten] ?? SKIN_TONES[2];
   const skinD = shade(skin, -26);
   const ref = !!kit.ref;
@@ -144,8 +147,8 @@ export function Figure({ p, look, kit, hasar = 0 }: { p: Pose; look: Appearance;
   const sC = add(j.neck, j.td, -3);
   const wC = add(j.pelvis, j.td, 8);
   const pt = (b: { x: number; y: number }, k: number) => add(b, j.perp, k);
-  const torsoPath = L("M{0} {1} Q{2} {3} {4} {5} L{6} {7} Q{8} {9} {10} {11} Z", [pt(sC, 11).x, pt(sC, 11).y, pt(wC, 10).x, pt(wC, 10).y, pt(j.pelvis, 8.5).x, pt(j.pelvis, 8.5).y, pt(j.pelvis, -8.5).x, pt(j.pelvis, -8.5).y, pt(wC, -9).x, pt(wC, -9).y, pt(sC, -10).x, pt(sC, -10).y]);
-  const backPath = L("M{0} {1} Q{2} {3} {4} {5} L{6} {7} L{8} {9} Z", [pt(sC, -10).x, pt(sC, -10).y, pt(wC, -9).x, pt(wC, -9).y, pt(j.pelvis, -8.5).x, pt(j.pelvis, -8.5).y, pt(j.pelvis, -2).x, pt(j.pelvis, -2).y, pt(sC, -3).x, pt(sC, -3).y]);
+  const torsoPath = L("M{0} {1} Q{2} {3} {4} {5} L{6} {7} Q{8} {9} {10} {11} Z", [pt(sC, 11 * bw).x, pt(sC, 11 * bw).y, pt(wC, 10 * bw).x, pt(wC, 10 * bw).y, pt(j.pelvis, 8.5 * bw).x, pt(j.pelvis, 8.5 * bw).y, pt(j.pelvis, -8.5 * bw).x, pt(j.pelvis, -8.5 * bw).y, pt(wC, -9 * bw).x, pt(wC, -9 * bw).y, pt(sC, -10 * bw).x, pt(sC, -10 * bw).y]);
+  const backPath = L("M{0} {1} Q{2} {3} {4} {5} L{6} {7} L{8} {9} Z", [pt(sC, -10 * bw).x, pt(sC, -10 * bw).y, pt(wC, -9 * bw).x, pt(wC, -9 * bw).y, pt(j.pelvis, -8.5 * bw).x, pt(j.pelvis, -8.5 * bw).y, pt(j.pelvis, -2 * bw).x, pt(j.pelvis, -2 * bw).y, pt(sC, -3 * bw).x, pt(sC, -3 * bw).y]);
   const chest = add(sC, j.td, -7);
   const abs = add(j.pelvis, j.td, 12);
   const shortsTop = add(j.pelvis, j.td, 4);
@@ -173,11 +176,11 @@ export function Figure({ p, look, kit, hasar = 0 }: { p: Pose; look: Appearance;
         </RadialGradient>
       </Defs>
       {/* Arka bacak ve kol */}
-      <Limb a={j.hipR} b={j.knR} w={10} color={legCD} />
-      <Limb a={j.knR} b={j.anR} w={8} color={legCD} />
+      <Limb a={j.hipR} b={j.knR} w={10 * lw} color={legCD} />
+      <Limb a={j.knR} b={j.anR} w={8 * lw} color={legCD} />
       <Ellipse cx={j.anR.x + 2.5} cy={j.anR.y + 1} rx={5} ry={2.4} fill={ref ? '#111' : skinD} />
-      <Limb a={j.shR} b={j.elR} w={7.5} color={shade(armC, -26)} />
-      <Limb a={j.elR} b={j.wrR} w={6.5} color={shade(armC, -26)} />
+      <Limb a={j.shR} b={j.elR} w={7.5 * lw} color={shade(armC, -26)} />
+      <Limb a={j.elR} b={j.wrR} w={6.5 * lw} color={shade(armC, -26)} />
       <Glove at={j.wrR} dir={p.aR1 + p.aR2} color={shade(kit.glove, -25)} bare={ref || kit.bare} skin={skinD} />
 
       {/* Gövde */}
@@ -222,8 +225,8 @@ export function Figure({ p, look, kit, hasar = 0 }: { p: Pose; look: Appearance;
       <Head c={j.head} ang={p.torso + p.head} look={look} skin={skin} ref={ref} hasar={ref ? 0 : hasar} />
 
       {/* Ön bacak ve kol */}
-      <Limb a={j.hipL} b={j.knL} w={10.5} color={legC} />
-      <Limb a={j.knL} b={j.anL} w={8.2} color={legC} />
+      <Limb a={j.hipL} b={j.knL} w={10.5 * lw} color={legC} />
+      <Limb a={j.knL} b={j.anL} w={8.2 * lw} color={legC} />
       <Ellipse cx={j.anL.x + 2.5} cy={j.anL.y + 1} rx={5.2} ry={2.5} fill={ref ? '#111' : skin} />
       {!ref ? (
         <>
@@ -232,13 +235,15 @@ export function Figure({ p, look, kit, hasar = 0 }: { p: Pose; look: Appearance;
           {kit.desen ? <Pattern a={j.hipL} b={thighMidL} kind={kit.desen} color={kit.desenRenk ?? kit.trim} /> : null}
           <Line x1={j.hipL.x + 1.2} y1={j.hipL.y - 1.2} x2={thighMidL.x + 1.2} y2={thighMidL.y - 1.2} stroke="#ffffff" strokeOpacity={0.13} strokeWidth={3.5} strokeLinecap="round" />
           <Line x1={pt(shortsTop, 9).x} y1={pt(shortsTop, 9).y + 3} x2={pt(shortsTop, -9).x} y2={pt(shortsTop, -9).y + 3} stroke={kit.trim} strokeWidth={1.2} opacity={0.8} />
+          {/* Sponsor yaması */}
+          <Line x1={j.hipL.x + (thighMidL.x - j.hipL.x) * 0.55} y1={j.hipL.y + (thighMidL.y - j.hipL.y) * 0.55} x2={j.hipL.x + (thighMidL.x - j.hipL.x) * 0.8} y2={j.hipL.y + (thighMidL.y - j.hipL.y) * 0.8} stroke={kit.trim} strokeWidth={4.5} strokeLinecap="round" opacity={0.55} />
         </>
       ) : null}
-      <Limb a={j.shL} b={j.elL} w={8} color={ref ? kit.shorts : armC} />
+      <Limb a={j.shL} b={j.elL} w={8 * lw} color={ref ? kit.shorts : armC} />
       {!ref && look.dovmeler?.includes('kol') ? (
         <Line x1={j.shL.x + (j.elL.x - j.shL.x) * 0.2} y1={j.shL.y + (j.elL.y - j.shL.y) * 0.2} x2={j.shL.x + (j.elL.x - j.shL.x) * 0.85} y2={j.shL.y + (j.elL.y - j.shL.y) * 0.85} stroke="#1d1d1d" strokeWidth={2.6} strokeDasharray="2 1.5" opacity={0.5} />
       ) : null}
-      <Limb a={j.elL} b={j.wrL} w={6.8} color={armC} />
+      <Limb a={j.elL} b={j.wrL} w={6.8 * lw} color={armC} />
       <Glove at={j.wrL} dir={p.aL1 + p.aL2} color={kit.glove} bare={ref || kit.bare} skin={skin} />
     </G>
   );

@@ -3,7 +3,8 @@ import { closeCrisis } from '../engine/crisis';
 import { CrisisCard } from './CrisisCard';
 import { fmtFollowers, followerBoard, followers, followerTier } from '../engine/fame';
 import { BioEditor, Highlights, IgTopBar, PhotoCard, PhotoComposer, ProfileGrid, ProfileHeader } from './SocialPhoto';
-import type { PhotoKind } from '../engine/gram';
+import { boostGain, boostPhoto, boostTarget, type PhotoKind } from '../engine/gram';
+import { AdOffer } from './AdOffer';
 import { dmUnread } from '../engine/dm';
 import { DmChat, DmInbox, markRead } from './SocialDm';
 import { FeedHome } from './SocialFeed';
@@ -42,6 +43,13 @@ function Avatar({ name, color }: { name: string; color: string }) {
       <Text style={[so.avatarText, { color }]}>{ini}</Text>
     </View>
   );
+}
+
+/** Bu haftaki fotoğraf ilgi gördüyse: ödüllü reklamla sponsorlu gönderi (fotoğraf başına bir kez). */
+function BoostOffer({ s, act, onMsg }: { s: GameState; act: Act; onMsg: (m: string) => void }) {
+  const p = boostTarget(s);
+  if (!p) return null;
+  return <AdOffer yer="gram_one" icon="rocket-launch-outline" title={L("Gönderiyi öne çıkar")} desc={L("Bu haftaki fotoğrafın sponsorlu gönderi olsun, daha çok kişiye ulaşsın: yaklaşık +{0} takipçi.", [fmtFollowers(boostGain(p))])} onReward={() => act((x) => onMsg(boostPhoto(x)))} />;
 }
 
 function PostCard({ s, p, act, onMsg }: { s: GameState; p: Post; act: Act; onMsg: (m: string) => void }) {
@@ -249,6 +257,7 @@ export function SocialScreen({ s, act }: { s: GameState; act: Act }) {
               <Text style={so.toastText}>{msg}</Text>
             </Pressable>
           ) : null}
+          <BoostOffer s={s} act={act} onMsg={setMsg} />
           <FeedHome s={s} act={act} onMsg={setMsg} onNew={() => setCompose('foto')} onDm={() => setDm('list')} unread={dmUnread(s)} />
         </>
       ) : (
@@ -272,6 +281,7 @@ export function SocialScreen({ s, act }: { s: GameState; act: Act }) {
               <Text style={so.toastText}>{msg}</Text>
             </Pressable>
           ) : null}
+          <BoostOffer s={s} act={act} onMsg={setMsg} />
           <View style={so.igTabs}>
             {(
               [

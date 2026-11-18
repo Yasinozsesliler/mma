@@ -112,6 +112,8 @@ export interface MFighter {
   /** Birikmiş hasar (0-100): yüksekse doktor uyarır, nakavt riski artar */
   hasar: number;
   sakat: number;
+  /** Bu sakatlıkta ödüllü fizyoterapi kullanıldı (iyileşince sıfırlanır) */
+  fizyo?: boolean;
   mac?: Mac;
   katilis: number;
   /** Son maçından beri geçen hafta (bekletme şikâyeti için) */
@@ -168,6 +170,8 @@ export interface Masa {
   baz: { ucret: number; bonus: number };
   mesaj: string;
   ruh: 'sicak' | 'gergin' | 'kizgin' | 'son';
+  /** Piyasa araştırması (ödüllü reklam): ücret tavanı görünür */
+  bilgi?: boolean;
 }
 
 export interface Teklif {
@@ -230,6 +234,8 @@ export interface Ajans {
 }
 
 export interface MgrRun {
+  /** Yeni adaylar ödüllü teklifinin kullanıldığı hafta */
+  rwAday?: number;
   ad: string;
   soyad: string;
   ajans: string;
@@ -1521,7 +1527,10 @@ export function advanceWeek(r: MgrRun) {
     if (!f.mac) f.bosHafta++;
     if (f.sakat > 0) {
       f.sakat--;
-      if (f.sakat === 0) rapor.push(L("💪 {0} sakatlığını atlattı.", [fullName(f)]));
+      if (f.sakat === 0) {
+        f.fizyo = undefined;
+        rapor.push(L("💪 {0} sakatlığını atlattı.", [fullName(f)]));
+      }
       if (f.sozlesme?.maddeler.includes('sakatlik')) earn(r, f, r100(f.sozlesme.ucret * 0.12));
     }
     f.hasar = clamp(f.hasar - (f.sakat > 0 ? 3 : 1), 0, 100);
@@ -2070,12 +2079,39 @@ export function faceOffLines(f: MFighter, unvan: boolean): [string, string] {
   const rnd = localRng(hashStr(`${f.id}-${f.mac?.hafta ?? 0}-fo`));
   const pk = <T,>(a: T[]) => a[Math.floor(rnd() * a.length)];
   const own: Record<Kisilik, string[]> = {
-    hirsli: [L("Bu gece senin kariyerini bitireceğim."), L("Herkes beni konuşacak, sen de dahil."), unvan ? L("O kemer zaten benim, sadece takacağım.") : L("Sen sadece bir basamaksın.")],
-    sadik: [L("Ekibim arkamda. Hazırım."), L("Saygım var ama o kafeste kardeş yok."), L("Köşemi dinleyeceğim, gerisi gelir.")],
-    tembel: [L("Erken bitireceğim, akşam yemeğine yetişmem lazım."), L("Antrenman mı? Yeteneğim yeter."), L("Uzatmayalım şu işi.")],
-    medya: [L("Kameralar hazır mı? Bu an viral olacak."), L("Seni yarın herkes benim videomdan tanıyacak."), L("Gülümse, bu fotoğraf manşette.")],
-    paragoz: [L("Bu maç benim maaşımı ikiye katlayacak."), L("Sponsorlarım bakıyor, iyi görünmem lazım."), L("Ödemeyi aldım, şimdi şovu izle.")],
+    hirsli: [L("Sıralamada adın vardı. Cumartesiden sonra olmayacak."), L("Senin için kimse ağlamayacak."), L("Bu gece senin kariyerini bitireceğim."), L("Herkes beni konuşacak, sen de dahil."), unvan ? L("O kemer zaten benim, sadece takacağım.") : L("Sen sadece bir basamaksın.")],
+    sadik: [L("Annem tribünde. Onu utandırmayacağım."), L("Plan basit: çalıştığımı yapacağım."), L("Ekibim arkamda. Hazırım."), L("Saygım var ama o kafeste kardeş yok."), L("Köşemi dinleyeceğim, gerisi gelir.")],
+    tembel: [L("İki raunt yeter de artar."), L("Kamp mı? Uyudum, dinlendim, hazırım."), L("Erken bitireceğim, akşam yemeğine yetişmem lazım."), L("Antrenman mı? Yeteneğim yeter."), L("Uzatmayalım şu işi.")],
+    medya: [L("Bu face-off'un klibi yarın her yerde."), L("Takipçilerim seni yorumlarda bitirdi bile."), L("Kameralar hazır mı? Bu an viral olacak."), L("Seni yarın herkes benim videomdan tanıyacak."), L("Gülümse, bu fotoğraf manşette.")],
+    paragoz: [L("Kazanınca yeni sözleşme masada."), L("Senin bonusun da benim olacak."), L("Bu maç benim maaşımı ikiye katlayacak."), L("Sponsorlarım bakıyor, iyi görünmem lazım."), L("Ödemeyi aldım, şimdi şovu izle.")],
   };
-  const rk = [L("Yanlış kapıyı çaldın."), L("Gözlerinde korku görüyorum."), L("Üçüncü raunda kalmazsın."), L("Menajerin seni kurbanlığa getirmiş."), L("Bu gece ışıkları söndüreceğim.")];
+  const rk = [L("Menajerine söyle, yeni dövüşçü arasın."), L("Seni izledim. Hiçbir şey görmedim."), L("Bu gece eve yürüyerek dönmeyeceksin."), L("Ellerin titriyor, fark ettim."), L("Kemer yolu benden geçiyor, sen yoldan çekil."), L("Yanlış kapıyı çaldın."), L("Gözlerinde korku görüyorum."), L("Üçüncü raunda kalmazsın."), L("Menajerin seni kurbanlığa getirmiş."), L("Bu gece ışıkları söndüreceğim.")];
   return [pk(own[f.kisilik] ?? own.sadik), pk(rk)];
+}
+
+// ---------- Ödüllü reklam teklifleri (güç vermez: bilgi ve zaman) ----------
+
+/** Piyasa araştırması: pazarlık masasında organizasyonun ücrette çıkabileceği üst sınır görünür */
+export function masaArastir(r: MgrRun, id: string): string {
+  const t = r.teklifler.find((x) => x.id === id);
+  if (!t?.masa) return '';
+  t.masa.bilgi = true;
+  return L("Araştırma tamam: {0} ücrette en fazla yaklaşık {1} verir.", [orgName(t.org), $(masaTavan(t))]);
+}
+export const masaTavan = (t: Teklif) => r100((t.masa?.baz.ucret ?? t.ucret) * (t.masa?.tavan ?? 1));
+/** Yeni adaylar: yetenek avı dört haftada bir kez erken yenilenir */
+export const canAdCandidates = (r: MgrRun) => r.hafta - r.adayHafta >= 1 && r.hafta - (r.rwAday ?? -99) >= 4;
+export function adNewCandidates(r: MgrRun): string {
+  r.rwAday = r.hafta;
+  refreshCandidates(r, true);
+  return L("Gözcülerin bir tur daha attı: {0} yeni aday.", [r.adaylar.length]);
+}
+/** Fizyoterapi: sakatlık başına bir kez, dövüşçü 2 hafta erken döner (en az 1 hafta kalır) */
+export const canAdPhysio = (f: MFighter) => f.sakat >= 2 && !f.fizyo;
+export function adPhysio(r: MgrRun, id: string): string {
+  const f = r.kadro.find((x) => x.id === id);
+  if (!f || !canAdPhysio(f)) return '';
+  f.sakat = Math.max(1, f.sakat - 2);
+  f.fizyo = true;
+  return L("🩺 Fizyoterapi işe yaradı: {0} {1} hafta sonra dönüyor.", [fullName(f), f.sakat]);
 }

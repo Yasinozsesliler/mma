@@ -57,6 +57,7 @@ export function createGame(input: NewFighterInput, stats: Stats): GameState {
     baslangicYasi: input.yas,
     yas: input.yas,
     siklet: input.siklet,
+    dogalSiklet: input.siklet,
     gecmis: input.gecmis,
     hikaye: input.hikaye.trim(),
     gorunum: input.gorunum ? { ...input.gorunum, kadin: input.kadin || undefined, sakal: input.kadin ? 'yok' : input.gorunum.sakal } : input.gorunum,

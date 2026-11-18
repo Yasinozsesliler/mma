@@ -5,7 +5,7 @@ import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { cosmeticById } from '../engine/cosmetics';
 import { bonusAvailable, bonusChapter, currentChapter, dismissLegendIntro, inBonus, LEGEND_IDS, LEGENDS, legendMaxStars, legendName, legendStars, noteOpen, openNote, startBonus, unlockLegendRun, type Chapter, type LegendId, type LegendRun } from '../engine/legendRun';
-import { buy, LEGENDS_STORE, MONETIZATION, PURCHASES, restorePurchases, useOwned, usePremium, usePrice } from '../monetization';
+import { buyErrorText, buy, LEGENDS_STORE, MONETIZATION, PURCHASES, restorePurchases, useOwned, usePremium, usePrice } from '../monetization';
 import { BuyPremium } from './PremiumCard';
 import { LEGENDS_SKU, PREMIUM_SKU } from '../monetization/skus';
 import { AdOffer } from './AdOffer';
@@ -142,7 +142,7 @@ function LegendPackStore({ compact, lead }: { compact?: boolean; lead?: string }
     setMsg('');
     const r = await buy(LEGENDS_SKU);
     setBusy(false);
-    if (r === 'hata') setMsg(L("Satın alma şu an yapılamadı. Biraz sonra tekrar dene."));
+    if (r === 'hata') setMsg(buyErrorText());
   };
   return (
     <LinearGradient colors={['#2a1d05', '#100c04']} style={[st.pack, compact && { marginBottom: 0 }]}>

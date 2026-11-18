@@ -63,6 +63,8 @@ export type { Achievement, AchCategory, AchTier } from './achievements';
 /** Yeni kazanılan başarımları işler ve haber olarak duyurur. */
 export function checkAchievements(s: GameState, sessiz = false): string[] {
   s.basarimlar = s.basarimlar ?? [];
+  // Editörde istatistikleri düzenlenmiş kariyer başarım kazanmaz
+  if (s.editlendi) return [];
   const i = istat(s);
   i.maxPara = Math.max(i.maxPara, s.para);
   const yeni: string[] = [];

@@ -3,7 +3,7 @@
 // (afiş hariç), aynı türü üst üste paylaşmak ilgiyi düşürür, profesyonel çekim parayla etkiyi büyütür.
 import { L } from '../i18n';
 import { fullName } from './character';
-import { fmtDelta, fmtFollowers, followers, photoFollowers } from './fame';
+import { addFollowers, fmtDelta, fmtFollowers, followers, photoFollowers } from './fame';
 import { addHype } from './hype';
 import { petType } from './pets';
 import { itemById, owns } from './shop';
@@ -47,6 +47,8 @@ export interface PhotoPost {
   ek?: PhotoExtra;
   /** Başka bir dövüşçünün paylaşımıysa onun kimliği (şort rengi buna göre) */
   sahip?: string;
+  /** Ödüllü reklamla öne çıkarıldı (sponsorlu gönderi) */
+  oneCikan?: boolean;
 }
 
 export interface PhotoState {
@@ -214,6 +216,33 @@ export function photoExtra(s: GameState, k: PhotoKind, preview = false): PhotoEx
 }
 
 /** Fotoğrafı paylaş: takipçi, beğeni, yorumlar; gerekirse para (pro çekim) ve hype. */
+/** Öne çıkarılabilecek gönderi: bu hafta paylaşılan, ilgi görmüş son fotoğraf (her fotoğrafa bir kez). */
+export function boostTarget(s: GameState): PhotoPost | undefined {
+  const p = s.foto?.liste[0];
+  return p && p.hafta === s.hafta && p.delta > 0 && !p.oneCikan && !p.sahip ? p : undefined;
+}
+
+/** Öne çıkarmanın beklenen takipçi kazancı (fotoğrafın kendi kazancının yarısı kadar). */
+export const boostGain = (p: PhotoPost) => Math.max(10, Math.round(p.delta * 0.5));
+
+/** Ödüllü "öne çıkar": takipçi ve beğeni; popülerlik ya da istatistik vermez. */
+export function boostPhoto(s: GameState): string {
+  const p = boostTarget(s);
+  if (!p) return '';
+  const d = addFollowers(s, boostGain(p) * (0.85 + rand() * 0.3));
+  const ek = Math.round(p.begeni * 0.5);
+  const apply = (x: PhotoPost) => {
+    x.oneCikan = true;
+    x.delta += d;
+    x.begeni += ek;
+  };
+  apply(p);
+  const post = (s.sosyal ?? []).find((x) => x.foto?.id === p.id);
+  if (post?.foto && post.foto !== p) apply(post.foto);
+  if (post) post.begeni = (post.begeni ?? 0) + ek;
+  return L("🚀 Gönderin öne çıkarıldı: {0} takipçi · +{1} beğeni", [fmtDelta(d), fmtFollowers(ek)]);
+}
+
 export function sharePhoto(s: GameState, k: PhotoKind, opts: { caption?: string; filtre?: number; pro?: boolean } = {}): string {
   const lock = photoLock(s, k);
   if (lock) return lock;

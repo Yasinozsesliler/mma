@@ -171,7 +171,7 @@ export const cosmeticById = (id: string) => COSMETICS.find((x) => x.id === id);
 export function unlockCtx(saves: (GameState | null)[], daily: DailyStore): UnlockCtx {
   const c: UnlockCtx = { galibiyet: 0, ko: 0, sub: 0, kemer: 0, savunma: 0, hof: false, nesil: 1, gunlukSeri: daily.enIyiSeri ?? 0, intikam: false, ozel: [] };
   for (const s of saves) {
-    if (!s) continue;
+    if (!s || s.editlendi) continue;
     const pro = s.stage !== 'amator';
     if (pro) {
       c.galibiyet = Math.max(c.galibiyet, s.rekor.g);

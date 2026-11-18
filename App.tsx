@@ -1,5 +1,7 @@
 // Fontlar tek tek içe aktarılır: paket girişinden almak kullanılmayan tüm varyantları da pakete sokar (çevrimdışı indirme boyutu şişer).
 import { L, LANG } from './src/i18n';
+// Editör düzenlemeleri kayıtlar yüklenmeden önce uygulanır (organizasyon adları, UCC kadrosu)
+import './src/editor';
 import { Inter_400Regular } from '@expo-google-fonts/inter/400Regular';
 import { Inter_500Medium } from '@expo-google-fonts/inter/500Medium';
 import { Inter_600SemiBold } from '@expo-google-fonts/inter/600SemiBold';
@@ -39,7 +41,10 @@ import { DreamScreen } from './src/ui/DreamScreen';
 import { GhostScreen } from './src/ui/GhostScreen';
 import { RefereeScreen } from './src/ui/RefereeScreen';
 import { ManagerScreen } from './src/ui/ManagerScreen';
+import { PatronScreen } from './src/ui/PatronScreen';
+import { onModeRequest } from './src/modeNav';
 import { UniverseScreen } from './src/ui/UniverseScreen';
+import { EditorScreen } from './src/ui/EditorScreen';
 import { refreshEvren } from './src/universe';
 import { peekRun } from './src/managerStore';
 import { readGhostFromUrl } from './src/ghost';
@@ -145,7 +150,7 @@ const PHASE_LABELS: Record<Phase, string> = {
   memleket: L("Memleketim"),
 };
 
-type View_ = 'loading' | 'menu' | 'create' | 'game' | 'daily' | 'dream' | 'ghost' | 'referee' | 'manager' | 'locker' | 'season' | 'evren';
+type View_ = 'loading' | 'menu' | 'create' | 'game' | 'daily' | 'dream' | 'ghost' | 'referee' | 'manager' | 'patron' | 'locker' | 'season' | 'evren' | 'editor';
 
 installErrorLog();
 installImmersive();
@@ -338,10 +343,20 @@ export default function App() {
     initAnalytics(LANG);
     void initMonetization();
   }, []);
+  // Oyun içinden mod geçişi (kariyerdeki kişisel öneri kartı: Patron / Menajer / Efsane Yolları).
+  useEffect(
+    () =>
+      onModeRequest((v) => {
+        if (v === 'manager') track('manager_open', { kaynak: 'oneri' });
+        if (v === 'patron') track('patron_open', { kaynak: 'oneri' });
+        setView(v);
+      }),
+    [],
+  );
   // Android geri tuşu: oyundan ve karakter oluşturmadan menüye döner; menüdeyse uygulamadan çıkar.
   useEffect(() => {
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
-      if (view === 'game' || view === 'create' || view === 'daily' || view === 'dream' || view === 'ghost' || view === 'referee' || view === 'manager' || view === 'locker' || view === 'season' || view === 'evren') {
+      if (view === 'game' || view === 'create' || view === 'daily' || view === 'dream' || view === 'ghost' || view === 'referee' || view === 'manager' || view === 'patron' || view === 'locker' || view === 'season' || view === 'evren' || view === 'editor') {
         setView('menu');
         return true;
       }
@@ -423,9 +438,17 @@ export default function App() {
           track('manager_open');
           setView('manager');
         }}
+        onPatron={() => {
+          track('patron_open');
+          setView('patron');
+        }}
         onUniverse={() => {
           track('evren_open');
           setView('evren');
+        }}
+        onEditor={() => {
+          track('editor_open');
+          setView('editor');
         }}
         onImport={(x, g) => {
           void deleteGame(x).then(() => saveGame(g, x));
@@ -453,8 +476,22 @@ export default function App() {
     content = <RefereeScreen onExit={() => setView('menu')} />;
   } else if (view === 'manager') {
     content = <ManagerScreen onExit={() => setView('menu')} />;
+  } else if (view === 'patron') {
+    content = <PatronScreen onExit={() => setView('menu')} />;
   } else if (view === 'evren') {
     content = <UniverseScreen onExit={() => setView('menu')} />;
+  } else if (view === 'editor') {
+    content = (
+      <EditorScreen
+        saves={saves}
+        onSave={(x, g) => {
+          void saveGame(g, x);
+          putSave(x, g);
+          if (x === slot && game) setGameState(g);
+        }}
+        onExit={() => setView('menu')}
+      />
+    );
   } else if (view === 'season') {
     content = <SeasonScreen look={(saves[slot - 1] ?? game)?.fighter.gorunum} onExit={() => setView('menu')} />;
   } else if (view === 'create') {
@@ -612,7 +649,7 @@ export default function App() {
     }
   }
 
-  const topLabel = view === 'locker' ? L("Dolap") : view === 'daily' ? L("Günün Dövüşü") : view === 'dream' ? L("Hayalî Maçlar") : view === 'ghost' ? L("Hayalet Maç") : view === 'referee' ? L("Hakem Modu") : view === 'manager' ? L("Menajer Modu") : view === 'evren' ? L("YOL Evreni") : view === 'season' ? L("Sezon Kemeri") : view === 'create' ? L("Karakter Oluşturma") : view === 'game' && game ? PHASE_LABELS[game.phase] : null;
+  const topLabel = view === 'locker' ? L("Dolap") : view === 'daily' ? L("Günün Dövüşü") : view === 'dream' ? L("Hayalî Maçlar") : view === 'ghost' ? L("Hayalet Maç") : view === 'referee' ? L("Hakem Modu") : view === 'manager' ? L("Menajer Modu") : view === 'patron' ? L("Patron Modu") : view === 'evren' ? L("YOL Evreni") : view === 'editor' ? L("Editör") : view === 'season' ? L("Sezon Kemeri") : view === 'create' ? L("Karakter Oluşturma") : view === 'game' && game ? PHASE_LABELS[game.phase] : null;
 
   return (
     <SafeAreaProvider>

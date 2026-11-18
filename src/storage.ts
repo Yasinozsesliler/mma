@@ -1,4 +1,5 @@
 import { L } from './i18n';
+import { renameInState } from './engine/editor';
 import { ensureAlbum } from './engine/cards';
 import { ensureGoals } from './engine/goals';
 import { ensureEvent } from './engine/weeklyEvent';
@@ -153,6 +154,8 @@ export function parseSave(raw: string): GameState | null {
       st.maxPara = s.para;
     }
     checkAchievements(s, true);
+    // Editör: UCC yıldızlarının adları güncel kadroya çekilir
+    renameInState(s);
     ensureDivision(s);
     if (s.phase !== 'emeklilik') {
       ensureGoals(s);

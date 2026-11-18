@@ -648,7 +648,7 @@ function beginFight(s: GameState) {
     pAd: s.fighter.lakap || s.fighter.soyad,
     koseAdi: s.takim.antrenor,
     opp,
-    mods: { stats: mods, plan: k.plan ?? 'ayakta', planUyum: !!k.planUyum, oppStats: k.oppMods, kimlik: s.kimlik?.id, cutman: staffCutman(s), teknik: techLevels(s), imza: s.imza ? { id: s.imza.teknik, ad: s.imza.ad } : undefined, okunma: diffOf(s).okunma },
+    mods: { stats: mods, plan: k.plan ?? 'ayakta', planUyum: !!k.planUyum, oppStats: k.oppMods, kimlik: s.kimlik?.id, cutman: staffCutman(s), teknik: techLevels(s), imza: s.imza ? { id: s.imza.teknik, ad: s.imza.ad } : undefined, okunma: (diffOf(s).okunma ?? 1) * (s.sampiyon && s.zorluk !== 'kolay' ? 1.35 : 1) },
     maxRaunt: unvan || anaMac ? 5 : 3,
     unvanMaci: unvan,
     anaMac,
@@ -687,6 +687,23 @@ function planRivalMove(s: GameState): string | undefined {
 }
 
 type FaceResult = { anim: string; kazanan: 'p' | 'o' | null; baslik: string; metin: string; etkiler: string[] };
+
+/** Face-off sonrası rakibin kameraya söylediği söz: kim üstün çıktıysa ona göre. */
+const FACE_SOZ: Record<'p' | 'o' | 'n', ((o: string) => string)[]> = {
+  p: [
+    (o) => L("{0} geri çekilirken mırıldandı: “Cumartesi göreceğiz.”", [o]),
+    (o) => L("{0} kameraya döndü: “Bakışlar dövüşmez.”", [o]),
+    (o) => L("{0} sinirle omuz silkti, köşesine yürüdü.", [o]),
+    (o) => L("{0}: “Bu gece kazandın, cumartesi benim.”", [o]),
+  ],
+  o: [
+    (o) => L("{0} kameralara döndü: “Gördünüz mü, şimdiden korkuyor.”", [o]),
+    (o) => L("{0} giderken arkasından seslendi: “Cumartesi daha kötü olacak!”", [o]),
+    (o) => L("{0} el sallayıp güldü: “Tatlı rüyalar.”", [o]),
+    (o) => L("{0}: “Bu daha ısınma turu.”", [o]),
+  ],
+  n: [(o) => L("{0}: “Saygı var. Ama cumartesi kardeşlik yok.”", [o]), (o) => L("{0} başını salladı, iki taraf da sessizce ayrıldı.", [o]), (o) => L("{0}: “Güzel bir maç olacak. Kazanan ben olacağım.”", [o])],
+};
 
 function faceOff(s: GameState, key: string) {
   const k = s.pending.kamp!;
@@ -759,6 +776,7 @@ function faceOff(s: GameState, key: string) {
     r = { anim: 'handshake', kazanan: null, baslik: L("SAYGI"), metin: L("Tokalaştınız. Saygılı bir an. Kameralar bu kareyi sevdi."), etkiler: [L("Popülerlik +1")] };
   }
   const pre = hamle ? `${RIVAL_MOVES[hamle].metin(o.soyad)} ` : '';
+  r.metin += ' ' + pick(FACE_SOZ[r.kazanan ?? 'n'])(o.soyad);
   addHype(s, r.anim === 'brawl' ? 15 : r.kazanan === 'p' ? 6 : r.kazanan === 'o' ? 3 : 1, L("Face to face"));
   const ilk = k.yuzyuzeIlk;
   // İlk tur: kavga ya da tokalaşma olmadıysa rakip çoğu zaman karşılık verir, ikinci tur gelir

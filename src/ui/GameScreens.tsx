@@ -11,6 +11,8 @@ import { ageStage } from '../engine/body';
 import { unclaimedSets } from '../engine/cards';
 import { claimScout } from '../engine/rewards';
 import { RewardCard } from './RewardCard';
+import { DailyBox } from './DailyBox';
+import { PersonalOffer } from './PersonalOffer';
 import { CoachTip, type TipId } from './CoachTip';
 import { careerCard } from '../share/build';
 import { ShareButton } from '../share/ShareButton';
@@ -71,6 +73,7 @@ import { LeagueCard } from './LeagueCard';
 import { ChampionHourCard } from './ChampionHourCard';
 import { NotifyAsk } from './NotifyAsk';
 import { RecordChase } from './RecordsPanel';
+import { LegacyPath } from './LegacyPath';
 import { chooseTreatment, treatmentCostText, treatmentOptions } from '../engine/treatment';
 import { ContractTablePanel } from './ContractTablePanel';
 import { openTable } from '../engine/contractTable';
@@ -224,6 +227,8 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
         <>
           <CoachTip s={s} act={act} id="hub" />
           <RewardCard s={s} act={act} />
+          <DailyBox s={s} act={act} />
+          <PersonalOffer s={s} />
           <FatigueCard s={s} act={act} />
           {banned(s) ? (
             <Notice color={C.red} icon="cancel" action={<Button label={L("Cezanı çek (zamanı ilerlet)")} icon="timer-sand" tone="ghost" onPress={() => act((x) => { x.haberler.unshift(serveBan(x)); })} />}>
@@ -358,6 +363,7 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
           <ChampionHourCard />
           <LeagueCard s={s} compact />
           <RecordChase s={s} />
+          <LegacyPath s={s} />
           <FirstStepsCard s={s} act={act} />
           {featureOpen(s, 'etkinlik') ? <SpecialEventCard s={s} act={act} /> : null}
           {featureOpen(s, 'etkinlik') ? <EventCard s={s} act={act} /> : null}

@@ -76,9 +76,79 @@ const MOMENTS: Moment[] = [
       { metin: () => L("Kısa bir selam ver"), izleyici: [0, 10], sohbet: () => L("tatlıııı") },
     ],
   },
+  {
+    id: 'yenilgi',
+    kosul: (s) => s.gecmis[0]?.sonuc === 'M',
+    soru: () => L("Sohbet ikiye bölündü: “Son maçta ne oldu? Bitti mi bu iş?”"),
+    secenekler: [
+      { metin: () => L("Dürüstçe anlat, hataları kabul et"), izleyici: [10, 30], sohbet: () => L("saygı duydum, geri döneceksin 💪") },
+      { metin: () => L("Hakemi suçla"), izleyici: [15, 40], risk: 0.2, kriz: 'sahteHaber', sohbet: () => L("bahane bahane 🤡") },
+      { metin: () => L("“İzleyin ve görün” deyip konuyu kapat"), izleyici: [0, 15], sohbet: () => L("sessiz intikam modu 😤") },
+    ],
+  },
+  {
+    id: 'sampiyon',
+    kosul: (s) => !!s.sampiyon,
+    soru: () => L("Sohbet kemeri görmek istiyor: “KEMERİ GÖSTER! KEMERİ GÖSTER!”"),
+    secenekler: [
+      { metin: () => L("Kemeri kameraya tut"), izleyici: [25, 55], sohbet: () => L("ŞAMPİYOOON 🏆🏆") },
+      { metin: () => L("Kemeri hayranlarına adadığını söyle"), izleyici: [15, 35], bagis: 800, sohbet: () => L("bu kemer hepimizin ❤️") },
+    ],
+  },
+  {
+    id: 'maconcesi',
+    kosul: (s) => !!s.pending.rakip,
+    soru: (s) => L("Sohbetten: “{0} maçı için bir tahmin ver!”", [s.pending.rakip ? s.pending.rakip.soyad : L("sıradaki")]),
+    secenekler: [
+      { metin: () => L("Raunt ve yöntem söyle"), izleyici: [20, 45], risk: 0.1, kriz: 'kesilmisVideo', sohbet: () => L("ekran görüntüsü aldım, yalan çıkarsa yandın 📸") },
+      { metin: () => L("“Hazırlığımı konuşturacağım” de"), izleyici: [0, 15], sohbet: () => L("olgun cevap 👌") },
+    ],
+  },
+  {
+    id: 'ezeli',
+    kosul: (s) => !!s.ezeli && !s.ezeli.bitti,
+    soru: () => L("Ezeli rakibin sohbete yazdı: “Kamerada iyi görünüyorsun. Kafeste görüşürüz.”"),
+    secenekler: [
+      { metin: () => L("Canlı yayında meydan oku"), izleyici: [35, 70], risk: 0.2, kriz: 'taraftarBaskini', sohbet: () => L("BU NE YAAA 🍿🍿") },
+      { metin: () => L("Gülüp geç"), izleyici: [5, 20], sohbet: () => L("hiç takmadı 😎") },
+    ],
+  },
+  {
+    id: 'oyun',
+    soru: () => L("Sohbet istiyor: “Bir maç da oyun oynayalım!”"),
+    secenekler: [
+      { metin: () => L("Bir dövüş oyununa gir, kendini seç"), izleyici: [15, 40], sohbet: () => L("oyunda da kaybediyorsun hahaha 🎮") },
+      { metin: () => L("“Benim oyunum kafeste” de"), izleyici: [-5, 10], sohbet: () => L("havalı ama sıkıcı 😅") },
+    ],
+  },
+  {
+    id: 'bagisbuyuk',
+    kosul: (s) => s.stage === 'buyuk' || s.stage === 'ufc',
+    soru: () => L("💸 Anonim $5.000 bağış: “Yeni ayakkabılarını göster, sonra da bir dans!”"),
+    secenekler: [
+      { metin: () => L("Dans et"), izleyici: [30, 60], bagis: 5000, sohbet: () => L("bunu kimse silemez artık 😂🕺") },
+      { metin: () => L("Bağışı bir çocuk spor kulübüne yönlendir"), izleyici: [10, 30], sohbet: () => L("adam gibi adam 🙏") },
+    ],
+  },
+  {
+    id: 'soruCevap',
+    soru: () => L("Sohbetten: “Kariyerinin en zor anı hangisiydi?”"),
+    secenekler: [
+      { metin: () => L("İçten bir hikâye anlat"), izleyici: [15, 35], sohbet: () => L("tüylerim diken diken 🥺") },
+      { metin: () => L("“En zor anım bu yayın” diye şaka yap"), izleyici: [5, 25], sohbet: () => L("hahaha kral 😂") },
+    ],
+  },
+  {
+    id: 'internet',
+    soru: () => L("Yayın donup duruyor. Sohbet: “Kasıyorsun kral!”"),
+    secenekler: [
+      { metin: () => L("Modemi yeniden başlat, geri dön"), izleyici: [-20, -5], sohbet: () => L("geri geldi 🎉") },
+      { metin: () => L("Telefondan devam et"), izleyici: [-5, 10], sohbet: () => L("dikey mod efsane 📱") },
+    ],
+  },
 ];
 
-const CHAT = [L("selam kral 👋"), L("ne zaman maç var?"), L("🔥🔥🔥"), L("kemer geliyor"), L("bu adam efsane"), L("Türkiye'den selamlar"), L("GG"), L("rakibini yer bitirir"), L("hocam şınav rekorun kaç")];
+const CHAT = [L("selam kral 👋"), L("ne zaman maç var?"), L("🔥🔥🔥"), L("kemer geliyor"), L("bu adam efsane"), L("Türkiye'den selamlar"), L("GG"), L("rakibini yer bitirir"), L("hocam şınav rekorun kaç"), L("annem de izliyor selam"), L("gece 3, uyumuyorum senin yüzünden"), L("bir sonraki afişi bekliyoruz"), L("diyet ne yapıyorsun?"), L("kemere 3 maç kaldı"), L("izlemeye devam 👀")];
 
 export function startStream(s: GameState) {
   if (!canStream(s)) return;

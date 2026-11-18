@@ -157,6 +157,60 @@ const OZEL: Q[] = [
 /** Her basında sorulabilen genel sorular. */
 const GENEL: Q[] = [
   {
+    id: 'kamp',
+    soru: () => L("Kampın nasıl geçti? Bu maç için ne değiştirdin?"),
+    cevaplar: {
+      mutevazi: [L("“Her gün biraz daha iyi olmaya çalıştık. Gerisini kafeste göreceğiz.”"), L("“Ekibime güveniyorum. İşimizi yaptık.”")],
+      iddiali: [L("“Bu kampta onu üç kez yendim, sparringde. Cumartesi dördüncüsü.”"), L("“Hiç bu kadar hazır olmadım. Şanssızlığı onun.”")],
+      espri: [L("“Değişen tek şey diyetim. Özledim pideyi.”"), L("“Hocam bağırmaktan sesini kaybetti, demek ki iyi geçti.”")],
+    },
+  },
+  {
+    id: 'taraftar',
+    soru: () => L("Taraftarlarına bir mesajın var mı?"),
+    cevaplar: {
+      mutevazi: [L("“Her şey sizin için. İyi ki varsınız.”"), L("“Desteğinizi hissediyorum. Sizi mahcup etmeyeceğim.”")],
+      iddiali: [L("“Tribünleri doldurun, bir şov izleyeceksiniz.”"), L("“Bayramı şimdiden hazırlayın.”")],
+      espri: [L("“Bilet alanlar arkada oturmasın, önde daha çok kan var.”"), L("“Cumartesiden sonra hepinize çay benden.”")],
+    },
+  },
+  {
+    id: 'zayif',
+    soru: (ad) => L("{0} senin en zayıf yanını bulduğunu söylüyor. Ne diyeceksin?", [ad]),
+    cevaplar: {
+      mutevazi: [L("“Herkesin zayıf yanı vardır. Ben de kendiminkini çalıştım.”"), L("“Bulmuşsa iyi, ben de onunkini buldum.”")],
+      iddiali: [L("“Zayıf yanım mı? Onu bulmak için önce ayakta kalması lazım.”"), L("“Bulsun. Cumartesi aramaya vakti olmayacak.”")],
+      espri: [L("“Zayıf yanım tatlı. Kafeste tatlı yok, sorun yok.”"), L("“Bunu söylemesi bile bir zayıflık aslında.”")],
+    },
+  },
+  {
+    id: 'emeklilik',
+    soru: () => L("Ne zaman emekli olmayı düşünüyorsun?"),
+    cevaplar: {
+      mutevazi: [L("“Vücudum söyleyecek. Şimdilik dinliyor.”"), L("“Daha yolun başındayım gibi hissediyorum.”")],
+      iddiali: [L("“Bütün rekorları kırınca. Yani biraz daha var.”"), L("“Rakip kalmadığında. Takvimi ona göre ayarlayın.”")],
+      espri: [L("“Emeklilik maaşı yeterse yarın. Yetmiyor, devam.”"), L("“Torunum beni yenince.”")],
+    },
+  },
+  {
+    id: 'para',
+    soru: () => L("Bu maçtan ne kadar kazanacaksın?"),
+    cevaplar: {
+      mutevazi: [L("“Para önemli ama kemer daha önemli.”"), L("“Hak ettiğim kadar. Gerisi menajerin işi.”")],
+      iddiali: [L("“Yetmez. Bir sonrakinde iki katını isteyeceğim.”"), L("“Onun bütün kariyerinde kazandığından fazla.”")],
+      espri: [L("“Yeni bir araba alacak kadar. Park yeri bulamayacak kadar değil.”"), L("“Annem duyunca hemen fatura listesi yolladı.”")],
+    },
+  },
+  {
+    id: 'sosyal',
+    soru: (ad) => L("Sosyal medyada {0} ile atışmanız gündem oldu. Bu iş kafeste mi bitecek?", [ad]),
+    cevaplar: {
+      mutevazi: [L("“Sosyal medya bir şey, kafes başka. Ben kafese bakarım.”"), L("“Klavye arkasında herkes cesur. Cumartesi göreceğiz.”")],
+      iddiali: [L("“Paylaşımlarını silmesi için cumartesiye kadar vakti var.”"), L("“Yorumları kapatsın, maçtan sonra çok yorum gelecek.”")],
+      espri: [L("“Takipçi sayıma bakın, cevabım orada.”"), L("“Ona bir emoji yolladım: 🪦.”")],
+    },
+  },
+  {
     id: 'rakip',
     soru: (ad) => L("{0} hakkında ne düşünüyorsun?", [ad]),
     cevaplar: {
@@ -303,16 +357,16 @@ export function startPress(s: GameState) {
 }
 
 const TEPKI: Record<PressStyle, () => string> = {
-  mutevazi: () => oneOf([L("Salon saygıyla alkışladı. Hocan başını salladı."), L("Gazeteciler not aldı; olgun bir cevap."), L("Arka sıradan biri “İşte sporcu!” diye bağırdı."), L("Organizasyon yetkilisi memnun bir şekilde gülümsedi.")]),
-  iddiali: () => oneOf([L("Flaşlar patladı! Manşetler hazır; şimdi sözünü tutman gerek."), L("Salon uğuldadı. Bu söz yarın her yerde olacak."), L("Muhabirler ayağa kalktı; bu cümle manşet olur."), L("Hocan kaşlarını kaldırdı ama salon coştu.")]),
-  espri: () => oneOf([L("Salon kahkahaya boğuldu, klip şimdiden dolaşıyor."), L("Moderatör bile gülmeden duramadı."), L("Bu cevap kesin sosyal medyada caps olur."), L("Ön sıradaki gazeteciler kahkahadan not tutamadı.")]),
+  mutevazi: () => oneOf([L("Arka sıradaki eski bir şampiyon onaylarcasına başını salladı."), L("Sakin bir cevap. Tribünlerde saygılı bir alkış koptu."), L("Salon saygıyla alkışladı. Hocan başını salladı."), L("Gazeteciler not aldı; olgun bir cevap."), L("Arka sıradan biri “İşte sporcu!” diye bağırdı."), L("Organizasyon yetkilisi memnun bir şekilde gülümsedi.")]),
+  iddiali: () => oneOf([L("Moderatör mikrofonu almaya çalıştı ama geç kaldı."), L("Bahis siteleri oranları anında güncelledi."), L("Flaşlar patladı! Manşetler hazır; şimdi sözünü tutman gerek."), L("Salon uğuldadı. Bu söz yarın her yerde olacak."), L("Muhabirler ayağa kalktı; bu cümle manşet olur."), L("Hocan kaşlarını kaldırdı ama salon coştu.")]),
+  espri: () => oneOf([L("Rakibin köşesindeki hoca bile güldü, sonra kendini tuttu."), L("Bu cevap birkaç dakika içinde milyonlarca izlenmeye gidiyor."), L("Salon kahkahaya boğuldu, klip şimdiden dolaşıyor."), L("Moderatör bile gülmeden duramadı."), L("Bu cevap kesin sosyal medyada caps olur."), L("Ön sıradaki gazeteciler kahkahadan not tutamadı.")]),
 };
 
 /** Rakibin karşılığı: oyuncunun tonuna göre değişir. */
 const KARSILIK: Record<PressStyle, (o: string) => string[]> = {
-  mutevazi: (o) => [L("{0}: “Saygı güzel ama kafeste işe yaramaz.”", [o]), L("{0} başını salladı: “Ben de ona saygı duyuyorum. Cumartesiye kadar.”", [o]), L("{0} mikrofona eğildi: “Kibarlığı korkudan.”", [o]), L("{0} sessizce gülümsedi, cevap vermedi.", [o])],
-  iddiali: (o) => [L("{0}: “Bu sözleri cumartesi yutacak.”", [o]), L("{0} masaya vurdu: “Konuşmak kolay!”", [o]), L("{0}: “Böyle konuşanları çok uyuttum.”", [o]), L("{0} kahkaha attı: “Rüyasında kazanıyor.”", [o])],
-  espri: (o) => [L("{0} gülmedi: “Komedyen mi dövüşçü mü, karar versin.”", [o]), L("{0} bile gülümsedi, sonra toparlandı.", [o]), L("{0}: “Cumartesi gülmeyeceksin.”", [o]), L("{0} gözlerini devirdi: “Sahneye çıksın o zaman.”", [o])],
+  mutevazi: (o) => [L("{0}: “Böyle konuşan herkes kafeste başka biri olur.”", [o]), L("{0} yanındakine döndü: “Gördün mü, korkuyor.”", [o]), L("{0}: “Saygı güzel ama kafeste işe yaramaz.”", [o]), L("{0} başını salladı: “Ben de ona saygı duyuyorum. Cumartesiye kadar.”", [o]), L("{0} mikrofona eğildi: “Kibarlığı korkudan.”", [o]), L("{0} sessizce gülümsedi, cevap vermedi.", [o])],
+  iddiali: (o) => [L("{0} ayağa kalktı, güvenlik araya girdi.", [o]), L("{0}: “Bu cümleyi çerçeveletip duvarına as, son kez söylüyorsun.”", [o]), L("{0}: “Bu sözleri cumartesi yutacak.”", [o]), L("{0} masaya vurdu: “Konuşmak kolay!”", [o]), L("{0}: “Böyle konuşanları çok uyuttum.”", [o]), L("{0} kahkaha attı: “Rüyasında kazanıyor.”", [o])],
+  espri: (o) => [L("{0}: “Gülmek serbest, cumartesi ağlamak da.”", [o]), L("{0} kahkahayı bastıramadı, salon ikisine birden güldü.", [o]), L("{0} gülmedi: “Komedyen mi dövüşçü mü, karar versin.”", [o]), L("{0} bile gülümsedi, sonra toparlandı.", [o]), L("{0}: “Cumartesi gülmeyeceksin.”", [o]), L("{0} gözlerini devirdi: “Sahneye çıksın o zaman.”", [o])],
 };
 
 export function answerPress(s: GameState, st: PressStyle) {

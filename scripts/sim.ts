@@ -88,6 +88,7 @@ const BGS: Background[] = ['boks', 'muaythai', 'kickboks', 'gures', 'judo', 'bjj
 const N = Number(process.argv[2] ?? 300);
 setSeed(12345);
 
+const uccStat = { kemer: [] as number[], sav: [] as number[], siklet: [] as number[], toplamSav: [] as number[] };
 const stats = {
   careers: 0,
   fights: 0,
@@ -452,6 +453,13 @@ function playCareer() {
     }
     stats.followers.push(s.takipci ?? 0);
     if (s.unvanlar.some((u) => /^U[FC]C/.test(u))) stats.ufcChamp++;
+    {
+      const ub = (s.kemerler ?? []).filter((b) => b.org === 'ufc');
+      uccStat.kemer.push(ub.length);
+      uccStat.sav.push(ub.length ? Math.max(...ub.map((b) => b.savunma)) : 0);
+      uccStat.siklet.push(new Set(ub.map((b) => b.siklet)).size);
+      uccStat.toplamSav.push(ub.reduce((t, b) => t + b.savunma, 0));
+    }
     (s.hikayeler ?? []).forEach((h) => (stats.hikaye[h] = (stats.hikaye[h] ?? 0) + 1));
     stats.hikayeSayi.push((s.hikayeler ?? []).length);
     {
@@ -525,6 +533,7 @@ console.log(`Kariyer: ${stats.careers}, dövüş: ${stats.fights}, çökme: ${st
 console.log(`G/M/B: ${pct(stats.wins, stats.fights)} / ${pct(stats.losses, stats.fights)} / ${pct(stats.draws, stats.fights)}`);
 console.log('Yöntemler:', Object.entries(stats.methods).map(([k, v]) => `${k} ${pct(v, stats.fights)}`).join(', '));
 console.log(`Profesyonel: ${pct(stats.reachedPro, N)}, Büyük org: ${pct(stats.reachedBig, N)}, UFC: ${pct(stats.reachedUfc, N)}`);
+{ const av = (a: number[]) => (a.reduce((x, y) => x + y, 0) / Math.max(1, a.length)).toFixed(2); const ch = uccStat.kemer.map((k, i) => [k, i] as const).filter(([k]) => k > 0).map(([, i]) => i); console.log(`UCC kemer: kariyer başına ${av(uccStat.kemer)} · şampiyonlarda en uzun savunma ort. ${av(ch.map((i) => uccStat.sav[i]))} · toplam savunma ${av(ch.map((i) => uccStat.toplamSav[i]))} · sıklet sayısı ${av(ch.map((i) => uccStat.siklet[i]))}`); }
 console.log(`Herhangi bir kemer: ${pct(stats.anyTitle, N)}, UFC şampiyonu: ${pct(stats.ufcChamp, N)}`);
 const avg = stats.fightsToUfc.reduce((a, b) => a + b, 0) / Math.max(1, stats.fightsToUfc.length);
 console.log(`UFC'ye kadar ortalama dövüş: ${avg.toFixed(1)}`);

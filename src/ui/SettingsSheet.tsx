@@ -16,6 +16,7 @@ import { setLive, useLive } from '../livePref';
 import { adPrivacyRequired, showAdPrivacyOptions } from '../monetization';
 import { disableNotifications, enableNotifications, NOTIFY, useNotifyState } from '../notify';
 import { setLowPerf, useLowPerf } from '../perfPref';
+import { setLook, useLook } from '../lookPref';
 import { setQte, useQte } from '../qtePref';
 import { FeedbackRow, ImportCard } from './CareerTransfer';
 import { Icon, SLANT, type IconName } from './components';
@@ -77,6 +78,7 @@ export function SettingsSheet({ onClose, canImport, onImport }: { onClose: () =>
   const canli = useLive();
   const qte = useQte();
   const hafif = useLowPerf();
+  const gorunum = useLook();
   const bildirim = useNotifyState();
   const off = useOfflineStatus();
   const web = Platform.OS === 'web';
@@ -119,6 +121,10 @@ export function SettingsSheet({ onClose, canImport, onImport }: { onClose: () =>
                 );
               })}
             </View>
+
+            <Group title={L("GÖRÜNÜM")}>
+              <Row icon="palette" color={C.gold} title={L("Yeni görünüm")} sub={gorunum === 'yeni' ? L("Kartlı yeni ana menü · kapatınca klasik görünüme döner") : L("Klasik görünüm açık · yeni görünüme geçmek için dokun")} on={gorunum === 'yeni'} onPress={() => setLook(gorunum === 'yeni' ? 'klasik' : 'yeni')} last />
+            </Group>
 
             <Group title={L("SES VE TİTREŞİM")}>
               <Row icon={ses.muzik ? 'music' : 'music-off'} color="#c86bff" title={L("Müzik")} sub={L("Menü ve giriş müzikleri")} on={ses.muzik} onPress={() => setSoundSettings({ muzik: !ses.muzik })} />

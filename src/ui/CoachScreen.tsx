@@ -30,7 +30,7 @@ import { lookFor } from '../engine/tale';
 import type { Appearance, GameState } from '../engine/types';
 import { STAT_KEYS, STAT_LABELS } from '../engine/types';
 import { L, LOC } from '../i18n';
-import { buy, PURCHASES, restorePurchases, useOwned, usePrice } from '../monetization';
+import { buyErrorText, buy, PURCHASES, restorePurchases, useOwned, usePrice } from '../monetization';
 import { COACH_SKU, ULTIMATE_SKU } from '../monetization/skus';
 import { Bar, Button, CageBg, Card, Choice, Icon, SLANT, Screen, Section, type IconName } from './components';
 import { LookPicker } from './CreateScreen';
@@ -70,7 +70,7 @@ export function CoachPack({ lead }: { lead?: string }) {
           const r = await buy(COACH_SKU);
           setBusy(false);
           if (r === 'ok') sfx('fanfare');
-          else if (r === 'hata') setMsg(L("Satın alma şu an yapılamadı. Biraz sonra tekrar dene."));
+          else if (r === 'hata') setMsg(buyErrorText());
         }}
       />
       <Pressable onPress={async () => setMsg((await restorePurchases()) ? L("Satın alımların geri yüklendi.") : L("Bu hesapta satın alma bulunamadı."))} hitSlop={8} style={{ alignSelf: 'center', marginTop: 8 }}>

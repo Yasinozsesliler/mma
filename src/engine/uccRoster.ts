@@ -5,6 +5,8 @@ import { rand } from './rng';
 import type { Background, GameState, WeightClass } from './types';
 
 export interface Star {
+  /** Editör: orijinal isimden kalıcı kimlik (ad değişse de aynı kişi) */
+  key?: string;
   ad: string;
   soyad: string;
   lakap: string;
