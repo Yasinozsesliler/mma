@@ -10740,4 +10740,11 @@ export const FR: Record<string, string> = {
   "GÜREŞ": "GRAPPLING",
   "SENİN GÜCÜN": "TON NIVEAU",
   "SEÇİLİ": "CHOISI",
+  "ARANIZDA": "FACE-À-FACE",
+  "KARAR": "DÉCISION",
+  "KO/TKO": "KO/TKO",
+  "RAUNT": "ROUND",
+  "YAŞIN": "TON ÂGE",
+  "YÖNTEM": "MÉTHODE",
+  "{0} karşılaşma": "{0} affrontements",
 };

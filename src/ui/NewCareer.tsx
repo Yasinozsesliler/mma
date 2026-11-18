@@ -17,6 +17,13 @@ import { DEFAULT_LOOK } from './FighterAvatar';
 import { Figure, HIP_H, POSES, type Kit } from './rig';
 import { C, F } from './theme';
 
+/** Rozet için organizasyon kısaltması. Profesyonelken sözleşme boşta olsa bile asla "AMATÖR" yazmaz. */
+export function orgShort(s: GameState): string {
+  const id = currentOrg(s);
+  if (id === 'amator' && s.stage !== 'amator') return 'PRO';
+  return ORGS[id].kisa;
+}
+
 const shortMoney = (n: number) => (Math.abs(n) < 100_000 ? money(n) : `${n < 0 ? '-' : ''}$${fmtFollowers(Math.abs(n))}`);
 
 /** Ayakta duran tam boy dövüşçü. flip: sola bakar. */
@@ -55,7 +62,6 @@ export function CareerStage({ s, onSocial, fight }: { s: GameState; onSocial: ()
   const f = s.fighter;
   const amator = s.stage === 'amator';
   const r = amator ? s.amator : s.rekor;
-  const org = ORGS[currentOrg(s)];
   const posts = (s.sosyal ?? []).filter((p) => !p.foto && p.metin).slice(0, 2);
   const stats = [
     { ad: amator ? L("AMATÖR") : L("KARNE"), val: `${r.g}-${r.m}-${r.b}`, renk: C.text },
@@ -63,7 +69,7 @@ export function CareerStage({ s, onSocial, fight }: { s: GameState; onSocial: ()
     { ad: L("PARA"), val: shortMoney(s.para), renk: s.para < 0 ? '#ff4d5e' : C.green },
     { ad: L("TAKİPÇİ"), val: fmtFollowers(followers(s)), renk: C.gold },
   ];
-  const sub = s.sampiyon ? L("👑 ŞAMPİYON") : !amator && s.rank ? L("#{0} SIRALAMA", [s.rank]) : org.kisa;
+  const sub = s.sampiyon ? L("👑 ŞAMPİYON") : !amator && s.rank ? L("#{0} SIRALAMA", [s.rank]) : orgShort(s);
   return (
     <View style={k.wrap}>
       {/* Hafta şeridi */}
@@ -366,13 +372,12 @@ function cornerName(name: string, country?: string) {
 
 /** Gecenin kartı, yayın afişi gibi: organizasyon, "ANA KART", her maçta sıklet etiketi, bayraklar ve karneler. */
 export function PosterCard({ s, g, opp, rows, bitti, methodText }: { s: GameState; g: FightNight; opp: Opponent; rows: PosterRow[]; bitti: boolean; methodText: (b: NightBout) => string }) {
-  const org = ORGS[currentOrg(s)];
   const f = s.fighter;
   return (
     <LinearGradient colors={['#13254d', '#0a1430', '#050a18']} locations={[0, 0.45, 1]} style={p.wrap}>
       <CageBg opacity={0.05} />
       <View style={p.head}>
-        <Text style={p.org}>{org.kisa}</Text>
+        <Text style={p.org}>{orgShort(s)}</Text>
         <Text style={p.event} numberOfLines={1}>
           {g.ad.toLocaleUpperCase(LOC)}
         </Text>

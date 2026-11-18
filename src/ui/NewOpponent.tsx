@@ -5,8 +5,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { pickOpponent, rejectImposed } from '../engine/career';
-import { currentOrg, statAverage } from '../engine/character';
-import { BACKGROUNDS, ORGS, WEIGHT_CLASSES } from '../engine/data';
+import { statAverage } from '../engine/character';
+import { BACKGROUNDS, WEIGHT_CLASSES } from '../engine/data';
 import { HABITS } from '../engine/habits';
 import { describeOpponent, oppRecord } from '../engine/opponents';
 import { lookFor, physique } from '../engine/tale';
@@ -17,7 +17,7 @@ import { CoachTip } from './CoachTip';
 import { Compare } from './Compare';
 import { Button, Icon, Screen, SLANT, upName } from './components';
 import type { Act } from './GameScreens';
-import { flagOf, Standing } from './NewCareer';
+import { flagOf, orgShort, Standing } from './NewCareer';
 import type { Kit } from './rig';
 import { C, F } from './theme';
 
@@ -111,7 +111,6 @@ export function NewOpponentScreen({ s, act }: { s: GameState; act: Act }) {
   const [i, setI] = useState(imposed ? 0 : Math.min(1, list.length - 1));
   const [ti, setTi] = useState(0);
   const o = list[i] ?? list[0];
-  const org = ORGS[currentOrg(s)];
   const f = s.fighter;
   const myOvr = Math.round(statAverage(f.stats));
   const ph = physique(o.id, f.siklet);
@@ -155,7 +154,7 @@ export function NewOpponentScreen({ s, act }: { s: GameState; act: Act }) {
             {title}
           </Text>
           <View style={n.chips}>
-            <Text style={n.org}>{org.kisa}</Text>
+            <Text style={n.org}>{orgShort(s)}</Text>
             <View style={n.chip}>
               <Text style={n.chipLabel}>{L("SIKLET")}</Text>
               <Text style={n.chipVal}>{WEIGHT_CLASSES[f.siklet].ad.toLocaleUpperCase(LOC)}</Text>
@@ -194,7 +193,7 @@ export function NewOpponentScreen({ s, act }: { s: GameState; act: Act }) {
         {o.champion ? (
           <View style={n.belt}>
             <View style={n.beltPlate}>
-              <Text style={n.beltText}>{org.kisa}</Text>
+              <Text style={n.beltText}>{orgShort(s)}</Text>
             </View>
           </View>
         ) : null}

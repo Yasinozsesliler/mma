@@ -10786,4 +10786,11 @@ export const RU: Record<string, string> = {
   "GÜREŞ": "БОРЬБА",
   "SENİN GÜCÜN": "ТВОЯ СИЛА",
   "SEÇİLİ": "ВЫБРАН",
+  "ARANIZDA": "ЛИЧНЫЕ ВСТРЕЧИ",
+  "KARAR": "РЕШЕНИЕ",
+  "KO/TKO": "КО/ТКО",
+  "RAUNT": "РАУНД",
+  "YAŞIN": "ТВОЙ ВОЗРАСТ",
+  "YÖNTEM": "СПОСОБ",
+  "{0} karşılaşma": "встреч: {0}",
 };

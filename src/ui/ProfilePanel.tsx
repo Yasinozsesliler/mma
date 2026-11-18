@@ -17,6 +17,8 @@ import type { GameState } from '../engine/types';
 import { BeltShowcase } from './BeltShowcase';
 import { Card, Icon, OctIcon, Section, SLANT, type IconName } from './components';
 import { FightHistoryPanel } from './FightHistoryPanel';
+import { NewHistory } from './NewHistory';
+import { useLook } from '../lookPref';
 import { StatusPanel } from './StatusPanel';
 import { PetBadge } from './PetPanel';
 import { ItemArt } from './ItemArt';
@@ -118,12 +120,13 @@ function Showcase({ s, act, earned }: { s: GameState; act: Act; earned: number }
 }
 
 function CareerTab({ s }: { s: GameState }) {
+  const yeni = useLook() === 'yeni';
   return (
     <>
       <NemesisCard s={s} />
       <StoryJournal s={s} />
       <TimelinePanel s={s} />
-      <FightHistoryPanel s={s} />
+      {yeni ? <NewHistory s={s} /> : <FightHistoryPanel s={s} />}
     </>
   );
 }
