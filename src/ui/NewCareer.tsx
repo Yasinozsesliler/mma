@@ -2,7 +2,7 @@
 // Yalnızca görünüm: oyun durumu okunur, hiçbir şey değiştirilmez. Dokunuşlar mevcut eylemleri çağırır.
 import { LinearGradient } from 'expo-linear-gradient';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import Svg, { ClipPath, Defs, Ellipse, G, LinearGradient as SvgLinear, Polygon, Stop } from 'react-native-svg';
+import Svg, { Ellipse, G } from 'react-native-svg';
 import { playerKit, useCosmetics } from '../cosmetics';
 import { money } from '../engine/career';
 import { currentOrg, statAverage } from '../engine/character';
@@ -160,117 +160,104 @@ export function CareerStage({ s, onSocial, fight }: { s: GameState; onSocial: ()
   );
 }
 
-/** Maç öncesi VS sahnesi: çapraz bölünmüş köşeler, isim levhaları ve "tale of the tape". */
+/** Maç öncesi VS sahnesi: iki köşede tam boy dövüşçüler, ortada "tale of the tape" sütunu, altta büyük isimler. */
 export function VsStage({ s, g, opp, w }: { s: GameState; g: FightNight; opp: Opponent; w: number }) {
   useCosmetics();
   const f = s.fighter;
-  const H = 330;
+  const H = 400;
+  const colW = Math.min(126, Math.round(w * 0.35));
   const pp = playerPhysique(f);
   const op = physique(opp.id, f.siklet);
   const oYas = 22 + (opp.id.charCodeAt(0) % 14);
   const pPow = Math.round(statAverage(f.stats));
   const oPow = Math.round(statAverage(opp.stats));
-  const rows: [string, string, string, number, number][] = [
-    [L("REKOR"), `${s.rekor.g}-${s.rekor.m}-${s.rekor.b}`, `${opp.rekor.g}-${opp.rekor.m}-${opp.rekor.b}`, s.rekor.g, opp.rekor.g],
-    [L("YAŞ"), `${f.yas}`, `${oYas}`, f.yas, oYas],
-    [L('BOY'), `${pp.boy} cm`, `${op.boy} cm`, pp.boy, op.boy],
-    [L("UZANMA"), `${pp.uzanma} cm`, `${op.uzanma} cm`, pp.uzanma, op.uzanma],
-    [L("GÜÇ"), `${pPow}`, `${oPow}`, pPow, oPow],
+  // Amatörken amatör karne, profesyonelken profesyonel karne
+  const rec = s.stage === 'amator' ? s.amator : s.rekor;
+  /** [etiket, sol, sağ, sol sayı, sağ sayı, üstünlük vurgulansın mı] */
+  const rows: [string, string, string, number, number, boolean][] = [
+    [L("YAŞ"), `${f.yas}`, `${oYas}`, f.yas, oYas, false],
+    [L('BOY'), `${pp.boy}`, `${op.boy}`, pp.boy, op.boy, true],
+    [L("UZANMA"), `${pp.uzanma}`, `${op.uzanma}`, pp.uzanma, op.uzanma, true],
+    [L("KARNE"), `${rec.g}-${rec.m}`, `${opp.rekor.g}-${opp.rekor.m}`, rec.g - rec.m, opp.rekor.g - opp.rekor.m, true],
+    [L("GÜÇ"), `${pPow}`, `${oPow}`, pPow, oPow, true],
   ];
   const rounds = s.pending.dovus?.maxRaunt;
   const oKit: Kit = { shorts: '#1c4fc4', trim: '#f1f2f5', glove: '#1c4fc4' };
-  const fh = 250;
+  const split = (n: string) => {
+    const p = n.trim().split(/\s+/);
+    return p.length > 1 ? [p.slice(0, -1).join(' '), p[p.length - 1]] : ['', n];
+  };
+  const [pa, pb] = split(upName(`${f.ad} ${f.soyad}`, f.uyruk));
+  const [oa, ob] = split(upName(`${opp.ad} ${opp.soyad}`, opp.uyruk));
+  const fh = 290;
   return (
     <View style={{ marginBottom: 12 }}>
-      <View style={v.top}>
-        <View style={{ flex: 1 }}>
-          <Text style={v.kicker} numberOfLines={1}>
-            {SLOT_LABEL[g.konum]} · {WEIGHT_CLASSES[f.siklet].ad.toLocaleUpperCase(LOC)}
-          </Text>
-          <Text style={v.title} numberOfLines={1} adjustsFontSizeToFit>
-            {opp.champion ? L("ÜNVAN MAÇI") : g.ad.toLocaleUpperCase(LOC)}
-          </Text>
-        </View>
-        {rounds ? <Text style={[v.rounds, SLANT]}>{L("{0} RAUNT", [rounds])}</Text> : null}
-      </View>
-
-      <View style={{ height: H, width: w, overflow: 'hidden', borderRadius: 4 }}>
-        <Svg width={w} height={H} style={StyleSheet.absoluteFill}>
-          <Defs>
-            <SvgLinear id="vsRed" x1="0" y1="0" x2="1" y2="1">
-              <Stop offset="0" stopColor="#c1121f" />
-              <Stop offset="0.55" stopColor="#6a0812" />
-              <Stop offset="1" stopColor="#1a0306" />
-            </SvgLinear>
-            <SvgLinear id="vsBlue" x1="1" y1="0" x2="0" y2="1">
-              <Stop offset="0" stopColor="#1c4fc4" />
-              <Stop offset="0.55" stopColor="#0d2257" />
-              <Stop offset="1" stopColor="#050a1a" />
-            </SvgLinear>
-            <ClipPath id="vsL">
-              <Polygon points={`0,0 ${w * 0.64},0 ${w * 0.36},${H} 0,${H}`} />
-            </ClipPath>
-          </Defs>
-          <Polygon points={`${w * 0.64},0 ${w},0 ${w},${H} ${w * 0.36},${H}`} fill="url(#vsBlue)" />
-          <Polygon points={`0,0 ${w * 0.64},0 ${w * 0.36},${H} 0,${H}`} fill="url(#vsRed)" />
-          <Polygon points={`${w * 0.63},0 ${w * 0.655},0 ${w * 0.37},${H} ${w * 0.345},${H}`} fill="#f1f2f5" />
-        </Svg>
-        <View style={{ position: 'absolute', right: -w * 0.1, bottom: -6 }} pointerEvents="none">
-          <Standing look={lookFor(opp)} kit={oKit} h={fh} flip />
-        </View>
-        <View style={{ position: 'absolute', left: -w * 0.1, bottom: -6 }} pointerEvents="none">
+      <View style={[v.stage, { height: H }]}>
+        {/* Arena: kalabalık karanlığı, kafes deseni, iki köşe ışığı */}
+        <LinearGradient colors={['#14161c', '#0a0b0f', '#040405']} locations={[0, 0.6, 1]} style={StyleSheet.absoluteFill} />
+        <CageBg opacity={0.08} />
+        <LinearGradient colors={['rgba(193,18,31,0.35)', 'rgba(193,18,31,0)']} start={{ x: 0, y: 0.5 }} end={{ x: 0.45, y: 0.5 }} style={StyleSheet.absoluteFill} />
+        <LinearGradient colors={['rgba(28,79,196,0)', 'rgba(28,79,196,0.35)']} start={{ x: 0.55, y: 0.5 }} end={{ x: 1, y: 0.5 }} style={StyleSheet.absoluteFill} />
+        <View style={{ position: 'absolute', left: -w * 0.24, bottom: 18 }} pointerEvents="none">
           <Standing look={f.gorunum ?? DEFAULT_LOOK} kit={playerKit()} h={fh} />
         </View>
-        <View style={v.vsWrap} pointerEvents="none">
-          <Text style={v.vs}>VS</Text>
+        <View style={{ position: 'absolute', right: -w * 0.24, bottom: 18 }} pointerEvents="none">
+          <Standing look={lookFor(opp)} kit={oKit} h={fh} flip />
         </View>
-        <View style={[v.plate, { left: 0, bottom: 12, paddingRight: 18 }]}>
-          <Text style={[v.plateKicker, { color: '#c1121f' }]} numberOfLines={1}>
-            {f.lakap ? `“${f.lakap.toLocaleUpperCase(LOC)}” · ` : ''}
-            {f.uyruk.toLocaleUpperCase(LOC)}
+        <LinearGradient colors={['transparent', 'rgba(4,4,5,0.92)']} locations={[0.62, 1]} style={StyleSheet.absoluteFill} pointerEvents="none" />
+
+        {/* Orta sütun */}
+        <View style={[v.col, { width: colW, left: (w - colW) / 2 }]}>
+          <Text style={v.org}>{orgShort(s)}</Text>
+          <Text style={v.weight} numberOfLines={1} adjustsFontSizeToFit>
+            {WEIGHT_CLASSES[f.siklet].ad.toLocaleUpperCase(LOC)}
           </Text>
-          <Text style={v.plateName} numberOfLines={1}>
-            {upName(`${f.ad} ${f.soyad}`, f.uyruk)}
+          {opp.champion || g.konum === 'anaMac' ? <Text style={v.tag}>{opp.champion ? L("ÜNVAN MAÇI") : SLOT_LABEL[g.konum]}</Text> : null}
+          {rows.map(([ad, a, b, x, y, hl]) => {
+            const left = hl && x > y;
+            const right = hl && y > x;
+            return (
+              <View key={ad} style={v.row}>
+                <Text style={[v.val, left && v.valMe]}>{a}</Text>
+                <Text style={v.label} numberOfLines={1}>
+                  {ad}
+                </Text>
+                <Text style={[v.val, right && v.valOpp]}>{b}</Text>
+              </View>
+            );
+          })}
+          {rounds ? <Text style={v.rounds}>{L("{0} RAUNT", [rounds])}</Text> : null}
+        </View>
+
+        {/* İsimler */}
+        <View style={[v.name, { left: 10, maxWidth: (w - colW) / 2 + 14 }]}>
+          {pa ? <Text style={v.nameTop} numberOfLines={1}>{pa}</Text> : null}
+          <Text style={v.nameBig} numberOfLines={1} adjustsFontSizeToFit>
+            {pb}
+          </Text>
+          <Text style={[v.nameSub, { color: '#ff6b6b' }]} numberOfLines={1}>
+            {flagOf(f.uyruk)} {f.lakap ? `“${f.lakap.toLocaleUpperCase(LOC)}”` : ''}
           </Text>
         </View>
-        <View style={[v.plate, { right: 0, top: 12, alignItems: 'flex-end', paddingLeft: 18 }]}>
-          <Text style={[v.plateKicker, { color: '#1c4fc4' }]} numberOfLines={1}>
-            {opp.champion ? `${L("ŞAMPİYON")} · ` : ''}
-            {opp.uyruk.toLocaleUpperCase(LOC)}
+        <View style={[v.name, { right: 10, alignItems: 'flex-end', maxWidth: (w - colW) / 2 + 14 }]}>
+          {oa ? <Text style={[v.nameTop, { textAlign: 'right' }]} numberOfLines={1}>{oa}</Text> : null}
+          <Text style={[v.nameBig, { textAlign: 'right' }]} numberOfLines={1} adjustsFontSizeToFit>
+            {ob}
           </Text>
-          <Text style={v.plateName} numberOfLines={1}>
-            {upName(`${opp.ad} ${opp.soyad}`, opp.uyruk)}
+          <Text style={[v.nameSub, { color: '#7fa8ff', textAlign: 'right' }]} numberOfLines={1}>
+            {opp.champion ? `👑 ${L("ŞAMPİYON")} ` : ''}
+            {flagOf(opp.uyruk)}
           </Text>
         </View>
       </View>
-
-      <View style={{ paddingTop: 12, gap: 7 }}>
-        {rows.map(([ad, a, b, x, y]) => {
-          const m = Math.max(x, y) || 1;
-          return (
-            <View key={ad} style={v.row}>
-              <Text style={[v.val, { color: x >= y ? C.text : C.dim }]}>{a}</Text>
-              <View style={{ flex: 1, alignItems: 'center', gap: 4 }}>
-                <Text style={v.label}>{ad}</Text>
-                <View style={{ flexDirection: 'row', gap: 3, height: 5, alignSelf: 'stretch' }}>
-                  <View style={{ flex: 1, backgroundColor: '#14161a', alignItems: 'flex-end' }}>
-                    <View style={{ width: `${Math.round((x / m) * 100)}%`, height: 5, backgroundColor: C.red }} />
-                  </View>
-                  <View style={{ flex: 1, backgroundColor: '#14161a' }}>
-                    <View style={{ width: `${Math.round((y / m) * 100)}%`, height: 5, backgroundColor: C.blue }} />
-                  </View>
-                </View>
-              </View>
-              <Text style={[v.val, { textAlign: 'right', color: y >= x ? C.text : C.dim }]}>{b}</Text>
-            </View>
-          );
-        })}
-        <View style={v.meta}>
-          {g.sehir ? <Text style={v.metaText}>{g.sehir}</Text> : null}
-          <Text style={v.metaText}>
-            {L("Seyirci")}: <Text style={{ color: C.text, fontFamily: F.bold }}>{g.seyirci.toLocaleString(LOC)}</Text>
-          </Text>
-        </View>
+      <View style={v.meta}>
+        <Text style={v.metaText} numberOfLines={1}>
+          {g.ad.toLocaleUpperCase(LOC)} · {SLOT_LABEL[g.konum]}
+        </Text>
+        <Text style={v.metaText}>
+          {g.sehir ? `${g.sehir} · ` : ''}
+          {L("Seyirci")}: <Text style={{ color: C.text, fontFamily: F.bold }}>{g.seyirci.toLocaleString(LOC)}</Text>
+        </Text>
       </View>
     </View>
   );
@@ -305,20 +292,23 @@ const k = StyleSheet.create({
 });
 
 const v = StyleSheet.create({
-  top: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingBottom: 10 },
-  kicker: { color: C.gold, fontFamily: F.black, fontSize: 10, letterSpacing: 2 },
-  title: { color: C.text, fontFamily: F.display, fontSize: 18, letterSpacing: 1 },
-  rounds: { backgroundColor: C.red, color: '#fff', fontFamily: F.display, fontSize: 12, letterSpacing: 1.5, paddingHorizontal: 9, paddingVertical: 5, overflow: 'hidden' },
-  vsWrap: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center' },
-  vs: { color: C.text, fontFamily: F.display, fontSize: 84, lineHeight: 96, fontStyle: 'italic', letterSpacing: -2, textShadowColor: '#040405', textShadowOffset: { width: 0, height: 4 }, textShadowRadius: 0 },
-  plate: { position: 'absolute', backgroundColor: C.text, paddingHorizontal: 14, paddingVertical: 7, maxWidth: '62%' },
-  plateKicker: { fontFamily: F.black, fontSize: 9.5, letterSpacing: 1.5 },
-  plateName: { color: '#040405', fontFamily: F.display, fontSize: 21, lineHeight: 25, letterSpacing: 0.5 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  val: { width: 72, color: C.text, fontFamily: F.display, fontSize: 16 },
-  label: { color: '#8b919c', fontFamily: F.bold, fontSize: 10, letterSpacing: 1.5 },
-  meta: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 },
-  metaText: { color: C.dim, fontFamily: F.body, fontSize: 11.5 },
+  stage: { borderRadius: 4, overflow: 'hidden', borderWidth: 1, borderColor: '#1c1f25' },
+  col: { position: 'absolute', top: 10, bottom: 92, backgroundColor: 'rgba(16,20,34,0.82)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', alignItems: 'stretch', paddingHorizontal: 4, paddingTop: 8, gap: 6 },
+  org: { alignSelf: 'center', backgroundColor: C.red, color: '#fff', fontFamily: F.display, fontSize: 18, letterSpacing: 1, paddingHorizontal: 10, paddingVertical: 2, overflow: 'hidden' },
+  weight: { color: C.text, fontFamily: F.display, fontSize: 14, letterSpacing: 1, textAlign: 'center' },
+  tag: { alignSelf: 'center', color: C.gold, fontFamily: F.black, fontSize: 8.5, letterSpacing: 1.2, textAlign: 'center' },
+  row: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.06)', paddingVertical: 4, paddingHorizontal: 2, gap: 2 },
+  val: { minWidth: 27, color: C.text, fontFamily: F.display, fontSize: 13, textAlign: 'center', paddingHorizontal: 2, overflow: 'hidden' },
+  valMe: { backgroundColor: C.text, color: '#040405' },
+  valOpp: { backgroundColor: C.red, color: '#fff' },
+  label: { flex: 1, color: '#c3c8d1', fontFamily: F.black, fontSize: 7.5, letterSpacing: 0.2, textAlign: 'center' },
+  rounds: { alignSelf: 'center', color: '#8b919c', fontFamily: F.black, fontSize: 9, letterSpacing: 1.5, marginTop: 2 },
+  name: { position: 'absolute', bottom: 10 },
+  nameTop: { color: '#e4e6eb', fontFamily: F.display, fontSize: 15, letterSpacing: 1, textShadowColor: '#000', textShadowRadius: 6 },
+  nameBig: { color: '#fff', fontFamily: F.display, fontSize: 30, lineHeight: 33, letterSpacing: 0.5, textShadowColor: '#000', textShadowRadius: 8 },
+  nameSub: { fontFamily: F.black, fontSize: 10, letterSpacing: 1.2 },
+  meta: { flexDirection: 'row', justifyContent: 'space-between', gap: 10, marginTop: 8 },
+  metaText: { flexShrink: 1, color: C.dim, fontFamily: F.body, fontSize: 11.5 },
 });
 
 // ---------- Afiş düzeninde gecenin kartı ----------
