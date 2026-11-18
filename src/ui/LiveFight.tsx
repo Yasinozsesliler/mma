@@ -20,6 +20,7 @@ import { DEFAULT_LOOK } from './FighterAvatar';
 import { Figure, HIP_H, lerpPose, POSES, type Pose, type PoseName } from './rig';
 import { C, F } from './theme';
 import { Icon, type IconName } from './components';
+import { BroadcastScore } from './NewFight';
 import { useLook } from '../lookPref';
 
 type Actor = 'p' | 'o';
@@ -648,58 +649,21 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel, band }: { fs: FightSt
         </Pressable>
         {/* Skor tablosu */}
         {yeni ? (
-          <View style={sb2.wrap}>
-            <View style={sb2.bar}>
-              <View style={sb2.side}>
-                <View style={[sb2.rank, { backgroundColor: C.red }]}>
-                  <Text style={sb2.rankText}>{band?.pRank || '–'}</Text>
-                </View>
-                <View style={{ flex: 1, minWidth: 0 }}>
-                  <Text style={sb2.name} numberOfLines={1}>
-                    {fs.pAd.toLocaleUpperCase(LOC)}
-                  </Text>
-                  <View style={sb2.hpTrack}>
-                    <View style={{ width: `${Math.max(0, frame.pHp)}%`, height: '100%', backgroundColor: frame.pHp < 35 ? C.orange : C.red }} />
-                  </View>
-                  <View style={sb2.staTrack}>
-                    <View style={{ width: `${Math.max(0, frame.pSta)}%`, height: '100%', backgroundColor: C.gold }} />
-                  </View>
-                </View>
-              </View>
-              <View style={sb2.mid}>
-                <Text style={sb2.org} numberOfLines={1}>
-                  {band?.org ?? ''}
-                </Text>
-                <Text style={sb2.time}>{Math.floor(left / 60000)}:{String(Math.ceil((left % 60000) / 1000) % 60).padStart(2, '0')}</Text>
-                <View style={sb2.round}>
-                  <Text style={sb2.roundText}>R{fs.raunt}</Text>
-                </View>
-              </View>
-              <View style={[sb2.side, { flexDirection: 'row-reverse' }]}>
-                <View style={[sb2.rank, { backgroundColor: C.blue }]}>
-                  <Text style={sb2.rankText}>{band?.oRank || '–'}</Text>
-                </View>
-                <View style={{ flex: 1, minWidth: 0, alignItems: 'flex-end' }}>
-                  <Text style={[sb2.name, { textAlign: 'right' }]} numberOfLines={1}>
-                    {fs.oAd.toLocaleUpperCase(LOC)}
-                  </Text>
-                  <View style={[sb2.hpTrack, { alignItems: 'flex-end' }]}>
-                    <View style={{ width: `${Math.max(0, frame.oHp)}%`, height: '100%', backgroundColor: frame.oHp < 35 ? C.orange : C.blue }} />
-                  </View>
-                  <View style={[sb2.staTrack, { alignItems: 'flex-end' }]}>
-                    <View style={{ width: `${Math.max(0, frame.oSta)}%`, height: '100%', backgroundColor: C.gold }} />
-                  </View>
-                </View>
-              </View>
-            </View>
-            {band?.caption ? (
-              <View style={sb2.capWrap}>
-                <Text style={sb2.cap} numberOfLines={1}>
-                  {band.caption} · {fs.raunt}/{fs.maxRaunt}
-                </Text>
-              </View>
-            ) : null}
-          </View>
+          <BroadcastScore
+            pName={fs.pAd}
+            oName={fs.oAd}
+            pHp={frame.pHp}
+            oHp={frame.oHp}
+            pSta={frame.pSta}
+            oSta={frame.oSta}
+            org={band?.org ?? ''}
+            time={`${Math.floor(left / 60000)}:${String(Math.ceil((left % 60000) / 1000) % 60).padStart(2, '0')}`}
+            round={`R${fs.raunt}`}
+            caption={band?.caption ? `${band.caption} · ${fs.raunt}/${fs.maxRaunt}` : undefined}
+            pRank={band?.pRank}
+            oRank={band?.oRank}
+            style={{ marginRight: 38 }}
+          />
         ) : (
         <View style={lf.hud}>
           <View style={{ flex: 1 }}>
@@ -970,23 +934,6 @@ const rb = StyleSheet.create({
   now: { position: 'absolute', top: 40, width: 120, textAlign: 'center', color: C.gold, fontFamily: F.display, fontSize: 14, letterSpacing: 1.5, textShadowColor: '#000', textShadowRadius: 6 },
 });
 
-const sb2 = StyleSheet.create({
-  wrap: { marginRight: 38, alignItems: 'stretch' },
-  bar: { flexDirection: 'row', alignItems: 'stretch', height: 44, backgroundColor: 'rgba(10,11,14,0.94)', borderWidth: 1, borderColor: '#23262d', borderRadius: 3, overflow: 'hidden' },
-  side: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 4, minWidth: 0 },
-  rank: { width: 20, height: 20, borderRadius: 2, alignItems: 'center', justifyContent: 'center' },
-  rankText: { color: '#fff', fontFamily: F.black, fontSize: 10 },
-  name: { color: '#f1f2f5', fontFamily: F.display, fontSize: 12.5, letterSpacing: 0.3, lineHeight: 16 },
-  hpTrack: { alignSelf: 'stretch', height: 4, backgroundColor: '#ffffff14', marginTop: 2, overflow: 'hidden' },
-  staTrack: { alignSelf: 'stretch', height: 2, backgroundColor: '#ffffff0f', marginTop: 2, overflow: 'hidden' },
-  mid: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 6, backgroundColor: '#000', borderLeftWidth: 1, borderRightWidth: 1, borderColor: '#23262d' },
-  org: { color: '#fff', fontFamily: F.display, fontSize: 13, fontStyle: 'italic', letterSpacing: 0.5, maxWidth: 58 },
-  time: { color: '#fff', fontFamily: F.display, fontSize: 19, letterSpacing: 0.5 },
-  round: { borderWidth: 1, borderColor: '#5b6170', borderRadius: 2, paddingHorizontal: 3, paddingVertical: 0 },
-  roundText: { color: '#c3c8d1', fontFamily: F.black, fontSize: 9.5 },
-  capWrap: { alignSelf: 'center', backgroundColor: 'rgba(10,11,14,0.9)', borderWidth: 1, borderTopWidth: 0, borderColor: '#23262d', paddingHorizontal: 10, paddingVertical: 3, borderBottomLeftRadius: 3, borderBottomRightRadius: 3 },
-  cap: { color: '#e4e6eb', fontFamily: F.black, fontSize: 9, letterSpacing: 1.4 },
-});
 
 const np = StyleSheet.create({
   btn: { flex: 1, borderWidth: 1.2, borderRadius: 6, backgroundColor: '#0b0c0f', overflow: 'hidden', transform: [{ skewX: '-8deg' }], shadowOffset: { width: 0, height: 0 } },

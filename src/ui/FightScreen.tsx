@@ -35,7 +35,7 @@ import { lookFor } from '../engine/tale';
 import { Bar, Button, Card, Choice, Icon, P, Screen, Section, upName, type IconName } from './components';
 import { C, F, G, R } from './theme';
 import { orgShort } from './NewCareer';
-import { FightOption, FightPrompt, type OptBadge } from './NewFight';
+import { BroadcastScore, FightOption, FightPrompt, type OptBadge } from './NewFight';
 import { currentLook as lookNow, useLook } from '../lookPref';
 import { SLOT_LABEL } from '../engine/fightNight';
 
@@ -87,7 +87,43 @@ function RegionChips({ b }: { b?: Bolge }) {
   );
 }
 
-function Scoreboard({ fs, org, pUyruk }: { fs: FightState; org: string; pUyruk: string }) {
+function Scoreboard({ fs, org, pUyruk, band }: { fs: FightState; org: string; pUyruk: string; band?: { org: string; caption: string; pRank: string; oRank: string } }) {
+  if (band && lookNow() === 'yeni')
+    return (
+      <BroadcastScore
+        pName={fs.pAd}
+        oName={fs.oAd}
+        pHp={100 - fs.pHasar}
+        oHp={100 - fs.oHasar}
+        pSta={fs.pKondisyon}
+        oSta={fs.oKondisyon}
+        org={band.org}
+        round={fs.durum === 'bitti' ? L('SON') : `R${fs.raunt}/${fs.maxRaunt}`}
+        caption={band.caption}
+        pRank={band.pRank}
+        oRank={band.oRank}
+        style={{ marginBottom: 12 }}
+        below={
+          <View style={sb.newBelow}>
+            <View style={{ flex: 1, alignItems: 'flex-start' }}>
+              {fs.kesik ? <Text style={sb.cut}>{L("🩸 Kesik var")}</Text> : null}
+              <RegionChips b={fs.pBolge} />
+            </View>
+            <View style={sb.dots}>
+              {Array.from({ length: fs.maxRaunt }, (_, i) => {
+                const d = fs.rauntFarklari[i];
+                const col = d == null ? C.border : d > 0 ? C.red : d < 0 ? C.blue : C.dim;
+                return <View key={i} style={[sb.dot, { backgroundColor: col }]} />;
+              })}
+            </View>
+            <View style={{ flex: 1, alignItems: 'flex-end' }}>
+              {fs.oKesik ? <Text style={sb.cut}>{L("🩸 Kesik var")}</Text> : null}
+              <RegionChips b={fs.oBolge} />
+            </View>
+          </View>
+        }
+      />
+    );
   return (
     <View style={{ marginBottom: 12 }}>
       <View style={sb.row}>
@@ -302,6 +338,13 @@ export function FightScreen({ s, act }: { s: GameState; act: Act }) {
   const [intro, setIntro] = useState(fresh);
   const [kulis, setKulis] = useState(fresh && !!s.pending.gece);
   const org = ORGS[currentOrg(s)].kisa + (fs.unvanMaci ? L(" · ÜNVAN") : fs.anaMac ? L(" · ANA MAÇ") : '');
+  /** Yeni görünüm yayın bandı (canlı dövüş ve taktik izleme aynı) */
+  const band = {
+    org: orgShort(s),
+    caption: `${WEIGHT_CLASSES[s.fighter.siklet].ad.toLocaleUpperCase(LOC)} · ${fs.unvanMaci ? L("ÜNVAN MAÇI") : fs.anaMac ? L("ANA MAÇ") : s.pending.gece ? SLOT_LABEL[s.pending.gece.konum] : ORGS[currentOrg(s)].ad.toLocaleUpperCase(LOC)}`,
+    pRank: s.sampiyon ? 'C' : s.rank ? String(s.rank) : '',
+    oRank: fs.opp.champion ? 'C' : fs.opp.rank ? String(fs.opp.rank) : '',
+  };
 
   // Olaylar tek tek akar; kullanıcı hız seçebilir ya da atlayabilir.
   const [shown, setShown] = useState(fs.log.length);
@@ -347,7 +390,7 @@ export function FightScreen({ s, act }: { s: GameState; act: Act }) {
 
   return (
     <Screen footer={footer}>
-      <Scoreboard fs={view} org={org} pUyruk={s.fighter.uyruk} />
+      <Scoreboard fs={view} org={org} pUyruk={s.fighter.uyruk} band={band} />
       {/* Anons bitene kadar kafes beklemede: ilk zil anonstan sonra çalsın. */}
       {intro ? (
         <View style={{ height: 252, marginBottom: 10 }} />
@@ -394,12 +437,7 @@ export function FightScreen({ s, act }: { s: GameState; act: Act }) {
           pLook={s.fighter.gorunum}
           oLook={lookFor(fs.opp)}
           ozel={specialOf(s)}
-          band={{
-            org: orgShort(s),
-            caption: `${WEIGHT_CLASSES[s.fighter.siklet].ad.toLocaleUpperCase(LOC)} · ${fs.unvanMaci ? L("ÜNVAN MAÇI") : fs.anaMac ? L("ANA MAÇ") : s.pending.gece ? SLOT_LABEL[s.pending.gece.konum] : ORGS[currentOrg(s)].ad.toLocaleUpperCase(LOC)}`,
-            pRank: s.sampiyon ? 'C' : s.rank ? String(s.rank) : '',
-            oRank: fs.opp.champion ? 'C' : fs.opp.rank ? String(fs.opp.rank) : '',
-          }}
+          band={band}
           onEnd={(r) => setFs((f) => applyLiveRound(f, r))}
         /> : null}
 
@@ -486,6 +524,7 @@ export function FightScreen({ s, act }: { s: GameState; act: Act }) {
 }
 
 const sb = StyleSheet.create({
+  newBelow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginTop: 6 },
   habitHead: { color: C.blue, fontFamily: F.display, fontSize: 12, letterSpacing: 1, marginBottom: 4 },
   habit: { color: C.text, fontFamily: F.body, fontSize: 12, lineHeight: 17 },
   row: { flexDirection: 'row', alignItems: 'stretch' },
