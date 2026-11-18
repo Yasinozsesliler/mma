@@ -36,6 +36,75 @@ function tendencies(o: Opponent): { k: string; t: string; c: string }[] {
   return out;
 }
 
+
+/** Bölge yıldızı: iki özelliğin ortalaması, 5 üzerinden. */
+const zone = (o: Opponent, a: keyof Opponent['stats'], b: keyof Opponent['stats']) => Math.round(((o.stats[a] + o.stats[b]) / 2 / 20) * 2) / 2;
+
+function MiniStars({ n: v }: { n: number }) {
+  return (
+    <View style={{ flexDirection: 'row' }}>
+      {Array.from({ length: 5 }, (_, k) => (
+        <Icon key={k} name={v - k >= 1 ? 'star' : v - k >= 0.5 ? 'star-half-full' : 'star'} size={10} color={v - k >= 0.5 ? C.text : '#3a3d44'} />
+      ))}
+    </View>
+  );
+}
+
+/** Seçenek kartı: zorluk şeridi, gövde portresi, isim, güç ve bölge yıldızları. */
+function OppCard({ o, on, mine, onPress }: { o: Opponent; on: boolean; mine: number; onPress: () => void }) {
+  const tone = TONE(o);
+  const pow = Math.round(statAverage(o.stats));
+  const label = (o.etiket ?? '').replace(/^\S+\s/, '').toLocaleUpperCase(LOC);
+  return (
+    <Pressable onPress={onPress} accessibilityLabel={`${o.ad} ${o.soyad}`} style={({ pressed }) => [n.card, on && n.cardOn, pressed && { opacity: 0.85 }]}>
+      <LinearGradient colors={on ? ['#3a0d16', '#14080b'] : ['#1a1c22', '#0c0d10']} style={StyleSheet.absoluteFill} />
+      <View style={[n.cardTop, { backgroundColor: tone }]}>
+        <Text style={n.cardTopText} numberOfLines={1}>
+          {label || L("RAKİP")}
+        </Text>
+      </View>
+      <View style={n.portrait} pointerEvents="none">
+        <View style={{ position: 'absolute', left: -14, top: 8 }}>
+          <Standing look={lookFor(o)} kit={O_KIT} h={190} flip />
+        </View>
+        <LinearGradient colors={['transparent', on ? '#14080b' : '#0c0d10']} locations={[0.55, 1]} style={StyleSheet.absoluteFill} />
+        <View style={[n.pow, { borderColor: pow > mine ? C.red : pow < mine ? C.green : C.gold }]}>
+          <Text style={[n.powVal, { color: pow > mine ? C.red : pow < mine ? C.green : C.gold }]}>{pow}</Text>
+        </View>
+        {o.champion ? <Text style={n.champ}>👑</Text> : null}
+      </View>
+      <View style={n.cardBody}>
+        <Text style={n.cardName} numberOfLines={1} adjustsFontSizeToFit>
+          {upName(o.soyad, o.uyruk)}
+        </Text>
+        <Text style={n.cardSub} numberOfLines={1}>
+          {flagOf(o.uyruk)} {oppRecord(o)}
+          {o.rank ? ` · #${o.rank}` : ''}
+        </Text>
+        <View style={n.zones}>
+          {[
+            [L("AYAKTA"), zone(o, 'vurus', 'hiz')],
+            [L("GÜREŞ"), zone(o, 'gures', 'yer')],
+            [L("DAYANIKLILIK"), zone(o, 'kondisyon', 'cene')],
+          ].map(([ad, v]) => (
+            <View key={ad as string} style={n.zone}>
+              <Text style={n.zoneLabel} numberOfLines={1}>
+                {ad as string}
+              </Text>
+              <MiniStars n={v as number} />
+            </View>
+          ))}
+        </View>
+      </View>
+      {on ? (
+        <View style={n.selBar}>
+          <Text style={n.selText}>{L("SEÇİLİ")}</Text>
+        </View>
+      ) : null}
+    </Pressable>
+  );
+}
+
 export function NewOpponentScreen({ s, act }: { s: GameState; act: Act }) {
   const list = s.pending.secenekler!;
   const imposed = !!s.pending.dayatma;
@@ -45,7 +114,6 @@ export function NewOpponentScreen({ s, act }: { s: GameState; act: Act }) {
   const org = ORGS[currentOrg(s)];
   const f = s.fighter;
   const myOvr = Math.round(statAverage(f.stats));
-  const d = describeOpponent(o);
   const ph = physique(o.id, f.siklet);
   const yas = 22 + (o.id.charCodeAt(0) % 14);
   const tend = tendencies(o);
@@ -77,59 +145,44 @@ export function NewOpponentScreen({ s, act }: { s: GameState; act: Act }) {
   );
   return (
     <Screen footer={footer}>
-      {/* Üst */}
+      {/* Üst: başlık ve durum rozetleri */}
       <View style={n.top}>
-        <Text style={n.org}>{org.kisa}</Text>
-        <View style={{ flex: 1 }}>
-          <Text style={n.title}>{title}</Text>
-          <Text style={n.sub} numberOfLines={1}>
-            {imposed ? L("Matchmaker telefonda") : L("Kiminle dövüşeceksin?")} · {WEIGHT_CLASSES[f.siklet].ad.toLocaleUpperCase(LOC)}
+        <View style={{ flex: 1, gap: 6 }}>
+          <Text style={n.kicker} numberOfLines={1}>
+            {imposed ? L("Matchmaker telefonda") : L("Kiminle dövüşeceksin?")}
           </Text>
+          <Text style={[n.title, SLANT]} numberOfLines={1} adjustsFontSizeToFit>
+            {title}
+          </Text>
+          <View style={n.chips}>
+            <Text style={n.org}>{org.kisa}</Text>
+            <View style={n.chip}>
+              <Text style={n.chipLabel}>{L("SIKLET")}</Text>
+              <Text style={n.chipVal}>{WEIGHT_CLASSES[f.siklet].ad.toLocaleUpperCase(LOC)}</Text>
+            </View>
+            {s.sampiyon || s.rank ? (
+              <View style={n.chip}>
+                <Text style={n.chipLabel}>{s.sampiyon ? L("SAVUNMA") : L("SIRALAMA")}</Text>
+                <Text style={[n.chipVal, s.sampiyon && { color: C.gold }]}>{s.sampiyon ? s.savunma : `#${s.rank}`}</Text>
+              </View>
+            ) : null}
+          </View>
         </View>
-        <View style={{ alignItems: 'flex-end' }}>
-          <Text style={n.meLabel}>{L("SEN")}</Text>
+        <View style={n.me}>
+          <Text style={n.meLabel}>{L("SENİN GÜCÜN")}</Text>
           <Text style={n.meVal}>{myOvr}</Text>
         </View>
       </View>
       {imposed ? null : <CoachTip s={s} act={act} id="rakip" />}
 
-      {/* Seçenekler */}
+      {/* Rakip kartları */}
       {list.length > 1 ? (
-        <View style={n.opts}>
+        <View style={n.cards}>
           {list.map((x, k) => (
-            <Pressable key={x.id} onPress={() => select(k)} style={({ pressed }) => [n.opt, k === i && { borderColor: TONE(x), backgroundColor: TONE(x) + '1a' }, pressed && { opacity: 0.8 }]}>
-              <Text style={[n.optKicker, { color: TONE(x) }]} numberOfLines={1}>
-                {(x.etiket ?? '').replace(/^\S+\s/, '').toLocaleUpperCase(LOC) || `#${k + 1}`}
-              </Text>
-              <Text style={[n.optName, k === i && { color: C.text }]} numberOfLines={1}>
-                {upName(x.soyad, x.uyruk)}
-              </Text>
-              <Text style={n.optPow}>{L("GÜÇ")} {Math.round(statAverage(x.stats))}</Text>
-            </Pressable>
+            <OppCard key={x.id} o={x} on={k === i} mine={myOvr} onPress={() => select(k)} />
           ))}
         </View>
       ) : null}
-
-      {/* Bilgi şeridi */}
-      <View style={n.info}>
-        <View>
-          <Text style={[n.infoLabel, { color: C.red }]}>{L("GÜÇ")}</Text>
-          <Text style={[n.infoVal, { color: d.guc > myOvr ? C.red : d.guc < myOvr ? C.green : C.text }]}>{d.guc}</Text>
-        </View>
-        <View>
-          <Text style={[n.infoLabel, { color: C.gold }]}>{L("KARNE")}</Text>
-          <Text style={n.infoVal}>{oppRecord(o)}</Text>
-        </View>
-        {o.macHafta ? (
-          <View style={{ flex: 1, alignItems: 'flex-end' }}>
-            <Text style={[n.infoLabel, { color: C.green }]}>{L("MAÇ")}</Text>
-            <Text style={n.infoVal} numberOfLines={1}>
-              {L("{0} HAFTA", [o.macHafta])}
-            </Text>
-            {city ? <Text style={n.infoCity}>📍 {city.ad}</Text> : null}
-          </View>
-        ) : null}
-      </View>
 
       {/* Arena sahnesi */}
       <View style={n.stage}>
@@ -143,6 +196,15 @@ export function NewOpponentScreen({ s, act }: { s: GameState; act: Act }) {
             <View style={n.beltPlate}>
               <Text style={n.beltText}>{org.kisa}</Text>
             </View>
+          </View>
+        ) : null}
+        {o.macHafta ? (
+          <View style={n.date}>
+            <Text style={n.dateLabel}>{L("MAÇ")}</Text>
+            <Text style={n.dateVal}>{L("{0} HAFTA", [o.macHafta])}</Text>
+            {city ? <Text style={n.dateCity}>📍 {city.ad}</Text> : null}
+            <Text style={[n.dateLabel, { marginTop: 6 }]}>{L("KARNE")}</Text>
+            <Text style={n.dateVal}>{oppRecord(o)}</Text>
           </View>
         ) : null}
         {o.rivalry >= 3 ? <Text style={n.rival}>{L("EZELİ RAKİP")}</Text> : o.rivalry >= 1 ? <Text style={[n.rival, { backgroundColor: C.orange }]}>{L("TANIDIK YÜZ")}</Text> : null}
@@ -197,21 +259,38 @@ export function NewOpponentScreen({ s, act }: { s: GameState; act: Act }) {
 }
 
 const n = StyleSheet.create({
-  top: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 },
-  org: { minWidth: 44, backgroundColor: C.gold, color: '#1f1605', fontFamily: F.display, fontSize: 13, textAlign: 'center', paddingHorizontal: 6, paddingVertical: 10, overflow: 'hidden' },
-  title: { color: C.gold, fontFamily: F.display, fontSize: 18, letterSpacing: 1.5 },
-  sub: { color: '#c3c8d1', fontFamily: F.bold, fontSize: 11, letterSpacing: 1.2 },
-  meLabel: { color: '#8b919c', fontFamily: F.bold, fontSize: 9, letterSpacing: 1.2 },
-  meVal: { color: C.text, fontFamily: F.display, fontSize: 20 },
-  opts: { flexDirection: 'row', gap: 8, marginBottom: 10 },
-  opt: { flex: 1, minWidth: 0, borderWidth: 1, borderColor: C.border, backgroundColor: C.card, borderRadius: 4, padding: 8, gap: 1 },
-  optKicker: { fontFamily: F.black, fontSize: 9, letterSpacing: 1 },
-  optName: { color: C.dim, fontFamily: F.display, fontSize: 14 },
-  optPow: { color: '#8b919c', fontFamily: F.bold, fontSize: 10 },
-  info: { flexDirection: 'row', gap: 18, marginBottom: 10 },
-  infoLabel: { fontFamily: F.black, fontSize: 9.5, letterSpacing: 1.5 },
-  infoVal: { color: C.text, fontFamily: F.display, fontSize: 24, lineHeight: 28 },
-  infoCity: { color: C.dim, fontFamily: F.semi, fontSize: 11 },
+  top: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginBottom: 12 },
+  kicker: { color: '#8b919c', fontFamily: F.bold, fontSize: 10.5, letterSpacing: 1.5 },
+  title: { color: C.text, fontFamily: F.display, fontSize: 28, lineHeight: 32, letterSpacing: 1 },
+  chips: { flexDirection: 'row', gap: 6, alignItems: 'stretch' },
+  org: { backgroundColor: C.gold, color: '#1f1605', fontFamily: F.display, fontSize: 13, paddingHorizontal: 8, paddingVertical: 5, overflow: 'hidden', alignSelf: 'stretch', textAlignVertical: 'center' },
+  chip: { borderWidth: 1, borderColor: '#2a2d34', backgroundColor: '#0c0d10', paddingHorizontal: 8, paddingVertical: 3 },
+  chipLabel: { color: '#8b919c', fontFamily: F.black, fontSize: 8.5, letterSpacing: 1.2 },
+  chipVal: { color: C.text, fontFamily: F.display, fontSize: 13 },
+  me: { alignItems: 'center', borderWidth: 1, borderColor: '#2a2d34', backgroundColor: '#0c0d10', paddingHorizontal: 10, paddingVertical: 6 },
+  meLabel: { color: '#8b919c', fontFamily: F.black, fontSize: 8.5, letterSpacing: 1.2 },
+  meVal: { color: C.text, fontFamily: F.display, fontSize: 26, lineHeight: 30 },
+  cards: { flexDirection: 'row', gap: 8, marginBottom: 12 },
+  card: { flex: 1, minWidth: 0, height: 280, borderWidth: 1, borderColor: '#2a2d34', borderRadius: 4, overflow: 'hidden' },
+  cardOn: { borderWidth: 2, borderColor: '#ff3d6e', shadowColor: '#ff3d6e', shadowOpacity: 0.6, shadowRadius: 12, shadowOffset: { width: 0, height: 0 } },
+  cardTop: { height: 20, justifyContent: 'center', paddingHorizontal: 6 },
+  cardTopText: { color: '#040405', fontFamily: F.black, fontSize: 9, letterSpacing: 1.2 },
+  portrait: { height: 112, overflow: 'hidden' },
+  pow: { position: 'absolute', right: 5, top: 5, minWidth: 30, paddingHorizontal: 4, paddingVertical: 1, borderWidth: 1.5, borderRadius: 3, backgroundColor: 'rgba(4,4,5,0.85)', alignItems: 'center' },
+  powVal: { fontFamily: F.display, fontSize: 15 },
+  champ: { position: 'absolute', left: 6, top: 4, fontSize: 16 },
+  cardBody: { paddingHorizontal: 7, paddingTop: 4, gap: 2 },
+  cardName: { color: C.text, fontFamily: F.display, fontSize: 15, letterSpacing: 0.5 },
+  cardSub: { color: C.dim, fontFamily: F.semi, fontSize: 10 },
+  zones: { gap: 3, marginTop: 4 },
+  zone: { gap: 1 },
+  zoneLabel: { color: '#8b919c', fontFamily: F.black, fontSize: 7.5, letterSpacing: 1 },
+  selBar: { position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: '#ff3d6e', paddingVertical: 2, alignItems: 'center' },
+  selText: { color: '#fff', fontFamily: F.black, fontSize: 9, letterSpacing: 1.5 },
+  date: { position: 'absolute', right: 12, top: 12, alignItems: 'flex-end' },
+  dateLabel: { color: '#8b919c', fontFamily: F.black, fontSize: 9, letterSpacing: 1.5 },
+  dateVal: { color: C.text, fontFamily: F.display, fontSize: 20, lineHeight: 24 },
+  dateCity: { color: C.dim, fontFamily: F.semi, fontSize: 11 },
   stage: { height: 360, overflow: 'hidden', borderRadius: 4, marginBottom: 10 },
   figure: { position: 'absolute', left: '50%', marginLeft: -120, bottom: 20 },
   belt: { position: 'absolute', right: 14, top: 120, width: 84, height: 84, borderRadius: 42, backgroundColor: '#c8902e', borderWidth: 3, borderColor: '#ffe7a6', alignItems: 'center', justifyContent: 'center', shadowColor: C.gold, shadowOpacity: 0.6, shadowRadius: 20 },

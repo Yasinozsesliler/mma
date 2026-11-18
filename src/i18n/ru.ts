@@ -10782,4 +10782,8 @@ export const RU: Record<string, string> = {
   "Yaş {0} · Boy {1} · Uzanma {2}": "Возраст {0} · Рост {1} · Размах {2}",
   "Önceki": "Назад",
   "ÜNVAN SAVUNMASI": "ЗАЩИТА ТИТУЛА",
+  "DAYANIKLILIK": "ЖИВУЧЕСТЬ",
+  "GÜREŞ": "БОРЬБА",
+  "SENİN GÜCÜN": "ТВОЯ СИЛА",
+  "SEÇİLİ": "ВЫБРАН",
 };

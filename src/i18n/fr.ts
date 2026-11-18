@@ -10736,4 +10736,8 @@ export const FR: Record<string, string> = {
   "Yaş {0} · Boy {1} · Uzanma {2}": "Âge {0} · Taille {1} · Allonge {2}",
   "Önceki": "Précédent",
   "ÜNVAN SAVUNMASI": "DÉFENSE DU TITRE",
+  "DAYANIKLILIK": "RÉSISTANCE",
+  "GÜREŞ": "GRAPPLING",
+  "SENİN GÜCÜN": "TON NIVEAU",
+  "SEÇİLİ": "CHOISI",
 };
