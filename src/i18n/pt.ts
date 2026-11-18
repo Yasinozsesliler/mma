@@ -10763,4 +10763,13 @@ export const PT: Record<string, string> = {
   "efsane geçildi": "lendas superadas",
   "{0} / {1} basamak": "{0} / {1} degraus",
   "{0} BASAMAK KALDI": "FALTAM {0} DEGRAUS",
+  "Adsız Dövüşçü": "Lutador sem nome",
+  "DÖVÜŞÇÜ OLUŞTUR": "CRIAR LUTADOR",
+  "HAZIR YÜZLER": "ROSTOS PRONTOS",
+  "RASTGELE": "ALEATÓRIO",
+  "Saç ve sakal": "Cabelo e barba",
+  "Yenile": "Renovar",
+  "Yüz {0}": "Rosto {0}",
+  "Yüz": "Rosto",
+  "İz ve dövme": "Cicatrizes e tatuagens",
 };

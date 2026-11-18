@@ -10755,4 +10755,13 @@ export const EN: Record<string, string> = {
   "efsane geçildi": "legends passed",
   "{0} / {1} basamak": "{0} / {1} steps",
   "{0} BASAMAK KALDI": "{0} STEPS LEFT",
+  "Adsız Dövüşçü": "Unnamed Fighter",
+  "DÖVÜŞÇÜ OLUŞTUR": "CREATE FIGHTER",
+  "HAZIR YÜZLER": "PRESET FACES",
+  "RASTGELE": "RANDOM",
+  "Saç ve sakal": "Hair and beard",
+  "Yenile": "Refresh",
+  "Yüz {0}": "Face {0}",
+  "Yüz": "Face",
+  "İz ve dövme": "Scars and tattoos",
 };

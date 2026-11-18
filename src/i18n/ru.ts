@@ -10801,4 +10801,13 @@ export const RU: Record<string, string> = {
   "efsane geçildi": "легенд обойдено",
   "{0} / {1} basamak": "ступеней: {0} / {1}",
   "{0} BASAMAK KALDI": "ОСТАЛОСЬ: {0}",
+  "Adsız Dövüşçü": "Безымянный боец",
+  "DÖVÜŞÇÜ OLUŞTUR": "СОЗДАНИЕ БОЙЦА",
+  "HAZIR YÜZLER": "ГОТОВЫЕ ЛИЦА",
+  "RASTGELE": "СЛУЧАЙНО",
+  "Saç ve sakal": "Волосы и борода",
+  "Yenile": "Обновить",
+  "Yüz {0}": "Лицо {0}",
+  "Yüz": "Лицо",
+  "İz ve dövme": "Шрамы и тату",
 };

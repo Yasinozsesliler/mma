@@ -15,9 +15,12 @@ import { START_POINTS } from '../engine/progression';
 import type { Background, Stats, WeightClass } from '../engine/types';
 import { STAT_KEYS, STAT_LABELS } from '../engine/types';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Button, Card, Choice, Icon, OctIcon, P, Pill, Screen, Section, SLANT, Title, type IconName } from './components';
+import { Button, CageBg, Card, Choice, Icon, OctIcon, P, Pill, Screen, Section, SLANT, Title, type IconName } from './components';
 import { BASE_BOY, heightMods, heightOptions, lookFor } from '../engine/tale';
 import { C, F, R } from './theme';
+import { useLook } from '../lookPref';
+import { playerKit, useCosmetics } from '../cosmetics';
+import { Standing } from './NewCareer';
 
 const STEPS = 9;
 
@@ -61,6 +64,7 @@ export function CreateScreen({
     onDoneRaw(x, x.yas !== input.yas || x.gecmis !== input.gecmis || x.siklet !== input.siklet ? rollStartingStats(x) : stats);
   };
   const [step, setStep] = useState(1);
+  const yeni = useLook() === 'yeni';
   const startCountry = heritage?.uyruk ?? (COUNTRIES[LANG_COUNTRY[LANG]] ? LANG_COUNTRY[LANG] : 'tr');
   const [inp, setInp] = useState<NewFighterInput>({
     ad: heritage?.cocukAd ?? '',
@@ -171,7 +175,7 @@ export function CreateScreen({
 
   return (
     <Screen footer={footer}>
-      <Text style={cs.step}>{L("KARAKTER OLUŞTURMA ·")}{' '}{Math.min(step, 8)}/8</Text>
+      {yeni ? <NewStepHead step={step} total={8} /> : <Text style={cs.step}>{L("KARAKTER OLUŞTURMA ·")}{' '}{Math.min(step, 8)}/8</Text>}
 
       {step === 1 && (
         <>
@@ -357,7 +361,8 @@ export function CreateScreen({
         </>
       )}
 
-      {step === 7 && inp.gorunum && (
+      {step === 7 && inp.gorunum && yeni ? <NewLookStep inp={inp} set={set} /> : null}
+      {step === 7 && inp.gorunum && !yeni && (
         <>
           <Title sub={L("Kafese girdiğinde herkes bu yüzü görecek.")}>{L("Görünümün")}</Title>
           <View style={{ alignItems: 'center', marginBottom: 14 }}>
@@ -539,7 +544,9 @@ function Chips<T extends string>({ items, value, onPick }: { items: { key: T; ad
   );
 }
 
-export function LookPicker({ look, onChange }: { look: Appearance; onChange: (g: Appearance) => void }) {
+export type LookSection = 'yuz' | 'sac' | 'detay';
+export function LookPicker({ look, onChange, only, bare }: { look: Appearance; onChange: (g: Appearance) => void; /** Yalnızca bu bölüm (yeni görünüm); yoksa hepsi */ only?: LookSection; /** Kart çerçevesi ve Rastgele düğmesi olmadan */ bare?: boolean }) {
+  const show = (x: LookSection) => !only || only === x;
   const set = (p: Partial<Appearance>) => onChange({ ...look, ...p });
   // Şampiyon Paketi: özel saç renkleri ve oluştururken ek dövmeler (web sürümünde açık)
   const premium = usePremium();
@@ -549,23 +556,38 @@ export function LookPicker({ look, onChange }: { look: Appearance; onChange: (g:
   const tats = look.dovmeler ?? [];
   const toggleTat = (t: 'gogus' | 'kol' | 'boyun') => set({ dovmeler: tats.includes(t) ? tats.filter((x) => x !== t) : [...tats, t] });
   const rnd = <T,>(a: readonly T[]) => a[Math.floor(Math.random() * a.length)];
+  const Wrap = bare ? View : Card;
   return (
-    <Card>
-      <Text style={cs.label}>{L("TEN RENGİ")}</Text>
-      <Swatches colors={SKIN_TONES} value={look.ten} onPick={(ten) => set({ ten })} />
+    <Wrap>
+      {show('yuz') ? (
+        <>
+          <Text style={cs.label}>{L("TEN RENGİ")}</Text>
+          <Swatches colors={SKIN_TONES} value={look.ten} onPick={(ten) => set({ ten })} />
+        </>
+      ) : null}
+      {show('sac') ? (
+        <>
       <Text style={cs.label}>{L("SAÇ MODELİ")}</Text>
       <Chips items={HAIR_STYLES} value={look.sac} onPick={(sac) => set({ sac })} />
       <Text style={cs.label}>{L("SAÇ RENGİ")}</Text>
       <Swatches colors={HAIR_COLORS} value={look.sacRenk} onPick={(sacRenk) => (sacRenk < NATURAL_HAIR ? set({ sacRenk }) : proOnly(() => set({ sacRenk }))())} />
       <Text style={cs.proNote}>{L("👑 Son beş renk Şampiyon Paketi ile")}</Text>
-      <Text style={cs.label}>{L("GÖZ RENGİ")}</Text>
-      <Swatches colors={EYE_COLORS} value={look.goz} onPick={(goz) => set({ goz })} />
-      {!look.kadin ? (
+        </>
+      ) : null}
+      {show('yuz') ? (
+        <>
+          <Text style={cs.label}>{L("GÖZ RENGİ")}</Text>
+          <Swatches colors={EYE_COLORS} value={look.goz} onPick={(goz) => set({ goz })} />
+        </>
+      ) : null}
+      {show('sac') && !look.kadin ? (
         <>
           <Text style={cs.label}>{L("SAKAL")}</Text>
           <Chips items={BEARDS} value={look.sakal} onPick={(sakal) => set({ sakal })} />
         </>
       ) : null}
+      {show('yuz') ? (
+        <>
       <Text style={cs.label}>{L("YÜZ ŞEKLİ")}</Text>
       <Chips items={FACE_SHAPES} value={String(look.yuz ?? 0)} onPick={(k) => set({ yuz: Number(k) })} />
       <Text style={cs.label}>{L("GÖZLER")}</Text>
@@ -576,6 +598,10 @@ export function LookPicker({ look, onChange }: { look: Appearance; onChange: (g:
       <Chips items={LIPS} value={String(look.dudak ?? 1)} onPick={(k) => set({ dudak: Number(k) })} />
       <Text style={cs.label}>{L("KAŞLAR")}</Text>
       <Chips items={BROWS} value={String(look.kas ?? 1)} onPick={(k) => set({ kas: Number(k) })} />
+        </>
+      ) : null}
+      {show('detay') ? (
+        <>
       <Text style={cs.label}>{L("DETAYLAR")}</Text>
       <Chips
         items={[
@@ -596,7 +622,10 @@ export function LookPicker({ look, onChange }: { look: Appearance; onChange: (g:
         value={'' as 'gogus'}
         onPick={(k) => proOnly(() => toggleTat(k))()}
       />
+        </>
+      ) : null}
       {lockMsg && !pro ? <Text style={[cs.proNote, { color: C.gold }]}>{L("Bu seçenek Şampiyon Paketi ile açılır. Menüdeki Şampiyon Paketi kartından alabilirsin.")}</Text> : null}
+      {bare ? null : (
       <View style={{ marginTop: 12 }}>
         <Button
           label={L("Rastgele")}
@@ -621,9 +650,157 @@ export function LookPicker({ look, onChange }: { look: Appearance; onChange: (g:
           }
         />
       </View>
-    </Card>
+      )}
+    </Wrap>
   );
 }
+
+
+// ---------- Yeni görünüm: adım başlığı ve görünüm adımı (sahne, kategori rayı, hazır yüzler) ----------
+
+/** Adım başlığı: "DÖVÜŞÇÜ OLUŞTUR · 2/8" ve parçalı ilerleme. */
+function NewStepHead({ step, total }: { step: number; total: number }) {
+  return (
+    <View style={nl.head}>
+      <Text style={nl.headKicker}>
+        {L("DÖVÜŞÇÜ OLUŞTUR")} · {Math.min(step, total)}/{total}
+      </Text>
+      <View style={nl.segs}>
+        {Array.from({ length: total }, (_, i) => (
+          <View key={i} style={[nl.seg, i < step && { backgroundColor: C.red }]} />
+        ))}
+      </View>
+    </View>
+  );
+}
+
+const LOOK_CATS: { key: LookSection; ad: string; icon: IconName }[] = [
+  { key: 'yuz', ad: L("Yüz"), icon: 'face-man-outline' },
+  { key: 'sac', ad: L("Saç ve sakal"), icon: 'content-cut' },
+  { key: 'detay', ad: L("İz ve dövme"), icon: 'needle' },
+];
+
+function NewLookStep({ inp, set }: { inp: NewFighterInput; set: (p: Partial<NewFighterInput>) => void }) {
+  useCosmetics();
+  const [cat, setCat] = useState<LookSection>('yuz');
+  const [seed, setSeed] = useState(() => Math.floor(Math.random() * 100000));
+  const look = inp.gorunum ?? DEFAULT_LOOK;
+  const kadin = !!inp.kadin;
+  const country = COUNTRIES[inp.uyruk]?.ad ?? inp.uyruk;
+  /** Hazır yüzler: ülkeye ve cinsiyete uygun on yüz; yenile ile değişir. Gri saç verilmez. */
+  const faces = Array.from({ length: 10 }, (_, i) => {
+    const g = { ...lookFor({ id: `hazir-${seed}-${i}`, uyruk: country, kadin }) };
+    if (g.sacRenk >= NATURAL_HAIR - 1) g.sacRenk = g.sacRenk % (NATURAL_HAIR - 1);
+    return kadin ? { ...g, kadin: true } : g;
+  });
+  const same = (a: Appearance) => JSON.stringify(a) === JSON.stringify(look);
+  const pick = (g: Appearance) => set({ gorunum: { ...g, dovmeler: look.dovmeler } });
+  const random = () => {
+    const g = { ...lookFor({ id: `rastgele-${Date.now()}`, uyruk: country, kadin }) };
+    if (g.sacRenk >= NATURAL_HAIR - 1) g.sacRenk = g.sacRenk % (NATURAL_HAIR - 1);
+    set({ gorunum: kadin ? { ...g, kadin: true } : g });
+  };
+  return (
+    <View>
+      <Text style={nl.stepTitle}>{L("GÖRÜNÜM")}</Text>
+      <Text style={nl.stepSub}>{L("Kafese girdiğinde herkes bu yüzü görecek.")}</Text>
+      {/* Sahne */}
+      <View style={nl.stage}>
+        <LinearGradient colors={['#2c2f36', '#0c0d10', '#040405']} locations={[0, 0.55, 1]} style={StyleSheet.absoluteFill} />
+        <LinearGradient colors={['rgba(255,255,255,0.13)', 'rgba(255,255,255,0)']} style={nl.cone} />
+        <CageBg opacity={0.06} />
+        <View style={nl.floor} />
+        <View style={nl.figure} pointerEvents="none">
+          <Standing look={look} kit={playerKit()} h={330} />
+        </View>
+        <View style={nl.rail}>
+          {LOOK_CATS.map((c) => {
+            const on = c.key === cat;
+            return (
+              <Pressable key={c.key} accessibilityLabel={c.ad} onPress={() => setCat(c.key)} style={({ pressed }) => [nl.railBtn, on && nl.railOn, pressed && { opacity: 0.8 }]}>
+                <Icon name={c.key === 'yuz' && kadin ? 'face-woman' : c.icon} size={20} color={on ? '#040405' : '#c3c8d1'} />
+              </Pressable>
+            );
+          })}
+        </View>
+        <View style={nl.nameBox}>
+          <Text style={[nl.name, SLANT]} numberOfLines={1}>
+            {`${inp.ad} ${inp.soyad}`.trim() || L("Adsız Dövüşçü")}
+          </Text>
+          <Text style={nl.nameSub} numberOfLines={1}>
+            {WEIGHT_CLASSES[inp.siklet].ad.toLocaleUpperCase(LOC)} · {BACKGROUNDS[inp.gecmis].ad.toLocaleUpperCase(LOC)}
+          </Text>
+        </View>
+        <View style={nl.portrait}>
+          <FighterAvatar look={look} size={74} ring={C.red} />
+        </View>
+      </View>
+
+      {/* Hazır yüzler */}
+      <View style={nl.panel}>
+        <View style={nl.panelHead}>
+          <Text style={nl.panelTitle}>{L("HAZIR YÜZLER")}</Text>
+          <Pressable onPress={() => setSeed(seed + 1)} hitSlop={8} style={nl.refresh}>
+            <Icon name="refresh" size={14} color={C.dim} />
+            <Text style={nl.refreshText}>{L("Yenile")}</Text>
+          </Pressable>
+        </View>
+        <View style={nl.faces}>
+          {faces.map((g, i) => {
+            const on = same(g);
+            return (
+              <Pressable key={i} accessibilityLabel={L("Yüz {0}", [i + 1])} onPress={() => pick(g)} style={({ pressed }) => [nl.face, on && nl.faceOn, pressed && { opacity: 0.8 }]}>
+                {on ? <View style={nl.faceBar} /> : null}
+                <FighterAvatar look={g} size={56} ring={on ? C.red : '#2a2d34'} bg="#15171c" />
+              </Pressable>
+            );
+          })}
+        </View>
+      </View>
+
+      {/* Seçili kategorinin ayarları */}
+      <View style={nl.panel}>
+        <Text style={nl.panelTitle}>{LOOK_CATS.find((c) => c.key === cat)?.ad.toLocaleUpperCase(LOC)}</Text>
+        <LookPicker look={look} onChange={(g) => set({ gorunum: g })} only={cat} bare />
+      </View>
+      <Pressable onPress={random} style={({ pressed }) => [nl.random, pressed && { opacity: 0.8 }]}>
+        <Icon name="dice-multiple" size={18} color={C.text} />
+        <Text style={nl.randomText}>{L("RASTGELE")}</Text>
+      </Pressable>
+    </View>
+  );
+}
+
+const nl = StyleSheet.create({
+  head: { gap: 6, marginBottom: 12 },
+  headKicker: { color: C.dim, fontFamily: F.bold, fontSize: 10.5, letterSpacing: 2 },
+  segs: { flexDirection: 'row', gap: 4 },
+  seg: { flex: 1, height: 4, backgroundColor: C.border },
+  stepTitle: { color: C.text, fontFamily: F.display, fontSize: 22, letterSpacing: 1.5 },
+  stepSub: { color: C.dim, fontFamily: F.body, fontSize: 12.5, marginTop: 2, marginBottom: 10 },
+  stage: { height: 400, overflow: 'hidden', borderRadius: 4, marginBottom: 10 },
+  cone: { position: 'absolute', left: '25%', right: '25%', top: -40, height: 380, transform: [{ scaleX: 1.4 }] },
+  floor: { position: 'absolute', left: -40, right: -40, bottom: -50, height: 130, borderRadius: 200, backgroundColor: '#1b1d22' },
+  figure: { position: 'absolute', left: '50%', marginLeft: -132, bottom: 14 },
+  rail: { position: 'absolute', left: 12, top: 16, gap: 8 },
+  railBtn: { width: 46, height: 46, borderRadius: 23, backgroundColor: 'rgba(12,13,16,0.85)', borderWidth: 2, borderColor: '#2a2d34', alignItems: 'center', justifyContent: 'center' },
+  railOn: { backgroundColor: C.text, borderColor: C.text },
+  nameBox: { position: 'absolute', right: 14, top: 14, alignItems: 'flex-end', maxWidth: '62%' },
+  name: { color: C.text, fontFamily: F.display, fontSize: 22, letterSpacing: 1, borderBottomWidth: 2, borderBottomColor: C.text, paddingBottom: 2 },
+  nameSub: { color: C.dim, fontFamily: F.bold, fontSize: 10.5, letterSpacing: 1.5, marginTop: 3 },
+  portrait: { position: 'absolute', right: 12, bottom: 12 },
+  panel: { backgroundColor: C.card, borderWidth: 1, borderColor: C.border, borderRadius: 4, padding: 12, marginBottom: 10 },
+  panelHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
+  panelTitle: { color: C.dim, fontFamily: F.displayMed, fontSize: 13, letterSpacing: 2.5 },
+  refresh: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  refreshText: { color: C.dim, fontFamily: F.semi, fontSize: 11.5 },
+  faces: { flexDirection: 'row', flexWrap: 'wrap', gap: 7 },
+  face: { width: '18%', flexGrow: 1, height: 64, borderRadius: 4, borderWidth: 2, borderColor: '#2a2d34', backgroundColor: '#15171c', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  faceOn: { borderColor: C.red },
+  faceBar: { position: 'absolute', left: 0, right: 0, top: 0, height: 3, backgroundColor: C.red, zIndex: 1 },
+  random: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, minHeight: 48, borderWidth: 1, borderColor: '#2a2d34', backgroundColor: '#14161a', borderRadius: 3, marginBottom: 4 },
+  randomText: { color: C.text, fontFamily: F.display, fontSize: 15, letterSpacing: 1.5 },
+});
 
 function Field({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string }) {
   return (
