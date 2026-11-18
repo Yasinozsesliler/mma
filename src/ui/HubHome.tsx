@@ -16,6 +16,7 @@ import { OvrBadge } from './StatusPanel';
 import { Breathe, StageBackdrop } from './StageBackdrop';
 import { CountText } from './anim';
 import { C, F, R } from './theme';
+import { useLook } from '../lookPref';
 
 /** Dar sütun için kısa para: 100 bine kadar tam ($48.250), üstü kısaltılmış ($1,8M · $40M). */
 const shortMoney = (n: number) => (Math.abs(n) < 100_000 ? money(n) : `${n < 0 ? '-' : ''}$${fmtFollowers(Math.abs(n))}`);
@@ -139,6 +140,34 @@ export function ActionTile({
   selected?: boolean;
   accent?: string;
 }) {
+  const yeni = useLook() === 'yeni';
+  if (yeni)
+    return (
+      <Pressable onPress={onPress} style={({ pressed }) => [nt.tile, { borderColor: selected ? accent : accent + '55' }, selected && { borderWidth: 2 }, pressed && { transform: [{ scale: 0.98 }] }]}>
+        <LinearGradient colors={[accent + '40', '#121318', '#0b0c0f']} locations={[0, 0.6, 1]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
+        <View style={nt.water} pointerEvents="none">
+          <Icon name={icon} size={74} color={accent + '22'} />
+        </View>
+        <View style={[nt.top, { backgroundColor: accent }]} />
+        <View style={[nt.badgeIcon, { borderColor: accent, backgroundColor: accent + '26' }]}>
+          <Icon name={icon} size={18} color={accent} />
+        </View>
+        <View style={{ flex: 1 }} />
+        <Text style={nt.label} numberOfLines={1}>
+          {label.toLocaleUpperCase(LOC)}
+        </Text>
+        {sub ? (
+          <Text style={nt.sub} numberOfLines={2}>
+            {sub}
+          </Text>
+        ) : null}
+        {badge ? (
+          <View style={[nt.badge, { backgroundColor: accent }]}>
+            <Text style={nt.badgeText}>{badge}</Text>
+          </View>
+        ) : null}
+      </Pressable>
+    );
   return (
     <Pressable onPress={onPress} style={({ pressed }) => [hh.tile, selected && { borderColor: accent, backgroundColor: '#15161b' }, pressed && { backgroundColor: '#15161b' }]}>
       <View style={[hh.tileIcon, { backgroundColor: accent + '1c', borderColor: accent + '55' }]}>
@@ -175,6 +204,17 @@ export function Notice({ color, icon, children, action }: { color: string; icon:
     </View>
   );
 }
+
+const nt = StyleSheet.create({
+  tile: { width: '48.5%', flexGrow: 1, height: 116, borderRadius: 6, borderWidth: 1.2, overflow: 'hidden', padding: 10, backgroundColor: '#0b0c0f' },
+  water: { position: 'absolute', right: -10, bottom: -12 },
+  top: { position: 'absolute', left: 0, right: 0, top: 0, height: 3 },
+  badgeIcon: { width: 34, height: 34, borderRadius: 17, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center' },
+  label: { color: '#f6f7f9', fontFamily: F.display, fontSize: 15, letterSpacing: 0.8 },
+  sub: { color: '#a3a9b5', fontFamily: F.body, fontSize: 11, lineHeight: 14, marginTop: 1 },
+  badge: { position: 'absolute', top: 10, right: 10, minWidth: 22, height: 22, borderRadius: 11, paddingHorizontal: 6, alignItems: 'center', justifyContent: 'center' },
+  badgeText: { color: '#000', fontFamily: F.black, fontSize: 11 },
+});
 
 const hh = StyleSheet.create({
   hero: { borderRadius: R + 4, padding: 14, marginBottom: 12, borderWidth: 1, borderColor: '#3a1a20', overflow: 'hidden' },
