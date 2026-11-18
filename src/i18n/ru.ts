@@ -10828,4 +10828,6 @@ export const RU: Record<string, string> = {
   "Bu raunt ona uygun": "Этот раунд ему на руку",
   "Geçen raunt bunu yaptın, rakip bekliyor olabilir": "Было в прошлом раунде, он может ждать",
   "KRİTİK AN · HIZLI KARAR!": "КРИТИЧЕСКИЙ МОМЕНТ · БЫСТРЕЕ!",
+  "{0} PAKET": "НАБОР: {0}",
+  "{0} parça": "предметов: {0}",
 };

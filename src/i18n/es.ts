@@ -10793,4 +10793,6 @@ export const ES: Record<string, string> = {
   "Bu raunt ona uygun": "Este asalto le favorece",
   "Geçen raunt bunu yaptın, rakip bekliyor olabilir": "Lo hiciste el asalto pasado, puede esperarlo",
   "KRİTİK AN · HIZLI KARAR!": "MOMENTO CRÍTICO · ¡DECIDE YA!",
+  "{0} PAKET": "PAQUETE {0}",
+  "{0} parça": "{0} piezas",
 };

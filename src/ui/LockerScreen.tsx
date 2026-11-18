@@ -17,6 +17,7 @@ import { Button, Icon, Screen, Section, SLANT, Title, type IconName } from './co
 import { DEFAULT_LOOK, FighterAvatar } from './FighterAvatar';
 import { Figure, HIP_H, POSES } from './rig';
 import { C, F } from './theme';
+import { useLook } from '../lookPref';
 import { WalkoutFx } from './WalkoutFx';
 import { KitDesigner } from './KitDesigner';
 
@@ -170,6 +171,117 @@ function PackCard({ p, onTry, look }: { p: (typeof PACKS)[number]; onTry: () => 
   );
 }
 
+// ---------- Yeni görünüm: nadirlik renkli kozmetik kartı ve paket kartı ----------
+
+const STARS: Record<Rarity, number> = { siradan: 1, nadir: 2, epik: 3, efsane: 4 };
+
+function NewItem({ x, look, on, open, prev, isNew, onPick }: { x: Cosmetic; look: Appearance; on: boolean; open: boolean; prev: boolean; isNew: boolean; onPick: () => void }) {
+  const r = rarityOf(x);
+  const col = RARITY[r].renk;
+  const slot = TABS.find((t) => t.slot === x.slot);
+  return (
+    <Pressable onPress={onPick} style={({ pressed }) => [nk.card, { borderColor: on ? C.green : prev ? C.gold : col + 'aa' }, (on || prev) && { borderWidth: 2 }, pressed && { transform: [{ scale: 0.97 }] }]}>
+      <LinearGradient colors={[col + '55', '#14161b', '#0b0c0f']} locations={[0, 0.55, 1]} style={StyleSheet.absoluteFill} />
+      <View style={[nk.strip, { backgroundColor: col }]}>
+        <Text style={nk.stripText} numberOfLines={1}>
+          {(slot?.ad ?? '').toLocaleUpperCase(LOC)}
+        </Text>
+      </View>
+      <View style={[nk.art, !open && { opacity: 0.5 }]}>
+        <Swatch x={x} look={look} />
+      </View>
+      <LinearGradient colors={['rgba(0,0,0,0.55)', 'rgba(0,0,0,0.92)']} style={nk.foot}>
+        <Text style={nk.name} numberOfLines={1}>
+          {x.ad}
+        </Text>
+        <Text style={[nk.stars, { color: col }]}>{'★'.repeat(STARS[r])}</Text>
+        {on ? (
+          <Text style={[nk.state, { color: C.green }]}>{L("KUŞANILDI")}</Text>
+        ) : open ? (
+          <Text style={[nk.state, { color: C.gold }]}>{x.slot === 'giris' && x.giris ? L("DİNLE · KUŞAN") : L("KUŞAN")}</Text>
+        ) : (
+          <Text style={nk.lockText} numberOfLines={2}>
+            {lockText(x)}
+          </Text>
+        )}
+      </LinearGradient>
+      {!open ? (
+        <View style={nk.lock}>
+          <Icon name="lock" size={13} color="#f1f2f5" />
+        </View>
+      ) : on ? (
+        <View style={[nk.lock, { backgroundColor: C.green }]}>
+          <Icon name="check-bold" size={13} color="#052012" />
+        </View>
+      ) : isNew ? (
+        <Text style={nk.newTag}>{L("YENİ")}</Text>
+      ) : null}
+    </Pressable>
+  );
+}
+
+function NewPackCard({ p, onTry, look }: { p: (typeof PACKS)[number]; onTry: () => void; look: Appearance }) {
+  const items = COSMETICS.filter((x) => x.kaynak.tur === 'paket' && x.kaynak.sku === p.sku);
+  const fan = items.slice(0, 3);
+  const col = RARITY[p.nadir].renk;
+  return (
+    <View style={[nk.pack, { borderColor: p.renk + 'aa' }]}>
+      <LinearGradient colors={[p.renk + '55', '#120c22', '#08060f']} locations={[0, 0.6, 1]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
+      {/* Yelpaze kartlar */}
+      <View style={nk.fan} pointerEvents="none">
+        {fan.map((x, i) => {
+          const rc = RARITY[rarityOf(x)].renk;
+          const rot = (i - (fan.length - 1) / 2) * 13;
+          return (
+            <View key={x.id} style={[nk.fanCard, { borderColor: rc, transform: [{ rotate: `${rot}deg` }, { translateY: Math.abs(rot) * 0.5 }], zIndex: i === 1 ? 2 : 1 }]}>
+              <LinearGradient colors={[rc + '66', '#120a24']} style={StyleSheet.absoluteFill} />
+              <Swatch x={x} look={look} />
+            </View>
+          );
+        })}
+      </View>
+      <View style={{ width: '58%', gap: 4 }}>
+        <Text style={[nk.packKicker, { color: col }]}>{L("{0} PAKET", [RARITY[p.nadir].ad().toLocaleUpperCase(LOC)])}</Text>
+        <Text style={[nk.packTitle, SLANT]} numberOfLines={2}>
+          {p.ad.toLocaleUpperCase(LOC)}
+        </Text>
+        <Text style={nk.packDesc} numberOfLines={3}>
+          {p.aciklama}
+        </Text>
+        <Text style={nk.packCount}>{L("{0} parça", [items.length])}</Text>
+      </View>
+      <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center', marginTop: 10 }}>
+        <Pressable onPress={onTry} style={({ pressed }) => [ls.tryBtn, pressed && { borderColor: C.gold }]}>
+          <Icon name="eye" size={16} color={C.text} />
+          <Text style={ls.tryText}>{L("DENE")}</Text>
+        </Pressable>
+        <BuyButton sku={p.sku} />
+      </View>
+    </View>
+  );
+}
+
+const nk = StyleSheet.create({
+  card: { height: 186, borderRadius: 5, borderWidth: 1.5, overflow: 'hidden', backgroundColor: '#0b0c0f' },
+  strip: { height: 20, justifyContent: 'center', paddingHorizontal: 6 },
+  stripText: { color: '#0b0c0f', fontFamily: F.black, fontSize: 8.5, letterSpacing: 1 },
+  art: { height: 96, alignItems: 'center', justifyContent: 'center' },
+  foot: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: 6, paddingTop: 6, paddingBottom: 6, gap: 1 },
+  name: { color: '#f6f7f9', fontFamily: F.display, fontSize: 12.5, letterSpacing: 0.3 },
+  stars: { fontSize: 9, letterSpacing: 1 },
+  state: { fontFamily: F.display, fontSize: 10, letterSpacing: 1 },
+  lockText: { color: '#a3a9b5', fontFamily: F.body, fontSize: 9, lineHeight: 11 },
+  lock: { position: 'absolute', right: 5, top: 25, width: 24, height: 24, borderRadius: 12, backgroundColor: 'rgba(0,0,0,0.75)', alignItems: 'center', justifyContent: 'center' },
+  newTag: { position: 'absolute', right: 5, top: 25, backgroundColor: C.red, color: '#fff', fontFamily: F.black, fontSize: 8.5, letterSpacing: 1, paddingHorizontal: 5, paddingVertical: 2, borderRadius: 2, overflow: 'hidden' },
+  pack: { borderRadius: 6, borderWidth: 1.2, overflow: 'hidden', padding: 14, marginBottom: 12, minHeight: 200 },
+  fan: { position: 'absolute', right: 14, top: 18, width: 130, height: 130, alignItems: 'center', justifyContent: 'center', flexDirection: 'row' },
+  fanCard: { width: 62, height: 92, marginHorizontal: -10, borderRadius: 5, borderWidth: 2, overflow: 'hidden', alignItems: 'center', justifyContent: 'center', backgroundColor: '#120a24' },
+  packKicker: { fontFamily: F.black, fontSize: 10, letterSpacing: 2 },
+  packTitle: { color: '#fff', fontFamily: F.display, fontSize: 24, lineHeight: 27 },
+  packDesc: { color: '#cdbdf0', fontFamily: F.body, fontSize: 12, lineHeight: 17 },
+  packCount: { color: '#a3a9b5', fontFamily: F.bold, fontSize: 10.5, letterSpacing: 1 },
+});
+
 type Preview = Partial<Record<CosSlot, Cosmetic>> & { etiket?: string };
 
 export function LockerScreen({ look = DEFAULT_LOOK, onExit }: { look?: Appearance; onExit: () => void }) {
@@ -181,6 +293,7 @@ export function LockerScreen({ look = DEFAULT_LOOK, onExit }: { look?: Appearanc
   const [prev, setPrev] = useState<Preview | null>(null);
   const [restoreMsg, setRestoreMsg] = useState('');
   const yeni = new Set(st.yeni);
+  const yeniLook = useLook() === 'yeni';
   // Ekrana girince "yeni" rozetleri görülmüş sayılır (çıkarken temizlenir ki ilk bakışta işaretli kalsın).
   useEffect(() => () => clearNew(), []);
 
@@ -309,7 +422,7 @@ export function LockerScreen({ look = DEFAULT_LOOK, onExit }: { look?: Appearanc
         {TABS.map((t) => {
           const n = COSMETICS.filter((x) => x.slot === t.slot && yeni.has(x.id)).length;
           return (
-            <Pressable key={t.slot} onPress={() => setTab(t.slot)} style={[ls.tab, tab === t.slot && ls.tabOn]}>
+            <Pressable key={t.slot} onPress={() => setTab(t.slot)} style={[ls.tab, tab === t.slot && ls.tabOn, yeniLook && { borderRadius: 4 }, yeniLook && tab === t.slot && { backgroundColor: C.text, borderColor: C.text }]}>
               <Icon name={t.ikon} size={15} color={tab === t.slot ? '#000' : C.dim} />
               <Text style={[ls.tabText, tab === t.slot && { color: '#000' }]}>{t.ad}</Text>
               {n ? <View style={ls.dot} /> : null}
@@ -320,12 +433,18 @@ export function LockerScreen({ look = DEFAULT_LOOK, onExit }: { look?: Appearanc
 
       {tab === 'sort' || tab === 'kemer' ? <KitDesigner key={tab} slot={tab} onPreview={(x) => setPrev({ [x.slot]: { ...x, renk: [...x.renk] }, etiket: x.ad })} /> : null}
       <View style={ls.grid}>
-        {items.map((x) => (
-          <View key={x.id} style={ls.cell}>
-            <Item x={x} look={look} on={st.equip[x.slot] === x.id} open={unlocked(x)} prev={prev?.[x.slot]?.id === x.id} onPick={() => pick(x)} />
-            {yeni.has(x.id) ? <Text style={ls.newTag}>{L("YENİ")}</Text> : null}
-          </View>
-        ))}
+        {items.map((x) =>
+          yeniLook ? (
+            <View key={x.id} style={ls.cell}>
+              <NewItem x={x} look={look} on={st.equip[x.slot] === x.id} open={unlocked(x)} prev={prev?.[x.slot]?.id === x.id} isNew={yeni.has(x.id)} onPick={() => pick(x)} />
+            </View>
+          ) : (
+            <View key={x.id} style={ls.cell}>
+              <Item x={x} look={look} on={st.equip[x.slot] === x.id} open={unlocked(x)} prev={prev?.[x.slot]?.id === x.id} onPick={() => pick(x)} />
+              {yeni.has(x.id) ? <Text style={ls.newTag}>{L("YENİ")}</Text> : null}
+            </View>
+          ),
+        )}
       </View>
 
       {PACK_STORE ? <Section>{L("MAĞAZA")}</Section> : null}
@@ -341,7 +460,7 @@ export function LockerScreen({ look = DEFAULT_LOOK, onExit }: { look?: Appearanc
         </LinearGradient>
       ) : null}
       {PACK_STORE
-        ? PACKS.map((p) => <PackCard key={p.sku} p={p} look={look} onTry={() => tryPack(p)} />)
+        ? PACKS.map((p) => (yeniLook ? <NewPackCard key={p.sku} p={p} look={look} onTry={() => tryPack(p)} /> : <PackCard key={p.sku} p={p} look={look} onTry={() => tryPack(p)} />))
         : null}
       {MONETIZATION && PURCHASES ? (
         <Pressable
