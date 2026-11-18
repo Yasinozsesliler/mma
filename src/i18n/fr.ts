@@ -10695,4 +10695,12 @@ export const FR: Record<string, string> = {
   "Klasik görünüm açık · yeni görünüme geçmek için dokun": "Look classique activé · touche pour passer au nouveau",
   "Kullanım istatistikleri": "Statistiques d’utilisation",
   "Oyunu geliştirmemize yardımcı olan anonim kullanım verisi": "Données d’utilisation anonymes qui nous aident à améliorer le jeu",
+  "HAFTA {0}": "SEMAINE {0}",
+  "SAĞLIK {0}": "SANTÉ {0}",
+  "POPÜLERLİK {0}": "POPULARITÉ {0}",
+  "KAFESGRAM": "KAFESGRAM",
+  "GALİBİYET SERİSİ": "SÉRIE DE VICTOIRES",
+  "Üst üste {0} galibiyet": "{0} victoires d'affilée",
+  "{0} ÜNVAN SAVUNMASI": "{0} DÉFENSES DU TITRE",
+  "{0} RAUNT": "{0} ROUNDS",
 };

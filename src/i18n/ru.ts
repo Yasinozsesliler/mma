@@ -10741,4 +10741,12 @@ export const RU: Record<string, string> = {
   "Klasik görünüm açık · yeni görünüme geçmek için dokun": "Включён классический вид · коснись, чтобы перейти на новый",
   "Kullanım istatistikleri": "Статистика использования",
   "Oyunu geliştirmemize yardımcı olan anonim kullanım verisi": "Анонимные данные, которые помогают улучшать игру",
+  "HAFTA {0}": "НЕДЕЛЯ {0}",
+  "SAĞLIK {0}": "ЗДОРОВЬЕ {0}",
+  "POPÜLERLİK {0}": "ПОПУЛЯРНОСТЬ {0}",
+  "KAFESGRAM": "KAFESGRAM",
+  "GALİBİYET SERİSİ": "СЕРИЯ ПОБЕД",
+  "Üst üste {0} galibiyet": "{0} побед подряд",
+  "{0} ÜNVAN SAVUNMASI": "ЗАЩИТ ТИТУЛА: {0}",
+  "{0} RAUNT": "РАУНДОВ: {0}",
 };

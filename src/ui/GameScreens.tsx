@@ -51,6 +51,8 @@ import { Button, Card, Choice, Icon, P, Pill, Screen, Section, Title, upName, ty
 import { NewsFeed, RestPicker } from './HubParts';
 import { cityPin, visitedCount, visitedKitalar } from '../engine/worldMap';
 import { ActionGrid, ActionTile, FightCTA, HubHero, Notice } from './HubHome';
+import { CareerStage } from './NewCareer';
+import { useLook } from '../lookPref';
 import { pendingBouts, weeklyGymNet } from '../engine/academy';
 import { ACHIEVEMENTS } from '../engine/achievements';
 import { BeltLegendTease, LegendHubCard } from './LegendScreens';
@@ -171,6 +173,16 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
   const [profSub, setProfSub] = useState<'profil' | 'siralama'>('profil');
   const org = ORGS[currentOrg(s)];
   const injured = s.sakatliklar.length > 0;
+  const yeni = useLook() === 'yeni';
+  const fight = {
+    title: banned(s) ? L("MEN CEZASI") : isFarewellFight(s) ? L("VEDA MAÇI") : L("DÖVÜŞ AYARLA"),
+    sub:
+      (isFarewellFight(s) ? L("Kariyerinin son maçı") : org.rakipSecimi ? L("Rakibini kendin seç") : L("{0} rakip önerecek", [org.kisa])) +
+      (s.stage !== 'amator' ? L(" · Kamp ~{0}", [money(campCostPreview(s))]) : '') +
+      (injured ? L(" · ⚠️ Sakatsın") : ''),
+    disabled: banned(s),
+    onPress: () => act(findNextFight),
+  };
   const tiles: HubTile[] = [
               { cat: 'antrenman', show: true, badge: s.sakatliklar.length || null, node: <ActionTile key="dinlen" icon="bed" label={L("Dinlen")} sub={L("Sağlık {0}/100", [s.saglik])} accent={C.green} selected={resting} onPress={() => { setResting(!resting); setWeightOpen(false); }} badge={s.sakatliklar.length || null} /> },
               { cat: 'antrenman', show: true, badge: (s.sponsorTeklif ?? []).length || null, node: <ActionTile key="takim" icon="whistle" label={L("Takım")} sub={`${(s.sponsorlar ?? []).length} sponsor`} accent={C.blue} badge={(s.sponsorTeklif ?? []).length || null} onPress={() => act((x) => (x.phase = 'takim'))} /> },
@@ -221,7 +233,7 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
   ];
   return (
     <Screen key={tab} footer={<HubNav items={nav} value={tab} onChange={setTab} />}>
-      {tab === 'ana' ? <HubHero s={s} /> : <MiniHero s={s} />}
+      {tab !== 'ana' ? <MiniHero s={s} /> : yeni ? <CareerStage s={s} fight={fight} onSocial={() => act((x) => (x.phase = 'sosyal'))} /> : <HubHero s={s} />}
 
       {tab === 'ana' ? (
         <>
@@ -348,16 +360,7 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
           <GrandPrixCard s={s} act={act} />
           <KafesEviInvite s={s} act={act} />
           <BrainCard s={s} act={act} />
-          <FightCTA
-            title={banned(s) ? L("MEN CEZASI") : isFarewellFight(s) ? L("VEDA MAÇI") : L("DÖVÜŞ AYARLA")}
-            sub={
-              (isFarewellFight(s) ? L("Kariyerinin son maçı") : org.rakipSecimi ? L("Rakibini kendin seç") : L("{0} rakip önerecek", [org.kisa])) +
-              (s.stage !== 'amator' ? L(" · Kamp ~{0}", [money(campCostPreview(s))]) : '') +
-              (injured ? L(" · ⚠️ Sakatsın") : '')
-            }
-            disabled={banned(s)}
-            onPress={() => act(findNextFight)}
-          />
+          {yeni ? null : <FightCTA title={fight.title} sub={fight.sub} disabled={fight.disabled} onPress={fight.onPress} />}
           <FarewellCard s={s} act={act} />
           <NotifyAsk s={s} />
           <ChampionHourCard />

@@ -16,6 +16,8 @@ import { AdOffer } from './AdOffer';
 import { Button, Icon, Section } from './components';
 import type { Act } from './GameScreens';
 import { C, F, R } from './theme';
+import { useLook } from '../lookPref';
+import { VsStage } from './NewCareer';
 
 const short = (n: string) => {
   const p = n.split(' ');
@@ -78,6 +80,7 @@ export function FightNightIntro({ s, onDone, onPredict }: { s: GameState; onDone
   const [tahmin, setTahmin] = useState(preds.length > 0 && !g.tahmin);
   const [picks, setPicks] = useState<Record<string, Pick>>(g.tahmin ?? {});
   const bitti = n >= g.once.length;
+  const yeni = useLook() === 'yeni';
   useEffect(() => {
     sfx('swell', 0.35);
   }, []);
@@ -110,7 +113,7 @@ export function FightNightIntro({ s, onDone, onPredict }: { s: GameState; onDone
     <Modal transparent animationType="fade" onRequestClose={onDone}>
       <View style={fn.back}>
         <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 24 }}>
-          <View style={fn.hero}>
+          {yeni ? <VsStage s={s} g={g} opp={opp} w={W - 32} /> : <View style={fn.hero}>
             <Spot w={W - 32} />
             <Text style={fn.kicker}>{L("DÖVÜŞ GECESİ")}</Text>
             <Text style={[fn.title, { fontSize: g.ad.length > 16 ? 28 : g.ad.length > 11 ? 34 : 42 }]} numberOfLines={1} adjustsFontSizeToFit>
@@ -123,7 +126,7 @@ export function FightNightIntro({ s, onDone, onPredict }: { s: GameState; onDone
               <Icon name="star-four-points" size={13} color="#111" />
               <Text style={fn.slotText}>{SLOT_LABEL[g.konum]}</Text>
             </View>
-          </View>
+          </View>}
 
           {tahmin ? <PredictionCard preds={preds} picks={picks} setPicks={setPicks} /> : null}
           <View style={fn.card}>
