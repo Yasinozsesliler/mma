@@ -35,6 +35,8 @@ import { lookFor } from '../engine/tale';
 import { Bar, Button, Card, Choice, Icon, P, Screen, Section, upName, type IconName } from './components';
 import { C, F, G, R } from './theme';
 import { orgShort } from './NewCareer';
+import { FightOption, FightPrompt, type OptBadge } from './NewFight';
+import { currentLook as lookNow, useLook } from '../lookPref';
 import { SLOT_LABEL } from '../engine/fightNight';
 
 const TACTIC_ICONS: Record<Tactic, IconName> = {
@@ -44,6 +46,9 @@ const TACTIC_ICONS: Record<Tactic, IconName> = {
   clinch: 'hand-back-right',
   mesafe: 'arrow-expand-horizontal',
 };
+
+/** Yeni görünüm: taktik renkleri (canlı dövüş düğmeleriyle uyumlu) */
+const TACTIC_COLOR: Record<Tactic, string> = { baski: C.red, kontra: C.blue, takedown: '#b77dff', clinch: C.orange, mesafe: C.green };
 
 const CRIT_ICONS: Record<CriticalKind, IconName[]> = {
   rakipSersem: ['fire', 'target', 'arrow-collapse-down'],
@@ -237,6 +242,7 @@ function ModeSwitch() {
 }
 
 function TacticList({ fs, onPick, title }: { fs: FightState; onPick: (t: Tactic) => void; title: string }) {
+  const yeni = useLook() === 'yeni';
   const last = fs.oyuncuTaktikGecmisi?.at(-1);
   // Liste raunt arasında da açılır: not sıradaki raunda göre yazılır.
   const sira = fs.durum === 'rauntSonu' ? fs.raunt + 1 : fs.raunt;
@@ -257,7 +263,16 @@ function TacticList({ fs, onPick, title }: { fs: FightState; onPick: (t: Tactic)
           ))}
         </Card>
       ) : null}
-      {(Object.keys(TACTICS) as Tactic[]).map((t) => (
+      {(Object.keys(TACTICS) as Tactic[]).map((t) => {
+        if (!yeni) return null;
+        const e = knownEdge(fs, t, sira);
+        const badges: OptBadge[] = [
+          ...(last === t ? [{ text: L("Geçen raunt bunu yaptın, rakip bekliyor olabilir"), color: C.orange, icon: 'alert' as const }] : []),
+          ...(e > 0 ? [{ text: L("Bildiğin zaafına uyuyor"), color: C.green, icon: 'target' as const }] : e < 0 ? [{ text: L("Bu raunt ona uygun"), color: '#ff4d5e', icon: 'alert-octagon' as const }] : []),
+        ];
+        return <FightOption key={t} icon={TACTIC_ICONS[t]} title={TACTICS[t].ad} desc={TACTICS[t].aciklama} color={TACTIC_COLOR[t]} badges={badges} dim={last === t} onPress={() => onPick(t)} />;
+      })}
+      {yeni ? null : (Object.keys(TACTICS) as Tactic[]).map((t) => (
         <Choice
           key={t}
           icon={TACTIC_ICONS[t]}
@@ -390,6 +405,15 @@ export function FightScreen({ s, act }: { s: GameState; act: Act }) {
 
       {!flowing && fs.durum === 'karar' && fs.karar && (
         <>
+          {lookNow() === 'yeni' ? (
+            <>
+              <FightPrompt kicker={L("KARAR ANI")} text={fs.karar.metin} color={C.gold} icon="pause-circle" />
+              {fs.karar.secenekler.map((o, i) => (
+                <FightOption key={i} n={i + 1} title={o.ad} desc={o.aciklama} color={C.gold} onPress={() => setFs((f) => resolveDecision(f, i))} />
+              ))}
+            </>
+          ) : (
+            <>
           <Pulse>
             <Text style={sb.critKicker}>{L("⏸ KARAR ANI")}</Text>
             <Text style={sb.critText}>{fs.karar.metin}</Text>
@@ -397,11 +421,22 @@ export function FightScreen({ s, act }: { s: GameState; act: Act }) {
           {fs.karar.secenekler.map((o, i) => (
             <Choice key={i} n={i + 1} label={o.ad} desc={o.aciklama} tone="gold" onPress={() => setFs((f) => resolveDecision(f, i))} />
           ))}
+            </>
+          )}
         </>
       )}
 
       {!flowing && fs.durum === 'kritik' && fs.kritik && (
         <>
+          {lookNow() === 'yeni' ? (
+            <>
+              <FightPrompt kicker={L("KRİTİK AN · HIZLI KARAR!")} text={fs.kritikMetni} color={C.red} icon="lightning-bolt" />
+              {CRITICAL_OPTIONS[fs.kritik].map((o, i) => (
+                <FightOption key={i} icon={CRIT_ICONS[fs.kritik!][i]} title={o.ad} desc={o.aciklama} color={[C.red, C.gold, C.blue][i] ?? C.gold} onPress={() => pickCritical(i)} />
+              ))}
+            </>
+          ) : (
+            <>
           <Pulse>
             <Text style={sb.critKicker}>{L("⚡ KRİTİK AN")}</Text>
             <Text style={sb.critText}>{fs.kritikMetni}</Text>
@@ -410,6 +445,8 @@ export function FightScreen({ s, act }: { s: GameState; act: Act }) {
           {CRITICAL_OPTIONS[fs.kritik].map((o, i) => (
             <Choice key={i} icon={CRIT_ICONS[fs.kritik!][i]} label={o.ad} desc={o.aciklama} tone="gold" onPress={() => pickCritical(i)} />
           ))}
+            </>
+          )}
           {qte ? (
             <FightQTE
               spec={qte.spec}

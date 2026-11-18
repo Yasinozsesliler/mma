@@ -10824,4 +10824,8 @@ export const RU: Record<string, string> = {
   "Etkinlik": "Событие",
   "H{0}": "Н{0}",
   "MAÇA KALAN": "ДО БОЯ",
+  "Bildiğin zaafına uyuyor": "Бьёт в известную слабость",
+  "Bu raunt ona uygun": "Этот раунд ему на руку",
+  "Geçen raunt bunu yaptın, rakip bekliyor olabilir": "Было в прошлом раунде, он может ждать",
+  "KRİTİK AN · HIZLI KARAR!": "КРИТИЧЕСКИЙ МОМЕНТ · БЫСТРЕЕ!",
 };

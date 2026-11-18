@@ -10786,4 +10786,8 @@ export const PT: Record<string, string> = {
   "Etkinlik": "Evento",
   "H{0}": "S{0}",
   "MAÇA KALAN": "ATÉ A LUTA",
+  "Bildiğin zaafına uyuyor": "Explora uma fraqueza conhecida",
+  "Bu raunt ona uygun": "Este round favorece ele",
+  "Geçen raunt bunu yaptın, rakip bekliyor olabilir": "Você fez isso no último round, ele pode esperar",
+  "KRİTİK AN · HIZLI KARAR!": "MOMENTO CRÍTICO · DECIDA RÁPIDO!",
 };
