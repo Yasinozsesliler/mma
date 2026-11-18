@@ -10821,4 +10821,7 @@ export const RU: Record<string, string> = {
   "Pozisyonu tut": "Держать позицию",
   "Sıyrıl": "Уйти",
   "ŞİMDİ KAÇ!": "УХОДИ СЕЙЧАС!",
+  "Etkinlik": "Событие",
+  "H{0}": "Н{0}",
+  "MAÇA KALAN": "ДО БОЯ",
 };

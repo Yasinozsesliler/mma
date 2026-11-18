@@ -10775,4 +10775,7 @@ export const EN: Record<string, string> = {
   "Pozisyonu tut": "Hold position",
   "Sıyrıl": "Slip out",
   "ŞİMDİ KAÇ!": "SLIP NOW!",
+  "Etkinlik": "Event",
+  "H{0}": "W{0}",
+  "MAÇA KALAN": "UNTIL FIGHT",
 };

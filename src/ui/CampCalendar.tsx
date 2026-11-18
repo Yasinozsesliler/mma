@@ -19,6 +19,8 @@ import { TechniquePanel } from './TechniquePanel';
 import { DrillGame } from './DrillGame';
 import { lookFor } from '../engine/tale';
 import { C, F, R } from './theme';
+import { useLook } from '../lookPref';
+import { CampCalendarHero } from './NewCamp';
 
 type Choose = (v: string | number) => void;
 
@@ -87,10 +89,11 @@ export function FightDateHero({ s, children }: { s: GameState; children?: ReactN
 export function CampLengthStep({ s, header, choose }: { s: GameState; header: ReactNode; choose: Choose }) {
   const k = s.pending.kamp!;
   const mac = k.macHafta ?? k.hafta;
+  const yeni = useLook() === 'yeni';
   return (
     <Screen>
       {header}
-      <FightDateHero s={s} />
+      {yeni ? <CampCalendarHero s={s} /> : <FightDateHero s={s} />}
       <Text style={cc.title}>{L("Kamp süresini seç")}</Text>
       <Text style={cc.hint}>{L("Kamptan önceki haftalar serbest: teknik çalışır, spar yapar, etkinliklere katılırsın. Uzun kamp daha çok geliştirir ama pahalıdır ve yıpratır.")}</Text>
       {campLengthsFor(mac).map((w) => {

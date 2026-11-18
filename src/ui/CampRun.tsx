@@ -18,6 +18,8 @@ import { FighterAvatar } from './FighterAvatar';
 import { PartnerMomentCard } from './PartnerMomentCard';
 import { RivalNewsCard } from './RivalNewsCard';
 import { C, F, R } from './theme';
+import { useLook } from '../lookPref';
+import { CampCalendarHero, CampDecision, CampLiveRow } from './NewCamp';
 
 type Choose = (v: string | number) => void;
 
@@ -36,6 +38,8 @@ function Decision({ kicker, renk, ikon, metin, children }: { kicker: string; ren
 
 export function CampRun({ s, header, choose }: { s: GameState; header: ReactNode; choose: Choose }) {
   const k = s.pending.kamp!;
+  const yeni = useLook() === 'yeni';
+  const Dec = yeni ? CampDecision : Decision;
   const takvim = k.step === 'takvim';
   const ev = takvim ? currentEvent(s) : undefined;
   const seans = !takvim && !k.kisaHaber && !k.seansKarar && !drillDone(s) && (k.kampIdx ?? 0) === 0;
@@ -80,8 +84,11 @@ export function CampRun({ s, header, choose }: { s: GameState; header: ReactNode
       }
     >
       {header}
-      <FightDateHero s={s} />
+      {yeni ? <CampCalendarHero s={s} /> : <FightDateHero s={s} />}
 
+      {yeni ? (
+        <CampLiveRow s={s} kicker={`${evre} · ${L("{0}/{1} hafta", [gecen, toplam])}`} text={karar ? L("Bir karar seni bekliyor.") : dur ? L("Duraklatıldı.") : son[0]?.t ?? L("Kamp başlıyor…")} state={karar ? 'karar' : dur ? 'dur' : 'canli'} />
+      ) : (
       <LinearGradient colors={['#17130a', '#0c0d10']} style={st.now}>
         <FighterAvatar look={s.fighter.gorunum} size={52} ring={karar ? C.gold : dur ? C.faint : C.red} />
         <View style={{ flex: 1 }}>
@@ -94,31 +101,32 @@ export function CampRun({ s, header, choose }: { s: GameState; header: ReactNode
         </View>
         {!karar && !dur ? <View style={st.live} /> : null}
       </LinearGradient>
+      )}
       <View style={st.bar}>
         <View style={[st.fill, { width: `${(gecen / Math.max(1, toplam)) * 100}%` }]} />
       </View>
 
       {/* Karar kartları */}
       {ev ? (
-        <Decision kicker={L("TAKVİMDE BİR FIRSAT")} renk="#3aa8ff" ikon={ev.ikon as IconName} metin={`${ev.baslik}: ${ev.metin}`}>
+        <Dec kicker={L("TAKVİMDE BİR FIRSAT")} renk="#3aa8ff" ikon={ev.ikon as IconName} metin={`${ev.baslik}: ${ev.metin}`}>
           {ev.secenekler.map((o, i) => (
             <Pressable key={i} onPress={() => choose(`olay:${i}`)} style={({ pressed }) => [st.opt, pressed && { borderColor: '#3aa8ff' }]}>
               <Text style={st.optT}>{o.ad}</Text>
               <Text style={st.optD}>{o.aciklama}</Text>
             </Pressable>
           ))}
-        </Decision>
+        </Dec>
       ) : null}
       {seans ? (
-        <Decision kicker={L("KAMP SEANSI · İSTEĞE BAĞLI")} renk={C.gold} ikon={DRILLS[drillOfWeek(s)].ikon as IconName} metin={L("{0}: 15 saniyelik bir mini oyun. İyi oynarsan bütün kamp daha verimli geçer, sakatlık riski düşer.", [DRILLS[drillOfWeek(s)].ad])}>
+        <Dec kicker={L("KAMP SEANSI · İSTEĞE BAĞLI")} renk={C.gold} ikon={DRILLS[drillOfWeek(s)].ikon as IconName} metin={L("{0}: 15 saniyelik bir mini oyun. İyi oynarsan bütün kamp daha verimli geçer, sakatlık riski düşer.", [DRILLS[drillOfWeek(s)].ad])}>
           <View style={{ gap: 8 }}>
             <Button label={L("Seansı oyna")} icon="play" tone="gold" onPress={() => setOyun(true)} />
             <Button label={L("Atla, kamp aksın")} icon="fast-forward" tone="ghost" onPress={() => choose('seansAtla')} />
           </View>
-        </Decision>
+        </Dec>
       ) : null}
       {an ? (
-        <Decision kicker={L("KAMPTA BİR AN")} renk={C.orange} ikon="whistle" metin={an.metin}>
+        <Dec kicker={L("KAMPTA BİR AN")} renk={C.orange} ikon="whistle" metin={an.metin}>
           {an.sonuc ? (
             <>
               <Text style={st.res}>{an.sonuc}</Text>
@@ -131,7 +139,7 @@ export function CampRun({ s, header, choose }: { s: GameState; header: ReactNode
               ))}
             </View>
           )}
-        </Decision>
+        </Dec>
       ) : null}
       <PartnerMomentCard s={s} choose={choose} />
       <RivalNewsCard s={s} choose={choose} />

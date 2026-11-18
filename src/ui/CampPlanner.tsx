@@ -24,6 +24,8 @@ import { FighterAvatar } from './FighterAvatar';
 import type { Act } from './GameScreens';
 import { ScoutReportCard } from './ScoutReportCard';
 import { OvrBadge } from './StatusPanel';
+import { CampMatchCard } from './NewCamp';
+import { useLook } from '../lookPref';
 import { C, F, R } from './theme';
 
 const STAT_ICONS: Record<StatKey, IconName> = { vurus: 'boxing-glove', gures: 'arm-flex', yer: 'lock', kondisyon: 'lungs', cene: 'shield-check', hiz: 'flash', iq: 'brain' };
@@ -118,6 +120,7 @@ function RivalFile({ s, act }: { s: GameState; act: Act }) {
 }
 
 export function CampPlanner({ s, act, choose, steps }: { s: GameState; act: Act; choose: (v: string) => void; steps: ReactNode }) {
+  const yeni = useLook() === 'yeni';
   const k = s.pending.kamp!;
   const o = s.pending.rakip!;
   const [p, setP] = useState<CampPlan>(() => defaultCampPlan(s));
@@ -160,6 +163,10 @@ export function CampPlanner({ s, act, choose, steps }: { s: GameState; act: Act;
       <View style={cp.stack}>
         {steps}
         {/* Rakip ve maç */}
+        {yeni ? (
+          <CampMatchCard s={s} kicker={L("KAMP PLANI · MAÇA {0} HAFTA", [k.macHafta ?? p.hafta])} />
+        ) : (
+          <>
         <LinearGradient colors={['#2a0b12', '#0e0f13']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={cp.hero}>
           <FighterAvatar look={lookFor(o)} size={58} ring={C.blue} />
           <View style={{ flex: 1 }}>
@@ -173,6 +180,8 @@ export function CampPlanner({ s, act, choose, steps }: { s: GameState; act: Act;
           </View>
           <OvrBadge value={d.guc} size={44} />
         </LinearGradient>
+          </>
+        )}
         <PosterCard s={s} act={act} />
         <RivalFile s={s} act={act} />
 

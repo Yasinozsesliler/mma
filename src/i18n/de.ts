@@ -10775,4 +10775,7 @@ export const DE: Record<string, string> = {
   "Pozisyonu tut": "Position halten",
   "Sıyrıl": "Ausweichen",
   "ŞİMDİ KAÇ!": "JETZT AUSWEICHEN!",
+  "Etkinlik": "Event",
+  "H{0}": "W{0}",
+  "MAÇA KALAN": "BIS ZUM KAMPF",
 };

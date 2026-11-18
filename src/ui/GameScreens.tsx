@@ -54,7 +54,8 @@ import { ActionGrid, ActionTile, FightCTA, HubHero, Notice } from './HubHome';
 import { CareerStage } from './NewCareer';
 import { NewGrowth } from './NewGrowth';
 import { NewOpponentScreen } from './NewOpponent';
-import { useLook } from '../lookPref';
+import { CampMatchCard, CampStages } from './NewCamp';
+import { currentLook as lookNow, useLook } from '../lookPref';
 import { pendingBouts, weeklyGymNet } from '../engine/academy';
 import { ACHIEVEMENTS } from '../engine/achievements';
 import { BeltLegendTease, LegendHubCard } from './LegendScreens';
@@ -696,6 +697,18 @@ const STEP_TIPS: Partial<Record<CampState['step'], TipId>> = { sure: 'kamp', pla
 function CampHeader({ s, k, act }: { s: GameState; k: CampState; act: Act }) {
   const o = s.pending.rakip!;
   const d = describeOpponent(o);
+  const yeni = useLook() === 'yeni';
+  if (yeni)
+    return (
+      <>
+        <CampStages k={k} />
+        <CoachTip s={s} act={act} id={STEP_TIPS[k.step] ?? null} />
+        <CampMatchCard s={s} kicker={L("KAMP · {0} HAFTA", [k.hafta]) + (k.kisaHaber ? L(" · KISA HABER") : '')} />
+        <HypeMeter s={s} />
+        <CountdownButton s={s} onWatched={() => act(watchCountdown)} />
+        <PosterCard s={s} act={act} />
+      </>
+    );
   return (
     <>
       <CampSteps k={k} />
@@ -767,7 +780,7 @@ export function CampScreen({ s, act }: { s: GameState; act: Act }) {
         choose={choose}
         steps={
           <>
-            <CampSteps k={k} />
+            {lookNow() === 'yeni' ? <CampStages k={k} /> : <CampSteps k={k} />}
             <ScoutNote s={s} />
             <CoachTip s={s} act={act} id="kamp" />
           </>
