@@ -18,7 +18,7 @@ const ICONS: Record<StatKey, IconName> = {
   iq: 'brain',
 };
 
-const HINTS: Record<StatKey, string> = {
+export const HINTS: Record<StatKey, string> = {
   vurus: L("Ayakta hasar ve isabet"),
   gures: L("Takedown ve takedown savunması"),
   yer: L("Submission ve yer kontrolü"),

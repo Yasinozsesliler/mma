@@ -52,6 +52,7 @@ import { NewsFeed, RestPicker } from './HubParts';
 import { cityPin, visitedCount, visitedKitalar } from '../engine/worldMap';
 import { ActionGrid, ActionTile, FightCTA, HubHero, Notice } from './HubHome';
 import { CareerStage } from './NewCareer';
+import { NewGrowth } from './NewGrowth';
 import { useLook } from '../lookPref';
 import { pendingBouts, weeklyGymNet } from '../engine/academy';
 import { ACHIEVEMENTS } from '../engine/achievements';
@@ -442,10 +443,16 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
       ) : tab === 'gelisim' ? (
         <>
           <CoachTip s={s} act={act} id="gelisim" />
-          <SkillPanel s={s} act={act} />
-          <PerkTree s={s} act={act} />
-          <TechniquePanel s={s} act={act} />
-          <LegendPanel s={s} act={act} />
+          {yeni ? (
+            <NewGrowth s={s} act={act} />
+          ) : (
+            <>
+              <SkillPanel s={s} act={act} />
+              <PerkTree s={s} act={act} />
+              <TechniquePanel s={s} act={act} />
+              <LegendPanel s={s} act={act} />
+            </>
+          )}
         </>
       ) : tab === 'hayat' ? (
         <>
