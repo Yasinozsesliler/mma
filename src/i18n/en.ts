@@ -10717,4 +10717,6 @@ export const EN: Record<string, string> = {
   "ÖZELLİK VE TEKNİK": "ATTRIBUTES & MOVES",
   "YETENEKLER": "PERKS",
   "İMZA HAREKET": "SIGNATURE MOVE",
+  "YETENEK AĞACI": "SKILL TREE",
+  "{0} PERK PUANI": "{0} PERK POINTS",
 };

@@ -10763,4 +10763,6 @@ export const RU: Record<string, string> = {
   "ÖZELLİK VE TEKNİK": "НАВЫКИ И ТЕХНИКИ",
   "YETENEKLER": "ТАЛАНТЫ",
   "İMZA HAREKET": "КОРОННЫЙ ПРИЁМ",
+  "YETENEK AĞACI": "ДРЕВО НАВЫКОВ",
+  "{0} PERK PUANI": "ОЧКИ ТАЛАНТОВ: {0}",
 };

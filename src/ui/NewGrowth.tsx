@@ -3,19 +3,19 @@
 // Puan harcama, öğrenme ve geliştirme mevcut motor fonksiyonlarıyla yapılır (spendPoint, upgradeTech); kurallar aynı.
 import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { ageCap } from '../engine/character';
-import { perkPointsFree } from '../engine/perks';
+import { BRANCHES, canTakePerk, hasPerk, nextPerkAt, perkPointsFree, PERKS, takePerk, type PerkBranch, type PerkId } from '../engine/perks';
+import { buzz } from '../haptics';
 import { canSpend, spendPoint, statCost } from '../engine/progression';
 import { canSign, SIGNATURE_LEVEL } from '../engine/signature';
 import { canUpgradeTech, MAX_TECH, TECHNIQUES, techCost, techLevel, upgradeTech, xpNeed, type TechDef } from '../engine/techniques';
 import type { GameState, StatKey } from '../engine/types';
 import { STAT_LABELS } from '../engine/types';
 import { L, LOC } from '../i18n';
-import { Icon } from './components';
+import { Icon, type IconName } from './components';
 import type { Act } from './GameScreens';
 import { LegendPanel } from './LegendPanel';
-import { PerkTree } from './PerkTree';
 import { HINTS } from './SkillPanel';
 import { TechniquePanel } from './TechniquePanel';
 import { C, F } from './theme';
@@ -116,7 +116,7 @@ export function NewGrowth({ s, act }: { s: GameState; act: Act }) {
         </View>
       ) : tab === 'yetenek' ? (
         <View style={{ paddingTop: 4 }}>
-          <PerkTree s={s} act={act} />
+          <NewPerkTree s={s} act={act} />
           <LegendPanel s={s} act={act} />
         </View>
       ) : (
@@ -249,4 +249,159 @@ const g = StyleSheet.create({
   toggle: { alignItems: 'center', paddingVertical: 6 },
   toggleText: { color: C.dim, fontFamily: F.display, fontSize: 12, letterSpacing: 1 },
   foot: { color: C.faint, fontFamily: F.body, fontSize: 12, lineHeight: 17 },
+});
+
+// ---------- Yetenek ağacı (yeni görünüm): her dal ayrı panel, ikonlu düğümler ve bağlantı çizgileri ----------
+
+const PERK_ICON: Record<PerkId, IconName> = {
+  agirEl: 'weight', demirCene: 'shield-half-full', bitirici: 'skull-crossbones',
+  guresMakinesi: 'arm-flex', kafesKontrolu: 'fence', boga: 'cow',
+  kondisyonCanavari: 'lungs', cabukIyilesme: 'bandage', kiloUstasi: 'scale-bathroom',
+  sogukkanli: 'snowflake', kampci: 'tent', hizUstasi: 'flash',
+  sovmen: 'microphone-variant', isAdami: 'briefcase', yildiz: 'star-shooting',
+};
+
+function NewPerkTree({ s, act }: { s: GameState; act: Act }) {
+  const [sel, setSel] = useState<PerkId | null>(null);
+  const free = perkPointsFree(s);
+  const next = nextPerkAt(s);
+  const selBranch = sel ? (Object.keys(BRANCHES) as PerkBranch[]).find((b) => BRANCHES[b].perkler.includes(sel)) : null;
+  const selCol = selBranch ? BRANCHES[selBranch].renk : C.gold;
+  return (
+    <View style={{ marginBottom: 12 }}>
+      <View style={t.head}>
+        <Text style={t.headTitle}>{L("YETENEK AĞACI")}</Text>
+        <View style={[t.free, free > 0 && { borderColor: C.gold, backgroundColor: '#1d170a' }]}>
+          <Text style={[t.freeText, free > 0 && { color: C.gold }]}>{L("{0} PERK PUANI", [free])}</Text>
+        </View>
+      </View>
+      <Text style={t.hint}>
+        {s.stage === 'amator'
+          ? L("Perk puanları profesyonel galibiyetlerle gelir.")
+          : next
+            ? L("Sıradaki perk puanı {0}. profesyonel galibiyette.", [next])
+            : L("Bütün perk puanlarını kazandın.")}
+      </Text>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -16 }} contentContainerStyle={{ paddingHorizontal: 16, gap: 10 }}>
+        {(Object.keys(BRANCHES) as PerkBranch[]).map((b) => {
+          const br = BRANCHES[b];
+          const owned = br.perkler.filter((p) => hasPerk(s, p)).length;
+          return (
+            <LinearGradient key={b} colors={[br.renk + '24', '#0c0d10', '#08090b']} locations={[0, 0.45, 1]} style={[t.panel, { borderColor: br.renk + '55' }]}>
+              <View style={t.pHead}>
+                <View style={[t.pLine, { backgroundColor: br.renk }]} />
+                <Text style={[t.pTitle, { color: br.renk }]} numberOfLines={1}>
+                  {br.ad().toLocaleUpperCase(LOC)}
+                </Text>
+                <View style={[t.pLine, { backgroundColor: br.renk }]} />
+              </View>
+              {/* kök düğüm: dalın simgesi */}
+              <View style={[t.root, { borderColor: br.renk, backgroundColor: br.renk + '22' }]}>
+                <View style={{ transform: [{ rotate: '-45deg' }] }}>
+                  <Icon name={br.icon as IconName} size={26} color={br.renk} />
+                </View>
+              </View>
+              {br.perkler.map((p) => {
+                const has = hasPerk(s, p);
+                const can = canTakePerk(s, p);
+                const on = sel === p;
+                const col = has ? br.renk : can ? C.gold : '#3a3d44';
+                return (
+                  <Pressable key={p} onPress={() => setSel(on ? null : p)} accessibilityLabel={PERKS[p].ad()} style={({ pressed }) => [{ alignItems: 'center' }, pressed && { opacity: 0.8 }]}>
+                    <View style={[t.link, { backgroundColor: has ? br.renk : can ? C.gold + '88' : '#2a2d34' }]} />
+                    <View
+                      style={[
+                        t.node,
+                        { borderColor: col, backgroundColor: has ? br.renk + '30' : '#101115' },
+                        (has || can) && { shadowColor: col, shadowOpacity: 0.7, shadowRadius: 8, shadowOffset: { width: 0, height: 0 } },
+                        on && { transform: [{ scale: 1.08 }], borderWidth: 2.5 },
+                      ]}
+                    >
+                      <Icon name={PERK_ICON[p]} size={24} color={has ? '#fff' : can ? C.gold : '#5b6170'} />
+                      {has ? (
+                        <View style={[t.badge, { backgroundColor: br.renk }]}>
+                          <Icon name="check-bold" size={9} color="#040405" />
+                        </View>
+                      ) : !can ? (
+                        <View style={[t.badge, { backgroundColor: '#1c1f25' }]}>
+                          <Icon name="lock" size={9} color="#8b919c" />
+                        </View>
+                      ) : null}
+                    </View>
+                    <Text style={[t.nodeName, { color: has ? C.text : can ? C.gold : '#8b919c' }]} numberOfLines={2}>
+                      {PERKS[p].ad()}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+              <View style={t.pFoot}>
+                <View style={t.pBar}>
+                  <View style={{ width: `${(owned / br.perkler.length) * 100}%`, height: 4, backgroundColor: br.renk }} />
+                </View>
+                <Text style={[t.pCount, { color: owned === br.perkler.length ? br.renk : '#8b919c' }]}>
+                  {owned}/{br.perkler.length}
+                </Text>
+              </View>
+            </LinearGradient>
+          );
+        })}
+      </ScrollView>
+      {sel ? (
+        <View style={[t.detail, { borderColor: selCol }]}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+            <View style={[t.dIcon, { borderColor: selCol }]}>
+              <Icon name={PERK_ICON[sel]} size={22} color={selCol} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={t.dName}>{PERKS[sel].ad().toLocaleUpperCase(LOC)}</Text>
+              {selBranch ? <Text style={[t.dBranch, { color: selCol }]}>{BRANCHES[selBranch].ad().toLocaleUpperCase(LOC)}</Text> : null}
+            </View>
+          </View>
+          <Text style={t.dText}>{PERKS[sel].aciklama()}</Text>
+          {hasPerk(s, sel) ? (
+            <Text style={[t.dText, { color: C.green, fontFamily: F.bold }]}>{L("✓ Alındı")}</Text>
+          ) : canTakePerk(s, sel) ? (
+            <Pressable
+              onPress={() => {
+                buzz('basari');
+                act((x) => takePerk(x, sel));
+              }}
+              style={({ pressed }) => [t.dBtn, pressed && { opacity: 0.8 }]}
+            >
+              <Text style={t.dBtnText}>{L("Perki al").toLocaleUpperCase(LOC)}</Text>
+            </Pressable>
+          ) : (
+            <Text style={[t.dText, { color: C.faint }]}>{free ? L("Önce bu daldaki önceki perki almalısın.") : L("Perk puanın yok.")}</Text>
+          )}
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
+const t = StyleSheet.create({
+  head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 12, marginBottom: 4 },
+  headTitle: { color: C.text, fontFamily: F.display, fontSize: 17, letterSpacing: 1.5 },
+  free: { borderWidth: 1, borderColor: C.border, borderRadius: 12, paddingHorizontal: 10, paddingVertical: 4 },
+  freeText: { color: C.dim, fontFamily: F.black, fontSize: 10.5, letterSpacing: 1 },
+  hint: { color: C.dim, fontFamily: F.body, fontSize: 12, marginBottom: 10 },
+  panel: { width: 138, borderWidth: 1, borderRadius: 4, paddingHorizontal: 10, paddingTop: 10, paddingBottom: 10, alignItems: 'center' },
+  pHead: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'stretch', marginBottom: 12 },
+  pLine: { flex: 1, height: 2, opacity: 0.7 },
+  pTitle: { fontFamily: F.display, fontSize: 14, letterSpacing: 1.5 },
+  root: { width: 56, height: 56, borderRadius: 6, borderWidth: 2, alignItems: 'center', justifyContent: 'center', transform: [{ rotate: '45deg' }] },
+  link: { width: 2, height: 18 },
+  node: { width: 54, height: 54, borderRadius: 6, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center' },
+  badge: { position: 'absolute', right: -5, top: -5, width: 16, height: 16, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+  nodeName: { fontFamily: F.semi, fontSize: 10.5, textAlign: 'center', marginTop: 5, minHeight: 28, width: 112 },
+  pFoot: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'stretch', marginTop: 6 },
+  pBar: { flex: 1, height: 4, backgroundColor: '#1c1f25' },
+  pCount: { fontFamily: F.display, fontSize: 12 },
+  detail: { marginTop: 12, backgroundColor: '#0d0f12', borderWidth: 1, padding: 12, gap: 8 },
+  dIcon: { width: 42, height: 42, borderRadius: 6, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center' },
+  dName: { color: C.text, fontFamily: F.display, fontSize: 17, letterSpacing: 1 },
+  dBranch: { fontFamily: F.black, fontSize: 10, letterSpacing: 1.5 },
+  dText: { color: '#c3c8d1', fontFamily: F.body, fontSize: 12.5, lineHeight: 18 },
+  dBtn: { backgroundColor: C.gold, minHeight: 46, borderRadius: 3, alignItems: 'center', justifyContent: 'center' },
+  dBtnText: { color: '#1f1605', fontFamily: F.display, fontSize: 15, letterSpacing: 1.5 },
 });

@@ -10704,4 +10704,6 @@ export const PL: Record<string, string> = {
   "ÖZELLİK VE TEKNİK": "ATRYBUTY I TECHNIKI",
   "YETENEKLER": "ZDOLNOŚCI",
   "İMZA HAREKET": "RUCH POPISOWY",
+  "YETENEK AĞACI": "DRZEWKO UMIEJĘTNOŚCI",
+  "{0} PERK PUANI": "PUNKTY ZDOLNOŚCI: {0}",
 };
