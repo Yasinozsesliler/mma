@@ -55,6 +55,7 @@ import { CareerStage } from './NewCareer';
 import { NewGrowth } from './NewGrowth';
 import { NewOpponentScreen } from './NewOpponent';
 import { CampMatchCard, CampStages } from './NewCamp';
+import { CampChoice } from './NewFight';
 import { currentLook as lookNow, useLook } from '../lookPref';
 import { pendingBouts, weeklyGymNet } from '../engine/academy';
 import { ACHIEVEMENTS } from '../engine/achievements';
@@ -812,7 +813,7 @@ export function CampScreen({ s, act }: { s: GameState; act: Act }) {
             site.puan ? L("+{0} gelişim puanı", [site.puan]) : null,
           ].filter(Boolean);
           return (
-            <Choice
+            <CampChoice
               key={site.id}
               icon={site.ikon as IconName}
               label={`${site.ad} · ${q.toplam ? money(q.toplam) : L("Ücretsiz")}`}
@@ -836,7 +837,7 @@ export function CampScreen({ s, act }: { s: GameState; act: Act }) {
         {header}
         <Title sub={L("Bu kampta hangi alana yükleneceksin?")}>{L("Odak Alanı")}</Title>
         {STAT_KEYS.map((st: StatKey) => (
-          <Choice key={st} icon={STAT_ICONS[st]} label={STAT_LABELS[st]} desc={L("Şu an: {0}", [s.fighter.stats[st]])} onPress={() => choose(st)} />
+          <CampChoice key={st} icon={STAT_ICONS[st]} label={STAT_LABELS[st]} desc={L("Şu an: {0}", [s.fighter.stats[st]])} onPress={() => choose(st)} />
         ))}
       </Screen>
     );
@@ -867,7 +868,7 @@ export function CampScreen({ s, act }: { s: GameState; act: Act }) {
         {header}
         <Title sub={L("Sağlık: {0}/100", [s.saglik])}>{L("Antrenman Yoğunluğu")}</Title>
         {(Object.keys(INTENSITY) as Intensity[]).map((p) => (
-          <Choice key={p} icon={INT_ICONS[p]} label={INTENSITY[p].ad} desc={INTENSITY[p].aciklama} onPress={() => choose(p)} />
+          <CampChoice key={p} icon={INT_ICONS[p]} label={INTENSITY[p].ad} desc={INTENSITY[p].aciklama} onPress={() => choose(p)} />
         ))}
       </Screen>
     );
@@ -880,7 +881,7 @@ export function CampScreen({ s, act }: { s: GameState; act: Act }) {
           {L("Kilo Verme")}
         </Title>
         {(Object.keys(WEIGHT_CUTS) as WeightCut[]).map((p) => (
-          <Choice
+          <CampChoice
             key={p}
             icon={CUT_ICONS[p]}
             label={WEIGHT_CUTS[p].ad + (p === 'kademeli' ? ` · ${cutCost(s) ? money(cutCost(s)) : L("Diyetisyenin var")}` : '')}
@@ -897,7 +898,7 @@ export function CampScreen({ s, act }: { s: GameState; act: Act }) {
         {header}
         <Title sub={L("{0} ({1}) mikrofonu aldı ve sana döndü. Salon sessiz.", [o.soyad, o.kisilik])}>{L("Basın Toplantısı")}</Title>
         {(Object.keys(PRESS) as PressChoice[]).map((p) => (
-          <Choice key={p} icon={PRESS_ICONS[p]} label={PRESS[p].ad} desc={PRESS[p].aciklama} onPress={() => choose(p)} />
+          <CampChoice key={p} icon={PRESS_ICONS[p]} label={PRESS[p].ad} desc={PRESS[p].aciklama} onPress={() => choose(p)} />
         ))}
       </Screen>
     );
@@ -911,8 +912,8 @@ export function CampScreen({ s, act }: { s: GameState; act: Act }) {
             {k.sakatlik!.ad}{L(". Doktor")}{' '}{k.sakatlik!.hafta} {L("haftalık iyileşme öngörüyor. Dövüşürsen")}{' '}{STAT_LABELS[k.sakatlik!.stat]} -{k.sakatlik!.ceza} {L("ile çıkarsın.")}
           </P>
         </Card>
-        <Choice icon="boxing-glove" label={L("Yine de dövüş")} desc={L("Ücret ve sıralama fırsatı kaçmasın.")} onPress={() => choose(0)} />
-        <Choice icon="medical-bag" label={L("Maçtan çekil")} desc={L("Ücret yok, popülerlik -3. Ama sağlığın önemli.")} tone="plain" onPress={() => choose(1)} />
+        <CampChoice icon="boxing-glove" label={L("Yine de dövüş")} desc={L("Ücret ve sıralama fırsatı kaçmasın.")} onPress={() => choose(0)} />
+        <CampChoice icon="medical-bag" label={L("Maçtan çekil")} desc={L("Ücret yok, popülerlik -3. Ama sağlığın önemli.")} tone="plain" onPress={() => choose(1)} />
       </Screen>
     );
   if (k.step === 'yuzyuze')
@@ -929,14 +930,14 @@ export function CampScreen({ s, act }: { s: GameState; act: Act }) {
           <>
             <Text style={gs.faceAsk}>{k.yuzyuzeIlk ? L("2. tur: rakip karşılık verdi. Son sözün ne?") : k.rakipHamle ? L("Tepkini seç") : L("İlk hamle senin")}</Text>
             {FACEOFF.map((f, i) => (
-              <Choice key={f.key} n={i + 1} icon={f.ikon as IconName} label={f.ad} desc={f.aciklama} tone="gold" onPress={() => choose(f.key)} />
+              <CampChoice key={f.key} n={i + 1} icon={f.ikon as IconName} label={f.ad} desc={f.aciklama} tone="gold" onPress={() => choose(f.key)} />
             ))}
           </>
         ) : (
           <>
             <Text style={gs.faceAsk}>{L("Dövüş gecesi kafese nasıl gireceksin?")}</Text>
             {WALKOUT_STYLES.map((w, i) => (
-              <Choice key={w.key} n={i + 1} icon={w.ikon as IconName} label={w.ad} desc={w.aciklama} tone="gold" selected={(k.giris ?? 'sakin') === w.key} onPress={() => choose(`giris:${w.key}`)} />
+              <CampChoice key={w.key} n={i + 1} icon={w.ikon as IconName} label={w.ad} desc={w.aciklama} tone="gold" selected={(k.giris ?? 'sakin') === w.key} onPress={() => choose(`giris:${w.key}`)} />
             ))}
           </>
         )}

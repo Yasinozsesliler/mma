@@ -2,17 +2,25 @@
 // eğik koyu cam zemin, renkli kenar, ikon halkası, başlık ve açıklama, uyarı rozetleri. Klasik görünümde çizilmez.
 import { LinearGradient } from 'expo-linear-gradient';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { sfx } from '../audio';
 import { LOC } from '../i18n';
 import { lowPerf } from '../perfPref';
-import { Icon, type IconName } from './components';
+import { Choice, Icon, type IconName } from './components';
+import { currentLook } from '../lookPref';
 import { C, F } from './theme';
 
 export type OptBadge = { text: string; color: string; icon?: IconName };
 
-export function FightOption({ icon, n, title, desc, color, badges, dim, onPress }: { icon?: IconName; n?: number; title: string; desc?: string; color: string; badges?: OptBadge[]; dim?: boolean; onPress: () => void }) {
+export function FightOption({ icon, n, title, desc, color, badges, dim, onPress, disabled, selected }: { icon?: IconName; n?: number; title: string; desc?: string; color: string; badges?: OptBadge[]; dim?: boolean; onPress: () => void; disabled?: boolean; selected?: boolean }) {
   const low = lowPerf();
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => [o.card, { borderColor: color + (dim ? '44' : '88') }, dim && { opacity: 0.7 }, pressed && { backgroundColor: color + '33', borderColor: color, transform: [{ skewX: '-6deg' }, { scale: 0.985 }] }]}>
+    <Pressable
+      disabled={disabled}
+      onPress={() => {
+        sfx('click');
+        onPress();
+      }}
+      style={({ pressed }) => [o.card, { borderColor: color + (dim ? '44' : '88') }, dim && { opacity: 0.7 }, disabled && { opacity: 0.4 }, selected && { borderColor: color, borderWidth: 2 }, pressed && { backgroundColor: color + '33', borderColor: color, transform: [{ skewX: '-6deg' }, { scale: 0.985 }] }]}>
       {low ? null : <LinearGradient colors={['#1d2027', '#0e1014', '#08090b']} locations={[0, 0.55, 1]} style={StyleSheet.absoluteFill} pointerEvents="none" />}
       {low ? null : <LinearGradient colors={[color + '30', 'transparent']} start={{ x: 0, y: 0 }} end={{ x: 0.6, y: 0 }} style={StyleSheet.absoluteFill} pointerEvents="none" />}
       <View style={o.gloss} pointerEvents="none" />
@@ -37,7 +45,7 @@ export function FightOption({ icon, n, title, desc, color, badges, dim, onPress 
             </View>
           ) : null}
         </View>
-        <Icon name="chevron-right" size={22} color={color} />
+        <Icon name={selected ? 'check-circle' : 'chevron-right'} size={22} color={color} />
       </View>
     </Pressable>
   );
@@ -74,3 +82,10 @@ const o = StyleSheet.create({
   pKicker: { fontFamily: F.display, fontSize: 14, letterSpacing: 1.5 },
   pText: { color: C.text, fontFamily: F.semi, fontSize: 14, lineHeight: 20 },
 });
+
+/** Choice ile aynı arayüz: yeni görünümde FightOption, klasikte Choice (kamp adımları için). */
+export function CampChoice(p: { n?: number; label: string; desc?: string; onPress: () => void; disabled?: boolean; tone?: 'red' | 'gold' | 'plain'; selected?: boolean; icon?: IconName }) {
+  if (currentLook() !== 'yeni') return <Choice {...p} />;
+  const color = p.tone === 'gold' ? C.gold : p.tone === 'plain' ? '#9aa3b2' : C.red;
+  return <FightOption icon={p.icon} n={p.n} title={p.label} desc={p.desc} color={color} disabled={p.disabled} selected={p.selected} onPress={p.onPress} />;
+}
