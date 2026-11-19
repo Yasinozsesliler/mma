@@ -7,13 +7,14 @@ import { LOC } from '../i18n';
 import { F } from './theme';
 
 const ART = require('../../assets/art/arena.jpg');
+const ART_GOLD = require('../../assets/art/arena_gold.jpg');
 const IW = 1170;
 const IH = 1560;
 /** Görseldeki ring logosunun merkezi (piksel). */
 const RING_Y = 1376;
 
-/** w/h verilmezse kapsayıcısını kendisi ölçer. dim: üstüne bindirilen karartma (0–1). */
-export function ArenaBackdrop({ w: w0, h: h0, org, sub, dim = 0 }: { w?: number; h?: number; org?: string; sub?: string; dim?: number }) {
+/** gold: kemer kutlaması için altın ışıklı sürüm. w/h verilmezse kapsayıcısını kendisi ölçer. dim: üstüne bindirilen karartma (0–1). */
+export function ArenaBackdrop({ w: w0, h: h0, org, sub, dim = 0, gold }: { w?: number; h?: number; org?: string; sub?: string; dim?: number; gold?: boolean }) {
   const [ok, setOk] = useState(true);
   const [size, setSize] = useState({ w: 0, h: 0 });
   const w = w0 ?? size.w;
@@ -31,7 +32,7 @@ export function ArenaBackdrop({ w: w0, h: h0, org, sub, dim = 0 }: { w?: number;
   const fs = Math.min(150, 520 / Math.max(3, name.length * 0.62)) * k;
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="none" onLayout={w0 === undefined ? (e) => setSize({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height }) : undefined}>
-      <Image source={ART} onError={() => setOk(false)} style={{ position: 'absolute', left, top, width: iw, height: ih }} resizeMode="stretch" />
+      <Image source={gold ? ART_GOLD : ART} onError={() => setOk(false)} style={{ position: 'absolute', left, top, width: iw, height: ih }} resizeMode="stretch" />
       {name ? (
         <View style={{ position: 'absolute', left: 0, right: 0, top: ringY - fs * 0.62, alignItems: 'center', transform: [{ scaleY: 0.3 }] }}>
           <Text style={[a.org, { fontSize: fs, lineHeight: fs * 1.15 }]} numberOfLines={1}>

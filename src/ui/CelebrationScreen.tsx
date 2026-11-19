@@ -18,6 +18,7 @@ import { Button, Screen, SLANT } from './components';
 import { BeltOffer } from './PremiumCard';
 import { DEFAULT_LOOK, FighterAvatar } from './FighterAvatar';
 import { FrontWalker } from './WalkoutFront';
+import { ArenaBackdrop } from './ArenaBackdrop';
 import { playerKit } from '../cosmetics';
 import { useLook } from '../lookPref';
 import type { Act } from './GameScreens';
@@ -123,6 +124,8 @@ export function CelebrationScreen({ s, act }: { s: GameState; act: Act }) {
     >
       <Confetti />
       <LinearGradient colors={['#4a3508', '#140f04', 'rgba(4,4,5,0)']} style={cl.hero}>
+        {yeni ? <ArenaBackdrop gold dim={0.45} /> : null}
+        {yeni ? <LinearGradient colors={['rgba(74,53,8,0.85)', 'rgba(20,15,4,0.2)', 'rgba(4,4,5,0.6)']} locations={[0, 0.4, 1]} style={StyleSheet.absoluteFill} pointerEvents="none" /> : null}
         <Text style={cl.kicker}>{ORGS[k.org].kisa} · {L("{0} Sıklet", [WEIGHT_CLASSES[k.siklet].ad]).toLocaleUpperCase(LOC)}</Text>
         <Text style={[cl.title, SLANT]}>{baslik}</Text>
         <Text style={cl.sub}>{alt}</Text>
