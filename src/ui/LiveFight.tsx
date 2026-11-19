@@ -5,7 +5,7 @@ import { cageTintNow } from '../cosmetics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { memo, useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Modal, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
-import Svg, { Circle, Defs, Ellipse, G, Line, LinearGradient as SvgLinear, Path, Pattern, Polygon, RadialGradient, Rect, Stop } from 'react-native-svg';
+import Svg, { Circle, Defs, Ellipse, G, Image as SvgImage, Line, LinearGradient as SvgLinear, Path, Pattern, Polygon, RadialGradient, Rect, Stop } from 'react-native-svg';
 import { sfx } from '../audio';
 import { playerKit } from '../cosmetics';
 import { oppStatsOf } from '../engine/fight';
@@ -88,7 +88,9 @@ const hash = (n: number) => {
 const FANS = Array.from({ length: 90 }, (_, i) => ({ row: i % 3, u: hash(i), s: 0.8 + hash(i + 40) * 0.4, c: ['#14151b', '#1a1c23', '#111217', '#1f2129'][i % 4], lit: hash(i + 99) < 0.07 }));
 
 /** Sabit arka plan: tribün, LED pano, kafes teli, yastıklı ray, dokulu kanvas, spotlar (her karede yeniden çizilmez). */
-const ArenaBg = memo(function ArenaBg() {
+/** Yeni görünümde tribün ve ışıklar çizilmiş görselden gelir (kafes, kanvas ve kafes rengi kozmetiği vektör kalır). */
+const CROWD_ART = require('../../assets/art/arena_crowd.jpg');
+const ArenaBg = memo(function ArenaBg({ art }: { art?: boolean }) {
   const tint = cageTintNow();
   return (
     <Svg width="100%" height="100%" viewBox={VIEW} preserveAspectRatio="xMidYMid meet" style={StyleSheet.absoluteFill}>
@@ -134,6 +136,8 @@ const ArenaBg = memo(function ArenaBg() {
         </RadialGradient>
       </Defs>
       <Rect x={0} y={0} width={VB_W} height={VB_H} fill="url(#lfSky)" />
+      {art ? <SvgImage href={CROWD_ART} x={0} y={0} width={VB_W} height={100} preserveAspectRatio="xMidYMid slice" opacity={0.9} /> : null}
+      {art ? null : <>
       {/* LED pano ve tribün */}
       <Rect x={20} y={12} width={160} height={5} fill="#07080b" />
       <Rect x={20} y={12} width={160} height={5} fill="url(#lfLed)" />
@@ -152,6 +156,7 @@ const ArenaBg = memo(function ArenaBg() {
           </G>
         );
       })}
+      </>}
       {/* Spot konileri ve sis */}
       <Polygon points="66,0 80,0 122,118 26,118" fill="url(#lfCone)" />
       <Polygon points="120,0 134,0 174,118 78,118" fill="url(#lfCone)" />
@@ -694,7 +699,7 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel, band }: { fs: FightSt
         {/* Sahne */}
         <View style={lf.middle} onLayout={(e) => setMid({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height - 8 })}>
         <View style={[lf.stage, { width: stageW, height: stageW / ASPECT }]} pointerEvents="none">
-          <ArenaBg />
+          <ArenaBg art={yeni} />
           <Svg width="100%" height="100%" viewBox={VIEW} preserveAspectRatio="xMidYMid meet" style={StyleSheet.absoluteFill}>
             {yeni ? (
               <Defs>
