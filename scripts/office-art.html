@@ -1,0 +1,60 @@
+<!doctype html><html><body style="margin:0;background:#000">
+<canvas id="c" width="1200" height="600"></canvas>
+<script>
+// Patron ofisi (1200x600): gece şehri manzaralı cam duvar, duvarda vitrinde kemer, yanda dövüş yayını açık ekranlar,
+// deri koltuk ve masa silueti, masa lambası. Marka ve yazı yok.
+const c = document.getElementById('c'); const g = c.getContext('2d'); const W = c.width, H = c.height;
+let seed = 9; const R = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+const glow = (x, y, r, col) => { const rg = g.createRadialGradient(x, y, 0, x, y, r); rg.addColorStop(0, col); rg.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = rg; g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill(); };
+// oda
+let wall = g.createLinearGradient(0, 0, 0, H); wall.addColorStop(0, '#120f0c'); wall.addColorStop(1, '#07060a'); g.fillStyle = wall; g.fillRect(0, 0, W, H);
+// cam duvar ve şehir (ortada)
+const wx = 330, ww = 540, wy = 40, wh = 360;
+let sky = g.createLinearGradient(0, wy, 0, wy + wh); sky.addColorStop(0, '#0a0a24'); sky.addColorStop(0.7, '#3a1a4a'); sky.addColorStop(1, '#5a2238'); g.fillStyle = sky; g.fillRect(wx, wy, ww, wh);
+for (let i = 0; i < 40; i++) { g.fillStyle = `rgba(255,255,255,${0.2 + R() * 0.5})`; g.fillRect(wx + R() * ww, wy + R() * 120, 1.4, 1.4); }
+let x = wx - 10;
+while (x < wx + ww) { const w = 30 + R() * 60, h = 80 + R() * 200; g.fillStyle = R() < 0.5 ? '#0d0b1c' : '#110e22'; g.fillRect(x, wy + wh - h, w, h); for (let yy = wy + wh - h + 8; yy < wy + wh - 6; yy += 12) for (let xx = x + 5; xx < x + w - 5; xx += 9) if (R() < 0.25) { g.fillStyle = R() < 0.75 ? 'rgba(255,214,140,0.8)' : 'rgba(140,200,255,0.8)'; g.fillRect(xx, yy, 4, 5); } x += w + 3; }
+// cam kayıtları ve yansıma
+g.fillStyle = '#060508'; for (let i = 0; i <= 3; i++) g.fillRect(wx + (ww / 3) * i - 4, wy, 8, wh);
+g.fillRect(wx - 10, wy - 10, ww + 20, 12); g.fillRect(wx - 10, wy + wh, ww + 20, 14);
+g.save(); g.globalAlpha = 0.07; g.fillStyle = '#fff'; g.beginPath(); g.moveTo(wx + 40, wy); g.lineTo(wx + 140, wy); g.lineTo(wx + 40, wy + wh); g.lineTo(wx - 60, wy + wh); g.closePath(); g.fill(); g.restore();
+// sol duvar: vitrinde kemer (ışıklı kutu)
+g.fillStyle = '#0b0a09'; g.fillRect(60, 90, 220, 170);
+let box = g.createLinearGradient(0, 100, 0, 250); box.addColorStop(0, '#2a2112'); box.addColorStop(1, '#120e08'); g.fillStyle = box; g.fillRect(70, 100, 200, 150);
+glow(170, 130, 140, 'rgba(255,210,120,0.35)');
+// kemer
+g.fillStyle = '#3a0d10'; g.beginPath(); g.roundRect(84, 170, 172, 34, 14); g.fill();
+let gold = g.createLinearGradient(0, 150, 0, 225); gold.addColorStop(0, '#fff3b0'); gold.addColorStop(0.5, '#e0b040'); gold.addColorStop(1, '#7a5a10');
+g.fillStyle = gold; g.beginPath(); g.ellipse(170, 187, 38, 32, 0, 0, Math.PI * 2); g.fill();
+g.fillStyle = gold; g.beginPath(); g.roundRect(98, 174, 26, 26, 4); g.fill(); g.beginPath(); g.roundRect(216, 174, 26, 26, 4); g.fill();
+g.fillStyle = '#c1121f'; g.beginPath(); g.arc(170, 187, 9, 0, Math.PI * 2); g.fill();
+// sağ duvar: üç ekran, dövüş yayını
+[[920, 90], [1060, 90], [990, 200]].forEach(([sx, sy]) => {
+  g.fillStyle = '#040405'; g.fillRect(sx - 6, sy - 6, 132, 84);
+  let sc = g.createLinearGradient(sx, sy, sx, sy + 72); sc.addColorStop(0, '#1b2a44'); sc.addColorStop(1, '#0a1020'); g.fillStyle = sc; g.fillRect(sx, sy, 120, 72);
+  g.fillStyle = 'rgba(220,225,235,0.6)'; g.beginPath(); g.ellipse(sx + 60, sy + 58, 46, 8, 0, 0, Math.PI * 2); g.fill();
+  g.fillStyle = '#c1121f'; g.fillRect(sx + 40, sy + 26, 10, 28); g.fillStyle = '#1c4fc4'; g.fillRect(sx + 70, sy + 26, 10, 28);
+  g.fillStyle = 'rgba(0,0,0,0.6)'; g.fillRect(sx, sy, 120, 10); g.fillStyle = '#c1121f'; g.fillRect(sx + 4, sy + 2, 18, 6);
+  glow(sx + 60, sy + 36, 110, 'rgba(90,140,255,0.12)');
+});
+// zemin, masa, koltuk
+let fl = g.createLinearGradient(0, 410, 0, H); fl.addColorStop(0, '#1a130e'); fl.addColorStop(1, '#060504'); g.fillStyle = fl; g.fillRect(0, 410, W, H - 410);
+g.fillStyle = '#0a0807'; g.beginPath(); g.moveTo(240, 470); g.lineTo(960, 470); g.lineTo(1020, 540); g.lineTo(180, 540); g.closePath(); g.fill();
+let dtop = g.createLinearGradient(0, 462, 0, 476); dtop.addColorStop(0, '#3a2a1c'); dtop.addColorStop(1, '#140e09'); g.fillStyle = dtop; g.fillRect(232, 460, 736, 14);
+g.fillRect(260, 540, 24, 60); g.fillRect(916, 540, 24, 60);
+// koltuk sırtı (masanın arkasında)
+g.fillStyle = '#0d0909'; g.beginPath(); g.roundRect(530, 330, 140, 140, [30, 30, 6, 6]); g.fill();
+g.fillStyle = 'rgba(255,255,255,0.05)'; g.fillRect(548, 345, 8, 110);
+// masa lambası
+g.fillStyle = '#0a0a0a'; g.fillRect(812, 410, 6, 52); g.beginPath(); g.moveTo(790, 410); g.lineTo(840, 410); g.lineTo(826, 392); g.lineTo(804, 392); g.closePath(); g.fill();
+glow(815, 440, 160, 'rgba(255,200,120,0.35)');
+// masada belgeler ve telefon
+g.fillStyle = '#e8e0cc'; g.save(); g.translate(420, 452); g.rotate(-0.08); g.fillRect(0, 0, 90, 10); g.restore();
+g.fillStyle = '#111'; g.fillRect(640, 452, 34, 8);
+// vinyet ve gren
+const vg = g.createRadialGradient(W / 2, H * 0.45, 200, W / 2, H * 0.5, 760); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,0.65)'); g.fillStyle = vg; g.fillRect(0, 0, W, H);
+const img = g.getImageData(0, 0, W, H), d = img.data;
+for (let i = 0; i < d.length; i += 4) { const n = (R() - 0.5) * 12; d[i] += n; d[i + 1] += n; d[i + 2] += n; }
+g.putImageData(img, 0, 0);
+window.DONE = true;
+</script></body></html>

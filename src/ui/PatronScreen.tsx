@@ -2,6 +2,9 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useMemo, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useLook } from '../lookPref';
+import { ArenaBackdrop } from './ArenaBackdrop';
+import { BoutBg, NightBandBg, OfficeBg, OrgArena } from './NewPatron';
 import { track } from '../analytics';
 import { sfx } from '../audio';
 import { WEIGHT_CLASSES } from '../engine/data';
@@ -247,6 +250,7 @@ function PStart({ unlocked, onExit }: { unlocked: boolean; onExit: () => void })
   const [sen, setSen] = useState<PSenaryo>('garaj');
   const hall = usePatronHall();
   const preview = { org: { ad: orgAd || L("Yeni Organizasyon"), kisa: (kisa || orgAd.slice(0, 4) || 'YO').toLocaleUpperCase(LOC), renk } };
+  const yeni = useLook() === 'yeni';
   return (
     <Screen
       footer={
@@ -264,12 +268,25 @@ function PStart({ unlocked, onExit }: { unlocked: boolean; onExit: () => void })
         </View>
       }
     >
+      {yeni ? (
+        <View style={[ps.hero, ps.stageHero, { borderColor: renk + '99' }]}>
+          {/* Canlı önizleme: yazdığın ad ve seçtiğin renk ilk mekânın (depo salonu) zemininde ve ışıklarında */}
+          <OrgArena org={preview.org} mekan="salon" dim={0.2} />
+          <LinearGradient colors={['rgba(8,9,11,0.75)', 'rgba(8,9,11,0)']} locations={[0, 0.55]} style={StyleSheet.absoluteFill} pointerEvents="none" />
+          <View>
+            <OrgLogo r={preview} size={72} />
+          </View>
+          <Text style={[ps.heroTitle, SLANT]}>{L("PATRON MODU")}</Text>
+          <Text style={ps.heroText}>{L("Kafes senin, kurallar senin. Sıfırdan bir organizasyon kur ve UCC'yi tahtından indir.")}</Text>
+        </View>
+      ) : (
       <LinearGradient colors={['#2a1a05', '#0e0f12', '#08090b']} style={ps.hero}>
         <CageBg opacity={0.05} />
         <OrgLogo r={preview} size={72} />
         <Text style={[ps.heroTitle, SLANT]}>{L("PATRON MODU")}</Text>
         <Text style={ps.heroText}>{L("Kafes senin, kurallar senin. Sıfırdan bir organizasyon kur ve UCC'yi tahtından indir.")}</Text>
       </LinearGradient>
+      )}
       <View style={{ gap: 10, marginVertical: 14 }}>
         {(
           [
@@ -330,6 +347,7 @@ function PStart({ unlocked, onExit }: { unlocked: boolean; onExit: () => void })
 // ---------- Kapanış ----------
 
 function PClosed({ r, onExit }: { r: PatronRun; onExit: () => void }) {
+  const yeni = useLook() === 'yeni';
   const t =
     r.kapandi === 'satis'
       ? L("{0}, UCC'ye {1} karşılığında satıldı. Bodrum katından dünyanın zirvesine: efsane bir hikâye.", [r.org.ad, $(r.satis ?? 0)])
@@ -355,8 +373,11 @@ function PClosed({ r, onExit }: { r: PatronRun; onExit: () => void }) {
         </View>
       }
     >
-      <LinearGradient colors={r.kapandi === 'satis' ? ['#2a1a05', '#08090b'] : ['#2a0a0f', '#08090b']} style={ps.hero}>
-        <OrgLogo r={r} size={80} />
+      <LinearGradient colors={r.kapandi === 'satis' ? ['#2a1a05', '#08090b'] : ['#2a0a0f', '#08090b']} style={[ps.hero, yeni && ps.stageHero]}>
+        {yeni ? (r.kapandi === 'satis' ? <ArenaBackdrop gold tint={null} dim={0.45} /> : <OrgArena org={r.org} mekan="salon" dim={0.7} />) : null}
+        <View>
+          <OrgLogo r={r} size={80} />
+        </View>
         <Text style={[ps.heroTitle, SLANT]}>{r.kapandi === 'satis' ? L("EFSANE ÇIKIŞ") : L("PERDE İNDİ")}</Text>
         <Text style={ps.heroText}>{t}</Text>
       </LinearGradient>
@@ -401,9 +422,10 @@ function Hero({ r, goOffice, goCard }: { r: PatronRun; goOffice: () => void; goC
   const geceHaftasi = p && p.hafta <= r.hafta;
   const cap = itibarCap(r);
   const wait = bekleyen(r).length;
+  const yeni = useLook() === 'yeni';
   return (
-    <LinearGradient colors={[r.org.renk + '33', '#0e0f12', '#08090b']} locations={[0, 0.5, 1]} style={ps.heroCard}>
-      <CageBg opacity={0.04} />
+    <LinearGradient colors={[r.org.renk + '33', '#0e0f12', '#08090b']} locations={[0, 0.5, 1]} style={[ps.heroCard, yeni && { borderColor: r.org.renk + '88', paddingTop: 70 }]}>
+      {yeni ? <OfficeBg renk={r.org.renk} /> : <CageBg opacity={0.04} />}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
         <OrgLogo r={r} size={56} />
         <View style={{ flex: 1, minWidth: 0 }}>
@@ -420,7 +442,8 @@ function Hero({ r, goOffice, goCard }: { r: PatronRun; goOffice: () => void; goC
         <Meter label={L("TAKİPÇİ")} value={fmtK(r.gram.takipci)} />
       </View>
       {p?.maclar.length ? (
-        <Pressable onPress={goCard} style={({ pressed }) => [ps.banner, pressed && { opacity: 0.8 }]}>
+        <Pressable onPress={goCard} style={({ pressed }) => [ps.banner, yeni && ps.bannerArt, pressed && { opacity: 0.8 }]}>
+          {yeni ? <NightBandBg renk={r.org.renk} mekan={p.mekan} /> : null}
           <Icon name="calendar-star" size={16} color={C.gold} />
           <Text style={ps.bannerText} numberOfLines={2}>
             {geceHaftasi ? L("BU HAFTA: {0} · {1}", [eventName(r, p), cityById(p.sehir).ad]) : L("{0} · {1} hafta sonra · {2}", [eventName(r, p), p.hafta - r.hafta, cityById(p.sehir).ad])}
@@ -473,6 +496,7 @@ function NightModal({ r }: { r: PatronRun }) {
 }
 
 function NightReport({ r, g, onClose }: { r: PatronRun; g: GeceRapor; onClose: () => void }) {
+  const yeni = useLook() === 'yeni';
   const [watch, setWatch] = useState<{ f: PFighter; k: PKayit } | null>(null);
   const gelir = Object.values(g.gelir).reduce((s, x) => s + x, 0);
   const gider = Object.values(g.gider).reduce((s, x) => s + x, 0);
@@ -496,19 +520,32 @@ function NightReport({ r, g, onClose }: { r: PatronRun; g: GeceRapor; onClose: (
     <Modal visible animationType="slide" onRequestClose={onClose}>
       <View style={{ flex: 1, backgroundColor: C.bg }}>
         <ScrollView contentContainerStyle={{ padding: 16, paddingTop: 44, gap: 12, maxWidth: 620, width: '100%', alignSelf: 'center' }}>
-          <LinearGradient colors={[r.org.renk + '44', '#08090b']} style={ps.nightHead}>
-            <OrgLogo r={r} size={48} />
+          <LinearGradient colors={[r.org.renk + '44', '#08090b']} style={[ps.nightHead, yeni && ps.nightArt]}>
+            {yeni ? (
+              <>
+                <OrgArena org={r.org} mekan={g.mekan} dim={0.25} />
+                <LinearGradient colors={['rgba(8,9,11,0.7)', 'rgba(8,9,11,0.1)', 'rgba(8,9,11,0.92)']} locations={[0, 0.4, 1]} style={StyleSheet.absoluteFill} pointerEvents="none" />
+              </>
+            ) : null}
+            <View>
+              <OrgLogo r={r} size={48} />
+            </View>
             <Text style={[ps.nightTitle, SLANT]} numberOfLines={2} adjustsFontSizeToFit>
               {g.ad.toLocaleUpperCase(LOC)}
             </Text>
             <Text style={ps.heroSub}>
               {cityById(g.sehir).ad} · {MEKAN[g.mekan].ad()}
             </Text>
-            <View style={ps.meters}>
+            <View style={[ps.meters, { alignSelf: 'stretch' }]}>
               <Meter label={L("SEYİRCİ")} value={fmtK(g.seyirci)} sub={`/ ${fmtK(g.kapasite)}`} color={g.seyirci >= g.kapasite ? C.green : C.text} />
               <Meter label={L("KÂR")} value={$(g.kar)} color={g.kar >= 0 ? C.green : C.red} />
               <Meter label={L("İTİBAR")} value={g.itibarD >= 0 ? `+${g.itibarD}` : String(g.itibarD)} color={g.itibarD >= 0 ? C.gold : C.red} />
             </View>
+            {yeni ? (
+              <View style={ps.fillTrack}>
+                <View style={[ps.fillBar, { width: `${Math.min(100, Math.round((g.seyirci / Math.max(1, g.kapasite)) * 100))}%`, backgroundColor: g.seyirci >= g.kapasite ? C.green : r.org.renk }]} />
+              </View>
+            ) : null}
             <Text style={ps.small}>{L("+{0} takipçi", [g.takipciD.toLocaleString(LOC)])}</Text>
           </LinearGradient>
           <Text style={ps.section}>{L("SONUÇLAR")}</Text>
@@ -868,12 +905,14 @@ function FacePreview({ r, m, onClose }: { r: PatronRun; m: Mac; onClose: () => v
 }
 
 function BoutCard({ r, m, i, onFace }: { r: PatronRun; m: Mac; i: number; onFace: () => void }) {
+  const yeni = useLook() === 'yeni';
   const a = fighterById(r, m.a);
   const b = fighterById(r, m.b);
   if (!a || !b) return null;
   const notes = boutNote(r, m);
   return (
-    <View style={[ps.bout, i === 0 && { borderColor: C.gold }]}>
+    <View style={[ps.bout, yeni && { overflow: 'hidden', borderRadius: 6 }, i === 0 && { borderColor: C.gold }]}>
+      {yeni ? <BoutBg /> : null}
       <Text style={ps.resultKick}>
         {i === 0 ? L("ANA MAÇ") : L("ALT KART")} · {bolumAd(a)}
         {m.unvan ? ` · 🏆 ${L("KEMER")}` : ''} · 🔥{Math.round(boutDraw(r, m))}
@@ -1299,6 +1338,11 @@ const ps = StyleSheet.create({
   pack: { borderRadius: R, borderWidth: 1, borderColor: C.goldDeep, padding: 14, gap: 8, marginTop: 12 },
   packLead: { color: C.gold, fontFamily: F.display, fontSize: 15, letterSpacing: 1 },
   packText: { color: C.dim, fontFamily: F.body, fontSize: 13, lineHeight: 19 },
+  stageHero: { minHeight: 360, justifyContent: 'flex-start', backgroundColor: '#08090b' },
+  bannerArt: { overflow: 'hidden', paddingVertical: 16 },
+  nightArt: { minHeight: 330, justifyContent: 'flex-end', overflow: 'hidden' },
+  fillTrack: { alignSelf: 'stretch', height: 6, borderRadius: 3, backgroundColor: '#ffffff1a', overflow: 'hidden', marginTop: 2 },
+  fillBar: { height: '100%', borderRadius: 3 },
   heroCard: { borderRadius: R, borderWidth: 1, borderColor: C.border, padding: 14, overflow: 'hidden' },
   nick: { color: C.gold, fontFamily: F.display, fontSize: 11, letterSpacing: 1.5 },
   name: { color: C.text, fontFamily: F.display, fontSize: 26 },
