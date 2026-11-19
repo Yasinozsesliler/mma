@@ -132,7 +132,7 @@ export function GhostScreen({ saves, onExit }: { saves: (GameState | null)[]; on
   if (ben && rakip)
     return (
       <Screen footer={<Button label={L("Dövüşçünü değiştir")} icon="arrow-left" tone="ghost" onPress={() => setBen(null)} />}>
-        <Title kicker={L("👻 HAYALET MAÇ")} sub={L("Zirvedeki halleriyle · 5 raunt")}>
+        <Title art="tribun" kicker={L("👻 HAYALET MAÇ")} sub={L("Zirvedeki halleriyle · 5 raunt")}>
           {L("{0} vs {1}", [upName(ben.soyad, ben.uyruk), upName(rakip.soyad, rakip.uyruk)])}
         </Title>
         <Versus a={ben} b={rakip} />
@@ -147,7 +147,7 @@ export function GhostScreen({ saves, onExit }: { saves: (GameState | null)[]; on
     const list = mine.filter((f) => !!f.kadin === !!rakip.kadin);
     return (
       <Screen footer={<Button label={L("Geri")} icon="arrow-left" tone="ghost" onPress={() => setRakip(null)} />}>
-        <Title kicker={L("👻 HAYALET MAÇ")} sub={L("{0} karşısına kimi çıkaracaksın?", [fname(rakip)])}>
+        <Title art="tribun" kicker={L("👻 HAYALET MAÇ")} sub={L("{0} karşısına kimi çıkaracaksın?", [fname(rakip)])}>
           {L("Kırmızı köşe")}
         </Title>
         {list.length === 0 ? <Text style={st.hint}>{L("Bu kategoride dövüşçün yok. Önce bir kariyer başlat.")}</Text> : null}
@@ -171,7 +171,7 @@ export function GhostScreen({ saves, onExit }: { saves: (GameState | null)[]; on
   const kodF = mine.find((f) => f.key === kod) ?? mine[0];
   return (
     <Screen footer={<Button label={L("Menüye dön")} icon="arrow-left" tone="ghost" onPress={onExit} />}>
-      <Title kicker={L("👻 HAYALET MAÇ")} sub={L("Arkadaşının dövüşçüsü yapay zekâyla karşına çıkar. Sen de kodunu paylaş, seninkiyle dövüşsünler.")}>
+      <Title art="tribun" kicker={L("👻 HAYALET MAÇ")} sub={L("Arkadaşının dövüşçüsü yapay zekâyla karşına çıkar. Sen de kodunu paylaş, seninkiyle dövüşsünler.")}>
         {L("Hayalet Maç")}
       </Title>
       {msg ? <Text style={st.msg}>{msg}</Text> : null}

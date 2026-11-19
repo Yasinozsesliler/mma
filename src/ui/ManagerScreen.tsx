@@ -78,6 +78,10 @@ import { HubNav, type NavItem } from './HubNav';
 import { AdOffer } from './AdOffer';
 import { DealCard, FullPackLink } from './ShopSheet';
 import { C, F, R } from './theme';
+import { useLook } from '../lookPref';
+import { OfficeBg } from './NewPatron';
+import { CoverImage } from './CoverImage';
+import { SCENE_ART } from './sceneArt';
 
 const $ = (n: number) => `${n < 0 ? '-' : ''}$${Math.abs(Math.round(n)).toLocaleString(LOC)}`;
 const look = mLook;
@@ -153,6 +157,7 @@ function MgrStart({ unlocked, onExit }: { unlocked: boolean; onExit: () => void 
   const [ajans, setAjans] = useState('');
   const [sen, setSen] = useState<Senaryo>('sifir');
   const hall = useMgrHall();
+  const yeni = useLook() === 'yeni';
   return (
     <Screen
       footer={
@@ -170,7 +175,8 @@ function MgrStart({ unlocked, onExit }: { unlocked: boolean; onExit: () => void 
         </View>
       }
     >
-      <LinearGradient colors={['#0d1a2a', '#08090b']} style={ms.hero}>
+      <LinearGradient colors={['#0d1a2a', '#08090b']} style={[ms.hero, yeni && ms.stageHero]}>
+        {yeni ? <OfficeBg renk="#1c4fc4" dim={0.3} /> : null}
         <Icon name="briefcase" size={36} color={C.gold} />
         <Text style={[ms.heroTitle, SLANT]}>{L("MENAJER MODU")}</Text>
         <Text style={ms.heroText}>{L("Bu sefer kafese sen çıkmıyorsun. Dövüşçülerin kariyeri, parası ve sağlığı senin telefonunda.")}</Text>
@@ -248,9 +254,10 @@ function MgrHub({ r, onExit }: { r: MgrRun; onExit: () => void }) {
 function MgrHero({ r, goPhone }: { r: MgrRun; goPhone: () => void }) {
   const wait = bekleyen(r).length;
   const over = trialOver(r);
+  const yeni = useLook() === 'yeni';
   return (
-    <LinearGradient colors={['#0d1a2a', '#0e0f12', '#08090b']} locations={[0, 0.55, 1]} style={ms.heroCard}>
-      <CageBg opacity={0.04} />
+    <LinearGradient colors={['#0d1a2a', '#0e0f12', '#08090b']} locations={[0, 0.55, 1]} style={[ms.heroCard, yeni && { paddingTop: 64, borderColor: '#2f5da8' }]}>
+      {yeni ? <OfficeBg renk="#1c4fc4" /> : <CageBg opacity={0.04} />}
       <Text style={ms.nick}>{unvanOf(r).toLocaleUpperCase(LOC)}</Text>
       <Text style={[ms.name, SLANT]} numberOfLines={1} adjustsFontSizeToFit>
         {r.ajans.toLocaleUpperCase(LOC)}
@@ -525,9 +532,16 @@ function FixtureRow({ f, hafta, onPress }: { f: MFighter; hafta: number; onPress
 function FighterCard({ f, onPress }: { f: MFighter; onPress: () => void }) {
   const tc = f.sampiyon ? C.gold : TIER_COLOR[f.tier];
   const status = f.sakat ? { t: L("🩹 Sakat · {0} hafta", [f.sakat]), c: C.orange } : f.guven < 30 ? { t: L("😠 Güveni düşük"), c: C.red } : f.hasar >= 60 ? { t: L("🩺 Hasar yüksek"), c: C.red } : f.mac ? { t: L("🥊 {0} ile maçı var", [rkSoyad(f.mac.rakip)]), c: C.text } : f.bosHafta >= 4 ? { t: L("⏳ {0} haftadır maç bekliyor", [f.bosHafta]), c: C.orange } : { t: L("✅ Hazır"), c: C.green };
+  const yeni = useLook() === 'yeni';
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => [ms.fighter, { borderColor: tc + (f.sampiyon ? 'aa' : '44') }, pressed && { opacity: 0.8 }]}>
-      <LinearGradient colors={f.sampiyon ? ['#221b08', '#0c0d10'] : ['#11151c', '#0c0d10']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={ms.fighterInner}>
+    <Pressable onPress={onPress} style={({ pressed }) => [ms.fighter, { borderColor: tc + (f.sampiyon ? 'aa' : '44') }, yeni && { borderRadius: 6, borderColor: tc + '99' }, pressed && { opacity: 0.8 }]}>
+      {yeni ? (
+        <>
+          <CoverImage source={SCENE_ART.salon.src} iw={SCENE_ART.salon.w} ih={SCENE_ART.salon.h} opacity={0.35} />
+          <View style={[ms.tierEdge, { backgroundColor: tc }]} />
+        </>
+      ) : null}
+      <LinearGradient colors={f.sampiyon ? ['#221b08', '#0c0d10'] : yeni ? ['rgba(12,16,24,0.82)', 'rgba(12,13,16,0.96)'] : ['#11151c', '#0c0d10']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[ms.fighterInner, yeni && { paddingLeft: 16 }]}>
         <View style={ms.row}>
           <FighterAvatar look={mLook(f)} size={58} ring={tc} />
           <View style={{ flex: 1 }}>
@@ -1027,6 +1041,8 @@ const ms = StyleSheet.create({
   kicker: { color: C.gold, fontFamily: F.semi, fontSize: 11, letterSpacing: 1.5, marginBottom: 6 },
   text: { color: C.text, fontFamily: F.body, fontSize: 13, lineHeight: 19, marginBottom: 6 },
   small: { color: C.dim, fontFamily: F.body, fontSize: 12, lineHeight: 17, marginTop: 3 },
+  stageHero: { minHeight: 240, justifyContent: 'flex-end', overflow: 'hidden' },
+  tierEdge: { position: 'absolute', left: 0, top: 0, bottom: 0, width: 4, zIndex: 2 },
   heroCard: { borderRadius: R + 4, padding: 14, marginBottom: 12, borderWidth: 1, borderColor: '#1d3a5a', overflow: 'hidden' },
   nick: { color: C.gold, fontFamily: F.displayMed, fontSize: 11, letterSpacing: 1.5 },
   name: { color: C.text, fontFamily: F.display, fontSize: 24, lineHeight: 28 },

@@ -8,8 +8,12 @@ import { useEvren, useEvrenLog } from '../universe';
 import { Button, CageBg, Icon, Screen, SLANT } from './components';
 import { FighterAvatar } from './FighterAvatar';
 import { C, F, R } from './theme';
+import { useLook } from '../lookPref';
+import { CoverImage } from './CoverImage';
+import { SCENE_ART } from './sceneArt';
 
 export function UniverseScreen({ onExit }: { onExit: () => void }) {
+  const yeni = useLook() === 'yeni';
   const all = useEvren();
   const log = useEvrenLog();
   const kariyer = all.filter((x) => x.kaynak === 'kariyer');
@@ -17,8 +21,15 @@ export function UniverseScreen({ onExit }: { onExit: () => void }) {
   const aktifK = kariyer.filter((x) => !x.emekli).length;
   return (
     <Screen footer={<Button label={L("Menüye dön")} icon="arrow-left" tone="ghost" onPress={onExit} />}>
-      <LinearGradient colors={['#0b1a2e', '#0e0f12', '#08090b']} locations={[0, 0.6, 1]} style={u.hero}>
-        <CageBg opacity={0.05} />
+      <LinearGradient colors={['#0b1a2e', '#0e0f12', '#08090b']} locations={[0, 0.6, 1]} style={[u.hero, yeni && { overflow: 'hidden' }]}>
+        {yeni ? (
+          <>
+            <CoverImage source={SCENE_ART.sehir.src} iw={SCENE_ART.sehir.w} ih={SCENE_ART.sehir.h} align="bottom" />
+            <LinearGradient colors={['rgba(8,9,11,0.35)', 'rgba(8,9,11,0.9)']} locations={[0, 0.55]} style={StyleSheet.absoluteFill} pointerEvents="none" />
+          </>
+        ) : (
+          <CageBg opacity={0.05} />
+        )}
         <Icon name="earth" size={34} color={C.blue} />
         <Text style={[u.title, SLANT]}>{L("YOL EVRENİ")}</Text>
         <Text style={u.lead}>{L("Bütün modların aynı dünyada geçiyor. Kariyerindeki dövüşçülerin Menajer Modu'nda rakip olarak teklif edilir; Menajer Modu'ndaki dövüşçülerin de büyük ligde ve UCC'de kariyerinin karşısına çıkar.")}</Text>

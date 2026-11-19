@@ -15,6 +15,9 @@ import { DEFAULT_LOOK } from './FighterAvatar';
 import { Swatch } from './LockerScreen';
 import { BuyPremium } from './PremiumCard';
 import { C, F } from './theme';
+import { useLook } from '../lookPref';
+import { CoverImage } from './CoverImage';
+import { SCENE_ART } from './sceneArt';
 
 const GOREV_METIN: Record<GorevKind, (n: number) => string> = {
   mac: (n) => L("{0} maç yap", [n]),
@@ -30,6 +33,7 @@ const useProTrack = () => {
 };
 
 export function SeasonScreen({ look, onExit }: { look?: Appearance; onExit: () => void }) {
+  const yeni = useLook() === 'yeni';
   const s = useSeason();
   const pro = useProTrack();
   const premium = usePremium();
@@ -56,7 +60,13 @@ export function SeasonScreen({ look, onExit }: { look?: Appearance; onExit: () =
         )
       }
     >
-      <LinearGradient colors={[t.a, '#0c0d10']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[st.hero, { borderColor: t.b + '88' }]}>
+      <LinearGradient colors={[t.a, '#0c0d10']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[st.hero, { borderColor: t.b + '88' }, yeni && { overflow: 'hidden' }]}>
+        {yeni ? (
+          <>
+            <CoverImage source={SCENE_ART.altin.src} iw={SCENE_ART.altin.w} ih={SCENE_ART.altin.h} align="center" opacity={0.8} />
+            <LinearGradient colors={[t.a + '99', 'rgba(12,13,16,0.82)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} pointerEvents="none" />
+          </>
+        ) : null}
         <Text style={[st.kicker, { color: t.c }]}>{L("SEZON {0} · {1} GÜN KALDI", [s.idx, seasonDaysLeft()])}</Text>
         <Text style={[st.title, SLANT]}>{seasonName(s.idx).toLocaleUpperCase(LOC)}</Text>
         <View style={st.tierRow}>

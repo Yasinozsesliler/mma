@@ -32,6 +32,7 @@ import {
   type RefFighter,
   type RefRun,
 } from '../engine/referee';
+import type { RefTier } from '../engine/referee';
 import {
   canRefreshRefOffers,
   chooseEvent,
@@ -92,6 +93,12 @@ import { FullPackLink } from './ShopSheet';
 import { FighterAvatar } from './FighterAvatar';
 import { HubNav, type NavItem } from './HubNav';
 import { C, F, R } from './theme';
+import { useLook } from '../lookPref';
+import { ArenaBackdrop } from './ArenaBackdrop';
+import { cityTint } from './arenaArt';
+import { CITIES } from '../engine/worldMap';
+import { BroadcastScore } from './NewFight';
+import { Standing } from './NewCareer';
 
 export function useRefUnlocked() {
   const owned = useOwned();
@@ -151,7 +158,19 @@ export function RefereeScreen({ onExit }: { onExit: () => void }) {
 const REF_COUNTRIES = ['tr', 'us', 'br', 'ru', 'pl', 'gb', 'ie', 'mx', 'jp', 'kz', 'az', 'ge'];
 const countryName = (k?: string) => (k && COUNTRIES[k] ? COUNTRIES[k].ad : k ?? '');
 
+const REF_STAND_KIT = { shorts: '#15161a', trim: '#fff', glove: '#000', ref: true } as const;
+const REF_ARENA: Record<RefTier, 0 | 1 | 2 | 3> = { amator: 0, bolgesel: 1, buyuk: 2, ucc: 3 };
+/** Yayın bandı için kısa organizasyon adı: uzun adların baş harfleri (Şehir Amatör Ligi → ŞAL). */
+const shortOrg = (ad: string) => {
+  const up = ad.toLocaleUpperCase(LOC);
+  const w = up.split(/\s+/).filter(Boolean);
+  return up.length <= 7 || w.length < 2 ? up : w.map((x) => x[0]).join('').slice(0, 5);
+};
+/** Hakem maçının şehri (ad olarak gelir) → ışık tonu. */
+const tintOfCity = (ad?: string) => cityTint(CITIES.find((x) => x.ad === ad)?.id);
+
 function RefStart({ unlocked, onExit }: { unlocked: boolean; onExit: () => void }) {
+  const yeni = useLook() === 'yeni';
   const [ad, setAd] = useState('');
   const [soyad, setSoyad] = useState('');
   const [ulke, setUlke] = useState('tr');
@@ -174,8 +193,18 @@ function RefStart({ unlocked, onExit }: { unlocked: boolean; onExit: () => void 
         </View>
       }
     >
-      <LinearGradient colors={['#2a0d10', '#0d0a0b']} style={rs.hero}>
-        <Icon name="whistle" size={36} color={C.red} />
+      <LinearGradient colors={['#2a0d10', '#0d0a0b']} style={[rs.hero, yeni && rs.stageHero]}>
+        {yeni ? (
+          <>
+            {/* Kafesin ortasında sen: seçtiğin görünümle tam boy hakem, arkada amatör salon */}
+            <ArenaBackdrop tier={0} dim={0.3} tint="#c1121f" />
+            <View style={rs.refFig} pointerEvents="none">
+              <Standing look={look} kit={REF_STAND_KIT} h={250} pose="refIdle" />
+            </View>
+            <LinearGradient colors={['rgba(13,10,11,0.8)', 'rgba(13,10,11,0)', 'rgba(13,10,11,0.92)']} locations={[0, 0.35, 0.9]} style={StyleSheet.absoluteFill} pointerEvents="none" />
+          </>
+        ) : null}
+        {yeni ? null : <Icon name="whistle" size={36} color={C.red} />}
         <Text style={[rs.heroTitle, SLANT]}>{L("HAKEM MODU")}</Text>
         <Text style={rs.heroText}>{L("Kafesin içindeki üçüncü kişi sensin. Bir dövüşçünün kariyerini, hatta hayatını korumak senin kararına bağlı.")}</Text>
       </LinearGradient>
@@ -250,9 +279,17 @@ function RefHub({ r, unlocked, onExit }: { r: RefRun; unlocked: boolean; onExit:
 
 function RefHero({ r }: { r: RefRun }) {
   const tc = TIER_COLOR[r.seviye];
+  const yeni = useLook() === 'yeni';
   return (
-    <LinearGradient colors={r.seviye === 'ucc' ? ['#2e2206', '#0e0c07', '#08090b'] : ['#240710', '#0e0f12', '#08090b']} locations={[0, 0.55, 1]} style={rs.heroCard}>
-      <CageBg opacity={0.05} />
+    <LinearGradient colors={r.seviye === 'ucc' ? ['#2e2206', '#0e0c07', '#08090b'] : ['#240710', '#0e0f12', '#08090b']} locations={[0, 0.55, 1]} style={[rs.heroCard, yeni && { borderColor: tc + '88', paddingTop: 90 }]}>
+      {yeni ? (
+        <>
+          <ArenaBackdrop tier={REF_ARENA[r.seviye]} gold={r.seviye === 'ucc'} tint={null} dim={0.2} />
+          <LinearGradient colors={['rgba(8,9,11,0.1)', 'rgba(8,9,11,0.55)', 'rgba(8,9,11,0.95)']} locations={[0, 0.35, 0.7]} style={StyleSheet.absoluteFill} pointerEvents="none" />
+        </>
+      ) : (
+        <CageBg opacity={0.05} />
+      )}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
         <FighterAvatar look={r.gorunum ?? DEFAULT_REF_LOOK} size={64} ring={tc} />
         <View style={{ flex: 1 }}>
@@ -971,6 +1008,7 @@ function cageState(b: RefBout, log: string[]): FightState {
 
 function BoutView({ r, b }: { r: RefRun; b: RefBout }) {
   useSoundScene('fight');
+  const yeni = useLook() === 'yeni';
   const [shown, setShown] = useState(0);
   const [len, setLen] = useState(b.log.length);
   const [lk] = useState(() => looks(b));
@@ -1005,6 +1043,21 @@ function BoutView({ r, b }: { r: RefRun; b: RefBout }) {
         ) : undefined
       }
     >
+      {yeni ? (
+        <BroadcastScore
+          pName={b.a.ad.split(' ').slice(-1)[0]}
+          oName={b.b.ad.split(' ').slice(-1)[0]}
+          pHp={b.hp[0]}
+          oHp={b.hp[1]}
+          pSta={b.hp[0]}
+          oSta={b.hp[1]}
+          org={shortOrg(b.org ?? TIER_NAME[r.seviye]())}
+          round={b.sonuc ? L("BİTTİ") : `R${b.raunt}`}
+          caption={[b.unvan ? L("ÜNVAN") : b.anaKart ? L("ANA KART") : null, b.sehir, L("R{0}/{1}", [b.raunt, b.maxRaunt])].filter(Boolean).join(' · ').toLocaleUpperCase(LOC)}
+          style={{ marginBottom: 10 }}
+        />
+      ) : (
+      <>
       <View style={rs.boutTop}>
         <Text style={rs.boutOrg} numberOfLines={1}>
           {[b.org, b.sehir].filter(Boolean).join(' · ').toLocaleUpperCase(LOC) || TIER_NAME[r.seviye]().toLocaleUpperCase(LOC)}
@@ -1019,6 +1072,8 @@ function BoutView({ r, b }: { r: RefRun; b: RefBout }) {
         </View>
         <Corner f={b.b} hp={b.hp[1]} color={C.blue} look={lk[1]} right />
       </View>
+      </>
+      )}
       {b.etiketler?.length || b.yayin || b.evSahibi ? (
         <View style={[ds.chips, { justifyContent: 'center', marginBottom: 6 }]}>
           {(b.etiketler ?? []).map((t) => (
@@ -1030,7 +1085,7 @@ function BoutView({ r, b }: { r: RefRun; b: RefBout }) {
           {b.evSahibi ? <Text style={ds.chipPlain}>{L("🏟️ Ev sahibi salon")}</Text> : null}
         </View>
       ) : null}
-      <CageView fs={cageState(b, cageLog)} shown={cageShown} pLook={lk[0]} oLook={lk[1]} rLook={r.gorunum ?? DEFAULT_REF_LOOK} rShirt={kiyafetRenk(r)} pKitOverride={RED_KIT} noReplay />
+      <CageView fs={cageState(b, cageLog)} shown={cageShown} pLook={lk[0]} oLook={lk[1]} rLook={r.gorunum ?? DEFAULT_REF_LOOK} rShirt={kiyafetRenk(r)} pKitOverride={RED_KIT} noReplay arena={yeni ? { tier: REF_ARENA[r.seviye], logo: b.org, tint: tintOfCity(b.sehir) } : undefined} />
       <View style={rs.logBox}>
         {b.log.slice(0, shown).slice(-4).map((t, i) => (
           <Text key={`${b.raunt}-${i}-${t}`} style={[rs.logLine, t.startsWith('📋') && { color: C.gold }]}>
@@ -1174,6 +1229,8 @@ const rs = StyleSheet.create({
   chip: { borderWidth: 1, borderColor: C.border, borderRadius: 14, paddingHorizontal: 10, paddingVertical: 5, backgroundColor: '#0d0f13' },
   chipOn: { backgroundColor: C.red, borderColor: C.red },
   chipText: { color: C.dim, fontFamily: F.semi, fontSize: 12 },
+  stageHero: { minHeight: 330, justifyContent: 'flex-end', overflow: 'hidden' },
+  refFig: { position: 'absolute', left: 0, right: 0, bottom: 40, alignItems: 'center' },
   heroCard: { borderRadius: R + 4, padding: 14, marginBottom: 12, borderWidth: 1, borderColor: '#3a1a20', overflow: 'hidden' },
   nick: { color: C.gold, fontFamily: F.displayMed, fontSize: 11, letterSpacing: 1.5 },
   name: { color: C.text, fontFamily: F.display, fontSize: 24, lineHeight: 28 },
