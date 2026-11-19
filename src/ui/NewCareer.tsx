@@ -1,7 +1,7 @@
 // Yeni görünüm: kariyer ana ekranı sahnesi ve maç öncesi VS sahnesi. Klasik görünümde hiç çizilmez.
 // Yalnızca görünüm: oyun durumu okunur, hiçbir şey değiştirilmez. Dokunuşlar mevcut eylemleri çağırır.
 import { LinearGradient } from 'expo-linear-gradient';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Ellipse, G } from 'react-native-svg';
 import { playerKit, useCosmetics } from '../cosmetics';
 import { money } from '../engine/career';
@@ -32,6 +32,8 @@ export function arenaOrgText(s: GameState): { org: string; sub: string } {
   const ad = ORGS[id].ad;
   return { org: kisa, sub: kisa === 'PRO' || ad.toLocaleUpperCase(LOC) === kisa.toLocaleUpperCase(LOC) ? '' : ad };
 }
+
+const LIGHTS_ART = require('../../assets/art/arena_lights.jpg');
 
 const shortMoney = (n: number) => (Math.abs(n) < 100_000 ? money(n) : `${n < 0 ? '-' : ''}$${fmtFollowers(Math.abs(n))}`);
 
@@ -377,6 +379,11 @@ export function PosterCard({ s, g, opp, rows, bitti, methodText }: { s: GameStat
   return (
     <LinearGradient colors={['#13254d', '#0a1430', '#050a18']} locations={[0, 0.45, 1]} style={p.wrap}>
       <CageBg opacity={0.05} />
+      {/* Üstte arena bandı: ışıklar ve tribün, alta doğru afiş rengine kaybolur */}
+      <View style={p.art} pointerEvents="none">
+        <Image source={LIGHTS_ART} style={StyleSheet.absoluteFill} resizeMode="cover" />
+        <LinearGradient colors={['rgba(10,20,45,0)', 'rgba(14,28,60,0.25)', '#0d1a3a']} locations={[0, 0.6, 1]} style={StyleSheet.absoluteFill} />
+      </View>
       <View style={p.head}>
         <Text style={p.org}>{orgShort(s)}</Text>
         <Text style={p.event} numberOfLines={1}>
@@ -405,7 +412,7 @@ export function PosterCard({ s, g, opp, rows, bitti, methodText }: { s: GameStat
                 {SLOT_LABEL[g.konum]} · {bitti ? L("SIRA SENDE") : L("SEN")}
               </Text>
               <View style={p.line}>
-                <Corner country={f.uyruk} name={`${f.ad} ${f.soyad}`} rec={`${s.rekor.g}-${s.rekor.m}`} side="l" />
+                <Corner country={f.uyruk} name={`${f.ad} ${f.soyad}`} rec={s.stage === 'amator' ? `${s.amator.g}-${s.amator.m}` : `${s.rekor.g}-${s.rekor.m}`} side="l" />
                 <Text style={[p.vs, { color: '#fff' }]}>vs</Text>
                 <Corner country={opp.uyruk} name={`${opp.ad} ${opp.soyad}`} rec={`${opp.rekor.g}-${opp.rekor.m}`} side="r" />
               </View>
@@ -422,7 +429,8 @@ export function PosterCard({ s, g, opp, rows, bitti, methodText }: { s: GameStat
 
 const p = StyleSheet.create({
   wrap: { borderRadius: 6, borderWidth: 1, borderColor: '#24365f', paddingHorizontal: 10, paddingTop: 14, paddingBottom: 10, overflow: 'hidden' },
-  head: { alignItems: 'center', gap: 6, marginBottom: 4 },
+  art: { position: 'absolute', left: 0, right: 0, top: 0, height: 200, overflow: 'hidden' },
+  head: { alignItems: 'center', gap: 6, marginBottom: 4, paddingTop: 34 },
   org: { backgroundColor: C.gold, color: '#1f1605', fontFamily: F.display, fontSize: 18, letterSpacing: 1, paddingHorizontal: 10, paddingVertical: 2, overflow: 'hidden' },
   event: { color: '#c7d3ee', fontFamily: F.black, fontSize: 10, letterSpacing: 2 },
   title: { color: C.text, fontFamily: F.display, fontSize: 30, letterSpacing: 1.5, textAlign: 'center', marginTop: 8, marginBottom: 6 },

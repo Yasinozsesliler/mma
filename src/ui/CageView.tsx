@@ -8,7 +8,8 @@ import { cageTintNow, playerKit } from '../cosmetics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { memo, useEffect, useRef, useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
-import Svg, { Circle, Defs, Ellipse, G, Line, LinearGradient as SvgLinear, Polygon, RadialGradient, Rect, Stop, Text as SvgText } from 'react-native-svg';
+import Svg, { Circle, Defs, Ellipse, G, Image as SvgImage, Line, LinearGradient as SvgLinear, Polygon, RadialGradient, Rect, Stop, Text as SvgText } from 'react-native-svg';
+import { currentLook } from '../lookPref';
 import type { Appearance, FightState } from '../engine/types';
 import type { Arena } from './arena';
 import { DEFAULT_LOOK } from './FighterAvatar';
@@ -129,6 +130,22 @@ const Crowd = memo(function Crowd({ w, hp, t, tier = 2 }: { w: number; hp: numbe
   );
 });
 
+/** Yeni görünüm: tribün çizilmiş görselden gelir; coşku anlarında üstünde foto flaşları patlar. */
+const CROWD_ART = require('../../assets/art/arena_crowd.jpg');
+const ArtCrowd = memo(function ArtCrowd({ w, hp, t }: { w: number; hp: number; t: number }) {
+  const tick = Math.floor(t / 90);
+  return (
+    <>
+      <SvgImage href={CROWD_ART} x={0} y={0} width={w} height={H * 0.74} preserveAspectRatio="xMidYMid slice" opacity={0.85} />
+      {hp > 0.25
+        ? Array.from({ length: 10 }, (_, i) =>
+            hash(i * 31 + tick) < 0.35 * hp ? <Circle key={i} cx={w * (0.04 + hash(i * 7 + tick) * 0.92)} cy={CROWD_TOP + 14 + hash(i * 3 + tick) * 34} r={2.6} fill="#ffffff" opacity={0.85} /> : null,
+          )
+        : null}
+    </>
+  );
+});
+
 /** Tavan spotları, arka kafes ve kanvas */
 const CageBack = memo(function CageBack({ w, tint, tier = 2, logo, renk }: { w: number; tint?: string[] | null; tier?: number; logo?: string; renk?: string }) {
   const cx = w / 2;
@@ -206,6 +223,7 @@ export function CageView({
   oBuild?: number;
 }) {
   const [tint] = useState(() => cageTintNow());
+  const [art] = useState(() => currentLook() === 'yeni');
   const [pKit] = useState(() => pKitOverride ?? playerKit());
   const [w, setW] = useState(340);
   const k = Math.max(0.95, Math.min(1.3, w / 300));
@@ -673,8 +691,9 @@ export function CageView({
             </Defs>
             <G transform={sx || sy ? `translate(${sx} ${sy})` : undefined}>
             {/* Sabit katmanlar yalnızca genişlik değişince yeniden çizilir; seyirci yalnızca coşku anlarında hareket eder */}
+            {art ? <ArtCrowd w={w} hp={low ? 0 : hp} t={!low && hp ? tNow : 0} /> : null}
             <Stands w={w} tier={arena?.tier} logo={arena?.logo} renk={arena?.renk} />
-            <Crowd w={w} hp={low ? 0 : hp} t={!low && hp ? tNow : 0} tier={arena?.tier} />
+            {art ? null : <Crowd w={w} hp={low ? 0 : hp} t={!low && hp ? tNow : 0} tier={arena?.tier} />}
             <CageBack w={w} tint={tint} tier={arena?.tier} logo={arena?.logo} renk={arena?.renk} />
             {stains.current.map((s2, i) => (
               <Ellipse key={`s${i}`} cx={s2.x} cy={s2.y} rx={s2.r * 1.4} ry={s2.r * 0.5} fill="#7a0d12" opacity={s2.o} />
