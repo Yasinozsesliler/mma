@@ -51,7 +51,7 @@ export function StyleScreen({ s, act }: { s: GameState; act: Act }) {
         </View>
       }
     >
-      <Title kicker={L("BERBER VE DÖVMECİ")} sub={L("Görünüşün senin imzan. Değişiklikler ücretli; dövme silmek pahalıdır.")}>
+      <Title art="salon" kicker={L("BERBER VE DÖVMECİ")} sub={L("Görünüşün senin imzan. Değişiklikler ücretli; dövme silmek pahalıdır.")}>
         {L("Yeni Tarz")}
       </Title>
       <View style={st.preview}>

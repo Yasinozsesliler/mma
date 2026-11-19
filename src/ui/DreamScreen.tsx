@@ -167,7 +167,7 @@ function DreamIntro({ spec, store, deneme, onStart, onStudio }: { spec: DreamSpe
   return (
     <Screen>
       <Head store={store} />
-      <Title kicker={deneme ? L("İKİNCİ HAK") : L("BUGÜNÜN EŞLEŞMESİ · HERKES AYNI MAÇI OYNUYOR")} sub={L("Zirvedeki halleriyle · {0} · 5 raunt", [WEIGHT_CLASSES[spec.siklet].ad])}>
+      <Title art="dev" kicker={deneme ? L("İKİNCİ HAK") : L("BUGÜNÜN EŞLEŞMESİ · HERKES AYNI MAÇI OYNUYOR")} sub={L("Zirvedeki halleriyle · {0} · 5 raunt", [WEIGHT_CLASSES[spec.siklet].ad])}>
         {dreamTitle(spec.ben, spec.rakip)}
       </Title>
       <Versus spec={spec} />

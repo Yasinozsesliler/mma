@@ -803,7 +803,7 @@ export function CampScreen({ s, act }: { s: GameState; act: Act }) {
     return (
       <Screen>
         {header}
-        <Title sub={L("{0} haftalık kamp. Masraflar kamp bitince ödenir. Bakiye: {1}", [k.hafta, money(s.para)])}>{L("Kamp Yeri")}</Title>
+        <Title art="dag" sub={L("{0} haftalık kamp. Masraflar kamp bitince ödenir. Bakiye: {1}", [k.hafta, money(s.para)])}>{L("Kamp Yeri")}</Title>
         {CAMP_SITES.map((site) => {
           const q = campQuote(s, site.id, k.hafta);
           const locked = !open.includes(site);
@@ -898,7 +898,7 @@ export function CampScreen({ s, act }: { s: GameState; act: Act }) {
     return (
       <Screen>
         {header}
-        <Title sub={L("{0} ({1}) mikrofonu aldı ve sana döndü. Salon sessiz.", [o.soyad, o.kisilik])}>{L("Basın Toplantısı")}</Title>
+        <Title art="basin" sub={L("{0} ({1}) mikrofonu aldı ve sana döndü. Salon sessiz.", [o.soyad, o.kisilik])}>{L("Basın Toplantısı")}</Title>
         {(Object.keys(PRESS) as PressChoice[]).map((p) => (
           <CampChoice key={p} icon={PRESS_ICONS[p]} label={PRESS[p].ad} desc={PRESS[p].aciklama} onPress={() => choose(p)} />
         ))}

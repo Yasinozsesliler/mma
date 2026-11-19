@@ -19,18 +19,21 @@ import {
 import type { GameState } from '../engine/types';
 import { Bar, Button, Icon, OctIcon, Screen, Section, SLANT, Title, type IconName } from './components';
 import { FighterAvatar } from './FighterAvatar';
+import { Medal } from './Medal';
+import { useLook } from '../lookPref';
 import type { Act } from './GameScreens';
 import { C, F, R } from './theme';
 
 // ---------- Başarımlar ----------
 
 function AchRow({ a, s, ok }: { a: Achievement; s: GameState; ok: boolean }) {
+  const yeni = useLook() === 'yeni';
   const t = TIERS[a.tier];
   const hidden = a.gizli && !ok;
   const prog = !ok && a.ilerleme ? a.ilerleme(s) : null;
   return (
     <View style={[ac.row, ok && { borderColor: t.renk + '77', backgroundColor: t.renk + '0d' }]}>
-      <OctIcon name={(hidden ? 'help' : ok ? a.ikon : 'lock') as IconName} color={ok ? t.renk : C.faint} size={44} />
+      {yeni ? <Medal color={t.renk} icon={a.ikon as IconName} ok={ok} hidden={hidden} size={42} /> : <OctIcon name={(hidden ? 'help' : ok ? a.ikon : 'lock') as IconName} color={ok ? t.renk : C.faint} size={44} />}
       <View style={{ flex: 1 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
           <Text style={[ac.name, !ok && { color: C.dim }]} numberOfLines={1}>
@@ -50,6 +53,7 @@ function AchRow({ a, s, ok }: { a: Achievement; s: GameState; ok: boolean }) {
 }
 
 function AchievementList({ s }: { s: GameState }) {
+  const yeni = useLook() === 'yeni';
   const [kat, setKat] = useState<AchCategory | 'hepsi'>('hepsi');
   const [durum, setDurum] = useState<'hepsi' | 'acik' | 'kilitli'>('hepsi');
   const earned = new Set(s.basarimlar ?? []);
@@ -91,6 +95,27 @@ function AchievementList({ s }: { s: GameState }) {
         </View>
       </LinearGradient>
       <Bar value={(got / total) * 100} color={C.gold} />
+      {yeni && got ? (
+        <View style={ac.shelf}>
+          <Text style={ac.shelfTitle}>{L("VİTRİN · SON KAZANILANLAR")}</Text>
+          <View style={ac.shelfRow}>
+            {(s.basarimlar ?? [])
+              .slice(-5)
+              .reverse()
+              .map((id) => ACHIEVEMENTS.find((x) => x.id === id))
+              .filter((x): x is Achievement => !!x)
+              .map((a) => (
+                <View key={a.id} style={ac.shelfItem}>
+                  <Medal color={TIERS[a.tier].renk} icon={a.ikon as IconName} ok size={50} />
+                  <Text style={ac.shelfName} numberOfLines={2}>
+                    {a.ad}
+                  </Text>
+                </View>
+              ))}
+          </View>
+          <View style={ac.shelfBoard} />
+        </View>
+      ) : null}
 
       <View style={ac.chips}>
         {[{ id: 'hepsi' as const, ad: L("TÜMÜ"), ikon: 'view-grid' }, ...CATEGORIES].map((c) => {
@@ -297,7 +322,7 @@ export function AchievementsScreen({ s, act }: { s: GameState; act: Act }) {
         />
       }
     >
-      <Title kicker={L("MİRAS")} sub={L("Kafeste ve kafes dışında bıraktığın iz.")}>
+      <Title art="altin" kicker={L("MİRAS")} sub={L("Kafeste ve kafes dışında bıraktığın iz.")}>
         
         {L("Başarımlar")}
       </Title>
@@ -320,6 +345,12 @@ export function AchievementsScreen({ s, act }: { s: GameState; act: Act }) {
 }
 
 const ac = StyleSheet.create({
+  shelf: { marginTop: 10, marginBottom: 4, borderRadius: 6, borderWidth: 1, borderColor: '#3a2c0c', backgroundColor: '#120e06', paddingTop: 10, paddingHorizontal: 8, overflow: 'hidden' },
+  shelfTitle: { color: C.gold, fontFamily: F.black, fontSize: 9.5, letterSpacing: 1.6, marginLeft: 4, marginBottom: 8 },
+  shelfRow: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'flex-end' },
+  shelfItem: { width: 62, alignItems: 'center', gap: 4 },
+  shelfName: { color: '#e9dcc0', fontFamily: F.semi, fontSize: 9.5, textAlign: 'center', lineHeight: 12, minHeight: 24 },
+  shelfBoard: { height: 8, marginTop: 6, marginHorizontal: -8, backgroundColor: '#3a2a10', borderTopWidth: 1, borderTopColor: '#6b4f1e' },
   tabs: { flexDirection: 'row', gap: 8, marginBottom: 12 },
   tab: { flex: 1, flexDirection: 'row', gap: 6, justifyContent: 'center', alignItems: 'center', paddingVertical: 11, borderRadius: 4, borderWidth: 1, borderColor: C.border, backgroundColor: C.card, transform: [{ skewX: '-8deg' }] },
   tabOn: { backgroundColor: C.red, borderColor: C.red },

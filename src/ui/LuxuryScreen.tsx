@@ -39,7 +39,7 @@ export function LuxuryScreen({ s, act }: { s: GameState; act: Act }) {
   const maliyet = owned.reduce((a, x) => a + x.o.alis, 0);
   return (
     <Screen footer={<Button label={L("Kariyere dön")} icon="arrow-left" tone="ghost" onPress={() => act((x) => (x.phase = 'hub'))} />}>
-      <Title kicker={L("KOLEKSİYON")} sub={L("Nadir saatler, klasik arabalar ve sanat eserleri. Değerleri her hafta değişir; doğru zamanda al, doğru zamanda sat.")}>
+      <Title art="sehir" kicker={L("KOLEKSİYON")} sub={L("Nadir saatler, klasik arabalar ve sanat eserleri. Değerleri her hafta değişir; doğru zamanda al, doğru zamanda sat.")}>
         {L("Lüks Koleksiyon")}
       </Title>
       <View style={ls.summary}>

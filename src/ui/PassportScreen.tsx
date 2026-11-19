@@ -47,7 +47,7 @@ export function PassportScreen({ s, act }: { s: GameState; act: Act }) {
   const ulke = COUNTRIES[s.fighter.uyruk]?.ad ?? s.fighter.uyruk;
   return (
     <Screen footer={<Button label={L("Kariyere dön")} icon="arrow-left" tone="ghost" onPress={() => act((x) => (x.phase = 'hub'))} />}>
-      <Title kicker={L("KOLEKSİYON")} sub={L("Dövüştüğün her şehir pasaportuna bir damga ve rafına bir hediyelik eşya bırakır.")}>
+      <Title art="sehir" kicker={L("KOLEKSİYON")} sub={L("Dövüştüğün her şehir pasaportuna bir damga ve rafına bir hediyelik eşya bırakır.")}>
         {L("Pasaport")}
       </Title>
       <LinearGradient colors={['#5a1020', '#2b070f']} style={ps.cover}>

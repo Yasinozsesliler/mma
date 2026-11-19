@@ -237,7 +237,7 @@ export function NightlifeScreen({ s, act }: { s: GameState; act: Act }) {
   }, [s.hafta, s.adaylar?.hafta, act]);
   return (
     <Screen footer={<Button label={L("Kariyere dön")} icon="arrow-left" tone="ghost" onPress={() => act((x) => (x.phase = 'hub'))} />}>
-      <Title kicker={L("GECE HAYATI")} sub={L("Kafes dışındaki hayatın. Eğlenceli, pahalı ve riskli.")}>
+      <Title art="sehir" kicker={L("GECE HAYATI")} sub={L("Kafes dışındaki hayatın. Eğlenceli, pahalı ve riskli.")}>
         
         {L("Şehrin Işıkları")}
       </Title>

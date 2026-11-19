@@ -59,7 +59,7 @@ export function AlbumScreen({ s, act }: { s: GameState; act: Act }) {
   const n = cards.length;
   return (
     <Screen footer={<Button label={L("Kariyere dön")} icon="arrow-left" tone="ghost" onPress={() => act((x) => (x.phase = 'hub'))} />}>
-      <Title kicker={L("KOLEKSİYON")} sub={L("Yendiğin her dövüşçü albüme bir kart olarak girer. UCC şampiyonu, ezeli rakibin ve eski antrenman ortağın efsane kart olur.")}>
+      <Title art="tribun" kicker={L("KOLEKSİYON")} sub={L("Yendiğin her dövüşçü albüme bir kart olarak girer. UCC şampiyonu, ezeli rakibin ve eski antrenman ortağın efsane kart olur.")}>
         {L("Kart Albümü")}
       </Title>
       <View style={st.stats}>

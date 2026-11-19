@@ -10816,4 +10816,5 @@ export const ES: Record<string, string> = {
   "Son söz": "Última palabra",
   "Temsilci": "Representante",
   "Menajerin": "Tu mánager",
+  "VİTRİN · SON KAZANILANLAR": "VITRINA · ÚLTIMOS LOGROS",
 };

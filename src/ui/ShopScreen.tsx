@@ -91,7 +91,7 @@ export function ShopScreen({ s, act, start = 'ekipman' }: { s: GameState; act: A
   const items = SHOP.filter((i) => i.kategori === tab && (tab !== 'yasam' || (i.alt ?? 'diger') === alt)).sort((a, b) => a.fiyat - b.fiyat);
   return (
     <Screen footer={<Button label={L("Kariyere dön")} icon="arrow-left" tone="ghost" onPress={() => act((x) => (x.phase = 'hub'))} />}>
-      <Title kicker={L("DÖVÜŞÇÜ MAĞAZASI")} sub={L("Ekipmanlar kafeste kalıcı bonus verir. Yaşam eşyaları popülerlik, motivasyon ve daha hızlı iyileşme sağlar.")}>
+      <Title art="salon" kicker={L("DÖVÜŞÇÜ MAĞAZASI")} sub={L("Ekipmanlar kafeste kalıcı bonus verir. Yaşam eşyaları popülerlik, motivasyon ve daha hızlı iyileşme sağlar.")}>
         
         {L("Mağaza")}
       </Title>

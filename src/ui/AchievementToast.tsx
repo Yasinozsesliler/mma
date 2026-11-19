@@ -1,14 +1,18 @@
 import { L } from '../i18n';
 import { sfx } from '../audio';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
 import { Icon } from './components';
+import { Medal } from './Medal';
+import { useLook } from '../lookPref';
 import { C, F, R } from './theme';
 
 /** Yeni açılan başarımlar için üstten kayan kısa bildirim. */
 export function AchievementToast({ items, onDone }: { items: string[]; onDone: () => void }) {
   const y = useRef(new Animated.Value(-120)).current;
+  const [shine] = useState(() => new Animated.Value(0));
+  const yeni = useLook() === 'yeni';
   const key = items.join('|');
   useEffect(() => {
     if (!items.length) return;
@@ -20,6 +24,8 @@ export function AchievementToast({ items, onDone }: { items: string[]; onDone: (
       Animated.timing(y, { toValue: -140, duration: 260, useNativeDriver: true }),
     ]);
     anim.start(({ finished }) => finished && onDone());
+    shine.setValue(0);
+    Animated.timing(shine, { toValue: 1, duration: 1100, delay: 350, useNativeDriver: true }).start();
     return () => anim.stop();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
@@ -27,8 +33,13 @@ export function AchievementToast({ items, onDone }: { items: string[]; onDone: (
   const hof = items.includes(L("HALL OF FAME"));
   return (
     <Animated.View pointerEvents="none" style={[ts.wrap, { transform: [{ translateY: y }] }]}>
-      <LinearGradient colors={hof ? ['#f7d57a', '#c8902e'] : ['#231a07', '#0c0d10']} style={ts.box}>
-        <Icon name={hof ? 'pillar' : 'trophy'} size={26} color={hof ? '#000' : C.gold} />
+      <LinearGradient colors={hof ? ['#f7d57a', '#c8902e'] : ['#231a07', '#0c0d10']} style={[ts.box, yeni && { overflow: 'hidden' }]}>
+        {yeni && !hof ? <Medal color={C.gold} icon="trophy" ok size={34} /> : <Icon name={hof ? 'pillar' : 'trophy'} size={26} color={hof ? '#000' : C.gold} />}
+        {yeni ? (
+          <Animated.View pointerEvents="none" style={[ts.shine, { transform: [{ translateX: shine.interpolate({ inputRange: [0, 1], outputRange: [-120, 460] }) }, { skewX: '-20deg' }] }]}>
+            <LinearGradient colors={['rgba(255,255,255,0)', 'rgba(255,240,200,0.35)', 'rgba(255,255,255,0)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFill} />
+          </Animated.View>
+        ) : null}
         <View style={{ flex: 1 }}>
           <Text style={[ts.kicker, hof && { color: '#3a2a07' }]}>{hof ? L("ONUR LİSTESİ") : items.length > 1 ? L("{0} BAŞARIM AÇILDI", [items.length]) : L("BAŞARIM AÇILDI")}</Text>
           <Text style={[ts.text, hof && { color: '#000' }]} numberOfLines={2}>
@@ -42,6 +53,7 @@ export function AchievementToast({ items, onDone }: { items: string[]; onDone: (
 
 const ts = StyleSheet.create({
   wrap: { position: 'absolute', top: 58, left: 12, right: 12, zIndex: 50 },
+  shine: { position: 'absolute', top: 0, bottom: 0, width: 70 },
   box: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: R, borderWidth: 1, borderColor: C.gold, padding: 12, shadowColor: C.gold, shadowOpacity: 0.4, shadowRadius: 16 },
   kicker: { color: C.gold, fontFamily: F.display, fontSize: 11, letterSpacing: 1.5 },
   text: { color: C.text, fontFamily: F.display, fontSize: 16 },

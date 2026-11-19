@@ -1,6 +1,9 @@
 import { L, LOC } from '../i18n';
 import { useState } from 'react';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useLook } from '../lookPref';
+import { SCENE_ART } from './sceneArt';
 import { money } from '../engine/career';
 import { AGENTS, COUNTRIES } from '../engine/data';
 import { acceptSponsor, brandById, rejectSponsor, sponsorSlots, startHaggle } from '../engine/sponsors';
@@ -8,10 +11,11 @@ import { HagglePanel } from './HagglePanel';
 import { agentSeverance, agentSigning, agentUnlocked, availableGyms, fireAgent, hireAgent, switchGym } from '../engine/team';
 import type { GameState } from '../engine/types';
 import { STAT_LABELS } from '../engine/types';
-import { Button, Card, OctIcon, P, Pill, Screen, Section, SLANT, Title } from './components';
+import { Button, Card, Icon, OctIcon, P, Pill, Screen, Section, SLANT, Title } from './components';
 import type { Act } from './GameScreens';
 import { StaffPanel } from './StaffPanel';
 import { bondColor, bondLabel } from '../engine/coachBond';
+import { CoverImage } from './CoverImage';
 import { C, F, R } from './theme';
 
 function Stars({ n }: { n: number }) {
@@ -24,43 +28,112 @@ function Stars({ n }: { n: number }) {
   );
 }
 
+/** 10 üzerinden kaliteyi beş yıldızla gösterir (yarım yıldız dahil). */
+function StarRow({ n }: { n: number }) {
+  const v = Math.max(0, Math.min(10, n)) / 2;
+  return (
+    <View style={{ flexDirection: 'row', gap: 1, marginTop: 3 }}>
+      {Array.from({ length: 5 }, (_, i) => (
+        <Icon key={i} name={v >= i + 1 ? 'star' : v >= i + 0.5 ? 'star-half-full' : 'star-outline'} size={15} color={C.gold} />
+      ))}
+    </View>
+  );
+}
+
 export function TeamScreen({ s, act }: { s: GameState; act: Act }) {
+  const yeni = useLook() === 'yeni';
   const [tab, setTab] = useState<'salon' | 'menajer' | 'sponsor' | 'kadro'>((s.sponsorTeklif ?? []).length ? 'sponsor' : 'kadro');
   const [msg, setMsg] = useState<string | null>(null);
   const gyms = availableGyms(s);
   const bond = s.hoca && s.hoca.ad === s.takim.antrenor ? s.hoca : { bag: 55 };
   return (
     <Screen footer={<Button label={L("Kariyere dön")} icon="arrow-left" tone="ghost" onPress={() => act((x) => (x.phase = 'hub'))} />}>
-      <Title kicker={L("KÖŞENDEKİLER")} sub={L("Antrenörün kampta ne kadar gelişeceğini, menajerin ne kadar kazanacağını belirler.")}>
+      <Title art="salon" kicker={L("KÖŞENDEKİLER")} sub={L("Antrenörün kampta ne kadar gelişeceğini, menajerin ne kadar kazanacağını belirler.")}>
         
         {L("Takım")}
       </Title>
-      <Card accent={C.red}>
-        <Text style={tm.label}>{L("SALON VE ANTRENÖR")}</Text>
-        <Text style={[tm.big, SLANT]}>{s.takim.salon.toLocaleUpperCase(LOC)}</Text>
-        <Text style={tm.meta}>
-          {s.takim.antrenor} {L("· Uzmanlık:")}{' '}{s.takim.uzmanlik ? STAT_LABELS[s.takim.uzmanlik] : '—'}
-        </Text>
-        <Stars n={s.takim.antrenorKalite} />
-        <View style={tm.bondRow}>
-          <Text style={tm.bondL}>{L("GÜVEN")}</Text>
-          <View style={tm.bondTrack}>
-            <View style={[tm.bondFill, { width: `${bond.bag}%`, backgroundColor: bondColor(bond.bag) }]} />
+      {yeni ? (
+        <View style={{ gap: 10, marginBottom: 12 }}>
+          {/* Köşe kartı: antrenör */}
+          <View style={[tm.corner, { borderColor: C.red + '88' }]}>
+            <CoverImage source={SCENE_ART.salon.src} iw={SCENE_ART.salon.w} ih={SCENE_ART.salon.h} />
+            <LinearGradient colors={['rgba(8,9,12,0.55)', 'rgba(8,9,12,0.96)']} start={{ x: 0, y: 0 }} end={{ x: 0.85, y: 0 }} style={StyleSheet.absoluteFill} />
+            <View style={[tm.cornerEdge, { backgroundColor: C.red }]} />
+            <View style={tm.cornerRow}>
+              <OctIcon name="whistle" color={C.red} size={54} />
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <Text style={[tm.label, { color: C.red }]}>{L("ANTRENÖRÜN")}</Text>
+                <Text style={[tm.big, SLANT]} numberOfLines={1} adjustsFontSizeToFit>
+                  {s.takim.antrenor.toLocaleUpperCase(LOC)}
+                </Text>
+                <Text style={tm.meta} numberOfLines={1}>
+                  {s.takim.salon} {L("· Uzmanlık:")} {s.takim.uzmanlik ? STAT_LABELS[s.takim.uzmanlik] : '—'}
+                </Text>
+                <StarRow n={s.takim.antrenorKalite} />
+              </View>
+            </View>
+            <View style={[tm.bondRow, { paddingHorizontal: 14, paddingBottom: 12 }]}>
+              <Text style={tm.bondL}>{L("GÜVEN")}</Text>
+              <View style={tm.bondTrack}>
+                <View style={[tm.bondFill, { width: `${bond.bag}%`, backgroundColor: bondColor(bond.bag) }]} />
+              </View>
+              <Text style={[tm.bondT, { color: bondColor(bond.bag) }]}>{bondLabel(bond.bag)}</Text>
+            </View>
           </View>
-          <Text style={[tm.bondT, { color: bondColor(bond.bag) }]}>{bondLabel(bond.bag)}</Text>
+          {/* Köşe kartı: menajer */}
+          <View style={[tm.corner, { borderColor: C.blue + '88' }]}>
+            <CoverImage source={SCENE_ART.sehir.src} iw={SCENE_ART.sehir.w} ih={SCENE_ART.sehir.h} align="bottom" />
+            <LinearGradient colors={['rgba(8,9,12,0.55)', 'rgba(8,9,12,0.96)']} start={{ x: 0, y: 0 }} end={{ x: 0.85, y: 0 }} style={StyleSheet.absoluteFill} />
+            <View style={[tm.cornerEdge, { backgroundColor: C.blue }]} />
+            <View style={[tm.cornerRow, { paddingBottom: 12 }]}>
+              <OctIcon name="account-tie" color={C.blue} size={54} />
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <Text style={[tm.label, { color: C.blue }]}>{L("MENAJERİN")}</Text>
+                <Text style={[tm.big, SLANT]} numberOfLines={1} adjustsFontSizeToFit>
+                  {(s.takim.menajer ?? L('YOK')).toLocaleUpperCase(LOC)}
+                </Text>
+                {s.takim.menajer ? (
+                  <>
+                    <Text style={tm.meta}>
+                      {L("Kalite")} {s.takim.menajerKalite}{L("/10 · Komisyon %")}{Math.round(s.takim.menajerPay * 100)}
+                    </Text>
+                    <StarRow n={s.takim.menajerKalite} />
+                  </>
+                ) : (
+                  <Text style={tm.meta}>{L("Pazarlıkları tek başına yapıyorsun.")}</Text>
+                )}
+              </View>
+            </View>
+          </View>
         </View>
-        <Text style={tm.bondHint}>{L("Kazandıkça ve onun planına uydukça güven artar. Çok yüksek güven köşede IQ +1 verir; çok düşükse köşe soğur.")}</Text>
-        <Text style={[tm.label, { marginTop: 12 }]}>{L("MENAJER")}</Text>
-        <Text style={[tm.big, SLANT, { fontSize: 18 }]}>{s.takim.menajer ?? L('YOK')}</Text>
-        {s.takim.menajer ? (
+      ) : (
+      <Card accent={C.red}>
+          <Text style={tm.label}>{L("SALON VE ANTRENÖR")}</Text>
+          <Text style={[tm.big, SLANT]}>{s.takim.salon.toLocaleUpperCase(LOC)}</Text>
           <Text style={tm.meta}>
-            
-            {L("Kalite")}{' '}{s.takim.menajerKalite}{L("/10 · Komisyon %")}{Math.round(s.takim.menajerPay * 100)}
+            {s.takim.antrenor} {L("· Uzmanlık:")}{' '}{s.takim.uzmanlik ? STAT_LABELS[s.takim.uzmanlik] : '—'}
           </Text>
-        ) : (
-          <Text style={tm.meta}>{L("Pazarlıkları tek başına yapıyorsun.")}</Text>
-        )}
-      </Card>
+          <Stars n={s.takim.antrenorKalite} />
+          <View style={tm.bondRow}>
+            <Text style={tm.bondL}>{L("GÜVEN")}</Text>
+            <View style={tm.bondTrack}>
+              <View style={[tm.bondFill, { width: `${bond.bag}%`, backgroundColor: bondColor(bond.bag) }]} />
+            </View>
+            <Text style={[tm.bondT, { color: bondColor(bond.bag) }]}>{bondLabel(bond.bag)}</Text>
+          </View>
+          <Text style={tm.bondHint}>{L("Kazandıkça ve onun planına uydukça güven artar. Çok yüksek güven köşede IQ +1 verir; çok düşükse köşe soğur.")}</Text>
+          <Text style={[tm.label, { marginTop: 12 }]}>{L("MENAJER")}</Text>
+          <Text style={[tm.big, SLANT, { fontSize: 18 }]}>{s.takim.menajer ?? L('YOK')}</Text>
+          {s.takim.menajer ? (
+            <Text style={tm.meta}>
+              
+              {L("Kalite")}{' '}{s.takim.menajerKalite}{L("/10 · Komisyon %")}{Math.round(s.takim.menajerPay * 100)}
+            </Text>
+          ) : (
+            <Text style={tm.meta}>{L("Pazarlıkları tek başına yapıyorsun.")}</Text>
+          )}
+        </Card>
+      )}
       {msg ? (
         <Card accent={C.gold}>
           <P style={{ marginBottom: 0 }}>{msg}</P>
@@ -228,6 +301,9 @@ export function TeamScreen({ s, act }: { s: GameState; act: Act }) {
 }
 
 const tm = StyleSheet.create({
+  corner: { borderWidth: 1.2, borderRadius: 6, overflow: 'hidden', backgroundColor: '#0b0c10' },
+  cornerEdge: { position: 'absolute', left: 0, top: 0, bottom: 0, width: 4 },
+  cornerRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 14, paddingTop: 14, paddingBottom: 8 },
   label: { color: C.faint, fontFamily: F.display, fontSize: 11, letterSpacing: 1.5 },
   big: { color: C.text, fontFamily: F.display, fontSize: 22 },
   meta: { color: C.dim, fontFamily: F.body, fontSize: 12, lineHeight: 17 },

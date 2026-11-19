@@ -7,7 +7,10 @@ import { createContext, useContext, useEffect, useRef, type ComponentProps, type
 import { Animated, Pressable, ScrollView, StyleSheet, Text, View, type ViewStyle } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Defs, Path, Pattern, Polygon, Rect } from 'react-native-svg';
+import { CoverImage } from './CoverImage';
 import { C, F, G, R } from './theme';
+import { useLook } from '../lookPref';
+import { SCENE_ART, type SceneKey } from './sceneArt';
 
 export type IconName = ComponentProps<typeof MaterialCommunityIcons>['name'];
 
@@ -140,7 +143,30 @@ export function Screen({ children, footer }: { children: ReactNode; footer?: Rea
   );
 }
 
-export function Title({ children, sub, kicker }: { children: ReactNode; sub?: string; kicker?: string }) {
+/** art: yeni görünümde başlık, o ekrana uygun çizilmiş bir sahne bandının üstünde durur (klasikte yok sayılır). */
+export function Title({ children, sub, kicker, art }: { children: ReactNode; sub?: string; kicker?: string; art?: SceneKey }) {
+  const yeni = useLook() === 'yeni';
+  if (yeni && art)
+    return (
+      <View style={{ marginBottom: 16 }}>
+        <View style={st.scene}>
+          <CoverImage source={SCENE_ART[art].src} iw={SCENE_ART[art].w} ih={SCENE_ART[art].h} />
+          <LinearGradient colors={['rgba(5,5,7,0)', 'rgba(5,5,7,0.15)', 'rgba(5,5,7,0.9)']} locations={[0, 0.45, 1]} style={StyleSheet.absoluteFill} />
+          <View style={st.sceneEdge} />
+          <View style={st.sceneText}>
+            {kicker ? (
+              <View style={st.kickerBox}>
+                <Text style={st.kicker}>{kicker}</Text>
+              </View>
+            ) : null}
+            <Text style={[st.title, SLANT, st.sceneTitle]} numberOfLines={2} adjustsFontSizeToFit>
+              {children}
+            </Text>
+          </View>
+        </View>
+        {sub ? <Text style={st.sub}>{sub}</Text> : null}
+      </View>
+    );
   return (
     <View style={{ marginBottom: 16 }}>
       {kicker ? (
@@ -187,6 +213,32 @@ export function Choice({
   icon?: IconName;
 }) {
   const accent = tone === 'gold' ? C.gold : tone === 'plain' ? C.dim : C.red;
+  const yeni = useLook() === 'yeni';
+  if (yeni)
+    return (
+      <Pressable
+        onPress={() => {
+          sfx('click');
+          onPress();
+        }}
+        disabled={disabled}
+        style={({ pressed }) => [st.nChoice, { borderColor: selected ? accent : accent + '77' }, selected && { borderWidth: 2 }, disabled && { opacity: 0.4 }, pressed && { backgroundColor: accent + '2a', borderColor: accent, transform: [{ skewX: '-6deg' }, { scale: 0.985 }] }]}
+      >
+        <LinearGradient colors={['#1d2027', '#0e1014', '#08090b']} locations={[0, 0.55, 1]} style={StyleSheet.absoluteFill} pointerEvents="none" />
+        <LinearGradient colors={[accent + '30', 'transparent']} start={{ x: 0, y: 0 }} end={{ x: 0.6, y: 0 }} style={StyleSheet.absoluteFill} pointerEvents="none" />
+        <View style={[st.nEdge, { backgroundColor: accent }]} pointerEvents="none" />
+        <View style={st.nInner}>
+          <View style={[st.nBadge, { borderColor: accent, backgroundColor: accent + '22' }]}>
+            {icon ? <Icon name={icon} size={20} color={accent} /> : <Text style={[st.nNum, { color: accent }]}>{n ?? ''}</Text>}
+          </View>
+          <View style={{ flex: 1, gap: 3 }}>
+            <Text style={st.nTitle}>{label.toLocaleUpperCase(LOC)}</Text>
+            {desc ? <Text style={st.nDesc}>{desc}</Text> : null}
+          </View>
+          <Icon name={selected ? 'check-circle' : 'chevron-right'} size={22} color={accent} />
+        </View>
+      </Pressable>
+    );
   return (
     <Pressable
       onPress={() => {
@@ -310,6 +362,17 @@ export const st = StyleSheet.create({
   topLabel: { color: C.text, fontSize: 17, fontFamily: F.display, letterSpacing: 0.5 },
   topBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1, borderColor: C.border, backgroundColor: C.card, borderRadius: 4, paddingHorizontal: 10, paddingVertical: 7 },
   topBtnText: { color: C.text, fontSize: 12, fontFamily: F.display, letterSpacing: 1 },
+  scene: { height: 150, borderRadius: 6, overflow: 'hidden', borderWidth: 1, borderColor: '#24272e', justifyContent: 'flex-end', marginBottom: 2 },
+  sceneEdge: { position: 'absolute', left: 0, top: 0, bottom: 0, width: 4, backgroundColor: C.red },
+  sceneText: { paddingHorizontal: 14, paddingBottom: 12 },
+  sceneTitle: { textShadowColor: '#000', textShadowRadius: 8 },
+  nChoice: { borderWidth: 1.2, borderRadius: 6, backgroundColor: '#0b0c0f', overflow: 'hidden', marginBottom: 10, transform: [{ skewX: '-6deg' }] },
+  nEdge: { position: 'absolute', left: 0, top: 0, bottom: 0, width: 4 },
+  nInner: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, paddingLeft: 16, paddingRight: 10, transform: [{ skewX: '6deg' }] },
+  nBadge: { width: 42, height: 42, borderRadius: 21, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center' },
+  nNum: { fontFamily: F.display, fontSize: 20 },
+  nTitle: { color: '#f6f7f9', fontFamily: F.display, fontSize: 16, letterSpacing: 1.2 },
+  nDesc: { color: '#b8bec9', fontFamily: F.body, fontSize: 12.5, lineHeight: 17 },
   kickerBox: { alignSelf: 'flex-start', backgroundColor: C.red, paddingHorizontal: 8, paddingVertical: 2, marginBottom: 6, transform: [{ skewX: '-12deg' }] },
   kicker: { color: '#fff', fontSize: 11, fontFamily: F.display, letterSpacing: 1.5 },
   title: { color: C.text, fontSize: 32, fontFamily: F.display, textTransform: 'uppercase', letterSpacing: 0.5, lineHeight: 38 },

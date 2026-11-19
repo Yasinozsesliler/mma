@@ -10792,4 +10792,5 @@ export const PL: Record<string, string> = {
   "Son söz": "Ostatnie słowo",
   "Temsilci": "Przedstawiciel",
   "Menajerin": "Twój menedżer",
+  "VİTRİN · SON KAZANILANLAR": "GABLOTA · OSTATNIO ZDOBYTE",
 };

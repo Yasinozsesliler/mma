@@ -123,7 +123,7 @@ export function KafesEviScreen({ s, act }: { s: GameState; act: Act }) {
   const o = keOpponent(k);
   const head = (
     <>
-      <Title kicker={L("KAFES EVİ · {0}", [KE_ROUNDS()[k.tur]])} sub={L("Kameralar 7/24 açık. Ne yaparsan ekranda.")}>
+      <Title art="salon" kicker={L("KAFES EVİ · {0}", [KE_ROUNDS()[k.tur]])} sub={L("Kameralar 7/24 açık. Ne yaparsan ekranda.")}>
         {k.adim === 'sonuc' ? L("Bölüm sonu") : k.adim === 'plan' ? L("Dövüş gecesi") : L("Bölüm {0}", [k.tur * 2 + k.sahneSay + 1])}
       </Title>
       <View style={st.meters}>

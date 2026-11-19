@@ -2,7 +2,7 @@
 // Aşama şeridi (Plan / Kamp / Tartı), iki portreli eşleşme kartı, haftalık takvim ve canlı kamp satırı.
 import { LinearGradient } from 'expo-linear-gradient';
 import type { ReactNode } from 'react';
-import { Image, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { siteById } from '../engine/gyms';
 import { statAverage } from '../engine/character';
 import { describeOpponent } from '../engine/opponents';
@@ -12,6 +12,7 @@ import { L, LOC } from '../i18n';
 import { Icon, SLANT, upName, type IconName } from './components';
 import { FighterAvatar } from './FighterAvatar';
 import { flagOf } from './NewCareer';
+import { CoverImage } from './CoverImage';
 import { C, F } from './theme';
 
 const STAGES: { keys: CampState['step'][]; ad: () => string; icon: IconName }[] = [
@@ -218,7 +219,7 @@ export function CampSiteBand({ k }: { k: CampState }) {
   const site = siteById(k.yer ?? 'salon');
   return (
     <View style={c.band}>
-      <Image source={CAMP_ART[site.id] ?? CAMP_ART.salon} style={StyleSheet.absoluteFill} resizeMode="cover" />
+      <CoverImage source={CAMP_ART[site.id] ?? CAMP_ART.salon} iw={900} ih={300} />
       <LinearGradient colors={['rgba(5,5,7,0.75)', 'rgba(5,5,7,0.15)']} start={{ x: 0, y: 0 }} end={{ x: 0.75, y: 0 }} style={StyleSheet.absoluteFill} />
       <View style={c.bandRow}>
         <View style={c.bandIcon}>

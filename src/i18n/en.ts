@@ -10805,4 +10805,5 @@ export const EN: Record<string, string> = {
   "Son söz": "Final word",
   "Temsilci": "Rep",
   "Menajerin": "Your manager",
+  "VİTRİN · SON KAZANILANLAR": "SHOWCASE · LATEST EARNED",
 };

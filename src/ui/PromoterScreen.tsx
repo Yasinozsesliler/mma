@@ -76,7 +76,7 @@ export function PromoterScreen({ s, act }: { s: GameState; act: Act }) {
     ];
     return (
       <Screen footer={footer}>
-        <Title kicker={L("KARİYER SONRASI")} sub={L("Eldivenlerini astığında hikâyen bitmiyor: kendi dövüş organizasyonunu kurup bu sefer afişi sen yazacaksın.")}>
+        <Title art="basin" kicker={L("KARİYER SONRASI")} sub={L("Eldivenlerini astığında hikâyen bitmiyor: kendi dövüş organizasyonunu kurup bu sefer afişi sen yazacaksın.")}>
           {L("Organizasyonum")}
         </Title>
         <LinearGradient colors={['#2a1a08', '#0b0c0f']} style={ps.locked}>

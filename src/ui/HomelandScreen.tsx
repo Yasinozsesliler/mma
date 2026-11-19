@@ -102,7 +102,7 @@ export function HomelandScreen({ s, act }: { s: GameState; act: Act }) {
   const cost = renovateCost(s);
   return (
     <Screen footer={<Button label={L("Kariyere dön")} icon="arrow-left" tone="ghost" onPress={() => act((x) => (x.phase = 'hub'))} />}>
-      <Title kicker={L("YAŞAM")} sub={L("Ünlendikçe memleketin değişir. Her aşama kasabada iz bırakır.")}>
+      <Title art="sehir" kicker={L("YAŞAM")} sub={L("Ünlendikçe memleketin değişir. Her aşama kasabada iz bırakır.")}>
         {town(s)}
       </Title>
       <View style={ms.scene}>

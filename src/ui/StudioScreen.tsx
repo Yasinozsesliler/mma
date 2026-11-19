@@ -66,7 +66,7 @@ export function StudioScreen({ onBack }: { onBack: () => void }) {
   if (!open)
     return (
       <Screen footer={<Button label={L("Geri")} icon="arrow-left" tone="ghost" onPress={onBack} />}>
-        <Title kicker={L("👑 ŞAMPİYON PAKETİ")} sub={L("İstediğin iki dövüşçü, istediğin sıklet, istediğin kadar maç. Kendi efsanelerini de efsanelere karşı dövüştür.")}>
+        <Title art="studyo" kicker={L("👑 ŞAMPİYON PAKETİ")} sub={L("İstediğin iki dövüşçü, istediğin sıklet, istediğin kadar maç. Kendi efsanelerini de efsanelere karşı dövüştür.")}>
           {L("Hayalî Maç Stüdyosu")}
         </Title>
         <View style={[st.grid, { opacity: 0.5 }]}>

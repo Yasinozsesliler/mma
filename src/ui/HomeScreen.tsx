@@ -188,7 +188,7 @@ export function HomeScreen({ s, act }: { s: GameState; act: Act }) {
   const go = (phase: GameState['phase']) => act((x) => (x.phase = phase));
   return (
     <Screen footer={<Button label={L("Kariyere dön")} icon="arrow-left" tone="ghost" onPress={() => go('hub')} />}>
-      <Title kicker={L("YAŞAM")} sub={ev ? ev.aciklama : L("Henüz kendi evin yok; salonun soyunma odasında bir şiltede yatıyorsun.")}>
+      <Title art="sehir" kicker={L("YAŞAM")} sub={ev ? ev.aciklama : L("Henüz kendi evin yok; salonun soyunma odasında bir şiltede yatıyorsun.")}>
         {ev ? ev.ad : L("Evim")}
       </Title>
       <View style={hs.scene}>

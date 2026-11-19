@@ -1,6 +1,8 @@
 // Podcast stüdyosu: sunucunun sorusu, cevap seçenekleri, tepki ve bölüm sonucu.
 import { LinearGradient } from 'expo-linear-gradient';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useLook } from '../lookPref';
+import { SCENE_ART } from './sceneArt';
 import { closePodcast, podcastAnswer } from '../engine/podcast';
 import type { GameState } from '../engine/types';
 import { buzz } from '../haptics';
@@ -8,11 +10,13 @@ import { L } from '../i18n';
 import { Button, Icon, Screen, SLANT } from './components';
 import { FighterAvatar } from './FighterAvatar';
 import type { Act } from './GameScreens';
+import { CoverImage } from './CoverImage';
 import { C, F } from './theme';
 
 const HOST_LOOK = { ten: 1, sac: 'kel', sacRenk: 0, goz: 1, sakal: 'tam', yara: false, dovme: false } as const;
 
 export function PodcastScreen({ s, act }: { s: GameState; act: Act }) {
+  const yeni = useLook() === 'yeni';
   const p = s.podcast;
   if (!p) {
     return (
@@ -25,6 +29,12 @@ export function PodcastScreen({ s, act }: { s: GameState; act: Act }) {
   return (
     <Screen footer={p.sonuc ? <Button label={L("Stüdyodan çık")} icon="exit-run" tone="gold" onPress={() => act(closePodcast)} /> : undefined}>
       <LinearGradient colors={['#1d1406', '#0b0b0e']} style={st.studio}>
+        {yeni ? (
+          <>
+            <CoverImage source={SCENE_ART.studyo.src} iw={SCENE_ART.studyo.w} ih={SCENE_ART.studyo.h} />
+            <LinearGradient colors={['rgba(8,8,12,0.35)', 'rgba(8,8,12,0.9)']} locations={[0, 0.6]} style={StyleSheet.absoluteFill} />
+          </>
+        ) : null}
         <View style={st.onair}>
           <View style={st.dot} />
           <Text style={st.onairText}>{L("YAYINDA")}</Text>
@@ -84,7 +94,7 @@ export function PodcastScreen({ s, act }: { s: GameState; act: Act }) {
 }
 
 const st = StyleSheet.create({
-  studio: { borderRadius: 14, borderWidth: 1, borderColor: '#3a2a10', padding: 14, gap: 10, marginBottom: 12 },
+  studio: { overflow: 'hidden', borderRadius: 14, borderWidth: 1, borderColor: '#3a2a10', padding: 14, gap: 10, marginBottom: 12 },
   onair: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'center', backgroundColor: '#3a0a0f', borderRadius: 10, paddingHorizontal: 10, paddingVertical: 3 },
   dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: C.red },
   onairText: { color: C.red, fontFamily: F.display, fontSize: 11, letterSpacing: 2 },

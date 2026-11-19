@@ -73,7 +73,7 @@ export function BodyScreen({ s, act }: { s: GameState; act: Act }) {
   const set = (patch: Partial<typeof r>) => act((x) => (x.rutin = { ...rutinOf(x), ...patch }));
   return (
     <Screen footer={<Button label={L("Kariyere dön")} icon="arrow-left" tone="ghost" onPress={() => act((x) => (x.phase = 'hub'))} />}>
-      <Title kicker={L("ANTRENMAN")} sub={L("Yaşın, izlerin ve günlük rutinin. Küçük seçimler, uzun bir kariyerde büyük fark yaratır.")}>
+      <Title art="elit" kicker={L("ANTRENMAN")} sub={L("Yaşın, izlerin ve günlük rutinin. Küçük seçimler, uzun bir kariyerde büyük fark yaratır.")}>
         {L("Vücudum")}
       </Title>
       <View style={bs.top}>

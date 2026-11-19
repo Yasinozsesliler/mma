@@ -64,7 +64,7 @@ export function FanClubScreen({ s, act }: { s: GameState; act: Act }) {
     const ok = canFoundClub(s);
     return (
       <Screen footer={back}>
-        <Title kicker={L("TARAFTAR KULÜBÜ")} sub={L("Takipçilerinden resmi bir kulüp kur. Kulüp büyüdükçe tribünde marşın, koreografin ve giriş şarkın olur.")}>
+        <Title art="studyo" kicker={L("TARAFTAR KULÜBÜ")} sub={L("Takipçilerinden resmi bir kulüp kur. Kulüp büyüdükçe tribünde marşın, koreografin ve giriş şarkın olur.")}>
           {L("Kulübünü kur")}
         </Title>
         {ok ? (

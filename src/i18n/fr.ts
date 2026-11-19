@@ -10805,4 +10805,5 @@ export const FR: Record<string, string> = {
   "Son söz": "Dernier mot",
   "Temsilci": "Représentant",
   "Menajerin": "Ton manager",
+  "VİTRİN · SON KAZANILANLAR": "VITRINE · DERNIERS OBTENUS",
 };

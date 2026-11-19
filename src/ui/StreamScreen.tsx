@@ -1,6 +1,8 @@
 // Canlı yayın ekranı: CANLI etiketi, izleyici sayacı, akan sohbet, sıradaki an ve seçenekler; sonunda özet.
 import { LinearGradient } from 'expo-linear-gradient';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useLook } from '../lookPref';
+import { SCENE_ART } from './sceneArt';
 import { money } from '../engine/career';
 import { closeStream, currentMoment, streamChoice } from '../engine/stream';
 import type { GameState } from '../engine/types';
@@ -9,11 +11,13 @@ import { L, LOC } from '../i18n';
 import { Button, Icon, Screen, SLANT } from './components';
 import { FighterAvatar } from './FighterAvatar';
 import type { Act } from './GameScreens';
+import { CoverImage } from './CoverImage';
 import { C, F } from './theme';
 
 const TWITCH = '#9146ff';
 
 export function StreamScreen({ s, act }: { s: GameState; act: Act }) {
+  const yeni = useLook() === 'yeni';
   const y = s.yayin;
   if (!y) {
     return (
@@ -26,6 +30,12 @@ export function StreamScreen({ s, act }: { s: GameState; act: Act }) {
   return (
     <Screen footer={y.bitti ? <Button label={L("Yayını kapat")} icon="close" tone="gold" onPress={() => act(closeStream)} /> : undefined}>
       <LinearGradient colors={['#1d1036', '#0b0814']} style={st.studio}>
+        {yeni ? (
+          <>
+            <CoverImage source={SCENE_ART.studyo.src} iw={SCENE_ART.studyo.w} ih={SCENE_ART.studyo.h} />
+            <LinearGradient colors={['rgba(8,8,12,0.35)', 'rgba(8,8,12,0.9)']} locations={[0, 0.6]} style={StyleSheet.absoluteFill} />
+          </>
+        ) : null}
         <View style={st.top}>
           <View style={st.live}>
             <View style={st.dot} />
@@ -81,7 +91,7 @@ export function StreamScreen({ s, act }: { s: GameState; act: Act }) {
 }
 
 const st = StyleSheet.create({
-  studio: { borderRadius: 14, borderWidth: 1, borderColor: '#3a2466', padding: 12, gap: 10, marginBottom: 12 },
+  studio: { overflow: 'hidden', borderRadius: 14, borderWidth: 1, borderColor: '#3a2466', padding: 12, gap: 10, marginBottom: 12 },
   top: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   live: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: '#e63946', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 },
   dot: { width: 7, height: 7, borderRadius: 4, backgroundColor: '#fff' },

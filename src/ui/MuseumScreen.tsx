@@ -44,7 +44,7 @@ export function MuseumScreen({ s, act }: { s: GameState; act: Act }) {
   ];
   return (
     <Screen footer={<Button label={L("Kariyere dön")} icon="arrow-left" tone="ghost" onPress={() => act((x) => (x.phase = 'hub'))} />}>
-      <Title kicker={L("KOLEKSİYON")} sub={L("Kariyerinin büyük anlarından kalanlar. Her eşyanın bir hikâyesi var.")}>
+      <Title art="altin" kicker={L("KOLEKSİYON")} sub={L("Kariyerinin büyük anlarından kalanlar. Her eşyanın bir hikâyesi var.")}>
         {L("Hatıralar")}
       </Title>
       <View style={ms.tabs}>

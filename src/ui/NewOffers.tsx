@@ -3,7 +3,7 @@
 // değişmez: bu dosya yalnızca görünümdür, düğmeler OffersScreen'in verdiği işlevleri çağırır.
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { Animated, Easing, Image, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Animated, Easing, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { sfx } from '../audio';
 import { money } from '../engine/career';
@@ -16,6 +16,7 @@ import { lowPerf } from '../perfPref';
 import { ORG_RENK } from './arena';
 import { ARENA_ART, LIGHTS_ART, type ArenaTier } from './arenaArt';
 import { Icon, SLANT, type IconName } from './components';
+import { CoverImage } from './CoverImage';
 import { C, F } from './theme';
 
 const STAGE_TIER: Record<Stage, ArenaTier> = { amator: 0, bolgesel: 1, buyuk: 2, ufc: 3 };
@@ -63,7 +64,7 @@ export function OfferCardNew({ s, o, all, children }: { s: GameState; o: Offer; 
   return (
     <View style={[o2.card, { borderColor: col + '88' }]}>
       <View style={o2.band}>
-        <Image source={LIGHTS_ART[tierOf(o.org)]} style={StyleSheet.absoluteFill} resizeMode="cover" />
+        <CoverImage source={LIGHTS_ART[tierOf(o.org)]} iw={936} ih={468} />
         <LinearGradient colors={[col + '40', 'rgba(8,9,12,0.35)', '#0b0c10']} locations={[0, 0.5, 1]} style={StyleSheet.absoluteFill} />
         <View style={[o2.edge, { backgroundColor: col }]} />
         <View style={o2.bandRow}>
@@ -162,7 +163,7 @@ export function SigningMoment({ s, o, onDone }: { s: GameState; o: Offer; onDone
   return (
     <Modal transparent animationType="fade" onRequestClose={finish}>
       <Pressable style={o3.back} onPress={finish}>
-        <Image source={ARENA_ART[tierOf(o.org)]} style={StyleSheet.absoluteFill} resizeMode="cover" />
+        <CoverImage source={ARENA_ART[tierOf(o.org)]} iw={1170} ih={1560} />
         <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(4,4,6,0.72)' }]} />
         <LinearGradient colors={[col + '55', 'transparent']} locations={[0, 0.6]} style={StyleSheet.absoluteFill} />
         <Text style={[o3.kicker, { color: col }]}>{L("KONTRAT")}</Text>

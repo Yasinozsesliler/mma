@@ -125,7 +125,7 @@ export function ArcadeScreen({ s, act }: { s: GameState; act: Act }) {
   };
   return (
     <Screen footer={<Button label={L("Gece hayatına dön")} icon="arrow-left" tone="ghost" onPress={() => act((x) => (x.phase = 'gece'))} />}>
-      <Title kicker={L("GECE HAYATI")} sub={L("Arkadaşlarınla dart ve yumruk makinesi. Bahis yok; sadece rekorlar ve eğlence.")}>
+      <Title art="dev" kicker={L("GECE HAYATI")} sub={L("Arkadaşlarınla dart ve yumruk makinesi. Bahis yok; sadece rekorlar ve eğlence.")}>
         {L("Oyun Salonu")}
       </Title>
       {msg ? <Text style={st.msg}>{msg}</Text> : null}

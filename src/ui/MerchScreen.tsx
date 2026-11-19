@@ -36,7 +36,7 @@ export function MerchScreen({ s, act }: { s: GameState; act: Act }) {
     const ok = canStartBrand(s);
     return (
       <Screen footer={back}>
-        <Title kicker={L("İŞ DÜNYASI")} sub={L("Adın bir marka olsun: tişört, imzalı eldiven, enerji içeceği. Her dövüşten sonra satış yapar.")}>
+        <Title art="studyo" kicker={L("İŞ DÜNYASI")} sub={L("Adın bir marka olsun: tişört, imzalı eldiven, enerji içeceği. Her dövüşten sonra satış yapar.")}>
           {L("Kendi Markan")}
         </Title>
         <View style={st.card}>

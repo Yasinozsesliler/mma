@@ -1,7 +1,7 @@
 // Yeni görünüm: kariyer ana ekranı sahnesi ve maç öncesi VS sahnesi. Klasik görünümde hiç çizilmez.
 // Yalnızca görünüm: oyun durumu okunur, hiçbir şey değiştirilmez. Dokunuşlar mevcut eylemleri çağırır.
 import { LinearGradient } from 'expo-linear-gradient';
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Ellipse, G } from 'react-native-svg';
 import { playerKit, useCosmetics } from '../cosmetics';
 import { money } from '../engine/career';
@@ -17,6 +17,7 @@ import { arenaLook, LIGHTS_ART, orgShort } from './arenaArt';
 import { CageBg, Icon, SLANT, upName } from './components';
 import { DEFAULT_LOOK } from './FighterAvatar';
 import { Figure, HIP_H, POSES, type Kit, type PoseName } from './rig';
+import { CoverImage } from './CoverImage';
 import { C, F } from './theme';
 
 export { arenaOrgText, orgShort } from './arenaArt';
@@ -369,7 +370,7 @@ export function PosterCard({ s, g, opp, rows, bitti, methodText }: { s: GameStat
       <CageBg opacity={0.05} />
       {/* Üstte arena bandı: ışıklar ve tribün, alta doğru afiş rengine kaybolur */}
       <View style={p.art} pointerEvents="none">
-        <Image source={LIGHTS_ART[look.tier]} style={StyleSheet.absoluteFill} resizeMode="cover" />
+        <CoverImage source={LIGHTS_ART[look.tier]} iw={936} ih={468} align="top" />
         {look.tint ? <LinearGradient colors={[look.tint + '55', look.tint + '00']} locations={[0, 0.8]} style={StyleSheet.absoluteFill} /> : null}
         <LinearGradient colors={['rgba(10,20,45,0)', 'rgba(14,28,60,0.25)', '#0d1a3a']} locations={[0, 0.6, 1]} style={StyleSheet.absoluteFill} />
       </View>

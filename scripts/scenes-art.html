@@ -1,0 +1,71 @@
+<!doctype html><html><body style="margin:0;background:#000">
+<canvas id="c" width="1200" height="500"></canvas>
+<script>
+// Yan ekran başlık sahneleri (1200x500): ?scene=sehir|studyo. Marka ve yazı yok.
+const c = document.getElementById('c'); const g = c.getContext('2d'); const W = c.width, H = c.height;
+let seed = 5; const R = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+const SCENE = new URLSearchParams(location.search).get('scene') || 'sehir';
+const glow = (x, y, r, col) => { const rg = g.createRadialGradient(x, y, 0, x, y, r); rg.addColorStop(0, col); rg.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = rg; g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill(); };
+
+if (SCENE === 'sehir') {
+  // gece şehri: mor-lacivert gökyüzü, katmanlı gökdelenler, ışıklı pencereler, sokak ışığı ve yansıyan ıslak yol
+  let sky = g.createLinearGradient(0, 0, 0, H); sky.addColorStop(0, '#07061a'); sky.addColorStop(0.55, '#2a1450'); sky.addColorStop(0.8, '#7a2a5a'); sky.addColorStop(1, '#0a0610');
+  g.fillStyle = sky; g.fillRect(0, 0, W, H);
+  for (let i = 0; i < 90; i++) { g.fillStyle = `rgba(255,255,255,${0.2 + R() * 0.5})`; g.fillRect(R() * W, R() * 200, 1.5, 1.5); }
+  glow(900, 120, 60, 'rgba(255,240,220,0.9)'); glow(900, 120, 200, 'rgba(255,200,220,0.15)');
+  function layer(baseY, minH, maxH, col, winA, wmin) {
+    let x = -20;
+    while (x < W + 20) {
+      const w = 50 + R() * 90, h = minH + R() * (maxH - minH);
+      g.fillStyle = col; g.fillRect(x, baseY - h, w, h + 200);
+      if (R() < 0.3) { g.fillRect(x + w / 2 - 2, baseY - h - 40, 4, 40); g.fillStyle = '#ff3b5c'; g.fillRect(x + w / 2 - 3, baseY - h - 44, 6, 6); g.fillStyle = col; }
+      for (let wy = baseY - h + 12; wy < baseY - 10; wy += 16) for (let wx = x + 8; wx < x + w - 8; wx += 12) if (R() < winA) { g.fillStyle = R() < 0.7 ? `rgba(255,214,140,${0.5 + R() * 0.5})` : `rgba(140,200,255,${0.5 + R() * 0.4})`; g.fillRect(wx, wy, 6, wmin); }
+      g.fillStyle = col; x += w + 4;
+    }
+  }
+  layer(360, 80, 200, '#140e2a', 0.12, 6);
+  layer(390, 60, 250, '#0c0919', 0.22, 7);
+  layer(420, 40, 160, '#07060f', 0.3, 8);
+  // ıslak yol ve neon yansımalar
+  let road = g.createLinearGradient(0, 420, 0, H); road.addColorStop(0, '#0d0a18'); road.addColorStop(1, '#050408');
+  g.fillStyle = road; g.fillRect(0, 420, W, 80);
+  for (let i = 0; i < 70; i++) { const x = R() * W; g.fillStyle = R() < 0.5 ? `rgba(255,80,140,${0.1 + R() * 0.25})` : `rgba(255,200,120,${0.1 + R() * 0.25})`; g.fillRect(x, 425 + R() * 70, 2 + R() * 3, 8 + R() * 30); }
+  // araba farları ışık izleri
+  g.save(); g.globalCompositeOperation = 'lighter'; g.filter = 'blur(3px)';
+  g.strokeStyle = 'rgba(255,60,60,0.55)'; g.lineWidth = 3; g.beginPath(); g.moveTo(0, 452); g.lineTo(W, 446); g.stroke();
+  g.strokeStyle = 'rgba(255,240,200,0.6)'; g.beginPath(); g.moveTo(0, 470); g.lineTo(W, 466); g.stroke();
+  g.restore();
+} else {
+  // yayın stüdyosu: koyu duvar, neon halka ışık, iki mikrofon kolu, kamera silueti, ekran duvarı, masa
+  let bg = g.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, '#0a0b12'); bg.addColorStop(1, '#050507'); g.fillStyle = bg; g.fillRect(0, 0, W, H);
+  // akustik panel duvar
+  for (let y = 40; y < 380; y += 46) for (let x = (y / 46 % 2) * 30; x < W; x += 60) { g.fillStyle = `rgba(${30 + R() * 10 | 0},${28 + R() * 10 | 0},${40 + R() * 12 | 0},0.9)`; g.beginPath(); g.moveTo(x, y); g.lineTo(x + 28, y + 16); g.lineTo(x + 28, y + 44); g.lineTo(x, y + 30); g.closePath(); g.fill(); }
+  // neon halka ve şerit
+  g.save(); g.globalCompositeOperation = 'lighter';
+  g.strokeStyle = '#ff2d6f'; g.lineWidth = 10; g.filter = 'blur(10px)'; g.beginPath(); g.arc(600, 190, 120, 0, Math.PI * 2); g.stroke();
+  g.filter = 'none'; g.lineWidth = 5; g.strokeStyle = '#ffd1e0'; g.beginPath(); g.arc(600, 190, 120, 0, Math.PI * 2); g.stroke();
+  g.filter = 'blur(12px)'; g.fillStyle = 'rgba(58,168,255,0.7)'; g.fillRect(0, 60, W, 10); g.filter = 'none'; g.fillStyle = '#9fd3ff'; g.fillRect(0, 63, W, 3);
+  g.restore();
+  glow(600, 190, 340, 'rgba(255,45,111,0.18)');
+  // ekran duvarı (sol ve sağ)
+  [[90, 130], [930, 130]].forEach(([x, y]) => { g.fillStyle = '#05060a'; g.fillRect(x, y, 180, 110); let sc = g.createLinearGradient(x, y, x + 180, y + 110); sc.addColorStop(0, '#1c4fc4'); sc.addColorStop(1, '#c1121f'); g.fillStyle = sc; g.globalAlpha = 0.55; g.fillRect(x + 6, y + 6, 168, 98); g.globalAlpha = 1; for (let yy = y + 6; yy < y + 104; yy += 4) { g.fillStyle = 'rgba(0,0,0,0.25)'; g.fillRect(x + 6, yy, 168, 1.5); } });
+  // masa
+  let desk = g.createLinearGradient(0, 360, 0, 430); desk.addColorStop(0, '#2a2d36'); desk.addColorStop(1, '#0c0d11');
+  g.fillStyle = desk; g.beginPath(); g.moveTo(140, 360); g.lineTo(1060, 360); g.lineTo(1120, 430); g.lineTo(80, 430); g.closePath(); g.fill();
+  g.fillStyle = 'rgba(255,45,111,0.7)'; g.fillRect(80, 428, 1040, 4);
+  g.fillStyle = '#060608'; g.fillRect(0, 432, W, 68);
+  // mikrofon kolları
+  function mic(x, dir) { g.strokeStyle = '#0a0a0d'; g.lineWidth = 7; g.lineCap = 'round'; g.beginPath(); g.moveTo(x, 360); g.lineTo(x + 40 * dir, 270); g.lineTo(x + 110 * dir, 250); g.stroke(); g.fillStyle = '#16171c'; g.beginPath(); g.roundRect(x + 100 * dir - 16, 222, 32, 56, 14); g.fill(); g.fillStyle = 'rgba(255,255,255,0.12)'; g.fillRect(x + 100 * dir - 10, 230, 4, 40); }
+  mic(380, 1); mic(820, -1);
+  // kamera silueti önde
+  g.fillStyle = '#030304'; g.fillRect(40, 300, 150, 90); g.fillRect(180, 325, 60, 40); g.fillRect(100, 390, 14, 110); g.beginPath(); g.moveTo(60, 500); g.lineTo(107, 390); g.lineTo(154, 500); g.stroke();
+  g.fillStyle = '#ff2d2d'; g.beginPath(); g.arc(60, 315, 5, 0, Math.PI * 2); g.fill();
+}
+// ortak: vinyet, gren
+const vg = g.createRadialGradient(W / 2, H * 0.45, 150, W / 2, H * 0.5, 700); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,0.6)');
+g.fillStyle = vg; g.fillRect(0, 0, W, H);
+const img = g.getImageData(0, 0, W, H), d = img.data;
+for (let i = 0; i < d.length; i += 4) { const n = (R() - 0.5) * 12; d[i] += n; d[i + 1] += n; d[i + 2] += n; }
+g.putImageData(img, 0, 0);
+window.DONE = true;
+</script></body></html>

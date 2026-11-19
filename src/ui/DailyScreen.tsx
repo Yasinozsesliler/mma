@@ -147,7 +147,7 @@ function DailyIntro({ gun, spec, store, onStart }: { gun: number; spec: DailySpe
           <Text style={st.chalBannerText}>{L("Bir arkadaşın bu dövüşten {0} puan aldı. Geçebilir misin?", [challengeFor(gun)!.skor])}</Text>
         </View>
       ) : null}
-      <Title kicker={L("HERKES BUGÜN AYNI DÖVÜŞÜ OYNUYOR · TEK HAKKIN VAR")} sub={L("{0} sıklet · {1}", [WEIGHT_CLASSES[spec.siklet].ad, spec.twist === 'unvan' ? L("5 raunt") : L("3 raunt")])}>
+      <Title art="arena" kicker={L("HERKES BUGÜN AYNI DÖVÜŞÜ OYNUYOR · TEK HAKKIN VAR")} sub={L("{0} sıklet · {1}", [WEIGHT_CLASSES[spec.siklet].ad, spec.twist === 'unvan' ? L("5 raunt") : L("3 raunt")])}>
         {L("Bugün kafeste sen varsın")}
       </Title>
       <Card>

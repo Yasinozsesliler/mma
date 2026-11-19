@@ -80,7 +80,7 @@ export function WorldMapScreen({ s, act }: { s: GameState; act: Act }) {
     .reverse();
   return (
     <Screen footer={<Button label={L("Kariyere dön")} icon="arrow-left" tone="ghost" onPress={() => act((x) => (x.phase = 'hub'))} />}>
-      <Title kicker={L("DÜNYA TURU")} sub={L("Her maç bir şehirde. Yeni şehirler ve kıtalar kilometre taşı ödülleri getirir.")}>
+      <Title art="sehir" kicker={L("DÜNYA TURU")} sub={L("Her maç bir şehirde. Yeni şehirler ve kıtalar kilometre taşı ödülleri getirir.")}>
         {L("{0} şehir · {1} kıta", [visitedCount(s), kitalar.length])}
       </Title>
       <View style={st.map}>
