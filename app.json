@@ -2,7 +2,7 @@
   "expo": {
     "name": "YOL: Kafesten Kemere",
     "slug": "yol-kafesten-kemere",
-    "version": "1.2.0",
+    "version": "1.2.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
@@ -99,6 +99,7 @@
         }
       ],
       "./plugins/withAdMediation",
+      "./plugins/withPortraitOptional",
       "expo-iap",
       "expo-asset",
       [
