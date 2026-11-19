@@ -100,8 +100,10 @@ export function CelebrationScreen({ s, act }: { s: GameState; act: Act }) {
     // Kutlama açılışında bir kez.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scale]);
-  const belts = k.tur === 'cift' ? activeBelts(s).filter((b) => b.org === k.org) : activeBelts(s).filter((b) => b.org === k.org && b.siklet === k.siklet);
-  const belt = belts.find((b) => b.siklet === k.siklet);
+  const found = k.tur === 'cift' ? activeBelts(s).filter((b) => b.org === k.org) : activeBelts(s).filter((b) => b.org === k.org && b.siklet === k.siklet);
+  // Kayıtta bulunamasa bile kutlamada kemer mutlaka görünür (takılı kemer görünümüyle çizilir).
+  const belts = found.length ? found : [{ org: k.org, siklet: k.siklet }];
+  const belt = found.find((b) => b.siklet === k.siklet);
   const sayi = k.sayi ?? belts.length;
   const baslik = k.tur === 'cift' ? `${champLabel(sayi).en}!` : k.tur === 'savunma' ? L("KEMER KORUNDU!") : L("YENİ ŞAMPİYON!");
   const alt =
