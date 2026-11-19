@@ -2,7 +2,8 @@
 // Aşama şeridi (Plan / Kamp / Tartı), iki portreli eşleşme kartı, haftalık takvim ve canlı kamp satırı.
 import { LinearGradient } from 'expo-linear-gradient';
 import type { ReactNode } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Image, StyleSheet, Text, View } from 'react-native';
+import { siteById } from '../engine/gyms';
 import { statAverage } from '../engine/character';
 import { describeOpponent } from '../engine/opponents';
 import { lookFor } from '../engine/tale';
@@ -202,7 +203,44 @@ export function CampDecision({ kicker, renk, ikon, metin, children }: { kicker: 
   );
 }
 
+/** Kamp yerine göre çizilmiş başlık bandı (scripts/camp-art.html). Bilinmeyen yer için kendi salonu. */
+const CAMP_ART: Record<string, number> = {
+  salon: require('../../assets/art/camp_salon.jpg'),
+  ev: require('../../assets/art/camp_ev.jpg'),
+  tayland: require('../../assets/art/camp_tayland.jpg'),
+  dagistan: require('../../assets/art/camp_dagistan.jpg'),
+  brezilya: require('../../assets/art/camp_brezilya.jpg'),
+  irtifa: require('../../assets/art/camp_irtifa.jpg'),
+  elit: require('../../assets/art/camp_elit.jpg'),
+};
+
+export function CampSiteBand({ k }: { k: CampState }) {
+  const site = siteById(k.yer ?? 'salon');
+  return (
+    <View style={c.band}>
+      <Image source={CAMP_ART[site.id] ?? CAMP_ART.salon} style={StyleSheet.absoluteFill} resizeMode="cover" />
+      <LinearGradient colors={['rgba(5,5,7,0.75)', 'rgba(5,5,7,0.15)']} start={{ x: 0, y: 0 }} end={{ x: 0.75, y: 0 }} style={StyleSheet.absoluteFill} />
+      <View style={c.bandRow}>
+        <View style={c.bandIcon}>
+          <Icon name={site.ikon as IconName} size={16} color={C.gold} />
+        </View>
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={c.bandKicker}>{L("KAMP YERİ")}</Text>
+          <Text style={c.bandName} numberOfLines={1}>
+            {site.ad.toLocaleUpperCase(LOC)}
+          </Text>
+        </View>
+      </View>
+    </View>
+  );
+}
+
 const c = StyleSheet.create({
+  band: { height: 92, borderRadius: 6, overflow: 'hidden', marginBottom: 10, borderWidth: 1, borderColor: '#24272e', justifyContent: 'flex-end' },
+  bandRow: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 10 },
+  bandIcon: { width: 30, height: 30, borderRadius: 15, borderWidth: 1, borderColor: C.gold, backgroundColor: 'rgba(0,0,0,0.55)', alignItems: 'center', justifyContent: 'center' },
+  bandKicker: { color: C.gold, fontFamily: F.black, fontSize: 9, letterSpacing: 1.6, textShadowColor: '#000', textShadowRadius: 4 },
+  bandName: { color: '#fff', fontFamily: F.display, fontSize: 16, letterSpacing: 0.8, textShadowColor: '#000', textShadowRadius: 6 },
   stages: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
   stage: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 14, borderWidth: 1, borderColor: '#2a2d34', backgroundColor: '#0c0d10' },
   stageDone: { backgroundColor: C.red, borderColor: C.red },

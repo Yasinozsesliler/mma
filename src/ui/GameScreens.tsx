@@ -54,7 +54,7 @@ import { ActionGrid, ActionTile, FightCTA, HubHero, Notice } from './HubHome';
 import { CareerStage } from './NewCareer';
 import { NewGrowth } from './NewGrowth';
 import { NewOpponentScreen } from './NewOpponent';
-import { CampMatchCard, CampStages } from './NewCamp';
+import { CampMatchCard, CampSiteBand, CampStages } from './NewCamp';
 import { CampChoice } from './NewFight';
 import { currentLook as lookNow, useLook } from '../lookPref';
 import { pendingBouts, weeklyGymNet } from '../engine/academy';
@@ -704,6 +704,7 @@ function CampHeader({ s, k, act }: { s: GameState; k: CampState; act: Act }) {
       <>
         <CampStages k={k} />
         <CoachTip s={s} act={act} id={STEP_TIPS[k.step] ?? null} />
+        <CampSiteBand k={k} />
         <CampMatchCard s={s} kicker={L("KAMP · {0} HAFTA", [k.hafta]) + (k.kisaHaber ? L(" · KISA HABER") : '')} />
         <HypeMeter s={s} />
         <CountdownButton s={s} onWatched={() => act(watchCountdown)} />
