@@ -2,6 +2,7 @@
 // Açı kuralları: kol/bacak açısı "aşağı"dan ölçülür, pozitif = ileri (rakibe doğru). Gövde açısı dikeyden, pozitif = öne eğilme.
 import { L } from '../i18n';
 import { currentLook } from '../lookPref';
+import { lowPerf } from '../perfPref';
 import { Circle, Defs, Ellipse, G, Line, LinearGradient, Path, RadialGradient, Stop } from 'react-native-svg';
 import type { Appearance } from '../engine/types';
 import { HAIR_COLORS, SKIN_TONES } from './FighterAvatar';
@@ -92,7 +93,8 @@ function Head({ c, ang, look, skin, ref, hasar = 0 }: { c: { x: number; y: numbe
   const hair = HAIR_COLORS[look.sacRenk] ?? HAIR_COLORS[0];
   const dark = shade(skin, -35);
   const s = look.sac;
-  const hd = !ref && currentLook() === 'yeni';
+  // Hafif modda yüz ve saç ayrıntıları çizilmez: dövüş sahnesinde figürler her karede yeniden çizilir
+  const hd = !ref && currentLook() === 'yeni' && !lowPerf();
   return (
     <G transform={L("rotate({0} {1} {2})", [ang, c.x, c.y])}>
       {s === 'afro' ? <Circle cx={c.x - 1} cy={c.y - 3} r={12.5} fill={hair} /> : null}

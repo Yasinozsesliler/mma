@@ -13,7 +13,7 @@ export function CoverImage({ source, iw, ih, align = 'center', opacity }: { sour
   const top = align === 'bottom' ? h - ih * k : align === 'top' ? 0 : (h - ih * k) / 2;
   return (
     <View style={[StyleSheet.absoluteFill, { overflow: 'hidden' }]} pointerEvents="none" onLayout={(e) => setSize({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}>
-      {k ? <Image source={source} onError={() => setOk(false)} style={{ position: 'absolute', left: (w - iw * k) / 2, top, width: iw * k, height: ih * k, opacity }} resizeMode="stretch" /> : null}
+      {k ? <Image source={source} onError={() => setOk(false)} style={{ position: 'absolute', left: (w - iw * k) / 2, top, width: iw * k, height: ih * k, opacity }} resizeMode="stretch" resizeMethod="resize" /> : null}
     </View>
   );
 }

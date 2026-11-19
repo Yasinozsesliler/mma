@@ -3,7 +3,7 @@ import { L as tL, LOC } from '../i18n';
 import { announce } from '../announcer';
 import { sfx, type Sfx } from '../audio';
 import { buzz } from '../haptics';
-import { lowPerf, paintMs } from '../perfPref';
+import { frameMeter, lowPerf, paintMs } from '../perfPref';
 import { cageTintNow, playerKit } from '../cosmetics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { memo, useEffect, useRef, useState } from 'react';
@@ -237,6 +237,8 @@ export function CageView({
   const tracks = useRef<Partial<Record<Actor, { from: Pose; segs: { to: Pose; ms: number }[]; t0: number }>>>({});
   const fx = useRef<Fx[]>([]);
   const raf = useRef<number | null>(null);
+  // Taktik izlemede de kare hızı ölçülür; telefon zorlanırsa hafif mod kendiliğinden açılır
+  const meter = useRef(frameMeter());
   const [, setTick] = useState(0);
   const [caption, setCaption] = useState('');
   const [replay, setReplay] = useState<string | null>(null);
@@ -279,6 +281,7 @@ export function CageView({
     });
     fx.current = fx.current.filter((f) => t - f.t0 < LIFE(f));
     if (fx.current.length || pulseAt(shake.current, t) || pulseAt(flash.current, t) || pulseAt(hype.current, t) || pulseAt(zoom.current, t)) active = true;
+    meter.current(t);
     const pm = paintMs();
     if (!pm || t - lastPaint.current >= pm || !active) {
       lastPaint.current = t;

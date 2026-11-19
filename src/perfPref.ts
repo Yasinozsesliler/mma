@@ -6,6 +6,12 @@ import { getPref, setPref } from './prefs';
 
 const KEY = 'yol_hafif'; // '1' açık (elle), 'oto' kendiliğinden açıldı, '0' oyuncu kapattı, yoksa ölçülmedi
 let state = getPref(KEY);
+// Ölçülmemiş eski Android (9 ve altı) telefonlarda yeni görünümün çizilmiş sahneleri ve ayrıntılı figürleri ağır
+// gelebilir: hafif mod baştan açılır ('oto'). Oyuncu ayarlardan kapatabilir; kapatırsa bir daha açılmaz.
+if (state == null && Platform.OS === 'android' && typeof Platform.Version === 'number' && Platform.Version < 29) {
+  state = 'oto';
+  setPref(KEY, state);
+}
 const subs = new Set<() => void>();
 const set = (v: string) => {
   state = v;

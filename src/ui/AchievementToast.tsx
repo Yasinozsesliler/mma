@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
 import { Icon } from './components';
 import { Medal } from './Medal';
+import { lowPerf } from '../perfPref';
 import { useLook } from '../lookPref';
 import { C, F, R } from './theme';
 
@@ -35,7 +36,7 @@ export function AchievementToast({ items, onDone }: { items: string[]; onDone: (
     <Animated.View pointerEvents="none" style={[ts.wrap, { transform: [{ translateY: y }] }]}>
       <LinearGradient colors={hof ? ['#f7d57a', '#c8902e'] : ['#231a07', '#0c0d10']} style={[ts.box, yeni && { overflow: 'hidden' }]}>
         {yeni && !hof ? <Medal color={C.gold} icon="trophy" ok size={34} /> : <Icon name={hof ? 'pillar' : 'trophy'} size={26} color={hof ? '#000' : C.gold} />}
-        {yeni ? (
+        {yeni && !lowPerf() ? (
           <Animated.View pointerEvents="none" style={[ts.shine, { transform: [{ translateX: shine.interpolate({ inputRange: [0, 1], outputRange: [-120, 460] }) }, { skewX: '-20deg' }] }]}>
             <LinearGradient colors={['rgba(255,255,255,0)', 'rgba(255,240,200,0.35)', 'rgba(255,255,255,0)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFill} />
           </Animated.View>

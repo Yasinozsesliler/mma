@@ -40,7 +40,7 @@ export function ArenaBackdrop(props: { s?: GameState; w?: number; h?: number; or
   const fs = Math.min(150, 520 / Math.max(3, name.length * 0.62)) * k;
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="none" onLayout={w0 === undefined ? (e) => setSize({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height }) : undefined}>
-      <Image source={gold ? ARENA_GOLD : ARENA_ART[tier]} onError={() => setOk(false)} style={{ position: 'absolute', left, top, width: iw, height: ih }} resizeMode="stretch" />
+      <Image source={gold ? ARENA_GOLD : ARENA_ART[tier]} onError={() => setOk(false)} style={{ position: 'absolute', left, top, width: iw, height: ih }} resizeMode="stretch" resizeMethod="resize" />
       {tint && !gold ? <LinearGradient colors={[tint + '50', tint + '1c', tint + '00']} locations={[0, 0.45, 0.75]} style={StyleSheet.absoluteFill} /> : null}
       {name ? (
         <View style={{ position: 'absolute', left: 0, right: 0, top: ringY - fs * 0.62, alignItems: 'center', transform: [{ scaleY: 0.3 }] }}>
@@ -77,7 +77,7 @@ function CoverArt({ source, iw, ih, align = 'bottom', dim = 0 }: { source: numbe
   const top = align === 'bottom' ? h - ih * k : (h - ih * k) / 2;
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="none" onLayout={(e) => setSize({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}>
-      {k ? <Image source={source} onError={() => setOk(false)} style={{ position: 'absolute', left: (w - iw * k) / 2, top, width: iw * k, height: ih * k }} resizeMode="stretch" /> : null}
+      {k ? <Image source={source} onError={() => setOk(false)} style={{ position: 'absolute', left: (w - iw * k) / 2, top, width: iw * k, height: ih * k }} resizeMode="stretch" resizeMethod="resize" /> : null}
       {dim > 0 ? <View style={[StyleSheet.absoluteFill, { backgroundColor: `rgba(4,4,6,${dim})` }]} /> : null}
     </View>
   );
