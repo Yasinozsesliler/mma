@@ -12,9 +12,15 @@ const IH = 1560;
 /** Görseldeki ring logosunun merkezi (piksel). */
 const RING_Y = 1376;
 
-export function ArenaBackdrop({ w, h, org, sub }: { w: number; h: number; org?: string; sub?: string }) {
+/** w/h verilmezse kapsayıcısını kendisi ölçer. dim: üstüne bindirilen karartma (0–1). */
+export function ArenaBackdrop({ w: w0, h: h0, org, sub, dim = 0 }: { w?: number; h?: number; org?: string; sub?: string; dim?: number }) {
   const [ok, setOk] = useState(true);
-  if (!ok || w <= 0 || h <= 0) return null;
+  const [size, setSize] = useState({ w: 0, h: 0 });
+  const w = w0 ?? size.w;
+  const h = h0 ?? size.h;
+  if (!ok) return null;
+  if (w <= 0 || h <= 0)
+    return <View style={StyleSheet.absoluteFill} pointerEvents="none" onLayout={(e) => setSize({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })} />;
   const k = Math.max(w / IW, h / IH);
   const iw = IW * k;
   const ih = IH * k;
@@ -24,7 +30,7 @@ export function ArenaBackdrop({ w, h, org, sub }: { w: number; h: number; org?: 
   const name = (org ?? '').toLocaleUpperCase(LOC);
   const fs = Math.min(150, 520 / Math.max(3, name.length * 0.62)) * k;
   return (
-    <View style={StyleSheet.absoluteFill} pointerEvents="none">
+    <View style={StyleSheet.absoluteFill} pointerEvents="none" onLayout={w0 === undefined ? (e) => setSize({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height }) : undefined}>
       <Image source={ART} onError={() => setOk(false)} style={{ position: 'absolute', left, top, width: iw, height: ih }} resizeMode="stretch" />
       {name ? (
         <View style={{ position: 'absolute', left: 0, right: 0, top: ringY - fs * 0.62, alignItems: 'center', transform: [{ scaleY: 0.3 }] }}>
@@ -38,6 +44,7 @@ export function ArenaBackdrop({ w, h, org, sub }: { w: number; h: number; org?: 
           ) : null}
         </View>
       ) : null}
+      {dim > 0 ? <View style={[StyleSheet.absoluteFill, { backgroundColor: `rgba(4,4,6,${dim})` }]} /> : null}
     </View>
   );
 }

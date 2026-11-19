@@ -10,7 +10,8 @@ import type { Appearance, GameState } from '../engine/types';
 import { L, LOC } from '../i18n';
 import { CageBg, SLANT, upName } from './components';
 import { DEFAULT_LOOK } from './FighterAvatar';
-import { flagOf } from './NewCareer';
+import { arenaOrgText, flagOf } from './NewCareer';
+import { ArenaBackdrop } from './ArenaBackdrop';
 import { Figure, HIP_H, POSES, type Kit, type PoseName } from './rig';
 import { C, F } from './theme';
 
@@ -49,6 +50,8 @@ export function PostHero({ s, o, pWin, tone, title }: { s: GameState; o: Ozet; p
     <View style={h.wrap}>
       <LinearGradient colors={[tone + '55', '#0c0b0a', '#040405']} locations={[0, 0.55, 1]} style={StyleSheet.absoluteFill} />
       <CageBg opacity={0.07} />
+      <ArenaBackdrop {...arenaOrgText(s)} dim={0.25} />
+      <LinearGradient colors={[tone + '44', 'transparent']} locations={[0, 0.5]} style={StyleSheet.absoluteFill} pointerEvents="none" />
       <Svg width="100%" height="100%" viewBox="0 0 200 200" preserveAspectRatio="none" style={StyleSheet.absoluteFill} pointerEvents="none">
         <Defs>
           <SvgLinear id="phCone" x1="0" y1="0" x2="0" y2="1">
