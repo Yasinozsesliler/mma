@@ -11,6 +11,7 @@ let seed = 7;
 const R = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
 const P = new URLSearchParams(location.search);
 const TINT = P.get('tint') || '#e63946'; // köşe/organizasyon rengi
+const TIER = +(P.get('tier') ?? 2); // 0 amatör salon · 1 bölgesel · 2 büyük · 3 dev arena
 function hexA(hex, a) { const n = parseInt(hex.slice(1), 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`; }
 
 // 1) Zemin: koyu dikey gradyan
@@ -18,7 +19,23 @@ let gr = g.createLinearGradient(0, 0, 0, H);
 gr.addColorStop(0, '#05060a'); gr.addColorStop(0.35, '#0b0b12'); gr.addColorStop(0.62, '#120b0d'); gr.addColorStop(1, '#050405');
 g.fillStyle = gr; g.fillRect(0, 0, W, H);
 
-// 2) Çatı iskelesi: kafes kirişler
+// 2) Çatı: amatörde alçak tavan ve boyalı salon duvarı, diğerlerinde kafes kirişler
+if (TIER === 0) {
+  let wg = g.createLinearGradient(0, 0, 0, 640); wg.addColorStop(0, '#15171c'); wg.addColorStop(1, '#22252c');
+  g.fillStyle = wg; g.fillRect(0, 0, W, 640);
+  // beton blok duvar dokusu
+  g.strokeStyle = 'rgba(0,0,0,0.35)'; g.lineWidth = 2;
+  for (let y = 200; y < 640; y += 40) { g.beginPath(); g.moveTo(0, y); g.lineTo(W, y); g.stroke(); for (let x = ((y / 40) % 2) * 60; x < W; x += 120) { g.beginPath(); g.moveTo(x, y); g.lineTo(x, y + 40); g.stroke(); } }
+  // duvar boyunca renkli şerit ve asılı bayrak/flama dizisi
+  g.fillStyle = hexA(TINT, 0.55); g.fillRect(0, 470, W, 14);
+  for (let x = 40; x < W; x += 130) { g.fillStyle = ['#2a3b66', '#5a1a20', '#2c4a32', '#4a3a16'][(x / 130 | 0) % 4]; g.beginPath(); g.moveTo(x, 210); g.lineTo(x + 70, 210); g.lineTo(x + 70, 330); g.lineTo(x + 35, 300); g.lineTo(x, 330); g.closePath(); g.fill(); }
+  // basketbol potası silueti (spor salonu olduğu belli olsun)
+  g.fillStyle = '#0b0c0f'; g.fillRect(W / 2 - 90, 160, 180, 110); g.strokeStyle = '#3a3e48'; g.lineWidth = 4; g.strokeRect(W / 2 - 90, 160, 180, 110); g.strokeRect(W / 2 - 34, 210, 68, 50);
+  g.strokeStyle = '#7a3a1a'; g.lineWidth = 5; g.beginPath(); g.ellipse(W / 2, 280, 34, 8, 0, 0, Math.PI * 2); g.stroke();
+  // tavan
+  g.fillStyle = '#0c0d10'; g.fillRect(0, 0, W, 120);
+}
+if (TIER > 0) {
 g.save(); g.globalAlpha = 0.22; g.strokeStyle = '#3a3f4b'; g.lineWidth = 3;
 for (let k = 0; k < 3; k++) {
   const y = 70 + k * 70;
@@ -26,6 +43,7 @@ for (let k = 0; k < 3; k++) {
   for (let x = 0; x < W; x += 60) { g.beginPath(); g.moveTo(x, y); g.lineTo(x + 30, y + 35); g.lineTo(x + 60, y); g.stroke(); }
 }
 g.restore();
+}
 
 // 3) Işık hüzmeleri (bulanık koniler)
 function beam(x, y, ang, len, w0, w1, col, a) {
@@ -39,20 +57,37 @@ function beam(x, y, ang, len, w0, w1, col, a) {
 g.globalCompositeOperation = 'lighter';
 const rigY = 150;
 const lamps = [];
-for (let i = 0; i < 9; i++) lamps.push(80 + i * ((W - 160) / 8));
+const NL = [0, 5, 9, 13][TIER];
+for (let i = 0; i < NL; i++) lamps.push(80 + i * ((W - 160) / (NL - 1)));
 lamps.forEach((x, i) => {
   const target = W / 2 + (R() - 0.5) * 260;
   const ang = Math.atan2(-(target - x), 980);
   beam(x, rigY, ang, 1150, 16, 210, i % 3 === 1 ? TINT : '#fff1d6', i % 3 === 1 ? 0.2 : 0.17);
   beam(x, rigY, ang, 900, 6, 70, '#fff8ea', 0.12);
 });
-// orta ana hüzme
-beam(W / 2, rigY - 20, 0, 1250, 40, 330, '#fff4dc', 0.26);
+// orta ana hüzme (amatör salonda yok: floresan tavan ışığı)
+if (TIER > 0) {
+beam(W / 2, rigY - 20, 0, 1250, 40, 330, '#fff4dc', TIER === 1 ? 0.18 : 0.26);
 beam(W / 2, rigY - 20, 0, 1100, 14, 140, '#ffffff', 0.16);
+} else {
+  g.globalCompositeOperation = 'source-over';
+  for (let i = 0; i < 4; i++) {
+    const x = 150 + i * 290;
+    g.fillStyle = '#e8f0ff'; g.fillRect(x - 90, 92, 180, 10);
+    g.globalCompositeOperation = 'lighter';
+    let rg = g.createRadialGradient(x, 98, 0, x, 98, 260); rg.addColorStop(0, 'rgba(220,235,255,0.35)'); rg.addColorStop(1, 'rgba(220,235,255,0)');
+    g.fillStyle = rg; g.beginPath(); g.ellipse(x, 98, 300, 150, 0, 0, Math.PI * 2); g.fill();
+    g.globalCompositeOperation = 'source-over';
+  }
+  g.globalCompositeOperation = 'lighter';
+  // soğuk, düz salon ışığı
+  let cold = g.createLinearGradient(0, 100, 0, 1100); cold.addColorStop(0, 'rgba(170,190,220,0.10)'); cold.addColorStop(1, 'rgba(170,190,220,0)');
+  g.fillStyle = cold; g.fillRect(0, 100, W, 1000);
+}
 g.globalCompositeOperation = 'source-over';
 
 // lambaların kendisi: koyu iskele çubuğu, parlak çekirdek, hale ve yatay parlama
-g.fillStyle = '#0d0f14'; g.fillRect(0, rigY - 34, W, 14);
+if (TIER > 0) { g.fillStyle = '#0d0f14'; g.fillRect(0, rigY - 34, W, 14); }
 lamps.forEach((x) => {
   g.fillStyle = '#16181e'; g.beginPath(); g.ellipse(x, rigY - 6, 26, 18, 0, 0, Math.PI * 2); g.fill();
   g.globalCompositeOperation = 'lighter';
@@ -66,14 +101,35 @@ lamps.forEach((x) => {
 });
 // hüzmelerde toz zerreleri
 g.globalCompositeOperation = 'lighter';
-for (let i = 0; i < 260; i++) {
+for (let i = 0; i < [40, 160, 260, 320][TIER]; i++) {
   const y = rigY + 40 + R() * 900, x = W / 2 + (R() - 0.5) * (200 + (y - rigY) * 0.7);
   g.fillStyle = `rgba(255,245,225,${0.08 + R() * 0.25})`; g.beginPath(); g.arc(x, y, 0.8 + R() * 1.6, 0, Math.PI * 2); g.fill();
 }
 g.globalCompositeOperation = 'source-over';
 
+// dev arenada ortada asılı dev ekran (jumbotron)
+if (TIER === 3) {
+  const jx = W / 2, jy = 250;
+  g.strokeStyle = '#08090c'; g.lineWidth = 4; [-150, 150].forEach((d) => { g.beginPath(); g.moveTo(jx + d, 0); g.lineTo(jx + d, jy - 90); g.stroke(); });
+  g.fillStyle = '#07080b'; g.fillRect(jx - 230, jy - 95, 460, 190);
+  // iki yarı: kırmızı ve mavi köşe, ortada parlak ayrım; yatay tarama çizgileri
+  let L1 = g.createLinearGradient(jx - 215, 0, jx, 0); L1.addColorStop(0, '#3a0a10'); L1.addColorStop(1, '#a01a26');
+  g.fillStyle = L1; g.fillRect(jx - 215, jy - 80, 215, 160);
+  let L2 = g.createLinearGradient(jx, 0, jx + 215, 0); L2.addColorStop(0, '#1a3a9a'); L2.addColorStop(1, '#0a1640');
+  g.fillStyle = L2; g.fillRect(jx, jy - 80, 215, 160);
+  g.globalCompositeOperation = 'lighter';
+  let mid = g.createLinearGradient(jx - 40, 0, jx + 40, 0); mid.addColorStop(0, 'rgba(255,255,255,0)'); mid.addColorStop(0.5, 'rgba(255,255,255,0.55)'); mid.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = mid; g.fillRect(jx - 40, jy - 80, 80, 160);
+  let glow = g.createRadialGradient(jx, jy + 40, 0, jx, jy + 40, 380); glow.addColorStop(0, 'rgba(255,255,255,0.18)'); glow.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = glow; g.beginPath(); g.ellipse(jx, jy + 60, 420, 220, 0, 0, Math.PI * 2); g.fill();
+  g.globalCompositeOperation = 'source-over';
+  for (let y = jy - 80; y < jy + 80; y += 4) { g.fillStyle = 'rgba(0,0,0,0.22)'; g.fillRect(jx - 215, y, 430, 1.5); }
+  g.fillStyle = hexA(TINT, 0.9); g.fillRect(jx - 230, jy + 95, 460, 8);
+}
+
 // 4) Tribün: düzensiz yerleşimli, renkli kıyafetli kalabalık; uzak sıralar bulanık, yakın sıralar iri siluet
-const tierTop = 420, tierBottom = 960;
+const tierTop = TIER === 0 ? 600 : 420, tierBottom = 960;
+const DENS = [0.3, 0.72, 1, 1][TIER];
 const SHIRT = [[40, 18, 22], [22, 26, 40], [30, 30, 34], [44, 36, 20], [20, 34, 28], [50, 50, 56], [60, 20, 24], [16, 16, 20]];
 function person(hx, hy, sc, t) {
   const lit = Math.max(0, 1 - Math.abs(hx - W / 2) / 420) * (0.4 + t * 0.6);
@@ -87,7 +143,7 @@ function person(hx, hy, sc, t) {
   if (lit > 0.25) { g.strokeStyle = `rgba(255,228,190,${lit * 0.45})`; g.lineWidth = 1.3 * sc; g.beginPath(); g.arc(hx, hy, 6.2 * sc, Math.PI * 1.05, Math.PI * 1.95); g.stroke(); }
   if (R() < 0.06) { g.strokeStyle = `rgb(${sk + 10 | 0},${sk | 0},${sk | 0})`; g.lineWidth = 3.2 * sc; g.lineCap = 'round'; g.beginPath(); g.moveTo(hx + 7 * sc, hy + 9 * sc); g.lineTo(hx + 9 * sc + R() * 6 * sc, hy - 18 * sc); g.stroke(); }
 }
-const bands = [[0, 9, 3.2], [9, 18, 1.6], [18, 28, 0.5]];
+const bands = TIER === 0 ? [[14, 20, 1.2], [20, 28, 0.5]] : [[0, 9, 3.2], [9, 18, 1.6], [18, 28, 0.5]];
 for (const [r0, r1, blur] of bands) {
   const off = document.createElement('canvas'); off.width = W; off.height = H; const og = off.getContext('2d');
   const keep = g; // kişi çizimi ana bağlamı kullanır; bandı geçici bağlama çizip bulanıklaştırarak ekle
@@ -96,7 +152,7 @@ for (const [r0, r1, blur] of bands) {
     const t = row / 27;
     const y = tierTop + Math.pow(t, 1.3) * (tierBottom - tierTop);
     const sc = 0.33 + t * 0.9;
-    og.fillStyle = `rgba(16,14,20,${0.6 + t * 0.3})`; og.fillRect(0, y + 11 * sc, W, 16 * sc);
+    og.fillStyle = TIER === 0 ? `rgba(${60 + t * 30 | 0},${40 + t * 20 | 0},${24 + t * 10 | 0},${0.8})` : `rgba(16,14,20,${0.6 + t * 0.3})`; og.fillRect(0, y + 11 * sc, W, 16 * sc);
     let x = -20 + R() * 10;
     while (x < W + 20) {
       if (R() > 0.06) { const real = g; Object.defineProperty(window, 'g2', { value: og, configurable: true }); }
@@ -104,18 +160,25 @@ for (const [r0, r1, blur] of bands) {
       const prev = g;
       // geçici olarak kişiyi bant tuvaline çiz
       const tmp = g; // eslint
-      drawOn(og, () => person(x + (R() - 0.5) * 5, y + (R() - 0.5) * 5, sc * (0.9 + R() * 0.2), t));
+      if (R() < DENS) drawOn(og, () => person(x + (R() - 0.5) * 5, y + (R() - 0.5) * 5, sc * (0.9 + R() * 0.2), t));
     }
   }
   g.save(); g.filter = `blur(${blur}px)`; g.drawImage(off, 0, 0); g.restore();
 }
 function drawOn(ctx, fn) { const old = g; g = ctx; try { fn(); } finally { g = old; } }
 // ön sıra: kafesin hemen arkasında iri, karanlık siluetler
-for (let x = -30; x < W + 40; x += 46 + R() * 26) person(x, 880 + R() * 14, 1.9 + R() * 0.3, 0.55);
+for (let x = -30; x < W + 40; x += 46 + R() * 26) if (R() < DENS) person(x, 880 + R() * 14, 1.9 + R() * 0.3, 0.55);
 
+// büyük organizasyonlarda tribün önünde LED reklam bandı (yazısız)
+if (TIER >= 2) {
+  g.fillStyle = '#06070a'; g.fillRect(0, 846, W, 22);
+  let lb = g.createLinearGradient(0, 0, W, 0); lb.addColorStop(0, hexA(TINT, 0.2)); lb.addColorStop(0.5, hexA(TINT, 0.75)); lb.addColorStop(1, hexA(TINT, 0.2));
+  g.fillStyle = lb; g.fillRect(0, 850, W, 14);
+  for (let x = 0; x < W; x += 12) { g.fillStyle = 'rgba(0,0,0,0.35)'; g.fillRect(x, 850, 3, 14); }
+}
 // 5) Flaşlar ve telefon ekranları (bokeh)
 g.globalCompositeOperation = 'lighter';
-for (let i = 0; i < 140; i++) {
+for (let i = 0; i < [14, 60, 140, 220][TIER]; i++) {
   const x = R() * W, y = tierTop + R() * (tierBottom - tierTop - 60);
   const big = R() < 0.12;
   const r = big ? 22 + R() * 26 : 4 + R() * 7;
@@ -128,7 +191,7 @@ g.globalCompositeOperation = 'source-over';
 
 // 6) Sis: yumuşak katmanlar
 g.globalCompositeOperation = 'screen';
-for (let i = 0; i < 26; i++) {
+for (let i = 0; i < [6, 18, 26, 30][TIER]; i++) {
   const x = R() * W, y = 300 + R() * 900, r = 180 + R() * 320;
   const rg = g.createRadialGradient(x, y, 0, x, y, r);
   rg.addColorStop(0, `rgba(120,110,120,${0.05 + R() * 0.05})`); rg.addColorStop(1, 'rgba(120,110,120,0)');

@@ -15,6 +15,7 @@ import type { Arena } from './arena';
 import { DEFAULT_LOOK } from './FighterAvatar';
 import { Figure, HIP_H, joints, lerpPose, POSES, type Kit, type Pose, type PoseName } from './rig';
 import { C, F, R } from './theme';
+import { CROWD_ART, type ArenaTier } from './arenaArt';
 
 type Actor = 'p' | 'o' | 'r';
 type Side = 'p' | 'o';
@@ -131,12 +132,12 @@ const Crowd = memo(function Crowd({ w, hp, t, tier = 2 }: { w: number; hp: numbe
 });
 
 /** Yeni görünüm: tribün çizilmiş görselden gelir; coşku anlarında üstünde foto flaşları patlar. */
-const CROWD_ART = require('../../assets/art/arena_crowd.jpg');
-const ArtCrowd = memo(function ArtCrowd({ w, hp, t }: { w: number; hp: number; t: number }) {
+const ArtCrowd = memo(function ArtCrowd({ w, hp, t, tier = 2, tint }: { w: number; hp: number; t: number; tier?: number; tint?: string }) {
   const tick = Math.floor(t / 90);
   return (
     <>
-      <SvgImage href={CROWD_ART} x={0} y={0} width={w} height={H * 0.74} preserveAspectRatio="xMidYMid slice" opacity={0.85} />
+      <SvgImage href={CROWD_ART[tier as ArenaTier] ?? CROWD_ART[2]} x={0} y={0} width={w} height={H * 0.74} preserveAspectRatio="xMidYMid slice" opacity={0.85} />
+      {tint ? <Rect x={0} y={0} width={w} height={H * 0.45} fill="url(#cityTint)" /> : null}
       {hp > 0.25
         ? Array.from({ length: 10 }, (_, i) =>
             hash(i * 31 + tick) < 0.35 * hp ? <Circle key={i} cx={w * (0.04 + hash(i * 7 + tick) * 0.92)} cy={CROWD_TOP + 14 + hash(i * 3 + tick) * 34} r={2.6} fill="#ffffff" opacity={0.85} /> : null,
@@ -684,6 +685,10 @@ export function CageView({
                 <Stop offset="0" stopColor="#5a3a2a" stopOpacity={0.35} />
                 <Stop offset="1" stopColor="#5a3a2a" stopOpacity={0} />
               </SvgLinear>
+              <SvgLinear id="cityTint" x1="0" y1="0" x2="0" y2="1">
+                <Stop offset="0" stopColor={arena?.tint ?? '#000'} stopOpacity={0.35} />
+                <Stop offset="1" stopColor={arena?.tint ?? '#000'} stopOpacity={0} />
+              </SvgLinear>
               <RadialGradient id="vig" cx="50%" cy="55%" r="70%">
                 <Stop offset="0.6" stopColor="#000" stopOpacity={0} />
                 <Stop offset="1" stopColor="#000" stopOpacity={0.55} />
@@ -691,7 +696,7 @@ export function CageView({
             </Defs>
             <G transform={sx || sy ? `translate(${sx} ${sy})` : undefined}>
             {/* Sabit katmanlar yalnızca genişlik değişince yeniden çizilir; seyirci yalnızca coşku anlarında hareket eder */}
-            {art ? <ArtCrowd w={w} hp={low ? 0 : hp} t={!low && hp ? tNow : 0} /> : null}
+            {art ? <ArtCrowd w={w} hp={low ? 0 : hp} t={!low && hp ? tNow : 0} tier={arena?.tier} tint={arena?.tint} /> : null}
             <Stands w={w} tier={arena?.tier} logo={arena?.logo} renk={arena?.renk} />
             {art ? null : <Crowd w={w} hp={low ? 0 : hp} t={!low && hp ? tNow : 0} tier={arena?.tier} />}
             <CageBack w={w} tint={tint} tier={arena?.tier} logo={arena?.logo} renk={arena?.renk} />

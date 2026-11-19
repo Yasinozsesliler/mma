@@ -35,6 +35,7 @@ import { lookFor } from '../engine/tale';
 import { Bar, Button, Card, Choice, Icon, P, Screen, Section, upName, type IconName } from './components';
 import { C, F, G, R } from './theme';
 import { orgShort } from './NewCareer';
+import { arenaLook, arenaTier, cityTint, fightCity } from './arenaArt';
 import { BroadcastScore, FightOption, FightPrompt, type OptBadge } from './NewFight';
 import { currentLook as lookNow, useLook } from '../lookPref';
 import { SLOT_LABEL } from '../engine/fightNight';
@@ -340,6 +341,7 @@ export function FightScreen({ s, act }: { s: GameState; act: Act }) {
   const org = ORGS[currentOrg(s)].kisa + (fs.unvanMaci ? L(" · ÜNVAN") : fs.anaMac ? L(" · ANA MAÇ") : '');
   /** Yeni görünüm yayın bandı (canlı dövüş ve taktik izleme aynı) */
   const band = {
+    ...arenaLook(s),
     org: orgShort(s),
     caption: `${WEIGHT_CLASSES[s.fighter.siklet].ad.toLocaleUpperCase(LOC)} · ${fs.unvanMaci ? L("ÜNVAN MAÇI") : fs.anaMac ? L("ANA MAÇ") : s.pending.gece ? SLOT_LABEL[s.pending.gece.konum] : ORGS[currentOrg(s)].ad.toLocaleUpperCase(LOC)}`,
     pRank: s.sampiyon ? 'C' : s.rank ? String(s.rank) : '',
@@ -396,7 +398,7 @@ export function FightScreen({ s, act }: { s: GameState; act: Act }) {
         <View style={{ height: 252, marginBottom: 10 }} />
       ) : (
         <View>
-          <CageView fs={fs} shown={shown} speed={speed} pLook={s.fighter.gorunum} oLook={lookFor(fs.opp)} arena={arenaForOrg(currentOrg(s))} pBuild={buildOf(s.fighter.siklet, s.fighter.kadin)} oBuild={buildOf(s.fighter.siklet, s.fighter.kadin)} />
+          <CageView fs={fs} shown={shown} speed={speed} pLook={s.fighter.gorunum} oLook={lookFor(fs.opp)} arena={{ ...arenaForOrg(currentOrg(s)), tier: arenaTier(s), tint: cityTint(fightCity(s)) }} pBuild={buildOf(s.fighter.siklet, s.fighter.kadin)} oBuild={buildOf(s.fighter.siklet, s.fighter.kadin)} />
           {fs.durum !== 'bitti' && shown <= 1 ? <RoundBanner key={fs.raunt} raunt={fs.raunt} max={fs.maxRaunt} /> : null}
           {!flowing && fs.durum === 'rauntSonu' ? <BroadcastBar key={fs.raunt} fs={fs} org={ORGS[currentOrg(s)].kisa} /> : null}
         </View>

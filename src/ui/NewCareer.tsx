@@ -5,35 +5,22 @@ import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Ellipse, G } from 'react-native-svg';
 import { playerKit, useCosmetics } from '../cosmetics';
 import { money } from '../engine/career';
-import { currentOrg, statAverage } from '../engine/character';
-import { ORGS, WEIGHT_CLASSES } from '../engine/data';
+import { statAverage } from '../engine/character';
+import { WEIGHT_CLASSES } from '../engine/data';
 import { fmtFollowers, followers } from '../engine/fame';
 import { judgePick, SLOT_LABEL } from '../engine/fightNight';
 import { lookFor, physique, playerPhysique } from '../engine/tale';
 import type { Appearance, FightNight, GameState, NightBout, Opponent } from '../engine/types';
 import { L, LOC } from '../i18n';
 import { ArenaBackdrop, GymBackdrop } from './ArenaBackdrop';
+import { arenaLook, LIGHTS_ART, orgShort } from './arenaArt';
 import { CageBg, Icon, SLANT, upName } from './components';
 import { DEFAULT_LOOK } from './FighterAvatar';
 import { Figure, HIP_H, POSES, type Kit, type PoseName } from './rig';
 import { C, F } from './theme';
 
-/** Rozet için organizasyon kısaltması. Profesyonelken sözleşme boşta olsa bile asla "AMATÖR" yazmaz. */
-export function orgShort(s: GameState): string {
-  const id = currentOrg(s);
-  if (id === 'amator' && s.stage !== 'amator') return 'PRO';
-  return ORGS[id].kisa;
-}
+export { arenaOrgText, orgShort } from './arenaArt';
 
-/** Zemine yazılacak organizasyon adı ve alt yazı. Profesyonelde asla "AMATÖR" yazmaz. */
-export function arenaOrgText(s: GameState): { org: string; sub: string } {
-  const kisa = orgShort(s);
-  const id = currentOrg(s);
-  const ad = ORGS[id].ad;
-  return { org: kisa, sub: kisa === 'PRO' || ad.toLocaleUpperCase(LOC) === kisa.toLocaleUpperCase(LOC) ? '' : ad };
-}
-
-const LIGHTS_ART = require('../../assets/art/arena_lights.jpg');
 
 const shortMoney = (n: number) => (Math.abs(n) < 100_000 ? money(n) : `${n < 0 ? '-' : ''}$${fmtFollowers(Math.abs(n))}`);
 
@@ -208,7 +195,7 @@ export function VsStage({ s, g, opp, w }: { s: GameState; g: FightNight; opp: Op
         {/* Arena: kalabalık karanlığı, kafes deseni, iki köşe ışığı */}
         <LinearGradient colors={['#14161c', '#0a0b0f', '#040405']} locations={[0, 0.6, 1]} style={StyleSheet.absoluteFill} />
         <CageBg opacity={0.08} />
-        <ArenaBackdrop w={w} h={H} {...arenaOrgText(s)} />
+        <ArenaBackdrop w={w} h={H} s={s} />
         <LinearGradient colors={['rgba(193,18,31,0.35)', 'rgba(193,18,31,0)']} start={{ x: 0, y: 0.5 }} end={{ x: 0.45, y: 0.5 }} style={StyleSheet.absoluteFill} />
         <LinearGradient colors={['rgba(28,79,196,0)', 'rgba(28,79,196,0.35)']} start={{ x: 0.55, y: 0.5 }} end={{ x: 1, y: 0.5 }} style={StyleSheet.absoluteFill} />
         <View style={{ position: 'absolute', left: -w * 0.24, bottom: 18 }} pointerEvents="none">
@@ -376,12 +363,14 @@ function cornerName(name: string, country?: string) {
 /** Gecenin kartı, yayın afişi gibi: organizasyon, "ANA KART", her maçta sıklet etiketi, bayraklar ve karneler. */
 export function PosterCard({ s, g, opp, rows, bitti, methodText }: { s: GameState; g: FightNight; opp: Opponent; rows: PosterRow[]; bitti: boolean; methodText: (b: NightBout) => string }) {
   const f = s.fighter;
+  const look = arenaLook(s);
   return (
     <LinearGradient colors={['#13254d', '#0a1430', '#050a18']} locations={[0, 0.45, 1]} style={p.wrap}>
       <CageBg opacity={0.05} />
       {/* Üstte arena bandı: ışıklar ve tribün, alta doğru afiş rengine kaybolur */}
       <View style={p.art} pointerEvents="none">
-        <Image source={LIGHTS_ART} style={StyleSheet.absoluteFill} resizeMode="cover" />
+        <Image source={LIGHTS_ART[look.tier]} style={StyleSheet.absoluteFill} resizeMode="cover" />
+        {look.tint ? <LinearGradient colors={[look.tint + '55', look.tint + '00']} locations={[0, 0.8]} style={StyleSheet.absoluteFill} /> : null}
         <LinearGradient colors={['rgba(10,20,45,0)', 'rgba(14,28,60,0.25)', '#0d1a3a']} locations={[0, 0.6, 1]} style={StyleSheet.absoluteFill} />
       </View>
       <View style={p.head}>

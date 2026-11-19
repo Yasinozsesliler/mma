@@ -26,7 +26,7 @@ import { chants, crowdMood, moodLine, walkoutTier } from '../engine/walkout';
 import { C, F } from './theme';
 import { useLook } from '../lookPref';
 import { Barricades, FrontWalker } from './WalkoutFront';
-import { arenaOrgText, flagOf } from './NewCareer';
+import { flagOf } from './NewCareer';
 import { ArenaBackdrop } from './ArenaBackdrop';
 
 type Card = { kicker: string; lines: string[]; name?: string; nick?: string; side?: 'p' | 'o'; ms: number; say?: string; vs?: boolean; /** Kemeri taşıyan şampiyon girişi */ belt?: boolean; /** Hakem talimatı: iki köşe karşı karşıya, VS yok */ yuzyuze?: boolean };
@@ -430,7 +430,7 @@ export function WalkoutScene({ s, onDone: finish }: { s: GameState; onDone: () =
     <Modal transparent animationType="fade" onRequestClose={onDone}>
       <Pressable style={st.back} onPress={onDone}>
         <Arena w={W} h={Hh} color={color} />
-        {yeni ? <ArenaBackdrop w={W} h={Hh} {...arenaOrgText(s)} dim={0.2} /> : null}
+        {yeni ? <ArenaBackdrop w={W} h={Hh} s={s} dim={0.2} /> : null}
         {yeni && card.side ? <Barricades w={W} h={Hh} /> : null}
         {spots.map((x, k) => (
           <Spot key={x} x={W * x} h={Hh * 0.8} color={card.belt ? '#ffe3a3' : card.side === 'o' && k % 2 === 0 ? '#9ec5ff' : card.side === 'p' && k % 2 === 1 ? '#ffb3b8' : '#fff1d6'} delay={(k * 650) % 2600} wide={W * (tier >= 2 ? 0.42 : 0.5)} />

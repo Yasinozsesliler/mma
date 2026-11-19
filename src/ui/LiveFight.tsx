@@ -19,6 +19,7 @@ import { frameMeter, lowPerf, paintMs } from '../perfPref';
 import { DEFAULT_LOOK } from './FighterAvatar';
 import { Figure, HIP_H, lerpPose, POSES, type Pose, type PoseName } from './rig';
 import { C, F } from './theme';
+import { CROWD_ART, type ArenaTier } from './arenaArt';
 import { Icon, type IconName } from './components';
 import { BroadcastScore } from './NewFight';
 import { useLook } from '../lookPref';
@@ -89,8 +90,7 @@ const FANS = Array.from({ length: 90 }, (_, i) => ({ row: i % 3, u: hash(i), s: 
 
 /** Sabit arka plan: tribün, LED pano, kafes teli, yastıklı ray, dokulu kanvas, spotlar (her karede yeniden çizilmez). */
 /** Yeni görünümde tribün ve ışıklar çizilmiş görselden gelir (kafes, kanvas ve kafes rengi kozmetiği vektör kalır). */
-const CROWD_ART = require('../../assets/art/arena_crowd.jpg');
-const ArenaBg = memo(function ArenaBg({ art }: { art?: boolean }) {
+const ArenaBg = memo(function ArenaBg({ art, tier = 2, city }: { art?: boolean; tier?: ArenaTier; city?: string }) {
   const tint = cageTintNow();
   return (
     <Svg width="100%" height="100%" viewBox={VIEW} preserveAspectRatio="xMidYMid meet" style={StyleSheet.absoluteFill}>
@@ -130,13 +130,18 @@ const ArenaBg = memo(function ArenaBg({ art }: { art?: boolean }) {
           <Line x1={0} y1={0.5} x2={2} y2={0.5} stroke="#000" strokeOpacity={0.05} strokeWidth={0.3} />
           <Line x1={0.5} y1={0} x2={0.5} y2={2} stroke="#fff" strokeOpacity={0.06} strokeWidth={0.3} />
         </Pattern>
+        <SvgLinear id="lfCity" x1="0" y1="0" x2="0" y2="1">
+          <Stop offset="0" stopColor={city ?? '#000'} stopOpacity={0.35} />
+          <Stop offset="1" stopColor={city ?? '#000'} stopOpacity={0} />
+        </SvgLinear>
         <RadialGradient id="lfVig" cx="50%" cy="55%" r="70%">
           <Stop offset="0.55" stopColor="#000" stopOpacity={0} />
           <Stop offset="1" stopColor="#000" stopOpacity={0.6} />
         </RadialGradient>
       </Defs>
       <Rect x={0} y={0} width={VB_W} height={VB_H} fill="url(#lfSky)" />
-      {art ? <SvgImage href={CROWD_ART} x={0} y={0} width={VB_W} height={100} preserveAspectRatio="xMidYMid slice" opacity={0.9} /> : null}
+      {art ? <SvgImage href={CROWD_ART[tier]} x={0} y={0} width={VB_W} height={100} preserveAspectRatio="xMidYMid slice" opacity={0.9} /> : null}
+      {art && city ? <Rect x={0} y={0} width={VB_W} height={60} fill="url(#lfCity)" /> : null}
       {art ? null : <>
       {/* LED pano ve tribün */}
       <Rect x={20} y={12} width={160} height={5} fill="#07080b" />
@@ -237,7 +242,7 @@ const GUIDE_TEXT: Record<GuideId, () => string> = {
   son: () => L("Gerisi sende! Sarı çubuk nefesin: bitince vuruşların zayıflar. DİREKT ve TEKME rakibin hazırlığını keser."),
 };
 
-export function LiveFight({ fs, pLook, oLook, onEnd, ozel, band }: { fs: FightState; pLook?: Appearance; oLook: Appearance; onEnd: (r: LiveRoundResult) => void; ozel?: Special; /** Yeni görünüm yayın bandı: organizasyon, alt yazı, sıralamalar */ band?: { org: string; caption: string; pRank: string; oRank: string } }) {
+export function LiveFight({ fs, pLook, oLook, onEnd, ozel, band }: { fs: FightState; pLook?: Appearance; oLook: Appearance; onEnd: (r: LiveRoundResult) => void; ozel?: Special; /** Yeni görünüm yayın bandı: organizasyon, alt yazı, sıralamalar */ band?: { org: string; caption: string; pRank: string; oRank: string; tier?: ArenaTier; tint?: string } }) {
   const { width: W, height: H } = useWindowDimensions();
   const [kit] = useState(playerKit);
   const sim = useRef<LiveSim | null>(null);
@@ -699,7 +704,7 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel, band }: { fs: FightSt
         {/* Sahne */}
         <View style={lf.middle} onLayout={(e) => setMid({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height - 8 })}>
         <View style={[lf.stage, { width: stageW, height: stageW / ASPECT }]} pointerEvents="none">
-          <ArenaBg art={yeni} />
+          <ArenaBg art={yeni} tier={band?.tier} city={band?.tint} />
           <Svg width="100%" height="100%" viewBox={VIEW} preserveAspectRatio="xMidYMid meet" style={StyleSheet.absoluteFill}>
             {yeni ? (
               <Defs>

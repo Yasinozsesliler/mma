@@ -4,7 +4,7 @@ import { ORGS } from '../engine/data';
 import type { OrgId, Stage, WeightClass } from '../engine/types';
 
 /** tier: 0 depo/amatör salon · 1 bölgesel · 2 büyük lig · 3 dev arena */
-export type Arena = { tier: 0 | 1 | 2 | 3; logo?: string; renk?: string };
+export type Arena = { tier: 0 | 1 | 2 | 3; logo?: string; renk?: string; /** Şehre göre ışık tonu (yeni görünüm) */ tint?: string };
 
 const ORG_RENK: Record<OrgId, string> = {
   amator: '#8a8f99',

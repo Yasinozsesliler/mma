@@ -1,20 +1,28 @@
-// Yeni görünüm: çizilmiş arena arka planı (assets/art/arena.jpg) ve ring zeminine perspektifle yazılan
-// organizasyon adı. Görsel alta hizalanır (zemin hep görünür); yüklenemezse hiçbir şey çizmez, altındaki
+// Yeni görünüm: çizilmiş arena arka planı (arenaArt.ts: kariyer seviyesine göre mekan, ünvanda altın, şehre göre
+// ışık tonu) ve ring zeminine perspektifle yazılan organizasyon adı. Görsel alta hizalanır (zemin hep görünür); yüklenemezse hiçbir şey çizmez, altındaki
 // gradyan zemin kalır. Klasik görünümde kullanılmaz.
 import { useState } from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import type { GameState } from '../engine/types';
 import { LOC } from '../i18n';
+import { ARENA_ART, ARENA_GOLD, arenaLook, arenaOrgText, type ArenaTier } from './arenaArt';
 import { F } from './theme';
-
-const ART = require('../../assets/art/arena.jpg');
-const ART_GOLD = require('../../assets/art/arena_gold.jpg');
 const IW = 1170;
 const IH = 1560;
 /** Görseldeki ring logosunun merkezi (piksel). */
 const RING_Y = 1376;
 
-/** gold: kemer kutlaması için altın ışıklı sürüm. w/h verilmezse kapsayıcısını kendisi ölçer. dim: üstüne bindirilen karartma (0–1). */
-export function ArenaBackdrop({ w: w0, h: h0, org, sub, dim = 0, gold }: { w?: number; h?: number; org?: string; sub?: string; dim?: number; gold?: boolean }) {
+/** s verilirse mekan, altın, şehir tonu ve zemin yazısı oyundan gelir; tek tek verilenler üstüne yazar.
+ *  gold: altın ışıklı sürüm (kutlama, ünvan maçı). w/h verilmezse kapsayıcısını kendisi ölçer. dim: karartma (0–1). */
+export function ArenaBackdrop(props: { s?: GameState; w?: number; h?: number; org?: string; sub?: string; dim?: number; gold?: boolean; tier?: ArenaTier; tint?: string | null }) {
+  const auto = props.s ? { ...arenaOrgText(props.s), ...arenaLook(props.s) } : undefined;
+  const { w: w0, h: h0, dim = 0 } = props;
+  const org = props.org ?? auto?.org;
+  const sub = props.sub ?? auto?.sub;
+  const gold = props.gold ?? auto?.gold ?? false;
+  const tier = props.tier ?? auto?.tier ?? 2;
+  const tint = props.tint === null ? undefined : (props.tint ?? auto?.tint);
   const [ok, setOk] = useState(true);
   const [size, setSize] = useState({ w: 0, h: 0 });
   const w = w0 ?? size.w;
@@ -32,7 +40,8 @@ export function ArenaBackdrop({ w: w0, h: h0, org, sub, dim = 0, gold }: { w?: n
   const fs = Math.min(150, 520 / Math.max(3, name.length * 0.62)) * k;
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="none" onLayout={w0 === undefined ? (e) => setSize({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height }) : undefined}>
-      <Image source={gold ? ART_GOLD : ART} onError={() => setOk(false)} style={{ position: 'absolute', left, top, width: iw, height: ih }} resizeMode="stretch" />
+      <Image source={gold ? ARENA_GOLD : ARENA_ART[tier]} onError={() => setOk(false)} style={{ position: 'absolute', left, top, width: iw, height: ih }} resizeMode="stretch" />
+      {tint && !gold ? <LinearGradient colors={[tint + '50', tint + '1c', tint + '00']} locations={[0, 0.45, 0.75]} style={StyleSheet.absoluteFill} /> : null}
       {name ? (
         <View style={{ position: 'absolute', left: 0, right: 0, top: ringY - fs * 0.62, alignItems: 'center', transform: [{ scaleY: 0.3 }] }}>
           <Text style={[a.org, { fontSize: fs, lineHeight: fs * 1.15 }]} numberOfLines={1}>
