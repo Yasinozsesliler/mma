@@ -4,6 +4,26 @@ import { themeOf } from './themes';
 import { L, LOC } from '../i18n';
 import { C, F } from '../ui/theme';
 import type { ShareCardData } from './types';
+import { Image as RNImage } from 'react-native';
+import { cardArtSource } from './CardArt';
+
+/** Yeni görünüm sahnesi: paketlenmiş görselin adresini çözer ve yükler (olmazsa null; kart düz arka planla çizilir). */
+async function artImage(d: ShareCardData): Promise<{ img: HTMLImageElement; iw: number; ih: number } | null> {
+  if (!d.sahne) return null;
+  const { src, iw, ih } = cardArtSource(d.sahne);
+  const any = src as unknown as { uri?: string; default?: string } | string | number;
+  const uri = typeof any === 'string' ? any : typeof any === 'object' ? any.uri ?? any.default : RNImage.resolveAssetSource?.(any)?.uri;
+  if (!uri) return null;
+  const img = new Image();
+  img.src = uri;
+  await img.decode().catch(() => undefined);
+  return img.complete && img.naturalWidth ? { img, iw, ih } : null;
+}
+
+const hexA = (hex: string, a: number) => {
+  const n = parseInt(hex.slice(1, 7), 16);
+  return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`;
+};
 
 export const CAN_SHARE = true;
 const WD = 1080;
@@ -61,6 +81,30 @@ function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
 
 const up = (s: string) => s.toLocaleUpperCase(LOC);
 
+/** Yeni görünüm sahnesini (varsa) tuvale çizer; üstüne şablon renkleri yarı saydam bindirilir. */
+async function drawArt(ctx: CanvasRenderingContext2D, d: ShareCardData, bgc: readonly string[]) {
+  const art = await artImage(d);
+  if (art) {
+    const k = Math.max(WD / art.iw, HT / art.ih);
+    ctx.drawImage(art.img, (WD - art.iw * k) / 2, HT - art.ih * k, art.iw * k, art.ih * k);
+    if (d.sahne?.tint) {
+      const tg = ctx.createLinearGradient(0, 0, 0, HT * 0.5);
+      tg.addColorStop(0, hexA(d.sahne.tint, 0.31));
+      tg.addColorStop(1, hexA(d.sahne.tint, 0));
+      ctx.fillStyle = tg;
+      ctx.fillRect(0, 0, WD, HT);
+    }
+    const ov = ctx.createLinearGradient(0, 0, 0, HT);
+    ov.addColorStop(0, hexA(bgc[0], 0.35));
+    ov.addColorStop(0.5, hexA(bgc[1], 0.7));
+    ov.addColorStop(0.85, hexA(bgc[2], 0.96));
+    ov.addColorStop(1, hexA(bgc[2], 0.96));
+    ctx.fillStyle = ov;
+    ctx.fillRect(0, 0, WD, HT);
+  }
+}
+
+
 export async function renderCard(d: ShareCardData, avatarId: string, beltId: string, oppId?: string): Promise<{ url: string; file: File | null } | null> {
   const D = doc();
   if (!D) return null;
@@ -87,6 +131,7 @@ export async function renderCard(d: ShareCardData, avatarId: string, beltId: str
   bg.addColorStop(1, th.bg[2]);
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, WD, HT);
+  await drawArt(ctx, d, th.bg);
   const glow = ctx.createRadialGradient(WD / 2, 640, 40, WD / 2, 640, 620);
   glow.addColorStop(0, d.tur === 'kemer' ? 'rgba(242,193,78,0.30)' : 'rgba(230,57,70,0.32)');
   glow.addColorStop(1, 'rgba(0,0,0,0)');
@@ -239,6 +284,7 @@ async function renderPoster(d: ShareCardData, pImg: HTMLImageElement | null, oIm
   bg.addColorStop(1, '#071433');
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, WD, HT);
+  await drawArt(ctx, d, ['#3a0710', '#0b0c10', '#071433']);
   ctx.save();
   ctx.globalAlpha = 0.18;
   ctx.fillStyle = accent;

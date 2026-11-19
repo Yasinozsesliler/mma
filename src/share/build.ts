@@ -14,14 +14,23 @@ import { lookFor } from '../engine/tale';
 import { hypeLabel, isBigFight } from '../engine/hype';
 import { isComebackFight } from '../engine/comeback';
 import { LEGENDS, legendMaxStars, legendName, legendStars } from '../engine/legendRun';
+import { currentLook } from '../lookPref';
+import { arenaLook } from '../ui/arenaArt';
 
 const up = (s: string) => s.toLocaleUpperCase(LOC);
 const rec = (s: GameState) => `${s.rekor.g}-${s.rekor.m}-${s.rekor.b}`;
 const MESAJ = () => L("Kafesten Kemere · Kendi dövüş efsaneni yaz");
 
+/** Yeni görünümde kartın arkasındaki sahne: oyuncunun seviyesindeki arena (ünvanda altın), şehrin ışık tonu. */
+function sahneOf(s: GameState, kaynak?: 'arena' | 'altin' | 'salon'): ShareCardData['sahne'] {
+  if (currentLook() !== 'yeni') return undefined;
+  const a = arenaLook(s);
+  return { kaynak: kaynak ?? (a.gold ? 'altin' : 'arena'), tier: a.tier, tint: kaynak ? undefined : a.tint };
+}
+
 function base(s: GameState) {
   const f = s.fighter;
-  return { ad: `${f.ad} ${f.soyad}`, adBuyuk: upName(`${f.ad} ${f.soyad}`, f.uyruk), lakap: f.lakap, look: f.gorunum, mesaj: MESAJ() };
+  return { ad: `${f.ad} ${f.soyad}`, adBuyuk: upName(`${f.ad} ${f.soyad}`, f.uyruk), lakap: f.lakap, look: f.gorunum, mesaj: MESAJ(), sahne: sahneOf(s) };
 }
 
 /** Kemer kazanma / savunma / çift kemer anı. */
@@ -35,6 +44,7 @@ export function beltCard(s: GameState): ShareCardData | null {
   return {
     ...base(s),
     tur: 'kemer',
+    sahne: sahneOf(s, 'altin'),
     baslik,
     ust: up(L("{0} {1} Sıklet Şampiyonu", [ORGS[k.org].kisa, WEIGHT_CLASSES[k.siklet].ad])),
     kutular: [
@@ -76,6 +86,7 @@ export function careerCard(s: GameState): ShareCardData {
   return {
     ...base(s),
     tur: 'kariyer',
+    sahne: sahneOf(s, 'salon'),
     baslik,
     ust: up(`${org.kisa} · ${L("{0} Sıklet", [WEIGHT_CLASSES[s.fighter.siklet].ad])}`),
     kutular: [

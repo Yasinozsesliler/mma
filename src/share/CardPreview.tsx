@@ -15,6 +15,7 @@ import { C, F } from '../ui/theme';
 import type { CardHandle, ShareCardData } from './types';
 import { WikiCardBody } from './WikiCard';
 import { PosterView } from './PosterView';
+import { CardArt } from './CardArt';
 
 // Tasarım 360×640 birimde yapılır, 3 kat büyütülerek 1080×1920 yakalanır.
 const WD = 360;
@@ -60,6 +61,7 @@ export function CardPreview({ data, onReady }: { data: ShareCardData; onReady: (
       ) : (
       <View ref={ref} collapsable={false} style={st.card}>
         <LinearGradient colors={th.bg} locations={[0, 0.45, 1]} style={StyleSheet.absoluteFill} />
+        <CardArt sahne={data.sahne} bg={th.bg} w={WD} h={HT} />
         <Svg width={WD} height={HT} style={StyleSheet.absoluteFill}>
           {[0, 1, 2, 3].map((i) => {
             const x = -100 + i * 47;

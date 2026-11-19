@@ -1,6 +1,7 @@
 // Maç afişi (360×640 tasarım birimi): iki köşe karşı karşıya, ortada VS. Yerelde paylaşım görüntüsü ve
 // oyun içi önizleme olarak kullanılır; web'deki tuval çizimi (render.web.ts) aynı yerleşimi izler.
 import { LinearGradient } from 'expo-linear-gradient';
+import { CardArt } from './CardArt';
 import { StyleSheet, Text, View } from 'react-native';
 import { storeLine } from './storeLine';
 import Svg, { Polygon } from 'react-native-svg';
@@ -19,6 +20,7 @@ export function PosterView({ data, store = true }: { data: ShareCardData; store?
   return (
     <View style={st.card}>
       <LinearGradient colors={['#3a0710', '#0b0c10', '#071433']} start={{ x: 0, y: 0.3 }} end={{ x: 1, y: 0.7 }} style={StyleSheet.absoluteFill} />
+      <CardArt sahne={data.sahne} bg={['#3a0710', '#0b0c10', '#071433']} w={POSTER_W} h={POSTER_H} />
       <Svg width={POSTER_W} height={POSTER_H} style={StyleSheet.absoluteFill}>
         <Polygon points={`170,0 190,0 150,${POSTER_H} 130,${POSTER_H}`} fill={accent} opacity={0.18} />
         <Polygon points={`0,${POSTER_H - 120} ${POSTER_W},${POSTER_H - 190} ${POSTER_W},${POSTER_H} 0,${POSTER_H}`} fill="#000" opacity={0.45} />

@@ -22,6 +22,8 @@ export type ShareCardData = {
   tema?: import('./themes').CardThemeId;
   /** Kuşanılan sezon unvanı */
   unvan?: string;
+  /** Yeni görünüm: kartın arkasındaki çizilmiş sahne (klasik görünümde yok) */
+  sahne?: { kaynak: 'arena' | 'altin' | 'salon'; tier: 0 | 1 | 2 | 3; tint?: string };
   /** Paylaşım menüsünde gönderiye eklenecek metin */
   mesaj: string;
   /** Kafespedia kartı: giriş paragrafı ve bilgi kutusu satırları */
