@@ -34,6 +34,10 @@ export function Belt({ org, siklet, width = 300, dim = false, skin }: { org: Org
   const globe = `o${id}`;
   const cx = 150;
   const cy = 64;
+  // Kurdele yazısı kurdelenin içine sığacak kadar küçülür (uzun sıklet adları ve diğer diller için).
+  const ribbonText = L("WORLD CHAMPION{0}", [siklet ? ' · ' + WEIGHT_CLASSES[siklet].ad.toLocaleUpperCase(LOC) : '']);
+  const ribbonFs = Math.max(3.6, Math.min(6.5, 82 / (ribbonText.length * 0.82)));
+  const ribbon = { text: ribbonText, fs: ribbonFs, ls: ribbonFs * 0.12 };
 
   /** Yan plaka: eğimli altın levha, oyma çerçeve, ortada taş ve dört perçin. */
   const sidePlate = (x: number, w: number) => (
@@ -138,8 +142,8 @@ export function Belt({ org, siklet, width = 300, dim = false, skin }: { org: Org
 
       {/* Altta kurdele */}
       <Path d={L("M{0} {1} L{2} {3} L{4} {5} L{6} {7} Z", [cx - 52, cy + 36, cx + 52, cy + 36, cx + 46, cy + 50, cx - 46, cy + 50])} fill="#0b0b0c" stroke={hi} strokeWidth={1.2} />
-      <SvgText x={cx} y={cy + 45} fill={hi} fontSize={6.5} fontWeight="bold" textAnchor="middle" letterSpacing={1.2}>
-        {L("WORLD CHAMPION{0}", [siklet ? ' · ' + WEIGHT_CLASSES[siklet].ad.toLocaleUpperCase(LOC) : ''])}
+      <SvgText x={cx + ribbon.ls / 2} y={cy + 43 + ribbon.fs * 0.36} fill={hi} fontSize={ribbon.fs} fontWeight="bold" textAnchor="middle" letterSpacing={ribbon.ls}>
+        {ribbon.text}
       </SvgText>
 
       {/* Parlama */}
