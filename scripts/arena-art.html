@@ -1,0 +1,207 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><style>html,body{margin:0;background:#000}canvas{display:block}</style></head>
+<body><canvas id="c"></canvas>
+<script>
+// Arena illüstrasyonu (1170x1560): çatı ışık iskelesi, hüzmeler, sis, kademeli tribün ve kalabalık, flaşlar,
+// derinlikli kafes, ring zemini, vinyet ve film greni. Sabit tohumlu rastgele: her çizimde aynı sonuç.
+const W = 1170, H = 1560;
+const c = document.getElementById('c'); c.width = W; c.height = H;
+let g = c.getContext('2d');
+let seed = 7;
+const R = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+const P = new URLSearchParams(location.search);
+const TINT = P.get('tint') || '#e63946'; // köşe/organizasyon rengi
+function hexA(hex, a) { const n = parseInt(hex.slice(1), 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`; }
+
+// 1) Zemin: koyu dikey gradyan
+let gr = g.createLinearGradient(0, 0, 0, H);
+gr.addColorStop(0, '#05060a'); gr.addColorStop(0.35, '#0b0b12'); gr.addColorStop(0.62, '#120b0d'); gr.addColorStop(1, '#050405');
+g.fillStyle = gr; g.fillRect(0, 0, W, H);
+
+// 2) Çatı iskelesi: kafes kirişler
+g.save(); g.globalAlpha = 0.22; g.strokeStyle = '#3a3f4b'; g.lineWidth = 3;
+for (let k = 0; k < 3; k++) {
+  const y = 70 + k * 70;
+  g.beginPath(); g.moveTo(0, y); g.lineTo(W, y + 10); g.stroke();
+  for (let x = 0; x < W; x += 60) { g.beginPath(); g.moveTo(x, y); g.lineTo(x + 30, y + 35); g.lineTo(x + 60, y); g.stroke(); }
+}
+g.restore();
+
+// 3) Işık hüzmeleri (bulanık koniler)
+function beam(x, y, ang, len, w0, w1, col, a) {
+  g.save(); g.translate(x, y); g.rotate(ang);
+  const lg = g.createLinearGradient(0, 0, 0, len);
+  lg.addColorStop(0, hexA(col, a)); lg.addColorStop(0.6, hexA(col, a * 0.35)); lg.addColorStop(1, hexA(col, 0));
+  g.fillStyle = lg; g.filter = 'blur(18px)';
+  g.beginPath(); g.moveTo(-w0, 0); g.lineTo(w0, 0); g.lineTo(w1, len); g.lineTo(-w1, len); g.closePath(); g.fill();
+  g.restore();
+}
+g.globalCompositeOperation = 'lighter';
+const rigY = 150;
+const lamps = [];
+for (let i = 0; i < 9; i++) lamps.push(80 + i * ((W - 160) / 8));
+lamps.forEach((x, i) => {
+  const target = W / 2 + (R() - 0.5) * 260;
+  const ang = Math.atan2(-(target - x), 980);
+  beam(x, rigY, ang, 1150, 16, 210, i % 3 === 1 ? TINT : '#fff1d6', i % 3 === 1 ? 0.2 : 0.17);
+  beam(x, rigY, ang, 900, 6, 70, '#fff8ea', 0.12);
+});
+// orta ana hüzme
+beam(W / 2, rigY - 20, 0, 1250, 40, 330, '#fff4dc', 0.26);
+beam(W / 2, rigY - 20, 0, 1100, 14, 140, '#ffffff', 0.16);
+g.globalCompositeOperation = 'source-over';
+
+// lambaların kendisi: koyu iskele çubuğu, parlak çekirdek, hale ve yatay parlama
+g.fillStyle = '#0d0f14'; g.fillRect(0, rigY - 34, W, 14);
+lamps.forEach((x) => {
+  g.fillStyle = '#16181e'; g.beginPath(); g.ellipse(x, rigY - 6, 26, 18, 0, 0, Math.PI * 2); g.fill();
+  g.globalCompositeOperation = 'lighter';
+  let rg = g.createRadialGradient(x, rigY, 0, x, rigY, 70);
+  rg.addColorStop(0, 'rgba(255,252,240,1)'); rg.addColorStop(0.08, 'rgba(255,245,220,0.95)'); rg.addColorStop(0.3, 'rgba(255,225,170,0.25)'); rg.addColorStop(1, 'rgba(255,210,150,0)');
+  g.fillStyle = rg; g.beginPath(); g.arc(x, rigY, 70, 0, Math.PI * 2); g.fill();
+  let fl = g.createLinearGradient(x - 160, 0, x + 160, 0);
+  fl.addColorStop(0, 'rgba(255,230,200,0)'); fl.addColorStop(0.5, 'rgba(255,240,220,0.45)'); fl.addColorStop(1, 'rgba(255,230,200,0)');
+  g.fillStyle = fl; g.fillRect(x - 160, rigY - 2, 320, 4);
+  g.globalCompositeOperation = 'source-over';
+});
+// hüzmelerde toz zerreleri
+g.globalCompositeOperation = 'lighter';
+for (let i = 0; i < 260; i++) {
+  const y = rigY + 40 + R() * 900, x = W / 2 + (R() - 0.5) * (200 + (y - rigY) * 0.7);
+  g.fillStyle = `rgba(255,245,225,${0.08 + R() * 0.25})`; g.beginPath(); g.arc(x, y, 0.8 + R() * 1.6, 0, Math.PI * 2); g.fill();
+}
+g.globalCompositeOperation = 'source-over';
+
+// 4) Tribün: düzensiz yerleşimli, renkli kıyafetli kalabalık; uzak sıralar bulanık, yakın sıralar iri siluet
+const tierTop = 420, tierBottom = 960;
+const SHIRT = [[40, 18, 22], [22, 26, 40], [30, 30, 34], [44, 36, 20], [20, 34, 28], [50, 50, 56], [60, 20, 24], [16, 16, 20]];
+function person(hx, hy, sc, t) {
+  const lit = Math.max(0, 1 - Math.abs(hx - W / 2) / 420) * (0.4 + t * 0.6);
+  const sh = SHIRT[Math.floor(R() * SHIRT.length)];
+  const k = 0.55 + t * 0.5 + lit * 0.9;
+  g.fillStyle = `rgb(${sh[0] * k | 0},${sh[1] * k | 0},${sh[2] * k | 0})`;
+  g.beginPath(); g.ellipse(hx, hy + 13 * sc, 12 * sc * (0.85 + R() * 0.3), 9 * sc, 0, Math.PI, 0); g.fill();
+  const sk = 22 + t * 20 + lit * 60;
+  g.fillStyle = `rgb(${sk + 14 | 0},${sk + 4 | 0},${sk | 0})`;
+  g.beginPath(); g.arc(hx, hy, 6.2 * sc * (0.9 + R() * 0.2), 0, Math.PI * 2); g.fill();
+  if (lit > 0.25) { g.strokeStyle = `rgba(255,228,190,${lit * 0.45})`; g.lineWidth = 1.3 * sc; g.beginPath(); g.arc(hx, hy, 6.2 * sc, Math.PI * 1.05, Math.PI * 1.95); g.stroke(); }
+  if (R() < 0.06) { g.strokeStyle = `rgb(${sk + 10 | 0},${sk | 0},${sk | 0})`; g.lineWidth = 3.2 * sc; g.lineCap = 'round'; g.beginPath(); g.moveTo(hx + 7 * sc, hy + 9 * sc); g.lineTo(hx + 9 * sc + R() * 6 * sc, hy - 18 * sc); g.stroke(); }
+}
+const bands = [[0, 9, 3.2], [9, 18, 1.6], [18, 28, 0.5]];
+for (const [r0, r1, blur] of bands) {
+  const off = document.createElement('canvas'); off.width = W; off.height = H; const og = off.getContext('2d');
+  const keep = g; // kişi çizimi ana bağlamı kullanır; bandı geçici bağlama çizip bulanıklaştırarak ekle
+  const save = g; window.__g = g;
+  for (let row = r0; row < r1; row++) {
+    const t = row / 27;
+    const y = tierTop + Math.pow(t, 1.3) * (tierBottom - tierTop);
+    const sc = 0.33 + t * 0.9;
+    og.fillStyle = `rgba(16,14,20,${0.6 + t * 0.3})`; og.fillRect(0, y + 11 * sc, W, 16 * sc);
+    let x = -20 + R() * 10;
+    while (x < W + 20) {
+      if (R() > 0.06) { const real = g; Object.defineProperty(window, 'g2', { value: og, configurable: true }); }
+      x += (15 + R() * 10) * sc + 4;
+      const prev = g;
+      // geçici olarak kişiyi bant tuvaline çiz
+      const tmp = g; // eslint
+      drawOn(og, () => person(x + (R() - 0.5) * 5, y + (R() - 0.5) * 5, sc * (0.9 + R() * 0.2), t));
+    }
+  }
+  g.save(); g.filter = `blur(${blur}px)`; g.drawImage(off, 0, 0); g.restore();
+}
+function drawOn(ctx, fn) { const old = g; g = ctx; try { fn(); } finally { g = old; } }
+// ön sıra: kafesin hemen arkasında iri, karanlık siluetler
+for (let x = -30; x < W + 40; x += 46 + R() * 26) person(x, 880 + R() * 14, 1.9 + R() * 0.3, 0.55);
+
+// 5) Flaşlar ve telefon ekranları (bokeh)
+g.globalCompositeOperation = 'lighter';
+for (let i = 0; i < 140; i++) {
+  const x = R() * W, y = tierTop + R() * (tierBottom - tierTop - 60);
+  const big = R() < 0.12;
+  const r = big ? 22 + R() * 26 : 4 + R() * 7;
+  const rg = g.createRadialGradient(x, y, 0, x, y, r);
+  const col = R() < 0.5 ? '255,248,230' : '200,220,255';
+  rg.addColorStop(0, `rgba(${col},${big ? 0.9 : 0.75})`); rg.addColorStop(0.3, `rgba(${col},${big ? 0.35 : 0.3})`); rg.addColorStop(1, `rgba(${col},0)`);
+  g.fillStyle = rg; g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill();
+}
+g.globalCompositeOperation = 'source-over';
+
+// 6) Sis: yumuşak katmanlar
+g.globalCompositeOperation = 'screen';
+for (let i = 0; i < 26; i++) {
+  const x = R() * W, y = 300 + R() * 900, r = 180 + R() * 320;
+  const rg = g.createRadialGradient(x, y, 0, x, y, r);
+  rg.addColorStop(0, `rgba(120,110,120,${0.05 + R() * 0.05})`); rg.addColorStop(1, 'rgba(120,110,120,0)');
+  g.fillStyle = rg; g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill();
+}
+g.globalCompositeOperation = 'source-over';
+
+// 7) Kafes: perspektifli çit (arka yüz), üst yastık ve köşe direkleri
+const cageTop = 930, cageBot = 1220;
+g.save();
+g.globalAlpha = 0.55; g.strokeStyle = '#7d8696'; g.lineWidth = 1.6;
+const cell = 26;
+for (let x = -cageBot; x < W + cageBot; x += cell) {
+  g.beginPath(); g.moveTo(x, cageTop); g.lineTo(x + (cageBot - cageTop), cageBot); g.stroke();
+  g.beginPath(); g.moveTo(x, cageTop); g.lineTo(x - (cageBot - cageTop), cageBot); g.stroke();
+}
+g.restore();
+// kafes parlaması (ortada ışık)
+let cg = g.createRadialGradient(W / 2, cageTop + 120, 0, W / 2, cageTop + 120, 520);
+cg.addColorStop(0, 'rgba(255,240,220,0.16)'); cg.addColorStop(1, 'rgba(255,240,220,0)');
+g.fillStyle = cg; g.fillRect(0, cageTop, W, cageBot - cageTop);
+// üst yastık ve ışık bandı
+// silindirik yastık: üstte parlak kenar, altta gölge; üzerinde ince renkli şerit
+let pg = g.createLinearGradient(0, cageTop - 34, 0, cageTop + 4);
+pg.addColorStop(0, '#2a2d35'); pg.addColorStop(0.25, '#4a4e58'); pg.addColorStop(0.45, '#16181d'); pg.addColorStop(1, '#050507');
+g.fillStyle = pg; g.fillRect(0, cageTop - 34, W, 38);
+g.fillStyle = hexA(TINT, 0.9); g.fillRect(0, cageTop - 14, W, 5);
+let sh2 = g.createRadialGradient(W / 2, cageTop - 12, 0, W / 2, cageTop - 12, 520); sh2.addColorStop(0, 'rgba(255,240,220,0.35)'); sh2.addColorStop(1, 'rgba(255,240,220,0)');
+g.fillStyle = sh2; g.fillRect(0, cageTop - 34, W, 38);
+g.fillStyle = 'rgba(0,0,0,0.5)'; g.fillRect(0, cageTop + 4, W, 10);
+// direkler
+[90, W - 90].forEach((x) => {
+  g.fillStyle = '#0a0b0e'; g.fillRect(x - 14, cageTop - 40, 28, cageBot - cageTop + 60);
+  g.fillStyle = 'rgba(255,255,255,0.12)'; g.fillRect(x - 10, cageTop - 40, 4, cageBot - cageTop + 60);
+});
+
+// 8) Ring zemini: açık gri mat, ortada logo halkası, ışık lekesi ve yansıma
+const floorY = 1200;
+let fg = g.createLinearGradient(0, floorY, 0, H);
+fg.addColorStop(0, '#3c3f46'); fg.addColorStop(0.4, '#25272c'); fg.addColorStop(1, '#08080a');
+g.fillStyle = fg;
+g.beginPath(); g.moveTo(-200, H); g.lineTo(-40, floorY + 90); g.lineTo(140, floorY); g.lineTo(W - 140, floorY); g.lineTo(W + 40, floorY + 90); g.lineTo(W + 200, H); g.closePath(); g.fill();
+g.strokeStyle = 'rgba(255,255,255,0.08)'; g.lineWidth = 2; g.beginPath(); g.moveTo(-40, floorY + 90); g.lineTo(140, floorY); g.lineTo(W - 140, floorY); g.lineTo(W + 40, floorY + 90); g.stroke();
+let sg = g.createRadialGradient(W / 2, floorY + 170, 0, W / 2, floorY + 170, 560);
+sg.addColorStop(0, 'rgba(255,248,235,0.42)'); sg.addColorStop(0.5, 'rgba(255,248,235,0.1)'); sg.addColorStop(1, 'rgba(255,248,235,0)');
+g.fillStyle = sg; g.beginPath(); g.ellipse(W / 2, floorY + 170, 560, 190, 0, 0, Math.PI * 2); g.fill();
+g.strokeStyle = hexA(TINT, 0.45); g.lineWidth = 6; g.beginPath(); g.ellipse(W / 2, floorY + 180, 300, 80, 0, 0, Math.PI * 2); g.stroke();
+g.strokeStyle = 'rgba(255,255,255,0.18)'; g.lineWidth = 2; g.beginPath(); g.ellipse(W / 2, floorY + 180, 330, 90, 0, 0, Math.PI * 2); g.stroke();
+const ORG = (P.get('org') || '').toUpperCase(), SUB = (P.get('sub') || '').toUpperCase();
+if (ORG) {
+  g.save(); g.translate(W / 2, floorY + 176); g.scale(1, 0.3);
+  g.textAlign = 'center'; g.textBaseline = 'middle';
+  let fs = 150; g.font = `italic 900 ${fs}px Oswald, Impact, sans-serif`;
+  while (g.measureText(ORG).width > 500 && fs > 60) { fs -= 6; g.font = `italic 900 ${fs}px Oswald, Impact, sans-serif`; }
+  g.fillStyle = 'rgba(0,0,0,0.35)'; g.fillText(ORG, 4, 10);
+  g.fillStyle = 'rgba(255,255,255,0.22)'; g.fillText(ORG, 0, 0);
+  if (SUB) { g.font = '700 46px Oswald, Impact, sans-serif'; g.fillStyle = hexA(TINT, 0.5); g.fillText(SUB.split('').join(String.fromCharCode(8202)), 0, fs * 0.72); }
+  g.restore();
+}
+// mat dokusu ve yıpranma lekeleri
+for (let i = 0; i < 90; i++) { const x = 120 + R() * (W - 240), y = floorY + 20 + R() * 330; const r = 20 + R() * 70; const rg2 = g.createRadialGradient(x, y, 0, x, y, r); rg2.addColorStop(0, `rgba(0,0,0,${0.03 + R() * 0.05})`); rg2.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = rg2; g.beginPath(); g.ellipse(x, y, r, r * 0.3, 0, 0, Math.PI * 2); g.fill(); }
+
+// 9) Vinyet
+let vg = g.createRadialGradient(W / 2, H * 0.48, H * 0.25, W / 2, H * 0.5, H * 0.78);
+vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,0.78)');
+g.fillStyle = vg; g.fillRect(0, 0, W, H);
+// köşe renkli ışık sızması
+let lk = g.createRadialGradient(0, H * 0.55, 0, 0, H * 0.55, 700); lk.addColorStop(0, hexA(TINT, 0.18)); lk.addColorStop(1, hexA(TINT, 0));
+g.fillStyle = lk; g.fillRect(0, 0, W, H);
+
+// 10) Film greni
+const id = g.getImageData(0, 0, W, H); const d = id.data;
+for (let i = 0; i < d.length; i += 4) { const n = (R() - 0.5) * 14; d[i] += n; d[i + 1] += n; d[i + 2] += n; }
+g.putImageData(id, 0, 0);
+window.DONE = true;
+</script></body></html>

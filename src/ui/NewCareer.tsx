@@ -12,6 +12,7 @@ import { judgePick, SLOT_LABEL } from '../engine/fightNight';
 import { lookFor, physique, playerPhysique } from '../engine/tale';
 import type { Appearance, FightNight, GameState, NightBout, Opponent } from '../engine/types';
 import { L, LOC } from '../i18n';
+import { ArenaBackdrop } from './ArenaBackdrop';
 import { CageBg, Icon, SLANT, upName } from './components';
 import { DEFAULT_LOOK } from './FighterAvatar';
 import { Figure, HIP_H, POSES, type Kit, type PoseName } from './rig';
@@ -22,6 +23,14 @@ export function orgShort(s: GameState): string {
   const id = currentOrg(s);
   if (id === 'amator' && s.stage !== 'amator') return 'PRO';
   return ORGS[id].kisa;
+}
+
+/** Zemine yazılacak organizasyon adı ve alt yazı. Profesyonelde asla "AMATÖR" yazmaz. */
+export function arenaOrgText(s: GameState): { org: string; sub: string } {
+  const kisa = orgShort(s);
+  const id = currentOrg(s);
+  const ad = ORGS[id].ad;
+  return { org: kisa, sub: kisa === 'PRO' || ad.toLocaleUpperCase(LOC) === kisa.toLocaleUpperCase(LOC) ? '' : ad };
 }
 
 const shortMoney = (n: number) => (Math.abs(n) < 100_000 ? money(n) : `${n < 0 ? '-' : ''}$${fmtFollowers(Math.abs(n))}`);
@@ -196,6 +205,7 @@ export function VsStage({ s, g, opp, w }: { s: GameState; g: FightNight; opp: Op
         {/* Arena: kalabalık karanlığı, kafes deseni, iki köşe ışığı */}
         <LinearGradient colors={['#14161c', '#0a0b0f', '#040405']} locations={[0, 0.6, 1]} style={StyleSheet.absoluteFill} />
         <CageBg opacity={0.08} />
+        <ArenaBackdrop w={w} h={H} {...arenaOrgText(s)} />
         <LinearGradient colors={['rgba(193,18,31,0.35)', 'rgba(193,18,31,0)']} start={{ x: 0, y: 0.5 }} end={{ x: 0.45, y: 0.5 }} style={StyleSheet.absoluteFill} />
         <LinearGradient colors={['rgba(28,79,196,0)', 'rgba(28,79,196,0.35)']} start={{ x: 0.55, y: 0.5 }} end={{ x: 1, y: 0.5 }} style={StyleSheet.absoluteFill} />
         <View style={{ position: 'absolute', left: -w * 0.24, bottom: 18 }} pointerEvents="none">
@@ -204,7 +214,7 @@ export function VsStage({ s, g, opp, w }: { s: GameState; g: FightNight; opp: Op
         <View style={{ position: 'absolute', right: -w * 0.24, bottom: 18 }} pointerEvents="none">
           <Standing look={lookFor(opp)} kit={oKit} h={fh} flip />
         </View>
-        <LinearGradient colors={['transparent', 'rgba(4,4,5,0.92)']} locations={[0.62, 1]} style={StyleSheet.absoluteFill} pointerEvents="none" />
+        <LinearGradient colors={['transparent', 'rgba(4,4,5,0.85)']} locations={[0.78, 1]} style={StyleSheet.absoluteFill} pointerEvents="none" />
 
         {/* Orta sütun */}
         <View style={[v.col, { width: colW, left: (w - colW) / 2 }]}>
