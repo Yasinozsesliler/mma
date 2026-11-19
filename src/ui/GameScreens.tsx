@@ -45,7 +45,7 @@ import { currentOrg, fullName, statAverage } from '../engine/character';
 import { ORGS, WEIGHT_CLASSES } from '../engine/data';
 import { chooseEvent, closeEvent } from '../engine/events';
 import { describeOpponent, oppRecord } from '../engine/opponents';
-import type { CampState, GameState, Intensity, Opponent, PressChoice, StatKey, Stats, WeightCut } from '../engine/types';
+import type { CampState, GameState, Intensity, Offer, Opponent, PressChoice, StatKey, Stats, WeightCut } from '../engine/types';
 import { STAT_KEYS, STAT_LABELS } from '../engine/types';
 import { Button, Card, Choice, Icon, P, Pill, Screen, Section, Title, upName, type IconName } from './components';
 import { NewsFeed, RestPicker } from './HubParts';
@@ -55,6 +55,7 @@ import { CareerStage } from './NewCareer';
 import { NewGrowth } from './NewGrowth';
 import { NewOpponentScreen } from './NewOpponent';
 import { CampMatchCard, CampSiteBand, CampStages } from './NewCamp';
+import { OfferCardNew, SigningMoment } from './NewOffers';
 import { CampChoice } from './NewFight';
 import { currentLook as lookNow, useLook } from '../lookPref';
 import { pendingBouts, weeklyGymNet } from '../engine/academy';
@@ -981,6 +982,7 @@ export function OffersScreen({ s, act }: { s: GameState; act: Act }) {
   const offers = s.pending.teklifler!;
   const amateur = currentOrg(s) === 'amator';
   const yeniLook = useLook() === 'yeni';
+  const [signing, setSigning] = useState<Offer | null>(null);
   return (
     <Screen footer={amateur ? <Button label={L("Şimdilik amatörde kal")} tone="ghost" onPress={() => act(stayAmateur)} /> : undefined}>
       <Title kicker={L("MENAJERİN TELEFONU SUSMUYOR")} sub={s.pending.teklifMetni}>
@@ -994,6 +996,27 @@ export function OffersScreen({ s, act }: { s: GameState; act: Act }) {
       ) : null}
       {offers.map((o) => {
         const ufc = o.org === 'ufc' || o.org === 'dwcs';
+        if (yeniLook)
+          return (
+            <OfferCardNew key={o.id} s={s} o={o} all={offers}>
+            <View style={{ gap: 8, marginTop: 14 }}>
+                {o.masa ? <ContractTablePanel s={s} o={o} act={act} setMsg={setMsg} /> : null}
+                <Button label={o.devam ? L("Kontrata devam et") : o.fesih ? L("Kabul et (-{0})", [money(o.fesih)]) : L("Kabul et")} icon="file-sign" tone={ufc || o.org === 'dwcs' ? 'gold' : 'red'} disabled={!!o.fesih && s.para < o.fesih} onPress={() => (yeniLook && !o.devam ? setSigning(o) : act((x) => acceptOffer(x, o.id)))} />
+                <View style={{ flexDirection: 'row', gap: 8 }}>
+                  {!o.pazarlikYapildi && !o.masa ? (
+                    <View style={{ flex: 1 }}>
+                      <Button label={L("Pazarlık")} icon="handshake" tone="ghost" onPress={() => act((x) => openTable(x, o.id))} />
+                    </View>
+                  ) : null}
+                  {offers.length > 1 && !o.devam && !o.fesih ? (
+                    <View style={{ flex: 1 }}>
+                      <Button label={L("Reddet")} tone="ghost" onPress={() => act((x) => rejectOffer(x, o.id))} />
+                    </View>
+                  ) : null}
+                </View>
+              </View>
+              </OfferCardNew>
+          );
         return (
           <LinearGradient key={o.id} colors={ufc ? ['#2e2006', '#0c0d10'] : ['#1f070b', '#0c0d10']} style={[gs.offer, { borderColor: ufc ? C.goldDeep : '#3a1a20' }, yeniLook && gs.offerNew]}>
             {yeniLook ? (
@@ -1044,7 +1067,7 @@ export function OffersScreen({ s, act }: { s: GameState; act: Act }) {
             </View>
             <View style={{ gap: 8, marginTop: 14 }}>
               {o.masa ? <ContractTablePanel s={s} o={o} act={act} setMsg={setMsg} /> : null}
-              <Button label={o.devam ? L("Kontrata devam et") : o.fesih ? L("Kabul et (-{0})", [money(o.fesih)]) : L("Kabul et")} icon="file-sign" tone={ufc || o.org === 'dwcs' ? 'gold' : 'red'} disabled={!!o.fesih && s.para < o.fesih} onPress={() => act((x) => acceptOffer(x, o.id))} />
+              <Button label={o.devam ? L("Kontrata devam et") : o.fesih ? L("Kabul et (-{0})", [money(o.fesih)]) : L("Kabul et")} icon="file-sign" tone={ufc || o.org === 'dwcs' ? 'gold' : 'red'} disabled={!!o.fesih && s.para < o.fesih} onPress={() => (yeniLook && !o.devam ? setSigning(o) : act((x) => acceptOffer(x, o.id)))} />
               <View style={{ flexDirection: 'row', gap: 8 }}>
                 {!o.pazarlikYapildi && !o.masa ? (
                   <View style={{ flex: 1 }}>
@@ -1061,6 +1084,17 @@ export function OffersScreen({ s, act }: { s: GameState; act: Act }) {
           </LinearGradient>
         );
       })}
+      {signing ? (
+        <SigningMoment
+          s={s}
+          o={signing}
+          onDone={() => {
+            const id = signing.id;
+            setSigning(null);
+            act((x) => acceptOffer(x, id));
+          }}
+        />
+      ) : null}
     </Screen>
   );
 }
