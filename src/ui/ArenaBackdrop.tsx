@@ -53,3 +53,20 @@ const a = StyleSheet.create({
   org: { color: 'rgba(255,255,255,0.24)', fontFamily: F.display, fontStyle: 'italic', textShadowColor: 'rgba(0,0,0,0.4)', textShadowOffset: { width: 1, height: 3 }, textShadowRadius: 2 },
   sub: { color: 'rgba(230,57,70,0.6)', fontFamily: F.display },
 });
+
+const GYM = require('../../assets/art/gym.jpg');
+
+/** Kariyer sahnesi için çizilmiş dövüş salonu (1200x1000), alta hizalı ve kapsayıcıyı kaplar. */
+export function GymBackdrop({ dim = 0 }: { dim?: number }) {
+  const [ok, setOk] = useState(true);
+  const [size, setSize] = useState({ w: 0, h: 0 });
+  if (!ok) return null;
+  const { w, h } = size;
+  const k = w > 0 && h > 0 ? Math.max(w / 1200, h / 1000) : 0;
+  return (
+    <View style={StyleSheet.absoluteFill} pointerEvents="none" onLayout={(e) => setSize({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}>
+      {k ? <Image source={GYM} onError={() => setOk(false)} style={{ position: 'absolute', left: (w - 1200 * k) / 2, top: h - 1000 * k, width: 1200 * k, height: 1000 * k }} resizeMode="stretch" /> : null}
+      {dim > 0 ? <View style={[StyleSheet.absoluteFill, { backgroundColor: `rgba(4,4,6,${dim})` }]} /> : null}
+    </View>
+  );
+}

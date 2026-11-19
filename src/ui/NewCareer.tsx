@@ -12,7 +12,7 @@ import { judgePick, SLOT_LABEL } from '../engine/fightNight';
 import { lookFor, physique, playerPhysique } from '../engine/tale';
 import type { Appearance, FightNight, GameState, NightBout, Opponent } from '../engine/types';
 import { L, LOC } from '../i18n';
-import { ArenaBackdrop } from './ArenaBackdrop';
+import { ArenaBackdrop, GymBackdrop } from './ArenaBackdrop';
 import { CageBg, Icon, SLANT, upName } from './components';
 import { DEFAULT_LOOK } from './FighterAvatar';
 import { Figure, HIP_H, POSES, type Kit, type PoseName } from './rig';
@@ -110,6 +110,7 @@ export function CareerStage({ s, onSocial, fight }: { s: GameState; onSocial: ()
         <CageBg opacity={0.07} />
         <View style={k.floor} />
         <View style={k.tape} />
+        <GymBackdrop dim={0.1} />
         <View style={k.figure} pointerEvents="none">
           <Standing look={f.gorunum ?? DEFAULT_LOOK} kit={playerKit()} h={300} />
         </View>
