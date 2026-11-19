@@ -28,6 +28,7 @@ import type { Act } from './GameScreens';
 import { SkillPanel } from './SkillPanel';
 import { useLook } from '../lookPref';
 import { PostHero } from './NewPostFight';
+import { NewGrowth } from './NewGrowth';
 import { C, F, R } from './theme';
 
 type Tone = { ana: string; hero: readonly [string, string, string]; kicker: string; baslik: string; ikon: IconName };
@@ -274,7 +275,7 @@ export function PostFightScreen({ s, act }: { s: GameState; act: Act }) {
 
       {ps.roportajSonucu && s.puan > 0 ? (
         gelisim ? (
-          <SkillPanel s={s} act={act} />
+          yeni ? <NewGrowth s={s} act={act} /> : <SkillPanel s={s} act={act} />
         ) : (
           <Pressable onPress={() => setGelisim(true)} style={({ pressed }) => [pf.skillBar, pressed && { opacity: 0.85 }]}>
             <Icon name="star-four-points" size={18} color="#111" />

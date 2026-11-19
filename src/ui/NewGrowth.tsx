@@ -48,7 +48,8 @@ function Stars({ n, size = 12 }: { n: number; size?: number }) {
 
 type Row = { key: string; ad: string; tur: string; n: number; up: boolean; stat?: StatKey; tech?: TechDef };
 
-export function NewGrowth({ s, act }: { s: GameState; act: Act }) {
+/** title: başlık (varsayılan GELİŞİM; kamp sonunda "DÖVÜŞTEN ÖNCE GÜÇLEN" gibi). */
+export function NewGrowth({ s, act, title }: { s: GameState; act: Act; title?: string }) {
   const [tab, setTab] = useState<Tab>('ozellik');
   const [sel, setSel] = useState<string | null>(null);
   const [all, setAll] = useState(false);
@@ -65,7 +66,9 @@ export function NewGrowth({ s, act }: { s: GameState; act: Act }) {
   return (
     <View style={{ marginBottom: 8 }}>
       <View style={g.head}>
-        <Text style={g.title}>{L("GELİŞİM")}</Text>
+        <Text style={g.title} numberOfLines={1} adjustsFontSizeToFit>
+          {title ?? L("GELİŞİM")}
+        </Text>
         <View style={g.points}>
           <Icon name="star" size={14} color="#b57bff" />
           <Text style={g.pointsText}>{L('{0} puan', [s.puan])}</Text>

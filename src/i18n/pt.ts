@@ -10814,4 +10814,13 @@ export const PT: Record<string, string> = {
   "Temsilci": "Representante",
   "Menajerin": "Seu empresário",
   "VİTRİN · SON KAZANILANLAR": "VITRINE · ÚLTIMAS CONQUISTAS",
+  "Mesaj istekleri": "Solicitações de mensagem",
+  "Ara": "Pesquisar",
+  "İstekler": "Solicitações",
+  "İstek yok": "Nenhuma solicitação",
+  "Tanımadığın hesapların mesajları burada görünür.": "Mensagens de contas que você não conhece aparecem aqui.",
+  "Görüldü": "Visto",
+  "Profili gör": "Ver perfil",
+  "Yukarıdan bir cevap seç…": "Escolha uma resposta acima…",
+  "Mesaj…": "Mensagem…",
 };

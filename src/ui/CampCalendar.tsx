@@ -21,6 +21,7 @@ import { lookFor } from '../engine/tale';
 import { C, F, R } from './theme';
 import { useLook } from '../lookPref';
 import { CampCalendarHero } from './NewCamp';
+import { NewGrowth } from './NewGrowth';
 
 type Choose = (v: string | number) => void;
 
@@ -295,6 +296,7 @@ function Tile({ label, value, sub, color, icon }: { label: string; value: string
 const SUMMARY_SKIP = [/^📍/, /^📈/, /^⭐ \+/, /^💸/];
 
 export function CampSummary({ s, act, choose }: { s: GameState; act: Act; choose: Choose }) {
+  const yeni = useLook() === 'yeni';
   const k = s.pending.kamp!;
   const o = s.pending.rakip!;
   const r = k.sonuc;
@@ -376,8 +378,14 @@ export function CampSummary({ s, act, choose }: { s: GameState; act: Act; choose
         </>
       ) : null}
 
-      <SkillPanel s={s} act={act} title={L("DÖVÜŞTEN ÖNCE GÜÇLEN")} />
-      <TechniquePanel s={s} act={act} />
+      {yeni ? (
+        <NewGrowth s={s} act={act} title={L("DÖVÜŞTEN ÖNCE GÜÇLEN")} />
+      ) : (
+        <>
+          <SkillPanel s={s} act={act} title={L("DÖVÜŞTEN ÖNCE GÜÇLEN")} />
+          <TechniquePanel s={s} act={act} />
+        </>
+      )}
     </Screen>
   );
 }

@@ -1,8 +1,14 @@
 // Instagram mesaj kutusu: sohbet listesi ve sohbet ekranı. Her mesaja hazır cevaplardan biriyle yanıt verilir.
+import { LinearGradient } from 'expo-linear-gradient';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { playerHandle } from '../engine/social';
+import { lookFor } from '../engine/tale';
+import { useLook } from '../lookPref';
+import { AvatarHD } from './avatarHD';
 import { answerDm, dmExpired, readDm, type DmKind, type DmMsg } from '../engine/dm';
 import type { GameState } from '../engine/types';
 import { L } from '../i18n';
+import { useState } from 'react';
 import { Icon, type IconName } from './components';
 import type { Act } from './GameScreens';
 import { C, F } from './theme';
@@ -41,6 +47,8 @@ function Avatar({ m, size = 52 }: { m: DmMsg; size?: number }) {
 }
 
 export function DmInbox({ s, onOpen, onBack }: { s: GameState; onOpen: (id: string) => void; onBack: () => void }) {
+  const yeni = useLook() === 'yeni';
+  if (yeni) return <IgInbox s={s} onOpen={onOpen} onBack={onBack} />;
   const list = s.dm?.liste ?? [];
   return (
     <View>
@@ -80,6 +88,8 @@ export function DmInbox({ s, onOpen, onBack }: { s: GameState; onOpen: (id: stri
 }
 
 export function DmChat({ s, act, id, onBack }: { s: GameState; act: Act; id: string; onBack: () => void }) {
+  const yeni = useLook() === 'yeni';
+  if (yeni) return <IgChat s={s} act={act} id={id} onBack={onBack} />;
   const m = s.dm?.liste.find((x) => x.id === id);
   if (!m) return null;
   const k = KIND[m.kind];
@@ -146,6 +156,227 @@ export function DmChat({ s, act, id, onBack }: { s: GameState; act: Act; id: str
     </View>
   );
 }
+
+// ---------- Yeni görünüm: Instagram mesaj kutusu ----------
+
+const IG_RING = ['#feda75', '#fa7e1e', '#d62976', '#962fbf', '#4f5bd5'] as const;
+const IG_ME = ['#a033ff', '#6b4cff', '#3b82f6'] as const;
+const BLUE = '#3897f0';
+/** Gerçek kişi gibi yüzü olanlar; marka ve bilinmeyen hesaplar ikonla görünür. */
+const FACE: Partial<Record<DmKind, boolean>> = { rakip: true, hayran: true, troll: true, sevgili: true, aile: true, hoca: true, kanka: true, gazeteci: true, efsane: true, unlu: true };
+const VERIFIED_KIND: Partial<Record<DmKind, boolean>> = { promotor: true, sponsor: true, efsane: true, unlu: true, gazeteci: true };
+/** İstekler: tanımadığın hesaplar (Instagram'daki "İstekler" klasörü gibi ayrı listelenir). */
+const REQUEST_KIND: Partial<Record<DmKind, boolean>> = { troll: true, dolandirici: true };
+
+function IgAvatar({ s, m, size = 56, ring }: { s: GameState; m: DmMsg; size?: number; ring?: boolean }) {
+  const k = KIND[m.kind];
+  const yakin = m.kind === 'aile' || m.kind === 'hoca' || m.kind === 'kanka';
+  const kadin = m.kind === 'sevgili' ? !s.fighter.kadin : undefined;
+  const inner = size - (ring ? 6 : 0);
+  const face = FACE[m.kind] ? (
+    <View style={{ width: inner, height: inner, borderRadius: inner / 2, overflow: 'hidden', backgroundColor: '#1d1f25', alignItems: 'center', justifyContent: 'center' }}>
+      <AvatarHD look={lookFor({ id: m.kullanici, uyruk: yakin ? s.fighter.uyruk : 'us', kadin })} size={inner * 1.12} frame="kare" ring="transparent" bg="#1d1f25" />
+    </View>
+  ) : (
+    <LinearGradient colors={[k.color, k.color + '88']} style={{ width: inner, height: inner, borderRadius: inner / 2, alignItems: 'center', justifyContent: 'center' }}>
+      <Icon name={k.icon} size={inner * 0.46} color="#fff" />
+    </LinearGradient>
+  );
+  if (!ring) return face;
+  return (
+    <LinearGradient colors={IG_RING} start={{ x: 0, y: 1 }} end={{ x: 1, y: 0 }} style={{ width: size, height: size, borderRadius: size / 2, alignItems: 'center', justifyContent: 'center' }}>
+      <View style={{ padding: 2, borderRadius: size / 2, backgroundColor: C.bg }}>{face}</View>
+    </LinearGradient>
+  );
+}
+
+function IgName({ m, style }: { m: DmMsg; style: object }) {
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, flexShrink: 1 }}>
+      <Text style={style} numberOfLines={1}>
+        {tx(m.kimden)}
+      </Text>
+      {VERIFIED_KIND[m.kind] ? <Icon name="check-decagram" size={14} color={BLUE} /> : null}
+    </View>
+  );
+}
+
+function IgInbox({ s, onOpen, onBack }: { s: GameState; onOpen: (id: string) => void; onBack: () => void }) {
+  const all = s.dm?.liste ?? [];
+  const [req, setReq] = useState(false);
+  const list = all.filter((m) => !!REQUEST_KIND[m.kind] === req);
+  const reqCount = all.filter((m) => REQUEST_KIND[m.kind] && !m.okundu).length;
+  return (
+    <View>
+      <View style={ig.head}>
+        <Pressable onPress={req ? () => setReq(false) : onBack} hitSlop={10}>
+          <Icon name="arrow-left" size={26} color={C.text} />
+        </Pressable>
+        <Text style={ig.handle} numberOfLines={1}>
+          {req ? L("Mesaj istekleri") : playerHandle(s).slice(1)}
+        </Text>
+        {req ? null : <Icon name="chevron-down" size={18} color={C.text} />}
+        <View style={{ flex: 1 }} />
+        <Icon name="video-outline" size={27} color={C.text} />
+        <Icon name="square-edit-outline" size={24} color={C.text} />
+      </View>
+      <View style={ig.search}>
+        <Icon name="magnify" size={18} color="#8e8e8e" />
+        <Text style={ig.searchText}>{L("Ara")}</Text>
+      </View>
+      {req ? null : (
+        <View style={ig.sectionRow}>
+          <Text style={ig.section}>{L("Mesajlar")}</Text>
+          <Pressable onPress={() => setReq(true)} hitSlop={8}>
+            <Text style={ig.requests}>
+              {L("İstekler")}
+              {reqCount ? ` (${reqCount})` : ''}
+            </Text>
+          </Pressable>
+        </View>
+      )}
+      {list.length === 0 ? (
+        <View style={st.empty}>
+          <View style={ig.emptyIcon}>
+            <Icon name="send-outline" size={40} color={C.text} />
+          </View>
+          <Text style={st.emptyTitle}>{req ? L("İstek yok") : L("Henüz mesaj yok")}</Text>
+          <Text style={st.emptySub}>{req ? L("Tanımadığın hesapların mesajları burada görünür.") : L("Rakiplerin, hayranların ve sponsorların maçlar yaklaştıkça yazmaya başlar.")}</Text>
+        </View>
+      ) : null}
+      {list.map((m) => {
+        const bekliyor = m.cevap == null && !dmExpired(s, m);
+        return (
+          <Pressable key={m.id} onPress={() => onOpen(m.id)} style={({ pressed }) => [ig.row, pressed && { backgroundColor: '#ffffff08' }]}>
+            <IgAvatar s={s} m={m} ring={!m.okundu} />
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <IgName m={m} style={[ig.name, !m.okundu && { fontFamily: F.bold }]} />
+              <Text style={[ig.preview, !m.okundu && { color: C.text, fontFamily: F.semi }]} numberOfLines={1}>
+                {m.cevapMetin ? L("Sen: {0}", [tx(m.cevapMetin)]) : tx(m.metin)}
+                <Text style={ig.ago}> · {ago(s, m)}</Text>
+              </Text>
+            </View>
+            {!m.okundu ? <View style={ig.dot} /> : bekliyor ? <Icon name="reply-outline" size={22} color="#8e8e8e" /> : <Icon name="camera-outline" size={24} color="#8e8e8e" />}
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
+function IgChat({ s, act, id, onBack }: { s: GameState; act: Act; id: string; onBack: () => void }) {
+  const m = s.dm?.liste.find((x) => x.id === id);
+  if (!m) return null;
+  const k = KIND[m.kind];
+  const expired = dmExpired(s, m);
+  const open = m.cevap == null && !expired;
+  return (
+    <View>
+      <View style={ig.head}>
+        <Pressable onPress={onBack} hitSlop={10}>
+          <Icon name="arrow-left" size={26} color={C.text} />
+        </Pressable>
+        <IgAvatar s={s} m={m} size={34} />
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <IgName m={m} style={ig.chatName} />
+          <Text style={ig.chatSub} numberOfLines={1}>
+            {m.kullanici}
+          </Text>
+        </View>
+        <Icon name="phone-outline" size={25} color={C.text} />
+        <Icon name="video-outline" size={28} color={C.text} />
+      </View>
+      {/* Sohbetin başında profil tanıtımı */}
+      <View style={ig.intro}>
+        <IgAvatar s={s} m={m} size={88} />
+        <IgName m={m} style={ig.introName} />
+        <Text style={ig.introSub}>
+          {m.kullanici} · {k.label()}
+        </Text>
+        <View style={ig.introBtn}>
+          <Text style={ig.introBtnText}>{L("Profili gör")}</Text>
+        </View>
+      </View>
+      <Text style={st.when}>{ago(s, m)}</Text>
+      <View style={[ig.themRow, { marginTop: 8 }]}>
+        <IgAvatar s={s} m={m} size={28} />
+        <View style={ig.them}>
+          <Text style={ig.bubble}>{tx(m.metin)}</Text>
+        </View>
+      </View>
+      {m.cevapMetin ? (
+        <>
+          <LinearGradient colors={IG_ME} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={ig.me}>
+            <Text style={[ig.bubble, { color: '#fff' }]}>{tx(m.cevapMetin)}</Text>
+          </LinearGradient>
+          <Text style={ig.seen}>{L("Görüldü")}</Text>
+        </>
+      ) : null}
+      {m.sonuc ? (
+        <View style={st.result}>
+          <Icon name="information-outline" size={14} color={C.gold} />
+          <Text style={st.resultText}>{m.sonuc}</Text>
+        </View>
+      ) : null}
+      {expired ? <Text style={st.expired}>{L("Bu mesajın cevap süresi geçti.")}</Text> : null}
+      {open ? (
+        <View style={ig.quick}>
+          {m.secenek.map((o, i) => (
+            <Pressable key={o} onPress={() => act((x) => void answerDm(x, m.id, i))} style={({ pressed }) => [ig.pill, pressed && { backgroundColor: '#3897f033', borderColor: BLUE }]}>
+              <Text style={ig.pillText}>{tx(o)}</Text>
+            </Pressable>
+          ))}
+        </View>
+      ) : null}
+      {/* Mesaj yazma çubuğu (görünüm): cevaplar yukarıdaki hazır seçeneklerden gönderilir */}
+      <View style={[ig.composer, !open && { opacity: 0.5 }]}>
+        <View style={ig.cam}>
+          <Icon name="camera" size={20} color="#fff" />
+        </View>
+        <Text style={ig.composerText} numberOfLines={1}>
+          {open ? L("Yukarıdan bir cevap seç…") : L("Mesaj…")}
+        </Text>
+        <Icon name="microphone-outline" size={22} color={C.text} />
+        <Icon name="image-outline" size={22} color={C.text} />
+        <Icon name="sticker-emoji" size={22} color={C.text} />
+      </View>
+    </View>
+  );
+}
+
+const ig = StyleSheet.create({
+  head: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, marginHorizontal: -16, paddingHorizontal: 16, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#262626', marginBottom: 8 },
+  handle: { color: C.text, fontFamily: F.bold, fontSize: 20, marginLeft: 4, flexShrink: 1 },
+  search: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#262626', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 9, marginBottom: 14 },
+  searchText: { color: '#8e8e8e', fontFamily: F.body, fontSize: 15 },
+  sectionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
+  section: { color: C.text, fontFamily: F.bold, fontSize: 16 },
+  requests: { color: BLUE, fontFamily: F.semi, fontSize: 14 },
+  emptyIcon: { width: 88, height: 88, borderRadius: 44, borderWidth: 2, borderColor: C.text, alignItems: 'center', justifyContent: 'center', marginBottom: 6 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 8, marginHorizontal: -16, paddingHorizontal: 16 },
+  name: { color: C.text, fontFamily: F.body, fontSize: 14.5 },
+  preview: { color: '#a8a8a8', fontFamily: F.body, fontSize: 13.5, marginTop: 2 },
+  ago: { color: '#8e8e8e' },
+  dot: { width: 9, height: 9, borderRadius: 5, backgroundColor: BLUE },
+  chatName: { color: C.text, fontFamily: F.bold, fontSize: 15.5 },
+  chatSub: { color: '#a8a8a8', fontFamily: F.body, fontSize: 12 },
+  intro: { alignItems: 'center', gap: 4, paddingVertical: 18 },
+  introName: { color: C.text, fontFamily: F.bold, fontSize: 18, marginTop: 6 },
+  introSub: { color: '#a8a8a8', fontFamily: F.body, fontSize: 13 },
+  introBtn: { marginTop: 8, backgroundColor: '#262626', borderRadius: 8, paddingHorizontal: 14, paddingVertical: 7 },
+  introBtnText: { color: C.text, fontFamily: F.semi, fontSize: 13 },
+  themRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 8, maxWidth: '85%' },
+  them: { backgroundColor: '#262626', borderRadius: 22, paddingVertical: 10, paddingHorizontal: 14, flexShrink: 1 },
+  me: { alignSelf: 'flex-end', maxWidth: '78%', borderRadius: 22, paddingVertical: 10, paddingHorizontal: 14, marginTop: 10 },
+  bubble: { color: C.text, fontFamily: F.body, fontSize: 15, lineHeight: 20 },
+  seen: { alignSelf: 'flex-end', color: '#8e8e8e', fontFamily: F.body, fontSize: 11.5, marginTop: 3, marginRight: 4 },
+  quick: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'flex-end', marginTop: 18 },
+  pill: { borderWidth: 1, borderColor: '#3a3a3a', borderRadius: 20, paddingVertical: 9, paddingHorizontal: 14, maxWidth: '100%' },
+  pillText: { color: BLUE, fontFamily: F.semi, fontSize: 14 },
+  composer: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#262626', borderRadius: 24, paddingVertical: 6, paddingLeft: 6, paddingRight: 14, marginTop: 14 },
+  cam: { width: 34, height: 34, borderRadius: 17, backgroundColor: BLUE, alignItems: 'center', justifyContent: 'center' },
+  composerText: { flex: 1, color: '#8e8e8e', fontFamily: F.body, fontSize: 15 },
+});
 
 /** Sohbet açılınca okundu işaretle. */
 export const markRead = (act: Act, id: string) =>

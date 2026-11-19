@@ -10852,4 +10852,13 @@ export const RU: Record<string, string> = {
   "Temsilci": "Представитель",
   "Menajerin": "Твой менеджер",
   "VİTRİN · SON KAZANILANLAR": "ВИТРИНА · ПОСЛЕДНИЕ НАГРАДЫ",
+  "Mesaj istekleri": "Запросы на переписку",
+  "Ara": "Поиск",
+  "İstekler": "Запросы",
+  "İstek yok": "Запросов нет",
+  "Tanımadığın hesapların mesajları burada görünür.": "Здесь появляются сообщения от незнакомых аккаунтов.",
+  "Görüldü": "Просмотрено",
+  "Profili gör": "Смотреть профиль",
+  "Yukarıdan bir cevap seç…": "Выбери ответ выше…",
+  "Mesaj…": "Сообщение…",
 };
