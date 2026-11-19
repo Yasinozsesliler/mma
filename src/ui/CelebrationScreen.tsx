@@ -79,6 +79,7 @@ export function CelebrationScreen({ s, act }: { s: GameState; act: Act }) {
   const k = s.kutlama!;
   const yeni = useLook() === 'yeni';
   const { width: W } = useWindowDimensions();
+  const champSize = Math.min(W * 0.46, 210);
   const scale = useRef(new Animated.Value(0.3)).current;
   useEffect(() => {
     Animated.spring(scale, { toValue: 1, friction: 5, tension: 60, useNativeDriver: true }).start();
@@ -134,7 +135,11 @@ export function CelebrationScreen({ s, act }: { s: GameState; act: Act }) {
         {yeni ? (
           <View style={cl.champ}>
             <LinearGradient colors={['rgba(255,214,120,0.16)', 'rgba(255,214,120,0)']} locations={[0.2, 1]} style={cl.champGlow} />
-            <FrontWalker look={s.fighter.gorunum ?? DEFAULT_LOOK} kit={playerKit()} walking={false} size={Math.min(W * 0.46, 210)} seed={11} />
+            <FrontWalker look={s.fighter.gorunum ?? DEFAULT_LOOK} kit={playerKit()} walking={false} size={champSize} seed={11} />
+            {/* Kazanılan kemer belinde (takılı kemer görünümüyle) */}
+            <View pointerEvents="none" style={{ position: 'absolute', top: champSize * 0.98 - champSize * 0.5 * (64 / 300) }}>
+              <Belt org={k.org} siklet={k.siklet} width={champSize * 0.5} />
+            </View>
           </View>
         ) : (
           <View style={{ marginVertical: 16 }}>

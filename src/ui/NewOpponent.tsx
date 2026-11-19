@@ -17,7 +17,8 @@ import { CoachTip } from './CoachTip';
 import { Compare } from './Compare';
 import { Button, Icon, Screen, SLANT, upName } from './components';
 import type { Act } from './GameScreens';
-import { flagOf, orgShort, Standing } from './NewCareer';
+import { arenaOrgText, flagOf, orgShort, Standing } from './NewCareer';
+import { ArenaBackdrop } from './ArenaBackdrop';
 import type { Kit } from './rig';
 import { C, F } from './theme';
 
@@ -186,7 +187,8 @@ export function NewOpponentScreen({ s, act }: { s: GameState; act: Act }) {
       {/* Arena sahnesi */}
       <View style={n.stage}>
         <LinearGradient colors={['#3a2e14', '#120f08', '#040405']} locations={[0, 0.5, 1]} style={StyleSheet.absoluteFill} />
-        <LinearGradient colors={['transparent', '#5a0a1288', '#2a0509']} locations={[0.5, 0.85, 1]} style={StyleSheet.absoluteFill} />
+        <ArenaBackdrop {...arenaOrgText(s)} dim={0.15} />
+        <LinearGradient colors={['rgba(58,46,20,0.35)', 'transparent', 'rgba(42,5,9,0.55)']} locations={[0, 0.5, 1]} style={StyleSheet.absoluteFill} pointerEvents="none" />
         <View style={n.figure} pointerEvents="none">
           <Standing look={lookFor(o)} kit={O_KIT} h={300} flip />
         </View>

@@ -56,18 +56,30 @@ const a = StyleSheet.create({
 });
 
 const GYM = require('../../assets/art/gym.jpg');
+const PRESS = require('../../assets/art/press.jpg');
 
-/** Kariyer sahnesi için çizilmiş dövüş salonu (1200x1000), alta hizalı ve kapsayıcıyı kaplar. */
-export function GymBackdrop({ dim = 0 }: { dim?: number }) {
+/** Kapsayıcıyı kaplayan çizilmiş görsel (cover). align: 'bottom' zemini, 'center' ortayı korur. Yüklenemezse çizilmez. */
+function CoverArt({ source, iw, ih, align = 'bottom', dim = 0 }: { source: number; iw: number; ih: number; align?: 'bottom' | 'center'; dim?: number }) {
   const [ok, setOk] = useState(true);
   const [size, setSize] = useState({ w: 0, h: 0 });
   if (!ok) return null;
   const { w, h } = size;
-  const k = w > 0 && h > 0 ? Math.max(w / 1200, h / 1000) : 0;
+  const k = w > 0 && h > 0 ? Math.max(w / iw, h / ih) : 0;
+  const top = align === 'bottom' ? h - ih * k : (h - ih * k) / 2;
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="none" onLayout={(e) => setSize({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}>
-      {k ? <Image source={GYM} onError={() => setOk(false)} style={{ position: 'absolute', left: (w - 1200 * k) / 2, top: h - 1000 * k, width: 1200 * k, height: 1000 * k }} resizeMode="stretch" /> : null}
+      {k ? <Image source={source} onError={() => setOk(false)} style={{ position: 'absolute', left: (w - iw * k) / 2, top, width: iw * k, height: ih * k }} resizeMode="stretch" /> : null}
       {dim > 0 ? <View style={[StyleSheet.absoluteFill, { backgroundColor: `rgba(4,4,6,${dim})` }]} /> : null}
     </View>
   );
+}
+
+/** Kariyer sahnesi için çizilmiş dövüş salonu (1200x1000), alta hizalı. */
+export function GymBackdrop({ dim = 0 }: { dim?: number }) {
+  return <CoverArt source={GYM} iw={1200} ih={1000} dim={dim} />;
+}
+
+/** Yüz yüze / tartı sahnesi: basın panosu, spotlar, foto muhabirleri (1200x720), ortalı. */
+export function PressBackdrop({ dim = 0 }: { dim?: number }) {
+  return <CoverArt source={PRESS} iw={1200} ih={720} align="center" dim={dim} />;
 }

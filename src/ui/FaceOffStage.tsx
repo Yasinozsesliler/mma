@@ -10,6 +10,8 @@ import type { GameState } from '../engine/types';
 import { Icon, SLANT, upName } from './components';
 import { FighterAvatar } from './FighterAvatar';
 import { C, F, R } from './theme';
+import { PressBackdrop } from './ArenaBackdrop';
+import { useLook } from '../lookPref';
 
 type Bubble = { emoji: string; side: 'p' | 'o' | 'mid' } | null;
 
@@ -19,6 +21,7 @@ const par = Animated.parallel;
 const wait = Animated.delay;
 
 export function FaceOffStage({ s }: { s: GameState }) {
+  const yeni = useLook() === 'yeni';
   const k = s.pending.kamp!;
   const o = s.pending.rakip!;
   const v = useRef({
@@ -126,6 +129,7 @@ export function FaceOffStage({ s }: { s: GameState }) {
     <>
       <Animated.View style={{ transform: [{ translateX: v.shake }] }}>
         <LinearGradient colors={['#1a0508', '#060607']} style={fo.stage}>
+          {yeni ? <PressBackdrop dim={0.1} /> : null}
           {/* Foto muhabirlerinin flaşları */}
           <Flashes />
           {/* Flaşlar */}
