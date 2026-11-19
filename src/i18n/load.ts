@@ -10,4 +10,7 @@ export function loadLang(): Promise<void> | void {
   // Yeni diller: çevrilmemiş metinler İngilizce kalır
   else if (LANG === 'de') setDict({ ...require('./en').EN, ...require('./de').DE });
   else if (LANG === 'fr') setDict({ ...require('./en').EN, ...require('./fr').FR });
+  else if (LANG === 'it') setDict({ ...require('./en').EN, ...require('./it').IT });
+  else if (LANG === 'id') setDict({ ...require('./en').EN, ...require('./id').ID });
+  else if (LANG === 'ja') setDict({ ...require('./en').EN, ...require('./ja').JA });
 }

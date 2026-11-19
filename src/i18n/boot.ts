@@ -8,7 +8,11 @@ function pick(): Lang {
   const saved = getPref(LANG_KEY);
   if (isLang(saved)) return saved;
   try {
-    for (const loc of getLocales()) if (isLang(loc.languageCode)) return loc.languageCode;
+    // Bazı Android sürümleri Endonezceyi eski 'in' koduyla bildirir
+    for (const loc of getLocales()) {
+      const code = loc.languageCode === 'in' ? 'id' : loc.languageCode;
+      if (isLang(code)) return code;
+    }
   } catch {}
   return 'en';
 }

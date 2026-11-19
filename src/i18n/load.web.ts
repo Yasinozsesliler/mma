@@ -10,6 +10,9 @@ export async function loadLang(): Promise<void> {
     else if (LANG === 'pl') setDict((await import('./pl')).PL);
     else if (LANG === 'de') setDict({ ...(await import('./en')).EN, ...(await import('./de')).DE });
     else if (LANG === 'fr') setDict({ ...(await import('./en')).EN, ...(await import('./fr')).FR });
+    else if (LANG === 'it') setDict({ ...(await import('./en')).EN, ...(await import('./it')).IT });
+    else if (LANG === 'id') setDict({ ...(await import('./en')).EN, ...(await import('./id')).ID });
+    else if (LANG === 'ja') setDict({ ...(await import('./en')).EN, ...(await import('./ja')).JA });
   } catch {
     // Sözlük inemezse (ör. çevrimdışı ve önbellekte yok) oyun Türkçe açılır.
   }

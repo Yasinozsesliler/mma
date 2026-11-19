@@ -17,7 +17,7 @@ try {
 } catch {}
 
 /** Büyük/küçük harf ve sayı biçimi için yerel ayar (Türkçede i→İ; İngilizcede i→I). */
-export const LOC = ({ tr: 'tr-TR', en: 'en-US', es: 'es-ES', pt: 'pt-BR', ru: 'ru-RU', pl: 'pl-PL', de: 'de-DE', fr: 'fr-FR' } as const)[LANG];
+export const LOC = ({ tr: 'tr-TR', en: 'en-US', es: 'es-ES', pt: 'pt-BR', ru: 'ru-RU', pl: 'pl-PL', de: 'de-DE', fr: 'fr-FR', it: 'it-IT', id: 'id-ID', ja: 'ja-JP' } as const)[LANG];
 
 // Sözlük uygulama açılmadan önce yüklenir (bkz. load.ts / load.web.ts ve kökteki index.ts).
 let DICT: Record<string, string> = {};

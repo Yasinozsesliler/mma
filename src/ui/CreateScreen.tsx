@@ -27,7 +27,7 @@ import Svg, { Defs, RadialGradient as SvgRadial, Rect, Stop } from 'react-native
 const STEPS = 9;
 
 /** Dile göre varsayılan ülke: oyuncu kendi ülkesiyle başlasın. */
-const LANG_COUNTRY: Record<string, string> = { tr: 'tr', en: 'us', es: 'mx', pt: 'br', ru: 'ru', pl: 'pl', de: 'de', fr: 'fr' };
+const LANG_COUNTRY: Record<string, string> = { tr: 'tr', en: 'us', es: 'mx', pt: 'br', ru: 'ru', pl: 'pl', de: 'de', fr: 'fr', it: 'us', id: 'us', ja: 'jp' };
 const rnd = <T,>(a: readonly T[]) => a[Math.floor(Math.random() * a.length)];
 
 function randomName(uyruk: string, kadin = false) {

@@ -19,7 +19,7 @@ const damp = (s: GameState, F: number) => Math.max(0.08, 1 - F / SOFT_CAP[s.stag
 export function fmtFollowers(n: number) {
   const a = Math.abs(n);
   const sign = n < 0 ? '-' : '';
-  const dec = LANG === 'en' ? '.' : ',';
+  const dec = LANG === 'en' || LANG === 'ja' ? '.' : ',';
   // Tam sayılarda gereksiz ",0" yazılmaz (50,0B değil 50B).
   const num = (v: number, d: number) => v.toFixed(d).replace(/\.0$/, '').replace('.', dec);
   if (a >= 1e6) return `${sign}${num(a / 1e6, a >= 1e7 ? 0 : 1)}M`;
