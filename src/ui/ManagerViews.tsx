@@ -2,7 +2,10 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useMemo, useState } from 'react';
 import Svg, { Defs, Ellipse, RadialGradient, Stop } from 'react-native-svg';
-import { Animated, Easing, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Animated, Easing, Modal, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { useLook } from '../lookPref';
+import { BroadcastScore } from './NewFight';
+import { WatchResult, WatchVs, type Corner, type WatchArena } from './NewWatch';
 import { sfx } from '../audio';
 import { BACKGROUNDS, WEIGHT_CLASSES } from '../engine/data';
 import { ARC, faceOffLines, fightBeats, fullName, KISILIK, M_TIER_NAME, MADDE, orgName, rawL, rekorOf, rkSoyad, starsOf, type MFighter, type MKayit, type Rakip } from '../engine/manager';
@@ -25,6 +28,44 @@ export const TIER_COLOR = {
   ucc: C.gold,
 } as const;
 const RED_KIT = { shorts: '#b5121b', trim: '#ffffff', glove: '#c1121f' };
+
+/** Yeni görünüm izleme sahneleri için ortak veriler (kariyer VS ve maç sonu görselleri). */
+const cornerOf = (f: MFighter): Corner => ({ look: mLook(f), name: `${f.ad} ${f.soyad}`, country: f.ulke, nick: f.lakap });
+const rCornerOf = (rk: Rakip, kadin: boolean): Corner => ({ look: rLook(rk, kadin), name: rk.ad, country: rk.ulke });
+const tapeRows = (f: MFighter, rk: Rakip): [string, string, string][] => [
+  [rekorOf(f), L("REKOR"), rk.rekor],
+  [String(f.guc), L("GÜÇ"), String(rk.guc)],
+  [BACKGROUNDS[f.stil]?.ad ?? f.stil, L("STİL"), BACKGROUNDS[rk.stil]?.ad ?? rk.stil],
+];
+const watchArena = (org: OrgId, arena?: Arena, orgAd?: string): WatchArena => {
+  const a = arena ?? arenaForOrg(org);
+  const kisa = a.logo ?? orgName(org);
+  const ad = orgAd ?? orgName(org);
+  return { tier: a.tier, org: kisa, sub: ad.toLocaleUpperCase(LOC) === kisa.toLocaleUpperCase(LOC) ? '' : ad, tint: a.tint ?? (arena ? a.renk : undefined) };
+};
+const fightTitle = (unvan: boolean, sup: boolean) => (unvan ? L("ÜNVAN MAÇI") : sup ? L("SÜPER DÖVÜŞ") : L("YÜZ YÜZE"));
+
+/** Yeni görünüm face-off: arena önünde tam boy dövüşçüler, karşılaştırma ve iki laf. */
+function FaceOffNew({ f, rk, org, unvan, sup, orgAd, arena, onDone, doneLabel }: { f: MFighter; rk: Rakip; org: OrgId; unvan: boolean; sup: boolean; orgAd?: string; arena?: Arena; onDone: () => void; doneLabel: string }) {
+  const { width } = useWindowDimensions();
+  const w = Math.min(width, 620) - 32;
+  const [q1, q2] = useMemo(() => faceOffLines(f, unvan), [f, unvan]);
+  useEffect(() => {
+    sfx('slam');
+  }, []);
+  return (
+    <ScrollView contentContainerStyle={{ padding: 16, paddingTop: 44, gap: 12, maxWidth: 620, width: '100%', alignSelf: 'center' }}>
+      <WatchVs w={w} a={cornerOf(f)} b={rCornerOf(rk, f.kadin)} rows={tapeRows(f, rk)} arena={watchArena(org, arena, orgAd)} title={WEIGHT_CLASSES[f.siklet]?.ad.toLocaleUpperCase(LOC)} tag={unvan || sup ? fightTitle(unvan, sup) : undefined} />
+      <View style={[v.quote, { alignSelf: 'flex-start', borderColor: C.red }]}>
+        <Text style={v.quoteText}>“{q1}”</Text>
+      </View>
+      <View style={[v.quote, { alignSelf: 'flex-end', borderColor: C.blue }]}>
+        <Text style={v.quoteText}>“{q2}”</Text>
+      </View>
+      <Button label={doneLabel} icon={doneLabel === L("Kapat") ? 'close' : 'boxing-glove'} tone={doneLabel === L("Kapat") ? 'ghost' : 'gold'} onPress={onDone} />
+    </ScrollView>
+  );
+}
 
 // ---------- Küçük parçalar ----------
 
@@ -442,7 +483,16 @@ function FaceOffScene({ f, rk, org, unvan, sup, onDone, orgAd }: { f: MFighter; 
   );
 }
 
-export function FaceOffModal({ f, rk, org, unvan, sup, onClose, orgAd }: { f: MFighter; rk: Rakip; org: OrgId; unvan: boolean; sup: boolean; onClose: () => void; orgAd?: string }) {
+export function FaceOffModal({ f, rk, org, unvan, sup, onClose, orgAd, arena }: { f: MFighter; rk: Rakip; org: OrgId; unvan: boolean; sup: boolean; onClose: () => void; orgAd?: string; arena?: Arena }) {
+  const yeni = useLook() === 'yeni';
+  if (yeni)
+    return (
+      <Modal visible animationType="fade" onRequestClose={onClose}>
+        <View style={{ flex: 1, backgroundColor: '#000' }}>
+          <FaceOffNew f={f} rk={rk} org={org} unvan={unvan} sup={sup} orgAd={orgAd} arena={arena} onDone={onClose} doneLabel={L("Kapat")} />
+        </View>
+      </Modal>
+    );
   return (
     <Modal visible animationType="fade" onRequestClose={onClose}>
       <View style={{ flex: 1, backgroundColor: '#000' }}>
@@ -458,6 +508,9 @@ export function FaceOffModal({ f, rk, org, unvan, sup, onClose, orgAd }: { f: MF
 // ---------- Maçı izle ----------
 
 export function MgrWatch({ f, m, onClose, orgAd, arena }: { f: MFighter; m: MKayit; onClose: () => void; orgAd?: string; arena?: Arena }) {
+  const yeni = useLook() === 'yeni';
+  const { width } = useWindowDimensions();
+  const ww = Math.min(width, 620) - 32;
   const [step, setStep] = useState<'face' | 'mac' | 'sonuc'>('face');
   const lines = useMemo(() => fightBeats(f, m), [f, m]);
   // Kafes sahnesi hareketleri Türkçe anlatımdan okur; ekrandaki yazı seçili dilde
@@ -499,10 +552,26 @@ export function MgrWatch({ f, m, onClose, orgAd, arena }: { f: MFighter; m: MKay
   return (
     <Modal visible animationType="fade" onRequestClose={onClose}>
       <View style={{ flex: 1, backgroundColor: '#000' }}>
-        {step === 'face' ? (
+        {step === 'face' && yeni ? (
+          <FaceOffNew f={f} rk={m.rk} org={m.org} unvan={!!m.unvan} sup={!!m.sup} orgAd={orgAd} arena={arena} onDone={() => (sfx('bell'), setStep('mac'))} doneLabel={L("Maça geç")} />
+        ) : step === 'face' ? (
           <FaceOffScene f={f} rk={m.rk} org={m.org} unvan={!!m.unvan} sup={!!m.sup} orgAd={orgAd} onDone={() => (sfx('bell'), setStep('mac'))} />
         ) : (
-          <ScrollView contentContainerStyle={{ padding: 16, paddingTop: 40, gap: 12 }}>
+          <ScrollView contentContainerStyle={{ padding: 16, paddingTop: 40, gap: 12, maxWidth: 620, width: '100%', alignSelf: 'center' }}>
+            {yeni ? (
+              <BroadcastScore
+                pName={f.soyad}
+                oName={rkSoyad(m.rk)}
+                pHp={100 - fs.pHasar}
+                oHp={100 - fs.oHasar}
+                pSta={Math.round(100 - prog * (m.w ? 30 : 45))}
+                oSta={Math.round(100 - prog * (m.w ? 45 : 30))}
+                org={watchArena(m.org, arena, orgAd).org}
+                round={`R${raunt}`}
+                caption={`${fightTitle(!!m.unvan, !!m.sup)} · ${raunt}/${m.top}`}
+              />
+            ) : (
+            <>
             <View style={v.watchHead}>
               <View style={{ flex: 1, alignItems: 'flex-start' }}>
                 <Text style={[v.cornerName, { color: C.red }]} numberOfLines={1}>
@@ -538,6 +607,8 @@ export function MgrWatch({ f, m, onClose, orgAd, arena }: { f: MFighter; m: MKay
                 </View>
               ))}
             </View>
+            </>
+            )}
             <CageView fs={fs} shown={shown} pLook={mLook(f)} oLook={rLook(m.rk, f.kadin)} pKitOverride={RED_KIT} noReplay arena={arena ?? arenaForOrg(m.org)} pBuild={buildOf(f.siklet, f.kadin)} oBuild={buildOf(f.siklet, f.kadin)} />
             {step === 'mac' ? (
               <View style={v.caption}>
@@ -551,6 +622,18 @@ export function MgrWatch({ f, m, onClose, orgAd, arena }: { f: MFighter; m: MKay
                 ) : null}
               </View>
             ) : (
+              <>
+              {yeni ? (
+                <WatchResult
+                  w={ww}
+                  winner={m.w ? cornerOf(f) : rCornerOf(m.rk, f.kadin)}
+                  loser={m.w ? rCornerOf(m.rk, f.kadin) : cornerOf(f)}
+                  winnerRed={!!m.w}
+                  arena={watchArena(m.org, arena, orgAd)}
+                  title={fightTitle(!!m.unvan, !!m.sup)}
+                  method={L("{0} · {1}. raunt", [m.y, m.ra])}
+                />
+              ) : null}
               <LinearGradient colors={m.w ? ['#0f2a18', '#08090b'] : ['#2a0a0f', '#08090b']} style={[v.result, { borderColor: m.w ? C.green : C.red }]}>
                 <Text style={[v.resultTitle, SLANT, { color: orgAd ? C.gold : m.w ? C.green : C.red }]}>{orgAd ? L("{0} KAZANDI!", [(m.w ? f.soyad : rkSoyad(m.rk)).toLocaleUpperCase(LOC)]) : m.w ? L("KAZANDI!") : L("KAYBETTİ")}</Text>
                 <Text style={v.resultSub}>{L("{0} · {1}. raunt", [m.y, m.ra])}</Text>
@@ -561,6 +644,7 @@ export function MgrWatch({ f, m, onClose, orgAd, arena }: { f: MFighter; m: MKay
                 ))}
                 {m.kom ? <Text style={[v.line, { color: C.green }]}>{L("Ajansın komisyonu: {0}", [$(m.kom)])}</Text> : null}
               </LinearGradient>
+              </>
             )}
             <Button label={step === 'sonuc' ? L("Kapat") : L("Çık")} icon="close" tone={step === 'sonuc' ? 'gold' : 'ghost'} onPress={onClose} />
           </ScrollView>

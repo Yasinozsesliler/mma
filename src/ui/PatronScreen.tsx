@@ -5,6 +5,7 @@ import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 
 import { useLook } from '../lookPref';
 import { ArenaBackdrop } from './ArenaBackdrop';
 import { BoutBg, NightBandBg, OfficeBg, OrgArena } from './NewPatron';
+import { cityTint } from './arenaArt';
 import { track } from '../analytics';
 import { sfx } from '../audio';
 import { WEIGHT_CLASSES } from '../engine/data';
@@ -131,8 +132,9 @@ const rkOfF = (f: PFighter) => toRk({ id: f.id, ad: pFullName(f), ulke: f.ulke, 
 function Watch({ r, f, k, onClose }: { r: PatronRun; f: PFighter; k: PKayit; onClose: () => void }) {
   const mf = useMemo(() => toMF(f, k.h), [f, k.h]);
   const mk = useMemo(() => toMK(k), [k]);
-  const mekan = r.geceler.find((g) => g.no === k.gece)?.mekan ?? 'salon';
-  return <MgrWatch f={mf} m={mk} orgAd={r.org.ad} arena={{ tier: MEKANLAR.indexOf(mekan) as 0 | 1 | 2 | 3, logo: r.org.kisa, renk: r.org.renk }} onClose={onClose} />;
+  const gece = r.geceler.find((g) => g.no === k.gece);
+  const mekan = gece?.mekan ?? 'salon';
+  return <MgrWatch f={mf} m={mk} orgAd={r.org.ad} arena={{ tier: MEKANLAR.indexOf(mekan) as 0 | 1 | 2 | 3, logo: r.org.kisa, renk: r.org.renk, tint: cityTint(gece?.sehir) ?? r.org.renk }} onClose={onClose} />;
 }
 
 function Meter({ label, value, color = C.text, sub }: { label: string; value: string; color?: string; sub?: string }) {
@@ -901,7 +903,8 @@ function FacePreview({ r, m, onClose }: { r: PatronRun; m: Mac; onClose: () => v
   const a = fighterById(r, m.a);
   const b = fighterById(r, m.b);
   if (!a || !b) return null;
-  return <FaceOffModal f={toMF(a, r.plan?.hafta ?? r.hafta)} rk={rkOfF(b)} org="cfc" orgAd={r.org.ad} unvan={!!m.unvan} sup={false} onClose={onClose} />;
+  const mk = r.plan?.mekan ?? 'salon';
+  return <FaceOffModal f={toMF(a, r.plan?.hafta ?? r.hafta)} rk={rkOfF(b)} org="cfc" orgAd={r.org.ad} unvan={!!m.unvan} sup={false} onClose={onClose} arena={{ tier: MEKANLAR.indexOf(mk) as 0 | 1 | 2 | 3, logo: r.org.kisa, renk: r.org.renk, tint: cityTint(r.plan?.sehir) ?? r.org.renk }} />;
 }
 
 function BoutCard({ r, m, i, onFace }: { r: PatronRun; m: Mac; i: number; onFace: () => void }) {
