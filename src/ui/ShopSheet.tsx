@@ -27,8 +27,10 @@ import {
   useOwned,
   usePrice,
   useShop,
+  useShopHost,
   type Deal,
 } from '../monetization';
+import { track } from '../analytics';
 import { BUNDLE_SKU, COACH_SKU, DEAL_SKU, MGR_SKU, PATRON_SKU, PREMIUM_SKU, REF_SKU, ULTIMATE_SKU, UPGRADE_SKU } from '../monetization/skus';
 import { Icon, type IconName } from './components';
 import { PremiumCompare } from './PremiumCard';
@@ -272,19 +274,37 @@ function PartRow({ sku, icon, title, price: fixed }: { sku: string; icon: IconNa
   );
 }
 
-/** Mağaza penceresi (uygulama kökünde bir kez). */
-export function ShopModal() {
+/** Mağaza penceresi. Uygulama kökünde bir kez; ayrıca mağaza düğmesi barındıran her pencerenin içinde `nested` ile
+ *  (iOS pencere üstüne kökten pencere açamaz). Mağaza yalnızca en üstteki yerde çizilir. */
+export function ShopModal({ nested = false }: { nested?: boolean }) {
   const src = useShop();
+  const top = useShopHost(nested);
   const owned = useOwned();
   const deal = useDeal();
   const dealPrice = usePrice(DEAL_SKU);
   const ins = useSafeAreaInsets();
   const [rmsg, setRmsg] = useState('');
-  if (!src || !PURCHASES) return null;
+  const visible = !!src && PURCHASES && top;
+  const [shown, setShown] = useState(false);
+  // Güvenlik ağı: pencere sistem tarafından gösterilemezse mağaza "açık" durumda takılı kalmasın,
+  // bir sonraki dokunuş yeniden açabilsin.
+  useEffect(() => {
+    if (!visible) {
+      setShown(false);
+      return;
+    }
+    if (shown) return;
+    const t = setTimeout(() => {
+      track('shop_present_fail', { kaynak: src ?? '' });
+      closeShop();
+    }, 2500);
+    return () => clearTimeout(t);
+  }, [visible, shown, src]);
+  if (!visible) return null;
   const all = owned.has(ULTIMATE_SKU);
   const prem = owned.has(PREMIUM_SKU);
   return (
-    <Modal transparent animationType="slide" onRequestClose={closeShop}>
+    <Modal transparent animationType="slide" onRequestClose={closeShop} onShow={() => setShown(true)}>
       <View style={s.wrap}>
         <View style={[s.sheet, { paddingBottom: 16 + ins.bottom, paddingTop: 14 }]}>
           <View style={s.head}>

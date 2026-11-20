@@ -29,7 +29,7 @@ import { SettingsSheet } from './SettingsSheet';
 import { COACH_STORE, MGR_STORE, REF_STORE, LEGENDS_STORE, maybeStartWelcome, milestoneOffer, openOffer, PURCHASES, usePremium, usePrice } from '../monetization';
 import { DEAL_SKU } from '../monetization/skus';
 import { careerFights } from '../engine/rewards';
-import { DealPopup } from './ShopSheet';
+import { DealPopup, ShopModal } from './ShopSheet';
 import { ChampionHourCard } from './ChampionHourCard';
 import { useSeason } from '../season';
 import { seasonDaysLeft, seasonRewards, tierOf } from '../engine/season';
@@ -258,6 +258,8 @@ function MenuSheet({ title, icon, onClose, children }: { title: string; icon: Ic
           <ScrollView contentContainerStyle={{ paddingBottom: 8 }}>{children}</ScrollView>
         </View>
       </View>
+      {/* Efsane Yolları ve Antrenör kilidindeki "Tam Paket" bu pencerenin üstünde açılsın (iOS) */}
+      <ShopModal nested />
     </Modal>
   );
 }
