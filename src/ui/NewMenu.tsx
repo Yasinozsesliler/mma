@@ -1,6 +1,6 @@
 // Yeni görünüm: ana menünün üst bölümü (kartlı düzen). Klasik görünümde hiç çizilmez.
 // Kariyer büyük kahraman kartı, Efsane Yolları ve Patron yan yana, diğer modlar yana kaydırılan kartlar,
-// "Önerilen" bölümünde süreli fırsat. Satın alma ve reklam akışı değişmez; kartlar mevcut ekranları açar.
+// paket kartı ve süreli fırsat ana menüde (PremiumCard). Satın alma ve reklam akışı değişmez; kartlar mevcut ekranları açar.
 import { LinearGradient } from 'expo-linear-gradient';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { STAGE_LABELS } from '../engine/career';
@@ -8,7 +8,6 @@ import { WEIGHT_CLASSES } from '../engine/data';
 import type { GameState } from '../engine/types';
 import { L, LOC } from '../i18n';
 import { markLookIntro, setLook, useLookIntro } from '../lookPref';
-import { fmtLeft, openShop, useDeal, useNow } from '../monetization';
 import { Icon, SLANT, upName, type IconName } from './components';
 import { FighterAvatar } from './FighterAvatar';
 import { C, F } from './theme';
@@ -50,27 +49,6 @@ function LookIntro() {
         </Pressable>
       </View>
     </View>
-  );
-}
-
-function DealRow() {
-  const deal = useDeal();
-  const now = useNow();
-  if (!deal) return null;
-  return (
-    <Pressable onPress={() => openShop('menu_onerilen')} style={({ pressed }) => [s.deal, pressed && { borderColor: C.gold }]}>
-      <View style={s.dealIcon}>
-        <Icon name="gift" size={26} color="#1f1605" />
-      </View>
-      <View style={{ flex: 1 }}>
-        <Text style={s.dealTitle}>{L("TAM PAKET FIRSATI")}</Text>
-        <Text style={s.dealSub}>{L("Bütün modlar ve kozmetikler · süreli")}</Text>
-      </View>
-      <View style={{ alignItems: 'flex-end' }}>
-        <Text style={s.dealTime}>{fmtLeft(deal.ends - now)}</Text>
-        <Text style={s.dealLeft}>{L("kaldı")}</Text>
-      </View>
-    </Pressable>
   );
 }
 
@@ -190,8 +168,6 @@ export function NewMenuTop({
           </Pressable>
         ))}
       </ScrollView>
-
-      <DealRow />
     </View>
   );
 }
@@ -233,12 +209,6 @@ const s = StyleSheet.create({
   modeBadge: { position: 'absolute', right: 8, top: 12, fontFamily: F.display, fontSize: 10, borderWidth: 1, borderRadius: 8, paddingHorizontal: 6, paddingVertical: 1, overflow: 'hidden' },
   modeTitle: { color: C.text, fontFamily: F.display, fontSize: 16, lineHeight: 18, letterSpacing: 0.5 },
   modeSub: { color: C.dim, fontFamily: F.body, fontSize: 11, lineHeight: 14, marginTop: 4 },
-  deal: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 14, padding: 12, borderRadius: 6, borderWidth: 1, borderColor: C.goldDeep, backgroundColor: '#1d170a' },
-  dealIcon: { width: 50, height: 50, borderRadius: 4, backgroundColor: C.gold, alignItems: 'center', justifyContent: 'center' },
-  dealTitle: { color: C.text, fontFamily: F.display, fontSize: 16, letterSpacing: 0.5 },
-  dealSub: { color: '#d8c79c', fontFamily: F.body, fontSize: 12 },
-  dealTime: { color: C.gold, fontFamily: F.display, fontSize: 15 },
-  dealLeft: { color: C.dim, fontFamily: F.body, fontSize: 10 },
   intro: { marginTop: 8, marginBottom: 2, padding: 12, gap: 8, borderRadius: 8, borderWidth: 1, borderColor: C.goldDeep, backgroundColor: '#15110a' },
   introTitle: { color: C.gold, fontFamily: F.display, fontSize: 16, letterSpacing: 0.5 },
   introText: { color: C.dim, fontFamily: F.body, fontSize: 12.5, lineHeight: 18 },
