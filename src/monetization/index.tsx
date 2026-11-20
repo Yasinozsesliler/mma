@@ -269,6 +269,13 @@ export async function maybeInterstitial(careerFights: number, afterLoss = false)
 // ---------- Satın alma (Google Play) ----------
 
 type BuyResult = 'ok' | 'iptal' | 'hata';
+
+/** Ödemesi henüz onaylanmamış satın alma mı? (Play'de nakit/operatör ödemesi; App Store'da "Satın almak için sor") */
+function isPendingPurchase(p: unknown): boolean {
+  const x = p as { purchaseState?: unknown; purchaseStateAndroid?: unknown } | null;
+  const st = String(x?.purchaseState ?? '').toLowerCase();
+  return st === 'pending' || st === 'deferred' || x?.purchaseStateAndroid === 2;
+}
 let prices: Record<string, string> = {};
 /** Sayısal fiyat ve para birimi ("ayrı ayrı alsan" toplamı ve indirim oranı için) */
 let amounts: Record<string, { n: number; cur: string }> = {};
@@ -299,6 +306,7 @@ const RETRY = new Set(['sku_not_found', 'not_prepared', 'service_disconnected', 
 let lastErr = '';
 /** Satın alma hatasında gösterilecek metin: Play faturalandırması yoksa ya da mağazaya ulaşılamıyorsa ne yapılacağını söyler. */
 export function buyErrorText() {
+  if (lastErr === 'bekliyor') return L("Ödemen onay bekliyor. Onaylanınca paket kendiliğinden açılır.");
   if (lastErr === 'billing_unavailable') return L("Google Play ödeme sistemi bu cihazda kullanılamıyor. Play Store'u güncelleyip Google hesabınla giriş yaptığından emin ol, sonra tekrar dene.");
   if (RETRY.has(lastErr)) return L("Mağazaya şu an ulaşılamadı. İnternet bağlantını kontrol edip birkaç saniye sonra tekrar dene.");
   return L("Satın alma şu an yapılamadı. Biraz sonra tekrar dene.");
@@ -422,6 +430,15 @@ function StoreManager() {
     },
     onPurchaseSuccess: async (purchase) => {
       if (!ALL_SKUS.includes(purchase.productId)) return;
+      // Ödemesi henüz onaylanmamış (bekleyen) satın alma: ürün açılmaz, onaylanınca mağaza yeniden bildirir
+      if (isPendingPurchase(purchase)) {
+        track('iap_pending', { sku: purchase.productId });
+        if (pending?.sku === purchase.productId) {
+          lastErr = 'bekliyor';
+          settle('hata');
+        }
+        return;
+      }
       grant(purchase.productId);
       await rcRecordPurchase(purchase.productId);
       // Onaylanmayan satın alımlar 3 gün sonra iade edilir.
@@ -464,7 +481,7 @@ function StoreManager() {
   useEffect(() => {
     const found = new Set<string>();
     for (const p of availablePurchases) {
-      if (!ALL_SKUS.includes(p.productId) || found.has(p.productId)) continue;
+      if (!ALL_SKUS.includes(p.productId) || found.has(p.productId) || isPendingPurchase(p)) continue;
       found.add(p.productId);
       grant(p.productId);
       void finishTransaction({ purchase: p, isConsumable: false }).catch(() => undefined);

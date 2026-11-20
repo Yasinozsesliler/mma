@@ -10477,6 +10477,7 @@ export const EN: Record<string, string> = {
   "Takipçin arttıkça dövüşçüler, gazeteciler ve ünlüler yazacak.": "As your followers grow, fighters, journalists and celebrities will write.",
   "Google Play ödeme sistemi bu cihazda kullanılamıyor. Play Store'u güncelleyip Google hesabınla giriş yaptığından emin ol, sonra tekrar dene.": "Google Play billing isn’t available on this device. Update the Play Store and make sure you’re signed in to your Google account, then try again.",
   "Mağazaya şu an ulaşılamadı. İnternet bağlantını kontrol edip birkaç saniye sonra tekrar dene.": "Couldn’t reach the store right now. Check your internet connection and try again in a few seconds.",
+  "Ödemen onay bekliyor. Onaylanınca paket kendiliğinden açılır.": "Your payment is pending. The pack will unlock automatically once it's approved.",
   "DENEME SONU FIRSATI": "TRIAL END DEAL",
   "Denemeyi bitirdin. 24 saat boyunca Tam Paket bu fiyatta: Patron, Menajer ve bütün modlar dahil.": "You finished the trial. For 24 hours the Full Pack is at this price: Promoter, Manager and every mode included.",
   "Tekrar yayınını sat": "Sell the replay",
