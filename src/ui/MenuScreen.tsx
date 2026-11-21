@@ -226,7 +226,7 @@ function LegendShowcase({ onOpen }: { onOpen: (id?: LegendId) => void }) {
                 ) : d.ucretsiz ? (
                   <Text style={[ms.lgBadge, { color: C.green }]}>{L("ÜCRETSİZ")}</Text>
                 ) : !open ? (
-                  <Text style={ms.lgBadge}>{LEGENDS_STORE ? L("1. BÖLÜM ÜCRETSİZ") : L("👑 TAM SÜRÜM")}</Text>
+                  <Text style={ms.lgBadge}>{LEGENDS_STORE ? L("2 BÖLÜM ÜCRETSİZ") : L("👑 TAM SÜRÜM")}</Text>
                 ) : (
                   <Text style={ms.lgBadge}>{L("{0} bölüm", [d.bolumler.length])}</Text>
                 )}
@@ -445,7 +445,7 @@ export function MenuScreen({
         ) : null}
       </View>}
 
-      {/* Efsane vitrini her iki görünümde: kilitli efsaneler "1. bölüm ücretsiz" ile Efsaneler Paketi'ne götürür */}
+      {/* Efsane vitrini her iki görünümde: kilitli efsaneler "ilk 2 bölüm ücretsiz" ile Efsaneler Paketi'ne götürür */}
       <LegendShowcase onOpen={openLegends} />
       {/* Yeni görünümde paket kartı üstte (klasikte sayfanın sonunda kalır) */}
       {yeni ? <PremiumCard /> : null}

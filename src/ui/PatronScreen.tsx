@@ -111,6 +111,7 @@ import { FaceOffModal, MgrWatch } from './ManagerViews';
 import { PatronGram } from './PatronGram';
 import { DealCard, FullPackLink } from './ShopSheet';
 import { C, F, R } from './theme';
+import { canExtendTrial, extendTrial, TRIAL_EXT_MAX } from '../engine/patron';
 
 const $ = money;
 const fmtK = (n: number) => (n >= 1_000_000 ? `${(n / 1_000_000).toFixed(1)}M` : n >= 10_000 ? `${Math.round(n / 1000)}B` : n.toLocaleString(LOC));
@@ -461,7 +462,10 @@ function Hero({ r, goOffice, goCard }: { r: PatronRun; goOffice: () => void; goC
       )}
       {r.kayipHafta > 0 ? <Text style={[ps.small, { color: C.red, marginTop: 6 }]}>{L("⚠️ Kasa ekside: {0}/6 hafta. Düzelmezse iflas.", [r.kayipHafta])}</Text> : null}
       {over ? (
-        <PatronPack lead={L("Deneme bitti: {0} gece yaptın. Organizasyonun seni bekliyor.", [P_TRIAL_NIGHTS])} over />
+        <>
+          {canExtendTrial(r) ? <AdOffer yer="deneme_patron" icon="play-circle" title={L("Bir gece daha oyna")} desc={L("Kısa bir reklam izle, organizasyonunla bir gece daha düzenle. Kalan hak: {0}", [TRIAL_EXT_MAX - (r.ek ?? 0)])} onReward={() => actPatron(extendTrial)} /> : null}
+          <PatronPack lead={L("Deneme bitti: {0} gece yaptın. Organizasyonun seni bekliyor.", [r.geceNo])} over />
+        </>
       ) : (
         <View style={{ marginTop: 10 }}>
           <Button

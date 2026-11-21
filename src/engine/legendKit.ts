@@ -23,7 +23,7 @@ export interface LegendRun {
   /** Senaryolu boks maçının sonucu */
   boks?: 'G' | 'M' | 'KO' | 'red';
   bitti?: boolean;
-  /** Paketsiz deneme: yalnızca 1. bölüm oynanır */
+  /** Paketsiz deneme: yalnızca ilk 2 bölüm oynanır (LEGEND_FREE_CHAPTERS) */
   deneme?: boolean;
   /** Deneme bitti: hikâye paket alınana kadar duraklatıldı (kariyer normal sürer) */
   bekle?: boolean;

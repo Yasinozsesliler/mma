@@ -78,6 +78,7 @@ import { HubNav, type NavItem } from './HubNav';
 import { AdOffer } from './AdOffer';
 import { DealCard, FullPackLink } from './ShopSheet';
 import { C, F, R } from './theme';
+import { canExtendTrial, extendTrial, TRIAL_EXT_MAX } from '../engine/manager';
 import { useLook } from '../lookPref';
 import { OfficeBg } from './NewPatron';
 import { CoverImage } from './CoverImage';
@@ -274,7 +275,10 @@ function MgrHero({ r, goPhone }: { r: MgrRun; goPhone: () => void }) {
         <Bar value={r.itibar} color={C.gold} label={L("İtibar")} right={String(r.itibar)} />
       </View>
       {over ? (
-        <MgrPack lead={L("Deneme bitti. Ajansın seni bekliyor:")} over />
+        <>
+          {canExtendTrial(r) ? <AdOffer yer="deneme_menajer" icon="play-circle" title={L("İki hafta daha oyna")} desc={L("Kısa bir reklam izle, ajansını iki hafta daha yönet. Kalan hak: {0}", [TRIAL_EXT_MAX - (r.ek ?? 0)])} onReward={() => actMgr(extendTrial)} /> : null}
+          <MgrPack lead={L("Deneme bitti. Ajansın seni bekliyor:")} over />
+        </>
       ) : (
         <View style={{ marginTop: 10 }}>
           <Button

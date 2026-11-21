@@ -41,6 +41,8 @@ export interface CoachRun {
   yilSonu?: { no: number; kazandi: boolean; satir: string };
   /** Satın alınmadan oynanıyor; DENEME haftasında durur */
   deneme?: boolean;
+  /** Denemeyi ödüllü reklamla uzatma sayısı (her biri +2 hafta) */
+  ek?: number;
   bekle?: boolean;
   /** Hocanın sosyal medyası: takipçi ve öğrencilerin maçlarından sonra gelen paylaşımlar */
   takipci?: number;
@@ -79,7 +81,9 @@ export interface CoachCeremony {
   odul: number;
 }
 
-export const DENEME = 20;
+export const DENEME = 26;
+/** Deneme bitince ödüllü reklamla en fazla bu kadar kez uzatılabilir. */
+export const TRIAL_EXT_MAX = 2;
 export const SKILL_MAX = 3;
 export const START_MONEY = 25_000;
 
@@ -536,13 +540,22 @@ export function advanceCoachWeek(s: GameState): string[] {
     if (y) notes.push(y);
   }
   maybeEvent(s);
-  if (r.deneme && coachWeek(s) >= DENEME) {
+  if (r.deneme && coachWeek(s) >= DENEME + 2 * (r.ek ?? 0)) {
     r.bekle = true;
     notes.push(L("⏸️ Deneme süresi bitti. Antrenör Modu paketiyle salonun kaldığı yerden devam eder."));
   }
   notes.slice().reverse().forEach((n) => s.haberler.unshift(n));
   s.haberler = s.haberler.slice(0, 40);
   return notes;
+}
+
+/** Deneme bitti ve uzatma hakkı var mı (ödüllü reklamla +2 hafta). */
+export const canExtendCoach = (s: GameState) => !!s.antrenor?.deneme && !!s.antrenor.bekle && (s.antrenor.ek ?? 0) < TRIAL_EXT_MAX;
+export function extendCoach(s: GameState) {
+  const r = s.antrenor;
+  if (!r || !canExtendCoach(s)) return;
+  r.ek = (r.ek ?? 0) + 1;
+  delete r.bekle;
 }
 
 /** Paket alındı: deneme kalkar. */

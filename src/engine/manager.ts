@@ -258,6 +258,8 @@ export interface MgrRun {
   gelir: number;
   sampiyonluk: number;
   deneme: boolean;
+  /** Denemeyi ödüllü reklamla uzatma sayısı (her biri +2 hafta) */
+  ek?: number;
   emekli?: boolean;
   /** Bu hafta sonucu (son sonuç kartı) */
   rapor?: string[];
@@ -280,8 +282,15 @@ export const OFIS = [
 ];
 export const ofisOf = (r: MgrRun) => OFIS[r.ofis];
 
-export const MGR_TRIAL_WEEKS = 8;
-export const trialOver = (r: MgrRun) => r.deneme && r.hafta > MGR_TRIAL_WEEKS;
+export const MGR_TRIAL_WEEKS = 12;
+/** Deneme bitince ödüllü reklamla en fazla bu kadar kez uzatılabilir. */
+export const TRIAL_EXT_MAX = 2;
+export const trialOver = (r: MgrRun) => r.deneme && r.hafta > MGR_TRIAL_WEEKS + 2 * (r.ek ?? 0);
+export const canExtendTrial = (r: MgrRun) => trialOver(r) && (r.ek ?? 0) < TRIAL_EXT_MAX;
+/** Ödüllü reklam izlendi: iki hafta daha. */
+export function extendTrial(r: MgrRun) {
+  if (canExtendTrial(r)) r.ek = (r.ek ?? 0) + 1;
+}
 
 export const unvanOf = (r: MgrRun) => (r.itibar >= 75 ? L("Süper ajan") : r.itibar >= 50 ? L("Ulusal menajer") : r.itibar >= 25 ? L("Bölgesel menajer") : L("Yerel menajer"));
 

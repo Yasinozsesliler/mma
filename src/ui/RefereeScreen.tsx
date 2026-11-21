@@ -93,6 +93,7 @@ import { FullPackLink } from './ShopSheet';
 import { FighterAvatar } from './FighterAvatar';
 import { HubNav, type NavItem } from './HubNav';
 import { C, F, R } from './theme';
+import { canExtendTrial, extendTrial, TRIAL_EXT_MAX } from '../engine/referee';
 import { useLook } from '../lookPref';
 import { ArenaBackdrop } from './ArenaBackdrop';
 import { cityTint } from './arenaArt';
@@ -349,6 +350,7 @@ function CareerTab({ r, unlocked, onExit }: { r: RefRun; unlocked: boolean; onEx
         </View>
       ) : null}
       {r.son ? <LastBout r={r} /> : null}
+      {kilit && canExtendTrial(r) ? <AdOffer yer="deneme_hakem" icon="play-circle" title={L("Bir maç daha yönet")} desc={L("Kısa bir reklam izle, bir maç daha hakemlik yap. Kalan hak: {0}", [TRIAL_EXT_MAX - (r.ek ?? 0)])} onReward={() => actRef(extendTrial)} /> : null}
       {kilit ? <RefPack lead={L("Deneme bitti. Kafes seni bekliyor:")} /> : null}
       {r.sozlesme ? (
         <View style={[rs.notice, { borderColor: C.gold }]}>

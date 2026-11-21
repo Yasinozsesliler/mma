@@ -156,7 +156,7 @@ export function PremiumCompare() {
     [L("Geçiş reklamları"), L("Var"), L("Yok")],
     [L("Ödüllü teklifler"), L("Reklamla"), L("Anında")],
     [L("Kariyer yuvası"), '3', '5'],
-    [L("Efsane Yolları"), LEGENDS_STORE ? L("Conor + 1. bölümler") : L("Conor"), L("{0} efsanenin tamamı", [LEGEND_IDS.length])],
+    [L("Efsane Yolları"), LEGENDS_STORE ? L("Conor + ilk 2 bölümler") : L("Conor"), L("{0} efsanenin tamamı", [LEGEND_IDS.length])],
     [L("Sezon Kemeri ödülleri"), L("4 / ay"), L("10 / ay")],
     [L("Hayalî Maç Stüdyosu"), '—', '✓'],
     [L("Efsanelerim"), '1', '10'],

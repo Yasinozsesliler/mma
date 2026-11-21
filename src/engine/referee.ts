@@ -46,7 +46,9 @@ export const TIER_NAME: Record<RefTier, () => string> = {
 const PROMOTE: Record<RefTier, [number, number] | null> = { amator: [30, 6], bolgesel: [55, 14], buyuk: [75, 24], ucc: null };
 const BASE: Record<RefTier, number> = { amator: 48, bolgesel: 58, buyuk: 67, ucc: 76 };
 /** Deneme: ilk bu kadar maç ücretsiz */
-export const REF_TRIAL = 3;
+export const REF_TRIAL = 5;
+/** Deneme bitince ödüllü reklamla en fazla bu kadar kez uzatılabilir. */
+export const TRIAL_EXT_MAX = 2;
 export const YEAR_BOUTS = 10;
 
 export type RefFighter = { ad: string; ulke: string; stil: Background; vurus: number; gures: number; yer: number; cene: number; kond: number; rekor: string };
@@ -150,6 +152,8 @@ export type RefRun = {
   gecmis: { a: string; b: string; not: string; puan: number; tier: RefTier }[];
   /** Deneme bittiyse ve paket yoksa sıradaki maç kilitli */
   deneme: boolean;
+  /** Denemeyi ödüllü reklamla uzatma sayısı (her biri +1 maç) */
+  ek?: number;
   aktif?: RefBout;
   /** Biten maçın özeti (sonuç ekranı) */
   son?: {
@@ -786,6 +790,11 @@ export function finishExam(r: RefRun): { gecti: boolean; dogru: number; tier: Re
 export const promoteReq = (r: RefRun) => PROMOTE[r.seviye];
 
 /** Deneme bitti mi (paket yoksa yeni maç başlamaz). */
-export const trialOver = (r: RefRun) => r.deneme && r.mac >= REF_TRIAL;
+export const trialOver = (r: RefRun) => r.deneme && r.mac >= REF_TRIAL + (r.ek ?? 0);
+export const canExtendTrial = (r: RefRun) => trialOver(r) && (r.ek ?? 0) < TRIAL_EXT_MAX;
+/** Ödüllü reklam izlendi: bir maç daha. */
+export function extendTrial(r: RefRun) {
+  if (canExtendTrial(r)) r.ek = (r.ek ?? 0) + 1;
+}
 
 export const fighterName = nm;

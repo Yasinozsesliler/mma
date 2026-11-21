@@ -42,6 +42,8 @@ import { HubNav, type NavItem } from './HubNav';
 import { AxesCard, AxesStrip, CampPicker, CoachHallOfFame, PerkRow, PhilosophyPicker, RetireCard, RetiredHero, RivalCard, StaffCard } from './CoachDepthViews';
 import { PHILOSOPHIES } from '../engine/coachDepth';
 import { C, F, R } from './theme';
+import { canExtendCoach, extendCoach, TRIAL_EXT_MAX } from '../engine/coachMode';
+import { AdOffer } from './AdOffer';
 
 /** Antrenör Modu açık mı: paket sahibi ya da satın almanın olmadığı web. */
 export function useCoachUnlocked() {
@@ -280,6 +282,7 @@ function SalonTab({ s, act, notes, onCorner }: { s: GameState; act: Act; notes: 
     );
   return (
     <>
+      {canExtendCoach(s) ? <AdOffer yer="deneme_antrenor" icon="play-circle" title={L("İki hafta daha oyna")} desc={L("Kısa bir reklam izle, salonunu iki hafta daha yönet. Kalan hak: {0}", [TRIAL_EXT_MAX - (r.ek ?? 0)])} onReward={() => act(extendCoach)} /> : null}
       {r.bekle ? <CoachPack lead={L("Deneme bitti. Salonun seni bekliyor:")} /> : null}
       {!r.felsefe ? <PhilosophyPicker s={s} act={act} first /> : null}
       {r.olay ? <EventCard s={s} act={act} onResult={setSonuc} /> : null}
@@ -632,7 +635,7 @@ export function CoachScreen({ s, act }: { s: GameState; act: Act }) {
   ];
   const footer = (
     <View style={{ gap: 8 }}>
-      {r.deneme ? <Text style={cs.hint}>{L("Deneme: {0}/{1} hafta", [Math.min(DENEME, s.hafta - (s.salon?.acilis ?? 0)), DENEME])}</Text> : null}
+      {r.deneme ? <Text style={cs.hint}>{L("Deneme: {0}/{1} hafta", [Math.min(DENEME + 2 * (r.ek ?? 0), s.hafta - (s.salon?.acilis ?? 0)), DENEME + 2 * (r.ek ?? 0)])}</Text> : null}
       <Button
         label={r.emekli ? L("Emekli oldun") : r.olay ? L("Önce salondaki durumu çöz") : r.bekle ? L("Deneme bitti") : !r.felsefe ? L("Önce felsefeni seç") : L("Haftayı ilerlet")}
         icon="calendar-arrow-right"

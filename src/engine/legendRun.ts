@@ -228,6 +228,9 @@ export const legendName = (d: LegendDef) => `${d.ad} ${d.soyad}`.trim() || d.lak
 // ---------- Başlatma ----------
 
 /** Efsanenin hazır dövüşçüsüyle yeni kariyer. İsimler oyuncu tarafından değiştirilebilir. */
+/** Paketsiz denemede oynanabilen bölüm sayısı (kilitli efsaneler). */
+export const LEGEND_FREE_CHAPTERS = 2;
+
 export function createLegendGame(id: LegendId, isim?: { ad?: string; soyad?: string; lakap?: string }, deneme = false): GameState {
   const d = LEGENDS[id];
   const input: NewFighterInput = {
@@ -337,8 +340,8 @@ export function legendCheck(s: GameState, f: LegendFight | null = null): string[
     r.bolum++;
     f = null;
     const next = currentChapter(s);
-    if (next && r.deneme) {
-      // Deneme bölümü bitti: devamı Efsaneler Paketi'yle (paket alınınca unlockLegendRun sonraki bölümü başlatır)
+    if (next && r.deneme && r.bolum >= LEGEND_FREE_CHAPTERS) {
+      // Deneme bölümleri bitti: devamı Efsaneler Paketi'yle (paket alınınca unlockLegendRun sonraki bölümü başlatır)
       r.bekle = true;
       lines.push(L("🔒 {0} hikâyesinin devamı Efsaneler Paketi'nde. Kariyerine normal devam edebilirsin.", [legendName(d)]));
       break;

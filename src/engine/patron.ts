@@ -324,6 +324,8 @@ export interface PatronRun {
   sehir: string;
   senaryo: PSenaryo;
   deneme: boolean;
+  /** Denemeyi ödüllü reklamla uzatma sayısı (her biri +1 gece) */
+  ek?: number;
   hafta: number;
   para: number;
   itibar: number;
@@ -372,8 +374,15 @@ export const cityById = (id: string): City => CITIES.find((c) => c.id === id) ??
 export const fighterById = (r: PatronRun, id: string) => r.kadro.find((f) => f.id === id);
 export const yilOf = (r: PatronRun) => Math.floor((r.hafta - 1) / 52) + 1;
 export const haftaOfYil = (r: PatronRun) => ((r.hafta - 1) % 52) + 1;
-export const P_TRIAL_NIGHTS = 3;
-export const trialOver = (r: PatronRun) => r.deneme && r.geceNo >= P_TRIAL_NIGHTS;
+export const P_TRIAL_NIGHTS = 5;
+/** Deneme bitince ödüllü reklamla en fazla bu kadar kez uzatılabilir. */
+export const TRIAL_EXT_MAX = 2;
+export const trialOver = (r: PatronRun) => r.deneme && r.geceNo >= P_TRIAL_NIGHTS + (r.ek ?? 0);
+export const canExtendTrial = (r: PatronRun) => trialOver(r) && (r.ek ?? 0) < TRIAL_EXT_MAX;
+/** Ödüllü reklam izlendi: bir gece daha. */
+export function extendTrial(r: PatronRun) {
+  if (canExtendTrial(r)) r.ek = (r.ek ?? 0) + 1;
+}
 export const orgAdi = (o: OrgId) => (o === 'ufc' ? 'UCC' : ORGS[o].ad);
 const atesKey = (a: string, b: string) => (a < b ? `${a}|${b}` : `${b}|${a}`);
 export const atesOf = (r: PatronRun, a: string, b: string) => r.ates[atesKey(a, b)] ?? 0;

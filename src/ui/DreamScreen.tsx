@@ -251,7 +251,7 @@ function StoryLink({ id, onGo }: { id: DreamSpec['ben']; onGo: () => void }) {
       <FighterAvatar look={d.gorunum} size={42} ring={d.renk} />
       <View style={{ flex: 1 }}>
         <Text style={st.storyTitle}>{L("{0} nasıl efsane oldu?", [dreamName(id)])}</Text>
-        <Text style={st.storySub}>{unlocked(id) ? L("Hikâyesini bölüm bölüm oyna.") : LEGENDS_STORE ? L("Hikâyesini oyna: 1. bölüm ücretsiz.") : L("Hikâyesini tam sürümde oyna.")}</Text>
+        <Text style={st.storySub}>{unlocked(id) ? L("Hikâyesini bölüm bölüm oyna.") : LEGENDS_STORE ? L("Hikâyesini oyna: ilk 2 bölüm ücretsiz.") : L("Hikâyesini tam sürümde oyna.")}</Text>
       </View>
       <Icon name="chevron-right" size={20} color={d.renk} />
     </Pressable>
