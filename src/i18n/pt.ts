@@ -10485,6 +10485,7 @@ export const PT: Record<string, string> = {
   "Takipçin arttıkça dövüşçüler, gazeteciler ve ünlüler yazacak.": "Quando seus seguidores crescerem, lutadores, jornalistas e famosos vão escrever.",
   "Google Play ödeme sistemi bu cihazda kullanılamıyor. Play Store'u güncelleyip Google hesabınla giriş yaptığından emin ol, sonra tekrar dene.": "O sistema de pagamento do Google Play não está disponível neste aparelho. Atualize a Play Store, entre na sua conta Google e tente de novo.",
   "Mağazaya şu an ulaşılamadı. İnternet bağlantını kontrol edip birkaç saniye sonra tekrar dene.": "Não foi possível acessar a loja agora. Verifique sua conexão e tente de novo em alguns segundos.",
+  "Ödemen onay bekliyor. Onaylanınca paket kendiliğinden açılır.": "Seu pagamento está pendente. O pacote será liberado automaticamente quando for aprovado.",
   "DENEME SONU FIRSATI": "OFERTA FIM DO TESTE",
   "Denemeyi bitirdin. 24 saat boyunca Tam Paket bu fiyatta: Patron, Menajer ve bütün modlar dahil.": "Você terminou o teste. Por 24 horas o Pacote Completo sai por este preço: Promotor, Empresário e todos os modos incluídos.",
   "Tekrar yayınını sat": "Vender a reprise",

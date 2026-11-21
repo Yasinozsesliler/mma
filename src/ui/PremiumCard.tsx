@@ -9,7 +9,7 @@ import { buyErrorText, buyPremium, closeNudge, closeOffer, COACH_STORE, dismissU
 import { LEGEND_IDS } from '../engine/legendRun';
 import { getPref, setPref } from '../prefs';
 import { DEAL_SKU, PREMIUM_SKU, ULTIMATE_SKU } from '../monetization/skus';
-import { DealCard, FullPackLink } from './ShopSheet';
+import { DealCard, FullPackLink, ShopModal } from './ShopSheet';
 import { Button, Icon } from './components';
 import { C, F } from './theme';
 
@@ -269,6 +269,7 @@ export function PremiumOfferModal() {
           </Pressable>
         </LinearGradient>
       </View>
+      <ShopModal nested />
     </Modal>
   );
 }

@@ -11,7 +11,7 @@ export const REF_STORE = true;
 export const MGR_STORE = true;
 export { dismissUpsell, useUpsellDue } from './upsell';
 export { HOUR_GOAL, hourActive, startHour, takeHourEndOffer, useHour } from './hour';
-export { closeShop, currentDeal, dealSeen, fmtLeft, markDealSeen, maybeStartBeltDeal, maybeStartTrialDeal, maybeStartWelcome, openShop, useDeal, useNow, useShop, type Deal, type DealKind } from './deals';
+export { closeShop, currentDeal, dealSeen, fmtLeft, markDealSeen, maybeStartBeltDeal, maybeStartTrialDeal, maybeStartWelcome, openShop, useDeal, useNow, useShop, useShopHost, type Deal, type DealKind } from './deals';
 export { closeNudge, closeOffer, milestoneOffer, noteInterstitialShown, openOffer, rewardedCount, useNudge, useOffer, type OfferReason } from './offers';
 
 export async function initMonetization() {}

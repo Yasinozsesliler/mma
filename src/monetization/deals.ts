@@ -4,7 +4,7 @@
 //  • Kara Cuma: Kara Cuma Gecesi etkinliği boyunca; etkinliğin penceresi şimdilik kapalı (specialEvent.ts).
 //  • Şampiyon: ilk UCC kemerinden sonra 24 saat, bir kez (Hoş Geldin bittiyse).
 //  • Deneme sonu: Patron ya da Menajer Modu'nun ücretsiz denemesi bitince 24 saat, bir kez (başka fırsat açık değilse).
-import { useEffect, useState, useSyncExternalStore } from 'react';
+import { useEffect, useLayoutEffect, useState, useSyncExternalStore } from 'react';
 import { track } from '../analytics';
 import { activeSpecial } from '../engine/specialEvent';
 import { L } from '../i18n';
@@ -131,4 +131,30 @@ export function closeShop() {
 }
 export function useShop(): string | null {
   return useSyncExternalStore(subscribe, () => shop, () => null);
+}
+
+// ---------- Mağaza penceresinin sahibi ----------
+// iOS bir pencere (Modal) açıkken kökten ikinci bir pencere açamaz: mağaza hiç görünmez ve "açık" durumda takılı
+// kalırdı (sonra her yerdeki Tam Paket düğmesi ölü olurdu). Bu yüzden mağaza düğmesi barındıran her pencere kendi
+// içinde bir mağaza yeri açar; mağaza en üstteki pencerenin içinde çizilir. Hiç pencere yoksa uygulama kökünde çizilir.
+let hosts: number[] = [];
+let hostSeq = 0;
+
+/** Bu mağaza yeri şu an mağazayı çizmeli mi? Kök (nested=false) yalnızca açık pencere yokken çizer. */
+export function useShopHost(nested: boolean): boolean {
+  const [id] = useState(() => (nested ? ++hostSeq : 0));
+  useLayoutEffect(() => {
+    if (!id) return;
+    hosts = [...hosts, id];
+    notify();
+    return () => {
+      const wasTop = hosts[hosts.length - 1] === id;
+      hosts = hosts.filter((x) => x !== id);
+      // Pencere kapanınca içindeki mağaza da kapanır (başka yerde yarım açık kalmasın)
+      if (wasTop) shop = null;
+      notify();
+    };
+  }, [id]);
+  const top = useSyncExternalStore(subscribe, () => hosts[hosts.length - 1] ?? 0, () => 0);
+  return top === id;
 }

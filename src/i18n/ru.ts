@@ -10523,6 +10523,7 @@ export const RU: Record<string, string> = {
   "Takipçin arttıkça dövüşçüler, gazeteciler ve ünlüler yazacak.": "С ростом подписчиков напишут бойцы, журналисты и звёзды.",
   "Google Play ödeme sistemi bu cihazda kullanılamıyor. Play Store'u güncelleyip Google hesabınla giriş yaptığından emin ol, sonra tekrar dene.": "Оплата через Google Play недоступна на этом устройстве. Обнови Play Маркет, войди в аккаунт Google и попробуй снова.",
   "Mağazaya şu an ulaşılamadı. İnternet bağlantını kontrol edip birkaç saniye sonra tekrar dene.": "Не удалось связаться с магазином. Проверь интернет и попробуй через несколько секунд.",
+  "Ödemen onay bekliyor. Onaylanınca paket kendiliğinden açılır.": "Платёж ожидает подтверждения. Набор откроется автоматически, как только он будет подтверждён.",
   "DENEME SONU FIRSATI": "ПРЕДЛОЖЕНИЕ ПОСЛЕ ПРОБЫ",
   "Denemeyi bitirdin. 24 saat boyunca Tam Paket bu fiyatta: Patron, Menajer ve bütün modlar dahil.": "Пробный период окончен. 24 часа Полный набор по этой цене: промоутер, менеджер и все режимы.",
   "Tekrar yayınını sat": "Продать повтор",
