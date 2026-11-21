@@ -1,7 +1,7 @@
 // Görünüm seçimi: yeni (kartlı) ana menü ya da klasik. Oyuncu Ayarlar'dan her an değiştirebilir.
 // Güncellemeden sonra yeni görünüm ilk kez açıldığında bir kez "klasiğe dönebilirsin" kartı çıkar.
 import { useSyncExternalStore } from 'react';
-import { track } from './analytics';
+import { setUserProp, track } from './analytics';
 import { getPref, setPref } from './prefs';
 
 export type Look = 'yeni' | 'klasik';
@@ -18,6 +18,7 @@ export function setLook(v: Look) {
   look = v;
   setPref(KEY, v);
   track('look_change', { gorunum: v });
+  setUserProp('gorunum', v);
   notify();
 }
 

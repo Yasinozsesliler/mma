@@ -53,6 +53,8 @@ export function initAnalytics(lang: string) {
     .setConsent(f.a, { analytics_storage: on, ad_storage: false, ad_user_data: false, ad_personalization: false })
     .catch(() => undefined);
   setUserProp('dil', lang);
+  // Görünüm (yeni/klasik): satın almaları ve oturumları görünüme göre karşılaştırmak için
+  setUserProp('gorunum', getPref('yol_gorunum') === 'klasik' ? 'klasik' : 'yeni');
 }
 
 export function setAnalyticsEnabled(v: boolean) {

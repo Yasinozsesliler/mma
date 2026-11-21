@@ -445,7 +445,10 @@ export function MenuScreen({
         ) : null}
       </View>}
 
-      {yeni ? null : <LegendShowcase onOpen={openLegends} />}
+      {/* Efsane vitrini her iki görünümde: kilitli efsaneler "1. bölüm ücretsiz" ile Efsaneler Paketi'ne götürür */}
+      <LegendShowcase onOpen={openLegends} />
+      {/* Yeni görünümde paket kartı üstte (klasikte sayfanın sonunda kalır) */}
+      {yeni ? <PremiumCard /> : null}
 
       {/* Kariyerler */}
       {filled.length ? <Section>{L("KARİYERLERİN")}</Section> : null}
@@ -558,7 +561,7 @@ export function MenuScreen({
       </>)}
 
       <ChampionHourCard />
-      <PremiumCard />
+      {yeni ? null : <PremiumCard />}
       <DealPopup />
 
       {sheet === 'meydan' ? (
