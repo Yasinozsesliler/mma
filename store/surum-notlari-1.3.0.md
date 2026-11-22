@@ -2,7 +2,7 @@
 
 Ücretsiz, reklam, fiyat, paket gibi ifadeler bilerek kullanılmadı.
 
-## 1) GOOGLE PLAY — "Bu sürümdeki yenilikler"
+## 1) GOOGLE PLAY (9 dil: tr, en, es, pt-BR, ru, pl, de, fr, it) — "Bu sürümdeki yenilikler"
 
 Play Console → Sürüm → Sürüm notları kutusuna aşağıdaki bloğun tamamını olduğu gibi yapıştır. Etiketler sayesinde her dil kendi yerine gider (her dil en fazla 500 karakter).
 
@@ -67,6 +67,36 @@ YOL 1.3.0
 • Bardziej szczegółowi zawodnicy i płynniejsze animacje
 • Poprawki i ulepszenia
 </pl-PL>
+<de-DE>
+YOL 1.3.0
+• Jugendweg: Starte deine Karriere als Kind, mit Turnieren, Medaillen und einem ewigen Rivalen
+• 4 neue Ligen: Boxen, Muay Thai, Grappling, Ringen, jede mit Gürtel und Saisontabelle
+• Jede Sportart mit eigenen Regeln und Wertung, Anzählen im Boxen
+• TAKTIK ZUSCHAUEN jetzt in den Ligen und im Jugendweg
+• Tägliche Ziele, Serien und eine tägliche Truhe
+• Detailliertere Kämpfer und flüssigere Animationen
+• Fehlerbehebungen und Verbesserungen
+</de-DE>
+<fr-FR>
+YOL 1.3.0
+• Parcours jeunesse : commence ta carrière enfant, avec tournois, médailles et un rival de toujours
+• 4 nouvelles ligues : Boxe, Muay Thaï, Grappling, Lutte, chacune avec ceinture et classement
+• Chaque sport a ses règles et sa notation, avec le compte en boxe
+• REGARDER LA TACTIQUE dans les ligues et le Parcours jeunesse
+• Objectifs quotidiens, séries et coffre du jour
+• Combattants plus détaillés et animations plus fluides
+• Corrections et améliorations
+</fr-FR>
+<it-IT>
+YOL 1.3.0
+• Percorso giovanile: inizia la carriera da bambino, con tornei, medaglie e un rivale di sempre
+• 4 nuove leghe: Boxe, Muay Thai, Grappling, Wrestling, ognuna con cintura e classifica
+• Ogni sport ha regole e punteggi propri, con il conteggio nella boxe
+• GUARDA LA TATTICA ora nelle leghe e nel Percorso giovanile
+• Obiettivi giornalieri, serie e scrigno del giorno
+• Lottatori più dettagliati e animazioni più fluide
+• Correzioni e miglioramenti
+</it-IT>
 ```
 
 ## 2) APP STORE — "Bu Sürümdeki Yenilikler" (What's New)
@@ -300,3 +330,116 @@ Do tego różne poprawki błędów i ulepszenia wydajności.
 ```
 Nowość: Ścieżka młodości i 4 ligi sportów walki! Zacznij jako dziecko, zdobywaj pasy w boksie, muay thai, grapplingu i zapasach i dowodź w trybie OGLĄDAJ TAKTYKĘ.
 ```
+
+### Sonraki sürüm için ek App Store dilleri
+
+1.3.0 gönderiminde bu üç dilin notu yoktu; bir sonraki güncellemede otomatik yazılacak.
+
+#### Deutsch (de-DE)
+
+```
+Mit YOL 1.3.0 beginnt deine Karriere viel früher!
+
+JUGENDWEG
+• Zieh deinen Kämpfer von klein auf groß: Entscheide zwischen Schule, Training und Familie
+• Halbfinale, Finale und Medaillen in Jugendturnieren
+• Der Rivale aus deiner Kindheit tritt dir in deiner MMA-Karriere wieder gegenüber
+• Deine Medaillen und Erinnerungen begleiten dich die ganze Karriere
+
+4 NEUE KAMPFSPORT-LIGEN
+• Ligen für Boxen, Muay Thai, Grappling und Ringen
+• Jede Liga mit Kader, Saisontabelle und Gürtelmoment
+• Jede Sportart mit eigenen Regeln: Anzählen und 10-8-Runden im Boxen, Bodenkampf im Ringen und Grappling
+• Passende Outfits und Kampfhaltungen für jede Sportart
+
+TAKTIK ZUSCHAUEN
+• Schau Liga- und Jugendkämpfe mit Taktikanweisungen und triff in den entscheidenden Momenten die Wahl
+
+TÄGLICHE ZIELE
+• Jeden Tag neue Ziele, ein Serienzähler und eine tägliche Truhe
+
+AUSSEHEN
+• Neu gezeichneter, detaillierterer Kämpferkörper
+• Flüssigere und natürlichere Animationen
+
+Außerdem diverse Fehlerbehebungen und Leistungsverbesserungen.
+```
+
+**Tanıtım Metni** (151/170):
+
+```
+Neu: Jugendweg und 4 Kampfsport-Ligen! Starte als Kind, gewinne Gürtel in Boxen, Muay Thai, Grappling und Ringen und lenke Kämpfe mit TAKTIK ZUSCHAUEN.
+```
+
+#### Français (fr-FR)
+
+```
+Avec YOL 1.3.0, ta carrière commence bien plus tôt !
+
+PARCOURS JEUNESSE
+• Forme ton combattant dès l'enfance : choisis entre l'école, l'entraînement et la famille
+• Demi-finales, finales et médailles dans les tournois jeunes
+• Le rival rencontré enfant revient t'affronter dans ta carrière MMA
+• Tes médailles et souvenirs t'accompagnent toute ta carrière
+
+4 NOUVELLES LIGUES DE SPORTS DE COMBAT
+• Ligues de Boxe, Muay Thaï, Grappling et Lutte
+• Chaque ligue a son effectif, son classement de saison et son moment de ceinture
+• Chaque sport a ses règles : compte et rounds 10-8 en boxe, combat au sol en lutte et en grappling
+• Tenues et gardes propres à chaque sport
+
+REGARDER LA TACTIQUE
+• Regarde les combats de ligue et jeunes en donnant des consignes, et décide dans les moments clés
+
+OBJECTIFS QUOTIDIENS
+• De nouveaux objectifs chaque jour, un compteur de série et un coffre du jour
+
+APPARENCE
+• Corps du combattant redessiné et plus détaillé
+• Animations plus fluides et naturelles
+
+Ainsi que diverses corrections de bugs et améliorations de performances.
+```
+
+**Tanıtım Metni** (163/170):
+
+```
+Nouveau : Parcours jeunesse et 4 ligues de combat ! Commence enfant, gagne des ceintures en boxe, Muay Thaï, grappling et lutte, et dirige en REGARDER LA TACTIQUE.
+```
+
+#### Español México (es-MX)
+
+```
+¡Con YOL 1.3.0 tu carrera empieza mucho antes!
+
+CAMINO JUVENIL
+• Forma a tu peleador desde niño: elige entre la escuela, el entrenamiento y la familia
+• Semifinales, finales y medallas en los torneos juveniles
+• El rival que conoces de niño regresa para enfrentarte en tu carrera de MMA
+• Tus medallas y recuerdos te acompañan toda la carrera
+
+4 NUEVAS LIGAS DE DEPORTES DE COMBATE
+• Ligas de Box, Muay Thai, Grappling y Lucha
+• Cada liga tiene plantilla, tabla de temporada y momento del cinturón
+• Cada deporte con sus reglas: cuenta de protección y rounds 10-8 en box, pelea en el suelo en lucha y grappling
+• Ropa y guardias propias de cada deporte
+
+VER TÁCTICA
+• Mira las peleas de liga y juveniles dando tácticas, y decide en los momentos clave
+
+OBJETIVOS DIARIOS
+• Nuevos objetivos cada día, contador de racha y cofre diario
+
+ASPECTO
+• Cuerpo del peleador rediseñado y más detallado
+• Animaciones más fluidas y naturales
+
+Además, varias correcciones de errores y mejoras de rendimiento.
+```
+
+**Tanıtım Metni** (155/170):
+
+```
+Novedad: ¡Camino juvenil y 4 ligas de deportes de combate! Empieza de niño, gana cinturones en box, Muay Thai, grappling y lucha, y dirige con VER TÁCTICA.
+```
+
