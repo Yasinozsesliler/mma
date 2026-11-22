@@ -149,7 +149,7 @@ export function SportScreen({ s, act }: { s: GameState; act: Act }) {
       <Screen
         footer={
           <View style={{ gap: 8 }}>
-            <Button label={b.unvan ? L("Kemer için ringe çık") : L("Ringe çık")} icon="boxing-glove" tone="gold" onPress={() => act(startSportFight)} />
+            <Button label={b.spor === 'grappling' || b.spor === 'gures' ? (b.unvan ? L("Kemer için mindere çık") : L("Mindere çık")) : b.unvan ? L("Kemer için ringe çık") : L("Ringe çık")} icon="boxing-glove" tone="gold" onPress={() => act(startSportFight)} />
             <Button label={L("Vazgeç")} icon="close" tone="ghost" onPress={() => act(withdrawSportBout)} />
           </View>
         }
@@ -164,9 +164,17 @@ export function SportScreen({ s, act }: { s: GameState; act: Act }) {
           rows={[
             [`${r.g}-${r.m}`, L("KARNE"), `${o.rekor.g}-${o.rekor.m}`],
             [r.kemer ? L("ŞAMPİYON") : r.sira >= 11 ? '—' : `#${r.sira}`, L("SIRA"), o.champion ? L("ŞAMPİYON") : o.rank ? `#${o.rank}` : '—'],
-            [String(s.fighter.stats.vurus), L("VURUŞ"), String(o.stats.vurus)],
-            [String(s.fighter.stats.hiz), L("HIZ"), String(o.stats.hiz)],
-            [String(s.fighter.stats.cene), L("ÇENE"), String(o.stats.cene)],
+            ...(b.spor === 'grappling' || b.spor === 'gures'
+              ? ([
+                  [String(s.fighter.stats.gures), L("GÜREŞ"), String(o.stats.gures)],
+                  [String(s.fighter.stats.yer), L("YER"), String(o.stats.yer)],
+                  [String(s.fighter.stats.iq), L("ZEKÂ"), String(o.stats.iq)],
+                ] as [string, string, string][])
+              : ([
+                  [String(s.fighter.stats.vurus), L("VURUŞ"), String(o.stats.vurus)],
+                  [String(s.fighter.stats.hiz), L("HIZ"), String(o.stats.hiz)],
+                  [String(s.fighter.stats.cene), L("ÇENE"), String(o.stats.cene)],
+                ] as [string, string, string][])),
           ]}
           arena={{ tier: b.unvan ? 3 : 1, org: lig.kisa, sub: lig.ad().toLocaleUpperCase(LOC) }}
           title={b.unvan ? L("ÜNVAN") : L("{0} RAUNT", [3])}

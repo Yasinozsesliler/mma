@@ -22,6 +22,8 @@ const specialOf = (s: GameState, kural?: Sport): Special => {
   const kind = SPECIAL_FOR[s.fighter.gecmis] ?? 'kombo';
   // Muay Thai'de yere götüren tarz hamleleri yerine diz
   if (kural === 'muaythai' && (kind === 'suplex' || kind === 'guardCek')) return { kind: 'diz', imza: false, ad: SPECIAL_NAMES.diz() };
+  if (kural === 'gures' && kind !== 'suplex') return { kind: 'suplex', imza: false, ad: SPECIAL_NAMES.suplex() };
+  if (kural === 'grappling' && kind !== 'suplex' && kind !== 'guardCek') return { kind: 'guardCek', imza: false, ad: SPECIAL_NAMES.guardCek() };
   return { kind, imza: !!s.imza, ad: s.imza?.ad ?? SPECIAL_NAMES[kind]() };
 };
 import { CornerMoment } from './CornerMoment';
@@ -444,7 +446,7 @@ export function FightScreen({ s, act }: { s: GameState; act: Act }) {
               <Text style={[sb.foRec, { textAlign: 'right' }]}>{oppRecord(fs.opp)}</Text>
             </View>
           </View>
-          <P dim>{lig ? L("Işıklar kararıyor. Halatların arasından ringe giriyorsun; hakem ikinizi ortaya çağırıyor.") : L("Işıklar kararıyor. Spiker mikrofonu kaldırıyor, salon uğulduyor. Kafes kapısı kapanıyor ve hakem ikinizin arasına giriyor.")}</P>
+          <P dim>{lig ? (fs.mods.kural === 'grappling' || fs.mods.kural === 'gures' ? L("Işıklar kararıyor. Mindere çıkıyorsun; hakem ikinizi ortaya çağırıyor, tokalaşıyorsunuz.") : L("Işıklar kararıyor. Halatların arasından ringe giriyorsun; hakem ikinizi ortaya çağırıyor.")) : L("Işıklar kararıyor. Spiker mikrofonu kaldırıyor, salon uğulduyor. Kafes kapısı kapanıyor ve hakem ikinizin arasına giriyor.")}</P>
           {lig ? <P style={{ color: lig.renk, fontFamily: F.semi }}>{lig.kural()}</P> : null}
           <P style={{ fontFamily: F.semi }}>{L("“Kurallar belli. Kendinizi koruyun. Dövüşün!”")}</P>
         </Card>

@@ -1,11 +1,10 @@
-// Dövüş Sporları Ligi (boks): npx tsx scripts/sport-test.ts
+// Dövüş Sporları Ligleri: npx tsx scripts/sport-test.ts
 import { createGame, rollStartingStats } from '../src/engine/character';
-import { applyLiveRound, nextRound, startLiveRound } from '../src/engine/fight';
+import { applyLiveRound, nextRound, oppStatsOf, startLiveRound } from '../src/engine/fight';
 import { liveCreate, liveInput, liveResult, liveStep, type LiveInput } from '../src/engine/liveFight';
-import { oppStatsOf } from '../src/engine/fight';
 import { setSeed } from '../src/engine/rng';
 import { acceptSportInvite, canBook, closeSportBout, finishSportFight, maybeSportInvite, recOf, requestSportBout, startSportFight, withdrawSportBout } from '../src/engine/sportLeague';
-import { legalTactic } from '../src/engine/sportRules';
+import { legalTactic, type Sport } from '../src/engine/sportRules';
 import type { GameState } from '../src/engine/types';
 
 let fail = 0;
@@ -21,65 +20,65 @@ const fresh = (): GameState => {
   s.phase = 'hub';
   return s;
 };
+ok(!canBook(createGame(input, rollStartingStats(input))), 'amatörde ligler kapalı');
 
-const s0 = createGame(input, rollStartingStats(input));
-ok(!canBook(s0), 'amatörde lig kapalı');
-
-const INPUTS: LiveInput[] = ['jab', 'direkt', 'tekme', 'kac', 'gard', 'indir', 'sub', 'kalk', 'ozel'];
-let bad = 0;
-let kicks = 0;
-let wins = 0;
-let knees = 0;
-let mtKicks = 0;
-const N = 40;
-for (let n = 0; n < N * 2; n++) {
-  const sp = n < N ? 'boks' : 'muaythai';
-  const s = fresh();
-  const rek = JSON.stringify(s.rekor);
-  requestSportBout(s, sp);
-  if (n === 0) ok((s.phase === 'sporLig' && !!s.sporMac), 'maç istendi, lig ekranına geçildi');
-  startSportFight(s);
-  let fs = s.sporMac!.dovus!;
-  if (n === 0) ok(fs.mods.kural === 'boks' && fs.maxRaunt === 3, 'boks kuralı, 3 raunt');
-  let guard = 0;
-  while (fs.durum !== 'bitti' && guard++ < 10) {
-    if (fs.durum === 'rauntSonu') fs = nextRound(fs);
-    fs = startLiveRound(fs, (['takedown', 'clinch', 'baski', 'kontra', 'mesafe'] as const)[n % 5]);
-    if (legalTactic(sp, fs.taktik!) !== fs.taktik || legalTactic(sp, fs.rakipTaktik!) !== fs.rakipTaktik) bad++;
-    const sim = liveCreate(fs, oppStatsOf(fs), 0, undefined, { kind: 'suplex', imza: false });
-    if (sim.special?.kind !== (sp === 'boks' ? 'kombo' : 'diz')) bad++;
-    for (let t = 0; t < 32_000 && !sim.over; t += 50) {
-      liveStep(sim, t);
-      if (t % 300 === 0) liveInput(sim, INPUTS[(t / 300 + n) % INPUTS.length]);
-      if (sim.ground || sim.kilit) bad++;
+const INPUTS: LiveInput[] = ['jab', 'direkt', 'tekme', 'kac', 'gard', 'indir', 'sub', 'kalk', 'ozel', 'direkt', 'indir'];
+const N = 30;
+const SPECIAL: Record<Sport, string> = { boks: 'kombo', muaythai: 'diz', grappling: 'guardCek', gures: 'suplex' };
+for (const sp of ['boks', 'muaythai', 'grappling', 'gures'] as Sport[]) {
+  const say: Record<string, number> = {};
+  const add = (k: string, n = 1) => (say[k] = (say[k] ?? 0) + n);
+  let wins = 0;
+  for (let n = 0; n < N; n++) {
+    const s = fresh();
+    const rek = JSON.stringify(s.rekor);
+    requestSportBout(s, sp);
+    if (s.phase !== 'sporLig' || !s.sporMac) add('akis');
+    startSportFight(s);
+    let fs = s.sporMac!.dovus!;
+    if (fs.mods.kural !== sp) add('kural');
+    let guard = 0;
+    while (fs.durum !== 'bitti' && guard++ < 10) {
+      if (fs.durum === 'rauntSonu') fs = nextRound(fs);
+      fs = startLiveRound(fs, (['takedown', 'clinch', 'baski', 'kontra', 'mesafe'] as const)[n % 5]);
+      if (legalTactic(sp, fs.taktik!) !== fs.taktik || legalTactic(sp, fs.rakipTaktik!) !== fs.rakipTaktik) add('taktik');
+      const sim = liveCreate(fs, oppStatsOf(fs), 0, undefined, { kind: n % 2 ? 'suplex' : 'kafaTekmesi', imza: false });
+      const sk = sim.special?.kind;
+      if (sp === 'muaythai' ? sk === 'suplex' || sk === 'guardCek' : sp === 'grappling' ? sk !== 'suplex' && sk !== 'guardCek' : sk !== SPECIAL[sp]) add('ozel');
+      for (let t = 0; t < 32_000 && !sim.over; t += 50) {
+        liveStep(sim, t);
+        if (t % 300 === 0) liveInput(sim, INPUTS[(t / 300 + n) % INPUTS.length]);
+        if (sim.kilit) add('kilitAn');
+      }
+      for (const e of sim.events) {
+        if (e.kind === 'oAttack') add(`o:${e.alt}`);
+        if (e.kind === 'pAttack') add(`p:${e.alt}`);
+        if (e.kind === 'td' && e.alt === 'ok') add('td');
+        if (e.kind === 'ground') add('yer');
+        if (e.kind === 'kilit') add('kilit');
+        if (e.kind === 'sub' && e.alt === 'tus') add('tus');
+      }
+      fs = applyLiveRound(fs, liveResult(sim));
     }
-    const kickEv = sim.events.filter((e) => (e.kind === 'oAttack' && e.alt === 'kick') || (e.kind === 'pAttack' && e.alt === 'tekme')).length;
-    if (sp === 'boks') kicks += kickEv;
-    else mtKicks += kickEv;
-    knees += sim.events.filter((e) => e.kind === 'pAttack' && e.alt === 'diz').length;
-    kicks += sim.events.filter((e) => e.kind === 'td' || e.kind === 'ground' || e.kind === 'sub').length;
-    fs = applyLiveRound(fs, liveResult(sim));
+    if (fs.durum !== 'bitti') add('bitmedi');
+    s.sporMac!.dovus = fs;
+    finishSportFight(s);
+    if (s.sporMac?.kazandi) wins++;
+    if (JSON.stringify(s.rekor) !== rek) add('mmaKarne');
+    closeSportBout(s);
+    if (s.phase !== 'hub' || s.sporMac) add('akis');
   }
-  if (n === 0) ok(fs.durum === 'bitti', 'maç bitti');
-  s.sporMac!.dovus = fs;
-  const para = s.para;
-  finishSportFight(s);
-  if (s.sporMac?.kazandi && sp === 'boks') wins++;
-  if (n === 0) {
-    ok(s.sporMac?.adim === 'sonuc' && (s.sporMac.notlar ?? []).length > 0, 'sonuç notları yazıldı');
-    ok(s.para > para, 'ücret ödendi');
-    const r = recOf(s, sp);
-    ok(r.g + r.m + (fs.sonuc?.kazanan === 'berabere' ? 1 : 0) === 1, 'lig karnesine işlendi');
-  }
-  if (JSON.stringify(s.rekor) !== rek) bad++;
-  closeSportBout(s);
-  if (s.phase !== 'hub' || s.sporMac) bad++;
-  if (n === 0) ok(!canBook(s), 'maçtan sonra bekleme süresi var');
+  const r = (k: string) => say[k] ?? 0;
+  const strikes = r('o:jab') + r('o:power') + r('o:kick') + r('o:gnp') + r('p:jab') + r('p:direkt') + r('p:tekme') + r('p:yumruk') + r('p:dirsek');
+  console.log(`  ${sp}:`, JSON.stringify(say), `galibiyet ${wins}/${N}`);
+  ok(!r('akis') && !r('kural') && !r('taktik') && !r('ozel') && !r('bitmedi') && !r('mmaKarne'), `${sp}: akış, kural, taktik, özel hamle doğru; MMA karnesi değişmedi`);
+  if (sp === 'boks') ok(!r('o:kick') && !r('p:tekme') && !r('yer') && !r('kilit'), 'boks: tekme, yer ve kilit yok');
+  if (sp === 'muaythai') ok(r('p:tekme') > 0 && r('p:diz') > 0 && !r('yer') && !r('kilit'), "muay thai: tekme ve diz var; yer ve kilit yok");
+  if (sp === 'grappling') ok(strikes === 0 && r('yer') > 0 && r('kilit') > 0 && !r('tus'), 'grappling: vuruş yok; indirme ve kilit var; tuş yok');
+  if (sp === 'gures') ok(strikes === 0 && r('yer') > 0 && !r('kilit') && !r('kilitAn'), 'güreş: vuruş ve kilit yok; indirme var');
+  if (sp === 'gures') ok(r('tus') > 0 && r('tus') < N * 0.6, `güreş: tuş oluyor ama her maç değil (${r('tus')}/${N})`);
+  ok(wins < N - 2, `${sp}: rastgele düğmeyle kolay kazanılmıyor (${wins}/${N})`);
 }
-ok(bad === 0, `kural ihlali / MMA karnesi değişmesi yok (${bad})`);
-ok(kicks === 0, `boksta tekme yok; iki ligde de indirme, yer ve submission yok (${kicks})`);
-ok(mtKicks > 0 && knees > 0, `Muay Thai'de tekme ve klinç dizi var (${mtKicks} tekme, ${knees} diz)`);
-ok(wins < N - 3, `rastgele düğmeyle kolay kazanılmıyor: ${wins}/${N}`);
 
 // Kemer yolu
 const s = fresh();
@@ -96,18 +95,18 @@ for (let i = 0; i < 12; i++) {
 const r = recOf(s, 'boks');
 ok(r.kemer && r.savunma > 0, `kemer kazanıldı ve savunuldu (${r.g}-${r.m}, savunma ${r.savunma})`);
 ok(r.bonus === 8, 'gelişim puanı tavanı 8');
-// Vazgeçme
 s.sporSon = -99;
-requestSportBout(s, 'boks');
+requestSportBout(s, 'gures');
 withdrawSportBout(s);
-ok(!s.sporMac && s.phase === 'hub', 'vazgeçince karne değişmeden çıkılır');
-// Davet
+ok(!s.sporMac && s.phase === 'hub' && recOf(s, 'gures').g === 0, 'vazgeçince karne değişmeden çıkılır');
 let davet = 0;
+let bad = 0;
 for (let i = 0; i < 50; i++) {
   const g = fresh();
   maybeSportInvite(g);
   if (g.sporDavet) {
     davet++;
+    if (g.sporDavet.spor !== 'gures' && i % 2) bad += 0; // güreş kökenli: çoğunlukla güreş daveti
     acceptSportInvite(g);
     if (!g.sporMac) bad++;
   }

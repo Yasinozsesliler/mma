@@ -961,6 +961,12 @@ export function applyLiveRound(prev: FightState, r: LiveRoundResult): FightState
   }
   fs.pPuan = r.pLanded * 0.25 + r.pDealt * 0.18 + r.oKd * 3 + r.pCtrl * 0.12;
   fs.oPuan = r.oLanded * 0.25 + r.oDealt * 0.18 + r.pKd * 3 + r.oCtrl * 0.12;
+  // Grappling ve güreş: indirme ve kontrol süresi puanı belirler
+  if (fs.mods.kural === 'grappling' || fs.mods.kural === 'gures') {
+    fs.pPuan += (r.pTd ?? 0) * 2.5 + r.pCtrl * 0.1;
+    fs.oPuan += (r.oTd ?? 0) * 2.5 + r.oCtrl * 0.1;
+    if (r.pTd || r.oTd) fs.log.push(L("🤼 İndirme: {0} – {1}", [r.pTd ?? 0, r.oTd ?? 0]));
+  }
   fs.vurusSira = BEATS;
   fs.log.push(L("📊 İsabet: {0} – {1} · Verilen hasar: {2} – {3}", [r.pLanded, r.oLanded, Math.round(r.pDealt), Math.round(r.oDealt)]));
   if (r.oKd) fs.log.push(L("💥 {0} {1} kez yere gitti!", [fs.oAd, r.oKd]));
@@ -973,7 +979,11 @@ export function applyLiveRound(prev: FightState, r: LiveRoundResult): FightState
     const beat = Math.min(BEATS - 1, Math.floor(r.oran * BEATS));
     const kazanan = r.bitis.kazanan;
     const aciklama =
-      r.bitis.yontem === 'SUB'
+      r.bitis.yontem === 'SUB' && fs.mods.kural === 'gures'
+        ? kazanan === 'p'
+          ? L("🤼 TUŞ! {0} sırtı mindere yapıştı, hakem mindere vurdu!", [fs.oAd])
+          : L("🤼 Tuş oldun… sırtın mindere yapıştı.")
+        : r.bitis.yontem === 'SUB'
         ? kazanan === 'p'
           ? L("🔒 TAP! {0} kilidin içinde tap attı. Submission!", [fs.oAd])
           : L("🔒 Kilitten çıkamadın… tap attın.")

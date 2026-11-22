@@ -148,7 +148,7 @@ const ArtCrowd = memo(function ArtCrowd({ w, hp, t, tier = 2, tint }: { w: numbe
 });
 
 /** Tavan spotları, arka kafes ve kanvas */
-const CageBack = memo(function CageBack({ w, tint, tier = 2, logo, renk, ring }: { w: number; tint?: string[] | null; tier?: number; logo?: string; renk?: string; /** Boks ringi: kafes teli yerine üç sıra halat */ ring?: boolean }) {
+const CageBack = memo(function CageBack({ w, tint, tier = 2, logo, renk, ring, mat }: { w: number; tint?: string[] | null; tier?: number; logo?: string; renk?: string; /** Boks ringi: kafes teli yerine üç sıra halat */ ring?: boolean; /** Güreş minderi: kafes ve halat yok */ mat?: boolean }) {
   const cx = w / 2;
   const vurgu = tint?.[0] ?? C.red;
   const tel = tint?.[1];
@@ -162,7 +162,7 @@ const CageBack = memo(function CageBack({ w, tint, tier = 2, logo, renk, ring }:
           <Polygon points={`${w * 0.9},0 ${w * 0.95},0 ${w * 0.82},${H * 0.86} ${w * 0.6},${H * 0.86}`} fill="#f2c14e" opacity={0.05} />
         </>
       ) : null}
-      {ring ? (
+      {mat ? null : ring ? (
         <>
           {[0, 1, 2].map((i) => (
             <Line key={`r${i}`} x1={w * 0.12} y1={H * 0.34 + i * 17} x2={w * 0.88} y2={H * 0.34 + i * 17} stroke={i === 1 ? '#e8e8ea' : '#c1121f'} strokeWidth={2.2} opacity={0.85} />
@@ -713,7 +713,7 @@ export function CageView({
             {art ? <ArtCrowd w={w} hp={low ? 0 : hp} t={!low && hp ? tNow : 0} tier={arena?.tier} tint={arena?.tint} /> : null}
             <Stands w={w} tier={arena?.tier} logo={arena?.logo} renk={arena?.renk} />
             {art ? null : <Crowd w={w} hp={low ? 0 : hp} t={!low && hp ? tNow : 0} tier={arena?.tier} />}
-            <CageBack w={w} tint={tint} tier={arena?.tier} logo={arena?.logo} renk={arena?.renk} ring={fs.mods.kural === 'boks' || fs.mods.kural === 'muaythai'} />
+            <CageBack w={w} tint={tint} tier={arena?.tier} logo={arena?.logo} renk={arena?.renk} ring={fs.mods.kural === 'boks' || fs.mods.kural === 'muaythai'} mat={fs.mods.kural === 'grappling' || fs.mods.kural === 'gures'} />
             {stains.current.map((s2, i) => (
               <Ellipse key={`s${i}`} cx={s2.x} cy={s2.y} rx={s2.r * 1.4} ry={s2.r * 0.5} fill="#7a0d12" opacity={s2.o} />
             ))}

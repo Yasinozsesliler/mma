@@ -37,6 +37,9 @@ const PAD_SUB: Record<string, () => string> = {
   'ayakta:gard': () => L("Hasarı azalt"),
   'ayakta:indir': () => L("Yere götür"),
   'muaythai:indir': () => L("Klinçte diz"),
+  'grap:ayakta:kac': () => L("Dalışı kes"),
+  'grap:ustte:direkt': () => L("Pozisyon al"),
+  'grap:altta:gard': () => L("Tutun, baskıyı kes"),
   'ayakta:jab': () => L("Hızlı · az nefes"),
   'ayakta:direkt': () => L("Güçlü"),
   'ayakta:tekme': () => L("En güçlü · yavaş"),
@@ -67,11 +70,23 @@ const BUTTONS: Record<'ayakta' | 'ustte' | 'altta', Btn[][]> = {
 };
 /** Kurala göre görünen düğmeler (boksta tekme, indirme ve yer düğmeleri yok) */
 /** Düğme alt yazısı anahtarı: Muay Thai'de İNDİR yerine DİZ */
-const padKey = (kural: FightState['mods']['kural'], pos: string, k: LiveInput) => (kural === 'muaythai' && k === 'indir' ? 'muaythai:indir' : `${pos}:${k}`);
-const padIcon = (kural: FightState['mods']['kural'], k: LiveInput): IconName | undefined => (kural === 'muaythai' && k === 'indir' ? 'arm-flex' : PAD_ICON[k]);
+const padKey = (kural: FightState['mods']['kural'], pos: string, k: LiveInput) =>
+  kural === 'muaythai' && k === 'indir' ? 'muaythai:indir' : grapple(kural) && ((pos === 'ayakta' && k === 'kac') || k === 'direkt' || (pos === 'altta' && k === 'gard')) ? `grap:${pos}:${k}` : `${pos}:${k}`;
+const padIcon = (kural: FightState['mods']['kural'], k: LiveInput): IconName | undefined => (kural === 'muaythai' && k === 'indir' ? 'arm-flex' : grapple(kural) && k === 'direkt' ? 'arrow-up-bold-box' : PAD_ICON[k]);
 const KNEE: Btn = ['indir', () => L("DİZ"), PURPLE];
+const SPRAWL: Btn = ['kac', () => L("SPRAWL"), C.blue];
+const ADVANCE: Btn = ['direkt', () => L("İLERLET"), C.red];
+const grapple = (kural: FightState['mods']['kural']) => kural === 'grappling' || kural === 'gures';
 const buttonsFor = (kural: FightState['mods']['kural'], pos: keyof typeof BUTTONS) =>
-  kural ? BUTTONS[pos].map((r) => r.filter(([k]) => liveAllowed(kural, k)).map((b) => (kural === 'muaythai' && b[0] === 'indir' ? KNEE : b))).filter((r) => r.length) : BUTTONS[pos];
+  kural
+    ? BUTTONS[pos]
+        .map((r) =>
+          r
+            .filter(([k]) => liveAllowed(kural, k) && !(grapple(kural) && pos === 'ayakta' && (k === 'gard' || k === 'direkt')))
+            .map((b) => (kural === 'muaythai' && b[0] === 'indir' ? KNEE : grapple(kural) && pos === 'ayakta' && b[0] === 'kac' ? SPRAWL : grapple(kural) && b[0] === 'direkt' ? ADVANCE : b)),
+        )
+        .filter((r) => r.length)
+    : BUTTONS[pos];
 const GUARD: Partial<Pose> = { aL1: 70, aL2: 145, aR1: 62, aR2: 150, torso: 4, head: -4 };
 const now = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
 /** Rakibin hazırladığı hamlenin uyarı ikonu */
@@ -98,7 +113,7 @@ const FANS = Array.from({ length: 90 }, (_, i) => ({ row: i % 3, u: hash(i), s: 
 
 /** Sabit arka plan: tribün, LED pano, kafes teli, yastıklı ray, dokulu kanvas, spotlar (her karede yeniden çizilmez). */
 /** Yeni görünümde tribün ve ışıklar çizilmiş görselden gelir (kafes, kanvas ve kafes rengi kozmetiği vektör kalır). */
-const ArenaBg = memo(function ArenaBg({ art, tier = 2, city, ring }: { art?: boolean; tier?: ArenaTier; city?: string; /** Boks ringi: kafes yerine halatlar */ ring?: boolean }) {
+const ArenaBg = memo(function ArenaBg({ art, tier = 2, city, ring, mat }: { art?: boolean; tier?: ArenaTier; city?: string; /** Boks ringi: kafes yerine halatlar */ ring?: boolean; /** Güreş/grappling minderi: kafes ve halat yok */ mat?: boolean }) {
   const tint = cageTintNow();
   return (
     <Svg width="100%" height="100%" viewBox={VIEW} preserveAspectRatio="xMidYMid meet" style={StyleSheet.absoluteFill}>
@@ -174,7 +189,7 @@ const ArenaBg = memo(function ArenaBg({ art, tier = 2, city, ring }: { art?: boo
       <Polygon points="66,0 80,0 122,118 26,118" fill="url(#lfCone)" />
       <Polygon points="120,0 134,0 174,118 78,118" fill="url(#lfCone)" />
       {/* Arka kafes: yastıklı ray, tel örgü, direkler (boks ringinde halatlar) */}
-      {ring ? <RingRopes /> : <>
+      {mat ? null : ring ? <RingRopes /> : <>
       <Polygon points="14,98 30,44 170,44 186,98" fill="url(#lfMesh)" />
       <Polygon points="14,98 30,44 170,44 186,98" fill="none" stroke="#2b2e36" strokeWidth={0.6} />
       <Rect x={29} y={41.5} width={142} height={3.4} rx={1.6} fill="url(#lfPad)" />
@@ -418,6 +433,8 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel, band }: { fs: FightSt
       case 'blocked':
         if (e.alt === 'miss') flash.show({ puan: 30, metin: L("BOŞA"), renk: C.dim });
         else if (e.alt === 'escape') flash.show({ puan: 20, metin: L("KURTULAMADIN"), renk: C.dim });
+        else if (e.alt === 'ilerlet') flash.show({ puan: 20, metin: L("TUTUNUYOR"), renk: C.dim });
+        else if (e.alt === 'baski') flash.show({ puan: 60, metin: L("TUTUNDUN!"), renk: C.gold });
         else flash.show({ puan: 40, metin: e.side === 'p' ? L("GARD!") : L("GARDA"), renk: C.dim });
         sfx('body', 0.6);
         return;
@@ -463,10 +480,24 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel, band }: { fs: FightSt
         flash.show({ puan: 50, metin: L("AYAKTA"), renk: C.text });
         return;
       case 'held':
+        if (e.alt === 'ilerlet') {
+          flash.show({ puan: 60, metin: L("POZİSYON!"), renk: C.gold });
+          return;
+        }
+        if (e.alt === 'baski') {
+          flash.show({ puan: 40, metin: L("BASKI ALTINDASIN"), renk: C.red });
+          buzz('hafif');
+          return;
+        }
         flash.show({ puan: 100, metin: e.alt === 'gsub' ? L("KİLİDİ BOZDUN!") : L("BASTIRDIN!"), renk: C.gold });
         buzz('basari');
         return;
       case 'sub':
+        if (e.alt === 'tus') {
+          setBanner(e.side === 'p' ? L("TUŞ!") : L("TUŞ OLDUN"));
+          sfx('slam');
+          return;
+        }
         if (e.alt === 'fail' || e.alt === 'yakin') {
           flash.show({ puan: 30, metin: e.side === 'p' ? (e.alt === 'yakin' ? L("ÇOK YAKLAŞTIN!") : L("KİLİT KAÇTI")) : L("KURTULDUN!"), renk: e.side === 'p' ? (e.alt === 'yakin' ? C.orange : C.dim) : C.gold });
           if (ground.current) {
@@ -733,7 +764,7 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel, band }: { fs: FightSt
         {/* Sahne */}
         <View style={lf.middle} onLayout={(e) => setMid({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height - 8 })}>
         <View style={[lf.stage, { width: stageW, height: stageW / ASPECT }]} pointerEvents="none">
-          <ArenaBg art={yeni} tier={band?.tier} city={band?.tint} ring={fs.mods.kural === 'boks' || fs.mods.kural === 'muaythai'} />
+          <ArenaBg art={yeni} tier={band?.tier} city={band?.tint} ring={fs.mods.kural === 'boks' || fs.mods.kural === 'muaythai'} mat={grapple(fs.mods.kural)} />
           <Svg width="100%" height="100%" viewBox={VIEW} preserveAspectRatio="xMidYMid meet" style={StyleSheet.absoluteFill}>
             {yeni ? (
               <Defs>
@@ -933,10 +964,18 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel, band }: { fs: FightSt
             {frame.kilit
               ? ''
               : frame.pos === 'ustte'
-              ? L("🔒 ya da ⤴️ görünce KONTROL. Rakip yorulunca SUB dene.")
+              ? fs.mods.kural === 'gures'
+                ? L("İLERLET ile pozisyonu doldur; tam hâkimiyette sırtını yapıştır: TUŞ. ⤴️ görünce KONTROL.")
+                : grapple(fs.mods.kural)
+                  ? L("İLERLET ile pozisyon al, sonra SUB. ⤴️ ya da 🔒 görünce KONTROL.")
+                  : L("🔒 ya da ⤴️ görünce KONTROL. Rakip yorulunca SUB dene.")
               : frame.pos === 'altta'
-                ? L("🔒 görünce hemen KURTUL. 👊 gelirken GARD al.")
-                : fs.mods.kural === 'muaythai'
+                ? grapple(fs.mods.kural)
+                  ? L("👊 baskı gelirken GARD ile tutun, sonra KURTUL.")
+                  : L("🔒 görünce hemen KURTUL. 👊 gelirken GARD al.")
+                : grapple(fs.mods.kural)
+                  ? L("Dalış hazırlığında (halka altın) SPRAWL. İNDİR ile puan al; yerde İLERLET ile pozisyonu büyüt.")
+                  : fs.mods.kural === 'muaythai'
                   ? L("Halka altın olunca KAÇ. TEKME daha çok sayılır; DİZ klinçte kondisyon bitirir.")
                   : fs.mods.kural === 'boks'
                   ? L("Halka altın olunca KAÇ. DİREKT hazırlığı keser; yorulunca GARD al.")

@@ -174,7 +174,7 @@ function sportsSub(s: GameState) {
   const m = recs.reduce((a, r) => a + r.m, 0);
   const w = weeksToNext(s);
   if (g + m) return w ? L("Ligler {0}-{1} · {2} hafta", [g, m, w]) : L("Ligler {0}-{1} · maç hazır", [g, m]);
-  return L("Boks · Muay Thai");
+  return L("Boks · Muay Thai · Güreş");
 }
 
 export function HubScreen({ s, act }: { s: GameState; act: Act }) {

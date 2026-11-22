@@ -14,7 +14,7 @@ import { SPORT_TACTICS, type Sport } from './sportRules';
 
 export type { Sport };
 /** Şimdilik açık olan ligler (diğerleri sonraki sürümlerde) */
-export const OPEN_SPORTS: Sport[] = ['boks', 'muaythai'];
+export const OPEN_SPORTS: Sport[] = ['boks', 'muaythai', 'grappling', 'gures'];
 
 export type SportRec = { g: number; m: number; ko: number; /** 1 = 1 numaralı yarışmacı, 11 = sıralama dışı */ sira: number; kemer: boolean; savunma: number; /** Verilen gelişim puanı */ bonus: number };
 export type SportBout = { spor: Sport; rakip: Opponent; ucret: number; unvan: boolean; adim: 'hazir' | 'dovus' | 'sonuc'; dovus?: FightState; notlar?: string[]; kazandi?: boolean };
@@ -69,6 +69,12 @@ function sportOpponent(s: GameState, sp: Sport, r: SportRec, unvan: boolean): Op
     up('cene', Math.round(4 * k));
     up('gures', -18);
     up('yer', -18);
+  } else if (sp === 'grappling' || sp === 'gures') {
+    const k = unvan ? 1 : r.sira <= 3 ? 0.85 : r.sira <= 7 ? 0.6 : 0.3;
+    up(sp === 'grappling' ? 'yer' : 'gures', Math.round(7 * k));
+    up(sp === 'grappling' ? 'gures' : 'kondisyon', Math.round(4 * k));
+    up('iq', Math.round(3 * k));
+    up('vurus', -15);
   } else if (sp === 'muaythai') {
     const k = unvan ? 1 : r.sira <= 3 ? 0.85 : r.sira <= 7 ? 0.6 : 0.3;
     up('vurus', Math.round(5 * k));
@@ -80,7 +86,7 @@ function sportOpponent(s: GameState, sp: Sport, r: SportRec, unvan: boolean): Op
   const g = randInt(8, 26) + Math.round((UNRANKED - r.sira) * 1.5);
   return {
     ...o,
-    stil: sp === 'boks' ? 'boks' : sp === 'muaythai' ? 'muaythai' : o.stil,
+    stil: sp === 'boks' ? 'boks' : sp === 'muaythai' ? 'muaythai' : sp === 'grappling' ? 'bjj' : 'gures',
     stats: st,
     rekor: { g, m: randInt(0, 5), b: randInt(0, 2) },
     rank: unvan && r.kemer ? randInt(1, 3) : unvan ? null : Math.max(1, r.sira - 1 - randInt(0, 2)),

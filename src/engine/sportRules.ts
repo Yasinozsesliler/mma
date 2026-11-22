@@ -20,3 +20,7 @@ export function legalTactic(kural: Sport | undefined, t: Tactic): Tactic {
 /** Ayakta yumruk dışı hamleler (tekme, indirme) serbest mi */
 export const kicksAllowed = (k?: Sport) => !k || k === 'muaythai';
 export const groundAllowed = (k?: Sport) => !k || k === 'grappling' || k === 'gures';
+/** Vuruş serbest mi (grappling ve güreşte yok) */
+export const strikesAllowed = (k?: Sport) => !k || k === 'boks' || k === 'muaythai';
+/** Submission serbest mi (güreşte yok; tuşla biter) */
+export const subsAllowed = (k?: Sport) => k !== 'gures' && k !== 'boks' && k !== 'muaythai';

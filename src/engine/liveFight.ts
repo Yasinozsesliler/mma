@@ -3,7 +3,7 @@
 // Ayakta: jab/direkt/tekme, kaç (sprawl), gard, indir. Yerde (üstte): yumruk, dirsek, submission, kontrol, kalk;
 // (altta): kurtul, gard, submission. İstatistikler belirleyicidir: vuruş/çene hasarı, güreş takedown ve sprawl'u,
 // yer dövüşü submission'ları, kondisyon nefesi, rakibin hız ve zekâsı hazırlık süresini ve çalımları belirler.
-import { groundAllowed, kicksAllowed } from './sportRules';
+import { groundAllowed, kicksAllowed, strikesAllowed, subsAllowed } from './sportRules';
 import { chance, clamp, rand } from './rng';
 import type { Background, FightState, Stats, Tactic } from './types';
 import { pStatsOf, tacticEdge } from './fight';
@@ -41,6 +41,8 @@ export interface LiveSide {
   /** Bu rauntta gövde ve bacağa alınan hasar */
   govde: number;
   bacak: number;
+  /** Başarılı indirme sayısı (lig puanı) */
+  td?: number;
 }
 
 export interface LiveEvent {
@@ -119,7 +121,7 @@ export interface LiveSim {
   /** Rehberli ilk raunt: hocanın söylediği anda basılan KAÇ bir kez kesin tutar (öğretirken şans faktörü yok). */
   kesinKac?: boolean;
   /** Yer dövüşü: üstteki taraf */
-  ground: { top: 'p' | 'o'; since: number; /** Üstteki tarafın pozisyon hâkimiyeti 0-1 */ pos: number } | null;
+  ground: { top: 'p' | 'o'; since: number; /** Üstteki tarafın pozisyon hâkimiyeti 0-1 */ pos: number; /** Güreş: tuş için tam hâkimiyetin başladığı an */ tusAt?: number } | null;
   /** Submission mücadelesi: kilitleyen taraf, kilidin sıkılığı (0 kaçtı … 1 tap), bitiş anı */
   kilit: {
     by: 'p' | 'o';
@@ -152,12 +154,26 @@ export interface LiveSim {
 
 export const ROUND_MS = 30_000;
 
+/** Kurala uygun özel hamle: boksta kombinasyon, Muay Thai'de yere götürenler yerine diz, grappling'de guard çekme, güreşte suplex */
+export function sportSpecial(kural: import('./sportRules').Sport | undefined, kind: SpecialKind): SpecialKind {
+  if (kural === 'boks') return 'kombo';
+  if (kural === 'muaythai') return kind === 'suplex' || kind === 'guardCek' ? 'diz' : kind;
+  if (kural === 'grappling') return kind === 'suplex' ? 'suplex' : 'guardCek';
+  if (kural === 'gures') return 'suplex';
+  return kind;
+}
+
 /** Kurala göre yasal düğmeler (boks: yalnızca jab, direkt, kaç, gard; özel hamle yalnızca kombo). */
 export function liveAllowed(kural: import('./sportRules').Sport | undefined, k: LiveInput): boolean {
   if (k === 'tekme' && !kicksAllowed(kural)) return false;
   // Muay Thai'de İNDİR düğmesi klinç dizidir
   if (k === 'indir' && kural === 'muaythai') return true;
   if ((k === 'indir' || k === 'sub' || k === 'kalk') && !groundAllowed(kural)) return false;
+  // Grappling ve güreş: vuruş yok (DİREKT yerde pozisyon ilerletir); güreşte kilit ve üstten kalkma yok
+  if (k === 'jab' && !strikesAllowed(kural)) return false;
+  if (k === 'sub' && kural && !subsAllowed(kural)) return false;
+  if (k === 'kalk' && kural === 'gures') return false;
+  if (k === 'ozel' && kural === 'gures') return true;
   return true;
 }
 const COUNTDOWN = 1200;
@@ -210,6 +226,12 @@ export function liveCreate(fs: FightState, oStats: Stats, t0: number, dur = ROUN
   const kural = fs.mods.kural;
   if (!groundAllowed(kural)) cfg.tdRate = 0;
   if (!kicksAllowed(kural)) cfg.kickRate = 0;
+  // Grappling ve güreş: rakip ayakta yalnızca dalış hazırlar; aralarda tutuşur (gard), daha sık bekler
+  if (!strikesAllowed(kural)) {
+    cfg.jabRate = 0;
+    cfg.guardRate = Math.min(0.55, cfg.guardRate + 0.25);
+    cfg.idle = [cfg.idle[0] + 300, cfg.idle[1] + 500];
+  }
   return {
     kural,
     t: t0,
@@ -225,7 +247,7 @@ export function liveCreate(fs: FightState, oStats: Stats, t0: number, dur = ROUN
     kilit: null,
     subFails: fs.pSubFail ?? 0,
     // Boksta tarz hamlesi yerine kombinasyon (tekme/suplex/guard çekme kural dışı)
-    special: special ? { ...special, kind: kural === 'boks' ? 'kombo' : kural === 'muaythai' && (special.kind === 'suplex' || special.kind === 'guardCek') ? 'diz' : special.kind, readyAt: t0 + COUNTDOWN + 3000 } : null,
+    special: special ? { ...special, kind: sportSpecial(kural, special.kind), readyAt: t0 + COUNTDOWN + 3000 } : null,
   };
 }
 
@@ -237,6 +259,8 @@ export const livePos = (s: LiveSim): 'ayakta' | 'ustte' | 'altta' => (!s.ground 
 
 function setGround(s: LiveSim, top: 'p' | 'o' | null) {
   if (top) {
+    const by = top === 'p' ? s.p : s.o;
+    by.td = (by.td ?? 0) + 1;
     s.ground = { top, since: s.t, pos: 0 };
     ev(s, { kind: 'ground', side: top });
   } else {
@@ -448,6 +472,7 @@ export function liveInput(s: LiveSim, k: LiveInput) {
   }
   if (k === 'sub' || k === 'kalk') return;
   if (k === 'ozel') return special(s);
+  if (!strikesAllowed(s.kural) && k !== 'indir') return;
   if (p.sta < COST[k]) {
     ev(s, { kind: 'tired', side: 'p' });
     p.busyUntil = s.t + 250;
@@ -468,7 +493,7 @@ export function liveInput(s: LiveSim, k: LiveInput) {
     else {
       p.busyUntil = s.t + 1000;
       // Boşa dalış: dize ya da aparkata yakalanabilirsin
-      if (o.state !== 'rocked' && chance(0.45)) {
+      if (strikesAllowed(s.kural) && o.state !== 'rocked' && chance(0.45)) {
         ev(s, { kind: 'oAttack', alt: 'power' });
         damage(s, 'p', O_BASE.power * s.cfg.oPow * 0.8, true);
       }
@@ -591,8 +616,9 @@ function special(s: LiveSim) {
       } else ev(s, { kind: 'td', side: 'p', alt: 'stuffed' });
       break;
     case 'guardCek': {
-      // Rakibi guard'a çek ve hemen submission dene; tutmazsa altta kalırsın
+      // Rakibi guard'a çek ve hemen submission dene; tutmazsa altta kalırsın (rakibe indirme sayılmaz)
       setGround(s, 'o');
+      o.td = Math.max(0, (o.td ?? 1) - 1);
       startKilit(s, 'p', 0.32 + (sp.imza ? 0.1 : 0) + (rocked ? 0.12 : 0) + (1 - o.hp / 100) * 0.15 - s.subFails * 0.05, sp.imza);
       break;
     }
@@ -642,6 +668,17 @@ function groundInput(s: LiveSim, k: LiveInput, pos: 'ustte' | 'altta') {
       }
       // Kilidin başlangıç sıkılığı: pozisyon ve rakibin yıpranmışlığı; her başarısız deneme rakibi uyarır
       startKilit(s, 'p', 0.22 + g.pos * 0.2 + (1 - o.hp / 100) * 0.15 + (o.state === 'rocked' ? 0.12 : 0) - s.subFails * 0.05);
+      return;
+    }
+    if (!strikesAllowed(s.kural)) {
+      if (k !== 'direkt') return;
+      // Pozisyon ilerlet: yarım guard → yan kontrol → mount; rakip tutunuyorsa (gard) zor
+      p.busyUntil = s.t + 480;
+      const g = s.ground!;
+      if (chance(clamp(0.55 + s.cfg.gr / 150 + s.cfg.wr / 300 - (o.state === 'guard' ? 0.2 : 0) + (o.state === 'windup' ? 0.1 : 0), 0.2, 0.88))) {
+        g.pos = clamp(g.pos + (s.kural === 'gures' ? 0.1 : 0.16), 0, 1);
+        ev(s, { kind: 'held', side: 'p', alt: 'ilerlet' });
+      } else ev(s, { kind: 'blocked', side: 'o', alt: 'ilerlet' });
       return;
     }
     if (k === 'jab' || k === 'direkt') {
@@ -695,7 +732,20 @@ export function liveStep(s: LiveSim, t: number) {
   if (s.ground) {
     (s.ground.top === 'p' ? s.p : s.o).ctrl += dt;
     // Üstte geçen süre pozisyonu sağlamlaştırır (~9 sn'de tam)
-    s.ground.pos = clamp(s.ground.pos + dt / 9000, 0, 1);
+    // Güreşte pozisyon kendiliğinden yavaş dolar: tuş için İLERLET gerekir
+    s.ground.pos = clamp(s.ground.pos + dt / (s.kural === 'gures' ? 20000 : 9000), 0, 1);
+    // Güreş: tam hâkimiyet 3 sn korunursa TUŞ
+    if (s.kural === 'gures') {
+      const g = s.ground;
+      if (g.pos >= 0.92) g.tusAt = g.tusAt ?? t;
+      else g.tusAt = undefined;
+      if (g.tusAt != null && t - g.tusAt >= 3000 && !s.over) {
+        s.over = { kazanan: g.top, yontem: 'SUB', t };
+        ev(s, { kind: 'sub', side: g.top, alt: 'tus' });
+        ev(s, { kind: 'end', side: g.top === 'p' ? 'o' : 'p' });
+        return;
+      }
+    }
   }
   if (s.rocked && t >= s.rocked.until) s.rocked = null;
   if (s.kilit) {
@@ -732,7 +782,7 @@ export function liveStep(s: LiveSim, t: number) {
       }
       const c = s.cfg;
       const r = rand();
-      o.attack = r < c.tdRate ? 'td' : r < c.tdRate + c.jabRate ? 'jab' : r < c.tdRate + c.jabRate + c.kickRate ? 'kick' : 'power';
+      o.attack = !strikesAllowed(s.kural) ? 'td' : r < c.tdRate ? 'td' : r < c.tdRate + c.jabRate ? 'jab' : r < c.tdRate + c.jabRate + c.kickRate ? 'kick' : 'power';
       o.feint = o.attack !== 'jab' && o.attack !== 'td' && chance(c.feint);
       o.state = 'windup';
       const w = o.attack === 'jab' ? c.windup * 0.42 : o.attack === 'kick' ? c.windup * 1.15 : o.attack === 'td' ? c.windup * 1.1 : c.windup;
@@ -813,6 +863,16 @@ function groundAI(s: LiveSim, t: number) {
   if (o.state === 'windup') {
     o.state = 'idle';
     o.stateUntil = t + 500 + rand() * 600;
+    if (o.attack === 'gnp' && !strikesAllowed(s.kural)) {
+      // Vuruşsuz kural: üstteki rakip pozisyon ilerletir; GARD (tutun) bunu keser
+      if (t < p.guardUntil) ev(s, { kind: 'blocked', side: 'p', alt: 'baski' });
+      else {
+        s.ground!.pos = clamp(s.ground!.pos + (s.kural === 'gures' ? 0.08 : 0.14), 0, 1);
+        p.sta = clamp(p.sta - 4, 0, 100);
+        ev(s, { kind: 'held', side: 'o', alt: 'baski' });
+      }
+      return;
+    }
     if (o.attack === 'gnp') {
       o.thrown++;
       ev(s, { kind: 'oAttack', alt: 'gnp' });
@@ -840,7 +900,7 @@ function groundAI(s: LiveSim, t: number) {
     return;
   }
   // Uzun süre yerde: hakem ayağa kaldırır
-  if (t - s.ground!.since > 9000 && chance(0.5)) {
+  if (t - s.ground!.since > (s.kural === 'grappling' ? 15000 : 9000) && chance(0.5)) {
     setGround(s, null);
     return;
   }
@@ -850,11 +910,11 @@ function groundAI(s: LiveSim, t: number) {
       setGround(s, null);
       return;
     }
-    o.attack = chance(clamp(0.1 - s.cfg.gr / 250, 0.04, 0.22)) ? 'gsub' : 'gnp';
+    o.attack = subsAllowed(s.kural) && chance(clamp(0.1 - s.cfg.gr / 250, 0.04, 0.22)) ? 'gsub' : 'gnp';
     o.state = 'windup';
     o.stateUntil = t + (o.attack === 'gsub' ? 900 : 380) * (0.8 + rand() * 0.4);
   } else {
-    o.attack = chance(clamp(0.08 - s.cfg.gr / 250, 0.03, 0.18)) ? 'gsub' : 'escape';
+    o.attack = subsAllowed(s.kural) && chance(clamp(0.08 - s.cfg.gr / 250, 0.03, 0.18)) ? 'gsub' : 'escape';
     o.state = 'windup';
     o.stateUntil = t + (o.attack === 'gsub' ? 900 : 700) * (0.8 + rand() * 0.4);
   }
@@ -873,6 +933,7 @@ export function liveShift(s: LiveSim, dt: number) {
   s.o.stateUntil += dt;
   if (s.rocked) s.rocked.until += dt;
   if (s.ground) s.ground.since += dt;
+  if (s.ground?.tusAt != null) s.ground.tusAt += dt;
   if (s.special) s.special.readyAt += dt;
 }
 
@@ -900,6 +961,9 @@ export interface LiveRoundResult {
   pBacak: number;
   oGovde: number;
   oBacak: number;
+  /** Başarılı indirmeler (dövüş sporları liginde puan) */
+  pTd?: number;
+  oTd?: number;
 }
 
 export function liveResult(s: LiveSim): LiveRoundResult {
@@ -923,5 +987,7 @@ export function liveResult(s: LiveSim): LiveRoundResult {
     pBacak: s.p.bacak,
     oGovde: s.o.govde,
     oBacak: s.o.bacak,
+    pTd: s.p.td ?? 0,
+    oTd: s.o.td ?? 0,
   };
 }
