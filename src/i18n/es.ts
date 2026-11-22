@@ -11176,4 +11176,9 @@ export const ES: Record<string, string> = {
   "Kolunu bağla, belinden kavra!": "¡Amarra el brazo, agarra la cintura!",
   "Çevir onu! Tuşa bir adım kaldı.": "¡Gíralo! Estás a un paso del tocado.",
   "SAYIM: {0}": "CUENTA: {0}",
+  "📊 {0}: {1}, {2} karşısında kazandı ve sıralamada yükseldi.": "📊 {0}: {1} venció a {2} y subió en la clasificación.",
+  "Sıralama tablosu ilk maçında kurulur.": "La clasificación se crea con tu primer combate.",
+  "{0} (sen)": "{0} (tú)",
+  "Tabloyu kapat": "Cerrar tabla",
+  "Tüm tablo": "Tabla completa",
 };

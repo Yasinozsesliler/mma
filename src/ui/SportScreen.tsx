@@ -2,8 +2,9 @@
 // ringde canlı maç (FightScreen, kural ile) ve sonuç. Maçlar MMA karnesine işlenmez.
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useState } from 'react';
-import { Animated, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { Animated, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { cosmeticById } from '../engine/cosmetics';
+import { tableOf } from '../engine/sportRoster';
 import { ArenaBackdrop } from './ArenaBackdrop';
 import { Belt } from './Belt';
 import { Standing } from './NewCareer';
@@ -109,6 +110,31 @@ function SportFight({ s, act }: { s: GameState; act: Act }) {
   return <FightScreen s={shadow} act={fAct} />;
 }
 
+/** Lig sıralama tablosu: şampiyon ve ilk 10, oyuncu vurgulu. */
+function LeagueTable({ s, sp }: { s: GameState; sp: Sport }) {
+  const r = recOf(s, sp);
+  const [open, setOpen] = useState(false);
+  if (!r.kadro) return <Text style={st.small}>{L("Sıralama tablosu ilk maçında kurulur.")}</Text>;
+  const rows = tableOf(s, r.kadro, r);
+  const shown = open ? rows : rows.slice(0, 4).concat(rows.filter((x, i) => x.sen && i >= 4));
+  return (
+    <View style={st.table}>
+      {shown.map((x, i) => (
+        <View key={`${x.ad}${i}`} style={[st.trow, x.sen && { backgroundColor: SPORTS[sp].renk + '22', borderColor: SPORTS[sp].renk }]}>
+          <Text style={[st.tpos, x.sira === 'C' && { color: C.gold }]}>{x.sira === 'C' ? '👑' : x.sira > 10 ? '—' : `#${x.sira}`}</Text>
+          <Text style={[st.tname, x.sen && { color: C.text, fontFamily: F.bold }]} numberOfLines={1}>
+            {x.sen ? L("{0} (sen)", [x.ad]) : x.ad}
+          </Text>
+          <Text style={st.trec}>{`${x.g}-${x.m}`}</Text>
+        </View>
+      ))}
+      <Pressable onPress={() => setOpen(!open)} style={st.tmore}>
+        <Text style={st.tmoreText}>{open ? L("Tabloyu kapat") : L("Tüm tablo")}</Text>
+      </Pressable>
+    </View>
+  );
+}
+
 function LeagueRow({ s, sp, act }: { s: GameState; sp: Sport; act: Act }) {
   const lig = SPORTS[sp];
   const r = recOf(s, sp);
@@ -133,6 +159,7 @@ function LeagueRow({ s, sp, act }: { s: GameState; sp: Sport; act: Act }) {
           <Belt org="cfc" width={180} skin={cosmeticById(`kem_lig_${sp}`)?.renk ?? null} logoText={lig.kisa} ribbonOverride={L("{0} ŞAMPİYONU", [lig.spor().toLocaleUpperCase(LOC)])} />
         </View>
       ) : null}
+      <LeagueTable s={s} sp={sp} />
       {r.kemer ? <Text style={[st.small, { color: C.gold }]}>{L("🏆 Kemer sende · {0} savunma", [r.savunma])}</Text> : r.sira === 1 ? <Text style={[st.small, { color: C.gold }]}>{L("Sıradaki maç kemer maçı!")}</Text> : null}
       <Button
         label={canBook(s) ? (r.kemer ? L("Kemerini savun") : r.sira === 1 ? L("Kemer maçı iste") : L("Maç iste")) : wait ? L("{0} hafta sonra yeni maç", [wait]) : L("Önce MMA maçını bitir")}
@@ -267,6 +294,13 @@ const st = StyleSheet.create({
   momentTitle: { position: 'absolute', top: 30, left: 12, right: 12, color: C.gold, fontFamily: F.display, fontSize: 34, textAlign: 'center', textShadowColor: '#000', textShadowRadius: 10 },
   momentFig: { position: 'absolute', bottom: 88, alignSelf: 'center' },
   momentBelt: { position: 'absolute', bottom: 10, alignSelf: 'center' },
+  table: { gap: 3, marginBottom: 8 },
+  trow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 5, paddingHorizontal: 8, borderRadius: 6, borderWidth: 1, borderColor: 'transparent', backgroundColor: 'rgba(255,255,255,0.03)' },
+  tpos: { width: 30, color: C.dim, fontFamily: F.display, fontSize: 13 },
+  tname: { flex: 1, color: C.dim, fontFamily: F.semi, fontSize: 12.5 },
+  trec: { color: C.text, fontFamily: F.display, fontSize: 13 },
+  tmore: { alignSelf: 'center', paddingVertical: 4, paddingHorizontal: 10 },
+  tmoreText: { color: C.gold, fontFamily: F.bold, fontSize: 12 },
   soon: { flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1, borderRadius: 10, padding: 10, marginBottom: 6, opacity: 0.7 },
   soonText: { flex: 1, color: C.dim, fontFamily: F.semi, fontSize: 13 },
 });

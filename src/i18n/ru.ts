@@ -11211,4 +11211,9 @@ export const RU: Record<string, string> = {
   "Kolunu bağla, belinden kavra!": "Свяжи руку, бери пояс!",
   "Çevir onu! Tuşa bir adım kaldı.": "Переворачивай! Шаг до туше.",
   "SAYIM: {0}": "СЧЁТ: {0}",
+  "📊 {0}: {1}, {2} karşısında kazandı ve sıralamada yükseldi.": "📊 {0}: {1} победил {2} и поднялся в рейтинге.",
+  "Sıralama tablosu ilk maçında kurulur.": "Рейтинг появится после твоего первого боя.",
+  "{0} (sen)": "{0} (ты)",
+  "Tabloyu kapat": "Свернуть таблицу",
+  "Tüm tablo": "Вся таблица",
 };

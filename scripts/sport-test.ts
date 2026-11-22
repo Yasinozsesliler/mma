@@ -7,6 +7,7 @@ import { ACHIEVEMENTS } from '../src/engine/achievements';
 import { checkAchievements } from '../src/engine/legacy';
 import { acceptSportInvite, SPORTS, canBook, closeSportBout, finishSportFight, maybeSportInvite, recOf, requestSportBout, startSportFight, withdrawSportBout } from '../src/engine/sportLeague';
 import { legalTactic, type Sport } from '../src/engine/sportRules';
+import { tableOf } from '../src/engine/sportRoster';
 import type { GameState } from '../src/engine/types';
 
 let fail = 0;
@@ -94,6 +95,43 @@ for (const sp of ['boks', 'muaythai', 'grappling', 'gures'] as Sport[]) {
   ok(fs.durum === 'bitti' && /24-30/.test(fs.sonuc?.kartlar ?? ''), `boks: üç knockdown'lı raunt 10-8 → kartlar ${fs.sonuc?.kartlar}`);
   const m = { ...fs, mods: { ...fs.mods, kural: undefined } };
   void m;
+}
+
+// Kalıcı kadro ve tablo
+{
+  const g = fresh();
+  requestSportBout(g, 'boks');
+  const r0 = recOf(g, 'boks');
+  ok(r0.kadro?.length === 10 && g.sporMac!.rakip.id === r0.kadro![g.sporMac!.kadroIdx!].id, 'kadro kuruldu, rakip kadrodan');
+  const ids = r0.kadro!.map((k) => k.id).join();
+  startSportFight(g);
+  const fs = g.sporMac!.dovus!;
+  fs.sonuc = { kazanan: 'p', yontem: 'KO', raunt: 1, sure: '1:00', aciklama: '' };
+  finishSportFight(g);
+  closeSportBout(g);
+  const r1 = recOf(g, 'boks');
+  ok(r1.kadro!.map((k) => k.id).sort().join() === ids.split(',').sort().join(), 'kadro kalıcı (aynı 10 kişi)');
+  const rows = tableOf(g, r1.kadro!, r1);
+  ok(rows.filter((x) => x.sen).length === 1 && rows[0].sira === 'C', `tabloda bir kez sen varsın (#${rows.find((x) => x.sen)?.sira})`);
+  // Kemer maçı şampiyona karşı; kemeri kaybedersen seni yenen şampiyon olur
+  const champ = r1.kadro![0].id;
+  g.sporlar!.boks = { ...r1, sira: 1 };
+  g.sporSon = -99;
+  requestSportBout(g, 'boks');
+  ok(g.sporMac!.unvan && g.sporMac!.rakip.id === champ && g.sporMac!.rakip.champion, 'kemer maçı şampiyona karşı');
+  startSportFight(g);
+  g.sporMac!.dovus!.sonuc = { kazanan: 'p', yontem: 'UD', raunt: 5, sure: '5:00', aciklama: '' };
+  finishSportFight(g);
+  closeSportBout(g);
+  ok(recOf(g, 'boks').kemer && recOf(g, 'boks').kadro![0].id === champ, 'kemeri aldın; eski şampiyon 1 numara');
+  g.sporSon = -99;
+  requestSportBout(g, 'boks');
+  const challenger = g.sporMac!.rakip.id;
+  startSportFight(g);
+  g.sporMac!.dovus!.sonuc = { kazanan: 'o', yontem: 'KO', raunt: 2, sure: '1:00', aciklama: '' };
+  finishSportFight(g);
+  closeSportBout(g);
+  ok(!recOf(g, 'boks').kemer && recOf(g, 'boks').kadro![0].id === challenger, 'kemeri kaybettin; seni yenen şampiyon');
 }
 
 // Kemer yolu

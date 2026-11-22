@@ -10,6 +10,7 @@ import { startFight } from './fight';
 import { generateOpponent } from './opponents';
 import { chance, clamp, randInt } from './rng';
 import { techLevels } from './techniques';
+import { afterRosterBout, ensureRoster, pickRosterOpponent, type LigKisi } from './sportRoster';
 import type { FightState, GameState, Opponent, Stage, Stats } from './types';
 
 import { SPORT_TACTICS, type Sport } from './sportRules';
@@ -18,8 +19,8 @@ export type { Sport };
 /** Şimdilik açık olan ligler (diğerleri sonraki sürümlerde) */
 export const OPEN_SPORTS: Sport[] = ['boks', 'muaythai', 'grappling', 'gures'];
 
-export type SportRec = { g: number; m: number; ko: number; /** 1 = 1 numaralı yarışmacı, 11 = sıralama dışı */ sira: number; kemer: boolean; savunma: number; /** Verilen gelişim puanı */ bonus: number; /** Kazanılan kemer sayısı (kaybedip geri alınca artar) */ kemerler?: number };
-export type SportBout = { spor: Sport; rakip: Opponent; ucret: number; unvan: boolean; adim: 'hazir' | 'dovus' | 'sonuc'; dovus?: FightState; notlar?: string[]; kazandi?: boolean; /** Bu maçta kemer kazanıldı (kutlama sahnesi) */ yeniKemer?: boolean };
+export type SportRec = { g: number; m: number; ko: number; /** 1 = 1 numaralı yarışmacı, 11 = sıralama dışı */ sira: number; kemer: boolean; savunma: number; /** Verilen gelişim puanı */ bonus: number; /** Kazanılan kemer sayısı (kaybedip geri alınca artar) */ kemerler?: number; /** Kalıcı lig kadrosu (sportRoster.ts) */ kadro?: LigKisi[] };
+export type SportBout = { spor: Sport; rakip: Opponent; ucret: number; unvan: boolean; adim: 'hazir' | 'dovus' | 'sonuc'; dovus?: FightState; notlar?: string[]; kazandi?: boolean; /** Bu maçta kemer kazanıldı (kutlama sahnesi) */ yeniKemer?: boolean; /** Rakibin kadrodaki yeri */ kadroIdx?: number };
 
 export const SPORTS: Record<Sport, { ad: () => string; spor: () => string; kisa: string; renk: string; icon: string; kural: () => string }> = {
   boks: { spor: () => L("Boks"), ad: () => L("Altın Eldiven Boks Ligi"), kisa: 'AEB', renk: '#d4a017', icon: 'boxing-glove', kural: () => L("Yalnızca yumruk: jab, direkt, kaç, gard. Tekme, indirme ve yer dövüşü yok.") },
@@ -104,7 +105,17 @@ function book(s: GameState, sp: Sport) {
   const r = recOf(s, sp);
   // 1 numaraya yükselen kemer maçı alır; kemeri tutan savunur.
   const unvan = r.kemer || r.sira === 1;
-  s.sporMac = { spor: sp, rakip: sportOpponent(s, sp, r, unvan), ucret: purseOf(s, r, unvan), unvan, adim: 'hazir' };
+  // Rakip kalıcı kadrodan: adı, ülkesi ve karnesi tabloda görünenle aynı
+  const kadro = ensureRoster(s, sp, r.kadro);
+  saveRec(s, sp, { ...r, kadro });
+  const idx = pickRosterOpponent(kadro, r, unvan);
+  const k = kadro[idx];
+  const base = sportOpponent(s, sp, r, unvan);
+  const d = Math.round((k.guc - 0.5) * 8);
+  const stats = { ...base.stats };
+  for (const key of Object.keys(stats) as (keyof typeof stats)[]) stats[key] = clamp(stats[key] + d, 20, 99);
+  const rakip: Opponent = { ...base, id: k.id, ad: k.ad, soyad: k.soyad, lakap: k.lakap, uyruk: k.uyruk, stats, rekor: { g: k.g, m: k.m, b: 0 }, champion: unvan && !r.kemer, rank: unvan && !r.kemer ? null : idx + (r.kemer ? 1 : 0) };
+  s.sporMac = { spor: sp, rakip, ucret: purseOf(s, r, unvan), unvan, adim: 'hazir', kadroIdx: idx };
   s.sporDavet = undefined;
   s.pending.sonrakiFaz = 'hub';
   s.phase = 'sporLig';
@@ -220,6 +231,13 @@ export function finishSportFight(s: GameState) {
   if (hasar) {
     s.saglik = clamp(s.saglik - hasar, 5, 100);
     notes.push(L("🩹 Sağlık -{0} → {1}/100", [hasar, s.saglik]));
+  }
+  // Kadro: rakibin karnesi, kemer değişimi, diğer yarışmacıların maçları
+  if (r.kadro && b.kadroIdx != null) {
+    const once = recOf(s, b.spor).kemer;
+    const k = afterRosterBout(r.kadro, b.kadroIdx, won, draw, fin, once, b.unvan, lig.ad());
+    r.kadro = k.kadro;
+    s.haberler.unshift(...k.haber);
   }
   saveRec(s, b.spor, r);
   advanceWeeks(s, 2);

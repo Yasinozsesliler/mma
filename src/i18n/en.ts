@@ -11165,4 +11165,9 @@ export const EN: Record<string, string> = {
   "Kolunu bağla, belinden kavra!": "Tie up his arm, lock his waist!",
   "Çevir onu! Tuşa bir adım kaldı.": "Turn him! You're one step from the pin.",
   "SAYIM: {0}": "COUNT: {0}",
+  "📊 {0}: {1}, {2} karşısında kazandı ve sıralamada yükseldi.": "📊 {0}: {1} beat {2} and moved up the rankings.",
+  "Sıralama tablosu ilk maçında kurulur.": "The rankings table is set up with your first bout.",
+  "{0} (sen)": "{0} (you)",
+  "Tabloyu kapat": "Close table",
+  "Tüm tablo": "Full table",
 };
