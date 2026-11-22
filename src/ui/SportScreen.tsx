@@ -1,7 +1,13 @@
 // Dövüş Sporları Ligleri: ana ekranda davet kartı, lig ekranı (karne, sıralama, kemer), maç öncesi karşılaşma,
 // ringde canlı maç (FightScreen, kural ile) ve sonuç. Maçlar MMA karnesine işlenmez.
 import { LinearGradient } from 'expo-linear-gradient';
-import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Animated, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { cosmeticById } from '../engine/cosmetics';
+import { ArenaBackdrop } from './ArenaBackdrop';
+import { Belt } from './Belt';
+import { Standing } from './NewCareer';
+import { sportKit } from './sportLook';
 import { finishFight } from '../engine/career';
 import { lookFor } from '../engine/tale';
 import {
@@ -28,8 +34,35 @@ import { Button, Card, Icon, type IconName, Screen, Section, SLANT, Title } from
 import { DEFAULT_LOOK } from './FighterAvatar';
 import { FightScreen } from './FightScreen';
 import type { Act } from './GameScreens';
-import { WatchVs } from './NewWatch';
+import { BLUE_CORNER, RED_CORNER, WatchVs } from './NewWatch';
 import { C, F } from './theme';
+
+/** Lig kemeri anı: altın arena, kollar havada dövüşçü ve ligin renginde kemer (yukarıdan iner). */
+function LeagueBeltMoment({ s, spor, w }: { s: GameState; spor: Sport; w: number }) {
+  const lig = SPORTS[spor];
+  const skin = cosmeticById(`kem_lig_${spor}`)?.renk ?? null;
+  const [drop] = useState(() => new Animated.Value(0));
+  useEffect(() => {
+    Animated.spring(drop, { toValue: 1, friction: 6, tension: 40, useNativeDriver: true }).start();
+  }, [drop]);
+  const H = 360;
+  return (
+    <View style={[st.moment, { height: H }]}>
+      <ArenaBackdrop w={w} h={H} gold org={lig.kisa} sub={lig.ad().toLocaleUpperCase(LOC)} />
+      <LinearGradient colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0.75)']} locations={[0.55, 1]} style={StyleSheet.absoluteFill} />
+      <Text style={[st.momentKick, { backgroundColor: lig.renk }]}>{lig.ad().toLocaleUpperCase(LOC)}</Text>
+      <Text style={st.momentTitle} numberOfLines={1} adjustsFontSizeToFit>
+        {L("YENİ ŞAMPİYON")}
+      </Text>
+      <View style={st.momentFig} pointerEvents="none">
+        <Standing look={s.fighter.gorunum ?? DEFAULT_LOOK} kit={sportKit(RED_CORNER, spor)} h={190} pose="win" />
+      </View>
+      <Animated.View style={[st.momentBelt, { opacity: drop, transform: [{ translateY: drop.interpolate({ inputRange: [0, 1], outputRange: [-120, 0] }) }, { scale: drop.interpolate({ inputRange: [0, 1], outputRange: [1.3, 1] }) }] }]}>
+        <Belt org="cfc" width={Math.min(230, w - 40)} skin={skin} logoText={lig.kisa} ribbonOverride={L("{0} ŞAMPİYONU", [lig.spor().toLocaleUpperCase(LOC)])} />
+      </Animated.View>
+    </View>
+  );
+}
 
 const SOON = (['boks', 'muaythai', 'grappling', 'gures'] as Sport[]).filter((sp) => !OPEN_SPORTS.includes(sp));
 const rankText = (sira: number, kemer: boolean) => (kemer ? L("ŞAMPİYON") : sira >= 11 ? L("Sıralama dışı") : `#${sira}`);
@@ -92,9 +125,14 @@ function LeagueRow({ s, sp, act }: { s: GameState; sp: Sport; act: Act }) {
       <View style={st.stats}>
         <Stat label={L("KARNE")} value={`${r.g}-${r.m}`} />
         <Stat label={L("NAKAVT")} value={String(r.ko)} />
-        <Stat label={L("SIRA")} value={rankText(r.sira, r.kemer)} color={r.kemer ? C.gold : undefined} />
+        <Stat label={L("SIRA")} value={r.kemer ? L("ŞAMPİYON") : r.sira >= 11 ? '—' : `#${r.sira}`} color={r.kemer ? C.gold : undefined} />
         <Stat label={L("PUAN")} value={`${r.bonus}/${SPORT_BONUS_MAX}`} />
       </View>
+      {r.kemer ? (
+        <View style={{ alignItems: 'center' }}>
+          <Belt org="cfc" width={180} skin={cosmeticById(`kem_lig_${sp}`)?.renk ?? null} logoText={lig.kisa} ribbonOverride={L("{0} ŞAMPİYONU", [lig.spor().toLocaleUpperCase(LOC)])} />
+        </View>
+      ) : null}
       {r.kemer ? <Text style={[st.small, { color: C.gold }]}>{L("🏆 Kemer sende · {0} savunma", [r.savunma])}</Text> : r.sira === 1 ? <Text style={[st.small, { color: C.gold }]}>{L("Sıradaki maç kemer maçı!")}</Text> : null}
       <Button
         label={canBook(s) ? (r.kemer ? L("Kemerini savun") : r.sira === 1 ? L("Kemer maçı iste") : L("Maç iste")) : wait ? L("{0} hafta sonra yeni maç", [wait]) : L("Önce MMA maçını bitir")}
@@ -131,9 +169,13 @@ export function SportScreen({ s, act }: { s: GameState; act: Act }) {
     if (b.adim === 'sonuc') {
       return (
         <Screen footer={<Button label={L("Devam")} icon="arrow-right" tone="gold" onPress={() => act(closeSportBout)} />}>
-          <Title art="arena" kicker={lig.ad().toLocaleUpperCase(LOC)} sub={`${o.ad} ${o.soyad}`}>
-            {b.kazandi ? L("Ringin galibi sensin") : L("Bu gece onun gecesiydi")}
-          </Title>
+          {b.yeniKemer ? (
+            <LeagueBeltMoment s={s} spor={b.spor} w={w} />
+          ) : (
+            <Title art="arena" kicker={lig.ad().toLocaleUpperCase(LOC)} sub={`${o.ad} ${o.soyad}`}>
+              {b.kazandi ? L("Ringin galibi sensin") : L("Bu gece onun gecesiydi")}
+            </Title>
+          )}
           <Card accent={b.kazandi ? C.green : C.red}>
             {(b.notlar ?? []).map((n, i) => (
               <Text key={i} style={st.note}>
@@ -159,8 +201,8 @@ export function SportScreen({ s, act }: { s: GameState; act: Act }) {
         </Title>
         <WatchVs
           w={w}
-          a={{ look: s.fighter.gorunum ?? DEFAULT_LOOK, name: `${s.fighter.ad} ${s.fighter.soyad}`, country: s.fighter.uyruk, nick: s.fighter.lakap }}
-          b={{ look: lookFor(o), name: `${o.ad} ${o.soyad}`, country: o.uyruk, nick: o.lakap }}
+          a={{ look: s.fighter.gorunum ?? DEFAULT_LOOK, name: `${s.fighter.ad} ${s.fighter.soyad}`, country: s.fighter.uyruk, nick: s.fighter.lakap, kit: sportKit(RED_CORNER, b.spor) }}
+          b={{ look: lookFor(o), name: `${o.ad} ${o.soyad}`, country: o.uyruk, nick: o.lakap, kit: sportKit(BLUE_CORNER, b.spor) }}
           rows={[
             [`${r.g}-${r.m}`, L("KARNE"), `${o.rekor.g}-${o.rekor.m}`],
             [r.kemer ? L("ŞAMPİYON") : r.sira >= 11 ? '—' : `#${r.sira}`, L("SIRA"), o.champion ? L("ŞAMPİYON") : o.rank ? `#${o.rank}` : '—'],
@@ -220,6 +262,11 @@ const st = StyleSheet.create({
   stat: { flex: 1, backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 8, paddingVertical: 6, alignItems: 'center' },
   statLabel: { color: C.faint, fontFamily: F.black, fontSize: 9, letterSpacing: 1 },
   statVal: { color: C.text, fontFamily: F.display, fontSize: 16 },
+  moment: { borderRadius: 6, overflow: 'hidden', borderWidth: 1, borderColor: '#3a2e10', backgroundColor: '#050506', marginBottom: 12 },
+  momentKick: { position: 'absolute', top: 12, alignSelf: 'center', color: '#fff', fontFamily: F.black, fontSize: 10, letterSpacing: 1.4, paddingHorizontal: 8, paddingVertical: 2 },
+  momentTitle: { position: 'absolute', top: 30, left: 12, right: 12, color: C.gold, fontFamily: F.display, fontSize: 34, textAlign: 'center', textShadowColor: '#000', textShadowRadius: 10 },
+  momentFig: { position: 'absolute', bottom: 88, alignSelf: 'center' },
+  momentBelt: { position: 'absolute', bottom: 10, alignSelf: 'center' },
   soon: { flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1, borderRadius: 10, padding: 10, marginBottom: 6, opacity: 0.7 },
   soonText: { flex: 1, color: C.dim, fontFamily: F.semi, fontSize: 13 },
 });

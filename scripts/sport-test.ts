@@ -3,7 +3,9 @@ import { createGame, rollStartingStats } from '../src/engine/character';
 import { applyLiveRound, nextRound, oppStatsOf, startLiveRound } from '../src/engine/fight';
 import { liveCreate, liveInput, liveResult, liveStep, type LiveInput } from '../src/engine/liveFight';
 import { setSeed } from '../src/engine/rng';
-import { acceptSportInvite, canBook, closeSportBout, finishSportFight, maybeSportInvite, recOf, requestSportBout, startSportFight, withdrawSportBout } from '../src/engine/sportLeague';
+import { ACHIEVEMENTS } from '../src/engine/achievements';
+import { checkAchievements } from '../src/engine/legacy';
+import { acceptSportInvite, SPORTS, canBook, closeSportBout, finishSportFight, maybeSportInvite, recOf, requestSportBout, startSportFight, withdrawSportBout } from '../src/engine/sportLeague';
 import { legalTactic, type Sport } from '../src/engine/sportRules';
 import type { GameState } from '../src/engine/types';
 
@@ -95,6 +97,11 @@ for (let i = 0; i < 12; i++) {
 const r = recOf(s, 'boks');
 ok(r.kemer && r.savunma > 0, `kemer kazanıldı ve savunuldu (${r.g}-${r.m}, savunma ${r.savunma})`);
 ok(r.bonus === 8, 'gelişim puanı tavanı 8');
+ok((s.ozelKozmetik ?? []).includes('kem_lig_boks') && (r.kemerler ?? 0) === 1, 'lig kemeri dolaba eklendi, kemer sayacı 1');
+ok((s.hatiralar ?? []).some((h) => h.id === 'lig_kemer'), 'müze vitrini: başka bir sporun kemeri');
+ok((s.sosyal ?? []).some((p) => p.yazar === SPORTS.boks.ad()), "lig Kafesgram'da paylaştı");
+const ach = checkAchievements(s);
+ok(ACHIEVEMENTS.some((a) => a.id === 'lig_kemer') && ach.includes(ACHIEVEMENTS.find((a) => a.id === 'lig_kemer')!.ad), `kemer başarımı açıldı (${ach.join(', ')})`);
 s.sporSon = -99;
 requestSportBout(s, 'gures');
 withdrawSportBout(s);

@@ -4,6 +4,8 @@
 import { L, LOC } from '../i18n';
 import { advanceWeeks } from './character';
 import { addFollowers, fmtDelta, followers } from './fame';
+import { addMemento } from './memories';
+import { addPost } from './social';
 import { startFight } from './fight';
 import { generateOpponent } from './opponents';
 import { chance, clamp, randInt } from './rng';
@@ -16,8 +18,8 @@ export type { Sport };
 /** Şimdilik açık olan ligler (diğerleri sonraki sürümlerde) */
 export const OPEN_SPORTS: Sport[] = ['boks', 'muaythai', 'grappling', 'gures'];
 
-export type SportRec = { g: number; m: number; ko: number; /** 1 = 1 numaralı yarışmacı, 11 = sıralama dışı */ sira: number; kemer: boolean; savunma: number; /** Verilen gelişim puanı */ bonus: number };
-export type SportBout = { spor: Sport; rakip: Opponent; ucret: number; unvan: boolean; adim: 'hazir' | 'dovus' | 'sonuc'; dovus?: FightState; notlar?: string[]; kazandi?: boolean };
+export type SportRec = { g: number; m: number; ko: number; /** 1 = 1 numaralı yarışmacı, 11 = sıralama dışı */ sira: number; kemer: boolean; savunma: number; /** Verilen gelişim puanı */ bonus: number; /** Kazanılan kemer sayısı (kaybedip geri alınca artar) */ kemerler?: number };
+export type SportBout = { spor: Sport; rakip: Opponent; ucret: number; unvan: boolean; adim: 'hazir' | 'dovus' | 'sonuc'; dovus?: FightState; notlar?: string[]; kazandi?: boolean; /** Bu maçta kemer kazanıldı (kutlama sahnesi) */ yeniKemer?: boolean };
 
 export const SPORTS: Record<Sport, { ad: () => string; spor: () => string; kisa: string; renk: string; icon: string; kural: () => string }> = {
   boks: { spor: () => L("Boks"), ad: () => L("Altın Eldiven Boks Ligi"), kisa: 'AEB', renk: '#d4a017', icon: 'boxing-glove', kural: () => L("Yalnızca yumruk: jab, direkt, kaç, gard. Tekme, indirme ve yer dövüşü yok.") },
@@ -170,8 +172,19 @@ export function finishSportFight(s: GameState) {
         notes.push(L("🏆 Kemerini savundun! {0} savunma.", [r.savunma]));
       } else {
         r.kemer = true;
+        r.kemerler = (r.kemerler ?? 0) + 1;
+        b.yeniKemer = true;
         notes.push(L("🏆 {0} ŞAMPİYONU! Kemer artık senin.", [lig.ad().toLocaleUpperCase(LOC)]));
         s.haberler.unshift(L("🏆 {0} {1} kemerini kazandı!", [`${s.fighter.ad} ${s.fighter.soyad}`, lig.ad()]));
+        // Dolapta takılabilen lig kemeri, müze vitrini ve organizasyonun paylaşımı
+        const koz = `kem_lig_${b.spor}`;
+        if (!(s.ozelKozmetik ?? []).includes(koz)) {
+          s.ozelKozmetik = [...(s.ozelKozmetik ?? []), koz];
+          notes.push(L("🎽 Dolaba yeni kemer görünümü: {0}", [lig.ad()]));
+        }
+        const m = addMemento(s, { id: 'lig_kemer', tur: 'kemer', ad: L("Başka bir sporun kemeri"), metin: L("{0} kemeri. Kafesin dışında da şampiyon olduğunun kanıtı.", [lig.ad()]), nadir: 'efsane', kat: 'muze' });
+        if (m) notes.push(m);
+        addPost(s, { yazar: lig.ad(), kullanici: `@${lig.kisa.toLowerCase()}lig`, tur: 'organizasyon', metin: L("🏆 YENİ ŞAMPİYON! {0}, MMA'dan gelip kemeri aldı. Kimse beklemiyordu. 👑", [`${s.fighter.ad} ${s.fighter.soyad}`]), renk: lig.renk });
       }
       r.sira = 1;
     } else {
@@ -191,6 +204,8 @@ export function finishSportFight(s: GameState) {
   } else {
     notes.push(L("⚖️ Berabere: sıralama değişmedi."));
   }
+  // Lig galibiyeti Kafesgram'da konuşulur (kemer paylaşımı ayrı)
+  if (won && !b.yeniKemer) addPost(s, { yazar: lig.ad(), kullanici: `@${lig.kisa.toLowerCase()}lig`, tur: 'organizasyon', metin: fin ? L("💥 {0} ligimizde bitirişle kazandı! MMA'cılar bu işi biliyor.", [`${s.fighter.ad} ${s.fighter.soyad}`]) : L("✅ {0} ligimizde kazandı: {1}-{2}.", [`${s.fighter.ad} ${s.fighter.soyad}`, r.g, r.m]), renk: lig.renk });
   const pay = Math.round(b.ucret * (won ? 1.5 : 1));
   s.para += pay;
   notes.push(L("💵 Ücret: ${0}", [pay.toLocaleString(LOC)]));

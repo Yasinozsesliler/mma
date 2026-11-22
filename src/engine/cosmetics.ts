@@ -119,6 +119,11 @@ export const COSMETICS: Cosmetic[] = [
   { id: 'kem_klasik', slot: 'kemer', ad: L("Organizasyon rengi"), renk: [], kaynak: hazir },
   { id: 'kem_beyaz', slot: 'kemer', ad: L("Beyaz Altın"), renk: ['#ffffff', '#9aa3ad', '#0b0b0c', '#7fdbff'], kaynak: basari(L("Bir kemeri 3 kez savun"), (c) => c.savunma >= 3) },
   { id: 'kem_alev', slot: 'kemer', ad: L("Ateş Kemeri"), renk: ['#ffe08a', '#e85d04', '#1a0703', '#ffb703'], nadir: 'efsane', kaynak: basari(L("Günlük hedeflerde 30 günlük seri"), (c) => c.ozel.includes('kem_alev')) },
+  // Dövüş sporları lig kemerleri (sportLeague.ts kemer kazanınca verir)
+  { id: 'kem_lig_boks', slot: 'kemer', ad: L("Altın Eldiven"), renk: ['#fff1b8', '#d4a017', '#1a1405', '#e63946'], nadir: 'epik', kaynak: basari(L("Altın Eldiven Boks Ligi kemerini kazan"), (c) => c.ozel.includes('kem_lig_boks')) },
+  { id: 'kem_lig_muaythai', slot: 'kemer', ad: L("Sekiz Silah"), renk: ['#ffe08a', '#c1121f', '#2a0508', '#f2c14e'], nadir: 'epik', kaynak: basari(L("Sekiz Silah Muay Thai Ligi kemerini kazan"), (c) => c.ozel.includes('kem_lig_muaythai')) },
+  { id: 'kem_lig_grappling', slot: 'kemer', ad: L("Kilit"), renk: ['#e9d5ff', '#7b2cbf', '#12051f', '#f2c14e'], nadir: 'epik', kaynak: basari(L("Kilit Grappling Ligi kemerini kazan"), (c) => c.ozel.includes('kem_lig_grappling')) },
+  { id: 'kem_lig_gures', slot: 'kemer', ad: L("Er Meydanı"), renk: ['#d8f3ec', '#2a9d8f', '#06201c', '#f2c14e'], nadir: 'epik', kaynak: basari(L("Er Meydanı Güreş Ligi kemerini kazan"), (c) => c.ozel.includes('kem_lig_gures')) },
   { id: 'kem_altin', slot: 'kemer', ad: L("Kraliyet"), renk: ['#fff3b0', '#c9a227', '#3b0a45', '#e0b0ff'], kaynak: paket('paket_altin') },
   { id: 'kem_sokak', slot: 'kemer', ad: L("Karbon"), renk: ['#d0d4da', '#50565f', '#1a1d22', '#39ff14'], kaynak: paket('paket_sokak') },
   { id: 'kem_sultan', slot: 'kemer', ad: L("Sultan"), renk: ['#ffe39a', '#c18f2a', '#5a0f16', '#2ec4b6'], kaynak: paket('paket_sultan') },

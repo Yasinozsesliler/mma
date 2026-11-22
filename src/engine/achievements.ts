@@ -204,6 +204,11 @@ export const ACHIEVEMENTS: Achievement[] = [
   a({ id: 'salon_bir', ad: L("Bir Numara"), aciklama: L("Dünyanın 1 numaralı salonu ol."), ikon: 'podium-gold', kat: 'salon', tier: 'efsane', gizli: true, check: (s) => (s.salon?.enIyiSira ?? 99) <= 1 }),
   a({ id: 'salon_sampiyon', ad: L("Şampiyonların Hocası"), aciklama: L("Bir öğrencin UCC şampiyonu olsun."), ikon: 'crown', kat: 'salon', tier: 'efsane', gizli: true, get: (s) => s.salon?.sampiyonSayisi ?? 0, hedef: 1 }),
 
+  // Dövüş sporları ligleri
+  a({ id: 'lig_ilk', ad: L("Başka Bir Ring"), aciklama: L("Bir dövüş sporları liginde maç kazan."), ikon: 'boxing-glove', kat: 'dovus', tier: 'bronz', get: (s) => Object.values(s.sporlar ?? {}).reduce((n, r) => n + (r?.g ?? 0), 0), hedef: 1 }),
+  a({ id: 'lig_20', ad: L("Ring Kurdu"), aciklama: L("Dövüş sporları liglerinde 20 maç kazan."), ikon: 'karate', kat: 'dovus', tier: 'altin', get: (s) => Object.values(s.sporlar ?? {}).reduce((n, r) => n + (r?.g ?? 0), 0), hedef: 20 }),
+  a({ id: 'lig_kemer', ad: L("Çift Branş"), aciklama: L("Bir dövüş sporları liginde kemer kazan."), ikon: 'trophy-variant', kat: 'kemer', tier: 'gumus', get: (s) => Object.values(s.sporlar ?? {}).reduce((n, r) => n + (r?.kemerler ?? 0), 0), hedef: 1 }),
+  a({ id: 'lig_dort', ad: L("Dört Silah"), aciklama: L("Dört dövüş sporu liginin hepsinde kemer kazan."), ikon: 'crown', kat: 'kemer', tier: 'efsane', gizli: true, get: (s) => Object.values(s.sporlar ?? {}).filter((r) => (r?.kemerler ?? 0) > 0).length, hedef: 4 }),
   a({ id: 'gonderi20', ad: L("İçerik Üreticisi"), aciklama: L("Sosyal medyada 20 paylaşım yap."), ikon: 'cellphone-text', kat: 'sohret', tier: 'bronz', get: (s) => I(s).gonderi, hedef: 20 }),
 ];
 

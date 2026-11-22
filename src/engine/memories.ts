@@ -22,6 +22,7 @@ export const MUSEUM: { id: string; tur: HatiraTur; ad: () => string; ipucu: () =
   { id: 'savunma1', tur: 'kupa', ad: () => L("İlk unvan savunmasının kupası"), ipucu: () => L("Kemerini bir kez savun."), nadir: 'ozel' },
   { id: 'savunma3', tur: 'kupa', ad: () => L("Üç savunmanın altın eldiveni"), ipucu: () => L("Kemerini üç kez savun."), nadir: 'efsane' },
   { id: 'gp', tur: 'madalya', ad: () => L("Grand Prix madalyası"), ipucu: () => L("Bir Grand Prix kazan."), nadir: 'efsane' },
+  { id: 'lig_kemer', tur: 'kemer', ad: () => L("Başka bir sporun kemeri"), ipucu: () => L("Bir dövüş sporları liginde kemer kazan."), nadir: 'efsane' },
 ];
 
 export const HATIRA_ICON: Record<HatiraTur, string> = {

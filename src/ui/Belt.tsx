@@ -22,7 +22,7 @@ const VB_W = 300;
 const VB_H = 130;
 
 /** UCC kemerini andıran şampiyonluk kemeri: deri kayış, oymalı yan plakalar, küreli büyük orta plaka. */
-export function Belt({ org, siklet, width = 300, dim = false, skin }: { org: OrgId; siklet?: WeightClass; width?: number; dim?: boolean; skin?: string[] | null }) {
+export function Belt({ org, siklet, width = 300, dim = false, skin, logoText, ribbonOverride }: { org: OrgId; siklet?: WeightClass; width?: number; dim?: boolean; skin?: string[] | null; /** Dövüş sporları ligi: logo plakası ve kurdele yazısı */ logoText?: string; ribbonOverride?: string }) {
   const equipped = useBeltSkin();
   const sk = skin === undefined ? equipped : skin;
   const [hi, lo, strap, gem] = sk ?? PALETTE[org];
@@ -35,7 +35,7 @@ export function Belt({ org, siklet, width = 300, dim = false, skin }: { org: Org
   const cx = 150;
   const cy = 64;
   // Kurdele yazısı kurdelenin içine sığacak kadar küçülür (uzun sıklet adları ve diğer diller için).
-  const ribbonText = L("WORLD CHAMPION{0}", [siklet ? ' · ' + WEIGHT_CLASSES[siklet].ad.toLocaleUpperCase(LOC) : '']);
+  const ribbonText = ribbonOverride ?? L("WORLD CHAMPION{0}", [siklet ? ' · ' + WEIGHT_CLASSES[siklet].ad.toLocaleUpperCase(LOC) : '']);
   const ribbonFs = Math.max(3.6, Math.min(6.5, 82 / (ribbonText.length * 0.82)));
   const ribbon = { text: ribbonText, fs: ribbonFs, ls: ribbonFs * 0.12 };
 
@@ -136,8 +136,8 @@ export function Belt({ org, siklet, width = 300, dim = false, skin }: { org: Org
 
       {/* Üstte logo plakası */}
       <Rect x={cx - 34} y={cy - 54} width={68} height={24} rx={6} fill="#0b0b0c" stroke={hi} strokeWidth={1.6} />
-      <SvgText x={cx} y={cy - 36} fill={logo} fontSize={org === 'oktagon' ? 11 : 17} fontWeight="bold" fontStyle="italic" textAnchor="middle" letterSpacing={1}>
-        {ORGS[org].kisa}
+      <SvgText x={cx} y={cy - 36} fill={logoText ? gem : logo} fontSize={logoText ? 15 : org === 'oktagon' ? 11 : 17} fontWeight="bold" fontStyle="italic" textAnchor="middle" letterSpacing={1}>
+        {logoText ?? ORGS[org].kisa}
       </SvgText>
 
       {/* Altta kurdele */}
