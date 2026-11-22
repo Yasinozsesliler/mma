@@ -19,7 +19,7 @@ export const BLUE_CORNER: Kit = { shorts: '#1c4fc4', trim: '#f1f2f5', glove: '#1
 const REF_LOOK: Appearance = { ten: 1, sac: 'kazik', sacRenk: 7, goz: 0, sakal: 'yok', yara: false, dovme: false };
 const REF_KIT: Kit = { shorts: '#15161a', trim: '#fff', glove: '#000', ref: true };
 
-export type Corner = { look: Appearance; name: string; country?: string; nick?: string; kit?: Kit };
+export type Corner = { look: Appearance; name: string; country?: string; nick?: string; kit?: Kit; /** Gençlik Yolu: figür yaşa göre küçük */ genc?: number };
 export type WatchArena = { tier: ArenaTier; org: string; sub?: string; tint?: string };
 
 const split = (n: string) => {
@@ -45,10 +45,10 @@ export function WatchVs({ w, a, b, rows, arena, title, tag }: { w: number; a: Co
       <LinearGradient colors={['rgba(193,18,31,0.35)', 'rgba(193,18,31,0)']} start={{ x: 0, y: 0.5 }} end={{ x: 0.45, y: 0.5 }} style={StyleSheet.absoluteFill} />
       <LinearGradient colors={['rgba(28,79,196,0)', 'rgba(28,79,196,0.35)']} start={{ x: 0.55, y: 0.5 }} end={{ x: 1, y: 0.5 }} style={StyleSheet.absoluteFill} />
       <Animated.View style={{ position: 'absolute', left: -w * 0.24, bottom: 18, opacity: show, transform: [{ translateX: show.interpolate({ inputRange: [0, 1], outputRange: [-60, 0] }) }] }} pointerEvents="none">
-        <Standing look={a.look} kit={a.kit ?? RED_CORNER} h={fh} />
+        <Standing look={a.look} kit={a.kit ?? RED_CORNER} h={fh} genc={a.genc} />
       </Animated.View>
       <Animated.View style={{ position: 'absolute', right: -w * 0.24, bottom: 18, opacity: show, transform: [{ translateX: show.interpolate({ inputRange: [0, 1], outputRange: [60, 0] }) }] }} pointerEvents="none">
-        <Standing look={b.look} kit={b.kit ?? BLUE_CORNER} h={fh} flip />
+        <Standing look={b.look} kit={b.kit ?? BLUE_CORNER} h={fh} flip genc={b.genc} />
       </Animated.View>
       <LinearGradient colors={['transparent', 'rgba(4,4,5,0.85)']} locations={[0.78, 1]} style={StyleSheet.absoluteFill} pointerEvents="none" />
       <View style={[x.col, { width: colW, left: (w - colW) / 2 }]}>

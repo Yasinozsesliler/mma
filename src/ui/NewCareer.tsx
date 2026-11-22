@@ -1,5 +1,6 @@
 // Yeni görünüm: kariyer ana ekranı sahnesi ve maç öncesi VS sahnesi. Klasik görünümde hiç çizilmez.
 // Yalnızca görünüm: oyun durumu okunur, hiçbir şey değiştirilmez. Dokunuşlar mevcut eylemleri çağırır.
+import { youthBuild, youthLook, youthScale } from './sportLook';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Ellipse, G } from 'react-native-svg';
@@ -26,13 +27,14 @@ export { arenaOrgText, orgShort } from './arenaArt';
 const shortMoney = (n: number) => (Math.abs(n) < 100_000 ? money(n) : `${n < 0 ? '-' : ''}$${fmtFollowers(Math.abs(n))}`);
 
 /** Ayakta duran tam boy dövüşçü. flip: sola bakar. */
-export function Standing({ look, kit, h, flip, pose = 'stance' }: { look: Appearance; kit: Kit; h: number; flip?: boolean; pose?: PoseName }) {
+export function Standing({ look, kit, h, flip, pose = 'stance', genc }: { look: Appearance; kit: Kit; h: number; flip?: boolean; pose?: PoseName; /** Gençlik Yolu: 0 (12 yaş) … 1 (18 yaş) */ genc?: number }) {
   const w = h * 0.8;
+  const k = 0.95 * youthScale(genc);
   return (
     <Svg width={w} height={h} viewBox="0 0 80 100">
-      <Ellipse cx={40} cy={96} rx={22} ry={3.5} fill="#000" opacity={0.45} />
-      <G transform={`translate(40 ${96 - HIP_H * 0.95}) scale(${flip ? -0.95 : 0.95} 0.95)`}>
-        <Figure p={POSES[pose]} look={look} kit={kit} />
+      <Ellipse cx={40} cy={96} rx={22 * youthScale(genc)} ry={3.5} fill="#000" opacity={0.45} />
+      <G transform={`translate(40 ${96 - HIP_H * k}) scale(${flip ? -k : k} ${k})`}>
+        <Figure p={POSES[pose]} look={youthLook(look, genc)} kit={kit} build={youthBuild(genc)} />
       </G>
     </Svg>
   );

@@ -5,14 +5,17 @@ import { finishFight } from '../engine/career';
 import { SPORTS } from '../engine/sportLeague';
 import { lookFor } from '../engine/tale';
 import { STAT_LABELS, type GameState, type StatKey } from '../engine/types';
-import { chooseYouthEvent, eventOf, finishYouthFight, graduateYouth, MMA_AGE, nextYouthYear, startYouthFight, stayOneMoreYear, tournamentOf, YOUTH_MAX_AGE, YOUTH_START, type Youth } from '../engine/youth';
+import { chooseYouthEvent, eventOf, finishYouthFight, graduateYouth, isRivalBout, MMA_AGE, nextYouthYear, rivalName, simYouthSemi, startYouthFight, stayOneMoreYear, tournamentOf, withRival, YOUTH_MAX_AGE, YOUTH_START, youthGenc, type Medal, type Youth } from '../engine/youth';
 import { L, LOC } from '../i18n';
 import { Button, Card, Choice, Screen, Section, Title } from './components';
 import { DEFAULT_LOOK } from './FighterAvatar';
 import { FightScreen } from './FightScreen';
 import type { Act } from './GameScreens';
-import { WatchVs } from './NewWatch';
+import { BLUE_CORNER, RED_CORNER, WatchVs } from './NewWatch';
+import { sportKit } from './sportLook';
 import { C, F } from './theme';
+
+const MEDAL_ICON: Record<Medal, string> = { altin: '🥇', gumus: '🥈', bronz: '🥉' };
 
 function AgeStrip({ y }: { y: Youth }) {
   const last = Math.max(MMA_AGE, y.yas);
@@ -23,7 +26,7 @@ function AgeStrip({ y }: { y: Youth }) {
         const now = a === y.yas;
         return (
           <View key={a} style={[st.age, now && { borderColor: C.gold }, a >= MMA_AGE && { borderColor: C.red + '88' }]}>
-            <Text style={st.ageMedal}>{u ? (u.madalya === 'altin' ? '🥇' : '🥈') : a >= MMA_AGE ? '🥊' : now ? '•' : ''}</Text>
+            <Text style={st.ageMedal}>{u ? MEDAL_ICON[u.madalya] : a >= MMA_AGE ? '🥊' : now ? '•' : ''}</Text>
             <Text style={[st.ageText, now && { color: C.gold }]}>{a}</Text>
           </View>
         );
@@ -75,18 +78,32 @@ export function YouthScreen({ s, act }: { s: GameState; act: Act }) {
       <Screen>
         {head(L("Her yıl bir karar, her yıl bir turnuva. 18'inde MMA seni bekliyor."), 'ev', L("{0} yaşındasın", [y.yas]))}
         <Card accent={spor.renk}>
-          <Text style={st.event}>{e?.metin()}</Text>
+          <Text style={st.event}>{e ? withRival(y, e.metin()) : ''}</Text>
         </Card>
-        {e?.secenekler.map((o, i) => <Choice key={i} n={i + 1} label={o.ad()} tone="gold" onPress={() => act((x) => chooseYouthEvent(x, i))} />)}
+        {e?.secenekler.map((o, i) => <Choice key={i} n={i + 1} label={withRival(y, o.ad())} tone="gold" onPress={() => act((x) => chooseYouthEvent(x, i))} />)}
       </Screen>
     );
   }
 
   if (y.adim === 'hazir' && y.rakip) {
     const o = y.rakip;
+    const yari = y.tur === 'yari';
+    const rival = isRivalBout(y);
+    const g = youthGenc(y.yas);
     return (
-      <Screen footer={<Button label={L("Finale çık")} icon="trophy" tone="gold" onPress={() => act(startYouthFight)} />}>
+      <Screen
+        footer={
+          <View style={{ gap: 8 }}>
+            <Button label={yari ? L("Yarı finali oyna") : rival ? L("Finalde {0} ile karşılaş", [o.soyad]) : L("Finale çık")} icon={yari ? 'boxing-glove' : 'trophy'} tone="gold" onPress={() => act(startYouthFight)} />
+            {yari ? <Button label={L("Hızlı geç")} icon="fast-forward" tone="ghost" onPress={() => act(simYouthSemi)} /> : null}
+          </View>
+        }
+      >
         {head(spor.kural(), 'salon', t.ad)}
+        <View style={[st.round, rival && { borderColor: C.red }]}>
+          <Text style={[st.roundText, rival && { color: C.red }]}>{yari ? L("YARI FİNAL") : rival ? L("FİNAL · EZELİ RAKİP") : L("FİNAL")}</Text>
+          {rival && y.seri ? <Text style={st.small}>{L("Aranızdaki seri: {0}-{1}", [y.seri.g, y.seri.m])}</Text> : null}
+        </View>
         {(y.notlar ?? []).map((n, i) => (
           <Text key={i} style={st.note}>
             {n}
@@ -94,14 +111,15 @@ export function YouthScreen({ s, act }: { s: GameState; act: Act }) {
         ))}
         <WatchVs
           w={w}
-          a={{ look: s.fighter.gorunum ?? DEFAULT_LOOK, name: `${s.fighter.ad} ${s.fighter.soyad}`, country: s.fighter.uyruk, nick: s.fighter.lakap }}
-          b={{ look: lookFor(o), name: `${o.ad} ${o.soyad}`, country: o.uyruk, nick: o.lakap }}
+          a={{ look: s.fighter.gorunum ?? DEFAULT_LOOK, name: `${s.fighter.ad} ${s.fighter.soyad}`, country: s.fighter.uyruk, nick: s.fighter.lakap, kit: sportKit(RED_CORNER, y.spor), genc: g }}
+          b={{ look: lookFor(o), name: `${o.ad} ${o.soyad}`, country: rival ? s.fighter.uyruk : o.uyruk, nick: o.lakap, kit: sportKit(BLUE_CORNER, y.spor), genc: g }}
           rows={[
             [`${y.rekor.g}-${y.rekor.m}`, L("KARNE"), `${o.rekor.g}-${o.rekor.m}`],
-            [String(y.yas), L("YAŞ"), String(y.yas + (t.seviye >= 2 ? 1 : 0))],
+            [String(y.yas), L("YAŞ"), String(y.yas)],
           ]}
           arena={{ tier: t.seviye >= 3 ? 3 : t.seviye >= 2 ? 2 : 0, org: L("GENÇ"), sub: t.ad.toLocaleUpperCase(LOC) }}
-          title={L("FİNAL")}
+          title={yari ? L("YARI FİNAL") : L("FİNAL")}
+          tag={rival ? L("EZELİ RAKİP") : undefined}
         />
       </Screen>
     );
@@ -110,8 +128,8 @@ export function YouthScreen({ s, act }: { s: GameState; act: Act }) {
   if (y.adim === 'sonuc') {
     return (
       <Screen footer={<Button label={y.yas + 1 >= MMA_AGE ? L("18 yaşına gir") : L("Sonraki yıl")} icon="arrow-right" tone="gold" onPress={() => act(nextYouthYear)} />}>
-        {head(t.ad, 'arena', y.kazandi ? L("Altın madalya!") : L("Gümüş madalya"))}
-        <Card accent={y.kazandi ? C.gold : C.dim}>
+        {head(t.ad, 'arena', y.madalya === 'altin' ? L("Altın madalya!") : y.madalya === 'gumus' ? L("Gümüş madalya") : L("Bronz madalya"))}
+        <Card accent={y.madalya === 'altin' ? C.gold : y.madalya === 'gumus' ? '#c0c7d1' : '#cd7f32'}>
           {(y.notlar ?? []).map((n, i) => (
             <Text key={i} style={st.note}>
               {n}
@@ -136,21 +154,48 @@ export function YouthScreen({ s, act }: { s: GameState; act: Act }) {
     >
       {head(L("Kafes seni çağırıyor. Erken geçersen gelişecek zamanın çok olur; bir yıl daha kalırsan biraz daha olgun başlarsın."), 'arena', L("Karar anı"))}
       <Card accent={C.gold}>
-        <Text style={st.big}>{L("{0} altın · {1} gümüş", [altin, y.unvanlar.length - altin])}</Text>
+        <Text style={st.big}>{L("{0} altın · {1} gümüş · {2} bronz", [altin, y.unvanlar.filter((u) => u.madalya === 'gumus').length, y.unvanlar.filter((u) => u.madalya === 'bronz').length])}</Text>
         <Text style={st.small}>{L("Gençlik karnesi: {0}-{1}", [y.rekor.g, y.rekor.m])}</Text>
         {bonusText(y) ? <Text style={st.note}>{L("MMA'ya taşınan kazanımlar: {0}", [bonusText(y)])}</Text> : null}
+        {y.seri && y.seri.g + y.seri.m > 0 ? <Text style={[st.note, { color: C.red }]}>{L("⚔️ {0} ile seri {1}-{2}. MMA'da da peşini bırakmayacak.", [rivalName(y), y.seri.g, y.seri.m])}</Text> : null}
       </Card>
       <Section>{L("MADALYALAR")}</Section>
       {y.unvanlar.map((u, i) => (
         <Text key={i} style={st.note}>
-          {u.madalya === 'altin' ? '🥇' : '🥈'} {u.yas} · {u.ad}
+          {MEDAL_ICON[u.madalya]} {u.yas} · {u.ad}{u.rakip ? ` · ${L("ezeli rakip")}` : ''}
         </Text>
       ))}
     </Screen>
   );
 }
 
+/** Profilde gençlik geçmişi: spor, karne, madalya şeridi ve genç ezeli rakiple seri. */
+export function YouthHistoryCard({ s }: { s: GameState }) {
+  const g = s.gencGecmis;
+  if (!g) return null;
+  const say = (m: Medal) => g.unvanlar.filter((u) => u.madalya === m).length;
+  return (
+    <Card accent={SPORTS[g.spor].renk}>
+      <Text style={st.histHead}>{L("GENÇLİK · {0}", [SPORTS[g.spor].spor().toLocaleUpperCase(LOC)])}</Text>
+      <Text style={st.note}>{L("Gençlik karnesi: {0}-{1}", [g.rekor.g, g.rekor.m])} · 🥇 {say('altin')} · 🥈 {say('gumus')} · 🥉 {say('bronz')}</Text>
+      <View style={st.medalRow}>
+        {g.unvanlar.map((u, i) => (
+          <View key={i} style={st.medalCell}>
+            <Text style={{ fontSize: 18 }}>{MEDAL_ICON[u.madalya]}</Text>
+            <Text style={st.medalAge}>{u.yas}</Text>
+          </View>
+        ))}
+      </View>
+      {g.rakip ? <Text style={[st.small, { color: C.red }]}>{L("⚔️ Genç ezeli rakip {0}: {1}-{2}", [g.rakip.ad, g.rakip.g, g.rakip.m])}</Text> : null}
+    </Card>
+  );
+}
+
 const st = StyleSheet.create({
+  histHead: { color: C.gold, fontFamily: F.black, fontSize: 11, letterSpacing: 1.4, marginBottom: 4 },
+  medalRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginVertical: 6 },
+  medalCell: { alignItems: 'center', minWidth: 30 },
+  medalAge: { color: C.dim, fontFamily: F.bold, fontSize: 10 },
   strip: { flexDirection: 'row', gap: 4, marginBottom: 10 },
   age: { flex: 1, alignItems: 'center', borderWidth: 1, borderColor: '#2a2d35', borderRadius: 8, paddingVertical: 4, backgroundColor: 'rgba(255,255,255,0.03)' },
   ageMedal: { fontSize: 13, height: 17, color: C.gold },
@@ -159,4 +204,6 @@ const st = StyleSheet.create({
   note: { color: C.text, fontFamily: F.semi, fontSize: 13, lineHeight: 20, marginBottom: 4 },
   small: { color: C.dim, fontFamily: F.semi, fontSize: 12, marginTop: 4 },
   big: { color: C.gold, fontFamily: F.display, fontSize: 24 },
+  round: { alignSelf: 'flex-start', borderWidth: 1, borderColor: C.gold, borderRadius: 6, paddingHorizontal: 10, paddingVertical: 4, marginBottom: 8, gap: 2 },
+  roundText: { color: C.gold, fontFamily: F.black, fontSize: 12, letterSpacing: 1.2 },
 });

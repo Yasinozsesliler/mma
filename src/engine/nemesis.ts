@@ -22,7 +22,7 @@ export type Nemesis = {
   b: number;
   /** Son karşılaşmanın (ya da doğuşun) oyuncu dövüş sayısı. */
   son: number;
-  kaynak: 'yenilgi' | 'meydan';
+  kaynak: 'yenilgi' | 'meydan' | 'genclik';
   bitti?: boolean;
 };
 

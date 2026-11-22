@@ -10,7 +10,7 @@ import { Button, Icon, Screen, Section, Title, type IconName } from './component
 import type { Act } from './GameScreens';
 import { C, F, R } from './theme';
 
-type Tab = 'muze' | 'tatil' | 'aile';
+type Tab = 'muze' | 'tatil' | 'aile' | 'genclik';
 
 function Vitrine({ h, locked, hint, open, onPress }: { h?: Hatira; locked?: { ad: string; tur: Hatira['tur'] }; hint?: string; open: boolean; onPress: () => void }) {
   const renk = h ? NADIR_RENK[h.nadir] : '#2a2c33';
@@ -41,6 +41,8 @@ export function MuseumScreen({ s, act }: { s: GameState; act: Act }) {
     { k: 'muze', ad: L("Müze"), ikon: 'bank', n: muzeHas.size },
     { k: 'tatil', ad: L("Kartpostallar"), ikon: 'email-newsletter', n: all.filter((h) => h.kat === 'tatil').length },
     { k: 'aile', ad: L("Aile albümü"), ikon: 'heart', n: all.filter((h) => h.kat === 'aile').length },
+    // Gençlik Yolu madalyaları (yalnızca o yoldan gelenlerde)
+    ...(all.some((h) => h.kat === 'genclik') ? [{ k: 'genclik' as const, ad: L("Gençlik"), ikon: 'medal' as IconName, n: all.filter((h) => h.kat === 'genclik').length }] : []),
   ];
   return (
     <Screen footer={<Button label={L("Kariyere dön")} icon="arrow-left" tone="ghost" onPress={() => act((x) => (x.phase = 'hub'))} />}>
@@ -73,9 +75,9 @@ export function MuseumScreen({ s, act }: { s: GameState; act: Act }) {
       ) : list.length ? (
         <View style={{ gap: 10 }}>
           {list.map((h) => (
-            <LinearGradient key={h.id} colors={tab === 'tatil' ? ['#f4ecd8', '#e6dcc3'] : ['#1a1214', '#0e0f12']} style={[ms.photo, tab === 'tatil' ? ms.postcard : { borderColor: '#ff5c8a55' }]}>
+            <LinearGradient key={h.id} colors={tab === 'tatil' ? ['#f4ecd8', '#e6dcc3'] : tab === 'genclik' ? ['#1c170b', '#0e0f12'] : ['#1a1214', '#0e0f12']} style={[ms.photo, tab === 'tatil' ? ms.postcard : { borderColor: tab === 'genclik' ? NADIR_RENK[h.nadir] + '88' : '#ff5c8a55' }]}>
               <View style={ms.photoHead}>
-                <Icon name={HATIRA_ICON[h.tur] as IconName} size={18} color={tab === 'tatil' ? '#8a5a2b' : '#ff5c8a'} />
+                <Icon name={HATIRA_ICON[h.tur] as IconName} size={18} color={tab === 'tatil' ? '#8a5a2b' : tab === 'genclik' ? (h.id.endsWith('_altin') ? C.gold : h.id.endsWith('_bronz') ? '#cd7f32' : '#c0c7d1') : '#ff5c8a'} />
                 <Text style={[ms.photoTitle, tab === 'tatil' && { color: '#3b2a17' }]}>{h.ad}</Text>
                 {tab === 'tatil' ? <View style={ms.stamp}><Icon name="airplane" size={14} color="#b23a48" /></View> : null}
               </View>

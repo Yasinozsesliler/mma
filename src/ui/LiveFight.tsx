@@ -1,6 +1,7 @@
 // Canlı dövüş ekranı: bir raunt gerçek zamanlı oynanır (motor: engine/liveFight.ts). Rakip ⚠️ ile saldırı hazırlar;
 // küçülen halka vuruş anını gösterir. KAÇ ile sıyrıl ve kontra penceresinde vur, DİREKT/TEKME ile hazırlığı kes,
 // GARD ile hasarı azalt. Raunt bitince sonuç dövüşe işlenir.
+import { sportKit, youthBuild, youthLook, youthScale } from './sportLook';
 import { cageTintNow } from '../cosmetics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { memo, useEffect, useRef, useState } from 'react';
@@ -695,12 +696,14 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel, band }: { fs: FightSt
     const ps = a === 'p' ? frame.p : frame.o;
     const face = a === 'p' ? 1 : -1;
     const X = (a === 'p' ? 70 : 130) + face * ps.x;
-    const Y = FLOOR - HIP_H + ps.y;
+    // Gençlik turnuvası: figür yaşa göre küçük ve ince; grappling ve güreşte eldivensiz
+    const sc = youthScale(fs.mods.genc);
+    const Y = FLOOR - HIP_H * sc + ps.y;
     return (
       <G key={a}>
-        <Ellipse cx={X} cy={FLOOR + 3} rx={18} ry={3.5} fill="#000" opacity={0.3} />
-        <G transform={`translate(${X} ${Y}) scale(${face} 1) rotate(${ps.rot})`}>
-          <Figure p={{ ...ps, rot: 0 }} look={(a === 'p' ? pLook : oLook) ?? DEFAULT_LOOK} kit={a === 'p' ? kit : BLUE} hasar={100 - (a === 'p' ? frame.pHp : frame.oHp)} />
+        <Ellipse cx={X} cy={FLOOR + 3} rx={18 * sc} ry={3.5} fill="#000" opacity={0.3} />
+        <G transform={`translate(${X} ${Y}) scale(${face * sc} ${sc}) rotate(${ps.rot})`}>
+          <Figure p={{ ...ps, rot: 0 }} look={youthLook((a === 'p' ? pLook : oLook) ?? DEFAULT_LOOK, fs.mods.genc)} kit={sportKit(a === 'p' ? kit : BLUE, fs.mods.kural)} build={youthBuild(fs.mods.genc)} hasar={100 - (a === 'p' ? frame.pHp : frame.oHp)} />
         </G>
       </G>
     );

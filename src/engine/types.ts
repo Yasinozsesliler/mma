@@ -214,7 +214,7 @@ export interface Hatira {
   metin: string;
   nadir: 'siradan' | 'ozel' | 'efsane';
   /** Müze (maç), tatil kartpostalı ya da aile albümü */
-  kat: 'muze' | 'tatil' | 'aile';
+  kat: 'muze' | 'tatil' | 'aile' | 'genclik';
   hafta: number;
   yas: number;
 }
@@ -398,6 +398,8 @@ export interface FightMods {
   kural?: import('./sportRules').Sport;
   /** Gençlik turnuvası adı (youth.ts): yayın bandında lig adı yerine */
   ligAd?: string;
+  /** Gençlik Yolu: 0 (12 yaş) … 1 (18 yaş); figür küçük ve ince çizilir */
+  genc?: number;
 }
 
 export interface FightResult {
@@ -840,7 +842,7 @@ export interface GameState {
   sporSon?: number;
   /** Gençlik Yolu: süren gençlik yılları ve MMA'ya geçince kalan özet (youth.ts) */
   genclik?: import('./youth').Youth;
-  gencGecmis?: { spor: import('./sportRules').Sport; rekor: { g: number; m: number }; unvanlar: import('./youth').YouthTitle[] };
+  gencGecmis?: { spor: import('./sportRules').Sport; rekor: { g: number; m: number }; unvanlar: import('./youth').YouthTitle[]; rakip?: { ad: string; g: number; m: number } };
   /** Alınan harita kilometre taşları (c5, k3...) */
   haritaOdul?: string[];
   /** Crossover boks maçı (crossover.ts) */

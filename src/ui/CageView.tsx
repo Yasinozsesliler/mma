@@ -1,4 +1,5 @@
 // Kafes sahnesi: eklemli dövüşçüler ve hakem, maç akışındaki her olayı koreografiyle canlandırır.
+import { sportKit, youthBuild, youthLook, youthScale } from './sportLook';
 import { L as tL, LOC } from '../i18n';
 import { announce } from '../announcer';
 import { sfx, type Sfx } from '../audio';
@@ -668,12 +669,15 @@ export function CageView({
     const X = baseX(a) + f * k * ps.x;
     const Y = floorY - HIP_H * k + k * ps.y;
     const look = a === 'p' ? pLook ?? DEFAULT_LOOK : a === 'o' ? oLook : rLook ?? REF_LOOK;
-    const kit = a === 'p' ? pKit : a === 'o' ? { shorts: '#1f4fbf', trim: '#ffffff', glove: '#1740a8' } : { shorts: rShirt ?? '#15161a', trim: '#fff', glove: '#000', ref: true };
+    const kit0 = a === 'p' ? pKit : a === 'o' ? { shorts: '#1f4fbf', trim: '#ffffff', glove: '#1740a8' } : { shorts: rShirt ?? '#15161a', trim: '#fff', glove: '#000', ref: true };
+    // Grappling ve güreşte eldivensiz; gençlik turnuvasında dövüşçüler küçük ve ince (hakem değil)
+    const kit = a === 'r' ? kit0 : sportKit(kit0, fs.mods.kural);
+    const ysc = a === 'r' ? 1 : youthScale(fs.mods.genc);
     return (
       <G key={a}>
         <Ellipse cx={X} cy={floorY + 4} rx={20 * k} ry={4 * k} fill="#000" opacity={0.25} />
-        <G transform={tL("translate({0} {1}) scale({2} {3}) rotate({4})", [X, Y, f * k, k, ps.rot])}>
-          <Figure p={{ ...ps, rot: 0 }} look={look} kit={kit} hasar={a === 'p' ? fs.pHasar : a === 'o' ? fs.oHasar : 0} build={a === 'p' ? pBuild : a === 'o' ? oBuild : 0} />
+        <G transform={tL("translate({0} {1}) scale({2} {3}) rotate({4})", [X, Y + HIP_H * k * (1 - ysc), f * k * ysc, k * ysc, ps.rot])}>
+          <Figure p={{ ...ps, rot: 0 }} look={a === 'r' ? look : youthLook(look, fs.mods.genc)} kit={kit} hasar={a === 'p' ? fs.pHasar : a === 'o' ? fs.oHasar : 0} build={a === 'r' ? 0 : a === 'p' && fs.mods.genc == null ? pBuild : a === 'o' && fs.mods.genc == null ? oBuild : youthBuild(fs.mods.genc)} />
         </G>
       </G>
     );

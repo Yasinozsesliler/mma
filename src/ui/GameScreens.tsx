@@ -90,6 +90,7 @@ import { canFanMeet, fanMeet } from '../engine/fanMeet';
 import { GrandPrixCard } from './GrandPrixCard';
 import { KafesEviInvite } from './KafesEviScreen';
 import { SportInvite } from './SportScreen';
+import { YouthHistoryCard } from './YouthScreen';
 import { OPEN_SPORTS, recOf, sportsOpen, weeksToNext } from '../engine/sportLeague';
 import { BrainCard } from './BrainCard';
 import { PosterCard } from './PosterCard';
@@ -501,7 +502,14 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
               { key: 'siralama', label: L("SIRALAMA") },
             ]}
           />
-          {profSub === 'profil' ? <ProfilePanel s={s} act={act} /> : <RankingsTab s={s} act={act} />}
+          {profSub === 'profil' ? (
+            <>
+              <ProfilePanel s={s} act={act} />
+              <YouthHistoryCard s={s} />
+            </>
+          ) : (
+            <RankingsTab s={s} act={act} />
+          )}
         </>
       )}
       {fanMeetOpen && tab !== 'ana' ? (

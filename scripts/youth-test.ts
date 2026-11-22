@@ -3,7 +3,8 @@ import { createGame, rollStartingStats } from '../src/engine/character';
 import { applyLiveRound, nextRound, oppStatsOf, startLiveRound } from '../src/engine/fight';
 import { liveCreate, liveInput, liveResult, liveStep, type LiveInput } from '../src/engine/liveFight';
 import { setSeed } from '../src/engine/rng';
-import { chooseYouthEvent, finishYouthFight, graduateYouth, nextYouthYear, startYouth, startYouthFight, stayOneMoreYear, YOUTH_BONUS_MAX, youthSport } from '../src/engine/youth';
+import { chooseYouthEvent, finishYouthFight, graduateYouth, isRivalBout, nextYouthYear, simYouthSemi, startYouth, startYouthFight, stayOneMoreYear, YOUTH_BONUS_MAX, youthSport, type Youth } from '../src/engine/youth';
+import { YOUTH_EVENTS } from '../src/engine/youthEvents';
 import { STAT_KEYS, type Background, type FightState, type GameState } from '../src/engine/types';
 
 let fail = 0;
@@ -37,26 +38,40 @@ for (const gecmis of ['boks', 'muaythai', 'bjj', 'gures'] as Background[]) {
   ok(s.phase === 'genclik' && s.genclik?.yas === 12, `${gecmis}: 12 yaşında ${s.genclik?.spor} ile başladı`);
   let years = 0;
   let guard = 0;
+  let rivalBouts = 0;
+  let sims = 0;
+  const round = (y: Youth) => {
+    let g2 = 0;
+    while (y.adim === 'hazir' && g2++ < 3) {
+      if (isRivalBout(y)) rivalBouts++;
+      if (y.tur === 'yari' && years % 2) {
+        sims++;
+        simYouthSemi(s);
+        continue;
+      }
+      startYouthFight(s);
+      if (y.dovus?.mods.kural !== y.spor || y.dovus?.mods.genc == null) ok(false, 'turnuva lig kuralıyla ve genç figürle oynanır');
+      y.dovus = play(y.dovus!);
+      finishYouthFight(s);
+    }
+  };
   while (s.genclik && s.genclik.adim !== 'karar' && guard++ < 20) {
     const y = s.genclik;
     chooseYouthEvent(s, years % 2);
-    if (y.adim !== 'hazir' || !y.rakip) break;
-    startYouthFight(s);
-    if (y.dovus?.mods.kural !== y.spor) ok(false, 'turnuva lig kuralıyla oynanır');
-    y.dovus = play(y.dovus!);
-    finishYouthFight(s);
+    if (y.adim !== 'hazir' || !y.rakip || y.tur !== 'yari') break;
+    round(y);
     if ((y.adim as string) !== 'sonuc') break;
     nextYouthYear(s);
     years++;
   }
   ok(years === 6 && s.genclik?.adim === 'karar' && s.genclik.yas === 18, `${gecmis}: 6 yıl (12-17) sonra 18'de karar (${years} yıl)`);
   const y = s.genclik!;
-  ok(y.unvanlar.length === 6 && y.rekor.g + y.rekor.m === 6, `${gecmis}: 6 turnuva, karne ${y.rekor.g}-${y.rekor.m}`);
+  ok(y.unvanlar.length === 6, `${gecmis}: 6 turnuva madalyası (${y.unvanlar.map((u) => u.madalya[0]).join('')}), karne ${y.rekor.g}-${y.rekor.m}, hızlı geçilen yarı final ${sims}, rakip finali ${rivalBouts}`);
+  ok((s.hatiralar ?? []).filter((h) => h.kat === 'genclik').length === 6, `${gecmis}: madalyalar Hatıralar'ın Gençlik sekmesinde`);
+  ok(new Set(y.gorulen).size === y.gorulen.length, `${gecmis}: olaylar tekrar etmedi`);
   stayOneMoreYear(s);
   chooseYouthEvent(s, 0);
-  startYouthFight(s);
-  y.dovus = play(y.dovus!);
-  finishYouthFight(s);
+  round(y);
   nextYouthYear(s);
   ok(y.adim === 'karar' && y.yas === 19, `${gecmis}: bir yıl daha kalınca 19'da karar`);
   const total = Object.values(y.bonus).reduce((a, b) => a + (b ?? 0), 0);
@@ -66,6 +81,9 @@ for (const gecmis of ['boks', 'muaythai', 'bjj', 'gures'] as Background[]) {
   ok(gain === total && total >= 3 && total <= YOUTH_BONUS_MAX, `${gecmis}: kazanım ${total} puan (tavan ${YOUTH_BONUS_MAX}) istatistiklere işlendi`);
   ok(s.rekor.g + s.rekor.m === 0 && s.amator.g + s.amator.m === 0 && s.gecmis.length === 0, `${gecmis}: MMA ve amatör karnesi boş`);
   ok(!!s.gencGecmis && s.gencGecmis.unvanlar.length === 7, `${gecmis}: gençlik özeti kaldı`);
+  const seri = s.gencGecmis?.rakip;
+  ok(!seri || (s.ezeli?.kaynak === 'genclik' && s.ezeli.g === seri.m && s.ezeli.m === seri.g), `${gecmis}: genç rakip MMA'da ezeli rakip (${seri ? `${seri.g}-${seri.m}` : 'karşılaşmadınız'})`);
 }
+ok(YOUTH_EVENTS.length >= 20, `olay havuzu ${YOUTH_EVENTS.length}`);
 console.log(fail ? `${fail} HATA` : 'hepsi geçti');
 process.exit(fail ? 1 : 0);
