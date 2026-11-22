@@ -394,6 +394,8 @@ export interface FightMods {
   kimlik?: import('./identity').KimlikId;
   /** Zorluk: rakibin tekrar eden taktiği okuma çarpanı (Kabus) */
   okunma?: number;
+  /** Dövüş sporları ligi kuralı (sportLeague.ts); yoksa MMA */
+  kural?: import('./sportRules').Sport;
 }
 
 export interface FightResult {
@@ -581,6 +583,7 @@ export type Phase =
   | 'stil'
   | 'harita'
   | 'kafesEvi'
+  | 'sporLig'
   | 'kulup'
   | 'emeklilik'
   | 'evim'
@@ -827,6 +830,11 @@ export interface GameState {
   harcanan?: number;
   /** Kafes Evi realite şovu (kafesEvi.ts) */
   kafesEvi?: import('./kafesEvi').KafesEvi;
+  /** Dövüş sporları ligleri: karneler, aktif maç, davet, son maç haftası (sportLeague.ts) */
+  sporlar?: Partial<Record<import('./sportRules').Sport, import('./sportLeague').SportRec>>;
+  sporMac?: import('./sportLeague').SportBout;
+  sporDavet?: { spor: import('./sportRules').Sport; hafta: number };
+  sporSon?: number;
   /** Alınan harita kilometre taşları (c5, k3...) */
   haritaOdul?: string[];
   /** Crossover boks maçı (crossover.ts) */

@@ -148,7 +148,7 @@ const ArtCrowd = memo(function ArtCrowd({ w, hp, t, tier = 2, tint }: { w: numbe
 });
 
 /** Tavan spotları, arka kafes ve kanvas */
-const CageBack = memo(function CageBack({ w, tint, tier = 2, logo, renk }: { w: number; tint?: string[] | null; tier?: number; logo?: string; renk?: string }) {
+const CageBack = memo(function CageBack({ w, tint, tier = 2, logo, renk, ring }: { w: number; tint?: string[] | null; tier?: number; logo?: string; renk?: string; /** Boks ringi: kafes teli yerine üç sıra halat */ ring?: boolean }) {
   const cx = w / 2;
   const vurgu = tint?.[0] ?? C.red;
   const tel = tint?.[1];
@@ -162,6 +162,16 @@ const CageBack = memo(function CageBack({ w, tint, tier = 2, logo, renk }: { w: 
           <Polygon points={`${w * 0.9},0 ${w * 0.95},0 ${w * 0.82},${H * 0.86} ${w * 0.6},${H * 0.86}`} fill="#f2c14e" opacity={0.05} />
         </>
       ) : null}
+      {ring ? (
+        <>
+          {[0, 1, 2].map((i) => (
+            <Line key={`r${i}`} x1={w * 0.12} y1={H * 0.34 + i * 17} x2={w * 0.88} y2={H * 0.34 + i * 17} stroke={i === 1 ? '#e8e8ea' : '#c1121f'} strokeWidth={2.2} opacity={0.85} />
+          ))}
+          {[0.12, 0.88].map((u) => (
+            <Rect key={u} x={w * u - 3} y={H * 0.28} width={6} height={H * 0.4} rx={2} fill={u < 0.5 ? C.red : C.blue} opacity={0.9} />
+          ))}
+        </>
+      ) : <>
       <Polygon points={`${w * 0.08},${H * 0.72} ${w * 0.18},${H * 0.18} ${w * 0.82},${H * 0.18} ${w * 0.92},${H * 0.72}`} fill="none" stroke={tel ?? "#2c2f37"} strokeWidth={2} />
       {Array.from({ length: 15 }, (_, i) => {
         const x = w * 0.18 + (w * 0.64 * i) / 14;
@@ -170,6 +180,7 @@ const CageBack = memo(function CageBack({ w, tint, tier = 2, logo, renk }: { w: 
       {Array.from({ length: 7 }, (_, i) => (
         <Line key={`h${i}`} x1={w * 0.16} y1={H * 0.22 + i * 15} x2={w * 0.84} y2={H * 0.22 + i * 15} stroke={tel ?? "#1a1c22"} strokeWidth={1} />
       ))}
+      </>}
       <Ellipse cx={cx} cy={H * 0.8} rx={w * 0.49} ry={H * 0.17} fill="#d6d6d9" />
       <Ellipse cx={cx} cy={H * 0.8} rx={w * 0.49} ry={H * 0.17} fill="url(#cspot)" />
       <Ellipse cx={cx} cy={H * 0.8} rx={w * 0.13} ry={H * 0.045} fill="none" stroke={vurgu} strokeWidth={2} opacity={0.6} />
@@ -702,7 +713,7 @@ export function CageView({
             {art ? <ArtCrowd w={w} hp={low ? 0 : hp} t={!low && hp ? tNow : 0} tier={arena?.tier} tint={arena?.tint} /> : null}
             <Stands w={w} tier={arena?.tier} logo={arena?.logo} renk={arena?.renk} />
             {art ? null : <Crowd w={w} hp={low ? 0 : hp} t={!low && hp ? tNow : 0} tier={arena?.tier} />}
-            <CageBack w={w} tint={tint} tier={arena?.tier} logo={arena?.logo} renk={arena?.renk} />
+            <CageBack w={w} tint={tint} tier={arena?.tier} logo={arena?.logo} renk={arena?.renk} ring={fs.mods.kural === 'boks'} />
             {stains.current.map((s2, i) => (
               <Ellipse key={`s${i}`} cx={s2.x} cy={s2.y} rx={s2.r * 1.4} ry={s2.r * 0.5} fill="#7a0d12" opacity={s2.o} />
             ))}

@@ -9,7 +9,7 @@ import Svg, { Circle, Defs, Ellipse, G, Image as SvgImage, Line, LinearGradient 
 import { sfx } from '../audio';
 import { playerKit } from '../cosmetics';
 import { oppStatsOf } from '../engine/fight';
-import { liveCreate, liveElapsed, liveHold, liveInput, livePos, liveResult, liveShift, liveStep, SPECIAL_COOLDOWN, type SpecialKind, type LiveEvent, type LiveInput, type LiveRoundResult, type LiveSim, WARN_MS } from '../engine/liveFight';
+import { liveAllowed, liveCreate, liveElapsed, liveHold, liveInput, livePos, liveResult, liveShift, liveStep, SPECIAL_COOLDOWN, type SpecialKind, type LiveEvent, type LiveInput, type LiveRoundResult, type LiveSim, WARN_MS } from '../engine/liveFight';
 import type { Appearance, FightState } from '../engine/types';
 import { buzz } from '../haptics';
 import { L, LOC } from '../i18n';
@@ -64,6 +64,8 @@ const BUTTONS: Record<'ayakta' | 'ustte' | 'altta', Btn[][]> = {
     [['kac', () => L("KURTUL"), C.blue]],
   ],
 };
+/** Kurala göre görünen düğmeler (boksta tekme, indirme ve yer düğmeleri yok) */
+const buttonsFor = (kural: FightState['mods']['kural'], pos: keyof typeof BUTTONS) => (kural ? BUTTONS[pos].map((r) => r.filter(([k]) => liveAllowed(kural, k))).filter((r) => r.length) : BUTTONS[pos]);
 const GUARD: Partial<Pose> = { aL1: 70, aL2: 145, aR1: 62, aR2: 150, torso: 4, head: -4 };
 const now = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
 /** Rakibin hazırladığı hamlenin uyarı ikonu */
@@ -90,7 +92,7 @@ const FANS = Array.from({ length: 90 }, (_, i) => ({ row: i % 3, u: hash(i), s: 
 
 /** Sabit arka plan: tribün, LED pano, kafes teli, yastıklı ray, dokulu kanvas, spotlar (her karede yeniden çizilmez). */
 /** Yeni görünümde tribün ve ışıklar çizilmiş görselden gelir (kafes, kanvas ve kafes rengi kozmetiği vektör kalır). */
-const ArenaBg = memo(function ArenaBg({ art, tier = 2, city }: { art?: boolean; tier?: ArenaTier; city?: string }) {
+const ArenaBg = memo(function ArenaBg({ art, tier = 2, city, ring }: { art?: boolean; tier?: ArenaTier; city?: string; /** Boks ringi: kafes yerine halatlar */ ring?: boolean }) {
   const tint = cageTintNow();
   return (
     <Svg width="100%" height="100%" viewBox={VIEW} preserveAspectRatio="xMidYMid meet" style={StyleSheet.absoluteFill}>
@@ -165,7 +167,8 @@ const ArenaBg = memo(function ArenaBg({ art, tier = 2, city }: { art?: boolean; 
       {/* Spot konileri ve sis */}
       <Polygon points="66,0 80,0 122,118 26,118" fill="url(#lfCone)" />
       <Polygon points="120,0 134,0 174,118 78,118" fill="url(#lfCone)" />
-      {/* Arka kafes: yastıklı ray, tel örgü, direkler */}
+      {/* Arka kafes: yastıklı ray, tel örgü, direkler (boks ringinde halatlar) */}
+      {ring ? <RingRopes /> : <>
       <Polygon points="14,98 30,44 170,44 186,98" fill="url(#lfMesh)" />
       <Polygon points="14,98 30,44 170,44 186,98" fill="none" stroke="#2b2e36" strokeWidth={0.6} />
       <Rect x={29} y={41.5} width={142} height={3.4} rx={1.6} fill="url(#lfPad)" />
@@ -175,6 +178,7 @@ const ArenaBg = memo(function ArenaBg({ art, tier = 2, city }: { art?: boolean; 
           <Rect x={x - 1.6} y={40.5} width={3.2} height={4.6} rx={0.8} fill={x === 30 ? C.red : x === 170 ? C.blue : '#2c2f38'} />
         </G>
       ))}
+      </>}
       {/* Kanvas: dokulu mat, kenar gölgesi, logo halkası ve çıkartmalar */}
       <Ellipse cx={100} cy={FLOOR + 2} rx={98} ry={16} fill="url(#lfMat)" />
       <Ellipse cx={100} cy={FLOOR + 2} rx={98} ry={16} fill="url(#lfWeave)" />
@@ -184,16 +188,34 @@ const ArenaBg = memo(function ArenaBg({ art, tier = 2, city }: { art?: boolean; 
       <Ellipse cx={100} cy={FLOOR + 2} rx={26} ry={4.4} fill={C.red} opacity={0.08} />
       <Polygon points={`52,${FLOOR + 6} 66,${FLOOR + 6} 63,${FLOOR + 10} 48,${FLOOR + 10}`} fill="#1d2a52" opacity={0.25} />
       <Polygon points={`134,${FLOOR + 6} 148,${FLOOR + 6} 152,${FLOOR + 10} 137,${FLOOR + 10}`} fill="#52221d" opacity={0.25} />
-      {/* Ön direkler */}
+      {/* Ön direkler (ringde köşe minderli direkler ve ön halatlar) */}
       <Line x1={3} y1={10} x2={3} y2={VB_H} stroke="#3a3d45" strokeWidth={2} />
       <Line x1={197} y1={10} x2={197} y2={VB_H} stroke="#3a3d45" strokeWidth={2} />
-      <Rect x={1.5} y={10} width={3} height={8} fill={C.red} />
-      <Rect x={195.5} y={10} width={3} height={8} fill={C.blue} />
+      <Rect x={1.5} y={10} width={3} height={ring ? 30 : 8} fill={C.red} />
+      <Rect x={195.5} y={10} width={3} height={ring ? 30 : 8} fill={C.blue} />
+      {ring ? [0, 1, 2].map((i) => <Line key={i} x1={3} y1={FLOOR - 34 + i * 11} x2={197} y2={FLOOR - 34 + i * 11} stroke={i === 1 ? '#f2f2f2' : C.red} strokeOpacity={0.5} strokeWidth={1.1} />) : null}
       <Rect x={0} y={0} width={VB_W} height={VB_H} fill="url(#lfVig)" />
       {tint ? <Rect x={0} y={0} width={VB_W} height={VB_H} fill={tint[0]} opacity={0.1} /> : null}
     </Svg>
   );
 });
+
+/** Boks ringinin arka halatları: üç sıra halat, köşe direkleri ve minderleri. */
+function RingRopes() {
+  return (
+    <G>
+      {[0, 1, 2].map((i) => (
+        <Line key={i} x1={24} y1={58 + i * 12} x2={176} y2={58 + i * 12} stroke={i === 1 ? '#e8e8ea' : '#c1121f'} strokeWidth={1.3} strokeOpacity={0.85} />
+      ))}
+      {[24, 176].map((x) => (
+        <G key={x}>
+          <Line x1={x} y1={52} x2={x} y2={98} stroke="#9aa0aa" strokeWidth={1.8} />
+          <Rect x={x - 2} y={52} width={4} height={34} rx={1} fill={x === 24 ? C.blue : '#e8e8ea'} opacity={0.9} />
+        </G>
+      ))}
+    </G>
+  );
+}
 
 /** Bitiriş anında yukarıdan ve aşağıdan kayan siyah sinema bantları. */
 function Letterbox() {
@@ -300,7 +322,7 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel, band }: { fs: FightSt
     const sm = sim.current;
     if (!guideOn.current || guideSeen.current.has(id) || pausedAt.current != null || !sm || sm.kilit) return;
     // Hocanın söylediği düğme o an ekranda yoksa (konum değişti) bu an atlanır: oyuncu asla takılı kalmaz.
-    if (target && !BUTTONS[livePos(sm)].flat().some(([k]) => k === target)) return;
+    if (target && !buttonsFor(fs.mods.kural, livePos(sm)).flat().some(([k]) => k === target)) return;
     guideSeen.current.add(id);
     pausedAt.current = now();
     const g = { id, text: GUIDE_TEXT[id](), target };
@@ -704,7 +726,7 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel, band }: { fs: FightSt
         {/* Sahne */}
         <View style={lf.middle} onLayout={(e) => setMid({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height - 8 })}>
         <View style={[lf.stage, { width: stageW, height: stageW / ASPECT }]} pointerEvents="none">
-          <ArenaBg art={yeni} tier={band?.tier} city={band?.tint} />
+          <ArenaBg art={yeni} tier={band?.tier} city={band?.tint} ring={fs.mods.kural === 'boks'} />
           <Svg width="100%" height="100%" viewBox={VIEW} preserveAspectRatio="xMidYMid meet" style={StyleSheet.absoluteFill}>
             {yeni ? (
               <Defs>
@@ -852,7 +874,7 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel, band }: { fs: FightSt
               </Text>
             </Pressable>
           ) : null}
-          {frame.kilit ? null : BUTTONS[frame.pos].map((row, ri) => (
+          {frame.kilit ? null : buttonsFor(fs.mods.kural, frame.pos).map((row, ri) => (
             <View key={`${frame.pos}${ri}`} style={lf.row}>
               {row.map(([k, label, col]) => yeni ? (
                 <Pressable
@@ -907,7 +929,9 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel, band }: { fs: FightSt
               ? L("🔒 ya da ⤴️ görünce KONTROL. Rakip yorulunca SUB dene.")
               : frame.pos === 'altta'
                 ? L("🔒 görünce hemen KURTUL. 👊 gelirken GARD al.")
-                : L("Halka altın olunca KAÇ (⬇️ takedown'a karşı da). DİREKT ve TEKME hazırlığı keser.")}
+                : fs.mods.kural === 'boks'
+                  ? L("Halka altın olunca KAÇ. DİREKT hazırlığı keser; yorulunca GARD al.")
+                  : L("Halka altın olunca KAÇ (⬇️ takedown'a karşı da). DİREKT ve TEKME hazırlığı keser.")}
           </Text>
         </View>
         {paused ? (

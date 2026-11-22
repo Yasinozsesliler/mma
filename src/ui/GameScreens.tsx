@@ -89,6 +89,8 @@ import { FanMeetGame } from './FanMeetGame';
 import { canFanMeet, fanMeet } from '../engine/fanMeet';
 import { GrandPrixCard } from './GrandPrixCard';
 import { KafesEviInvite } from './KafesEviScreen';
+import { SportInvite } from './SportScreen';
+import { recOf, sportsOpen, weeksToNext } from '../engine/sportLeague';
 import { BrainCard } from './BrainCard';
 import { PosterCard } from './PosterCard';
 import { FirstStepsCard } from './FirstStepsCard';
@@ -164,6 +166,15 @@ function Tabs<T extends string>({ value, onChange, items }: { value: T; onChange
 
 // ---------- Hub ----------
 
+/** Dövüş Sporları kutucuğunun alt yazısı: boks karnesi ya da sıradaki maça kalan süre */
+function sportsSub(s: GameState) {
+  const r = recOf(s, 'boks');
+  if (r.kemer) return L("Boks şampiyonu");
+  const w = weeksToNext(s);
+  if (r.g + r.m) return w ? L("Boks {0}-{1} · {2} hafta", [r.g, r.m, w]) : L("Boks {0}-{1} · maç hazır", [r.g, r.m]);
+  return L("Boks ligi açık");
+}
+
 export function HubScreen({ s, act }: { s: GameState; act: Act }) {
   // Son sekme hatırlanır: Hayat'tan sosyal medyaya girip dönen oyuncu Hayat'a döner
   const [tab, setTabState] = useState<HubTab>(() => lastHubTab);
@@ -218,6 +229,7 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
               { cat: 'yasam', show: featureOpen(s, 'gece'), badge: isNewFeature(s, 'gece') || null, node: <ActionTile key="gece" icon="glass-cocktail" label={L("Gece hayatı")} sub={s.iliski ? `💞 ${s.iliski.ad}` : L("Randevu · kulüp · oyun salonu")} accent="#fd267a" badge={isNewFeature(s, 'gece') ? L("YENİ") : null} onPress={() => act((x) => (seeFeature(x, 'gece'), (x.phase = 'gece')))} /> },
               { cat: 'marka', show: featureOpen(s, 'kulup'), badge: isNewFeature(s, 'kulup') || (s.kulup && canActivity(s)) || canFoundClub(s) || null, node: <ActionTile key="kulup" icon="flag-variant" label={L("Taraftar kulübü")} sub={s.kulup ? `${s.kulup.ad} · ${fmtFollowers(members(s))}` : canFoundClub(s) ? L("Kulübünü kur") : L("3B takipçi gerekli")} accent="#ff8fb1" badge={isNewFeature(s, 'kulup') ? L("YENİ") : (s.kulup && canActivity(s)) || canFoundClub(s) ? '!' : null} onPress={() => act((x) => (seeFeature(x, 'kulup'), (x.phase = 'kulup')))} /> },
               { cat: 'marka', show: featureOpen(s, 'hayran'), badge: isNewFeature(s, 'hayran') || canFanMeet(s) || null, node: <ActionTile key="hayran" icon="draw-pen" label={L("Hayran buluşması")} sub={canFanMeet(s) ? L("İmza günü düzenle") : L("Sonraki maçtan sonra")} accent="#ff8fb1" badge={isNewFeature(s, 'hayran') ? L("YENİ") : canFanMeet(s) ? '!' : null} onPress={() => { act((x) => seeFeature(x, 'hayran')); canFanMeet(s) && setFanMeet(true); }} /> },
+              { cat: 'antrenman', show: sportsOpen(s), badge: s.sporDavet ? '•' : null, node: <ActionTile key="sporlar" icon="boxing-glove" label={L("Dövüş Sporları")} sub={sportsSub(s)} accent="#d4a017" badge={s.sporDavet ? L("DAVET") : null} onPress={() => act((x) => (x.phase = 'sporLig'))} /> },
               { cat: 'marka', show: featureOpen(s, 'lig'), badge: isNewFeature(s, 'lig') || null, node: <ActionTile key="lig" icon="lock-clock" label={L("Organizasyonum")} sub={L("Emekli olunca açılır")} accent={C.faint} badge={isNewFeature(s, 'lig') ? L("YENİ") : null} onPress={() => act((x) => (seeFeature(x, 'lig'), ((x.pending.sonrakiFaz = 'hub'), (x.phase = 'lig'))))} /> },
               { cat: 'marka', show: featureOpen(s, 'marka'), badge: isNewFeature(s, 'marka') || null, node: <ActionTile key="marka" icon="tag-heart" label={L("Markam")} sub={s.marka ? `${s.marka.ad} · ${money(s.marka.toplam)}` : L("Kendi markanı kur")} accent={C.gold} badge={isNewFeature(s, 'marka') ? L("YENİ") : null} onPress={() => act((x) => (seeFeature(x, 'marka'), (x.phase = 'marka')))} /> },
               { cat: 'marka', show: featureOpen(s, 'yayin'), badge: isNewFeature(s, 'yayin') || canStream(s) || null, node: <ActionTile key="yayin" icon="broadcast" label={L("Canlı yayın")} sub={canStream(s) ? L("Yayına geç") : followers(s) < STREAM_MIN_FOLLOWERS ? L("5B takipçi gerekli") : L("Sonraki maçtan sonra")} accent="#9146ff" badge={isNewFeature(s, 'yayin') ? L("YENİ") : canStream(s) ? '!' : null} onPress={() => act((x) => { seeFeature(x, 'yayin'); if (canStream(x)) startStream(x); })} /> },
@@ -366,6 +378,7 @@ export function HubScreen({ s, act }: { s: GameState; act: Act }) {
           {legendHoldsUcc(s) || currentChapter(s)?.uccKapi ? null : <UccRoadCard s={s} />}
           <GrandPrixCard s={s} act={act} />
           <KafesEviInvite s={s} act={act} />
+          <SportInvite s={s} act={act} />
           <BrainCard s={s} act={act} />
           {yeni ? null : <FightCTA title={fight.title} sub={fight.sub} disabled={fight.disabled} onPress={fight.onPress} />}
           <FarewellCard s={s} act={act} />

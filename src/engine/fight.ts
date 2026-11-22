@@ -1,4 +1,5 @@
 import { L, LOC } from '../i18n';
+import { legalTactic } from './sportRules';
 import { SUBMISSIONS } from './data';
 import type { LiveRoundResult } from './liveFight';
 import { exploited, habitEdge, HABITS, hasHabit, revealInFight } from './habits';
@@ -563,6 +564,12 @@ function oppTactic(fs: FightState): Tactic {
     const worked = (fs.taktikBasari[last] ?? 0) > 0 ? 0.1 : 0;
     if (chance(clamp(0.12 + 0.22 * rep + worked + o.iq / 300, 0, 0.85))) mul(counterOf(last), 6);
   }
+  // Dövüş sporları ligi: kurala aykırı taktikler (boksta indirme ve klinç) seçilmez
+  const kural = fs.mods.kural;
+  if (kural) {
+    for (const t of [...w.keys()]) if (legalTactic(kural, t) !== t) w.delete(t);
+    if (![...w.values()].some((v) => v > 0)) return legalTactic(kural, 'mesafe');
+  }
   return weighted([...w.entries()].filter(([, v]) => v > 0));
 }
 
@@ -594,7 +601,7 @@ function runBeats(fs: FightState) {
     // Rakip de raunt içinde uyum sağlar: zeki rakip oyuncunun o anki taktiğine karşılık verir.
     if (i < BEATS - 1 && chance(0.18)) {
       const o = oStats(fs);
-      const yeni = chance(0.25 + o.iq / 200) ? counterOf(fs.taktik!) : oppTactic(fs);
+      const yeni = legalTactic(fs.mods.kural, chance(0.25 + o.iq / 200) ? counterOf(fs.taktik!) : oppTactic(fs));
       if (yeni !== fs.rakipTaktik) {
         fs.rakipTaktik = yeni;
         fs.log.push(L("🔄 {0} oyununu değiştirdi: {1}.", [fs.oAd, TACTICS[yeni].ad.toLocaleLowerCase(LOC)]));
@@ -914,6 +921,7 @@ export function chooseTactic(prev: FightState, t: Tactic): FightState {
 /** Canlı raunt: rakip taktiğini seçer, raunt gerçek zamanlı oynanmak üzere bekler (beats koşulmaz). */
 export function startLiveRound(prev: FightState, t: Tactic): FightState {
   const fs = clone(prev);
+  t = legalTactic(fs.mods.kural, t);
   fs.rakipTaktik = oppTactic(fs);
   const hist = fs.oyuncuTaktikGecmisi ?? [];
   hist.push(t);

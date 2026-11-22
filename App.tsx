@@ -80,6 +80,7 @@ import { DocumentaryScreen } from './src/ui/DocumentaryScreen';
 import { PromoterScreen } from './src/ui/PromoterScreen';
 import { HomelandScreen } from './src/ui/HomelandScreen';
 import { KafesEviScreen } from './src/ui/KafesEviScreen';
+import { SportScreen } from './src/ui/SportScreen';
 import { FanClubScreen } from './src/ui/FanClubScreen';
 import { FadeIn } from './src/ui/anim';
 import { acceptComeback } from './src/engine/comeback';
@@ -138,6 +139,7 @@ const PHASE_LABELS: Record<Phase, string> = {
   stil: L("Berber ve Dövmeci"),
   harita: L("Dünya Turu"),
   kafesEvi: L("Kafes Evi"),
+  sporLig: L("Dövüş Sporları"),
   kulup: L("Taraftar Kulübü"),
   emeklilik: L("Emeklilik"),
   evim: L("Evim"),
@@ -379,7 +381,7 @@ export default function App() {
   useEffect(() => {
     if (view !== 'loading') trackScreen(phase ?? view);
   }, [view, phase]);
-  const scene: Scene = !phase || phase === 'emeklilik' ? 'menu' : phase === 'dovus' || (phase === 'kafesEvi' && game?.kafesEvi?.adim === 'dovus') ? 'fight' : phase === 'kutlama' ? 'celebrate' : 'hub';
+  const scene: Scene = !phase || phase === 'emeklilik' ? 'menu' : phase === 'dovus' || (phase === 'kafesEvi' && game?.kafesEvi?.adim === 'dovus') || (phase === 'sporLig' && game?.sporMac?.adim === 'dovus') ? 'fight' : phase === 'kutlama' ? 'celebrate' : 'hub';
   useSoundScene(scene);
 
   let content;
@@ -605,6 +607,9 @@ export default function App() {
         break;
       case 'kafesEvi':
         content = game.kafesEvi?.durum === 'aktif' ? <KafesEviScreen {...props} /> : <HubScreen {...props} />;
+        break;
+      case 'sporLig':
+        content = <SportScreen {...props} />;
         break;
       case 'harita':
         content = <WorldMapScreen {...props} />;

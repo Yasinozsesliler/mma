@@ -1,4 +1,5 @@
 import { L as tL, LOC } from '../i18n';
+import { maybeSportInvite } from './sportLeague';
 import { noteStyle } from './scouting';
 import { fatigue, fatigueAfterFight } from './fatigue';
 import { dmAfterFight } from './dm';
@@ -450,6 +451,7 @@ export function finishFight(s: GameState) {
   maybePodcast(s);
   maybeGpInvite(s);
   maybeCrossover(s);
+  maybeSportInvite(s);
   const teklif = refreshSponsorOffers(s, won && !caught);
   if (teklif) lines.push(teklif);
   // Toparlanma: maçtan sonra kısa bir ara. Sıradaki maçın tarihi teklifte belirlenir (toplam ~60-90 gün).

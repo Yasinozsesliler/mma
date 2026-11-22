@@ -3,6 +3,7 @@
 // Ayakta: jab/direkt/tekme, kaç (sprawl), gard, indir. Yerde (üstte): yumruk, dirsek, submission, kontrol, kalk;
 // (altta): kurtul, gard, submission. İstatistikler belirleyicidir: vuruş/çene hasarı, güreş takedown ve sprawl'u,
 // yer dövüşü submission'ları, kondisyon nefesi, rakibin hız ve zekâsı hazırlık süresini ve çalımları belirler.
+import { groundAllowed, kicksAllowed } from './sportRules';
 import { chance, clamp, rand } from './rng';
 import type { Background, FightState, Stats, Tactic } from './types';
 import { pStatsOf, tacticEdge } from './fight';
@@ -145,9 +146,18 @@ export interface LiveSim {
   over: { kazanan: 'p' | 'o'; yontem: 'KO' | 'TKO' | 'SUB'; t: number } | null;
   /** Özel hamle: tür, imza mı, bir sonraki kullanılabilir an */
   special: { kind: SpecialKind; imza: boolean; readyAt: number } | null;
+  /** Dövüş sporları ligi kuralı; yoksa MMA */
+  kural?: import('./sportRules').Sport;
 }
 
 export const ROUND_MS = 30_000;
+
+/** Kurala göre yasal düğmeler (boks: yalnızca jab, direkt, kaç, gard; özel hamle yalnızca kombo). */
+export function liveAllowed(kural: import('./sportRules').Sport | undefined, k: LiveInput): boolean {
+  if (k === 'tekme' && !kicksAllowed(kural)) return false;
+  if ((k === 'indir' || k === 'sub' || k === 'kalk') && !groundAllowed(kural)) return false;
+  return true;
+}
 const COUNTDOWN = 1200;
 const COST: Record<LiveInput, number> = { jab: 7, direkt: 18, tekme: 24, kac: 6, gard: 0, indir: 20, sub: 22, kalk: 4, ozel: 30 };
 const BASE = { jab: 0.65, direkt: 1.7, tekme: 2, yumruk: 0.7, dirsek: 1.6 };
@@ -194,7 +204,12 @@ export function liveCreate(fs: FightState, oStats: Stats, t0: number, dur = ROUN
   if (fs.mods.kimlik === 'taktisyen') cfg.edge += 0.01;
   cfg.oBacakCarpan = hasHabit(fs, 'bacakZayif') ? 1.5 : 1;
   cfg.oGovdeCarpan = hasHabit(fs, 'govdeHassas') ? 1.5 : 1;
+  // Dövüş sporları ligi: boksta rakip tekme atmaz, indirmeye gitmez
+  const kural = fs.mods.kural;
+  if (!groundAllowed(kural)) cfg.tdRate = 0;
+  if (!kicksAllowed(kural)) cfg.kickRate = 0;
   return {
+    kural,
     t: t0,
     dur,
     start: t0 + COUNTDOWN,
@@ -207,7 +222,8 @@ export function liveCreate(fs: FightState, oStats: Stats, t0: number, dur = ROUN
     over: null,
     kilit: null,
     subFails: fs.pSubFail ?? 0,
-    special: special ? { ...special, readyAt: t0 + COUNTDOWN + 3000 } : null,
+    // Boksta tarz hamlesi yerine kombinasyon (tekme/suplex/guard çekme kural dışı)
+    special: special ? { ...special, kind: kural === 'boks' ? 'kombo' : special.kind, readyAt: t0 + COUNTDOWN + 3000 } : null,
   };
 }
 
@@ -384,6 +400,7 @@ function submit(s: LiveSim, who: 'p' | 'o', p: number) {
 
 /** Oyuncu girdisi. Meşgulken, sarsılmışken ya da raunt dışında yok sayılır. */
 export function liveInput(s: LiveSim, k: LiveInput) {
+  if (!liveAllowed(s.kural, k)) return;
   const p = s.p;
   if (!liveRunning(s)) return;
   if (s.kilit) {

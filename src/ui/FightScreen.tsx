@@ -1,4 +1,6 @@
 import { L, LOC } from '../i18n';
+import { recOf, SPORTS } from '../engine/sportLeague';
+import { SPORT_TACTICS, type Sport } from '../engine/sportRules';
 import { WalkoutScene } from './WalkoutScene';
 import { FightNightIntro } from './FightNight';
 import { CoachTip } from './CoachTip';
@@ -14,7 +16,9 @@ import { LiveFight, SPECIAL_NAMES, type Special } from './LiveFight';
 import { SPECIAL_FOR } from '../engine/liveFight';
 
 /** Oyuncunun tarza özel hamlesi (imza hareketi varsa onun adıyla). */
-const specialOf = (s: GameState): Special => {
+const specialOf = (s: GameState, kural?: Sport): Special => {
+  // Boksta tarz hamlesi yerine kombinasyon
+  if (kural === 'boks') return { kind: 'kombo', imza: false, ad: SPECIAL_NAMES.kombo() };
   const kind = SPECIAL_FOR[s.fighter.gecmis] ?? 'kombo';
   return { kind, imza: !!s.imza, ad: s.imza?.ad ?? SPECIAL_NAMES[kind]() };
 };
@@ -288,10 +292,12 @@ function TacticList({ fs, onPick, title }: { fs: FightState; onPick: (t: Tactic)
     const e = knownEdge(fs, t, sira);
     return e > 0 ? L("\n🎯 Bildiğin zaafına uyuyor.") : e < 0 ? L("\n⚠️ Bu raunt ona uygun.") : '';
   };
+  // Dövüş sporları ligi: yalnızca kurala uygun taktikler; maç her zaman canlı oynanır
+  const tacticKeys = fs.mods.kural ? SPORT_TACTICS[fs.mods.kural] : (Object.keys(TACTICS) as Tactic[]);
   return (
     <>
       <Section>{title}</Section>
-      <ModeSwitch />
+      {fs.mods.kural ? null : <ModeSwitch />}
       {bilinen.length ? (
         <Card accent={C.blue}>
           <Text style={sb.habitHead}>{L("BİLDİĞİN ZAAFLAR")}</Text>
@@ -300,7 +306,7 @@ function TacticList({ fs, onPick, title }: { fs: FightState; onPick: (t: Tactic)
           ))}
         </Card>
       ) : null}
-      {(Object.keys(TACTICS) as Tactic[]).map((t) => {
+      {tacticKeys.map((t) => {
         if (!yeni) return null;
         const e = knownEdge(fs, t, sira);
         const badges: OptBadge[] = [
@@ -309,7 +315,7 @@ function TacticList({ fs, onPick, title }: { fs: FightState; onPick: (t: Tactic)
         ];
         return <FightOption key={t} icon={TACTIC_ICONS[t]} title={TACTICS[t].ad} desc={TACTICS[t].aciklama} color={TACTIC_COLOR[t]} badges={badges} dim={last === t} onPress={() => onPick(t)} />;
       })}
-      {yeni ? null : (Object.keys(TACTICS) as Tactic[]).map((t) => (
+      {yeni ? null : tacticKeys.map((t) => (
         <Choice
           key={t}
           icon={TACTIC_ICONS[t]}
@@ -336,11 +342,22 @@ export function FightScreen({ s, act }: { s: GameState; act: Act }) {
   const setFs = (fn: (f: typeof fs) => typeof fs) => act((x) => (x.pending.dovus = fn(x.pending.dovus!)));
   const fresh = fs.raunt === 1 && fs.log.length === 0;
   // Dövüşün başında (bir kez): kafese yürüyüş ve ring anonsu.
-  const [intro, setIntro] = useState(fresh);
+  // Lig maçında kariyerin kafes yürüyüşü ve dövüş gecesi kulisi yok (organizasyon bilgisi MMA'ya ait)
+  const [intro, setIntro] = useState(fresh && !fs.mods.kural);
   const [kulis, setKulis] = useState(fresh && !!s.pending.gece);
-  const org = ORGS[currentOrg(s)].kisa + (fs.unvanMaci ? L(" · ÜNVAN") : fs.anaMac ? L(" · ANA MAÇ") : '');
+  const lig = fs.mods.kural ? SPORTS[fs.mods.kural] : null;
+  const org = (lig ? lig.kisa : ORGS[currentOrg(s)].kisa) + (fs.unvanMaci ? L(" · ÜNVAN") : fs.anaMac ? L(" · ANA MAÇ") : '');
   /** Yeni görünüm yayın bandı (canlı dövüş ve taktik izleme aynı) */
-  const band = {
+  const ligRec = fs.mods.kural ? recOf(s, fs.mods.kural) : null;
+  const band = lig
+    ? {
+        ...arenaLook(s),
+        org: lig.kisa,
+        caption: `${lig.ad().toLocaleUpperCase(LOC)}${fs.unvanMaci ? ` · ${L("ÜNVAN MAÇI")}` : ''}`,
+        pRank: ligRec?.kemer ? 'C' : ligRec && ligRec.sira < 11 ? String(ligRec.sira) : '',
+        oRank: fs.opp.champion ? 'C' : fs.opp.rank ? String(fs.opp.rank) : '',
+      }
+    : {
     ...arenaLook(s),
     org: orgShort(s),
     caption: `${WEIGHT_CLASSES[s.fighter.siklet].ad.toLocaleUpperCase(LOC)} · ${fs.unvanMaci ? L("ÜNVAN MAÇI") : fs.anaMac ? L("ANA MAÇ") : s.pending.gece ? SLOT_LABEL[s.pending.gece.konum] : ORGS[currentOrg(s)].ad.toLocaleUpperCase(LOC)}`,
@@ -382,7 +399,7 @@ export function FightScreen({ s, act }: { s: GameState; act: Act }) {
   }, [koseSes]);
   const view = viewAt(fs, shown);
 
-  const live = useLive();
+  const live = useLive() || !!fs.mods.kural;
   /** Raundu seçilen modda başlat: canlı oynanır ya da akış olarak izlenir. */
   const begin = (f: FightState, t: Tactic) => (live ? startLiveRound(f, t) : chooseTactic(f, t));
   let footer = null;
@@ -398,9 +415,9 @@ export function FightScreen({ s, act }: { s: GameState; act: Act }) {
         <View style={{ height: 252, marginBottom: 10 }} />
       ) : (
         <View>
-          <CageView fs={fs} shown={shown} speed={speed} pLook={s.fighter.gorunum} oLook={lookFor(fs.opp)} arena={{ ...arenaForOrg(currentOrg(s)), tier: arenaTier(s), tint: cityTint(fightCity(s)) }} pBuild={buildOf(s.fighter.siklet, s.fighter.kadin)} oBuild={buildOf(s.fighter.siklet, s.fighter.kadin)} />
+          <CageView fs={fs} shown={shown} speed={speed} pLook={s.fighter.gorunum} oLook={lookFor(fs.opp)} arena={lig ? { tier: fs.unvanMaci ? 3 : 1, logo: lig.kisa, renk: lig.renk } : { ...arenaForOrg(currentOrg(s)), tier: arenaTier(s), tint: cityTint(fightCity(s)) }} pBuild={buildOf(s.fighter.siklet, s.fighter.kadin)} oBuild={buildOf(s.fighter.siklet, s.fighter.kadin)} />
           {fs.durum !== 'bitti' && shown <= 1 ? <RoundBanner key={fs.raunt} raunt={fs.raunt} max={fs.maxRaunt} /> : null}
-          {!flowing && fs.durum === 'rauntSonu' ? <BroadcastBar key={fs.raunt} fs={fs} org={ORGS[currentOrg(s)].kisa} /> : null}
+          {!flowing && fs.durum === 'rauntSonu' ? <BroadcastBar key={fs.raunt} fs={fs} org={lig ? lig.kisa : ORGS[currentOrg(s)].kisa} /> : null}
         </View>
       )}
       {intro && kulis ? <FightNightIntro s={s} onDone={() => setKulis(false)} onPredict={(p) => act((x) => x.pending.gece && (x.pending.gece.tahmin = p))} /> : null}
@@ -414,7 +431,7 @@ export function FightScreen({ s, act }: { s: GameState; act: Act }) {
             <View style={{ flex: 1 }}>
               <Text style={[sb.foName, { color: C.red }]}>{upName(fullName(s.fighter), s.fighter.uyruk)}</Text>
               <Text style={sb.foRec}>
-                {s.rekor.g}-{s.rekor.m}-{s.rekor.b}
+                {ligRec ? `${ligRec.g}-${ligRec.m}` : `${s.rekor.g}-${s.rekor.m}-${s.rekor.b}`}
               </Text>
             </View>
             <Text style={sb.vs}>VS</Text>
@@ -425,7 +442,8 @@ export function FightScreen({ s, act }: { s: GameState; act: Act }) {
               <Text style={[sb.foRec, { textAlign: 'right' }]}>{oppRecord(fs.opp)}</Text>
             </View>
           </View>
-          <P dim>{L("Işıklar kararıyor. Spiker mikrofonu kaldırıyor, salon uğulduyor. Kafes kapısı kapanıyor ve hakem ikinizin arasına giriyor.")}</P>
+          <P dim>{lig ? L("Işıklar kararıyor. Halatların arasından ringe giriyorsun; hakem ikinizi ortaya çağırıyor.") : L("Işıklar kararıyor. Spiker mikrofonu kaldırıyor, salon uğulduyor. Kafes kapısı kapanıyor ve hakem ikinizin arasına giriyor.")}</P>
+          {lig ? <P style={{ color: lig.renk, fontFamily: F.semi }}>{lig.kural()}</P> : null}
           <P style={{ fontFamily: F.semi }}>{L("“Kurallar belli. Kendinizi koruyun. Dövüşün!”")}</P>
         </Card>
       ) : null}
@@ -438,7 +456,7 @@ export function FightScreen({ s, act }: { s: GameState; act: Act }) {
           fs={fs}
           pLook={s.fighter.gorunum}
           oLook={lookFor(fs.opp)}
-          ozel={specialOf(s)}
+          ozel={specialOf(s, fs.mods.kural)}
           band={band}
           onEnd={(r) => setFs((f) => applyLiveRound(f, r))}
         /> : null}
