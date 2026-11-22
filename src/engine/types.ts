@@ -457,6 +457,8 @@ export interface FightState {
   pPuan: number;
   oPuan: number;
   rauntFarklari: number[];
+  /** Raunt raunt knockdown sayıları [oyuncu, rakip] (canlı maç; boks ve Muay Thai'de 10-8) */
+  rauntKd?: [number, number][];
   pKnockdown: number;
   oKnockdown: number;
   taktik: Tactic | null;

@@ -28,7 +28,7 @@ const specialOf = (s: GameState, kural?: Sport): Special => {
 };
 import { CornerMoment } from './CornerMoment';
 import { speakCoach, stopAnnounce } from '../announcer';
-import { CRITICAL_OPTIONS, TACTICS } from '../engine/narration';
+import { CRITICAL_OPTIONS, TACTICS, tacticText } from '../engine/narration';
 import { oppRecord } from '../engine/opponents';
 import type { Bolge, CriticalKind, FightState, GameState, Tactic } from '../engine/types';
 import { HABITS, knownEdge } from '../engine/habits';
@@ -317,14 +317,14 @@ function TacticList({ fs, onPick, title }: { fs: FightState; onPick: (t: Tactic)
           ...(last === t ? [{ text: L("Geçen raunt bunu yaptın, rakip bekliyor olabilir"), color: C.orange, icon: 'alert' as const }] : []),
           ...(e > 0 ? [{ text: L("Bildiğin zaafına uyuyor"), color: C.green, icon: 'target' as const }] : e < 0 ? [{ text: L("Bu raunt ona uygun"), color: '#ff4d5e', icon: 'alert-octagon' as const }] : []),
         ];
-        return <FightOption key={t} icon={TACTIC_ICONS[t]} title={TACTICS[t].ad} desc={TACTICS[t].aciklama} color={TACTIC_COLOR[t]} badges={badges} dim={last === t} onPress={() => onPick(t)} />;
+        return <FightOption key={t} icon={TACTIC_ICONS[t]} title={tacticText(fs.mods.kural, t).ad} desc={tacticText(fs.mods.kural, t).aciklama} color={TACTIC_COLOR[t]} badges={badges} dim={last === t} onPress={() => onPick(t)} />;
       })}
       {yeni ? null : tacticKeys.map((t) => (
         <Choice
           key={t}
           icon={TACTIC_ICONS[t]}
-          label={TACTICS[t].ad}
-          desc={TACTICS[t].aciklama + (last === t ? L("\n⚠️ Geçen raunt bunu yaptın. Rakip bekliyor olabilir.") : '') + not(t)}
+          label={tacticText(fs.mods.kural, t).ad}
+          desc={tacticText(fs.mods.kural, t).aciklama + (last === t ? L("\n⚠️ Geçen raunt bunu yaptın. Rakip bekliyor olabilir.") : '') + not(t)}
           tone={last === t ? 'plain' : 'red'}
           onPress={() => onPick(t)}
         />

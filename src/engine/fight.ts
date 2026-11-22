@@ -1,10 +1,10 @@
 import { L, LOC } from '../i18n';
-import { legalTactic } from './sportRules';
+import { legalTactic, SPORT_TACTICS } from './sportRules';
 import { SUBMISSIONS } from './data';
 import type { LiveRoundResult } from './liveFight';
 import { exploited, habitEdge, HABITS, hasHabit, revealInFight } from './habits';
 import { bestLevel, bestSpecial, pickTech, TECHNIQUES, techById, type TechDef } from './techniques';
-import { CRITICAL_INTRO, evenLine, groundLine, strikeLine, TACTICS, tdLine } from './narration';
+import { CRITICAL_INTRO, evenLine, groundLine, strikeLine, TACTICS, tacticText, tdLine } from './narration';
 import { chance, clamp, fill, noise, pick, rand, randInt, weighted } from './rng';
 import type {
   Background,
@@ -928,7 +928,7 @@ export function startLiveRound(prev: FightState, t: Tactic): FightState {
   fs.oyuncuTaktikGecmisi = hist;
   fs.taktik = t;
   fs.rakipTaktikGecmisi.push(fs.rakipTaktik);
-  fs.log = [L("— {0}. RAUNT — Sen: {1}", [fs.raunt, TACTICS[t].ad])];
+  fs.log = [L("— {0}. RAUNT — Sen: {1}", [fs.raunt, tacticText(fs.mods.kural, t).ad])];
   fs.anlar = undefined;
   fs.durum = 'canli';
   return fs;
@@ -946,6 +946,8 @@ export function applyLiveRound(prev: FightState, r: LiveRoundResult): FightState
   fs.pKondisyon = clamp(r.pSta, 5, 100);
   fs.oKondisyon = clamp(r.oSta, 5, 100);
   fs.pSubFail = r.subFails;
+  // Raunt raunt knockdown kaydı (boks ve Muay Thai'de knockdown rauntu 10-8 yapar)
+  fs.rauntKd = [...(fs.rauntKd ?? []), [r.pKd, r.oKd]];
   // Bölgesel hasar: canlı rauntta biriken gövde ve bacak
   for (const [v, govde, bacak] of [['p', r.pGovde, r.pBacak], ['o', r.oGovde, r.oBacak]] as [Side, number, number][]) {
     const once: Bolge = (v === 'o' ? fs.oBolge : fs.pBolge) ?? { govde: 0, bacak: 0 };
@@ -1234,21 +1236,35 @@ export function nextRound(prev: FightState, t?: Tactic): FightState {
 }
 
 function decision(fs: FightState) {
+  // Boks ve Muay Thai: her knockdown o raundu bir puan daha düşürür (10-8, 10-7)
+  const kdRule = fs.mods.kural === 'boks' || fs.mods.kural === 'muaythai';
   const judges = [0, 1, 2].map(() => {
     let p = 0;
     let o = 0;
-    fs.rauntFarklari.forEach((d) => {
+    fs.rauntFarklari.forEach((d, i) => {
       const seen = d + noise(1);
+      let rp: number;
+      let ro: number;
       if (Math.abs(seen) < 0.05) {
-        p += 10;
-        o += 10;
+        rp = 10;
+        ro = 10;
       } else if (seen > 0) {
-        p += 10;
-        o += seen > 9 ? 8 : 9;
+        rp = 10;
+        ro = seen > 9 ? 8 : 9;
       } else {
-        o += 10;
-        p += seen < -9 ? 8 : 9;
+        ro = 10;
+        rp = seen < -9 ? 8 : 9;
       }
+      const kd = kdRule ? fs.rauntKd?.[i] : undefined;
+      if (kd) {
+        rp = Math.max(7, rp - kd[0]);
+        ro = Math.max(7, ro - kd[1]);
+        // Knockdown'a rağmen raundu alan taraf 10'u korur
+        if (rp > ro) rp = 10;
+        else if (ro > rp) ro = 10;
+      }
+      p += rp;
+      o += ro;
     });
     return { p, o };
   });
@@ -1281,6 +1297,16 @@ function decision(fs: FightState) {
 
 // ---------- Köşe ----------
 
+/** Ligde köşe zaafı söylerken bakılan istatistikler */
+const SPORT_STAT_KEYS: Record<import('./sportRules').Sport, import('./types').StatKey[]> = { boks: ['vurus', 'hiz', 'cene', 'kondisyon', 'iq'], muaythai: ['vurus', 'hiz', 'cene', 'kondisyon', 'iq'], grappling: ['gures', 'yer', 'kondisyon', 'iq'], gures: ['gures', 'kondisyon', 'iq', 'yer'] };
+/** Spora özel köşe cümleleri */
+const SPORT_CORNER: Record<import('./sportRules').Sport, () => string[]> = {
+  boks: () => [L("Jabı unutma, her şey jabla başlar."), L("Çeneni göğsüne göm, ellerini yukarıda tut."), L("Gövdeye vur, kafa kendiliğinden gelir."), L("İplere yaslanma, ringin ortasında kal."), L("Vur ve çık; orada durma.")],
+  muaythai: () => [L("Tekmesini yakala, süpür!"), L("Klinçte ensesini bırakma, dizle!"), L("Ön bacağına low kick, o bacağı öldür."), L("Dirsek mesafesi açıldığında gönder."), L("Teep ile mesafeyi sen belirle.")],
+  grappling: () => [L("Önce pozisyon, sonra kilit!"), L("Sırtını mindere verme, kalçanı kaçır!"), L("Kolunu dışarıda bırakıyor, kimura'ya bak."), L("Ağırlığını ver, nefes aldırma."), L("Ayağa kalkmasına izin verme.")],
+  gures: () => [L("Bacaklarına dal, puan orada!"), L("Köprü kur, sırtını yere değdirme!"), L("Kafa pozisyonunu kaybetme."), L("Kolunu bağla, belinden kavra!"), L("Çevir onu! Tuşa bir adım kaldı.")],
+};
+
 function cornerAdvice(fs: FightState, diff: number): string {
   const lines: string[] = [];
   const c = fs.koseAdi;
@@ -1298,7 +1324,8 @@ function cornerAdvice(fs: FightState, diff: number): string {
   fs.rakipTaktikGecmisi.forEach((t) => counts.set(t, (counts.get(t) ?? 0) + 1));
   const fav = [...counts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0];
   if (fav) {
-    const counter = (Object.keys(ADV) as Tactic[]).reduce((a, b) => (ADV[b][fav] > ADV[a][fav] ? b : a));
+    const legal = fs.mods.kural ? SPORT_TACTICS[fs.mods.kural] : (Object.keys(ADV) as Tactic[]);
+    const counter = legal.reduce((a, b) => (ADV[b][fav] > ADV[a][fav] ? b : a));
     const favText: Record<Tactic, string> = {
       baski: L("sürekli üstüne yürüyor"),
       kontra: L("geri durup kontra bekliyor"),
@@ -1306,14 +1333,19 @@ function cornerAdvice(fs: FightState, diff: number): string {
       clinch: L("clinch’e girmeye çalışıyor"),
       mesafe: L("dışarıda dans ediyor"),
     };
-    lines.push(pick([L("\"Adam {0}. {1} ile cezalandır.\"", [favText[fav], TACTICS[counter].ad]), L("\"Gördün mü? {0}. Cevabı {1}.\"", [favText[fav], TACTICS[counter].ad.toLocaleLowerCase(LOC)]), L("\"Hep aynısını yapıyor, {0}. {1}!\"", [favText[fav], TACTICS[counter].ad])]));
+    const cAd = tacticText(fs.mods.kural, counter).ad;
+    lines.push(pick([L("\"Adam {0}. {1} ile cezalandır.\"", [favText[fav], cAd]), L("\"Gördün mü? {0}. Cevabı {1}.\"", [favText[fav], cAd.toLocaleLowerCase(LOC)]), L("\"Hep aynısını yapıyor, {0}. {1}!\"", [favText[fav], cAd])]));
   }
   const o = oStats(fs);
-  const weak = STAT_KEYS.reduce((a, b) => (o[b] < o[a] ? b : a));
+  // Ligde yalnızca o sporda işe yarayan istatistiklerden zaaf söylenir
+  const keys = fs.mods.kural ? SPORT_STAT_KEYS[fs.mods.kural] : STAT_KEYS;
+  const weak = keys.reduce((a, b) => (o[b] < o[a] ? b : a));
+  const sportLine = fs.mods.kural ? SPORT_CORNER[fs.mods.kural] : null;
+  if (sportLine && chance(0.6)) lines.push(`"${pick(sportLine())}"`);
   if (chance(0.5)) lines.push(pick([L("\"Unutma, {0} konusunda zayıf. Oraya yüklen.\"", [STAT_LABELS[weak].toLocaleLowerCase(LOC)]), L("\"Zayıf noktası {0}. Oraya git!\"", [STAT_LABELS[weak].toLocaleLowerCase(LOC)]), L("\"{0} tarafını zorla, orada çöküyor.\"", [STAT_LABELS[weak]])]));
   const ph = fs.oyuncuTaktikGecmisi ?? [];
   const cur = ph[ph.length - 1];
-  if (cur && streak(ph, cur) >= 2) lines.push(pick([L("\"Hep {0} yapıyorsun, adam seni okudu! Bu raunt başka bir şey dene.\"", [TACTICS[cur].ad.toLocaleLowerCase(LOC)]), L("\"Seni çözdü! Ritmi değiştir, başka bir şey göster.\""), L("\"Aynı kaseti çalıyorsun. Onu şaşırt!\"")]));
+  if (cur && streak(ph, cur) >= 2) lines.push(pick([L("\"Hep {0} yapıyorsun, adam seni okudu! Bu raunt başka bir şey dene.\"", [tacticText(fs.mods.kural, cur).ad.toLocaleLowerCase(LOC)]), L("\"Seni çözdü! Ritmi değiştir, başka bir şey göster.\""), L("\"Aynı kaseti çalıyorsun. Onu şaşırt!\"")]));
   else if (cur && streak(ph, cur) === 1 && chance(0.5)) lines.push(pick([L("\"Aynı şeyi tekrar yaparsan seni okur. Onu şaşırt.\""), L("\"Tahmin edilebilir olma. Karıştır.\"")]));
   if (fs.pKondisyon < 45) lines.push(pick([L("\"Nefesin gitmiş! Tempoyu düşür, akıllı dövüş.\""), L("\"Ağzın açık nefes alıyorsun, sakin! Ayaklarını kullan.\""), L("\"Gazın bitiyor, enerjini doğru yerde harca.\"")]));
   if (fs.oKondisyon < 45) lines.push(pick([L("\"O yoruldu! Şimdi bas, şimdi!\""), L("\"Elleri düştü, gördün mü? Şimdi zamanı!\""), L("\"Adam bitmek üzere. Tempoyu artır!\"")]));

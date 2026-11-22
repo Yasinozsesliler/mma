@@ -82,6 +82,20 @@ for (const sp of ['boks', 'muaythai', 'grappling', 'gures'] as Sport[]) {
   ok(wins < N - 2, `${sp}: rastgele düğmeyle kolay kazanılmıyor (${wins}/${N})`);
 }
 
+// Boksta knockdown rauntu 10-8 (her knockdown bir puan)
+{
+  const g = fresh();
+  requestSportBout(g, 'boks');
+  startSportFight(g);
+  let fs = g.sporMac!.dovus!;
+  fs = { ...fs, raunt: 3, rauntFarklari: [-1, -1], rauntKd: [[1, 0], [1, 0]], durum: 'canli' };
+  const lr = { pHp: 60, oHp: 90, pSta: 50, oSta: 60, pLanded: 5, oLanded: 9, pDealt: 5, oDealt: 12, pKd: 1, oKd: 0, pCtrl: 0, oCtrl: 0, oran: 1, bitis: null, subFails: 0, pGovde: 0, pBacak: 0, oGovde: 0, oBacak: 0 };
+  fs = applyLiveRound(fs, lr);
+  ok(fs.durum === 'bitti' && /24-30/.test(fs.sonuc?.kartlar ?? ''), `boks: üç knockdown'lı raunt 10-8 → kartlar ${fs.sonuc?.kartlar}`);
+  const m = { ...fs, mods: { ...fs.mods, kural: undefined } };
+  void m;
+}
+
 // Kemer yolu
 const s = fresh();
 for (let i = 0; i < 12; i++) {

@@ -548,6 +548,12 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel, band }: { fs: FightSt
         buzz('nakavt');
         shake.current = { t0: now(), amp: 5 };
         punch.current = { t0: now(), zoom: 0.14, flash: 0.55, ms: 700 };
+        // Boks ve Muay Thai: hakem sayar (sarsılma süresi boyunca 1…8)
+        if (fs.mods.kural === 'boks' || fs.mods.kural === 'muaythai') {
+          for (let i = 1; i <= 8; i++) setTimeout(() => setBanner(L("SAYIM: {0}", [i])), 150 + i * 190);
+          setTimeout(() => setBanner(null), 1850);
+          return;
+        }
         setTimeout(() => setBanner(null), 1700);
         return;
       case 'tired':

@@ -91,6 +91,32 @@ export const TACTICS: Record<Tactic, { ad: string; aciklama: string }> = {
   mesafe: { ad: L("Mesafeyi koru"), aciklama: L("Hareketli kal, jab ile puan topla, takedown’ları savun.") },
 };
 
+/** Dövüş sporları liginde taktiklerin o spora uygun adı ve açıklaması (MMA'da TACTICS). */
+const SPORT_TACTIC_TEXT: Partial<Record<import('./sportRules').Sport, Partial<Record<Tactic, () => { ad: string; aciklama: string }>>>> = {
+  boks: {
+    baski: () => ({ ad: L("Baskı kur"), aciklama: L("İleri yürü, rakibi iplere daya. Çok hasar, çok yorgunluk.") }),
+    kontra: () => ({ ad: L("Kontra bekle"), aciklama: L("Rakip gelsin, açığını kontra yumrukla cezalandır.") }),
+    mesafe: () => ({ ad: L("Jab ve ayak oyunu"), aciklama: L("Jab ile puan topla, ringin ortasında dön, köşeye sıkışma.") }),
+  },
+  muaythai: {
+    baski: () => ({ ad: L("Baskı kur"), aciklama: L("İleri yürü; tekme ve yumruk zinciriyle bastır.") }),
+    kontra: () => ({ ad: L("Kontra bekle"), aciklama: L("Tekmesini yakala, açığına dirsek ve diz gönder.") }),
+    mesafe: () => ({ ad: L("Uzun mesafe"), aciklama: L("Teep ve uzun tekmelerle uzakta tut, puan topla.") }),
+    clinch: () => ({ ad: L("Klinç (plum)"), aciklama: L("Ensesini kontrol et; diz ve dirsekle yıprat.") }),
+  },
+  grappling: {
+    takedown: () => ({ ad: L("İndirmeye git"), aciklama: L("Dal, yere götür; üstte pozisyon kur, kilit ara.") }),
+    clinch: () => ({ ad: L("Tutuş ve fırlatma"), aciklama: L("Gövde kilidi ve fırlatma; üst pozisyonu kap.") }),
+    kontra: () => ({ ad: L("Savun ve karşıla"), aciklama: L("Dalışını sprawl ile kes, sonra arkasını al.") }),
+  },
+  gures: {
+    takedown: () => ({ ad: L("Bacağa dal"), aciklama: L("Tek ya da çift bacak; indirme puanını al.") }),
+    clinch: () => ({ ad: L("Tutuş ve fırlatma"), aciklama: L("Kol bağla, belden kavra; suplex ve çevirme.") }),
+    kontra: () => ({ ad: L("Savun ve karşıla"), aciklama: L("Dalışını kes, arkasına dön; tuş fırsatını bekle.") }),
+  },
+};
+export const tacticText = (kural: import('./sportRules').Sport | undefined, t: Tactic) => (kural && SPORT_TACTIC_TEXT[kural]?.[t]?.()) || TACTICS[t];
+
 export const CRITICAL_OPTIONS = {
   rakipSersem: [
     { ad: L("Bitirmeye git!"), aciklama: L("Her şeyi sal. Yüksek bitirme şansı ama kontra riski ve büyük yorgunluk.") },
