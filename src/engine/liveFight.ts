@@ -155,6 +155,8 @@ export const ROUND_MS = 30_000;
 /** Kurala göre yasal düğmeler (boks: yalnızca jab, direkt, kaç, gard; özel hamle yalnızca kombo). */
 export function liveAllowed(kural: import('./sportRules').Sport | undefined, k: LiveInput): boolean {
   if (k === 'tekme' && !kicksAllowed(kural)) return false;
+  // Muay Thai'de İNDİR düğmesi klinç dizidir
+  if (k === 'indir' && kural === 'muaythai') return true;
   if ((k === 'indir' || k === 'sub' || k === 'kalk') && !groundAllowed(kural)) return false;
   return true;
 }
@@ -223,7 +225,7 @@ export function liveCreate(fs: FightState, oStats: Stats, t0: number, dur = ROUN
     kilit: null,
     subFails: fs.pSubFail ?? 0,
     // Boksta tarz hamlesi yerine kombinasyon (tekme/suplex/guard çekme kural dışı)
-    special: special ? { ...special, kind: kural === 'boks' ? 'kombo' : special.kind, readyAt: t0 + COUNTDOWN + 3000 } : null,
+    special: special ? { ...special, kind: kural === 'boks' ? 'kombo' : kural === 'muaythai' && (special.kind === 'suplex' || special.kind === 'guardCek') ? 'diz' : special.kind, readyAt: t0 + COUNTDOWN + 3000 } : null,
   };
 }
 
@@ -398,6 +400,26 @@ function submit(s: LiveSim, who: 'p' | 'o', p: number) {
   return false;
 }
 
+/** Muay Thai klinç dizi: ense kontrolünü güreş gücü belirler; tutarsa hasar ve kondisyon kaybı, tutmazsa itilip açık kalırsın. */
+function clinchKnee(s: LiveSim) {
+  const p = s.p;
+  const o = s.o;
+  p.busyUntil = s.t + 600;
+  p.guardUntil = 0;
+  p.thrown++;
+  p.lastAtk = s.t;
+  ev(s, { kind: 'pAttack', alt: 'diz' });
+  if (o.state === 'rocked') return damage(s, 'o', 2.6 * s.cfg.pPow, true);
+  const open = o.state === 'windup' ? 0.15 : o.state === 'guard' ? -0.12 : 0;
+  if (chance(clamp(0.48 + s.cfg.wr / 200 + open + s.cfg.edge, 0.2, 0.82))) {
+    damage(s, 'o', 2.3 * s.cfg.pPow * (p.sta < 20 ? 0.6 : 1), true);
+    o.sta = clamp(o.sta - 5, 0, 100);
+  } else {
+    ev(s, { kind: 'blocked', side: 'o' });
+    p.busyUntil = s.t + 900;
+  }
+}
+
 /** Oyuncu girdisi. Meşgulken, sarsılmışken ya da raunt dışında yok sayılır. */
 export function liveInput(s: LiveSim, k: LiveInput) {
   if (!liveAllowed(s.kural, k)) return;
@@ -433,6 +455,7 @@ export function liveInput(s: LiveSim, k: LiveInput) {
   }
   p.sta -= COST[k];
   const o = s.o;
+  if (k === 'indir' && s.kural === 'muaythai') return clinchKnee(s);
   if (k === 'indir') {
     p.busyUntil = s.t + 650;
     p.guardUntil = 0;
@@ -460,7 +483,8 @@ export function liveInput(s: LiveSim, k: LiveInput) {
   ev(s, { kind: 'pAttack', alt: k });
   const counter = s.t < p.counterUntil;
   const heavy = k !== 'jab';
-  let dmg = BASE[k] * s.cfg.pPow * (1 + s.cfg.edge * 2) * (p.sta < 20 ? 0.6 : 1) * (counter ? 2 : 1);
+  // Muay Thai: tekme daha çok sayılır
+  let dmg = BASE[k] * s.cfg.pPow * (1 + s.cfg.edge * 2) * (p.sta < 20 ? 0.6 : 1) * (counter ? 2 : 1) * (k === 'tekme' && s.kural === 'muaythai' ? 1.15 : 1);
   if (o.state === 'rocked') {
     damage(s, 'o', dmg, heavy);
     return;

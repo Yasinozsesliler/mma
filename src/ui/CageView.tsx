@@ -713,7 +713,7 @@ export function CageView({
             {art ? <ArtCrowd w={w} hp={low ? 0 : hp} t={!low && hp ? tNow : 0} tier={arena?.tier} tint={arena?.tint} /> : null}
             <Stands w={w} tier={arena?.tier} logo={arena?.logo} renk={arena?.renk} />
             {art ? null : <Crowd w={w} hp={low ? 0 : hp} t={!low && hp ? tNow : 0} tier={arena?.tier} />}
-            <CageBack w={w} tint={tint} tier={arena?.tier} logo={arena?.logo} renk={arena?.renk} ring={fs.mods.kural === 'boks'} />
+            <CageBack w={w} tint={tint} tier={arena?.tier} logo={arena?.logo} renk={arena?.renk} ring={fs.mods.kural === 'boks' || fs.mods.kural === 'muaythai'} />
             {stains.current.map((s2, i) => (
               <Ellipse key={`s${i}`} cx={s2.x} cy={s2.y} rx={s2.r * 1.4} ry={s2.r * 0.5} fill="#7a0d12" opacity={s2.o} />
             ))}

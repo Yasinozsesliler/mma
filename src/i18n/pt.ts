@@ -10916,4 +10916,11 @@ export const PT: Record<string, string> = {
   "Boks ligi açık": "Liga de boxe aberta",
   "Dövüş Sporları": "Esportes de combate",
   "DAVET": "CONVITE",
+  "Klinçte diz": "Joelhada no clinch",
+  "DİZ": "JOELHADA",
+  "Halka altın olunca KAÇ. TEKME daha çok sayılır; DİZ klinçte kondisyon bitirir.": "ESQUIVE quando o anel ficar dourado. CHUTES valem mais; JOELHADAS no clinch acabam com o fôlego.",
+  "Lig şampiyonu": "Campeão da liga",
+  "Ligler {0}-{1} · {2} hafta": "Ligas {0}-{1} · {2} sem.",
+  "Ligler {0}-{1} · maç hazır": "Ligas {0}-{1} · luta pronta",
+  "Boks · Muay Thai": "Boxe · Muay Thai",
 };

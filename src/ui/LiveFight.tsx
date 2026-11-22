@@ -36,6 +36,7 @@ const PAD_SUB: Record<string, () => string> = {
   'ayakta:kac': () => L("Sıyrıl"),
   'ayakta:gard': () => L("Hasarı azalt"),
   'ayakta:indir': () => L("Yere götür"),
+  'muaythai:indir': () => L("Klinçte diz"),
   'ayakta:jab': () => L("Hızlı · az nefes"),
   'ayakta:direkt': () => L("Güçlü"),
   'ayakta:tekme': () => L("En güçlü · yavaş"),
@@ -65,7 +66,12 @@ const BUTTONS: Record<'ayakta' | 'ustte' | 'altta', Btn[][]> = {
   ],
 };
 /** Kurala göre görünen düğmeler (boksta tekme, indirme ve yer düğmeleri yok) */
-const buttonsFor = (kural: FightState['mods']['kural'], pos: keyof typeof BUTTONS) => (kural ? BUTTONS[pos].map((r) => r.filter(([k]) => liveAllowed(kural, k))).filter((r) => r.length) : BUTTONS[pos]);
+/** Düğme alt yazısı anahtarı: Muay Thai'de İNDİR yerine DİZ */
+const padKey = (kural: FightState['mods']['kural'], pos: string, k: LiveInput) => (kural === 'muaythai' && k === 'indir' ? 'muaythai:indir' : `${pos}:${k}`);
+const padIcon = (kural: FightState['mods']['kural'], k: LiveInput): IconName | undefined => (kural === 'muaythai' && k === 'indir' ? 'arm-flex' : PAD_ICON[k]);
+const KNEE: Btn = ['indir', () => L("DİZ"), PURPLE];
+const buttonsFor = (kural: FightState['mods']['kural'], pos: keyof typeof BUTTONS) =>
+  kural ? BUTTONS[pos].map((r) => r.filter(([k]) => liveAllowed(kural, k)).map((b) => (kural === 'muaythai' && b[0] === 'indir' ? KNEE : b))).filter((r) => r.length) : BUTTONS[pos];
 const GUARD: Partial<Pose> = { aL1: 70, aL2: 145, aR1: 62, aR2: 150, torso: 4, head: -4 };
 const now = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
 /** Rakibin hazırladığı hamlenin uyarı ikonu */
@@ -367,6 +373,7 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel, band }: { fs: FightSt
     switch (e.kind) {
       case 'pAttack':
         if (e.alt === 'yumruk' || e.alt === 'dirsek') seq('p', [[P('gnp', { x: 18 }), e.alt === 'dirsek' ? 150 : 100], [P('gnpHit', { x: 20 }), 90], [base('p'), 200]]);
+        else if (e.alt === 'diz') seq('p', [[P('clinch', { x: 18 }), 120], [P('knee', { x: 20 }), 140], [base('p'), 220]]);
         else if (e.alt === 'jab') seq('p', [[P('jab', { x: 14 }), 80], [base('p'), 150]]);
         else if (e.alt === 'direkt') seq('p', [[P('stance', { torso: 8, x: 2 }), 110], [P('cross', { x: 16 }), 100], [base('p'), 180]]);
         else seq('p', [[P('stance', { x: -2 }), 120], [P('bodyKick', { x: 10 }), 160], [base('p'), 220]]);
@@ -726,7 +733,7 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel, band }: { fs: FightSt
         {/* Sahne */}
         <View style={lf.middle} onLayout={(e) => setMid({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height - 8 })}>
         <View style={[lf.stage, { width: stageW, height: stageW / ASPECT }]} pointerEvents="none">
-          <ArenaBg art={yeni} tier={band?.tier} city={band?.tint} ring={fs.mods.kural === 'boks'} />
+          <ArenaBg art={yeni} tier={band?.tier} city={band?.tint} ring={fs.mods.kural === 'boks' || fs.mods.kural === 'muaythai'} />
           <Svg width="100%" height="100%" viewBox={VIEW} preserveAspectRatio="xMidYMid meet" style={StyleSheet.absoluteFill}>
             {yeni ? (
               <Defs>
@@ -894,18 +901,18 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel, band }: { fs: FightSt
                       {pressed ? null : <View style={np.gloss} pointerEvents="none" />}
                       {pressed ? null : <View style={[np.edge, { backgroundColor: col }]} pointerEvents="none" />}
                       <View style={[np.inner, ri === 1 ? np.innerBig : np.innerSmall]}>
-                        {PAD_ICON[k] ? (
+                        {padIcon(fs.mods.kural, k) ? (
                           <View style={[ri === 1 ? np.badgeBig : np.badge, { borderColor: pressed ? '#0b0c0f' : col, backgroundColor: pressed ? '#0b0c0f22' : col + '24' }]}>
-                            <Icon name={PAD_ICON[k]!} size={ri === 1 ? 20 : 14} color={pressed ? '#0b0c0f' : col} />
+                            <Icon name={padIcon(fs.mods.kural, k)!} size={ri === 1 ? 20 : 14} color={pressed ? '#0b0c0f' : col} />
                           </View>
                         ) : null}
                         <View style={{ alignItems: ri === 1 ? 'center' : 'flex-start', flexShrink: 1 }}>
                           <Text style={[ri === 1 ? np.textBig : np.text, { color: pressed ? '#0b0c0f' : '#f6f7f9' }, label().length > 8 && { fontSize: 12 }]} numberOfLines={1}>
                             {label()}
                           </Text>
-                          {PAD_SUB[`${frame.pos}:${k}`] ? (
+                          {PAD_SUB[padKey(fs.mods.kural, frame.pos, k)] ? (
                             <Text style={[np.sub, { color: pressed ? '#0b0c0fcc' : col }]} numberOfLines={1}>
-                              {PAD_SUB[`${frame.pos}:${k}`]!()}
+                              {PAD_SUB[padKey(fs.mods.kural, frame.pos, k)]!()}
                             </Text>
                           ) : null}
                         </View>
@@ -929,7 +936,9 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel, band }: { fs: FightSt
               ? L("🔒 ya da ⤴️ görünce KONTROL. Rakip yorulunca SUB dene.")
               : frame.pos === 'altta'
                 ? L("🔒 görünce hemen KURTUL. 👊 gelirken GARD al.")
-                : fs.mods.kural === 'boks'
+                : fs.mods.kural === 'muaythai'
+                  ? L("Halka altın olunca KAÇ. TEKME daha çok sayılır; DİZ klinçte kondisyon bitirir.")
+                  : fs.mods.kural === 'boks'
                   ? L("Halka altın olunca KAÇ. DİREKT hazırlığı keser; yorulunca GARD al.")
                   : L("Halka altın olunca KAÇ (⬇️ takedown'a karşı da). DİREKT ve TEKME hazırlığı keser.")}
           </Text>

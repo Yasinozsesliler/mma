@@ -90,7 +90,7 @@ import { canFanMeet, fanMeet } from '../engine/fanMeet';
 import { GrandPrixCard } from './GrandPrixCard';
 import { KafesEviInvite } from './KafesEviScreen';
 import { SportInvite } from './SportScreen';
-import { recOf, sportsOpen, weeksToNext } from '../engine/sportLeague';
+import { OPEN_SPORTS, recOf, sportsOpen, weeksToNext } from '../engine/sportLeague';
 import { BrainCard } from './BrainCard';
 import { PosterCard } from './PosterCard';
 import { FirstStepsCard } from './FirstStepsCard';
@@ -166,13 +166,15 @@ function Tabs<T extends string>({ value, onChange, items }: { value: T; onChange
 
 // ---------- Hub ----------
 
-/** Dövüş Sporları kutucuğunun alt yazısı: boks karnesi ya da sıradaki maça kalan süre */
+/** Dövüş Sporları kutucuğunun alt yazısı: kemer, toplam lig karnesi ya da sıradaki maça kalan süre */
 function sportsSub(s: GameState) {
-  const r = recOf(s, 'boks');
-  if (r.kemer) return L("Boks şampiyonu");
+  const recs = OPEN_SPORTS.map((sp) => recOf(s, sp));
+  if (recs.some((r) => r.kemer)) return L("Lig şampiyonu");
+  const g = recs.reduce((a, r) => a + r.g, 0);
+  const m = recs.reduce((a, r) => a + r.m, 0);
   const w = weeksToNext(s);
-  if (r.g + r.m) return w ? L("Boks {0}-{1} · {2} hafta", [r.g, r.m, w]) : L("Boks {0}-{1} · maç hazır", [r.g, r.m]);
-  return L("Boks ligi açık");
+  if (g + m) return w ? L("Ligler {0}-{1} · {2} hafta", [g, m, w]) : L("Ligler {0}-{1} · maç hazır", [g, m]);
+  return L("Boks · Muay Thai");
 }
 
 export function HubScreen({ s, act }: { s: GameState; act: Act }) {

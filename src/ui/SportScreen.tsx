@@ -31,6 +31,7 @@ import type { Act } from './GameScreens';
 import { WatchVs } from './NewWatch';
 import { C, F } from './theme';
 
+const SOON = (['boks', 'muaythai', 'grappling', 'gures'] as Sport[]).filter((sp) => !OPEN_SPORTS.includes(sp));
 const rankText = (sira: number, kemer: boolean) => (kemer ? L("ŞAMPİYON") : sira >= 11 ? L("Sıralama dışı") : `#${sira}`);
 
 /** Ana ekranda davet kartı. */
@@ -187,8 +188,8 @@ export function SportScreen({ s, act }: { s: GameState; act: Act }) {
       {OPEN_SPORTS.map((sp) => (
         <LeagueRow key={sp} s={s} sp={sp} act={act} />
       ))}
-      <Section>{L("YAKINDA")}</Section>
-      {(['muaythai', 'grappling', 'gures'] as Sport[]).map((sp) => (
+      {SOON.length ? <Section>{L("YAKINDA")}</Section> : null}
+      {SOON.map((sp) => (
         <View key={sp} style={[st.soon, { borderColor: SPORTS[sp].renk + '55' }]}>
           <Icon name={SPORTS[sp].icon as IconName} size={16} color={SPORTS[sp].renk} />
           <Text style={st.soonText} numberOfLines={1}>

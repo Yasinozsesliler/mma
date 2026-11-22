@@ -20,6 +20,8 @@ const specialOf = (s: GameState, kural?: Sport): Special => {
   // Boksta tarz hamlesi yerine kombinasyon
   if (kural === 'boks') return { kind: 'kombo', imza: false, ad: SPECIAL_NAMES.kombo() };
   const kind = SPECIAL_FOR[s.fighter.gecmis] ?? 'kombo';
+  // Muay Thai'de yere götüren tarz hamleleri yerine diz
+  if (kural === 'muaythai' && (kind === 'suplex' || kind === 'guardCek')) return { kind: 'diz', imza: false, ad: SPECIAL_NAMES.diz() };
   return { kind, imza: !!s.imza, ad: s.imza?.ad ?? SPECIAL_NAMES[kind]() };
 };
 import { CornerMoment } from './CornerMoment';

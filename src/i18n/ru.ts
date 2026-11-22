@@ -10954,4 +10954,11 @@ export const RU: Record<string, string> = {
   "Boks ligi açık": "Лига бокса открыта",
   "Dövüş Sporları": "Единоборства",
   "DAVET": "ПРИГЛАШЕНИЕ",
+  "Klinçte diz": "Колено в клинче",
+  "DİZ": "КОЛЕНО",
+  "Halka altın olunca KAÇ. TEKME daha çok sayılır; DİZ klinçte kondisyon bitirir.": "УКЛОН, когда кольцо станет золотым. УДАРЫ НОГАМИ ценятся выше; КОЛЕНИ в клинче выматывают соперника.",
+  "Lig şampiyonu": "Чемпион лиги",
+  "Ligler {0}-{1} · {2} hafta": "Лиги {0}-{1} · {2} нед.",
+  "Ligler {0}-{1} · maç hazır": "Лиги {0}-{1} · бой готов",
+  "Boks · Muay Thai": "Бокс · Муай-тай",
 };
