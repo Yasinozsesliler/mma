@@ -319,11 +319,25 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel, band }: { fs: FightSt
   const flash = useFlash(H * 0.3);
   const ended = useRef(false);
 
+  /** Poz geçişi: hızlı çıkış, yumuşak duruş (cubic ease-out) */
   const cur = (a: Actor) => {
     const x = tw.current[a];
-    return lerpPose(x.from, x.to, Math.min(1, (now() - x.t0) / x.ms));
+    const k = Math.min(1, (now() - x.t0) / x.ms);
+    return lerpPose(x.from, x.to, 1 - (1 - k) * (1 - k) * (1 - k));
   };
-  const go = (a: Actor, to: Pose, ms: number) => void (tw.current[a] = { from: cur(a), to, t0: now(), ms: Math.max(1, ms) });
+  /** Ayakta beklerken canlılık: dizlerden yaylanma, nefes, gardda elle oynama. Hareket bitince yavaşça devreye girer. */
+  const alive = (a: Actor, ps: Pose): Pose => {
+    if (ground.current) return ps;
+    const x = tw.current[a];
+    const t = now();
+    const settle = Math.max(0, Math.min(1, (t - x.t0 - x.ms) / 260));
+    if (!settle) return ps;
+    const ph = a === 'p' ? 0 : 1.7;
+    const b = Math.sin(t / 165 + ph) * settle;
+    const br = Math.sin(t / 420 + ph) * settle;
+    return { ...ps, y: ps.y + b * 0.9, lL2: ps.lL2 + b * 3, lR2: ps.lR2 + b * 3, torso: ps.torso + br * 1.4, aL1: ps.aL1 + Math.sin(t / 300 + ph) * 3 * settle, aR1: ps.aR1 + Math.sin(t / 360 + ph + 1) * 2.4 * settle };
+  };
+  const go = (a: Actor, to: Pose, ms: number) => void (tw.current[a] = { from: alive(a, cur(a)), to, t0: now(), ms: Math.max(1, ms) });
   const seq = (a: Actor, steps: [Pose, number][]) => {
     let d = 0;
     steps.forEach(([p, ms]) => {
@@ -612,8 +626,8 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel, band }: { fs: FightSt
         const shk = shake.current.amp * Math.max(0, 1 - (t - shake.current.t0) / 300);
         setFrame({
           t,
-          p: cur('p'),
-          o: cur('o'),
+          p: alive('p', cur('p')),
+          o: alive('o', cur('o')),
           pHp: s.p.hp,
           pSta: s.p.sta,
           oHp: o.hp,

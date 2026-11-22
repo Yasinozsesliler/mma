@@ -7,6 +7,7 @@ import { Circle, Defs, Ellipse, G, Line, LinearGradient, Path, RadialGradient, S
 import type { Appearance } from '../engine/types';
 import { HAIR_COLORS, SKIN_TONES } from './FighterAvatar';
 import { add, down, joints, LEN, shade, type Pose } from './rigMath';
+import { FigureHD } from './rigBody';
 export { HIP_H, joints, lerpPose, POSES, type Pose, type PoseName } from './rigMath';
 
 /** bare: eldivensiz (ör. ip atlama); ref: hakem */
@@ -15,7 +16,7 @@ export type Kit = { shorts: string; trim: string; glove: string; ref?: boolean; 
 
 type P2 = { x: number; y: number };
 /** Şort bacağı (kalça a → uyluk ortası b) üzerine desen. */
-function Pattern({ a, b, kind, color, op = 1 }: { a: P2; b: P2; kind: ShortsPattern; color: string; op?: number }) {
+export function Pattern({ a, b, kind, color, op = 1 }: { a: P2; b: P2; kind: ShortsPattern; color: string; op?: number }) {
   const dx = b.x - a.x;
   const dy = b.y - a.y;
   const len = Math.hypot(dx, dy) || 1;
@@ -71,7 +72,7 @@ function Limb({ a, b, w, color, muscle = 1.12 }: { a: { x: number; y: number }; 
   );
 }
 
-function Glove({ at, dir, color, bare, skin }: { at: { x: number; y: number }; dir: number; color: string; bare?: boolean; skin: string }) {
+export function Glove({ at, dir, color, bare, skin }: { at: { x: number; y: number }; dir: number; color: string; bare?: boolean; skin: string }) {
   if (bare) return <Circle cx={at.x} cy={at.y} r={3.4} fill={skin} />;
   const d = down(dir);
   const c = add(at, d, 2);
@@ -89,7 +90,7 @@ function Glove({ at, dir, color, bare, skin }: { at: { x: number; y: number }; d
   );
 }
 
-function Head({ c, ang, look, skin, ref, hasar = 0 }: { c: { x: number; y: number }; ang: number; look: Appearance; skin: string; ref?: boolean; hasar?: number }) {
+export function Head({ c, ang, look, skin, ref, hasar = 0 }: { c: { x: number; y: number }; ang: number; look: Appearance; skin: string; ref?: boolean; hasar?: number }) {
   const hair = HAIR_COLORS[look.sacRenk] ?? HAIR_COLORS[0];
   const dark = shade(skin, -35);
   const s = look.sac;
@@ -157,7 +158,12 @@ function Head({ c, ang, look, skin, ref, hasar = 0 }: { c: { x: number; y: numbe
 
 /** Dövüşçü (ya da hakem) figürü. Koordinatlar: kalça merkezi (0,0). */
 /** build: vücut yapısı (-1 ince … 0 orta … 1 iri); sıklete göre gövde ve uzuv kalınlığı */
-export function Figure({ p, look, kit, hasar = 0, build = 0 }: { p: Pose; look: Appearance; kit: Kit; hasar?: number; build?: number }) {
+export function Figure(props: { p: Pose; look: Appearance; kit: Kit; hasar?: number; build?: number }) {
+  // Yeni görünüm: anatomik vücut (rigBody.tsx). Klasik görünüm eski çizimi korur.
+  return currentLook() === 'yeni' ? <FigureHD {...props} /> : <FigureClassic {...props} />;
+}
+
+function FigureClassic({ p, look, kit, hasar = 0, build = 0 }: { p: Pose; look: Appearance; kit: Kit; hasar?: number; build?: number }) {
   const j = joints(p);
   const bw = 1 + build * 0.16;
   const lw = 1 + build * 0.12;
