@@ -56,6 +56,8 @@ export function CreateScreen({
   const onDone = (input: NewFighterInput, stats: Stats) => {
     const x: NewFighterInput = { ...input, zorluk, meydan: challenge ?? undefined };
     if (ch?.yas) x.yas = ch.yas;
+    // Meydan okuma yaşı belirliyorsa Gençlik Yolu kapanır
+    if (ch?.yas) x.genclik = false;
     if (ch?.gecmis) x.gecmis = ch.gecmis;
     if (ch?.zorluk) x.zorluk = ch.zorluk;
     const w = challengeWeight(challenge, input.kadin);
@@ -301,6 +303,16 @@ export function CreateScreen({
       {step === 4 && (
         <>
           <Title sub={L("Genç dövüşçü hızlı gelişir ama ham başlar. Yaşlı dövüşçü tecrübeli başlar ama zamanı azdır.")}>{L("Kaç yaşındasın?")}</Title>
+          {/* Gençlik Yolu (isteğe bağlı): 12 yaşında dövüş geçmişinin sporunda başla, 18'de MMA'ya geç */}
+          <Choice
+            icon="sprout"
+            label={inp.genclik ? L("✓ Gençlik Yolu seçildi") : L("Gençlik Yolu: 12 yaşından başla")}
+            desc={L("Dövüş geçmişinin sporunda (boks, Muay Thai, grappling ya da güreş) çocukken başla. Her yıl bir karar ve bir turnuva; 18'inde MMA'ya geç. Seçmezsen hemen MMA ile başlarsın.")}
+            tone={inp.genclik ? 'gold' : 'plain'}
+            selected={!!inp.genclik}
+            onPress={() => set(inp.genclik ? { genclik: false } : { genclik: true, yas: 18 })}
+          />
+          {inp.genclik ? null : <>
           <View style={cs.ageGrid}>
             {Array.from({ length: 13 }, (_, i) => 18 + i).map((y) => (
               <Pressable key={y} onPress={() => set({ yas: y })} style={[cs.age, inp.yas === y && { borderColor: C.red, backgroundColor: C.redDim }]}>
@@ -320,6 +332,7 @@ export function CreateScreen({
                   : L("Olgun bir başlangıç. Daha güçlü başlarsın, ama saat tıkırdıyor.")}
             </P>
           </Card>
+          </>}
         </>
       )}
 

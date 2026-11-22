@@ -19,16 +19,16 @@ export const OPEN_SPORTS: Sport[] = ['boks', 'muaythai', 'grappling', 'gures'];
 export type SportRec = { g: number; m: number; ko: number; /** 1 = 1 numaralı yarışmacı, 11 = sıralama dışı */ sira: number; kemer: boolean; savunma: number; /** Verilen gelişim puanı */ bonus: number };
 export type SportBout = { spor: Sport; rakip: Opponent; ucret: number; unvan: boolean; adim: 'hazir' | 'dovus' | 'sonuc'; dovus?: FightState; notlar?: string[]; kazandi?: boolean };
 
-export const SPORTS: Record<Sport, { ad: () => string; kisa: string; renk: string; icon: string; kural: () => string }> = {
-  boks: { ad: () => L("Altın Eldiven Boks Ligi"), kisa: 'AEB', renk: '#d4a017', icon: 'boxing-glove', kural: () => L("Yalnızca yumruk: jab, direkt, kaç, gard. Tekme, indirme ve yer dövüşü yok.") },
-  muaythai: { ad: () => L("Sekiz Silah Muay Thai Ligi"), kisa: 'SSM', renk: '#e63946', icon: 'karate', kural: () => L("Yumruk, tekme, diz ve dirsek; indirme ve yer dövüşü yok.") },
-  grappling: { ad: () => L("Kilit Grappling Ligi"), kisa: 'KGL', renk: '#7b2cbf', icon: 'lock', kural: () => L("Vuruş yok: indir, pozisyon al, kilitle.") },
-  gures: { ad: () => L("Er Meydanı Güreş Ligi"), kisa: 'EMG', renk: '#2a9d8f', icon: 'human-handsup', kural: () => L("Vuruş yok: indirme ve çevirme puanı, tuşla biter.") },
+export const SPORTS: Record<Sport, { ad: () => string; spor: () => string; kisa: string; renk: string; icon: string; kural: () => string }> = {
+  boks: { spor: () => L("Boks"), ad: () => L("Altın Eldiven Boks Ligi"), kisa: 'AEB', renk: '#d4a017', icon: 'boxing-glove', kural: () => L("Yalnızca yumruk: jab, direkt, kaç, gard. Tekme, indirme ve yer dövüşü yok.") },
+  muaythai: { spor: () => L("Muay Thai"), ad: () => L("Sekiz Silah Muay Thai Ligi"), kisa: 'SSM', renk: '#e63946', icon: 'karate', kural: () => L("Yumruk, tekme, diz ve dirsek; indirme ve yer dövüşü yok.") },
+  grappling: { spor: () => L("Grappling"), ad: () => L("Kilit Grappling Ligi"), kisa: 'KGL', renk: '#7b2cbf', icon: 'lock', kural: () => L("Vuruş yok: indir, pozisyon al, kilitle.") },
+  gures: { spor: () => L("Güreş"), ad: () => L("Er Meydanı Güreş Ligi"), kisa: 'EMG', renk: '#2a9d8f', icon: 'human-handsup', kural: () => L("Vuruş yok: indirme ve çevirme puanı, tuşla biter.") },
 };
 
 export const sportTactics = (sp: Sport) => SPORT_TACTICS[sp];
 
-const UNRANKED = 11;
+export const UNRANKED = 11;
 export const recOf = (s: GameState, sp: Sport): SportRec => s.sporlar?.[sp] ?? { g: 0, m: 0, ko: 0, sira: UNRANKED, kemer: false, savunma: 0, bonus: 0 };
 const saveRec = (s: GameState, sp: Sport, r: SportRec) => (s.sporlar = { ...(s.sporlar ?? {}), [sp]: r });
 
@@ -56,7 +56,7 @@ const PAY: Record<Stage, number> = { amator: 0, bolgesel: 6_000, buyuk: 20_000, 
 export const purseOf = (s: GameState, r: SportRec, unvan: boolean) => Math.round((PAY[s.stage] * (1 + (UNRANKED - r.sira) * 0.08) * (unvan ? 2 : 1)) / 500) * 500;
 
 /** Sporun rakibi: o sporun uzmanı; MMA'nın diğer alanları zayıf. */
-function sportOpponent(s: GameState, sp: Sport, r: SportRec, unvan: boolean): Opponent {
+export function sportOpponent(s: GameState, sp: Sport, r: SportRec, unvan: boolean): Opponent {
   const zorluk = r.sira <= 3 || unvan ? 1 : r.sira <= 7 ? 0 : -1;
   const o = generateOpponent(s, { zorluk, org: 'cfc' });
   const st: Stats = { ...o.stats };

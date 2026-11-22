@@ -30,6 +30,8 @@ export interface NewFighterInput {
   /** Zorluk ve meydan okuma (challenges.ts) */
   zorluk?: import('./challenges').Difficulty;
   meydan?: import('./challenges').ChallengeId;
+  /** Gençlik Yolu: 12 yaşında bir spora başla, sonra MMA'ya geç (youth.ts) */
+  genclik?: boolean;
 }
 
 /** noise=false: zar atmadan beklenen değerler (seçim ekranındaki önizleme için). */

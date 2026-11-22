@@ -81,6 +81,8 @@ import { PromoterScreen } from './src/ui/PromoterScreen';
 import { HomelandScreen } from './src/ui/HomelandScreen';
 import { KafesEviScreen } from './src/ui/KafesEviScreen';
 import { SportScreen } from './src/ui/SportScreen';
+import { YouthScreen } from './src/ui/YouthScreen';
+import { startYouth } from './src/engine/youth';
 import { FanClubScreen } from './src/ui/FanClubScreen';
 import { FadeIn } from './src/ui/anim';
 import { acceptComeback } from './src/engine/comeback';
@@ -140,6 +142,7 @@ const PHASE_LABELS: Record<Phase, string> = {
   harita: L("Dünya Turu"),
   kafesEvi: L("Kafes Evi"),
   sporLig: L("Dövüş Sporları"),
+  genclik: L("Gençlik Yolu"),
   kulup: L("Taraftar Kulübü"),
   emeklilik: L("Emeklilik"),
   evim: L("Evim"),
@@ -381,7 +384,7 @@ export default function App() {
   useEffect(() => {
     if (view !== 'loading') trackScreen(phase ?? view);
   }, [view, phase]);
-  const scene: Scene = !phase || phase === 'emeklilik' ? 'menu' : phase === 'dovus' || (phase === 'kafesEvi' && game?.kafesEvi?.adim === 'dovus') || (phase === 'sporLig' && game?.sporMac?.adim === 'dovus') ? 'fight' : phase === 'kutlama' ? 'celebrate' : 'hub';
+  const scene: Scene = !phase || phase === 'emeklilik' ? 'menu' : phase === 'dovus' || (phase === 'kafesEvi' && game?.kafesEvi?.adim === 'dovus') || (phase === 'sporLig' && game?.sporMac?.adim === 'dovus') || (phase === 'genclik' && game?.genclik?.adim === 'dovus') ? 'fight' : phase === 'kutlama' ? 'celebrate' : 'hub';
   useSoundScene(scene);
 
   let content;
@@ -518,12 +521,14 @@ export default function App() {
           const s = createGame(input, stats);
           if (input.zorluk) s.zorluk = input.zorluk;
           if (input.meydan) s.meydan = { id: input.meydan, durum: 'devam' };
+          // Gençlik Yolu: kariyer 12 yaşında, dövüş geçmişinin sporunda başlar (Hanedan devrinde de seçilebilir)
+          if (input.genclik) startYouth(s);
           if (heritage) applyHeritage(s, heritage);
           setHeritage(null);
           socialWelcome(s);
           ensureGoals(s);
           ensureEvent(s);
-          track('career_start', { zorluk: s.zorluk, meydan: input.meydan, hanedan: !!heritage, yuva: createSlot });
+          track('career_start', { zorluk: s.zorluk, meydan: input.meydan, hanedan: !!heritage, yuva: createSlot, genclik: !!input.genclik });
           setSlot(createSlot);
           setGame(s);
           // Yuvanın eski kaydı ve yedeği silinir; yeni kariyer temiz başlar.
@@ -610,6 +615,9 @@ export default function App() {
         break;
       case 'sporLig':
         content = <SportScreen {...props} />;
+        break;
+      case 'genclik':
+        content = game.genclik ? <YouthScreen {...props} /> : <HubScreen {...props} />;
         break;
       case 'harita':
         content = <WorldMapScreen {...props} />;

@@ -352,12 +352,13 @@ export function FightScreen({ s, act }: { s: GameState; act: Act }) {
   const lig = fs.mods.kural ? SPORTS[fs.mods.kural] : null;
   const org = (lig ? lig.kisa : ORGS[currentOrg(s)].kisa) + (fs.unvanMaci ? L(" · ÜNVAN") : fs.anaMac ? L(" · ANA MAÇ") : '');
   /** Yeni görünüm yayın bandı (canlı dövüş ve taktik izleme aynı) */
-  const ligRec = fs.mods.kural ? recOf(s, fs.mods.kural) : null;
+  // Gençlik turnuvasında gençlik karnesi, ligde lig karnesi
+  const ligRec = fs.mods.kural ? (s.genclik ? { ...recOf(s, fs.mods.kural), ...s.genclik.rekor, sira: 11, kemer: false } : recOf(s, fs.mods.kural)) : null;
   const band = lig
     ? {
         ...arenaLook(s),
-        org: lig.kisa,
-        caption: `${lig.ad().toLocaleUpperCase(LOC)}${fs.unvanMaci ? ` · ${L("ÜNVAN MAÇI")}` : ''}`,
+        org: fs.mods.ligAd ? L("GENÇ") : lig.kisa,
+        caption: fs.mods.ligAd ? `${fs.mods.ligAd.toLocaleUpperCase(LOC)} · ${L("FİNAL")}` : `${lig.ad().toLocaleUpperCase(LOC)}${fs.unvanMaci ? ` · ${L("ÜNVAN MAÇI")}` : ''}`,
         pRank: ligRec?.kemer ? 'C' : ligRec && ligRec.sira < 11 ? String(ligRec.sira) : '',
         oRank: fs.opp.champion ? 'C' : fs.opp.rank ? String(fs.opp.rank) : '',
       }

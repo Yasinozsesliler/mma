@@ -396,6 +396,8 @@ export interface FightMods {
   okunma?: number;
   /** Dövüş sporları ligi kuralı (sportLeague.ts); yoksa MMA */
   kural?: import('./sportRules').Sport;
+  /** Gençlik turnuvası adı (youth.ts): yayın bandında lig adı yerine */
+  ligAd?: string;
 }
 
 export interface FightResult {
@@ -584,6 +586,7 @@ export type Phase =
   | 'harita'
   | 'kafesEvi'
   | 'sporLig'
+  | 'genclik'
   | 'kulup'
   | 'emeklilik'
   | 'evim'
@@ -835,6 +838,9 @@ export interface GameState {
   sporMac?: import('./sportLeague').SportBout;
   sporDavet?: { spor: import('./sportRules').Sport; hafta: number };
   sporSon?: number;
+  /** Gençlik Yolu: süren gençlik yılları ve MMA'ya geçince kalan özet (youth.ts) */
+  genclik?: import('./youth').Youth;
+  gencGecmis?: { spor: import('./sportRules').Sport; rekor: { g: number; m: number }; unvanlar: import('./youth').YouthTitle[] };
   /** Alınan harita kilometre taşları (c5, k3...) */
   haritaOdul?: string[];
   /** Crossover boks maçı (crossover.ts) */
