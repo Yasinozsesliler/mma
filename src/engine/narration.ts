@@ -57,6 +57,98 @@ export function strikeLine(att: Side, tactic: Tactic, names: Record<Side, string
   const def: Side = att === 'p' ? 'o' : 'p';
   return fill(pick(STRIKE[t]), { A: names[att], B: names[def] });
 }
+// ---------- Dövüş sporları ligi anlatımı (taktik izleme) ----------
+const BOKS_STRIKE: Partial<Record<Tactic, string[]>> = {
+  baski: [
+    L("{A} rakibini iplere dayıyor ve sol-sağ-sol hook serisini boşaltıyor!"),
+    L("{A} ileri yürüyor, gövdeye gömülen bir hook ile rakibinin nefesini kesiyor."),
+    L("{A} köşeye sıkıştırdı; ağır bir sağ el yüze temiz iniyor!"),
+    L("{A} içeri girip aparkatla başlayan bir kombinasyon bağlıyor."),
+  ],
+  kontra: [
+    L("{B} saldırıya geliyor ama {A} tam zamanında bir kontra sağ krosla karşılıyor!"),
+    L("{A} başını eğip sıyrılıyor, rakip boşluğa düşüyor ve kısa bir sol hook yiyor."),
+    L("{A} sabırla bekliyor… ve {B} içeri girdiği anda sert bir kontra patlıyor!"),
+  ],
+  mesafe: [
+    L("{A} jab ile mesafeyi yönetiyor, rakibin yüzü kızarmaya başladı."),
+    L("{A} ringin ortasında dönüp jab-kros ile puan topluyor."),
+    L("{A} ayak oyunuyla açı alıp çift jab yapıştırıyor ve çıkıyor."),
+    L("{A} uzun jabıyla rakibin atağını daha başlamadan kesiyor."),
+  ],
+};
+const MT_STRIKE: Partial<Record<Tactic, string[]>> = {
+  baski: [
+    L("{A} ileri yürüyor; yumruk serisini sert bir orta tekmeyle bağlıyor!"),
+    L("{A} rakibini iplere dayayıp dirsekle tamamlanan bir kombinasyon indiriyor."),
+    L("{A} gövdeye tekme, kafaya kros: zincir hiç durmuyor!"),
+  ],
+  kontra: [
+    L("{A} gelen tekmeyi yakaladı ve kontra kros patlattı!"),
+    L("{B} tekmeye gidiyor ama {A} bloklayıp sert bir low kick ile cevap veriyor."),
+    L("{A} geri adım atıyor, rakip boşluğa düşüyor ve dirsek yiyor."),
+  ],
+  mesafe: [
+    L("{A} dışarıdan sert bir low kick yapıştırıp çıkıyor. Ön bacak zorlanıyor."),
+    L("{A} teep ile mesafeyi koruyor, rakip içeri giremiyor."),
+    L("{A} uzun bir orta tekmeyle puan topluyor; gövde ses verdi."),
+    L("{A} yüksek tekme fırlattı, gard son anda kalktı!"),
+  ],
+  clinch: [
+    L("{A} plum klinç aldı, dizler gövdeye art arda iniyor!"),
+    L("{A} klinçten çıkarken kısa bir dirsek savuruyor, kaşın üstüne değdi!"),
+    L("{A} ensesinden çekip dizi yüze gönderdi!"),
+  ],
+};
+/** Ligde vuruş anlatımı: boks ve Muay Thai'ye özel cümleler (MMA'da STRIKE) */
+export function sportStrikeLine(kural: import('./sportRules').Sport | undefined, att: Side, tactic: Tactic, names: Record<Side, string>) {
+  const pool = kural === 'boks' ? BOKS_STRIKE[tactic] : kural === 'muaythai' ? MT_STRIKE[tactic] : undefined;
+  if (!pool?.length) return strikeLine(att, tactic, names);
+  const def: Side = att === 'p' ? 'o' : 'p';
+  return fill(pick(pool), { A: names[att], B: names[def] });
+}
+const GRAPPLE_GROUND: Record<'grappling' | 'gures', string[]> = {
+  grappling: [
+    L("{A} guard'ı geçip yan kontrole kuruldu, ağırlığını veriyor."),
+    L("{A} mount'a tırmandı! Rakip altta nefes almakta zorlanıyor."),
+    L("{A} sırtı aldı, iki kanca içeride. Kilit arıyor!"),
+    L("{A} yarım guard'dan çıkıp diz-göbek pozisyonuna geçti."),
+  ],
+  gures: [
+    L("{A} rakibini çevirdi; sırtı mindere yaklaşıyor, puan!"),
+    L("{A} yerde kontrolü aldı, rakibin omuzlarını mindere bastırıyor."),
+    L("{A} köprüdeki rakibini zorluyor; tuşa çok yakın!"),
+    L("{A} arkasına geçip rakibini yan çevirdi. İki puan!"),
+  ],
+};
+export function grappleGroundLine(kural: 'grappling' | 'gures', top: Side, names: Record<Side, string>) {
+  return fill(pick(GRAPPLE_GROUND[kural]), { A: names[top] });
+}
+const HAND_FIGHT = [
+  L("{A} el kavgasını kazanıyor, bilekleri kontrol edip rakibini geri itiyor."),
+  L("{A} kafa kafaya tutuşta baskı kuruyor; rakip mindere doğru geriliyor."),
+  L("{A} bacaklara fint atıp rakibini dengesiz yakaladı."),
+];
+export function handFightLine(att: Side, names: Record<Side, string>) {
+  const def: Side = att === 'p' ? 'o' : 'p';
+  return fill(pick(HAND_FIGHT), { A: names[att], B: names[def] });
+}
+const TD_OK_MAT = [
+  L("{A} seviye değiştirip çift bacak dalıyor… ve rakibini mindere çarpıyor!"),
+  L("{A} kalça atarak rakibini mindere savuruyor. Temiz fırlatma!"),
+  L("{A} tek bacağı yakaladı, rakibini döndürüp mindere indirdi."),
+];
+const TD_FAIL_MAT = [
+  L("{A} bacağa dalıyor ama {B} sprawl ile savunuyor ve ayağa dönüyor."),
+  L("{A} bacağa gidiyor, {B} kalçasını geri atıp dengesini koruyor. Boşa enerji."),
+  L("{A} dalış yaptı ama {B} kafasını bastırıp girişi kesti."),
+];
+/** Minderde (grappling, güreş) dalış cümlesi: kafes ve dizle karşılama yok */
+export function tdLineGrapple(att: Side, ok: boolean, names: Record<Side, string>) {
+  const def: Side = att === 'p' ? 'o' : 'p';
+  return fill(pick(ok ? TD_OK_MAT : TD_FAIL_MAT), { A: names[att], B: names[def] });
+}
+
 export function tdLine(att: Side, ok: boolean, names: Record<Side, string>) {
   const def: Side = att === 'p' ? 'o' : 'p';
   return fill(pick(ok ? TD_OK : TD_FAIL), { A: names[att], B: names[def] });
@@ -116,6 +208,19 @@ const SPORT_TACTIC_TEXT: Partial<Record<import('./sportRules').Sport, Partial<Re
   },
 };
 export const tacticText = (kural: import('./sportRules').Sport | undefined, t: Tactic) => (kural && SPORT_TACTIC_TEXT[kural]?.[t]?.()) || TACTICS[t];
+
+/** Kritik an seçeneğinin o spordaki adı (boksta 'clinch' yerine sarılmak) */
+export function criticalLabel(kind: keyof typeof CRITICAL_OPTIONS, i: number, kural?: import('./sportRules').Sport): { ad: string; aciklama: string } {
+  if (kural === 'boks' && kind === 'sarsildin' && i === 0) return { ad: L("Sarıl, zaman kazan"), aciklama: L("Rakibine sarıl, hakem ayırana kadar kafanı toparla.") };
+  return CRITICAL_OPTIONS[kind][i];
+}
+
+/** Kritik anda bu maçta gösterilecek seçeneklerin sırası (boks ve Muay Thai'de 'yere indir' yok) */
+export function criticalChoices(kind: keyof typeof CRITICAL_OPTIONS, kural?: import('./sportRules').Sport): number[] {
+  const all = CRITICAL_OPTIONS[kind].map((_, i) => i);
+  if ((kural === 'boks' || kural === 'muaythai') && kind === 'rakipSersem') return [0, 1];
+  return all;
+}
 
 export const CRITICAL_OPTIONS = {
   rakipSersem: [

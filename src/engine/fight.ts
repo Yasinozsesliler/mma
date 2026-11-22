@@ -1,10 +1,10 @@
 import { L, LOC } from '../i18n';
-import { legalTactic, SPORT_TACTICS } from './sportRules';
+import { groundAllowed, legalTactic, SPORT_TACTICS, strikesAllowed } from './sportRules';
 import { SUBMISSIONS } from './data';
 import type { LiveRoundResult } from './liveFight';
 import { exploited, habitEdge, HABITS, hasHabit, revealInFight } from './habits';
 import { bestLevel, bestSpecial, pickTech, TECHNIQUES, techById, type TechDef } from './techniques';
-import { CRITICAL_INTRO, evenLine, groundLine, strikeLine, TACTICS, tacticText, tdLine } from './narration';
+import { CRITICAL_INTRO, evenLine, grappleGroundLine, groundLine, handFightLine, sportStrikeLine, TACTICS, tacticText, tdLine, tdLineGrapple } from './narration';
 import { chance, clamp, fill, noise, pick, rand, randInt, weighted } from './rng';
 import type {
   Background,
@@ -369,7 +369,43 @@ function successRate(fs: FightState, t: Tactic, delta: number) {
 
 // ---------- Raunt içi anlar ----------
 
+/** Vuruşsuz sporlarda yer anı: pozisyon puanı ve yıpratma; grappling'de kilit, güreşte köprü ve tuş. */
+function groundGrapple(fs: FightState, top: Side, beat: number): boolean {
+  const kural = fs.mods.kural as 'grappling' | 'gures';
+  const T = sideDom(fs, top);
+  const B = sideDom(fs, other(top));
+  fs.log.push(grappleGroundLine(kural, top, names(fs)));
+  fs.yerde = true;
+  addPts(fs, top, 1.6);
+  drain(fs, other(top), 'clinch', 3);
+  if (kural === 'gures') {
+    const tus = clamp(0.05 + (T.wrestling - B.wrestling) / 160, 0.02, 0.2) * SC;
+    if (chance(tus)) {
+      finish(fs, top, 'SUB', top === 'p' ? L("🤼 TUŞ! {0} sırtı mindere yapıştı, hakem mindere vurdu!", [fs.oAd]) : L("🤼 Tuş oldun… sırtın mindere yapıştı."), beat);
+      return true;
+    }
+    if (chance(clamp(0.25 + (B.wrestling - T.wrestling) / 120, 0.08, 0.6))) {
+      fs.log.push(L("{0} köprü kurup döndü, tehlikeden çıktı!", [names(fs)[other(top)]]));
+      addPts(fs, other(top), 0.8);
+    }
+    return false;
+  }
+  let subP = clamp(0.1 + (T.grappling - B.grappling) / 110, 0.03, 0.4);
+  if (top === 'p') subP += bestLevel(fs.mods.teknik, 'sub') * 0.006;
+  if (chance(subP * SC)) {
+    setCritical(fs, top === 'p' ? 'subFirsat' : 'subTehlike');
+    return true;
+  }
+  if (B.grappling > T.grappling + 8 && chance(0.15 * SC)) {
+    fs.log.push(L("{0} alttan bacaklarını kilitledi, tehlikeli bir guard!", [names(fs)[other(top)]]));
+    setCritical(fs, top === 'p' ? 'subTehlike' : 'subFirsat');
+    return true;
+  }
+  return false;
+}
+
 function groundPhase(fs: FightState, top: Side, beat: number): boolean {
+  if (!strikesAllowed(fs.mods.kural)) return groundGrapple(fs, top, beat);
   const T = sideDom(fs, top);
   const B = sideDom(fs, other(top));
   fs.log.push(groundLine(top, names(fs)));
@@ -409,14 +445,18 @@ function takedownBeat(fs: FightState, shooter: Side, beat: number): boolean {
   }
   p = clamp(p, 0.08, 0.78);
   const ok = chance(p);
-  fs.log.push(tdLine(shooter, ok, names(fs)));
+  const grapple = !strikesAllowed(fs.mods.kural);
+  fs.log.push(grapple ? tdLineGrapple(shooter, ok, names(fs)) : tdLine(shooter, ok, names(fs)));
   drain(fs, shooter, 'takedown', ok ? 0 : 6);
   if (shooter === 'p') successRate(fs, 'takedown', ok ? 2 : -1);
   if (!ok) {
     addPts(fs, other(shooter), 0.9);
-    addDmg(fs, shooter, tD === 'kontra' || tD === 'mesafe' ? 4 : 2);
+    // Vuruşsuz sporlarda boşa dalış hasar değil yorgunluk getirir
+    if (!grapple) addDmg(fs, shooter, tD === 'kontra' || tD === 'mesafe' ? 4 : 2);
     return false;
   }
+  // Güreş ve grappling'de indirme ayrıca puan
+  if (grapple) addPts(fs, shooter, 1.2);
   addPts(fs, shooter, 1);
   return groundPhase(fs, shooter, beat);
 }
@@ -433,12 +473,31 @@ function clinchBeat(fs: FightState, beat: number): boolean {
   drain(fs, 'o', 'clinch');
   if (fs.taktik === 'clinch') successRate(fs, 'clinch', w === 'p' ? 1 : -1);
   const W = w === 'p' ? P : O;
+  const kural = fs.mods.kural;
+  // Vuruşsuz sporlar: klinçte fırlatma ya da el kavgası
+  if (!strikesAllowed(kural)) {
+    if (chance(0.38)) {
+      fs.log.push(L("{0} belden kavrayıp rakibini mindere fırlattı!", [names(fs)[w]]));
+      addPts(fs, w, 2);
+      return groundPhase(fs, w, beat);
+    }
+    fs.log.push(handFightLine(w, names(fs)));
+    addPts(fs, w, 0.7);
+    drain(fs, other(w), 'clinch', 2);
+    return false;
+  }
   if (chance(0.2) && W.wrestling > 35) {
+    // Muay Thai: yere indirme yok; süpürme puan getirir
+    if (!groundAllowed(kural)) {
+      fs.log.push(L("{0} klinçte rakibini süpürüp mindere düşürdü! Puan.", [names(fs)[w]]));
+      addPts(fs, w, 1.5);
+      return false;
+    }
     fs.log.push(L("{0} clinch’ten ayak çelmesiyle rakibini yere indirdi!", [names(fs)[w]]));
     addPts(fs, w, 1.5);
     return groundPhase(fs, w, beat);
   }
-  fs.log.push(strikeLine(w, 'clinch', names(fs)));
+  fs.log.push(sportStrikeLine(kural, w, 'clinch', names(fs)));
   const dmg = (4 + W.power / 25) * (0.7 + Math.abs(r - 0.5) * 3);
   addDmg(fs, other(w), dmg);
   addRegion(fs, other(w), dmg, 'clinch');
@@ -477,7 +536,7 @@ function strikeBeat(fs: FightState, beat: number): boolean {
   addPts(fs, w, 1 + dmg / 12);
   addPts(fs, other(w), 0.3);
   successRate(fs, pt, w === 'p' ? 1 : -1);
-  fs.log.push(strikeLine(w, wt, names(fs)));
+  fs.log.push(sportStrikeLine(fs.mods.kural, w, wt, names(fs)));
   return rockCheck(fs, other(w), dmg, beat);
 }
 
@@ -485,6 +544,18 @@ function beat(fs: FightState, i: number): boolean {
   fs.yerde = false;
   const pt = fs.taktik!;
   const ot = fs.rakipTaktik!;
+  const kural = fs.mods.kural;
+  // Boks: yalnızca ayakta vuruş; Muay Thai: vuruş ve klinç (indirme yok)
+  if (kural === 'boks') return strikeBeat(fs, i);
+  if (kural === 'muaythai') return pt === 'clinch' || ot === 'clinch' ? clinchBeat(fs, i) : strikeBeat(fs, i);
+  // Grappling ve güreş: dalış, klinç ya da el kavgası (vuruş yok)
+  if (kural) {
+    if (pt === 'takedown' || ot === 'takedown') {
+      const shooter: Side = pt === 'takedown' && ot === 'takedown' ? (sideDom(fs, 'p').wrestling + noise(8) > sideDom(fs, 'o').wrestling ? 'p' : 'o') : pt === 'takedown' ? 'p' : 'o';
+      return takedownBeat(fs, shooter, i);
+    }
+    return clinchBeat(fs, i);
+  }
   if (pt === 'takedown' || ot === 'takedown') {
     let shooter: Side;
     if (pt === 'takedown' && ot === 'takedown')
@@ -604,7 +675,7 @@ function runBeats(fs: FightState) {
       const yeni = legalTactic(fs.mods.kural, chance(0.25 + o.iq / 200) ? counterOf(fs.taktik!) : oppTactic(fs));
       if (yeni !== fs.rakipTaktik) {
         fs.rakipTaktik = yeni;
-        fs.log.push(L("🔄 {0} oyununu değiştirdi: {1}.", [fs.oAd, TACTICS[yeni].ad.toLocaleLowerCase(LOC)]));
+        fs.log.push(L("🔄 {0} oyununu değiştirdi: {1}.", [fs.oAd, tacticText(fs.mods.kural, yeni).ad.toLocaleLowerCase(LOC)]));
       }
     }
     if (i < BEATS - 1 && maybeDecision(fs)) return;
@@ -627,7 +698,7 @@ interface DecDef {
 }
 
 const setTac = (fs: FightState, t: Tactic) => {
-  fs.taktik = t;
+  fs.taktik = legalTactic(fs.mods.kural, t);
 };
 const boost = (fs: FightState, v: number, kalan: number) => {
   fs.anlik = { v, kalan };
@@ -876,13 +947,37 @@ const DECISIONS: DecDef[] = [
   },
 ];
 
+/**
+ * Dövüş sporları liginde karar anları: o sporda anlamlı olanlar ve kurala aykırı seçenekleri çıkarılmış hâli.
+ * Değer: çıkarılan seçeneklerin sırası (boş = hepsi kalır). Listede olmayan karar anı o sporda çıkmaz.
+ */
+const DEC_RULES: Record<import('./sportRules').Sport, Partial<Record<string, number[]>>> = {
+  boks: { kontra_firsat: [2], nefes: [2], kes_zorla: [], rakip_yorgun: [1], acik: [], seyirci: [], provokasyon: [], kesik: [2] },
+  muaythai: { kontra_firsat: [2], nefes: [], bacak_sok: [1], kes_zorla: [], rakip_yorgun: [1], acik: [], seyirci: [], provokasyon: [], kesik: [] },
+  grappling: { nefes: [0], rakip_yorgun: [0, 2], seyirci: [], sub_karar: [] },
+  gures: { nefes: [0], rakip_yorgun: [0, 2], seyirci: [] },
+};
+/** Karar anının bu maçtaki seçenekleri (lig kuralına göre süzülmüş; gösterim ve uygulama aynı listeyi kullanır) */
+function decOptions(fs: FightState, d: DecDef): DecOpt[] {
+  const all = d.secenekler(fs);
+  const k = fs.mods.kural;
+  if (!k) return all;
+  const out = DEC_RULES[k][d.tip] ?? [];
+  // Grappling'de yerdeki karar anında ground & pound seçeneği çıkar
+  const extra = k === 'grappling' && d.tip === 'sub_karar' ? all.map((o, i) => (/ground|pound/i.test(o.ad) ? i : -1)).filter((i) => i >= 0) : [];
+  return all.filter((_, i) => !out.includes(i) && !extra.includes(i));
+}
+
 /** Anlar arasında, bekleme süresi dolduysa ~%30 ihtimalle bağlama uygun bir karar anı çıkar. */
 function maybeDecision(fs: FightState): boolean {
   if ((fs.kararSayac ?? 0) < 2 || !chance(0.3)) return false;
-  const pool = DECISIONS.map((d) => [d, d.agirlik(fs)] as [DecDef, number]).filter(([, w]) => w > 0);
+  const k = fs.mods.kural;
+  const pool = DECISIONS.filter((d) => !k || DEC_RULES[k][d.tip] !== undefined)
+    .map((d) => [d, d.agirlik(fs)] as [DecDef, number])
+    .filter(([d, w]) => w > 0 && decOptions(fs, d).length >= 2);
   if (!pool.length) return false;
   const d = weighted(pool);
-  fs.karar = { tip: d.tip, metin: d.metin(fs), secenekler: d.secenekler(fs).map(({ ad, aciklama }) => ({ ad, aciklama })) };
+  fs.karar = { tip: d.tip, metin: d.metin(fs), secenekler: decOptions(fs, d).map(({ ad, aciklama }) => ({ ad, aciklama })) };
   fs.durum = 'karar';
   fs.kararSayac = 0;
   return true;
@@ -891,7 +986,7 @@ function maybeDecision(fs: FightState): boolean {
 export function resolveDecision(prev: FightState, idx: number): FightState {
   const fs = clone(prev);
   const d = DECISIONS.find((x) => x.tip === fs.karar?.tip);
-  const opt = d?.secenekler(fs)[idx];
+  const opt = d ? decOptions(fs, d)[idx] : undefined;
   fs.karar = null;
   fs.durum = 'taktik';
   if (opt) fs.log.push(`➤ ${opt.apply(fs)}`);
@@ -902,6 +997,7 @@ export function resolveDecision(prev: FightState, idx: number): FightState {
 
 export function chooseTactic(prev: FightState, t: Tactic): FightState {
   const fs = clone(prev);
+  t = legalTactic(fs.mods.kural, t);
   // Rakip, oyuncunun bu raunt ne seçtiğini bilmeden (yalnızca geçmişe bakarak) kararını verir.
   fs.rakipTaktik = oppTactic(fs);
   const hist = fs.oyuncuTaktikGecmisi ?? [];
@@ -911,7 +1007,7 @@ export function chooseTactic(prev: FightState, t: Tactic): FightState {
   fs.oyuncuTaktikGecmisi = hist;
   fs.taktik = t;
   fs.rakipTaktikGecmisi.push(fs.rakipTaktik);
-  fs.log = [L("— {0}. RAUNT — Sen: {1}", [fs.raunt, TACTICS[t].ad])];
+  fs.log = [L("— {0}. RAUNT — Sen: {1}", [fs.raunt, tacticText(fs.mods.kural, t).ad])];
   fs.anlar = [{ i: 1, pP: 0, oP: 0, pH: fs.pHasar, oH: fs.oHasar, pK: fs.pKondisyon, oK: fs.oKondisyon, dk: 0 }];
   if (rep > 0) fs.log.push(L("🧠 {0} bu hamleyi bekliyordu. Aynı oyunu {1}. kez oynamak seni öngörülebilir yapıyor.", [fs.oAd, rep + 1]));
   runBeats(fs);
@@ -1119,9 +1215,15 @@ export function resolveCritical(prev: FightState, choice: number, q = 0.5): Figh
       moment(fs, '🔓', L("{0} kilidini sonuna kadar sıktın, {1} son anda kurtuldu.", [fs.subAdi, fs.oAd]), 3, true);
       addPts(fs, 'p', 1);
     } else {
-      fs.log.push(L("{0} riske girmiyor, üstte kalıp dirsek ve yumrukla puan topluyor.", [fs.pAd]));
-      addPts(fs, 'p', 2);
-      addDmg(fs, 'o', 5);
+      if (strikesAllowed(fs.mods.kural)) {
+        fs.log.push(L("{0} riske girmiyor, üstte kalıp dirsek ve yumrukla puan topluyor.", [fs.pAd]));
+        addPts(fs, 'p', 2);
+        addDmg(fs, 'o', 5);
+      } else {
+        fs.log.push(L("{0} riske girmiyor, üstte ağırlığını verip pozisyon puanı topluyor.", [fs.pAd]));
+        addPts(fs, 'p', 2);
+        drain(fs, 'o', 'clinch', 4);
+      }
     }
   } else if (kind === 'subTehlike') {
     if (choice === 2) {
@@ -1157,6 +1259,12 @@ export function resolveCritical(prev: FightState, choice: number, q = 0.5): Figh
 function endRound(fs: FightState) {
   const diff = fs.pPuan - fs.oPuan;
   fs.rauntFarklari.push(Math.round(diff * 10) / 10);
+  // Taktik izlemede raunt raunt knockdown (canlı maçta applyLiveRound yazar): 10-8 için
+  if ((fs.rauntKd?.length ?? 0) < fs.rauntFarklari.length) {
+    const prevP = (fs.rauntKd ?? []).reduce((a, k) => a + k[0], 0);
+    const prevO = (fs.rauntKd ?? []).reduce((a, k) => a + k[1], 0);
+    fs.rauntKd = [...(fs.rauntKd ?? []), [Math.max(0, fs.pKnockdown - prevP), Math.max(0, fs.oKnockdown - prevO)]];
+  }
   fs.pPuan = 0;
   fs.oPuan = 0;
   fs.log.push(L("🔔 {0}. raunt bitti.", [fs.raunt]));

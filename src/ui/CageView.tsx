@@ -437,6 +437,12 @@ export function CageView({
         hitAt(Dd, 'body', 'dust', 700);
         return;
       case 'gnp':
+        // Grappling ve güreş: yerde vuruş yok; üstteki pozisyonu tutar, alttaki kıvranır
+        if (fs.mods.kural === 'grappling' || fs.mods.kural === 'gures') {
+          queue(Dd, [['onBack', 350, { x: -12 }], ['onBack', 300, { x: -12, head: 14 }], ['onBack', 300, { x: -12 }]]);
+          queue(A, [['kneelTop', 350, { x: GAP - 30 }], ['kneelTop', 300, { x: GAP - 26, torso: 46 }], ['kneelTop', 300, { x: GAP - 30 }]]);
+          return;
+        }
         if (cur.current[Dd].rot > -60) {
           queue(Dd, [['onBack', 350, { x: -12 }]]);
           queue(A, [['kneelTop', 350, { x: GAP - 30 }], ['gnp', 150, { x: GAP - 30 }], ['gnpHit', 110, { x: GAP - 28 }], ['kneelTop', 250, { x: GAP - 30 }]]);

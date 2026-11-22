@@ -28,7 +28,7 @@ const specialOf = (s: GameState, kural?: Sport): Special => {
 };
 import { CornerMoment } from './CornerMoment';
 import { speakCoach, stopAnnounce } from '../announcer';
-import { CRITICAL_OPTIONS, TACTICS, tacticText } from '../engine/narration';
+import { criticalChoices, criticalLabel, TACTICS, tacticText } from '../engine/narration';
 import { oppRecord } from '../engine/opponents';
 import type { Bolge, CriticalKind, FightState, GameState, Tactic } from '../engine/types';
 import { HABITS, knownEdge } from '../engine/habits';
@@ -301,7 +301,7 @@ function TacticList({ fs, onPick, title }: { fs: FightState; onPick: (t: Tactic)
   return (
     <>
       <Section>{title}</Section>
-      {fs.mods.kural ? null : <ModeSwitch />}
+      <ModeSwitch />
       {bilinen.length ? (
         <Card accent={C.blue}>
           <Text style={sb.habitHead}>{L("BİLDİĞİN ZAAFLAR")}</Text>
@@ -404,7 +404,7 @@ export function FightScreen({ s, act }: { s: GameState; act: Act }) {
   }, [koseSes]);
   const view = viewAt(fs, shown);
 
-  const live = useLive() || !!fs.mods.kural;
+  const live = useLive();
   /** Raundu seçilen modda başlat: canlı oynanır ya da akış olarak izlenir. */
   const begin = (f: FightState, t: Tactic) => (live ? startLiveRound(f, t) : chooseTactic(f, t));
   let footer = null;
@@ -494,7 +494,7 @@ export function FightScreen({ s, act }: { s: GameState; act: Act }) {
           {lookNow() === 'yeni' ? (
             <>
               <FightPrompt kicker={L("KRİTİK AN · HIZLI KARAR!")} text={fs.kritikMetni} color={C.red} icon="lightning-bolt" />
-              {CRITICAL_OPTIONS[fs.kritik].map((o, i) => (
+              {criticalChoices(fs.kritik, fs.mods.kural).map((i) => ({ o: criticalLabel(fs.kritik!, i, fs.mods.kural), i })).map(({ o, i }) => (
                 <FightOption key={i} icon={CRIT_ICONS[fs.kritik!][i]} title={o.ad} desc={o.aciklama} color={[C.red, C.gold, C.blue][i] ?? C.gold} onPress={() => pickCritical(i)} />
               ))}
             </>
@@ -505,7 +505,7 @@ export function FightScreen({ s, act }: { s: GameState; act: Act }) {
             <Text style={sb.critText}>{fs.kritikMetni}</Text>
           </Pulse>
           <Section>{L("HIZLI KARAR!")}</Section>
-          {CRITICAL_OPTIONS[fs.kritik].map((o, i) => (
+          {criticalChoices(fs.kritik, fs.mods.kural).map((i) => ({ o: criticalLabel(fs.kritik!, i, fs.mods.kural), i })).map(({ o, i }) => (
             <Choice key={i} icon={CRIT_ICONS[fs.kritik!][i]} label={o.ad} desc={o.aciklama} tone="gold" onPress={() => pickCritical(i)} />
           ))}
             </>
