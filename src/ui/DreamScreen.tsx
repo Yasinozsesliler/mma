@@ -1,4 +1,5 @@
 // Hayalî Maçlar ekranı: günün efsane eşleşmesi → plan → dövüş → sonuç ve albüm. Günde bir hak, reklamla bir hak daha.
+import { noteGoal } from '../dailyGoals';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSoundScene } from '../audio';
@@ -83,6 +84,7 @@ export function DreamScreen({ onExit }: { onExit: () => void }) {
     const next = recordDream(loadDream(), spec, res);
     setPref(STORE_KEY, JSON.stringify(next));
     addSeasonXp('hayali');
+    noteGoal('hayali');
     setPref(MATCH_KEY, '');
     endDreamFight();
     setStore(next);

@@ -94,6 +94,7 @@ import { PremiumNudge, PremiumOfferModal } from './src/ui/PremiumCard';
 import { ShopModal } from './src/ui/ShopSheet';
 import { milestoneOffer } from './src/monetization';
 import { addSeasonXp } from './src/season';
+import { noteGoal } from './src/dailyGoals';
 import { applyHeritage, heritageOf, type Heritage } from './src/engine/dynasty';
 import { unlockCtx } from './src/engine/cosmetics';
 import { refreshUnlocks } from './src/cosmetics';
@@ -275,7 +276,15 @@ export default function App() {
         addSeasonXp('galibiyet');
         if (f.yontem === 'KO' || f.yontem === 'TKO' || f.yontem === 'SUB') addSeasonXp('bitiris');
       }
+      // Günlük hedefler
+      noteGoal('mac');
+      if (f.sonuc === 'G') {
+        noteGoal('galibiyet');
+        if (f.yontem === 'KO' || f.yontem === 'TKO' || f.yontem === 'SUB') noteGoal('bitiris');
+      }
     }
+    if ((next.istat?.gonderi ?? 0) > (cur.istat?.gonderi ?? 0)) noteGoal('paylas', (next.istat?.gonderi ?? 0) - (cur.istat?.gonderi ?? 0));
+    if (next.puan < cur.puan && next.gecmis.length === cur.gecmis.length) noteGoal('puan');
     if (next.efsane && cur.efsane?.id === next.efsane.id && next.efsane.bolum > cur.efsane.bolum) addSeasonXp('bolum', next.efsane.bolum - cur.efsane.bolum);
     if (next.efsane) {
       saveLegendBest(next.efsane.id, legendStars(next.efsane), !!next.efsane.bitti);

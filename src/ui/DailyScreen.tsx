@@ -1,4 +1,5 @@
 // Günün Dövüşü ekranı: senaryo → plan seçimi → dövüş → sonuç (skor, seri, paylaş). Günde tek hak.
+import { noteGoal } from '../dailyGoals';
 import { addSeasonXp } from '../season';
 import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
@@ -83,6 +84,7 @@ export function DailyScreen({ onExit }: { onExit: () => void }) {
     const next = recordDaily(loadDaily(), gun, r);
     setPref(STORE_KEY, JSON.stringify(next));
     addSeasonXp('gunluk');
+    noteGoal('gunluk');
     setPref(MATCH_KEY, '');
     endDailyFight();
     setStore(next);

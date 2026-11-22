@@ -8,6 +8,7 @@ import { dayNumber } from '../engine/daily';
 import { BOX_DAYS, boxOpened, boxPara, boxStreak, canDoubleBox, doubleBox, openBox } from '../engine/dailyBox';
 import type { GameState } from '../engine/types';
 import { getBox, setBox, useBox } from '../dailyBoxStore';
+import { noteGoal } from '../dailyGoals';
 import { L } from '../i18n';
 import { AdOffer } from './AdOffer';
 import { Icon } from './components';
@@ -29,6 +30,7 @@ export function DailyBox({ s, act }: { s: GameState; act: Act }) {
         const r = openBox(x, getBox(), gun);
         if (!r) return;
         setBox(r.st);
+        noteGoal('kutu');
         setMsg(r.metin);
         sfx('chime');
         track('daily_box', { gun: r.st.seri });
