@@ -1,0 +1,52 @@
+# iOS sürümünü App Store incelemesine gönderir (derleme TestFlight'a yüklendikten sonra).
+# Çalıştırma: ios-submit dalına push (ya da Actions › "App Store incelemesine gönder" › Run workflow).
+# Yaptıkları: sürümü oluşturur, derlemeyi bağlar, store/whatsnew-<sürüm>.json'daki notları yazar, incelemeye gönderir.
+# Gizli anahtar: IOS_CREDENTIALS_B64 (iOS derlemesiyle aynı; içindeki App Store Connect API anahtarı kullanılır).
+name: App Store incelemesine gönder
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Deneme (hiçbir şeyi değiştirme)'
+        type: boolean
+        default: false
+  push:
+    branches: [ios-submit]
+
+permissions:
+  contents: read
+
+jobs:
+  submit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 110
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: API anahtarı
+        env:
+          IOS_CREDENTIALS_B64: ${{ secrets.IOS_CREDENTIALS_B64 }}
+        run: |
+          if [ -z "$IOS_CREDENTIALS_B64" ]; then echo "IOS_CREDENTIALS_B64 gizli anahtarı eksik"; exit 1; fi
+          echo "$IOS_CREDENTIALS_B64" | base64 --decode | tar xzf -
+          ls credentials/*.p8 > /dev/null
+
+      - name: İncelemeye gönder
+        env:
+          DRY_RUN: ${{ inputs.dry_run && '1' || '0' }}
+        run: node scripts/asc-submit.mjs 2>&1 | tee submit.log; exit ${PIPESTATUS[0]}
+
+      - if: always()
+        run: rm -rf credentials credentials.json
+
+      - if: always()
+        run: |
+          echo '### Gönderim günlüğü' >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          tail -n 60 submit.log >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || true
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
