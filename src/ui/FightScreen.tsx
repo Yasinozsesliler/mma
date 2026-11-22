@@ -358,7 +358,7 @@ export function FightScreen({ s, act }: { s: GameState; act: Act }) {
     ? {
         ...arenaLook(s),
         org: fs.mods.ligAd ? L("GENÇ") : lig.kisa,
-        caption: fs.mods.ligAd ? `${fs.mods.ligAd.toLocaleUpperCase(LOC)} · ${L("FİNAL")}` : `${lig.ad().toLocaleUpperCase(LOC)}${fs.unvanMaci ? ` · ${L("ÜNVAN MAÇI")}` : ''}`,
+        caption: fs.mods.ligAd ? fs.mods.ligAd.toLocaleUpperCase(LOC) : `${lig.ad().toLocaleUpperCase(LOC)}${fs.unvanMaci ? ` · ${L("ÜNVAN MAÇI")}` : ''}`,
         pRank: ligRec?.kemer ? 'C' : ligRec && ligRec.sira < 11 ? String(ligRec.sira) : '',
         oRank: fs.opp.champion ? 'C' : fs.opp.rank ? String(fs.opp.rank) : '',
       }
