@@ -5,11 +5,12 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { sfx } from '../audio';
 import { track } from '../analytics';
+import { milestoneOffer } from '../monetization';
 import { grantCosmetic } from '../cosmetics';
 import { getGoals, setGoals, useGoals } from '../dailyGoals';
 import { cosmeticById } from '../engine/cosmetics';
 import { dayNumber } from '../engine/daily';
-import { allDone, canRescue, chestPara, claimChest, GOAL_INFO, goalRows, nextStreakReward, rescue, streakOf, today } from '../engine/dailyGoals';
+import { allDone, canDoubleChest, canRescue, doubleChest, chestPara, claimChest, GOAL_INFO, goalRows, nextStreakReward, rescue, streakOf, today } from '../engine/dailyGoals';
 import type { GameState } from '../engine/types';
 import { L } from '../i18n';
 import { AdOffer } from './AdOffer';
@@ -41,6 +42,8 @@ export function DailyGoals({ s, act }: { s: GameState; act: Act }) {
       setMsg(names.length ? `${r.metin}\n${L("🎽 Seri ödülü açıldı: {0} (Dolap)", [names.join(', ')])}` : r.metin);
       sfx('chime');
       track('daily_goals', { seri: r.seri });
+      // 7 günlük seri: bir kez Şampiyon Paketi (ödüller reklamsız ve anında ikiye)
+      if (r.seri >= 7) milestoneOffer('seri7', 'yol_teklif_seri7', 2200);
     });
 
   if (st.alindi) {
@@ -50,6 +53,24 @@ export function DailyGoals({ s, act }: { s: GameState; act: Act }) {
           <Pressable onPress={() => setMsg('')} style={x.toast}>
             <Text style={x.toastText}>{msg}</Text>
           </Pressable>
+        ) : null}
+        {canDoubleChest(raw, gun) ? (
+          <AdOffer
+            yer="hedef_sandik"
+            icon="treasure-chest"
+            title={L("Sandığı ikiye katla")}
+            desc={L("Bugünkü sandık bir kez daha: +${0}", [(raw?.sandik?.para ?? 0).toLocaleString()])}
+            onReward={() =>
+              act((xs) => {
+                const cur = getGoals();
+                if (!cur) return;
+                const r = doubleChest(xs, cur, gun);
+                if (!r) return;
+                setGoals(r.st);
+                setMsg(r.metin);
+              })
+            }
+          />
         ) : null}
         <View style={x.slim}>
           <Text style={x.fire}>🔥</Text>

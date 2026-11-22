@@ -47,6 +47,11 @@ export type Youth = {
   kisi?: YouthRival;
   seri?: { g: number; m: number };
   husumet?: number;
+  /** Bu yılın madalya töreninde gelen takipçi; ödüllü reklamla ikiye katlandı mı */
+  torenFans?: number;
+  katlandi?: boolean;
+  /** MMA'ya geçişte sponsorlu başlangıç alındı mı */
+  sponsor?: boolean;
 };
 
 const SPORT_OF: Partial<Record<Background, Sport>> = { boks: 'boks', sokak: 'boks', kickboks: 'muaythai', muaythai: 'muaythai', kyokushin: 'muaythai', bjj: 'grappling', judo: 'grappling', sambo: 'grappling', gures: 'gures' };
@@ -231,7 +236,8 @@ function resolveRound(s: GameState, won: boolean, yontem: string | null) {
     }
     notes.push(L("🥉 {0} yarı finalinde elendin: bronz madalya.", [t.ad]));
     medal(s, y, 'bronz', false);
-    notes.push(L("{0} takipçi", [fmtDelta(addFollowers(s, [20, 50, 120, 300][t.seviye]))]));
+    y.torenFans = addFollowers(s, [20, 50, 120, 300][t.seviye]);
+    notes.push(L("{0} takipçi", [fmtDelta(y.torenFans)]));
   } else if (won) {
     notes.push(L("🥇 {0} şampiyonu oldun!", [t.ad]));
     medal(s, y, 'altin', rakip);
@@ -240,12 +246,14 @@ function resolveRound(s: GameState, won: boolean, yontem: string | null) {
       y.milli = true;
       notes.push(L("🎽 Milli takıma seçildin! Sıradaki durak: Gençler Dünya Şampiyonası."));
     }
-    notes.push(L("{0} takipçi", [fmtDelta(addFollowers(s, [150, 400, 1200, 4000][t.seviye]))]));
+    y.torenFans = addFollowers(s, [150, 400, 1200, 4000][t.seviye]);
+    notes.push(L("{0} takipçi", [fmtDelta(y.torenFans)]));
     s.haberler.unshift(L("🥇 {0} yaşındaki {1}, {2} şampiyonu!", [y.yas, `${s.fighter.ad} ${s.fighter.soyad}`, t.ad]));
   } else {
     notes.push(L("🥈 {0} finalinde kaybettin: gümüş madalya.", [t.ad]));
     medal(s, y, 'gumus', rakip);
-    notes.push(L("{0} takipçi", [fmtDelta(addFollowers(s, [50, 120, 300, 900][t.seviye]))]));
+    y.torenFans = addFollowers(s, [50, 120, 300, 900][t.seviye]);
+    notes.push(L("{0} takipçi", [fmtDelta(y.torenFans)]));
   }
   if (rakip && y.seri) {
     if (won) y.seri.g++;
@@ -264,6 +272,8 @@ export function nextYouthYear(s: GameState) {
   y.yas++;
   y.rakip = undefined;
   y.tur = undefined;
+  y.torenFans = undefined;
+  y.katlandi = undefined;
   if (y.yas >= MMA_AGE) {
     y.adim = 'karar';
     return;
@@ -295,4 +305,25 @@ export function graduateYouth(s: GameState) {
   s.gencGecmis = { spor: y.spor, rekor: y.rekor, unvanlar: y.unvanlar, rakip: r && y.seri && y.seri.g + y.seri.m > 0 ? { ad: `${r.ad} ${r.soyad}`, g: y.seri.g, m: y.seri.m } : undefined };
   s.genclik = undefined;
   s.phase = 'hub';
+}
+
+/** Ödüllü reklam (yılın madalya töreni, bir kez): törenden gelen takipçi bir kez daha. Güç vermez. */
+export function doubleYouthFans(s: GameState): string | null {
+  const y = s.genclik;
+  if (!y || y.adim !== 'sonuc' || y.katlandi || !y.torenFans) return null;
+  const n = addFollowers(s, y.torenFans);
+  y.katlandi = true;
+  const t = L("📣 Madalya töreni yayıldı: {0} takipçi", [fmtDelta(n)]);
+  y.notlar = [...(y.notlar ?? []), t];
+  return t;
+}
+
+export const YOUTH_SPONSOR = 1500;
+/** Ödüllü reklam (MMA'ya geçiş kararında, bir kez): yerel sponsor başlangıç parası verir. Güç vermez. */
+export function youthSponsor(s: GameState): string | null {
+  const y = s.genclik;
+  if (!y || y.adim !== 'karar' || y.sponsor) return null;
+  s.para += YOUTH_SPONSOR;
+  y.sponsor = true;
+  return L("🤝 Yerel sponsor imzaladı: +${0}", [YOUTH_SPONSOR.toLocaleString()]);
 }

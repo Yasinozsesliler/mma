@@ -6,7 +6,7 @@ import { getPref, setPref } from '../prefs';
 import { isPremium } from './premium';
 import { noteHourAd } from './hour';
 
-export type OfferReason = 'reklam' | 'reklam10' | 'yuva' | 'yuva5' | 'kemer' | 'galibiyet10' | 'ucc' | 'emeklilik' | 'sezon';
+export type OfferReason = 'reklam' | 'reklam10' | 'yuva' | 'yuva5' | 'kemer' | 'galibiyet10' | 'ucc' | 'emeklilik' | 'sezon' | 'ligKemer' | 'genclik' | 'seri7';
 
 const LAST_KEY = 'yol_teklif_son';
 const GAP = 20 * 3600 * 1000;

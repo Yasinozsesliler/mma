@@ -21,6 +21,9 @@ export type GoalState = {
   kurtarma?: number;
   /** Bir kez verilen seri ödülleri */
   verilen?: number[];
+  /** Bugünkü sandığın içeriği ve ödüllü reklamla ikiye katlandı mı */
+  sandik?: { para: number; fans: number };
+  katlandi?: boolean;
 };
 
 export const GOAL_INFO: Record<GoalKind, { icon: string; metin: (n: number) => string }> = {
@@ -47,7 +50,7 @@ export function goalsOf(gun: number): { k: GoalKind; n: number }[] {
 /** Bugünün durumu (gün değiştiyse sayaçlar sıfır; seri bilgisi korunur). */
 export function today(st: GoalState | undefined, gun: number): GoalState {
   if (st && st.gun === gun) return st;
-  return { ...(st ?? {}), gun, say: {}, alindi: false };
+  return { ...(st ?? {}), gun, say: {}, alindi: false, sandik: undefined, katlandi: false };
 }
 
 export function addGoal(st: GoalState | undefined, gun: number, k: GoalKind, times = 1): GoalState {
@@ -99,13 +102,24 @@ export function claimChest(s: GameState, st: GoalState | undefined, gun: number)
   const para = chestPara(s.stage, seri);
   s.para += para;
   const fans = Math.round(followers(s) * 0.006 + 40);
-  const parts = [`+$${para.toLocaleString()}`, L("{0} takipçi", [fmtDelta(addFollowers(s, fans))])];
+  const gelen = addFollowers(s, fans);
+  const parts = [`+$${para.toLocaleString()}`, L("{0} takipçi", [fmtDelta(gelen)])];
   const verilen = t.verilen ?? [];
   const yeni = STREAK_REWARDS.filter((r) => r.gun <= seri && !verilen.includes(r.gun));
   return {
-    st: { ...t, alindi: true, sonGun: gun, seri, enIyi: Math.max(t.enIyi ?? 0, seri), verilen: [...verilen, ...yeni.map((r) => r.gun)] },
+    st: { ...t, alindi: true, sandik: { para, fans: gelen }, katlandi: false, sonGun: gun, seri, enIyi: Math.max(t.enIyi ?? 0, seri), verilen: [...verilen, ...yeni.map((r) => r.gun)] },
     metin: L("🔥 Günlük hedefler tamam ({0}. gün): {1}", [seri, parts.join(' · ')]),
     kozmetik: yeni.map((r) => r.id),
     seri,
   };
+}
+
+/** Ödüllü reklam (günde bir): bugünkü sandığın parası ve takipçisi bir kez daha. Güç vermez. */
+export const canDoubleChest = (st: GoalState | undefined, gun: number) => !!st && st.gun === gun && !!st.alindi && !st.katlandi && !!st.sandik;
+export function doubleChest(s: GameState, st: GoalState, gun: number): { st: GoalState; metin: string } | null {
+  if (!canDoubleChest(st, gun)) return null;
+  const { para, fans } = st.sandik!;
+  s.para += para;
+  const n = addFollowers(s, fans);
+  return { st: { ...st, katlandi: true }, metin: L("🔥 Sandık ikiye katlandı: +${0} · {1} takipçi", [para.toLocaleString(), fmtDelta(n)]) };
 }

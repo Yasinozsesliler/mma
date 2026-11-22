@@ -5,7 +5,7 @@ import { liveCreate, liveInput, liveResult, liveStep, type LiveInput } from '../
 import { setSeed } from '../src/engine/rng';
 import { ACHIEVEMENTS } from '../src/engine/achievements';
 import { checkAchievements } from '../src/engine/legacy';
-import { acceptSportInvite, SPORTS, canBook, closeSportBout, finishSportFight, maybeSportInvite, recOf, requestSportBout, startSportFight, withdrawSportBout } from '../src/engine/sportLeague';
+import { claimSportBonus, sportBonusAmount, acceptSportInvite, SPORTS, canBook, closeSportBout, finishSportFight, maybeSportInvite, recOf, requestSportBout, startSportFight, withdrawSportBout } from '../src/engine/sportLeague';
 import { legalTactic, type Sport } from '../src/engine/sportRules';
 import { tableOf } from '../src/engine/sportRoster';
 import type { GameState } from '../src/engine/types';
@@ -132,6 +132,23 @@ for (const sp of ['boks', 'muaythai', 'grappling', 'gures'] as Sport[]) {
   finishSportFight(g);
   closeSportBout(g);
   ok(!recOf(g, 'boks').kemer && recOf(g, 'boks').kadro![0].id === challenger, 'kemeri kaybettin; seni yenen şampiyon');
+}
+
+// Ödüllü reklam: maç sonu ücret ikiye / teselli primi, bir kez, istatistiğe dokunmaz
+{
+  for (const kaz of ['p', 'o'] as const) {
+    const g = fresh();
+    requestSportBout(g, 'boks');
+    startSportFight(g);
+    g.sporMac!.dovus!.sonuc = { kazanan: kaz, yontem: 'UD', raunt: 3, sure: '5:00', aciklama: '' };
+    finishSportFight(g);
+    const st0 = JSON.stringify(g.fighter.stats);
+    const para = g.para;
+    const beklenen = sportBonusAmount(g.sporMac!);
+    const t = claimSportBonus(g);
+    ok(!!t && g.para === para + beklenen && beklenen > 0, (kaz === 'p' ? 'galibiyet: ücret ikiye' : 'yenilgi: teselli primi') + ' (+' + beklenen + ')');
+    ok(claimSportBonus(g) === null && JSON.stringify(g.fighter.stats) === st0, 'ikinci kez alınamaz, istatistik değişmez');
+  }
 }
 
 // Kemer yolu

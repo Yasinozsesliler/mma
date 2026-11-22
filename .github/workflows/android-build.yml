@@ -1,6 +1,6 @@
 # Android üretim derlemesi GitHub'ın sunucusunda (EAS yerel derleme): Expo'nun aylık bulut derleme hakkını kullanmaz.
-# Çalıştırma: GitHub › Actions › "Android derlemesi" › Run workflow. Bitince AAB dosyası repo sayfasındaki "Releases" bölümünden indirilir
-# (Releases, Actions depolama kotasına sayılmaz).
+# Çalıştırma: GitHub › Actions › "Android derlemesi" › Run workflow. Bitince AAB dosyası çalışmanın sayfasındaki "Artifacts"
+# bölümünden indirilir. Depo herkese açık olduğu için AAB Releases'e konmaz; artifact 3 gün sonra kendiliğinden silinir.
 # Gerekli gizli anahtar: EXPO_TOKEN (expo.dev › Account settings › Access tokens). İmza anahtarı Expo hesabından otomatik iner.
 name: Android derlemesi
 
@@ -11,7 +11,7 @@ on:
     branches: [android-build]
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   android:
@@ -43,13 +43,14 @@ jobs:
           EAS_BUILD_NO_EXPO_GO_WARNING: 'true'
         run: npx --yes eas-cli@latest build -p android --profile production --local --non-interactive --output ./YOL-android.aab 2>&1 | tee build.log; exit ${PIPESTATUS[0]}
 
-      # AAB'yi Releases'a koy (Actions artifact kotasını doldurmaz)
-      - name: Releases'a yükle
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          VER=$(node -p "require('./app.json').expo.version")
-          gh release create "android-$VER-${{ github.run_number }}" YOL-android.aab --prerelease --title "Android $VER (derleme ${{ github.run_number }})" --notes "Play Console'a yüklenecek AAB."
+      # AAB'yi çalışmanın Artifacts bölümüne koy (herkese açık Releases'e değil; 3 gün sonra silinir)
+      - name: AAB'yi sakla
+        uses: actions/upload-artifact@v4
+        with:
+          name: YOL-android-aab
+          path: YOL-android.aab
+          retention-days: 3
+          if-no-files-found: error
 
       # Hata olursa son günlük satırları çalışmanın özet sayfasına yazılır
       - if: failure()

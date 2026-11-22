@@ -1,5 +1,5 @@
 // Günlük Hedefler ve Seri: npx tsx scripts/goals-test.ts
-import { addGoal, allDone, canRescue, claimChest, goalsOf, rescue, streakOf, type GoalState } from '../src/engine/dailyGoals';
+import { addGoal, allDone, canDoubleChest, canRescue, claimChest, doubleChest, goalsOf, rescue, streakOf, type GoalState } from '../src/engine/dailyGoals';
 import { COSMETICS } from '../src/engine/cosmetics';
 import { createGame, rollStartingStats } from '../src/engine/character';
 
@@ -30,6 +30,13 @@ const para0 = s.para;
 const r1 = claimChest(s, st, d0)!;
 ok(!!r1 && r1.seri === 1 && s.para > para0, '1. gün sandık: para verdi, seri 1');
 ok(claimChest(s, r1.st, d0) === null, 'aynı gün ikinci kez açılmaz');
+{
+  const p0 = s.para;
+  ok(canDoubleChest(r1.st, d0), 'sandık ikiye katlanabilir');
+  const dbl = doubleChest(s, r1.st, d0)!;
+  ok(!!dbl && s.para === p0 + r1.st.sandik!.para && !canDoubleChest(dbl.st, d0), 'sandık bir kez ikiye katlandı');
+  ok(!canDoubleChest(addGoal(dbl.st, d0 + 1, 'mac'), d0 + 1), 'ertesi gün yeni sandık açılmadan katlanamaz');
+}
 st = r1.st;
 for (let d = d0 + 1; d <= d0 + 2; d++) st = claimChest(s, finish(st, d), d)!.st;
 ok(streakOf(st, d0 + 2) === 3, 'üç gün üst üste: seri 3');

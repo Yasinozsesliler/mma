@@ -218,6 +218,9 @@ const OFFER_TEXT: Record<OfferReason, () => [string, string]> = {
   galibiyet10: () => [L("10 GALİBİYET!"), L("Kariyerin yükselişte. Şampiyon Paketi ile 5 kariyer yuvası, bütün efsaneler ve reklamsız oyun.")],
   ucc: () => [L("UCC'YE HOŞ GELDİN"), L("En büyük sahnedesin. Şampiyon Paketi ile bu yolculuğu reklamsız ve bütün ekstralarla yaşa.")],
   emeklilik: () => [L("BİR EFSANE DOĞDU"), L("Kariyerin bitti ama hikâyen bitmek zorunda değil: Şampiyon Paketi ile 10 Efsanem yuvası, Hayalî Maç Stüdyosu ve 5 kariyer yuvası.")],
+  ligKemer: () => [L("İKİ SPORDA ŞAMPİYON"), L("Başka bir ringde de kemer senin. Şampiyon Paketi ile 5 kariyer yuvası, bütün efsaneler ve reklamsız oyun.")],
+  genclik: () => [L("GENÇLİKTEN KAFESE"), L("Bir efsanenin ilk yılları geride kaldı. Şampiyon Paketi ile bu kariyeri reklamsız yaşa; 5 yuvayla başka hikâyeler de başlat.")],
+  seri7: () => [L("7 GÜNLÜK SERİ!"), L("Her gün buradasın. Şampiyon Paketi ile sandık ve bütün ödüller reklam izlemeden, anında ikiye katlanır.")],
   sezon: () => [L("SEZON BİTMEK ÜZERE"), L("Şampiyon sırasındaki ödüller sezonla birlikte kaybolacak. Şampiyon Paketi ile hepsini şimdi al.")],
 };
 

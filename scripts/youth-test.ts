@@ -3,7 +3,7 @@ import { createGame, rollStartingStats } from '../src/engine/character';
 import { applyLiveRound, nextRound, oppStatsOf, startLiveRound } from '../src/engine/fight';
 import { liveCreate, liveInput, liveResult, liveStep, type LiveInput } from '../src/engine/liveFight';
 import { setSeed } from '../src/engine/rng';
-import { chooseYouthEvent, finishYouthFight, graduateYouth, isRivalBout, nextYouthYear, simYouthSemi, startYouth, startYouthFight, stayOneMoreYear, YOUTH_BONUS_MAX, youthSport, type Youth } from '../src/engine/youth';
+import { doubleYouthFans, youthSponsor, YOUTH_SPONSOR, chooseYouthEvent, finishYouthFight, graduateYouth, isRivalBout, nextYouthYear, simYouthSemi, startYouth, startYouthFight, stayOneMoreYear, YOUTH_BONUS_MAX, youthSport, type Youth } from '../src/engine/youth';
 import { YOUTH_EVENTS } from '../src/engine/youthEvents';
 import { STAT_KEYS, type Background, type FightState, type GameState } from '../src/engine/types';
 
@@ -40,6 +40,7 @@ for (const gecmis of ['boks', 'muaythai', 'bjj', 'gures'] as Background[]) {
   let guard = 0;
   let rivalBouts = 0;
   let sims = 0;
+  let tore = 0;
   const round = (y: Youth) => {
     let g2 = 0;
     while (y.adim === 'hazir' && g2++ < 3) {
@@ -54,6 +55,12 @@ for (const gecmis of ['boks', 'muaythai', 'bjj', 'gures'] as Background[]) {
       y.dovus = play(y.dovus!);
       finishYouthFight(s);
     }
+    if (y.adim === 'sonuc' && y.torenFans) {
+      const st0 = JSON.stringify(s.fighter.stats);
+      const t = doubleYouthFans(s);
+      if (!t || doubleYouthFans(s) !== null || JSON.stringify(s.fighter.stats) !== st0) ok(false, 'madalya töreni takipçisi bir kez ve güç vermez');
+      tore++;
+    }
   };
   while (s.genclik && s.genclik.adim !== 'karar' && guard++ < 20) {
     const y = s.genclik;
@@ -67,8 +74,14 @@ for (const gecmis of ['boks', 'muaythai', 'bjj', 'gures'] as Background[]) {
   ok(years === 6 && s.genclik?.adim === 'karar' && s.genclik.yas === 18, `${gecmis}: 6 yıl (12-17) sonra 18'de karar (${years} yıl)`);
   const y = s.genclik!;
   ok(y.unvanlar.length === 6, `${gecmis}: 6 turnuva madalyası (${y.unvanlar.map((u) => u.madalya[0]).join('')}), karne ${y.rekor.g}-${y.rekor.m}, hızlı geçilen yarı final ${sims}, rakip finali ${rivalBouts}`);
+  ok(tore === 6, gecmis + ': her yıl madalya töreni ikiye katlanabildi (' + tore + ')');
   ok((s.hatiralar ?? []).filter((h) => h.kat === 'genclik').length === 6, `${gecmis}: madalyalar Hatıralar'ın Gençlik sekmesinde`);
   ok(new Set(y.gorulen).size === y.gorulen.length, `${gecmis}: olaylar tekrar etmedi`);
+  {
+    const para = s.para;
+    const t1 = youthSponsor(s);
+    ok(!!t1 && s.para === para + YOUTH_SPONSOR && youthSponsor(s) === null, gecmis + ': sponsorlu başlangıç bir kez');
+  }
   stayOneMoreYear(s);
   chooseYouthEvent(s, 0);
   round(y);

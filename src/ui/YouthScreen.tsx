@@ -5,13 +5,15 @@ import { finishFight } from '../engine/career';
 import { SPORTS } from '../engine/sportLeague';
 import { lookFor } from '../engine/tale';
 import { STAT_LABELS, type GameState, type StatKey } from '../engine/types';
-import { chooseYouthEvent, eventOf, finishYouthFight, graduateYouth, isRivalBout, MMA_AGE, nextYouthYear, rivalName, simYouthSemi, startYouthFight, stayOneMoreYear, tournamentOf, withRival, YOUTH_MAX_AGE, YOUTH_START, youthGenc, type Medal, type Youth } from '../engine/youth';
+import { doubleYouthFans, youthSponsor, YOUTH_SPONSOR, chooseYouthEvent, eventOf, finishYouthFight, graduateYouth, isRivalBout, MMA_AGE, nextYouthYear, rivalName, simYouthSemi, startYouthFight, stayOneMoreYear, tournamentOf, withRival, YOUTH_MAX_AGE, YOUTH_START, youthGenc, type Medal, type Youth } from '../engine/youth';
 import { L, LOC } from '../i18n';
 import { Button, Card, Choice, Screen, Section, Title } from './components';
 import { DEFAULT_LOOK } from './FighterAvatar';
 import { FightScreen } from './FightScreen';
 import type { Act } from './GameScreens';
 import { BLUE_CORNER, RED_CORNER, WatchVs } from './NewWatch';
+import { AdOffer } from './AdOffer';
+import { milestoneOffer } from '../monetization';
 import { sportKit, sportPose } from './sportLook';
 import { C, F } from './theme';
 
@@ -137,6 +139,10 @@ export function YouthScreen({ s, act }: { s: GameState; act: Act }) {
           ))}
         </Card>
         {bonusText(y) ? <Text style={st.small}>{L("Gençlik kazanımları: {0}", [bonusText(y)])}</Text> : null}
+        {/* Ödüllü reklam: madalya töreninin takipçisi ikiye (yılda bir; güç vermez) */}
+        {y.torenFans && !y.katlandi ? (
+          <AdOffer yer="genclik_madalya" icon="bullhorn" title={L("Madalya töreni yayında")} desc={L("Törenin takipçisini ikiye katla: +{0}", [y.torenFans.toLocaleString(LOC)])} onReward={() => act((x) => void doubleYouthFans(x))} />
+        ) : null}
       </Screen>
     );
   }
@@ -147,7 +153,16 @@ export function YouthScreen({ s, act }: { s: GameState; act: Act }) {
     <Screen
       footer={
         <View style={{ gap: 8 }}>
-          <Button label={L("MMA'ya geç ({0} yaş)", [y.yas])} icon="sword-cross" tone="gold" onPress={() => act(graduateYouth)} />
+          <Button
+            label={L("MMA'ya geç ({0} yaş)", [y.yas])}
+            icon="sword-cross"
+            tone="gold"
+            onPress={() => {
+              act(graduateYouth);
+              // Gençlik Yolu bitti: bir kez Şampiyon Paketi (oturumda başka pencere açıldıysa çıkmaz)
+              milestoneOffer('genclik', 'yol_teklif_genclik', 1800);
+            }}
+          />
           {y.yas < YOUTH_MAX_AGE ? <Button label={L("Bir yıl daha {0} ({1} yaş)", [spor.spor(), y.yas + 1])} icon="calendar-plus" tone="ghost" onPress={() => act(stayOneMoreYear)} /> : null}
         </View>
       }
@@ -159,6 +174,12 @@ export function YouthScreen({ s, act }: { s: GameState; act: Act }) {
         {bonusText(y) ? <Text style={st.note}>{L("MMA'ya taşınan kazanımlar: {0}", [bonusText(y)])}</Text> : null}
         {y.seri && y.seri.g + y.seri.m > 0 ? <Text style={[st.note, { color: C.red }]}>{L("⚔️ {0} ile seri {1}-{2}. MMA'da da peşini bırakmayacak.", [rivalName(y), y.seri.g, y.seri.m])}</Text> : null}
       </Card>
+      {/* Ödüllü reklam: MMA'ya geçerken yerel sponsor (bir kez; para, güç vermez) */}
+      {!y.sponsor ? (
+        <AdOffer yer="genclik_sponsor" icon="handshake" title={L("Sponsorlu başlangıç")} desc={L("Memleketinden bir sponsor kariyerine destek: +${0}", [YOUTH_SPONSOR.toLocaleString(LOC)])} onReward={() => act((x) => void youthSponsor(x))} />
+      ) : (
+        <Text style={[st.small, { color: C.green }]}>{L("🤝 Sponsorun hazır: +${0}", [YOUTH_SPONSOR.toLocaleString(LOC)])}</Text>
+      )}
       <Section>{L("MADALYALAR")}</Section>
       {y.unvanlar.map((u, i) => (
         <Text key={i} style={st.note}>

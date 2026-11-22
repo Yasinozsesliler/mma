@@ -10,10 +10,14 @@ import { Belt } from './Belt';
 import { Standing } from './NewCareer';
 import { sportKit, sportPose } from './sportLook';
 import { finishFight } from '../engine/career';
+import { careerFights } from '../engine/rewards';
+import { maybeInterstitial, milestoneOffer, noteInterstitialShown } from '../monetization';
+import { AdOffer } from './AdOffer';
 import { lookFor } from '../engine/tale';
 import {
   acceptSportInvite,
   canBook,
+  claimSportBonus,
   closeSportBout,
   declineSportInvite,
   finishSportFight,
@@ -22,6 +26,7 @@ import {
   recOf,
   requestSportBout,
   SPORT_BONUS_MAX,
+  sportBonusAmount,
   SPORTS,
   sportsOpen,
   startSportFight,
@@ -195,7 +200,24 @@ export function SportScreen({ s, act }: { s: GameState; act: Act }) {
     const o = b.rakip;
     if (b.adim === 'sonuc') {
       return (
-        <Screen footer={<Button label={L("Devam")} icon="arrow-right" tone="gold" onPress={() => act(closeSportBout)} />}>
+        <Screen
+          footer={
+            <Button
+              label={L("Devam")}
+              icon="arrow-right"
+              tone="gold"
+              onPress={async () => {
+                // Geçiş reklamı: kariyer kuralıyla (ilk 5 maç yok, araları geniş, yenilgiden sonra yok)
+                const reklam = await maybeInterstitial(careerFights(s), !b.kazandi);
+                if (reklam) noteInterstitialShown();
+                const kemer = b.yeniKemer;
+                act(closeSportBout);
+                // Kemer kutlamasından sonra bir kez Şampiyon Paketi (reklam gösterildiyse araya girmez)
+                if (kemer && !reklam) milestoneOffer('ligKemer', 'yol_teklif_ligkemer', 1200);
+              }}
+            />
+          }
+        >
           {b.yeniKemer ? (
             <LeagueBeltMoment s={s} spor={b.spor} w={w} />
           ) : (
@@ -211,6 +233,16 @@ export function SportScreen({ s, act }: { s: GameState; act: Act }) {
             ))}
           </Card>
           <Text style={st.small}>{L("Lig karnen: {0}-{1} · {2}", [r.g, r.m, rankText(r.sira, r.kemer)])}</Text>
+          {/* Ödüllü reklam: galibiyette ücret ikiye, yenilgide teselli primi (bir kez; güç vermez) */}
+          {!b.katlandi && b.odenen ? (
+            <AdOffer
+              yer={b.kazandi ? 'lig_ucret' : 'lig_teselli'}
+              icon={b.kazandi ? 'cash-multiple' : 'hand-heart'}
+              title={b.kazandi ? L("Ücretini ikiye katla") : L("Teselli primi")}
+              desc={L("+${0}", [sportBonusAmount(b).toLocaleString(LOC)])}
+              onReward={() => act((x) => void claimSportBonus(x))}
+            />
+          ) : null}
         </Screen>
       );
     }

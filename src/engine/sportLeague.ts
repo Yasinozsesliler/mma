@@ -20,7 +20,7 @@ export type { Sport };
 export const OPEN_SPORTS: Sport[] = ['boks', 'muaythai', 'grappling', 'gures'];
 
 export type SportRec = { g: number; m: number; ko: number; /** 1 = 1 numaralı yarışmacı, 11 = sıralama dışı */ sira: number; kemer: boolean; savunma: number; /** Verilen gelişim puanı */ bonus: number; /** Kazanılan kemer sayısı (kaybedip geri alınca artar) */ kemerler?: number; /** Kalıcı lig kadrosu (sportRoster.ts) */ kadro?: LigKisi[] };
-export type SportBout = { spor: Sport; rakip: Opponent; ucret: number; unvan: boolean; adim: 'hazir' | 'dovus' | 'sonuc'; dovus?: FightState; notlar?: string[]; kazandi?: boolean; /** Bu maçta kemer kazanıldı (kutlama sahnesi) */ yeniKemer?: boolean; /** Rakibin kadrodaki yeri */ kadroIdx?: number };
+export type SportBout = { spor: Sport; rakip: Opponent; ucret: number; unvan: boolean; adim: 'hazir' | 'dovus' | 'sonuc'; dovus?: FightState; notlar?: string[]; kazandi?: boolean; /** Bu maçta kemer kazanıldı (kutlama sahnesi) */ yeniKemer?: boolean; /** Ödenen ücret ve ödüllü reklamla ek ücret alındı mı */ odenen?: number; katlandi?: boolean; /** Rakibin kadrodaki yeri */ kadroIdx?: number };
 
 export const SPORTS: Record<Sport, { ad: () => string; spor: () => string; kisa: string; renk: string; icon: string; kural: () => string }> = {
   boks: { spor: () => L("Boks"), ad: () => L("Altın Eldiven Boks Ligi"), kisa: 'AEB', renk: '#d4a017', icon: 'boxing-glove', kural: () => L("Yalnızca yumruk: jab, direkt, kaç, gard. Tekme, indirme ve yer dövüşü yok.") },
@@ -219,6 +219,7 @@ export function finishSportFight(s: GameState) {
   if (won && !b.yeniKemer) addPost(s, { yazar: lig.ad(), kullanici: `@${lig.kisa.toLowerCase()}lig`, tur: 'organizasyon', metin: fin ? L("💥 {0} ligimizde bitirişle kazandı! MMA'cılar bu işi biliyor.", [`${s.fighter.ad} ${s.fighter.soyad}`]) : L("✅ {0} ligimizde kazandı: {1}-{2}.", [`${s.fighter.ad} ${s.fighter.soyad}`, r.g, r.m]), renk: lig.renk });
   const pay = Math.round(b.ucret * (won ? 1.5 : 1));
   s.para += pay;
+  b.odenen = pay;
   notes.push(L("💵 Ücret: ${0}", [pay.toLocaleString(LOC)]));
   const fans = Math.round((followers(s) * (won ? 0.015 : 0.004) + (won ? 120 : 30)) * (b.unvan ? 2 : 1) * (fin && won ? 1.3 : 1));
   notes.push(L("{0} takipçi", [fmtDelta(addFollowers(s, fans))]));
@@ -251,4 +252,17 @@ export function finishSportFight(s: GameState) {
 export function closeSportBout(s: GameState) {
   s.sporMac = undefined;
   s.phase = 'hub';
+}
+
+/** Ödüllü reklam (maç sonu, bir kez): galibiyette ücret bir kez daha, yenilgide teselli primi (ücretin yarısı). Güç vermez. */
+export const sportBonusAmount = (b: SportBout) => Math.round((b.odenen ?? 0) * (b.kazandi ? 1 : 0.5));
+export function claimSportBonus(s: GameState): string | null {
+  const b = s.sporMac;
+  if (!b || b.adim !== 'sonuc' || b.katlandi || !b.odenen) return null;
+  const x = sportBonusAmount(b);
+  s.para += x;
+  b.katlandi = true;
+  const t = b.kazandi ? L("💵 Ücret ikiye katlandı: +${0}", [x.toLocaleString(LOC)]) : L("💵 Teselli primi: +${0}", [x.toLocaleString(LOC)]);
+  b.notlar = [...(b.notlar ?? []), t];
+  return t;
 }
