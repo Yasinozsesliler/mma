@@ -287,17 +287,19 @@ const GUIDE_TEXT: Record<GuideId, () => string> = {
 };
 
 export function LiveFight({ fs, pLook, oLook, onEnd, ozel, band }: { fs: FightState; pLook?: Appearance; oLook: Appearance; onEnd: (r: LiveRoundResult) => void; ozel?: Special; /** Yeni görünüm yayın bandı: organizasyon, alt yazı, sıralamalar */ band?: { org: string; caption: string; pRank: string; oRank: string; tier?: ArenaTier; tint?: string } }) {
+  // Grappling ve güreşte ayakta güreş duruşu (alçak, öne eğik)
+  const stance: PoseName = grapple(fs.mods.kural) ? 'stanceLow' : 'stance';
   const { width: W, height: H } = useWindowDimensions();
   const [kit] = useState(playerKit);
   const sim = useRef<LiveSim | null>(null);
   const seen = useRef(0);
   const tw = useRef<Record<Actor, { from: Pose; to: Pose; t0: number; ms: number }>>({
-    p: { from: P('stance'), to: P('stance'), t0: 0, ms: 1 },
-    o: { from: P('stance'), to: P('stance'), t0: 0, ms: 1 },
+    p: { from: P(stance), to: P(stance), t0: 0, ms: 1 },
+    o: { from: P(stance), to: P(stance), t0: 0, ms: 1 },
   });
   const fx = useRef<{ x: number; y: number; t0: number; big: boolean }[]>([]);
   const shake = useRef({ t0: 0, amp: 0 });
-  const [frame, setFrame] = useState<Frame>(() => ({ t: 0, p: P('stance'), o: P('stance'), pHp: 100 - fs.pHasar, pSta: fs.pKondisyon, oHp: 100 - fs.oHasar, oSta: fs.oKondisyon, left: 30000, ring: null, icon: null, pos: 'ayakta', special: null, kilit: null, gpos: 0, guard: false, counter: false, fx: [], sx: 0, zoom: 1, flash: 0 }));
+  const [frame, setFrame] = useState<Frame>(() => ({ t: 0, p: P(stance), o: P(stance), pHp: 100 - fs.pHasar, pSta: fs.pKondisyon, oHp: 100 - fs.oHasar, oSta: fs.oKondisyon, left: 30000, ring: null, icon: null, pos: 'ayakta', special: null, kilit: null, gpos: 0, guard: false, counter: false, fx: [], sx: 0, zoom: 1, flash: 0 }));
   /** Kamera yakınlaşması ve beyaz flaş (sert darbe, sarsılma, nakavt) */
   const punch = useRef({ t0: 0, zoom: 0, flash: 0, ms: 700 });
   /** Bitiriş anı: ağır çekim ve sinema bantları */
@@ -381,7 +383,7 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel, band }: { fs: FightSt
   const ground = useRef<'p' | 'o' | null>(null);
   const base = (a: Actor, ov: Partial<Pose> = {}): Pose => {
     const g = ground.current;
-    if (!g) return P('stance', ov);
+    if (!g) return P(stance, ov);
     return g === a ? P('kneelTop', { x: 18, ...ov }) : P('onBack', { x: 24, ...ov });
   };
 
@@ -391,28 +393,28 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel, band }: { fs: FightSt
         if (e.alt === 'yumruk' || e.alt === 'dirsek') seq('p', [[P('gnp', { x: 18 }), e.alt === 'dirsek' ? 150 : 100], [P('gnpHit', { x: 20 }), 90], [base('p'), 200]]);
         else if (e.alt === 'diz') seq('p', [[P('clinch', { x: 18 }), 120], [P('knee', { x: 20 }), 140], [base('p'), 220]]);
         else if (e.alt === 'jab') seq('p', [[P('jab', { x: 14 }), 80], [base('p'), 150]]);
-        else if (e.alt === 'direkt') seq('p', [[P('stance', { torso: 8, x: 2 }), 110], [P('cross', { x: 16 }), 100], [base('p'), 180]]);
-        else seq('p', [[P('stance', { x: -2 }), 120], [P('bodyKick', { x: 10 }), 160], [base('p'), 220]]);
+        else if (e.alt === 'direkt') seq('p', [[P(stance, { torso: 8, x: 2 }), 110], [P('cross', { x: 16 }), 100], [base('p'), 180]]);
+        else seq('p', [[P(stance, { x: -2 }), 120], [P('bodyKick', { x: 10 }), 160], [base('p'), 220]]);
         sfx('whoosh', 0.4);
         return;
       case 'pDodge':
-        seq('p', [[P('stance', { torso: -20, head: -16, x: -10, y: 3 }), 90], [base('p'), 220]]);
+        seq('p', [[P(stance, { torso: -20, head: -16, x: -10, y: 3 }), 90], [base('p'), 220]]);
         return;
       case 'pGuard':
         if (ground.current) return;
-        seq('p', [[P('stance', GUARD), 90], [P('stance', GUARD), 520], [base('p'), 160]]);
+        seq('p', [[P(stance, GUARD), 90], [P(stance, GUARD), 520], [base('p'), 160]]);
         return;
       case 'oWindup':
         if (ground.current === 'o') go('o', P('gnp', { x: 18 }), 150);
         else if (ground.current === 'p') go('o', P('onBack', { x: 24, head: 18 }), 150);
-        else if (e.alt === 'td') go('o', P('stance', { torso: 30, y: 6, x: -2 }), 160);
-        else go('o', P('stance', { torso: -14, x: -6, y: 2 }), 150);
+        else if (e.alt === 'td') go('o', P(stance, { torso: 30, y: 6, x: -2 }), 160);
+        else go('o', P(stance, { torso: -14, x: -6, y: 2 }), 150);
         return;
       case 'oFeint':
         go('o', base('o'), 160);
         return;
       case 'oGuard':
-        go('o', P('stance', GUARD), 140);
+        go('o', P(stance, GUARD), 140);
         return;
       case 'oAttack':
         if (e.alt === 'gnp') seq('o', [[P('gnpHit', { x: 20 }), 100], [base('o'), 220]]);
@@ -423,7 +425,7 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel, band }: { fs: FightSt
         const a = e.side as Actor;
         const big = (e.dmg ?? 0) >= 3;
         spark(a, big);
-        seq(a, ground.current ? [[base(a, { head: ground.current === a ? -14 : 22 }), 90], [base(a), 200]] : [[P('stance', { torso: -12, head: -22, x: -7 }), 90], [P('stance'), 220]]);
+        seq(a, ground.current ? [[base(a, { head: ground.current === a ? -14 : 22 }), 90], [base(a), 200]] : [[P(stance, { torso: -12, head: -22, x: -7 }), 90], [P(stance), 220]]);
         sfx(big ? 'heavy' : 'punch');
         if (a === 'p') buzz(big ? 'guclu' : 'orta');
         else buzz(big ? 'orta' : 'hafif');
@@ -453,12 +455,12 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel, band }: { fs: FightSt
       case 'td':
         if (e.alt === 'stuffed') {
           flash.show({ puan: e.side === 'o' ? 100 : 20, metin: e.side === 'o' ? L("TAKEDOWN SAVUNULDU!") : L("DALIŞ BOŞA ÇIKTI"), renk: e.side === 'o' ? C.gold : C.red });
-          seq(e.side as Actor, [[P('shot', { x: 20 }), 200], [P('stance'), 350]]);
+          seq(e.side as Actor, [[P('shot', { x: 20 }), 200], [P(stance), 350]]);
         } else seq(e.side as Actor, [[P('shot', { x: 24 }), 200]]);
         sfx('whoosh');
         return;
       case 'sprawl':
-        seq('p', [[P('sprawl', { x: 6 }), 220], [P('stance'), 400]]);
+        seq('p', [[P('sprawl', { x: 6 }), 220], [P(stance), 400]]);
         buzz('basari');
         return;
       case 'ground': {
@@ -476,8 +478,8 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel, band }: { fs: FightSt
       }
       case 'stand':
         ground.current = null;
-        go('p', P('stance'), 350);
-        go('o', P('stance'), 350);
+        go('p', P(stance), 350);
+        go('o', P(stance), 350);
         flash.show({ puan: 50, metin: L("AYAKTA"), renk: C.text });
         return;
       case 'held':
@@ -537,11 +539,11 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel, band }: { fs: FightSt
         return;
       case 'kd':
         if (e.side === 'o') {
-          if (!ground.current) seq('o', [[P('reel', { x: -8 }), 150], [P('hurt', { x: -6 }), 300], [P('reel', { x: -10 }), 400], [P('stance'), 600]]);
+          if (!ground.current) seq('o', [[P('reel', { x: -8 }), 150], [P('hurt', { x: -6 }), 300], [P('reel', { x: -10 }), 400], [P(stance), 600]]);
           setBanner(L("SARSILDI! BİTİR!"));
           sfx('roar');
         } else {
-          if (!ground.current) seq('p', [[P('reel', { x: -8 }), 150], [P('hurt', { x: -6 }), 400], [P('stance'), 800]]);
+          if (!ground.current) seq('p', [[P('reel', { x: -8 }), 150], [P('hurt', { x: -6 }), 400], [P(stance), 800]]);
           setBanner(L("SARSILDIN! KAÇ, GARD AL!"));
           sfx('ooh');
         }
@@ -569,7 +571,7 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel, band }: { fs: FightSt
           ground.current = null;
           // Ağır çekim: düşüş ve zafer pozu normalin üç katı sürede oynar
           seq(loser, [[P('reel', { x: -8 }), 450], [P('knockedOut', { x: -16 }), 1400]]);
-          seq(loser === 'p' ? 'o' : 'p', [[P('stance'), 1200], [P('win', { x: 0 }), 1100]]);
+          seq(loser === 'p' ? 'o' : 'p', [[P(stance), 1200], [P('win', { x: 0 }), 1100]]);
           setBanner(loser === 'o' ? L("NAKAVT!") : L("NAKAVT OLDUN"));
           sfx('roar');
         }

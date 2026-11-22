@@ -11,7 +11,7 @@ export { HIP_H, joints, lerpPose, POSES, type Pose, type PoseName } from './rigM
 
 /** bare: eldivensiz (ör. ip atlama); ref: hakem */
 export type ShortsPattern = 'alev' | 'simsek' | 'kaplan' | 'yildiz';
-export type Kit = { shorts: string; trim: string; glove: string; ref?: boolean; bare?: boolean; /** Şort deseni ve rengi */ desen?: ShortsPattern; desenRenk?: string };
+export type Kit = { shorts: string; trim: string; glove: string; ref?: boolean; bare?: boolean; /** Şort deseni ve rengi */ desen?: ShortsPattern; desenRenk?: string; /** Üst giysi: güreş mayosu (singlet) ya da grappling rashguard'ı (şort renginde) */ ust?: 'singlet' | 'rash' };
 
 type P2 = { x: number; y: number };
 /** Şort bacağı (kalça a → uyluk ortası b) üzerine desen. */
@@ -203,7 +203,7 @@ export function Figure({ p, look, kit, hasar = 0, build = 0 }: { p: Pose; look: 
       <Limb a={j.hipR} b={j.knR} w={10 * lw} color={legCD} />
       <Limb a={j.knR} b={j.anR} w={8 * lw} color={legCD} />
       <Ellipse cx={j.anR.x + 2.5} cy={j.anR.y + 1} rx={5} ry={2.4} fill={ref ? '#111' : skinD} />
-      <Limb a={j.shR} b={j.elR} w={7.5 * lw} color={shade(armC, -26)} />
+      <Limb a={j.shR} b={j.elR} w={7.5 * lw} color={kit.ust === 'rash' ? shade(kit.shorts, -30) : shade(armC, -26)} />
       <Limb a={j.elR} b={j.wrR} w={6.5 * lw} color={shade(armC, -26)} />
       <Glove at={j.wrR} dir={p.aR1 + p.aR2} color={shade(kit.glove, -25)} bare={ref || kit.bare} skin={skinD} />
 
@@ -235,6 +235,22 @@ export function Figure({ p, look, kit, hasar = 0, build = 0 }: { p: Pose; look: 
         <Line x1={pt(sC, 3).x} y1={pt(sC, 3).y} x2={pt(j.pelvis, 3).x} y2={pt(j.pelvis, 3).y} stroke="#ffffff" strokeWidth={0.8} opacity={0.35} />
       )}
 
+      {/* Güreş mayosu / rashguard: gövde şort renginde; mayoda omuz askıları ve açık yaka */}
+      {!ref && kit.ust ? (
+        <G>
+          <Path d={torsoPath} fill={`url(#${gS})`} />
+          <Path d={backPath} fill="#000" opacity={0.25} />
+          {kit.ust === 'singlet' ? (
+            <>
+              <Ellipse cx={pt(sC, 1).x} cy={pt(sC, 1).y + 1.5} rx={6.5} ry={3.2} fill={`url(#${gT})`} />
+              <Line x1={pt(sC, 7).x} y1={pt(sC, 7).y} x2={pt(chest, 6).x} y2={pt(chest, 6).y + 3} stroke={kit.trim} strokeWidth={1} opacity={0.7} />
+            </>
+          ) : (
+            <Line x1={pt(sC, 3).x} y1={pt(sC, 3).y} x2={pt(j.pelvis, 3).x} y2={pt(j.pelvis, 3).y} stroke={kit.trim} strokeWidth={1.4} opacity={0.6} />
+          )}
+        </G>
+      ) : null}
+
       {/* Şort */}
       {!ref ? (
         <G>
@@ -263,7 +279,7 @@ export function Figure({ p, look, kit, hasar = 0, build = 0 }: { p: Pose; look: 
           <Line x1={j.hipL.x + (thighMidL.x - j.hipL.x) * 0.55} y1={j.hipL.y + (thighMidL.y - j.hipL.y) * 0.55} x2={j.hipL.x + (thighMidL.x - j.hipL.x) * 0.8} y2={j.hipL.y + (thighMidL.y - j.hipL.y) * 0.8} stroke={kit.trim} strokeWidth={4.5} strokeLinecap="round" opacity={0.55} />
         </>
       ) : null}
-      <Limb a={j.shL} b={j.elL} w={8 * lw} color={ref ? kit.shorts : armC} />
+      <Limb a={j.shL} b={j.elL} w={8 * lw} color={ref ? kit.shorts : kit.ust === 'rash' ? kit.shorts : armC} />
       {!ref && look.dovmeler?.includes('kol') ? (
         <Line x1={j.shL.x + (j.elL.x - j.shL.x) * 0.2} y1={j.shL.y + (j.elL.y - j.shL.y) * 0.2} x2={j.shL.x + (j.elL.x - j.shL.x) * 0.85} y2={j.shL.y + (j.elL.y - j.shL.y) * 0.85} stroke="#1d1d1d" strokeWidth={2.6} strokeDasharray="2 1.5" opacity={0.5} />
       ) : null}

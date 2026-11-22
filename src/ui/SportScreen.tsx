@@ -8,7 +8,7 @@ import { tableOf } from '../engine/sportRoster';
 import { ArenaBackdrop } from './ArenaBackdrop';
 import { Belt } from './Belt';
 import { Standing } from './NewCareer';
-import { sportKit } from './sportLook';
+import { sportKit, sportPose } from './sportLook';
 import { finishFight } from '../engine/career';
 import { lookFor } from '../engine/tale';
 import {
@@ -228,8 +228,8 @@ export function SportScreen({ s, act }: { s: GameState; act: Act }) {
         </Title>
         <WatchVs
           w={w}
-          a={{ look: s.fighter.gorunum ?? DEFAULT_LOOK, name: `${s.fighter.ad} ${s.fighter.soyad}`, country: s.fighter.uyruk, nick: s.fighter.lakap, kit: sportKit(RED_CORNER, b.spor) }}
-          b={{ look: lookFor(o), name: `${o.ad} ${o.soyad}`, country: o.uyruk, nick: o.lakap, kit: sportKit(BLUE_CORNER, b.spor) }}
+          a={{ look: s.fighter.gorunum ?? DEFAULT_LOOK, name: `${s.fighter.ad} ${s.fighter.soyad}`, country: s.fighter.uyruk, nick: s.fighter.lakap, kit: sportKit(RED_CORNER, b.spor), pose: sportPose(b.spor) }}
+          b={{ look: lookFor(o), name: `${o.ad} ${o.soyad}`, country: o.uyruk, nick: o.lakap, kit: sportKit(BLUE_CORNER, b.spor), pose: sportPose(b.spor) }}
           rows={[
             [`${r.g}-${r.m}`, L("KARNE"), `${o.rekor.g}-${o.rekor.m}`],
             [r.kemer ? L("ŞAMPİYON") : r.sira >= 11 ? '—' : `#${r.sira}`, L("SIRA"), o.champion ? L("ŞAMPİYON") : o.rank ? `#${o.rank}` : '—'],

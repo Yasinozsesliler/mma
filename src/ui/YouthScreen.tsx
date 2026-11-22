@@ -12,7 +12,7 @@ import { DEFAULT_LOOK } from './FighterAvatar';
 import { FightScreen } from './FightScreen';
 import type { Act } from './GameScreens';
 import { BLUE_CORNER, RED_CORNER, WatchVs } from './NewWatch';
-import { sportKit } from './sportLook';
+import { sportKit, sportPose } from './sportLook';
 import { C, F } from './theme';
 
 const MEDAL_ICON: Record<Medal, string> = { altin: '🥇', gumus: '🥈', bronz: '🥉' };
@@ -111,8 +111,8 @@ export function YouthScreen({ s, act }: { s: GameState; act: Act }) {
         ))}
         <WatchVs
           w={w}
-          a={{ look: s.fighter.gorunum ?? DEFAULT_LOOK, name: `${s.fighter.ad} ${s.fighter.soyad}`, country: s.fighter.uyruk, nick: s.fighter.lakap, kit: sportKit(RED_CORNER, y.spor), genc: g }}
-          b={{ look: lookFor(o), name: `${o.ad} ${o.soyad}`, country: rival ? s.fighter.uyruk : o.uyruk, nick: o.lakap, kit: sportKit(BLUE_CORNER, y.spor), genc: g }}
+          a={{ look: s.fighter.gorunum ?? DEFAULT_LOOK, name: `${s.fighter.ad} ${s.fighter.soyad}`, country: s.fighter.uyruk, nick: s.fighter.lakap, kit: sportKit(RED_CORNER, y.spor), genc: g, pose: sportPose(y.spor) }}
+          b={{ look: lookFor(o), name: `${o.ad} ${o.soyad}`, country: rival ? s.fighter.uyruk : o.uyruk, nick: o.lakap, kit: sportKit(BLUE_CORNER, y.spor), genc: g, pose: sportPose(y.spor) }}
           rows={[
             [`${y.rekor.g}-${y.rekor.m}`, L("KARNE"), `${o.rekor.g}-${o.rekor.m}`],
             [String(y.yas), L("YAŞ"), String(y.yas)],
