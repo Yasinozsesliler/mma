@@ -1,0 +1,67 @@
+﻿PLAY CONSOLE · id · Bahasa Indonesia
+Görseller: store\graphics\id   ·   Simge: public\icon-512.png
+
+=== UYGULAMA ADI (24/30) ===
+YOL: MMA Karier Petarung
+
+=== KISA AÇIKLAMA (72/80) ===
+Bertarung di kandang dan jalankan kariermu. Dari jalanan ke sabuk juara.
+
+=== TAM AÇIKLAMA (3494/4000) ===
+Mulai dari nol, raih sabuk. YOL: Dari Kandang ke Sabuk adalah game petarung MMA di mana kamu bertarung dengan tanganmu sendiri di kandang dan setiap pilihan di luarnya membentuk kariermu.
+
+🥊 LAGA LIVE
+Mainkan ronde secara real time: jab, cross, tendangan, menghindar, dan garda. Baca serangan lawan, hindari di saat yang tepat, lalu serang balik. Sergap untuk takedown atau tahan dengan sprawl; pukul dari atas, kunci submission, atau lolos dari bawah. Tidak suka game refleks? Pilih rencanamu di mode "Lihat Taktik" dan tonton laganya.
+
+🌱 JALAN MUDA
+Mulai kariermu di usia 12. Setiap tahun satu pilihan antara sekolah, latihan, dan keluarga, setiap tahun satu turnamen: semifinal, final, dan medali. Rival yang kamu temui saat remaja akan kembali menghadapimu di karier MMA.
+
+🥋 LIGA OLAHRAGA TARUNG
+Di antara laga MMA, naiki ring di liga Tinju, Muay Thai, Grappling, dan Gulat. Setiap olahraga punya aturan dan penilaiannya sendiri, tabel musim, dan sabuknya sendiri.
+
+🎬 MALAM PERTARUNGAN
+Masuk ke belakang panggung, lihat tempatmu di kartu, dan berjalan ke kandang di bawah sorot lampu. Bicara di konferensi pers, berhadapan muka dengan lawan, tonton ulang KO dalam gerak lambat, dan kejar bonus Performa Malam Ini.
+
+🏋️ JALANKAN KAMPMU
+Pilih kewarganegaraan, kelas berat, dan latar belakang: tinju, muay thai, gulat, BJJ, sambo, judo, kyokushin, kickboxing, atau jalanan. Susun rencana kamp; minggu-minggu berjalan sendiri dan kamu memutuskan di momen penting. Percaya atau ragukan rumor dari kamp rival, dan turunkan beratmu sendiri di 48 jam terakhir.
+
+🏆 DARI AMATIR KE JUARA DUNIA
+Jadi pro lewat Rising Grand Prix, naik dari promosi regional ke panggung terbesar dunia. Naik peringkat, rebut sabuk, pertahankan gelar, dan masuk Hall of Fame. Petarung yang kamu kalahkan juga terus berkarier: salah satunya bisa jadi juara suatu hari.
+
+📖 KISAH DAN PILIHAN
+Partner latihan yang berkhianat, pelatih legendaris, anak dari lingkunganmu… Kisah berbab, ikatan kepercayaan dengan pelatih, tawaran film dan iklan, surat penggemar, dan persimpangan besar yang membagi kariermu menjadi era. Hidupkan kembali para legenda di Jalan Legenda.
+
+🏠 KEHIDUPAN DI LUAR KANDANG
+Beli rumah dan gantung sabukmu di dinding. Menikah, lihat langkah pertama anakmu, biarkan kampung halamanmu menamai jalan dengan namamu. Pergi berlibur, rawat tubuhmu, kelola media sosial dan sponsor.
+
+🏛️ KOLEKSI
+Museum kenang-kenangan laga, album kartu petarung yang kamu kalahkan, paspor penuh cap kota, koleksi mewah yang nilainya berubah setiap minggu, dan lebih dari 100 pencapaian.
+
+🏢 SETELAH PENSIUN
+Setelah gantung sarung tangan, dirikan promosimu sendiri: rekrut petarung, adakan acara, jual tiket, dan tingkatkan prestisemu.
+
+⚔️ TANTANGAN DAN TARGET HARIAN
+Main di kesulitan Mudah, Normal, Legenda, atau Mimpi Buruk dan uji dirimu dengan tantangan. Selesaikan target harian, jaga rentetanmu, dan buka peti hari ini. Bagikan skormu di "Laga Harian" yang sama untuk semua orang.
+
+✨ FITUR
+• Laga real time atau mode taktik
+• Jalan Muda dan 4 liga olahraga tarung
+• Malam pertarungan sinematik dan tayangan ulang KO
+• Bab cerita dan keputusan yang membekas
+• Rival abadi, mode dinasti, dan comeback dari pensiun
+• Poster laga dan kartu karier yang bisa dibagikan
+• Loker: celana, sarung tangan, sabuk, musik walkout, dan efek. Tanpa pay to win
+• Bisa dimainkan offline
+• Türkçe, English, Español, Português, Русский, Polski, Deutsch, Français, Italiano, Bahasa Indonesia
+
+Semua promosi, orang, dan merek dalam game ini fiktif.
+
+=== SÜRÜM NOTU ===
+YOL 1.3
+• Kini tersedia dalam Bahasa Indonesia!
+• Jalan Muda: mulai karier sejak kecil, dengan turnamen, medali, dan rival abadi
+• 4 liga baru: Tinju, Muay Thai, Grappling, Gulat, masing-masing dengan sabuk dan tabel
+• Setiap olahraga punya aturan dan penilaian sendiri, dengan hitungan di tinju
+• LIHAT TAKTIK kini di liga dan Jalan Muda
+• Target harian, rentetan, dan peti harian
+• Petarung lebih detail dan animasi lebih halus

@@ -37,6 +37,7 @@ const CAP = {
   pt: ['Entre no octógono. Ouça seu nome.', 'Lute com as próprias mãos', 'Mostre sua vitória ao mundo', 'Das ruas ao UCC', 'Lute pelo mundo inteiro', 'Sua lenda, escrita para você', 'Seu estilo · Sem pagar para ganhar', 'Erga o cinturão. Faça história.'],
   ru: ['Выходи в клетку. Услышь своё имя.', 'Дерись своими руками', 'Покажи миру свою победу', 'С улицы до UCC', 'Дерись по всему миру', 'Твоя легенда уже написана', 'Твой стиль · Без pay-to-win', 'Подними пояс. Войди в историю.'],
   pl: ['Wejdź do klatki. Usłysz swoje imię.', 'Walcz własnymi rękami', 'Pokaż światu swoje zwycięstwo', 'Z ulicy do UCC', 'Walcz na całym świecie', 'Twoja legenda, spisana dla ciebie', 'Twój styl · Bez pay-to-win', 'Unieś pas. Zapisz się w historii.'],
+  id: ['Masuk kandang. Dengar namamu.', 'Bertarung dengan tanganmu sendiri', 'Tunjukkan kemenanganmu ke dunia', 'Dari jalanan ke UCC', 'Bertarung keliling dunia', 'Legendamu, tertulis untukmu', 'Gayamu · Tanpa pay-to-win', 'Angkat sabuk. Cetak sejarah.'],
   it: ['Entra nella gabbia. Senti il tuo nome.', 'Combatti con le tue mani', 'Mostra al mondo la tua vittoria', "Dalla strada all'UCC", 'Combatti in tutto il mondo', 'La tua leggenda, scritta per te', 'Il tuo stile · Niente pay-to-win', 'Alza la cintura. Fai la storia.'],
 }[lang];
 // Yeni görseller: taktik (raunt arası köşe) ve Efsane Yolları
@@ -47,6 +48,7 @@ const NEW = {
   pt: ['Planeje. Leia o adversário.', 'Trilhe o caminho das lendas'],
   ru: ['Продумай план. Читай соперника.', 'Пройди путь легенд'],
   pl: ['Zaplanuj. Czytaj rywala.', 'Przejdź drogę legend'],
+  id: ['Susun rencana. Baca lawanmu.', 'Tempuh jalan para legenda'],
   it: ["Fai il piano. Leggi l'avversario.", 'Percorri la strada delle leggende'],
 }[lang];
 // 1.0.8: Hakem ve Antrenör modları
@@ -57,6 +59,7 @@ const MODES = {
   pt: ['NOVO: Modo Árbitro', 'NOVO: Modo Treinador'],
   ru: ['НОВОЕ: режим рефери', 'НОВОЕ: режим тренера'],
   pl: ['NOWOŚĆ: Tryb Sędziego', 'NOWOŚĆ: Tryb Trenera'],
+  id: ['BARU: Mode Wasit', 'BARU: Mode Pelatih'],
   it: ['NOVITÀ: Modalità Arbitro', 'NOVITÀ: Modalità Allenatore'],
 }[lang];
 const CAPS = { hakem: MODES[0], antrenor: MODES[1], yuruyus: CAP[0], dovus: CAP[1], 'mac-sonrasi': CAP[2], kariyer: CAP[3], 'dunya-turu': CAP[4], kafespedia: CAP[5], dolap: CAP[6], kemer: CAP[7], taktik: NEW[0], efsane: NEW[1] };
@@ -67,6 +70,7 @@ const BANNER = {
   pt: ['DO OCTÓGONO AO CINTURÃO', 'Das ruas a campeão mundial. Cada escolha é sua.'],
   ru: ['ИЗ КЛЕТКИ К ПОЯСУ', 'С улицы до чемпиона мира. Каждое решение за тобой.'],
   pl: ['Z KLATKI DO PASA', 'Z ulicy do mistrzostwa świata. Każdy wybór należy do ciebie.'],
+  id: ['DARI KANDANG KE SABUK', 'Dari jalanan ke juara dunia. Setiap pilihan milikmu.'],
   it: ['DALLA GABBIA ALLA CINTURA', 'Dalla strada a campione del mondo. Ogni scelta è tua.'],
 }[lang];
 

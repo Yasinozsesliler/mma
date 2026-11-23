@@ -1,4 +1,4 @@
-﻿PLAY CONSOLE · it-IT · it-IT
+﻿PLAY CONSOLE · it-IT · Italiano
 Görseller: store\graphics\it   ·   Simge: public\icon-512.png
 
 === UYGULAMA ADI (30/30) ===

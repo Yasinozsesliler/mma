@@ -145,7 +145,11 @@
       "es": "./locales/es.json",
       "pt": "./locales/pt.json",
       "ru": "./locales/ru.json",
-      "pl": "./locales/pl.json"
+      "pl": "./locales/pl.json",
+      "de": "./locales/de.json",
+      "fr": "./locales/fr.json",
+      "it": "./locales/it.json",
+      "id": "./locales/id.json"
     }
   },
   "react-native-google-mobile-ads": {

@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const j = JSON.parse(readFileSync(`${root}/store/listing.json`, 'utf8'));
-const NAMES = { 'tr-TR': 'Türkçe', 'en-US': 'English (US)', 'es-ES': 'Español', 'pt-BR': 'Português (BR)', 'ru-RU': 'Русский', 'pl-PL': 'Polski' };
+const NAMES = { 'tr-TR': 'Türkçe', 'en-US': 'English (US)', 'es-ES': 'Español', 'pt-BR': 'Português (BR)', 'ru-RU': 'Русский', 'pl-PL': 'Polski', 'it-IT': 'Italiano', id: 'Bahasa Indonesia' };
 const len = (s) => [...s].length;
 for (const [k, x] of Object.entries(j)) {
   const g = k.slice(0, 2);

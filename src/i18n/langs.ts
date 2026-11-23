@@ -12,7 +12,7 @@ export const LANGS: { id: Lang; ad: string; bayrak: string; hazir: boolean }[] =
   { id: 'fr', ad: 'Français', bayrak: '🇫🇷', hazir: true },
   // Çevirisi süren diller: hazir false iken seçilemez ve cihaz dili olarak da seçilmez
   { id: 'it', ad: 'Italiano', bayrak: '🇮🇹', hazir: true },
-  { id: 'id', ad: 'Bahasa Indonesia', bayrak: '🇮🇩', hazir: false },
+  { id: 'id', ad: 'Bahasa Indonesia', bayrak: '🇮🇩', hazir: true },
   { id: 'ja', ad: '日本語', bayrak: '🇯🇵', hazir: false },
 ];
 
