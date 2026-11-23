@@ -1,0 +1,67 @@
+﻿PLAY CONSOLE · it-IT · it-IT
+Görseller: store\graphics\it   ·   Simge: public\icon-512.png
+
+=== UYGULAMA ADI (30/30) ===
+YOL: MMA Carriera da Lottatore
+
+=== KISA AÇIKLAMA (73/80) ===
+Combatti nella gabbia e guida la tua carriera. Dalla strada alla cintura.
+
+=== TAM AÇIKLAMA (3742/4000) ===
+Parti da zero e punta alla cintura. YOL: Dalla Gabbia alla Cintura è un gioco di lottatori MMA in cui combatti con le tue mani nella gabbia e ogni scelta fuori dalla gabbia plasma la tua carriera.
+
+🥊 COMBATTIMENTI DAL VIVO
+Gioca i round in tempo reale: jab, diretto, calcio, schivata e guardia. Leggi l'attacco dell'avversario, schiva al momento giusto e contrattacca. Tenta l'atterramento o difenditi con lo sprawl; colpisci dall'alto, chiudi una sottomissione o liberati da sotto. Non ami i giochi di riflessi? Scegli il tuo piano in modalità "Guarda la tattica" e goditi l'incontro.
+
+🌱 PERCORSO GIOVANILE
+Inizia la carriera a 12 anni. Ogni anno una scelta tra scuola, allenamento e famiglia, ogni anno un torneo: semifinali, finali e medaglie. Il rivale che incontri da ragazzo tornerà ad affrontarti nella tua carriera MMA.
+
+🥋 LEGHE DI SPORT DA COMBATTIMENTO
+Tra un incontro MMA e l'altro, sali sul ring nelle leghe di Boxe, Muay Thai, Grappling e Wrestling. Ogni sport ha le sue regole e il suo punteggio, una classifica di stagione e la sua cintura.
+
+🎬 SERATA DI COMBATTIMENTO
+Entra nel backstage, guarda il tuo posto nella card e cammina verso la gabbia sotto i riflettori. Parla alla conferenza stampa, affronta il rivale faccia a faccia, rivedi i KO al rallentatore e punta al bonus Performance della Serata.
+
+🏋️ GESTISCI IL TUO CAMP
+Scegli nazionalità, categoria di peso e background: boxe, muay thai, lotta, BJJ, sambo, judo, kyokushin, kickboxing o strada. Costruisci il piano del camp; le settimane scorrono da sole e tu decidi nei momenti chiave. Credi o no alle voci dal camp rivale, e taglia il peso nelle ultime 48 ore.
+
+🏆 DA DILETTANTE A CAMPIONE DEL MONDO
+Diventa professionista con il Rising Grand Prix e sali dalle promozioni regionali al palcoscenico più grande del mondo. Scala il ranking, conquista cinture, difendi il titolo ed entra nella Hall of Fame. Anche i lottatori che batti vanno avanti: uno di loro potrebbe diventare campione.
+
+📖 STORIE E SCELTE
+Un compagno di allenamento traditore, un allenatore leggendario, un ragazzo del tuo quartiere… Storie a capitoli, un legame di fiducia con il tuo coach, offerte di film e pubblicità, lettere dei fan e grandi bivi che dividono la carriera in epoche. Rivivi le leggende nei Percorsi Leggendari.
+
+🏠 LA VITA FUORI DALLA GABBIA
+Compra casa e appendi le cinture al muro. Sposati, guarda i primi passi di tuo figlio, fai intitolare una strada a tuo nome nella tua città. Vai in vacanza, cura il tuo corpo, gestisci social e sponsor.
+
+🏛️ COLLEZIONE
+Un museo di cimeli, un album di figurine dei lottatori che hai battuto, un passaporto pieno di timbri, una collezione di lusso il cui valore cambia ogni settimana e oltre 100 obiettivi.
+
+🏢 DOPO IL RITIRO
+Appesi i guantoni, fonda la tua promozione: ingaggia lottatori, organizza eventi, vendi biglietti e fai crescere il tuo prestigio.
+
+⚔️ SFIDE E OBIETTIVI GIORNALIERI
+Gioca a difficoltà Facile, Normale, Leggenda o Incubo e mettiti alla prova con le sfide. Completa gli obiettivi giornalieri, mantieni la serie e apri lo scrigno del giorno. Condividi il tuo punteggio nell'"Incontro del Giorno", uguale per tutti.
+
+✨ CARATTERISTICHE
+• Combattimenti in tempo reale o modalità tattica
+• Percorso giovanile e 4 leghe di sport da combattimento
+• Serata di combattimento cinematografica e replay dei KO
+• Capitoli di storia e decisioni che restano
+• Rivale storico, modalità dinastia e ritorni dal ritiro
+• Locandine e card della carriera da condividere
+• Armadietto: pantaloncini, guantoni, cinture, musica d'ingresso ed effetti. Niente pay to win
+• Giocabile offline
+• Türkçe, English, Español, Português, Русский, Polski, Deutsch, Français, Italiano
+
+Tutte le promozioni, le persone e i marchi del gioco sono di fantasia.
+
+=== SÜRÜM NOTU ===
+YOL 1.3.0
+• Percorso giovanile: inizia la carriera da bambino, con tornei, medaglie e un rivale di sempre
+• 4 nuove leghe: Boxe, Muay Thai, Grappling, Wrestling, ognuna con cintura e classifica
+• Ogni sport ha regole e punteggi propri, con il conteggio nella boxe
+• GUARDA LA TATTICA ora nelle leghe e nel Percorso giovanile
+• Obiettivi giornalieri, serie e scrigno del giorno
+• Lottatori più dettagliati e animazioni più fluide
+• Correzioni e miglioramenti

@@ -7,36 +7,44 @@ YOL: Carrera de Luchador MMA
 === KISA AÇIKLAMA (72/80) ===
 Pelea tú mismo en la jaula y dirige tu carrera. De la calle al cinturón.
 
-=== TAM AÇIKLAMA (2452/4000) ===
-Empieza de cero y gánate el cinturón. YOL: De la jaula al cinturón es un juego de MMA en el que peleas en la jaula con tus propias manos y cada decisión fuera de ella cambia tu carrera.
+=== TAM AÇIKLAMA (3082/4000) ===
+Empieza desde cero y alcanza el cinturón. YOL: De la Jaula al Cinturón es un juego de luchador de MMA en el que peleas con tus propias manos en la jaula y cada decisión fuera de ella cambia tu carrera.
 
 🥊 PELEAS EN VIVO
-Juega cada asalto en tiempo real: jab, recto, patada, esquiva y guardia. Lee la preparación de tu rival, esquiva en el momento justo y contraataca. Busca el derribo o haz sprawl; en el suelo golpea desde arriba, busca la sumisión o escapa desde abajo. Usa el golpe especial de tu estilo y tu técnica firma. ¿No te van los reflejos? Elige "Ver táctica", decide tu plan y mira la pelea.
+Juega los asaltos en tiempo real: jab, directo, patada, esquiva y guardia. Lee el ataque de tu rival, esquiva en el momento justo y contraataca. Busca el derribo o haz sprawl; golpea desde arriba, aplica sumisiones o escapa desde abajo. ¿No te van los juegos de reflejos? Elige tu plan en el modo "Ver táctica" y mira la pelea.
 
 🎬 NOCHE DE PELEAS
-Baja la rampa bajo los focos mientras el presentador grita tu nombre. Cara a cara, suena la campana y revive tu nocaut a cámara lenta.
+Entra al vestuario, mira tu lugar en la cartelera y camina a la jaula bajo los focos cuando te toque. Habla en la rueda de prensa, cara a cara con tu rival, mira los nocauts a cámara lenta y busca el bono de Actuación de la Noche.
 
-🏋️ CREA TU PELEADOR, DIRIGE TU CAMPAMENTO
-Elige nacionalidad, peso y estilo: boxeo, muay thai, lucha, BJJ, sambo, judo, kyokushin, kickboxing o callejero. Define la duración, el lugar y el plan del campamento; da el peso, provoca en la rueda de prensa y aprende técnicas de maestros legendarios.
+🏋️ GESTIONA TU CAMPAMENTO
+Elige nacionalidad, categoría y estilo: boxeo, muay thai, lucha, BJJ, sambo, judo, kyokushin, kickboxing o callejero. Prepara tu plan; las semanas avanzan solas y tú decides en los momentos clave. Cree o duda de los rumores del campamento rival y da el peso tú mismo en las últimas 48 horas.
 
 🏆 DE AMATEUR A CAMPEÓN DEL MUNDO
-De la liga amateur a las promotoras regionales y al mayor escenario del mundo. Sube en el ranking, gana cinturones, defiende tu título, entra en torneos Grand Prix, pelea en nuevas ciudades en tu gira mundial y entra en el Salón de la Fama.
+Hazte profesional con el Grand Prix Ascenso y sube de las promotoras regionales al escenario más grande del mundo. Escala en el ranking, gana cinturones, defiende tu título y entra en el Salón de la Fama. Los rivales que vences siguen su carrera: alguno puede acabar siendo campeón.
 
-📺 VIDA FUERA DE LA JAULA
-El reality La Casa de la Jaula, tu club de fans, tu propia marca, directos, podcasts, negociaciones con patrocinadores, crisis en redes, vida familiar, vida nocturna y tu propio gimnasio. Pero recuerda: todo tiene un precio. Cuida tu salud cerebral y llega lúcido al retiro.
+📖 HISTORIAS Y DECISIONES
+Un compañero de entrenamiento traidor, un entrenador legendario, un chico del barrio… Historias por capítulos, un vínculo de confianza con tu entrenador, ofertas de cine y publicidad, cartas de fans y grandes encrucijadas que dividen tu carrera en etapas.
 
-⚔️ DESAFÍATE
-Empieza en dificultad Fácil, Normal o Leyenda y ponte a prueba en modos de desafío como Última Oportunidad, De la Calle a la Cima y Hombre de Hierro. Comparte tu puntuación en la Pelea del Día, igual para todos cada día.
+🏠 LA VIDA FUERA DE LA JAULA
+Consigue una casa y cuelga tus cinturones en la pared. Cásate, ve los primeros pasos de tu hijo y deja que tu ciudad ponga tu nombre a una calle. Vete de vacaciones, cuida tu cuerpo, gestiona redes sociales y patrocinadores.
+
+🏛️ COLECCIÓN
+Un museo lleno de recuerdos de tus peleas, un álbum de cartas con colecciones, un pasaporte con sellos de ciudades, una colección de lujo cuyo valor cambia cada semana y 111 logros.
+
+🏢 DESPUÉS DEL RETIRO
+Cuando cuelgues los guantes, funda tu propia promotora: ficha luchadores, organiza veladas, vende entradas y haz crecer tu prestigio. Revive tu carrera en un documental escena a escena.
+
+⚔️ DESAFÍOS
+Empieza en dificultad Fácil, Normal o Leyenda y ponte a prueba con modos de desafío. Comparte tu puntuación en la "Pelea del Día", igual para todos.
 
 ✨ CARACTERÍSTICAS
 • Peleas en vivo en tiempo real o modo táctico
-• Salidas cinematográficas, transiciones de asalto y repeticiones de KO
-• Árbol de habilidades, golpes firma y maestros legendarios
-• Rival eterno, modo dinastía y regreso del retiro
+• Noche de peleas cinematográfica, vestuario y repeticiones de nocauts
+• Capítulos de historia y decisiones con consecuencias
+• Archirrival, modo dinastía y regresos del retiro
 • Carteles de pelea y tarjetas de carrera para compartir
-• Álbum de cartas, mapa mundial y 111 logros
-• Vestuario: pantalones, guantes, cinturones y música de entrada. Sin pagar para ganar
-• 3 ranuras de carrera, juega sin conexión
+• Vestuario: pantalones, guantes, cinturones, música y efectos de entrada. Sin pagar para ganar
+• Se puede jugar sin conexión
 • Türkçe, English, Español, Português, Русский, Polski
 
 Todas las promotoras, personas y marcas del juego son ficticias.

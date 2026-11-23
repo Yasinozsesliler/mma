@@ -40,5 +40,12 @@
     "promo": "Nowość: graj każdą rundę w czasie rzeczywistym! Jab, prosty, kopnięcia, sprowadzenia i poddania. Walcz w klatce własnymi rękami i zostań mistrzem świata.",
     "keywords": "mma,walka,boks,kariera,symulator,klatka,zapasy,kickboxing,muay thai,mistrz,nokaut,jiu jitsu,sport",
     "listing": "pl-PL"
+  },
+  "it": {
+    "name": "YOL: Dalla Gabbia alla Cintura",
+    "subtitle": "Carriera da lottatore MMA",
+    "promo": "Novità: Percorso giovanile e 4 leghe di sport da combattimento! Inizia da ragazzo, vinci cinture in boxe, Muay Thai, grappling e wrestling.",
+    "keywords": "mma,lotta,boxe,carriera,simulatore,gabbia,kickboxing,muay thai,campione,knockout,bjj,wrestling",
+    "listing": "it-IT"
   }
 }
