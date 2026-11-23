@@ -2,11 +2,13 @@
 // 1) app.json'daki sürüm için App Store sürümünü bulur ya da oluşturur
 // 2) Aynı sürümün TestFlight derlemesi işlenene kadar bekler ve sürüme bağlar
 // 3) store/whatsnew-<sürüm>.json'daki "Yenilikler" ve "Tanıtım Metni"ni her dile yazar
-// 4) İnceleme gönderimini oluşturup gönderir
+// 4) store/appstore.json'da olup App Store'da sayfası olmayan dilleri açar: ad, alt başlık, açıklama, anahtar kelimeler,
+//    tanıtım metni ve store/graphics-ios/<dil> altındaki 6,7" ekran görüntüleri (örn. İtalyanca)
+// 5) İnceleme gönderimini oluşturup gönderir
 // Anahtar bilgileri eas.json'daki submit.production.ios'tan okunur; .p8 dosyası credentials/ altında olmalı.
 // DRY_RUN=1 ile hiçbir şey değiştirmeden ne yapacağını yazar.
-import { readFileSync, existsSync } from 'node:fs';
-import { createSign } from 'node:crypto';
+import { readFileSync, existsSync, readdirSync } from 'node:fs';
+import { createSign, createHash } from 'node:crypto';
 
 const eas = JSON.parse(readFileSync('eas.json', 'utf8')).submit.production.ios;
 const VERSION = JSON.parse(readFileSync('app.json', 'utf8')).expo.version;
@@ -100,6 +102,62 @@ for (const l of locs) {
     type: 'appStoreVersionLocalizations', id: l.id, attributes: { whatsNew: n.whatsNew, promotionalText: n.promotionalText },
   });
   console.log(` ✓ ${l.attributes.locale}: yenilikler yazıldı`);
+}
+
+// 3b) Yeni diller: App Store'da sayfası olmayan, store/appstore.json'da metni hazır diller
+const AS = JSON.parse(readFileSync('store/appstore.json', 'utf8'));
+const PLAY = JSON.parse(readFileSync('store/listing.json', 'utf8'));
+const SITE = 'https://mma-five-psi.vercel.app';
+// Apple açıklamada emoji kabul etmez (scripts/appstore-texts.mjs ile aynı temizlik)
+const noEmoji = (t) => t.replace(/[\p{Extended_Pictographic}\uFE0F\u200D]/gu, '').split('\n').map((l) => l.trim()).join('\n');
+const SHOT_DIR = { tr: 'tr', 'en-US': 'en', 'es-ES': 'es', 'pt-BR': 'pt', ru: 'ru', pl: 'pl', it: 'it', id: 'id', ja: 'ja' };
+const have = new Set(locs.map((l) => l.attributes.locale));
+const yeni = Object.keys(AS).filter((loc) => !have.has(loc));
+if (yeni.length && VID !== 'dry') {
+  const infos = (await api('GET', `/v1/apps/${APP}/appInfos`)).data;
+  const info = infos.find((i) => ['PREPARE_FOR_SUBMISSION', 'DEVELOPER_REJECTED', 'REJECTED', 'METADATA_REJECTED', 'WAITING_FOR_REVIEW'].includes(i.attributes.appStoreState ?? i.attributes.state)) ?? infos[0];
+  const infoLocs = new Set((await api('GET', `/v1/appInfos/${info.id}/appInfoLocalizations?limit=50`)).data.map((l) => l.attributes.locale));
+  for (const loc of yeni) {
+    const a = AS[loc];
+    const p = PLAY[a.listing];
+    if (!p) { console.log(` ! ${loc}: listing.json'da ${a.listing} yok, atlandı`); continue; }
+    if (!infoLocs.has(loc)) {
+      await api('POST', '/v1/appInfoLocalizations', {
+        type: 'appInfoLocalizations',
+        attributes: { locale: loc, name: a.name, subtitle: a.subtitle, privacyPolicyUrl: `${SITE}/gizlilik.html` },
+        relationships: { appInfo: { data: { type: 'appInfos', id: info.id } } },
+      });
+    }
+    const vl = (await api('POST', '/v1/appStoreVersionLocalizations', {
+      type: 'appStoreVersionLocalizations',
+      attributes: { locale: loc, description: noEmoji(p.full), keywords: a.keywords, promotionalText: NOTES[loc]?.promotionalText ?? a.promo, whatsNew: NOTES[loc]?.whatsNew ?? p.releaseNotes, supportUrl: SITE, marketingUrl: SITE },
+      relationships: { appStoreVersion: { data: { type: 'appStoreVersions', id: VID } } },
+    })).data;
+    console.log(` ✓ ${loc}: yeni dil sayfası açıldı`);
+    // Ekran görüntüleri (1290×2796 → 6,7" iPhone)
+    const dir = `store/graphics-ios/${SHOT_DIR[loc] ?? loc}`;
+    if (!existsSync(dir)) { console.log(`   ! ${dir} yok, ekran görüntüsü yüklenmedi`); continue; }
+    const set = (await api('POST', '/v1/appScreenshotSets', {
+      type: 'appScreenshotSets', attributes: { screenshotDisplayType: 'APP_IPHONE_67' },
+      relationships: { appStoreVersionLocalization: { data: { type: 'appStoreVersionLocalizations', id: vl.id } } },
+    })).data;
+    const files = readdirSync(dir).filter((f) => /^\d\d-.*\.png$/.test(f)).sort().slice(0, 10);
+    for (const f of files) {
+      const buf = readFileSync(`${dir}/${f}`);
+      const shot = (await api('POST', '/v1/appScreenshots', {
+        type: 'appScreenshots', attributes: { fileName: f, fileSize: buf.length },
+        relationships: { appScreenshotSet: { data: { type: 'appScreenshotSets', id: set.id } } },
+      })).data;
+      for (const op of shot.attributes.uploadOperations) {
+        const r = await fetch(op.url, { method: op.method, headers: Object.fromEntries(op.requestHeaders.map((h) => [h.name, h.value])), body: buf.subarray(op.offset, op.offset + op.length) });
+        if (!r.ok) throw new Error(`Ekran görüntüsü yüklenemedi ${f}: ${r.status}`);
+      }
+      await api('PATCH', `/v1/appScreenshots/${shot.id}`, {
+        type: 'appScreenshots', id: shot.id, attributes: { uploaded: true, sourceFileChecksum: createHash('md5').update(buf).digest('hex') },
+      });
+    }
+    console.log(`   ✓ ${files.length} ekran görüntüsü yüklendi`);
+  }
 }
 
 // 4) İncelemeye gönder
