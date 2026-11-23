@@ -53,3 +53,6 @@ credentials.json
 # graphify bilgi grafiği (yerelde üretilir)
 graphify-out/
 .claude/settings.json.graphify-bak
+
+# mağaza görseli ara çıktıları
+store/graphics*/*/ham/
