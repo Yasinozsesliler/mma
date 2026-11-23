@@ -8918,7 +8918,7 @@ export const ID: Record<string, string> = {
   "Felsefe gelecek yıl yeniden değiştirilebilir.": "Filosofi bisa diubah lagi tahun depan.",
   "Kamp: {0}": "Kamp: {0}",
   "MAÇ KAMPI · {0}": "KAMP LAGA · {0}",
-  "seri": "seri",
+  "seri": "rekor",
   "EKİP · {0}/{1}": "STAF · {0}/{1}",
   "−{0}/hafta": "−{0}/minggu",
   "Yardımcı hocalar haftalık maaş alır. Salon büyüdükçe ekipte yer açılır.": "Asisten pelatih mendapat gaji mingguan. Slot staf bertambah seiring sasana berkembang.",
