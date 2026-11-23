@@ -546,6 +546,7 @@ export function MgrWatch({ f, m, onClose, orgAd, arena }: { f: MFighter; m: MKay
     durum: done ? 'bitti' : 'canli',
     kritik: null,
     subAdi: '',
+    mods: {},
     sonuc: { kazanan: m.w ? 'p' : 'o', yontem: m.kod },
   } as unknown as FightState;
   const cur = lines[Math.max(0, shown - 1)] ?? '';

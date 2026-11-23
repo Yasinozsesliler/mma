@@ -438,7 +438,7 @@ export function CageView({
         return;
       case 'gnp':
         // Grappling ve güreş: yerde vuruş yok; üstteki pozisyonu tutar, alttaki kıvranır
-        if (fs.mods.kural === 'grappling' || fs.mods.kural === 'gures') {
+        if (fs.mods?.kural === 'grappling' || fs.mods?.kural === 'gures') {
           queue(Dd, [['onBack', 350, { x: -12 }], ['onBack', 300, { x: -12, head: 14 }], ['onBack', 300, { x: -12 }]]);
           queue(A, [['kneelTop', 350, { x: GAP - 30 }], ['kneelTop', 300, { x: GAP - 26, torso: 46 }], ['kneelTop', 300, { x: GAP - 30 }]]);
           return;
@@ -677,13 +677,13 @@ export function CageView({
     const look = a === 'p' ? pLook ?? DEFAULT_LOOK : a === 'o' ? oLook : rLook ?? REF_LOOK;
     const kit0 = a === 'p' ? pKit : a === 'o' ? { shorts: '#1f4fbf', trim: '#ffffff', glove: '#1740a8' } : { shorts: rShirt ?? '#15161a', trim: '#fff', glove: '#000', ref: true };
     // Grappling ve güreşte eldivensiz; gençlik turnuvasında dövüşçüler küçük ve ince (hakem değil)
-    const kit = a === 'r' ? kit0 : sportKit(kit0, fs.mods.kural);
-    const ysc = a === 'r' ? 1 : youthScale(fs.mods.genc);
+    const kit = a === 'r' ? kit0 : sportKit(kit0, fs.mods?.kural);
+    const ysc = a === 'r' ? 1 : youthScale(fs.mods?.genc);
     return (
       <G key={a}>
         <Ellipse cx={X} cy={floorY + 4} rx={20 * k} ry={4 * k} fill="#000" opacity={0.25} />
         <G transform={tL("translate({0} {1}) scale({2} {3}) rotate({4})", [X, Y + HIP_H * k * (1 - ysc), f * k * ysc, k * ysc, ps.rot])}>
-          <Figure p={{ ...ps, rot: 0 }} look={a === 'r' ? look : youthLook(look, fs.mods.genc)} kit={kit} hasar={a === 'p' ? fs.pHasar : a === 'o' ? fs.oHasar : 0} build={a === 'r' ? 0 : a === 'p' && fs.mods.genc == null ? pBuild : a === 'o' && fs.mods.genc == null ? oBuild : youthBuild(fs.mods.genc)} />
+          <Figure p={{ ...ps, rot: 0 }} look={a === 'r' ? look : youthLook(look, fs.mods?.genc)} kit={kit} hasar={a === 'p' ? fs.pHasar : a === 'o' ? fs.oHasar : 0} build={a === 'r' ? 0 : a === 'p' && fs.mods?.genc == null ? pBuild : a === 'o' && fs.mods?.genc == null ? oBuild : youthBuild(fs.mods?.genc)} />
         </G>
       </G>
     );
@@ -723,7 +723,7 @@ export function CageView({
             {art ? <ArtCrowd w={w} hp={low ? 0 : hp} t={!low && hp ? tNow : 0} tier={arena?.tier} tint={arena?.tint} /> : null}
             <Stands w={w} tier={arena?.tier} logo={arena?.logo} renk={arena?.renk} />
             {art ? null : <Crowd w={w} hp={low ? 0 : hp} t={!low && hp ? tNow : 0} tier={arena?.tier} />}
-            <CageBack w={w} tint={tint} tier={arena?.tier} logo={arena?.logo} renk={arena?.renk} ring={fs.mods.kural === 'boks' || fs.mods.kural === 'muaythai'} mat={fs.mods.kural === 'grappling' || fs.mods.kural === 'gures'} />
+            <CageBack w={w} tint={tint} tier={arena?.tier} logo={arena?.logo} renk={arena?.renk} ring={fs.mods?.kural === 'boks' || fs.mods?.kural === 'muaythai'} mat={fs.mods?.kural === 'grappling' || fs.mods?.kural === 'gures'} />
             {stains.current.map((s2, i) => (
               <Ellipse key={`s${i}`} cx={s2.x} cy={s2.y} rx={s2.r * 1.4} ry={s2.r * 0.5} fill="#7a0d12" opacity={s2.o} />
             ))}

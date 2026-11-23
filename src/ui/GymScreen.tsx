@@ -208,6 +208,7 @@ function CornerCage({ st, rakipAd, rakipLook, lines, raunt, hasar, rHasar, end }
     durum: done ? (end ? 'bitti' : 'rauntSonu') : 'canli',
     kritik: null,
     subAdi: '',
+    mods: {},
     sonuc: end ? { kazanan: end.kazandi ? 'p' : 'o', yontem: methodCode(end.yontem) } : undefined,
   } as unknown as FightState;
   return (

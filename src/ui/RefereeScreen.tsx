@@ -1004,6 +1004,7 @@ function cageState(b: RefBout, log: string[]): FightState {
     durum: b.sonuc ? 'bitti' : b.kart ? 'rauntSonu' : crit ? 'kritik' : 'canli',
     kritik: an?.kind === 'sarsildi' ? (an.side === 1 ? 'rakipSersem' : 'sarsildin') : an?.kind === 'kilit' ? (an.side === 1 ? 'subFirsat' : 'subTehlike') : null,
     subAdi: b.subAdi ?? '',
+    mods: {},
     sonuc: b.sonuc ? { kazanan: b.sonuc.kazanan == null ? 'berabere' : b.sonuc.kazanan === 0 ? 'p' : 'o', yontem: b.sonuc.yontem } : undefined,
   } as unknown as FightState;
 }
