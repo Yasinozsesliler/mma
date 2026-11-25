@@ -1,0 +1,46 @@
+{
+ "tr": {
+  "whatsNew": "YOL 1.3.2\n• Yeni diller: İtalyanca ve Endonezce\n• Antrenör, Hakem ve Menajer modlarında maç ekranının açılmamasına yol açan hata düzeltildi\n• Kararlılık iyileştirmeleri\n\n1.3.0 ile gelenler: Gençlik Yolu, Boks, Muay Thai, Grappling ve Güreş ligleri, TAKTİK İZLE, günlük hedefler ve yeni dövüşçü çizimleri.",
+  "promotionalText": "Yeni: Gençlik Yolu ve 4 dövüş sporu ligi! Kariyerine çocuk yaşta başla, boks, Muay Thai, grappling ve güreşte kemer kazan, TAKTİK İZLE ile maçı yönet."
+ },
+ "en-US": {
+  "whatsNew": "YOL 1.3.2\n• New languages: Italian and Indonesian\n• Fixed an issue that kept the fight screen from opening in Coach, Referee and Manager modes\n• Stability improvements\n\nNew in 1.3.0: the Youth Path, Boxing, Muay Thai, Grappling and Wrestling leagues, WATCH TACTICS, daily goals and redrawn fighters.",
+  "promotionalText": "New: the Youth Path and 4 combat sports leagues! Start as a kid, win belts in boxing, Muay Thai, grappling and wrestling, and run fights with WATCH TACTICS."
+ },
+ "es-ES": {
+  "whatsNew": "YOL 1.3.2\n• Nuevos idiomas: italiano e indonesio\n• Corregido un error que impedía abrir la pantalla de combate en los modos Entrenador, Árbitro y Mánager\n• Mejoras de estabilidad\n\nNovedades de la 1.3.0: Camino juvenil, ligas de Boxeo, Muay Thai, Grappling y Lucha, VER TÁCTICA, objetivos diarios y luchadores redibujados.",
+  "promotionalText": "Novedad: ¡Camino juvenil y 4 ligas de deportes de combate! Empieza de niño, gana cinturones en boxeo, Muay Thai, grappling y lucha, y dirige con VER TÁCTICA."
+ },
+ "es-MX": {
+  "whatsNew": "YOL 1.3.2\n• Nuevos idiomas: italiano e indonesio\n• Corregimos un error que impedía abrir la pantalla de pelea en los modos Entrenador, Árbitro y Mánager\n• Mejoras de estabilidad\n\nNovedades de la 1.3.0: Camino juvenil, ligas de Box, Muay Thai, Grappling y Lucha, VER TÁCTICA, objetivos diarios y peleadores rediseñados.",
+  "promotionalText": "Novedad: ¡Camino juvenil y 4 ligas de deportes de combate! Empieza de niño, gana cinturones en box, Muay Thai, grappling y lucha, y dirige con VER TÁCTICA."
+ },
+ "pt-BR": {
+  "whatsNew": "YOL 1.3.2\n• Novos idiomas: italiano e indonésio\n• Corrigido um erro que impedia a tela de luta de abrir nos modos Treinador, Árbitro e Empresário\n• Melhorias de estabilidade\n\nNovidades da 1.3.0: Caminho jovem, ligas de Boxe, Muay Thai, Grappling e Wrestling, ASSISTIR TÁTICA, metas diárias e lutadores redesenhados.",
+  "promotionalText": "Novidade: Caminho jovem e 4 ligas de esportes de combate! Comece criança, ganhe cinturões no boxe, Muay Thai, grappling e wrestling e comande no ASSISTIR TÁTICA."
+ },
+ "ru": {
+  "whatsNew": "YOL 1.3.2\n• Новые языки: итальянский и индонезийский\n• Исправлена ошибка, из-за которой экран боя не открывался в режимах тренера, рефери и менеджера\n• Улучшения стабильности\n\nНовое в 1.3.0: Путь юности, лиги бокса, муай-тай, грэпплинга и борьбы, режим ТАКТИКА, ежедневные цели и перерисованные бойцы.",
+  "promotionalText": "Новое: Путь юности и 4 лиги единоборств! Начни ребёнком, выигрывай пояса в боксе, муай-тай, грэпплинге и борьбе и управляй боем в режиме ТАКТИКА."
+ },
+ "pl": {
+  "whatsNew": "YOL 1.3.2\n• Nowe języki: włoski i indonezyjski\n• Naprawiono błąd, przez który ekran walki nie otwierał się w trybach Trenera, Sędziego i Menedżera\n• Poprawki stabilności\n\nNowości z 1.3.0: Ścieżka młodości, ligi boksu, muay thai, grapplingu i zapasów, OGLĄDAJ TAKTYKĘ, codzienne cele i nowi zawodnicy.",
+  "promotionalText": "Nowość: Ścieżka młodości i 4 ligi sportów walki! Zacznij jako dziecko, zdobywaj pasy w boksie, muay thai, grapplingu i zapasach i dowodź w trybie OGLĄDAJ TAKTYKĘ."
+ },
+ "de-DE": {
+  "whatsNew": "YOL 1.3.2\n• Neue Sprachen: Italienisch und Indonesisch\n• Fehler behoben, durch den sich der Kampfbildschirm im Trainer-, Schiedsrichter- und Manager-Modus nicht öffnete\n• Stabilitätsverbesserungen\n\nNeu in 1.3.0: Jugendweg, Ligen für Boxen, Muay Thai, Grappling und Ringen, TAKTIK ZUSCHAUEN, tägliche Ziele und neu gezeichnete Kämpfer.",
+  "promotionalText": "Neu: Jugendweg und 4 Kampfsport-Ligen! Starte als Kind, gewinne Gürtel in Boxen, Muay Thai, Grappling und Ringen und lenke Kämpfe mit TAKTIK ZUSCHAUEN."
+ },
+ "fr-FR": {
+  "whatsNew": "YOL 1.3.2\n• Nouvelles langues : italien et indonésien\n• Correction d'un bug qui empêchait l'écran de combat de s'ouvrir dans les modes Entraîneur, Arbitre et Manager\n• Améliorations de stabilité\n\nNouveautés de la 1.3.0 : Parcours jeunesse, ligues de Boxe, Muay Thaï, Grappling et Lutte, REGARDER LA TACTIQUE, objectifs quotidiens et combattants redessinés.",
+  "promotionalText": "Nouveau : Parcours jeunesse et 4 ligues de combat ! Commence enfant, gagne des ceintures en boxe, Muay Thaï, grappling et lutte, et dirige en REGARDER LA TACTIQUE."
+ },
+ "it": {
+  "whatsNew": "YOL 1.3.2\n• Nuove lingue: italiano e indonesiano\n• Risolto un problema che impediva l'apertura della schermata di combattimento nelle modalità Allenatore, Arbitro e Manager\n• Miglioramenti di stabilità\n\nNovità della 1.3.0: Percorso giovanile, leghe di Boxe, Muay Thai, Grappling e Wrestling, GUARDA LA TATTICA, obiettivi giornalieri e lottatori ridisegnati.",
+  "promotionalText": "Novità: Percorso giovanile e 4 leghe di sport da combattimento! Inizia da ragazzo, vinci cinture in boxe, Muay Thai, grappling e wrestling."
+ },
+ "id": {
+  "whatsNew": "YOL 1.3.2\n• Bahasa baru: Indonesia dan Italia\n• Memperbaiki masalah layar pertarungan yang tidak terbuka di Mode Pelatih, Mode Wasit, dan Mode Manajer\n• Peningkatan stabilitas\n\nBaru di 1.3.0: Jalan Muda, liga Tinju, Muay Thai, Grappling, dan Gulat, LIHAT TAKTIK, target harian, serta petarung yang digambar ulang.",
+  "promotionalText": "Baru: Jalan Muda dan 4 liga olahraga tarung! Mulai sejak kecil, rebut sabuk di tinju, Muay Thai, grappling, dan gulat. Kini dalam Bahasa Indonesia."
+ }
+}
