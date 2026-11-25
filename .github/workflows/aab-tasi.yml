@@ -1,0 +1,27 @@
+# Tek seferlik: Android 1.3.2 derlemesinin AAB'sini (Actions artifact'ı) taslak (herkese kapalı) bir sürüme ekler,
+# böylece indirilebilir. Taslak sürümler yalnızca depo sahibine görünür.
+name: AAB'yi taslak sürüme taşı
+
+on:
+  push:
+    branches: [aab-tasi]
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  tasi:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: YOL-android-aab
+          run-id: 45210426958
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Taslak sürüm
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mv YOL-android.aab YOL-1.3.2.aab
+          gh release create android-1.3.2-taslak YOL-1.3.2.aab --repo "$GITHUB_REPOSITORY" --draft --title "Android 1.3.2 (taslak)" --notes "Play Console'a yüklenecek AAB" --target 48d0ce3a
