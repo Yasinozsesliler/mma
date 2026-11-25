@@ -128,12 +128,26 @@ if (yeni.length && VID !== 'dry') {
         relationships: { appInfo: { data: { type: 'appInfos', id: info.id } } },
       });
     }
-    const vl = (await api('POST', '/v1/appStoreVersionLocalizations', {
-      type: 'appStoreVersionLocalizations',
-      attributes: { locale: loc, description: noEmoji(p.full), keywords: a.keywords, promotionalText: NOTES[loc]?.promotionalText ?? a.promo, whatsNew: NOTES[loc]?.whatsNew ?? p.releaseNotes, supportUrl: SITE, marketingUrl: SITE },
-      relationships: { appStoreVersion: { data: { type: 'appStoreVersions', id: VID } } },
-    })).data;
-    console.log(` ✓ ${loc}: yeni dil sayfası açıldı`);
+    const attrs = { description: noEmoji(p.full), keywords: a.keywords, promotionalText: NOTES[loc]?.promotionalText ?? a.promo, whatsNew: NOTES[loc]?.whatsNew ?? p.releaseNotes, supportUrl: SITE, marketingUrl: SITE };
+    let vl;
+    try {
+      vl = (await api('POST', '/v1/appStoreVersionLocalizations', {
+        type: 'appStoreVersionLocalizations',
+        attributes: { locale: loc, ...attrs },
+        relationships: { appStoreVersion: { data: { type: 'appStoreVersions', id: VID } } },
+      })).data;
+      console.log(` ✓ ${loc}: yeni dil sayfası açıldı`);
+    } catch (e) {
+      // Apple sayfayı önceki sürümden kendisi kopyalamış olabilir: varsa güncelle
+      if (e.status !== 409) throw e;
+      const all = (await api('GET', `/v1/appStoreVersions/${VID}/appStoreVersionLocalizations?limit=50`)).data;
+      vl = all.find((l) => l.attributes.locale === loc);
+      if (!vl) throw e;
+      await api('PATCH', `/v1/appStoreVersionLocalizations/${vl.id}`, { type: 'appStoreVersionLocalizations', id: vl.id, attributes: { whatsNew: attrs.whatsNew, promotionalText: attrs.promotionalText } });
+      console.log(` ✓ ${loc}: dil sayfası zaten vardı, yenilikler yazıldı`);
+      const sets = (await api('GET', `/v1/appStoreVersionLocalizations/${vl.id}/appScreenshotSets`)).data;
+      if (sets.length) { console.log(`   · ${loc}: ekran görüntüleri zaten var`); continue; }
+    }
     // Ekran görüntüleri (1290×2796 → 6,7" iPhone)
     const dir = `store/graphics-ios/${SHOT_DIR[loc] ?? loc}`;
     if (!existsSync(dir)) { console.log(`   ! ${dir} yok, ekran görüntüsü yüklenmedi`); continue; }
