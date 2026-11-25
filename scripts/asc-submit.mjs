@@ -112,7 +112,8 @@ const SITE = 'https://mma-five-psi.vercel.app';
 const noEmoji = (t) => t.replace(/[\p{Extended_Pictographic}\uFE0F\u200D]/gu, '').split('\n').map((l) => l.trim()).join('\n');
 const SHOT_DIR = { tr: 'tr', 'en-US': 'en', 'es-ES': 'es', 'pt-BR': 'pt', ru: 'ru', pl: 'pl', it: 'it', id: 'id', ja: 'ja' };
 const have = new Set(locs.map((l) => l.attributes.locale));
-const yeni = Object.keys(AS).filter((loc) => !have.has(loc));
+const bos = new Set(locs.filter((l) => !l.attributes.description).map((l) => l.attributes.locale));
+const yeni = Object.keys(AS).filter((loc) => !have.has(loc) || bos.has(loc));
 if (yeni.length && VID !== 'dry') {
   const infos = (await api('GET', `/v1/apps/${APP}/appInfos`)).data;
   const info = infos.find((i) => ['PREPARE_FOR_SUBMISSION', 'DEVELOPER_REJECTED', 'REJECTED', 'METADATA_REJECTED', 'WAITING_FOR_REVIEW'].includes(i.attributes.appStoreState ?? i.attributes.state)) ?? infos[0];
@@ -129,29 +130,29 @@ if (yeni.length && VID !== 'dry') {
       });
     }
     const attrs = { description: noEmoji(p.full), keywords: a.keywords, promotionalText: NOTES[loc]?.promotionalText ?? a.promo, whatsNew: NOTES[loc]?.whatsNew ?? p.releaseNotes, supportUrl: SITE, marketingUrl: SITE };
-    let vl;
-    try {
-      vl = (await api('POST', '/v1/appStoreVersionLocalizations', {
-        type: 'appStoreVersionLocalizations',
-        attributes: { locale: loc, ...attrs },
-        relationships: { appStoreVersion: { data: { type: 'appStoreVersions', id: VID } } },
-      })).data;
-      console.log(` ✓ ${loc}: yeni dil sayfası açıldı`);
-    } catch (e) {
-      // Apple sayfayı önceki sürümden kendisi kopyalamış olabilir: varsa güncelle
-      if (e.status !== 409) throw e;
-      const all = (await api('GET', `/v1/appStoreVersions/${VID}/appStoreVersionLocalizations?limit=50`)).data;
-      vl = all.find((l) => l.attributes.locale === loc);
-      if (!vl) throw e;
-      await api('PATCH', `/v1/appStoreVersionLocalizations/${vl.id}`, { type: 'appStoreVersionLocalizations', id: vl.id, attributes: { whatsNew: attrs.whatsNew, promotionalText: attrs.promotionalText } });
-      console.log(` ✓ ${loc}: dil sayfası zaten vardı, yenilikler yazıldı`);
-      const sets = (await api('GET', `/v1/appStoreVersionLocalizations/${vl.id}/appScreenshotSets`)).data;
-      if (sets.length) { console.log(`   · ${loc}: ekran görüntüleri zaten var`); continue; }
+    let vl = locs.find((l) => l.attributes.locale === loc);
+    if (!vl) {
+      try {
+        vl = (await api('POST', '/v1/appStoreVersionLocalizations', {
+          type: 'appStoreVersionLocalizations',
+          attributes: { locale: loc, ...attrs },
+          relationships: { appStoreVersion: { data: { type: 'appStoreVersions', id: VID } } },
+        })).data;
+        console.log(` ✓ ${loc}: yeni dil sayfası açıldı`);
+      } catch (e) {
+        // Sayfa bu arada açılmış olabilir (Apple'ın kopyası ya da önceki deneme): bul ve doldur
+        if (e.status !== 409) throw e;
+        vl = (await api('GET', `/v1/appStoreVersions/${VID}/appStoreVersionLocalizations?limit=50`)).data.find((l) => l.attributes.locale === loc);
+        if (!vl) throw e;
+      }
     }
-    // Ekran görüntüleri (1290×2796 → 6,7" iPhone)
+    await api('PATCH', `/v1/appStoreVersionLocalizations/${vl.id}`, { type: 'appStoreVersionLocalizations', id: vl.id, attributes: attrs });
+    console.log(` ✓ ${loc}: açıklama, anahtar kelimeler ve yenilikler yazıldı`);
+    const sets = (await api('GET', `/v1/appStoreVersionLocalizations/${vl.id}/appScreenshotSets?include=appScreenshots`)).data;
+    if (sets.some((x) => (x.relationships?.appScreenshots?.data ?? []).length > 0)) { console.log(`   · ${loc}: ekran görüntüleri zaten var`); continue; }
     const dir = `store/graphics-ios/${SHOT_DIR[loc] ?? loc}`;
     if (!existsSync(dir)) { console.log(`   ! ${dir} yok, ekran görüntüsü yüklenmedi`); continue; }
-    const set = (await api('POST', '/v1/appScreenshotSets', {
+    const set = sets.find((x) => x.attributes.screenshotDisplayType === 'APP_IPHONE_67') ?? (await api('POST', '/v1/appScreenshotSets', {
       type: 'appScreenshotSets', attributes: { screenshotDisplayType: 'APP_IPHONE_67' },
       relationships: { appStoreVersionLocalization: { data: { type: 'appStoreVersionLocalizations', id: vl.id } } },
     })).data;
