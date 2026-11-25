@@ -182,14 +182,22 @@ if (!sub) {
     type: 'reviewSubmissions', attributes: { platform: 'IOS' }, relationships: { app: { data: { type: 'apps', id: APP } } },
   })).data;
 }
-try {
-  await api('POST', '/v1/reviewSubmissionItems', {
-    type: 'reviewSubmissionItems',
-    relationships: { reviewSubmission: { data: { type: 'reviewSubmissions', id: sub.id } }, appStoreVersion: { data: { type: 'appStoreVersions', id: VID } } },
-  });
-} catch (e) {
-  if (e.status !== 409) throw e;
-  console.log('Sürüm zaten gönderimde: ' + e.message.slice(0, 300));
+// Yeni yüklenen ekran görüntüleri Apple'da işlenirken sürüm "geçersiz durumda" görünür: birkaç dakika bekleyip yeniden dene
+for (let i = 0; ; i++) {
+  try {
+    await api('POST', '/v1/reviewSubmissionItems', {
+      type: 'reviewSubmissionItems',
+      relationships: { reviewSubmission: { data: { type: 'reviewSubmissions', id: sub.id } }, appStoreVersion: { data: { type: 'appStoreVersions', id: VID } } },
+    });
+    break;
+  } catch (e) {
+    if (e.status !== 409) throw e;
+    if (!/STATE_ERROR/.test(e.message)) { console.log('Sürüm zaten gönderimde: ' + e.message.slice(0, 300)); break; }
+    if (i === 0) console.log(e.message);
+    if (i >= 12) throw e;
+    console.log(`Sürüm henüz gönderilmeye hazır değil, 1 dk sonra yeniden (${i + 1}/12)`);
+    await sleep(60_000);
+  }
 }
 await api('PATCH', `/v1/reviewSubmissions/${sub.id}`, { type: 'reviewSubmissions', id: sub.id, attributes: { submitted: true } });
 console.log(`✅ ${VERSION} (derleme ${build.attributes.version}) App Store incelemesine gönderildi`);
