@@ -1,0 +1,64 @@
+<tr-TR>
+YOL 1.3.2
+• Yeni diller: İtalyanca ve Endonezce
+• Antrenör, Hakem ve Menajer modlarında maç ekranının açılmamasına yol açan hata düzeltildi
+• Kararlılık iyileştirmeleri
+
+1.3.0 ile gelenler: Gençlik Yolu, Boks, Muay Thai, Grappling ve Güreş ligleri, TAKTİK İZLE, günlük hedefler ve yeni dövüşçü çizimleri.
+</tr-TR>
+<en-US>
+YOL 1.3.2
+• New languages: Italian and Indonesian
+• Fixed an issue that kept the fight screen from opening in Coach, Referee and Manager modes
+• Stability improvements
+
+New in 1.3.0: the Youth Path, Boxing, Muay Thai, Grappling and Wrestling leagues, WATCH TACTICS, daily goals and redrawn fighters.
+</en-US>
+<es-ES>
+YOL 1.3.2
+• Nuevos idiomas: italiano e indonesio
+• Corregido un error que impedía abrir la pantalla de combate en los modos Entrenador, Árbitro y Mánager
+• Mejoras de estabilidad
+
+Novedades de la 1.3.0: Camino juvenil, ligas de Boxeo, Muay Thai, Grappling y Lucha, VER TÁCTICA, objetivos diarios y luchadores redibujados.
+</es-ES>
+<pt-BR>
+YOL 1.3.2
+• Novos idiomas: italiano e indonésio
+• Corrigido um erro que impedia a tela de luta de abrir nos modos Treinador, Árbitro e Empresário
+• Melhorias de estabilidade
+
+Novidades da 1.3.0: Caminho jovem, ligas de Boxe, Muay Thai, Grappling e Wrestling, ASSISTIR TÁTICA, metas diárias e lutadores redesenhados.
+</pt-BR>
+<ru-RU>
+YOL 1.3.2
+• Новые языки: итальянский и индонезийский
+• Исправлена ошибка, из-за которой экран боя не открывался в режимах тренера, рефери и менеджера
+• Улучшения стабильности
+
+Новое в 1.3.0: Путь юности, лиги бокса, муай-тай, грэпплинга и борьбы, режим ТАКТИКА, ежедневные цели и перерисованные бойцы.
+</ru-RU>
+<pl-PL>
+YOL 1.3.2
+• Nowe języki: włoski i indonezyjski
+• Naprawiono błąd, przez który ekran walki nie otwierał się w trybach Trenera, Sędziego i Menedżera
+• Poprawki stabilności
+
+Nowości z 1.3.0: Ścieżka młodości, ligi boksu, muay thai, grapplingu i zapasów, OGLĄDAJ TAKTYKĘ, codzienne cele i nowi zawodnicy.
+</pl-PL>
+<it-IT>
+YOL 1.3.2
+• Nuove lingue: italiano e indonesiano
+• Risolto un problema che impediva l'apertura della schermata di combattimento nelle modalità Allenatore, Arbitro e Manager
+• Miglioramenti di stabilità
+
+Novità della 1.3.0: Percorso giovanile, leghe di Boxe, Muay Thai, Grappling e Wrestling, GUARDA LA TATTICA, obiettivi giornalieri e lottatori ridisegnati.
+</it-IT>
+<id>
+YOL 1.3.2
+• Bahasa baru: Indonesia dan Italia
+• Memperbaiki masalah layar pertarungan yang tidak terbuka di Mode Pelatih, Mode Wasit, dan Mode Manajer
+• Peningkatan stabilitas
+
+Baru di 1.3.0: Jalan Muda, liga Tinju, Muay Thai, Grappling, dan Gulat, LIHAT TAKTIK, target harian, serta petarung yang digambar ulang.
+</id>
