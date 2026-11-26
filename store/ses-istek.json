@@ -1,7 +1,10 @@
-{"islem":"uret","ses":"nPczCjzI2devNBz1zQrb","parcalar":[
- {"ad":"r01","metin":"Tek yumruk... ve bütün salon ayakta!"},
- {"ad":"r02","metin":"Ama bu kemere giden yol, on iki yaşında başlıyor."},
- {"ad":"r03","metin":"Boksta, Muay Thai'de, güreşte pişiyorsun. Sonra kafes."},
- {"ad":"r04","metin":"Maçın kritik anlarında kararı sen veriyorsun."},
- {"ad":"r05","metin":"Menajerinle pazarlık et, hatta kendi organizasyonunu kur."},
- {"ad":"r06","metin":"YOL: Kafesten Kemere. Ücretsiz indir, kendi efsaneni yaz!"}]}
+{"islem":"karakter","roller":[
+ {"rol":"anlatici","ses":"nPczCjzI2devNBz1zQrb","ayar":{"stability":0.6,"similarity_boost":0.85,"style":0.25},"replikler":[
+  {"ad":"f1","metin":"Her efsane... bir yerden başlar."},
+  {"ad":"f2","metin":"Yere düşersin."},
+  {"ad":"f3","metin":"Kalkarsın. Çalışırsın. Bir daha... bir daha."},
+  {"ad":"f4","metin":"Ve bir gün... kafesin ortasındasın."},
+  {"ad":"f5","metin":"Bütün dünya senin adını haykırıyor."},
+  {"ad":"f6","metin":"Bu hikâyeyi... sen yazıyorsun."},
+  {"ad":"f7","metin":"YOL: Kafesten Kemere. Şimdi ücretsiz."}]}
+]}
