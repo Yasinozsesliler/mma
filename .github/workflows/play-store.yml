@@ -1,0 +1,67 @@
+# Google Play'e otomatik yükleme: mağaza metinleri, ekran görüntüleri, tanıtım görseli ve isteğe bağlı AAB.
+# Çalıştırma: Actions › "Google Play'e yükle" › Run workflow (ya da play-magaza dalına push: metin + görsel).
+# Gizli anahtar: PLAY_SERVICE_ACCOUNT_JSON (Google Cloud hizmet hesabının JSON anahtarı; Play Console'da yetkili).
+# AAB için: Android derlemesi iş akışının çalışma numarası (run id) verilir; o çalışmanın AAB'si taslak sürüm olarak yüklenir.
+name: Google Play'e yükle
+
+on:
+  workflow_dispatch:
+    inputs:
+      isler:
+        description: 'Ne yüklensin (virgüllü: metin, gorsel, aab)'
+        default: 'metin,gorsel'
+      kanal:
+        description: 'AAB için kanal (production, beta, alpha, internal)'
+        default: 'production'
+      aab_run_id:
+        description: 'AAB için Android derlemesi çalışma numarası (boşsa en son başarılı derleme)'
+        default: ''
+      notlar:
+        description: 'Sürüm notları dosyası (store/ içinde)'
+        default: ''
+      deneme:
+        description: 'Deneme (Play''de hiçbir şeyi değiştirme, yalnızca doğrula)'
+        type: boolean
+        default: false
+  push:
+    branches: [play-magaza]
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  play:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: AAB'yi al
+        if: contains(github.event.inputs.isler, 'aab')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_ID: ${{ github.event.inputs.aab_run_id }}
+        run: |
+          if [ -z "$RUN_ID" ]; then
+            RUN_ID=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow android-build.yml --status success --limit 1 --json databaseId --jq '.[0].databaseId')
+          fi
+          echo "Android derlemesi: $RUN_ID"
+          gh run download "$RUN_ID" --repo "$GITHUB_REPOSITORY" --name YOL-android-aab --dir aab
+          ls -la aab
+
+      - name: Play'e yükle
+        env:
+          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          PLAY_ISLER: ${{ github.event.inputs.isler || 'metin,gorsel' }}
+          PLAY_KANAL: ${{ github.event.inputs.kanal || 'production' }}
+          PLAY_NOTLAR: ${{ github.event.inputs.notlar && format('store/{0}', github.event.inputs.notlar) || '' }}
+          PLAY_DENEME: ${{ github.event.inputs.deneme == 'true' && '1' || '0' }}
+          PLAY_AAB: aab/YOL-android.aab
+        run: |
+          if [ -z "$PLAY_SERVICE_ACCOUNT_JSON" ]; then echo "PLAY_SERVICE_ACCOUNT_JSON gizli anahtarı eksik"; exit 1; fi
+          node scripts/play-publish.mjs
