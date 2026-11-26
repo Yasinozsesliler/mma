@@ -1,13 +1,14 @@
 // Seri bölümünü birleştirir: sahne kareleri → sahne videoları → tek video + seslendirme, müzik ve efektler.
-// node scripts/seri-kurgu.mjs <ffmpeg> <kare klasörü> <ses klasörü> <çıktı.mp4>
+// node scripts/seri-kurgu.mjs <ffmpeg> <kare klasörü> <ses klasörü> <çıktı.mp4> [bölüm=1]
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, readdirSync, renameSync, writeFileSync } from 'node:fs';
 
-const [FF, KARE, SES, OUT] = process.argv.slice(2);
+const [FF, KARE, SES, OUT, BOLUM = '1'] = process.argv.slice(2);
 const SND = new URL('../assets/sounds/', import.meta.url).pathname;
 const FPS = 30;
 // Sahne sırası, süresi; her sahnedeki sesler: [dosya, sahne içi sn, ses düzeyi]
-const SAHNE = [
+const BOLUMLER = {
+  1: [
   ['vitrin', 6.0, [['ses:anlatici-n1', 0.7, 1.6], ['crowd_loop', 0, 0.12], ['punch1', 1.5, 0.12], ['punch3', 2.9, 0.12], ['ooh', 3.4, 0.1]]],
   ['kapi', 3.9, [['ses:anlatici-n2', 0.25, 1.6]]],
   ['salon', 3.0, [['punch1', 0.3, 0.55], ['punch2', 0.7, 0.55], ['punch3', 1.1, 0.6], ['ses:mert-3-m1', 1.7, 1.6]]],
@@ -15,7 +16,19 @@ const SAHNE = [
   ['can', 2.6, [['ses:can-2-c1', 0.25, 1.7], ['swell', 1.2, 0.25]]],
   ['meydan', 3.1, [['whoosh', 0.95, 0.45], ['body', 1.45, 0.55], ['ses:mert-3-m2', 0.35, 1.6]]],
   ['karar', 15.2, [['ses:anlatici-n3', 0.3, 1.6], ['heavy', 4.25, 0.5], ['swell', 4.3, 0.35], ['ses:anlatici-n4', 4.5, 1.6], ['tap', 5.2, 0.4], ['tap', 5.8, 0.4], ['ses:anlatici-n5', 9.8, 1.6], ['chime', 9.75, 0.35]]],
-];
+],
+  // Bölüm 2 (ringe çık): İlk Dayak
+  2: [
+    ['b2eldiven', 5.6, [['ses:anlatici-b2n1', 0.4, 1.6], ['tap', 1.25, 0.3], ['ses:mert-b2m1', 3.9, 1.6]]],
+    ['b2hakem', 3.2, [['ses:hoca-b2h1', 0.3, 1.6]]],
+    ['b2dovus', 8.8, [['bell', 0.05, 0.5], ['punch1', 0.42, 0.5], ['punch2', 0.92, 0.5], ['whoosh', 1.4, 0.35], ['punch3', 2.25, 0.7], ['heavy', 2.3, 0.6], ['slam', 2.95, 0.55], ['ooh', 3.0, 0.35], ['ses:anlatici-b2n2', 3.3, 1.6], ['swell', 5.4, 0.3], ['ses:mert-b2m2', 7.4, 1.6]]],
+    ['b2kalk', 2.4, [['ses:can-b2c1', 0.25, 1.7], ['bell2', 1.95, 0.55]]],
+    ['b2gong', 2.4, [['ses:hoca-b2h2', 0.3, 1.6]]],
+    ['b2ev', 4.3, [['ses:anne-2-b2a1', 0.3, 1.6]]],
+    ['b2karar', 16.0, [['ses:anlatici-b2n3', 0.3, 1.6], ['heavy', 3.65, 0.5], ['swell', 3.7, 0.35], ['ses:anlatici-b2n4', 3.9, 1.6], ['tap', 4.6, 0.4], ['tap', 5.2, 0.4], ['ses:anlatici-b2n5', 10.5, 1.6], ['chime', 10.35, 0.35]]],
+  ],
+};
+const SAHNE = BOLUMLER[BOLUM];
 const tmp = `${KARE}/_video`;
 mkdirSync(tmp, { recursive: true });
 const ff = (args) => execFileSync(FF, ['-v', 'error', '-y', ...args], { stdio: 'inherit' });
