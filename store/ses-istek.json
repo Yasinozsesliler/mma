@@ -1,17 +1,12 @@
-{"islem":"karakter","temizle":"^YOL (can [13]|mert [12]|hoca [12])$","roller":[
+{"islem":"karakter","roller":[
  {"rol":"anlatici","ses":"nPczCjzI2devNBz1zQrb","ayar":{"stability":0.5,"similarity_boost":0.8,"style":0.35},"replikler":[
-  {"ad":"b2n1","metin":"Can eldivenleri yerden aldı. Elleri titriyordu."},
-  {"ad":"b2n2","metin":"Herkes onun kalkmayacağını düşündü."},
-  {"ad":"b2n3","metin":"Annesi yasakladı. Ama Can'ın aklı hâlâ o ringde."},
-  {"ad":"b2n4","metin":"Sen olsan ne yapardın? Gizlice gider miydin, yoksa annene gerçeği anlatıp onu ikna etmeye mi çalışırdın?"},
-  {"ad":"b2n5","metin":"Yorumlara yaz. Çoğunluk ne derse, üçüncü bölüm öyle başlayacak."}]},
- {"rol":"can","ses":"Vv1QW9Yx3WB2mLKFmyZG","replikler":[{"ad":"b2c1","metin":"Daha gong çalmadı."}]},
- {"rol":"mert","ses":"mEf7WY0hvNO6KqdAkUeA","replikler":[
-  {"ad":"b2m1","metin":"Merak etme, yavaş vuracağım."},
-  {"ad":"b2m2","metin":"Hâlâ kalkıyor musun?"}]},
+  {"ad":"b2bn1","metin":"Can eldivenlere baktı... ve almadı."},
+  {"ad":"b2bn2","metin":"O günden sonra Can, her sabah altıda salondaydı."},
+  {"ad":"b2bn3","metin":"Üç ay geçti. Gençler turnuvasının kurası çekildi."},
+  {"ad":"b2bn4","metin":"Sen olsan ne yapardın? Mert'i gizlice izleyip zayıf noktasını mı arardın, yoksa sadece kendi oyununa mı odaklanırdın?"}]},
+ {"rol":"can","ses":"Vv1QW9Yx3WB2mLKFmyZG","replikler":[{"ad":"b2bc1","metin":"İlk maçım... Mert'le."}]},
+ {"rol":"mert","ses":"mEf7WY0hvNO6KqdAkUeA","replikler":[{"ad":"b2bm1","metin":"Korktu! Ben demiştim, bebek bu."}]},
  {"rol":"hoca","ses":"0DihkedLJYKoWg7H1u4d","replikler":[
-  {"ad":"b2h1","metin":"Bir raunt. Ben durdurmadıkça devam."},
-  {"ad":"b2h2","metin":"Yarın sabah altıda burada ol."}]},
- {"rol":"anne","filtre":"age=middle_aged&gender=female","sorgular":["use_cases=characters","use_cases=narrative_story",""],"adet":3,"replikler":[
-  {"ad":"b2a1","metin":"Can! Yüzüne ne oldu? Bir daha o salona gitmeyeceksin!"}]}
+  {"ad":"b2bh1","metin":"Korkmak ayıp değil. Hazır olmadan ringe çıkmak ayıp."},
+  {"ad":"b2bh2","metin":"Bir daha. Bir daha! Bir daha!"}]}
 ]}
