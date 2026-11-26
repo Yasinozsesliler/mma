@@ -43,7 +43,7 @@ if (REQ.islem === 'ornek') {
     const j = await get(`/v1/shared-voices?page_size=30&language=tr&gender=male&sort=usage_character_count_1y&${q}`);
     for (const v of j.voices ?? []) if (!seen.has(v.voice_id)) { seen.add(v.voice_id); adaylar.push(v); }
   }
-  const sec = adaylar.slice(0, REQ.adet ?? 5);
+  const sec = adaylar.slice(REQ.atla ?? 0, (REQ.atla ?? 0) + (REQ.adet ?? 5));
   const bilgi = [];
   for (const [i, v] of sec.entries()) {
     // Kütüphane sesini hesaba ekle (API ile okutmak için gerekli)
@@ -60,12 +60,18 @@ if (REQ.islem === 'ornek') {
     } catch (e) { console.log(' ! okutulamadı:', v.name, e.message.slice(0, 200)); }
   }
   // Karşılaştırma için hazır seslerden derin bir anlatıcı (çok dilli modelle Türkçe okur)
-  const hazir = (await get('/v1/voices')).voices.filter((v) => v.category === 'premade' && /Brian|Adam|Bill/.test(v.name)).slice(0, 2);
+  const hazir = (await get('/v1/voices')).voices.filter((v) => v.category === 'premade' && new RegExp(REQ.hazir ?? 'Brian|Adam').test(v.name)).slice(0, REQ.hazirAdet ?? 2);
   for (const [k, v] of hazir.entries()) {
     const no = bilgi.length + 1;
     await tts(v.voice_id, REQ.metin, `${OUT}/ornek-${no}.mp3`);
     bilgi.push({ no, ad: v.name + ' (hazır ses)', voice_id: v.voice_id, aciklama: v.labels ? JSON.stringify(v.labels) : '' });
     console.log(` ✓ ${no}. ${v.name} (hazır)`);
+  }
+  for (const x of REQ.ekler ?? []) {
+    const no = bilgi.length + 1;
+    await tts(x.ses, REQ.metin, `${OUT}/ornek-${no}.mp3`, x.ayar ?? {});
+    bilgi.push({ no, ad: x.ad, voice_id: x.ses, aciklama: JSON.stringify(x.ayar ?? {}) });
+    console.log(` ✓ ${no}. ${x.ad}`);
   }
   writeFileSync(`${OUT}/bilgi.json`, JSON.stringify(bilgi, null, 1));
 } else if (REQ.islem === 'uret') {

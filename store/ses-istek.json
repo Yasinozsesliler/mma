@@ -1,5 +1,18 @@
 {
  "islem": "ornek",
+ "atla": 5,
  "adet": 5,
+ "hazir": "Bill|Daniel|George|Callum|Clyde|Arnold",
+ "hazirAdet": 5,
+ "ekler": [
+  {
+   "ad": "Brian (daha sert ve vurgulu)",
+   "ses": "nPczCjzI2devNBz1zQrb",
+   "ayar": {
+    "stability": 0.28,
+    "style": 0.75
+   }
+  }
+ ],
  "metin": "Sıfırdan başladın. Kimse sana inanmadı. Şimdi kafes seni bekliyor. YOL: Kafesten Kemere. Hemen ücretsiz indir!"
 }
