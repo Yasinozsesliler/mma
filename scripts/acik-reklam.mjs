@@ -13,8 +13,9 @@ const puppeteer = require('puppeteer-core');
 const FF = process.argv[2];
 const VIDEO = process.argv[3] ?? 'dunya';
 const root = fileURLToPath(new URL('..', import.meta.url));
-const src = `${root}/store/video/acik-${VIDEO}`;
-const tmp = `${src}/parca`;
+// tiktok: viral fragmanın 15 sn'lik reklam kesiti (aynı malzeme, TikTok güvenli alanına göre yazılar)
+const src = `${root}/store/video/acik-${VIDEO === 'tiktok' ? 'viral' : VIDEO}`;
+const tmp = `${src}/parca${VIDEO === 'tiktok' ? '-tiktok' : ''}`;
 if (!process.env.SADECE_KURGU) rmSync(tmp, { recursive: true, force: true }); // SADECE_KURGU=1: sahneleri yeniden çizmeden sadece birleştir/sesle
 mkdirSync(tmp, { recursive: true });
 const FPS = 30;
@@ -514,8 +515,8 @@ const CONF = (() => {
 })();
 // 20 sn seslendirmeli fragman (ElevenLabs, Brian): 12 yaşından kemere. Malzeme: scripts/viral-yakala.mjs + ses/ (01..06.mp3)
 // Seslendirmeli fragmanlar (ElevenLabs, Brian): her sahne bir cümle; süreler ses/ klasöründeki mp3'lerden
-const VO = { viral: [3.24, 2.64, 2.69, 3.6, 3.58, 3.11], efsaneyol: [2.74, 2.93, 3.24, 3.47, 3.37, 3.94] }[VIDEO] ?? [];
-const VO_DOSYA = { viral: '0', efsaneyol: 'e0' }[VIDEO];
+const VO = { viral: [3.24, 2.64, 2.69, 3.6, 3.58, 3.11], tiktok: [3.24, 2.64, 2.69, 3.6, 3.58, 3.11], efsaneyol: [2.74, 2.93, 3.24, 3.47, 3.37, 3.94] }[VIDEO] ?? [];
+const VO_DOSYA = { viral: '0', tiktok: '0', efsaneyol: 'e0' }[VIDEO];
 // Telefon çerçevesinde ekran görüntüsü (oran: yükseklik/genişlik; varsayılan iPhone 1170×2532)
 const phone = (file, left, top, w, extra = '', oran = 2532 / 1170) => {
   const sh = Math.round((w - 24) * oran);
@@ -529,8 +530,10 @@ const shotCard = (left, top, w, h, { file, seq, start = 0, t0 = 0, rate = 1 }, e
   return `<div style="position:absolute;left:${left}px;top:${top}px;width:${w}px;height:${h}px;border-radius:34px;overflow:hidden;background:#000;border:10px solid #111;box-shadow:0 50px 110px rgba(60,30,10,.35);${extra}">${img}</div>`;
 };
 // Seslendirmeyle eşzamanlı büyük altyazı: kelimeler sırayla patlar
+// TikTok reklamı: üstteki sekme şeridinden aşağı, ekranın alt yarısında sağdaki simge sütunundan uzak dur
+const TT = VIDEO === 'tiktok';
 const sub = (top, words, t0, step, size = 112) =>
-  `<div style="position:absolute;left:50px;right:50px;top:${top}px;display:flex;flex-wrap:wrap;justify-content:center;gap:0 26px;z-index:30">${words
+  `<div style="position:absolute;left:${TT && top > 650 ? 90 : 50}px;right:${TT && top > 650 ? 150 : 50}px;top:${TT && top < 420 ? top + 70 : top}px;display:flex;flex-wrap:wrap;justify-content:center;gap:0 26px;z-index:30">${words
     .map(([w, red], i) => `<span style="font-size:${size}px;line-height:1.08;transform:skewX(-7deg);color:${red ? RED : INK};animation:wpop .28s ${(t0 + i * step).toFixed(2)}s cubic-bezier(.2,.9,.3,1.4) both">${w}</span>`)
     .join('')}</div>`;
 const VCSS = `${TAPCSS}@keyframes wpop{0%{opacity:0;transform:scale(1.8) skewX(-7deg)}100%{opacity:1;transform:skewX(-7deg)}}
@@ -539,7 +542,7 @@ const VCSS = `${TAPCSS}@keyframes wpop{0%{opacity:0;transform:scale(1.8) skewX(-
     @keyframes flash{0%{opacity:0}15%{opacity:.85}100%{opacity:0}}
     @keyframes chip{0%{opacity:0;transform:translateY(60px) scale(.6) rotate(-6deg)}100%{opacity:1;transform:rotate(-3deg)}}`;
 const d = (i) => +(VO[i] + 0.55).toFixed(2);
-if (VIDEO === 'viral') {
+if (VIDEO === 'viral' || VIDEO === 'tiktok') {
   END_KICK = 'ŞİMDİ ÜCRETSİZ';
   // 1) Kanca: 12 yaşındasın
   SCENES.push({
@@ -581,7 +584,7 @@ if (VIDEO === 'viral') {
   SCENES.push({
     name: 'v5', d: d(4),
     html: page0(
-      `<div style="position:absolute;inset:0;animation:zoomS 4s ease-out both">${phone('kemer.png', 240, 600, 600, 'transform:rotate(-2deg)')}</div>` +
+      `<div style="position:absolute;inset:0;animation:zoomS 4s ease-out both">${phone('kemer.png', 240, TT ? 650 : 600, 600, 'transform:rotate(-2deg)')}</div>` +
         sub(110, [['VE'], ['BİR'], ['GECE...']], 0.1, 0.3, 104) +
         sub(250, [['BÜTÜN'], ['DÜNYA'], ['ADINI', 1], ['HAYKIRIR.', 1]], 1.5, 0.32, 104) +
         `<div style="position:absolute;inset:0;background:#fff;opacity:0;animation:flash .6s 1.5s both;z-index:40"></div>${CONF.h}`,
@@ -589,6 +592,9 @@ if (VIDEO === 'viral') {
     ),
   });
 }
+
+// TikTok reklamı: 9-15 sn önerisine göre sadece kanca, kafes ve kemer (+ kapanış)
+if (VIDEO === 'tiktok') for (const n of ['v2', 'v4']) SCENES.splice(SCENES.findIndex((x) => x.name === n), 1);
 
 // Efsane Yolları fragmanı (seslendirmeli): efsaneler → sen olsaydın → bölümler → kafes → "ya öyle olsaydı?"
 // Malzeme: scripts/efsane-yakala.mjs (+ kırpılmış listek/, yuruyusk/, kafesk/, vs-k.jpg) ve ses/e01..e06.mp3
@@ -653,7 +659,7 @@ const END_D = VIDEO === 'efsaneyol' ? 4.5 : 3.8;
 SCENES.push({
   name: 'end', d: END_D,
   html: page0(
-    `<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10">
+    `<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10;${TT ? 'transform:translate(-30px,-190px) scale(.86)' : ''}">
       ${END_KICK ? `<div class="tag" style="font-size:40px;margin-bottom:40px;animation:pop .45s .0s both">${END_KICK}</div>` : ''}
       <img src="${ICON}" style="width:400px;filter:drop-shadow(0 30px 50px rgba(230,57,70,.35));animation:pop .6s .05s both"/>
       <div style="font-size:230px;line-height:1;color:${RED};letter-spacing:26px;transform:skewX(-8deg);margin-top:6px;animation:pop .55s .2s both">YOL</div>
@@ -815,7 +821,7 @@ if (VIDEO === 'antrenor') {
   cue('e5', 0.05, 'whoosh', 0.45);
   cue('e5', 1.55, 'flash', 0.45);
   cue('e5', 1.6, 'fanfare', 0.35);
-} else if (VIDEO === 'viral') {
+} else if (VIDEO === 'viral' || VIDEO === 'tiktok') {
   // Müzik sesin altında kısık; seslendirme her sahnenin başında
   add(snd('giris_rock'), 0, 0.32);
   add(snd('music_hub'), 8, 0.22, true);
