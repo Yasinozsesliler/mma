@@ -27,6 +27,14 @@ const BOLUMLER = {
     ['b2ev', 4.3, [['ses:anne-2-b2a1', 0.3, 1.6]]],
     ['b2karar', 16.0, [['ses:anlatici-b2n3', 0.3, 1.6], ['heavy', 3.65, 0.5], ['swell', 3.7, 0.35], ['ses:anlatici-b2n4', 3.9, 1.6], ['tap', 4.6, 0.4], ['tap', 5.2, 0.4], ['ses:anlatici-b2n5', 10.5, 1.6], ['chime', 10.35, 0.35]]],
   ],
+  // Bölüm 2 (bekle, önce öğren): Korkak mı?
+  '2b': [
+    ['b2beldiven', 5.3, [['ses:anlatici-b2bn1', 0.3, 1.6], ['ses:mert-b2bm1', 3.0, 1.6]]],
+    ['b2bhoca', 3.8, [['ses:hoca-b2bh1', 0.3, 1.6]]],
+    ['b2bmontaj', 5.6, [['ses:anlatici-b2bn2', 0.2, 1.6], ['whoosh', 0.3, 0.25], ['whoosh', 0.86, 0.25], ['whoosh', 1.42, 0.25], ['punch1', 2.05, 0.45], ['punch2', 2.35, 0.45], ['punch3', 2.65, 0.45], ['punch1', 2.95, 0.45], ['tap', 3.7, 0.5], ['tap', 4.3, 0.5], ['tap', 4.9, 0.5], ['ses:hoca-b2bh2', 3.7, 1.6]]],
+    ['b2bkura', 4.9, [['ses:anlatici-b2bn3', 0.2, 1.6], ['heavy', 1.6, 0.45], ['ses:can-b2bc1', 3.3, 1.7]]],
+    ['b2bkarar', 13.0, [['swell', 0.25, 0.35], ['ses:anlatici-b2bn4', 0.6, 1.6], ['tap', 1.2, 0.4], ['tap', 1.8, 0.4], ['ses:anlatici-b2n5', 7.6, 1.6], ['chime', 7.45, 0.35]]],
+  ],
 };
 const SAHNE = BOLUMLER[BOLUM];
 const tmp = `${KARE}/_video`;

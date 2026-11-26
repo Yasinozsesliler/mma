@@ -575,16 +575,121 @@ export const SAHNELER: Record<string, Sahne> = {
       ),
     };
   },
+
+  // ===== BÖLÜM 2 (Bekle, önce öğren): Korkak mı? =====
+  // 1) Can eldivenleri almaz; Mert alay eder (5.3 sn; n1 0.3, m1 3.0)
+  b2beldiven: (t) => ({
+    kam: { x: lin(t, 2.7, 3.2, 120, -60), y: 0, s: 1.1 },
+    el: (
+      <G>
+        <Arka src={ART.gym} iw={1200} ih={1000} dim={0.08} />
+        <Eldiven x={430} y={1545} aci={10} />
+        <Aktor kim="can" t={t} keys={[{ t: 0, p: 'dur', o: { head: 24, torso: 8 }, X: 250 }, { t: 1.6, p: 'dur', o: { head: 24, torso: 8 } }, { t: 2.1, p: 'dur', o: { head: 6 }, X: 190 }]} />
+        <Aktor kim="mert" f={-1} t={t} keys={[{ t: 0, p: 'elBel', X: 760 }, { t: 2.9, p: 'elBel' }, { t: 3.2, p: 'gul', o: { head: -20 + kon(t, [[3.0, 5.0]]) } }, { t: 4.0, p: 'isaret', o: { head: kon(t, [[3.0, 5.0]]) } }, { t: 5.3, p: 'isaret' }]} />
+      </G>
+    ),
+  }),
+
+  // 2) Rıza Hoca: "Korkmak ayıp değil..." (3.8 sn; h1 0.3)
+  b2bhoca: (t) => ({
+    kam: { x: lin(t, 0, 3.8, 0, -40), y: 80, s: lin(t, 0, 3.8, 1.15, 1.25) },
+    el: (
+      <G>
+        <Arka src={ART.gym} iw={1200} ih={1000} dim={0.08} />
+        <Aktor kim="can" t={t} keys={[{ t: 0, p: 'dur', o: { head: 10 }, X: 330 }, { t: 2.0, p: 'dur', o: { head: -8 } }]} />
+        <Aktor kim="hoca" f={-1} t={t} keys={[{ t: 0, p: 'dur', o: { head: 8 + kon(t, [[0.3, 3.5]]) }, X: 640 }, { t: 1.6, p: 'elBel', o: { head: 8 + kon(t, [[0.3, 3.5]]) } }, { t: 3.8, p: 'elBel', o: { head: 8 } }]} />
+        <Aktor kim="mert" f={-1} t={t} ol={0.85} floor={1450} keys={[{ t: 0, p: 'elBel', X: 930 }, { t: 1.2, p: 'dejected', o: { head: 4 } }]} />
+      </G>
+    ),
+  }),
+
+  // 3) Montaj: sabah 06.00 gölge boksu, torba, Hoca'yla pede vuruş (5.6 sn; n2 0.2, h2 3.7)
+  b2bmontaj: (t) => {
+    const parca = t < 1.8 ? 0 : t < 3.4 ? 1 : 2;
+    const tt = parca === 0 ? t : parca === 1 ? t - 1.8 : t - 3.4;
+    const vur = (dizi: number[]) => { const v = dizi.filter((x) => tt >= x).pop(); return v == null ? 0 : Math.sin((tt - v) * 9) * Math.exp(-(tt - v) * 3) * 8; };
+    const ritim = (d: number, a: string, b: string) => (Math.floor(tt / d) % 2 ? a : b);
+    const etiket = ['06:00', '1. AY', '3. AY'][parca];
+    return {
+      kam: { x: 0, y: [40, 0, 120][parca], s: [1.12, 1.18, 1.25][parca] + tt * 0.02 },
+      el: (
+        <G>
+          <Arka src={ART.gym} iw={1200} ih={1000} dim={parca === 0 ? 0.35 : 0.05} x={[0, -120, 80][parca]} />
+          {parca === 0 ? <Aktor kim="canE" t={t} keys={[{ t: 0, p: ritim(0.28, 'jab', 'stance'), X: 470 }]} /> : null}
+          {parca === 1 ? (
+            <G>
+              <Torba x={700} y={560} aci={vur([0.25, 0.55, 0.85, 1.15])} />
+              <Aktor kim="canE" t={tt} keys={[{ t: 0, p: 'stance', X: 430 }, { t: 0.2, p: 'jab' }, { t: 0.35, p: 'stance' }, { t: 0.5, p: 'cross' }, { t: 0.65, p: 'stance' }, { t: 0.8, p: 'hook' }, { t: 0.95, p: 'stance' }, { t: 1.1, p: 'cross' }, { t: 1.3, p: 'stance' }]} />
+            </G>
+          ) : null}
+          {parca === 2 ? (
+            <G>
+              <Aktor kim="hoca" f={-1} t={tt} keys={[{ t: 0, p: 'refSeparate', o: { head: kon(tt, [[0.3, 1.8]]) }, X: 740 }]} />
+              <Aktor kim="canE" t={tt} keys={[{ t: 0, p: ritim(0.3, 'cross', 'stance'), X: 360 }]} />
+            </G>
+          ) : null}
+          <G transform="translate(540 250)">
+            <Rect x={-170} y={-70} width={340} height={110} rx={18} fill="#e63946" />
+            <SvgText x={0} y={18} fontFamily="Oswald_700Bold" fontSize={78} fill="#fff" textAnchor="middle" letterSpacing={4}>{etiket}</SvgText>
+          </G>
+        </G>
+      ),
+    };
+  },
+
+  // 4) Kura panosu: 1. tur CAN – MERT (4.9 sn; n3 0.2, c1 3.3)
+  b2bkura: (t) => ({
+    kam: { x: lin(t, 0, 3.2, 0, -20), y: lin(t, 0, 3.2, 0, 380), s: lin(t, 0, 3.2, 1.0, 1.5) },
+    el: (
+      <G>
+        <Arka src={ART.gym} iw={1200} ih={1000} dim={0.12} />
+        <G transform="translate(230 260)">
+          <Rect x={0} y={0} width={620} height={520} rx={12} fill="#efe6d2" stroke="#5a3a22" strokeWidth={12} />
+          <SvgText x={310} y={80} fontFamily="Oswald_700Bold" fontSize={50} fill="#1b1b1b" textAnchor="middle" letterSpacing={3}>GENÇLER TURNUVASI</SvgText>
+          <SvgText x={310} y={130} fontFamily="Oswald_700Bold" fontSize={32} fill="#7a6a55" textAnchor="middle" letterSpacing={3}>1. TUR KURASI</SvgText>
+          {[['EMRE K.', 'BURAK T.'], ['CAN', 'MERT'], ['YUSUF A.', 'ONUR S.']].map(([a, b], i) => (
+            <G key={i}>
+              <Rect x={40} y={170 + i * 110} width={540} height={86} rx={10} fill={i === 1 ? '#e63946' : '#ffffff'} opacity={i === 1 ? 0.15 + 0.85 * Math.min(1, Math.max(0, (t - 1.6) / 0.4)) : 1} />
+              <SvgText x={180} y={228 + i * 110} fontFamily="Oswald_700Bold" fontSize={44} fill={i === 1 && t > 1.6 ? '#fff' : '#1b1b1b'} textAnchor="middle">{a}</SvgText>
+              <SvgText x={310} y={228 + i * 110} fontFamily="Oswald_700Bold" fontSize={34} fill={i === 1 && t > 1.6 ? '#fff' : '#9a8a75'} textAnchor="middle">VS</SvgText>
+              <SvgText x={440} y={228 + i * 110} fontFamily="Oswald_700Bold" fontSize={44} fill={i === 1 && t > 1.6 ? '#fff' : '#1b1b1b'} textAnchor="middle">{b}</SvgText>
+            </G>
+          ))}
+        </G>
+        <Aktor kim="can" t={t} keys={[{ t: 0, p: 'durBak', o: { head: -24 }, X: 160 }, { t: 3.3, p: 'durBak', o: { head: -10 + kon(t, [[3.3, 4.6]]) } }]} />
+      </G>
+    ),
+  }),
+
+  // 5) Gece salonda yalnız; karar (13 sn)
+  b2bkarar: (t0) => {
+    const t = Math.min(t0, 0.3);
+    return {
+      kam: { x: lin(t0, 0, 13, 0, -30), y: lin(t0, 0, 13, 0, -30), s: lin(t0, 0, 13, 1.05, 1.16) },
+      el: (
+        <G>
+          <Arka src={ART.gym} iw={1200} ih={1000} dim={0.35} />
+          <Torba x={700} y={560} aci={2} />
+          <Aktor kim="canE" t={t} keys={[{ t: 0, p: 'stance', X: 430 }]} />
+        </G>
+      ),
+    };
+  },
 };
 
 type Bolum = { baslikSahne: string; baslik: string; kararSahne: string; kararAn: number; sonAn: number; kart: [string, string][]; sonraki: number };
 const BOLUMLER: Bolum[] = [
   { baslikSahne: 'b2eldiven', baslik: 'BÖLÜM 2 · İLK DAYAK', kararSahne: 'b2karar', kararAn: 3.7, sonAn: 10.35, sonraki: 3, kart: [['GİZLİCE GİT', 'Annene yalan söyle, antrenmana kaç'], ['GERÇEĞİ ANLAT', 'Onu ikna etmeye çalış']] },
+  { baslikSahne: 'b2beldiven', baslik: 'BÖLÜM 2 · KORKAK MI?', kararSahne: 'b2bkarar', kararAn: 0.3, sonAn: 7.45, sonraki: 3, kart: [["MERT'İ GİZLİCE İZLE", 'Zayıf noktasını bul'], ['KENDİ OYUNUNA ODAKLAN', 'Hocanın planına güven']] },
   { baslikSahne: 'vitrin', baslik: 'BÖLÜM 1 · İLK GÜN', kararSahne: 'karar', kararAn: 4.3, sonAn: 9.75, sonraki: 2, kart: [['RİNGE ÇIK', 'Korkmadığını hemen göster'], ['BEKLE, ÖNCE ÖĞREN', 'Sabret, zamanı gelince çık']] },
 ];
 
 const ALT_Y: Record<string, number> = { b2dovus: 230 };
 const ALT: Record<string, Alt[]> = {
+  b2beldiven: [[0.3, 1.75, '', 'Can eldivenlere baktı...'], [1.94, 2.6, '', '...ve almadı.'], [3.0, 3.58, 'mert', 'Korktu!'], [3.81, 5.0, 'mert', 'Ben demiştim, bebek bu.']],
+  b2bhoca: [[0.3, 1.33, 'hoca', 'Korkmak ayıp değil.'], [1.85, 3.46, 'hoca', 'Hazır olmadan ringe çıkmak ayıp.']],
+  b2bmontaj: [[0.2, 1.37, '', 'O günden sonra Can,'], [1.63, 3.2, '', 'her sabah altıda salondaydı.'], [3.7, 5.16, 'hoca', 'Bir daha. Bir daha! Bir daha!']],
+  b2bkura: [[0.2, 1.18, '', 'Üç ay geçti.'], [1.38, 3.07, '', 'Gençler turnuvasının kurası çekildi.'], [3.3, 3.86, 'can', 'İlk maçım...'], [4.2, 4.6, 'can', "Mert'le."]],
   b2eldiven: [[0.4, 1.96, '', 'Can eldivenleri yerden aldı.'], [2.24, 3.25, '', 'Elleri titriyordu.'], [3.9, 5.3, 'mert', 'Merak etme, yavaş vuracağım.']],
   b2hakem: [[0.3, 1.02, 'hoca', 'Bir raunt.'], [1.55, 2.81, 'hoca', 'Ben durdurmadıkça devam.']],
   b2dovus: [[3.3, 5.06, '', 'Herkes onun kalkmayacağını düşündü.'], [7.4, 8.55, 'mert', 'Hâlâ kalkıyor musun?']],
