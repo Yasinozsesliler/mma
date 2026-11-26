@@ -513,24 +513,34 @@ const CONF = (() => {
   return { h, k };
 })();
 // 20 sn seslendirmeli fragman (ElevenLabs, Brian): 12 yaşından kemere. Malzeme: scripts/viral-yakala.mjs + ses/ (01..06.mp3)
-const VO = VIDEO === 'viral' ? [3.24, 2.64, 2.69, 3.6, 3.58, 3.11] : [];
-if (VIDEO === 'viral') {
-  END_KICK = 'ŞİMDİ ÜCRETSİZ';
-  const phone = (file, left, top, w, extra = '') => {
-    const sh = Math.round(((w - 24) * 2532) / 1170);
-    return `<div style="position:absolute;left:${left}px;top:${top}px;width:${w}px;height:${sh + 24}px;border-radius:56px;background:#111;padding:12px;box-shadow:0 50px 110px rgba(60,30,10,.35);${extra}"><img src="file://${src}/${file}" style="width:100%;display:block;border-radius:44px"/></div>`;
-  };
-  // Seslendirmeyle eşzamanlı büyük altyazı: kelimeler sırayla patlar
-  const sub = (top, words, t0, step, size = 112) =>
-    `<div style="position:absolute;left:50px;right:50px;top:${top}px;display:flex;flex-wrap:wrap;justify-content:center;gap:0 26px;z-index:30">${words
-      .map(([w, red], i) => `<span style="font-size:${size}px;line-height:1.08;transform:skewX(-7deg);color:${red ? RED : INK};animation:wpop .28s ${(t0 + i * step).toFixed(2)}s cubic-bezier(.2,.9,.3,1.4) both">${w}</span>`)
-      .join('')}</div>`;
-  const VCSS = `${TAPCSS}@keyframes wpop{0%{opacity:0;transform:scale(1.8) skewX(-7deg)}100%{opacity:1;transform:skewX(-7deg)}}
+// Seslendirmeli fragmanlar (ElevenLabs, Brian): her sahne bir cümle; süreler ses/ klasöründeki mp3'lerden
+const VO = { viral: [3.24, 2.64, 2.69, 3.6, 3.58, 3.11], efsaneyol: [2.74, 2.93, 3.24, 3.47, 3.37, 3.94] }[VIDEO] ?? [];
+const VO_DOSYA = { viral: '0', efsaneyol: 'e0' }[VIDEO];
+// Telefon çerçevesinde ekran görüntüsü (oran: yükseklik/genişlik; varsayılan iPhone 1170×2532)
+const phone = (file, left, top, w, extra = '', oran = 2532 / 1170) => {
+  const sh = Math.round((w - 24) * oran);
+  return `<div style="position:absolute;left:${left}px;top:${top}px;width:${w}px;height:${sh + 24}px;border-radius:56px;background:#111;padding:12px;box-shadow:0 50px 110px rgba(60,30,10,.35);${extra}"><img src="file://${src}/${file}" style="width:100%;display:block;border-radius:44px"/></div>`;
+};
+// Yuvarlak köşeli oyun kesiti: sabit görsel ya da kare dizisi (seq: klasör, kayıttaki başlangıç sn, sahnedeki başlangıç, hız)
+const shotCard = (left, top, w, h, { file, seq, start = 0, t0 = 0, rate = 1 }, extra = '') => {
+  const img = seq
+    ? `<img data-seq="${src}/${seq}" data-start="${start}" data-t0="${t0}" data-rate="${rate}" data-max="${readdirSync(`${src}/${seq}`).length}" style="width:100%;height:100%;object-fit:cover;object-position:top"/>`
+    : `<img src="file://${src}/${file}" style="width:100%;height:100%;object-fit:cover;object-position:top"/>`;
+  return `<div style="position:absolute;left:${left}px;top:${top}px;width:${w}px;height:${h}px;border-radius:34px;overflow:hidden;background:#000;border:10px solid #111;box-shadow:0 50px 110px rgba(60,30,10,.35);${extra}">${img}</div>`;
+};
+// Seslendirmeyle eşzamanlı büyük altyazı: kelimeler sırayla patlar
+const sub = (top, words, t0, step, size = 112) =>
+  `<div style="position:absolute;left:50px;right:50px;top:${top}px;display:flex;flex-wrap:wrap;justify-content:center;gap:0 26px;z-index:30">${words
+    .map(([w, red], i) => `<span style="font-size:${size}px;line-height:1.08;transform:skewX(-7deg);color:${red ? RED : INK};animation:wpop .28s ${(t0 + i * step).toFixed(2)}s cubic-bezier(.2,.9,.3,1.4) both">${w}</span>`)
+    .join('')}</div>`;
+const VCSS = `${TAPCSS}@keyframes wpop{0%{opacity:0;transform:scale(1.8) skewX(-7deg)}100%{opacity:1;transform:skewX(-7deg)}}
     @keyframes rise{from{opacity:0;transform:translateY(420px) rotate(5deg)}to{opacity:1;transform:rotate(-3deg)}}
     @keyframes zoomS{from{transform:scale(1)}to{transform:scale(1.12)}}
     @keyframes flash{0%{opacity:0}15%{opacity:.85}100%{opacity:0}}
     @keyframes chip{0%{opacity:0;transform:translateY(60px) scale(.6) rotate(-6deg)}100%{opacity:1;transform:rotate(-3deg)}}`;
-  const d = (i) => +(VO[i] + 0.55).toFixed(2);
+const d = (i) => +(VO[i] + 0.55).toFixed(2);
+if (VIDEO === 'viral') {
+  END_KICK = 'ŞİMDİ ÜCRETSİZ';
   // 1) Kanca: 12 yaşındasın
   SCENES.push({
     name: 'v1', d: d(0),
@@ -580,8 +590,66 @@ if (VIDEO === 'viral') {
   });
 }
 
+// Efsane Yolları fragmanı (seslendirmeli): efsaneler → sen olsaydın → bölümler → kafes → "ya öyle olsaydı?"
+// Malzeme: scripts/efsane-yakala.mjs (+ kırpılmış listek/, yuruyusk/, kafesk/, vs-k.jpg) ve ses/e01..e06.mp3
+if (VIDEO === 'efsaneyol') {
+  END_KICK = 'EFSANE YOLLARI · İLKİ ÜCRETSİZ';
+  const chip = (w, at, x, y, red) => `<div style="position:absolute;left:${x}px;top:${y}px;background:${red ? RED : INK};color:#fff;font-size:62px;padding:6px 28px 10px;border-radius:18px;transform:skewX(-7deg);box-shadow:0 20px 40px rgba(0,0,0,.25);animation:chip .3s ${at}s cubic-bezier(.2,.9,.3,1.4) both;z-index:20;white-space:nowrap">${w}</div>`;
+  // 1) Efsane listesi kayarak
+  SCENES.push({
+    name: 'e1', d: d(0),
+    html: page0(
+      sub(130, [['KAFESİN'], ['EN'], ['BÜYÜK'], ['EFSANELERİ', 1]], 0.0, 0.25, 116) +
+        shotCard(110, 470, 860, 1260, { seq: 'listek', start: 0.2, rate: 1.25 }, 'transform:rotate(-2deg);animation:rise .55s cubic-bezier(.2,.8,.2,1) -.1s both'),
+      VCSS,
+    ),
+  });
+  // 2) Kırmızı köşede... sen
+  SCENES.push({
+    name: 'e2', d: d(1),
+    html: page0(
+      `<div style="position:absolute;inset:0;animation:zoomS 3.6s ease-out both">${shotCard(60, 600, 960, 1150, { seq: 'yuruyusk', start: 5.6, rate: 0.9 }, 'transform:rotate(1.5deg)')}</div>` +
+        sub(120, [['PEKİ'], ['YA'], ['ONLARIN'], ['YERİNDE'], ['SEN', 1], ['OLSAYDIN?', 1]], 0.05, 0.27, 104),
+      VCSS,
+    ),
+  });
+  // 3) Bölümler ve ilk bölümün hikâyesi
+  SCENES.push({
+    name: 'e3', d: d(2),
+    html: page0(
+      phone('bolumler.jpg', 40, 640, 520, 'transform:rotate(-5deg);animation:chip .45s .0s both', 1920 / 1080) +
+        phone('giris1.jpg', 520, 720, 520, 'transform:rotate(5deg);animation:chip .45s 1.5s both', 1920 / 1080) +
+        sub(120, [['HER'], ['BÖLÜM'], ['BİR'], ['DÖNEM.', 1]], 0.1, 0.24, 108) +
+        sub(380, [['HER'], ['KARAR'], ['SENİN.', 1]], 1.75, 0.26, 108),
+      VCSS,
+    ),
+  });
+  // 4) Kafes: maç öncesi kart + canlı maç, bölüm adları
+  SCENES.push({
+    name: 'e4', d: d(3),
+    html: page0(
+      shotCard(90, 140, 900, 687, { file: 'vs-k.jpg' }, 'transform:rotate(-2deg);animation:chip .4s 0s both') +
+        `<div style="position:absolute;left:0;top:0;width:1080px;height:1920px;animation:rise .5s .55s cubic-bezier(.2,.8,.2,1) both;z-index:5">${cage(760, 1040, 1.4, 0.55, 1.3, 'transform:rotate(1.5deg)', '', `${src}/kafesk`)}</div>` +
+        chip('2006 · TESİSATÇI ÇIRAK', 1.3, 70, 1310, false) + chip('2015 · 13 SANİYE', 1.7, 380, 1420, true) +
+        sub(1570, [['KAFESE'], ['ÇIK.'], ['TARİHİ'], ['YENİDEN'], ['YAZ.', 1]], 2.0, 0.22, 92),
+      VCSS,
+    ),
+  });
+  // 5) Ya öyle olsaydı?
+  SCENES.push({
+    name: 'e5', d: d(4),
+    html: page0(
+      `<div style="position:absolute;inset:0;animation:zoomS 4s ease-out both">${phone('bonus.jpg', 230, 710, 620, 'transform:rotate(-2deg)', 1920 / 1080)}</div>` +
+        sub(110, [['YA'], ['DA'], ['TARİHİ'], ['DEĞİŞTİR.', 1]], 0.05, 0.27, 108) +
+        sub(390, [['RÖVANŞI'], ['BU'], ['KEZ'], ['SEN', 1], ['KAZAN.', 1]], 1.6, 0.25, 108) +
+        `<div style="position:absolute;inset:0;background:#fff;opacity:0;animation:flash .6s 1.55s both;z-index:40"></div>`,
+      VCSS,
+    ),
+  });
+}
+
 // Kapanış: krem zemin, logo, mağazalar, düşen konfeti
-const END_D = 3.8;
+const END_D = VIDEO === 'efsaneyol' ? 4.5 : 3.8;
 SCENES.push({
   name: 'end', d: END_D,
   html: page0(
@@ -730,12 +798,29 @@ if (VIDEO === 'antrenor') {
   cue('duvar', 0.05, 'whoosh', 0.5);
   cue('kaydir', 0.2, 'whoosh', 0.5);
   cue('kaydir', 1.6, 'whoosh', 0.4);
+} else if (VIDEO === 'efsaneyol') {
+  add(snd('giris_epik'), 0, 0.3);
+  add(snd('music_menu'), 8, 0.2, true);
+  add(snd('crowd_loop'), 0, 0.1);
+  ['e1', 'e2', 'e3', 'e4', 'e5', 'end'].forEach((n, i) => cue(n, 0.12, `${VO_DOSYA}${i + 1}.mp3`, 1.5));
+  cue('e1', 0.0, 'whoosh', 0.45);
+  cue('e2', 0.05, 'swell', 0.4);
+  cue('e2', 0.9, 'roar', 0.35);
+  cue('e3', 0.1, 'tap', 0.5);
+  cue('e3', 1.5, 'slam', 0.4);
+  cue('e4', 0.05, 'bell', 0.55);
+  cue('e4', 1.3, 'punch1', 0.45);
+  cue('e4', 1.7, 'punch3', 0.45);
+  cue('e4', 2.6, 'body', 0.4);
+  cue('e5', 0.05, 'whoosh', 0.45);
+  cue('e5', 1.55, 'flash', 0.45);
+  cue('e5', 1.6, 'fanfare', 0.35);
 } else if (VIDEO === 'viral') {
   // Müzik sesin altında kısık; seslendirme her sahnenin başında
   add(snd('giris_rock'), 0, 0.32);
   add(snd('music_hub'), 8, 0.22, true);
   add(snd('crowd_loop'), 0, 0.12);
-  ['v1', 'v2', 'v3', 'v4', 'v5', 'end'].forEach((n, i) => cue(n, 0.12, `0${i + 1}.mp3`, 1.5));
+  ['v1', 'v2', 'v3', 'v4', 'v5', 'end'].forEach((n, i) => cue(n, 0.12, `${VO_DOSYA}${i + 1}.mp3`, 1.5));
   cue('v1', 0.0, 'heavy', 0.5);
   cue('v2', 0.3, 'punch1', 0.5);
   cue('v2', 0.8, 'punch3', 0.5);
@@ -757,8 +842,8 @@ cue('sehir', 1.3, 'slam', 0.7);
 cue('mem0', 0.1, 'swell', 0.5);
 if (VIDEO === 'dunya') for (let k = 0; k < 5; k++) { cue('evr', k * 1.05 + 0.05, 'tap', 0.7); cue('evr', k * 1.05 + 0.25, 'chime', 0.35); }
 cue('heykel', 0.2, 'roar', 0.45);
-cue('end', 0.15, 'bell', VIDEO === 'viral' ? 0.4 : 0.85);
-cue('end', 0.35, 'applause', VIDEO === 'viral' ? 0.3 : 0.55);
+cue('end', 0.15, 'bell', VO.length ? 0.4 : 0.85);
+cue('end', 0.35, 'applause', VO.length ? 0.3 : 0.55);
 const args = ['-y'];
 SCENES.forEach((s) => args.push('-i', `${tmp}/${s.name}.mp4`));
 audio.forEach((a) => args.push(...(a.loop ? ['-stream_loop', '-1'] : []), '-i', a.file));
@@ -771,7 +856,7 @@ for (let k = 1; k < NV; k++) {
   prev = tag;
 }
 fc += ';' + audio.map((a, i) => { const ms = Math.round(a.startSec * 1000); return `[${NV + i}:a]aresample=44100,aformat=channel_layouts=stereo,volume=${a.vol},adelay=${ms}|${ms}[a${i}]`; }).join(';');
-fc += `;${audio.map((_, i) => `[a${i}]`).join('')}amix=inputs=${audio.length}:duration=longest:normalize=0,afade=t=out:st=${(total - (VIDEO === 'viral' ? 0.5 : 1)).toFixed(2)}:d=${VIDEO === 'viral' ? 0.5 : 1},alimiter=limit=0.95[aout]`;
+fc += `;${audio.map((_, i) => `[a${i}]`).join('')}amix=inputs=${audio.length}:duration=longest:normalize=0,afade=t=out:st=${(total - (VO.length ? 0.4 : 1)).toFixed(2)}:d=${VO.length ? 0.4 : 1},alimiter=limit=0.95[aout]`;
 writeFileSync(`${tmp}/filtre.txt`, fc);
 const out = `${root}/store/video/reklam-${VIDEO}.mp4`;
 const r = spawnSync(FF, [...args, '-filter_complex_script', `${tmp}/filtre.txt`, '-map', '[vout]', '-map', '[aout]', '-t', total.toFixed(2), '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-preset', 'medium', '-crf', '19', '-r', String(FPS), '-c:a', 'aac', '-b:a', '192k', '-movflags', '+faststart', `${out}.tmp.mp4`], { encoding: 'utf8' });
