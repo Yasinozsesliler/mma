@@ -2,6 +2,7 @@
 // İstek: store/ses-istek.json
 //   {"islem":"ornek","metin":"...","adet":5}  → Türkçe erkek fragman sesleri bulur, her biriyle aynı metni okutur
 //   {"islem":"uret","ses":"<voice_id>","parcalar":[{"ad":"01","metin":"..."}], "model":"eleven_multilingual_v2"}
+//   {"islem":"karakter","roller":[{"rol":"can","filtre":"age=young&gender=male","adet":3,"replikler":[{"ad":"01","metin":"..."}]}]}
 // Çıktı: ses/ klasörü (mp3 + bilgi.json); iş akışı bunları taslak bir sürüme ekler.
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 
@@ -80,5 +81,44 @@ if (REQ.islem === 'ornek') {
     console.log(` ✓ ${p.ad}: ${p.metin.slice(0, 60)}`);
   }
   writeFileSync(`${OUT}/bilgi.json`, JSON.stringify(REQ, null, 1));
+} else if (REQ.islem === 'karakter') {
+  // Hikâye seslendirmesi: her rol ya sabit bir sesle (ses) ya da kütüphanede filtreyle bulunan adaylarla (filtre, adet)
+  // okunur; adaylar rolün bütün repliklerini okur ki karşılaştırılabilsin. temizle: hesaptaki eski deneme seslerini siler.
+  if (REQ.temizle) {
+    const mevcut = (await get('/v1/voices')).voices;
+    for (const v of mevcut.filter((v) => v.category !== 'premade' && new RegExp(REQ.temizle).test(v.name) && !(REQ.koru ?? []).includes(v.voice_id))) {
+      const r = await fetch(`https://api.elevenlabs.io/v1/voices/${v.voice_id}`, { method: 'DELETE', headers: H });
+      console.log(' - silindi:', v.name, r.status);
+    }
+  }
+  const bilgi = [];
+  for (const r of REQ.roller) {
+    let adaylar = r.ses ? [{ voice_id: r.ses, name: r.rol, hazir: true }] : [];
+    if (!r.ses) {
+      const seen = new Set();
+      for (const q of r.sorgular ?? ['']) {
+        const j = await get(`/v1/shared-voices?page_size=30&language=tr&sort=usage_character_count_1y&${r.filtre ?? ''}&${q}`);
+        for (const v of j.voices ?? []) if (!seen.has(v.voice_id)) { seen.add(v.voice_id); adaylar.push(v); }
+      }
+      adaylar = adaylar.slice(r.atla ?? 0, (r.atla ?? 0) + (r.adet ?? 3));
+    }
+    for (const [i, v] of adaylar.entries()) {
+      let id = v.voice_id;
+      if (!v.hazir) {
+        try {
+          const x = await post(`/v1/voices/add/${v.public_owner_id}/${v.voice_id}`, { new_name: `YOL ${r.rol} ${i + 1}`.slice(0, 40) });
+          id = (await x.json()).voice_id ?? id;
+        } catch (e) { console.log(' ! eklenemedi:', v.name, e.message.slice(0, 200)); continue; }
+      }
+      const b = { rol: r.rol, no: i + 1, ad: v.name, voice_id: id, yas: v.age, cinsiyet: v.gender, aksan: v.accent, kullanim: v.use_case, aciklama: (v.description ?? '').slice(0, 200), dosyalar: [] };
+      for (const p of r.replikler) {
+        const f = `${OUT}/${r.rol}${adaylar.length > 1 ? '-' + (i + 1) : ''}-${p.ad}.mp3`;
+        try { await tts(id, p.metin, f, p.ayar ?? r.ayar ?? {}); b.dosyalar.push(f); } catch (e) { console.log(' ! okutulamadı:', e.message.slice(0, 200)); }
+      }
+      bilgi.push(b);
+      console.log(` ✓ ${r.rol} ${i + 1}: ${v.name} (${v.age ?? ''} ${v.gender ?? ''} ${v.accent ?? ''} ${v.use_case ?? ''})`);
+    }
+  }
+  writeFileSync(`${OUT}/bilgi.json`, JSON.stringify(bilgi, null, 1));
 }
 console.log('Sonra:', await kalan());

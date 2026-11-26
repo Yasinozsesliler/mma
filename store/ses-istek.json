@@ -1,7 +1,15 @@
-{"islem":"uret","ses":"nPczCjzI2devNBz1zQrb","parcalar":[
- {"ad":"e01","metin":"Kafesin en büyük efsanelerini tanıyorsun."},
- {"ad":"e02","metin":"Peki ya onların yerinde sen olsaydın?"},
- {"ad":"e03","metin":"Her bölüm, hayatlarından bir dönem. Her karar senin."},
- {"ad":"e04","metin":"Kafese çık. Hikâyeyi kendi yumruklarınla yeniden yaz."},
- {"ad":"e05","metin":"Ya da tarihi değiştir. Rövanşı bu kez sen kazan."},
- {"ad":"e06","metin":"YOL: Efsane Yolları. İlk efsane ücretsiz!"}]}
+{"islem":"karakter","temizle":"^YOL ","roller":[
+ {"rol":"anlatici","ses":"nPczCjzI2devNBz1zQrb","ayar":{"stability":0.5,"similarity_boost":0.8,"style":0.35},"replikler":[
+  {"ad":"n1","metin":"İstanbul. On iki yaşında bir çocuk... ve bir vitrinde, hayatını değiştirecek bir maç."},
+  {"ad":"n2","metin":"Ertesi sabah, mahallenin eski boks salonunun kapısındaydı."},
+  {"ad":"n3","metin":"İlk günü. Karşısında iki yaş büyük, bir yıldır çalışan biri."},
+  {"ad":"n4","metin":"Sen olsan ne yapardın? Ringe mi çıkardın, yoksa bekleyip önce öğrenir miydin?"},
+  {"ad":"n5","metin":"Yorumlara yaz. Çoğunluk ne derse, ikinci bölüm öyle başlayacak."}]},
+ {"rol":"can","filtre":"age=young&gender=male","sorgular":["use_cases=characters","use_cases=narrative_story",""],"adet":3,"replikler":[
+  {"ad":"c1","metin":"Can. Bir gün şampiyon olacağım."}]},
+ {"rol":"mert","filtre":"age=young&gender=male","sorgular":["use_cases=characters","use_cases=narrative_story",""],"atla":3,"adet":3,"replikler":[
+  {"ad":"m1","metin":"Hocam, kreş mi açtık?"},
+  {"ad":"m2","metin":"Öyle mi? Çık o zaman ringe. Hemen şimdi."}]},
+ {"rol":"hoca","filtre":"age=old&gender=male","sorgular":["use_cases=characters","use_cases=narrative_story",""],"adet":3,"replikler":[
+  {"ad":"h1","metin":"Kes sesini Mert. Gel evlat. Adın ne?"}]}
+]}
