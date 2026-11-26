@@ -515,8 +515,8 @@ const CONF = (() => {
 })();
 // 20 sn seslendirmeli fragman (ElevenLabs, Brian): 12 yaşından kemere. Malzeme: scripts/viral-yakala.mjs + ses/ (01..06.mp3)
 // Seslendirmeli fragmanlar (ElevenLabs, Brian): her sahne bir cümle; süreler ses/ klasöründeki mp3'lerden
-const VO = { reklamko: [2.75, 2.7, 3.55, 2.65, 3.35, 4.05], oyunpov: [2.75, 2.7, 3.55, 2.65, 3.35, 4.05], viral: [3.24, 2.64, 2.69, 3.6, 3.58, 3.11], tiktok: [3.24, 2.64, 2.69, 3.6, 3.58, 3.11], efsaneyol: [2.74, 2.93, 3.24, 3.47, 3.37, 3.94] }[VIDEO] ?? [];
-const VO_DOSYA = { reklamko: 'r0', oyunpov: 'r0', viral: '0', tiktok: '0', efsaneyol: 'e0' }[VIDEO];
+const VO = { reklamko: [2.75, 2.7, 3.55, 2.65, 3.35, 4.05], oyunpov: [2.75, 2.7, 3.55, 2.65, 3.35, 4.05], oyunhd: [2.75, 2.7, 3.55, 2.65, 3.35, 4.05], viral: [3.24, 2.64, 2.69, 3.6, 3.58, 3.11], tiktok: [3.24, 2.64, 2.69, 3.6, 3.58, 3.11], efsaneyol: [2.74, 2.93, 3.24, 3.47, 3.37, 3.94] }[VIDEO] ?? [];
+const VO_DOSYA = { reklamko: 'r0', oyunpov: 'r0', oyunhd: 'r0', viral: '0', tiktok: '0', efsaneyol: 'e0' }[VIDEO];
 // Telefon çerçevesinde ekran görüntüsü (oran: yükseklik/genişlik; varsayılan iPhone 1170×2532)
 const phone = (file, left, top, w, extra = '', oran = 2532 / 1170) => {
   const sh = Math.round((w - 24) * oran);
@@ -531,7 +531,7 @@ const shotCard = (left, top, w, h, { file, seq, start = 0, t0 = 0, rate = 1 }, e
 };
 // Seslendirmeyle eşzamanlı büyük altyazı: kelimeler sırayla patlar
 // TikTok reklamı: üstteki sekme şeridinden aşağı, ekranın alt yarısında sağdaki simge sütunundan uzak dur
-const TT = VIDEO === 'tiktok' || VIDEO === 'reklamko' || VIDEO === 'oyunpov';
+const TT = VIDEO === 'tiktok' || VIDEO === 'reklamko' || VIDEO === 'oyunpov' || VIDEO === 'oyunhd';
 const sub = (top, words, t0, step, size = 112) =>
   `<div style="position:absolute;left:${TT && top > 650 ? 90 : 50}px;right:${TT && top > 650 ? 150 : 50}px;top:${TT && top < 420 ? top + 70 : top}px;display:flex;flex-wrap:wrap;justify-content:center;gap:0 26px;z-index:30">${words
     .map(([w, red], i) => `<span style="font-size:${size}px;line-height:1.08;transform:skewX(-7deg);color:${red ? RED : INK};animation:wpop .28s ${(t0 + i * step).toFixed(2)}s cubic-bezier(.2,.9,.3,1.4) both">${w}</span>`)
@@ -741,6 +741,88 @@ if (VIDEO === 'oyunpov') {
   });
 }
 
+// HD tam ekran oyun reklamı: görüntüler 4x yoğunlukta, oyun saati yavaşlatılarak kare kare çekildi (scripts/hd-yakala.mjs).
+// Kayıtlar (kafes/ring bölgesi 2080×1080) doğal boyutunda, ekranlar (2160×3840) yarı boyutta gösterilir: hiçbir şey büyütülüp bulanıklaşmaz.
+if (VIDEO === 'oyunhd') {
+  END_KICK = 'ÜCRETSİZ İNDİR';
+  // Kayıt bandı: doğal boyutta (2080×1080), merkez x'i ekrana ortalanır
+  const bant = ({ seq, start = 0, t0 = 0, rate = 1, top = 420, cx = 1040, s0 = 1, s1 = 1.06, d = 4 }) => {
+    const id = `b${Math.random().toString(36).slice(2, 8)}`;
+    return `<style>@keyframes ${id}{from{transform:scale(${s0})}to{transform:scale(${s1})}}</style><div style="position:absolute;left:${540 - cx}px;top:${top}px;width:2080px;height:1080px;transform-origin:${cx}px 540px;animation:${id} ${d}s linear ${t0}s both"><img data-seq="${src}/${seq}" data-start="${start}" data-t0="${t0}" data-rate="${rate}" data-max="${readdirSync(`${src}/${seq}`).length}" style="width:2080px;height:1080px;display:block"/></div>`;
+  };
+  // Tam ekran oyun ekranı (2160×3840 → 1080×1920), yavaş yakınlaşma
+  const ekran = ({ file, t0 = 0, fx = 540, fy = 960, s0 = 1, s1 = 1.08, d = 4 }) => {
+    const id = `e${Math.random().toString(36).slice(2, 8)}`;
+    return `<style>@keyframes ${id}{from{transform:scale(${s0})}to{transform:scale(${s1})}}</style><div style="position:absolute;left:0;top:0;width:1080px;height:1920px;transform-origin:${fx}px ${fy}px;animation:${id} ${d}s linear ${t0}s both"><img src="file://${src}/${file}" style="width:1080px;height:1920px;display:block"/></div>`;
+  };
+  const yaz = (top, words, t0, step, size = 104) =>
+    `<div style="position:absolute;left:70px;right:${top > 650 ? 150 : 70}px;top:${top}px;display:flex;flex-wrap:wrap;justify-content:center;gap:0 24px;z-index:30">${words
+      .map(([w, red], i) => `<span style="font-size:${size}px;line-height:1.08;color:${red ? '#ffd23f' : '#fff'};-webkit-text-stroke:${Math.round(size / 9)}px #000;paint-order:stroke;text-shadow:0 8px 24px rgba(0,0,0,.6);animation:wpop .26s ${(t0 + i * step).toFixed(2)}s cubic-bezier(.2,.9,.3,1.4) both">${w}</span>`)
+      .join('')}</div>`;
+  const PCSS = `${VCSS}.paper{background:radial-gradient(ellipse at 50% 50%,#1b1416 0%,#050505 70%)!important}.grain,.logo{display:none}
+    @keyframes sars{0%,100%{transform:translate(0,0)}20%{transform:translate(-26px,14px)}40%{transform:translate(22px,-18px)}60%{transform:translate(-14px,10px)}80%{transform:translate(8px,-6px)}}
+    @keyframes slam{0%{opacity:0;transform:scale(3) rotate(-8deg)}60%{opacity:1;transform:scale(.92) rotate(-6deg)}100%{opacity:1;transform:scale(1) rotate(-6deg)}}
+    @keyframes gir{from{opacity:0}to{opacity:1}}`;
+  const ust = `<div style="position:absolute;left:0;right:0;top:0;height:760px;background:linear-gradient(#000e 0%,#000c 55%,#0000);z-index:20"></div>`;
+  const sw = (t, inner) => `<div style="position:absolute;inset:0;opacity:0;animation:gir .12s ${t}s both">${inner}</div>`;
+  // 1) KANCA: nakavt (kafes bandı doğal boyutta, ağır çekim)
+  SCENES.push({
+    name: 'p1', d: 3.3,
+    html: page0(
+      `<div style="position:absolute;inset:0;animation:sars .45s .9s linear both">${bant({ seq: 'kotam', top: 400, cx: 900, s0: 1, s1: 1.08, d: 3.3 })}</div>` +
+        `<div style="position:absolute;left:0;right:0;top:0;height:700px;background:linear-gradient(#000 0%,#000 82%,#0000);z-index:20"></div>` +
+        yaz(140, [['TEK'], ['YUMRUK...', 1]], 0.0, 0.3, 124) +
+        yaz(290, [['VE'], ['BÜTÜN'], ['SALON'], ['AYAKTA!', 1]], 1.3, 0.28, 92) +
+        `<div style="position:absolute;left:0;right:0;top:1250px;text-align:center;font-size:240px;color:#ffd23f;-webkit-text-stroke:22px #000;paint-order:stroke;z-index:35;animation:slam .35s .92s cubic-bezier(.2,.9,.3,1.3) both">NAKAVT!</div>` +
+        `<div style="position:absolute;inset:0;background:#fff;opacity:0;animation:flash .5s .9s both;z-index:40"></div>`,
+      PCSS, { logo: false },
+    ),
+  });
+  // 2) Kemer → 12 yaş
+  SCENES.push({
+    name: 'p2', d: d(1),
+    html: page0(
+      ekran({ file: 'kemer.jpg', fx: 540, fy: 900, s0: 1.0, s1: 1.12, d: 1.6 }) +
+        sw(1.45, ekran({ file: 'genclik.jpg', t0: 1.45, fx: 540, fy: 1700, s0: 1.12, s1: 1.16, d: 2 }) + tapAt(480, 785, 2.3)) + ust +
+        yaz(160, [['KEMERE'], ['GİDEN'], ['YOL...', 1]], 0.05, 0.28, 108) +
+        yaz(320, [['12', 1], ['YAŞINDA'], ['BAŞLIYOR.']], 1.45, 0.28, 104),
+      PCSS, { logo: false },
+    ),
+  });
+  // 3) Ring → kafes
+  SCENES.push({
+    name: 'p3', d: d(2),
+    html: page0(
+      bant({ seq: 'ringmac', start: 0.3, top: 470, cx: 1040, s0: 1, s1: 1.05, d: 2.1 }) +
+        sw(2.0, bant({ seq: 'kafesmac', start: 1.0, t0: 2.0, rate: 1.2, top: 470, cx: 1040, s0: 1, s1: 1.05, d: 2.2 })) +
+        [['BOKS', 0.1, 120], ['MUAY THAI', 0.55, 400], ['GÜREŞ', 1.1, 760]].map(([w, at, x], i) => `<div style="position:absolute;left:${x - 60}px;top:${200 + (i % 2) * 120}px;background:${i === 1 ? '#ffd23f' : '#fff'};color:#000;font-size:76px;padding:6px 30px 10px;border-radius:18px;transform:skewX(-7deg);box-shadow:0 20px 40px rgba(0,0,0,.5);animation:chip .3s ${at}s cubic-bezier(.2,.9,.3,1.4) both;z-index:30">${w}</div>`).join('') +
+        yaz(1300, [['SONRA'], ['KAFES.', 1]], 2.0, 0.3, 140),
+      PCSS, { logo: false },
+    ),
+  });
+  // 4) Karar anı
+  SCENES.push({
+    name: 'p4', d: d(3),
+    html: page0(
+      ekran({ file: 'karar.jpg', fx: 540, fy: 700, s0: 1.1, s1: 1.18, d: 3.2 }) + ust +
+        yaz(150, [['KRİTİK'], ['ANDA'], ['KARAR'], ['SENİN.', 1]], 0.05, 0.25, 108) +
+        tapAt(430, 1225, 1.5),
+      PCSS, { logo: false },
+    ),
+  });
+  // 5) Menajer → Patron Modu
+  SCENES.push({
+    name: 'p5', d: d(4),
+    html: page0(
+      ekran({ file: 'menajer.jpg', fx: 540, fy: 700, s0: 1.04, s1: 1.1, d: 1.6 }) + tapAt(540, 700, 0.8) +
+        sw(1.45, ekran({ file: 'patron-giris.jpg', t0: 1.45, fx: 540, fy: 1750, s0: 1.12, s1: 1.17, d: 2.5 })) + ust +
+        yaz(150, [['MENAJERİNLE'], ['PAZARLIK', 1], ['ET.', 1]], 0.15, 0.28, 100) +
+        yaz(420, [['ORGANİZASYONUNU'], ['KUR.', 1]], 1.45, 0.3, 100),
+      PCSS, { logo: false },
+    ),
+  });
+}
+
 // Efsane Yolları fragmanı (seslendirmeli): efsaneler → sen olsaydın → bölümler → kafes → "ya öyle olsaydı?"
 // Malzeme: scripts/efsane-yakala.mjs (+ kırpılmış listek/, yuruyusk/, kafesk/, vs-k.jpg) ve ses/e01..e06.mp3
 if (VIDEO === 'efsaneyol') {
@@ -803,7 +885,7 @@ if (VIDEO === 'efsaneyol') {
 const KARANLIK = `.paper{background:radial-gradient(ellipse at 50% 42%,#3a0f14 0%,#0b0a0c 62%)!important}.grain{display:none}body{color:#fff}`;
 
 // Kapanış: krem zemin, logo, mağazalar, düşen konfeti
-const END_D = VIDEO === 'efsaneyol' ? 4.5 : VIDEO === 'reklamko' || VIDEO === 'oyunpov' ? 4.6 : 3.8;
+const END_D = VIDEO === 'efsaneyol' ? 4.5 : VIDEO === 'reklamko' || VIDEO === 'oyunpov' || VIDEO === 'oyunhd' ? 4.6 : 3.8;
 SCENES.push({
   name: 'end', d: END_D,
   html: page0(
@@ -816,7 +898,7 @@ SCENES.push({
       <div style="margin-top:34px;font-size:52px;color:${RED};border:5px solid ${RED};border-radius:26px;padding:12px 40px;background:#fff;animation:pop .55s .6s both">ÜCRETSİZ İNDİR</div>
       <div style="margin-top:40px;font-family:In;font-size:32px;letter-spacing:6px;color:#8a7a66;animation:pop .55s .7s both">MMA KARİYER OYUNU</div>
     </div>${CONF.h}`,
-    CONF.k + (VIDEO === 'oyunpov' ? KARANLIK : ''),
+    CONF.k + (VIDEO === 'oyunpov' || VIDEO === 'oyunhd' ? KARANLIK : ''),
     { logo: false },
   ),
 });
@@ -840,7 +922,8 @@ const seqFrame = (pg, t) =>
 const browser = await puppeteer.launch({ executablePath: process.env.CHROME, headless: true, args: ['--no-sandbox', '--allow-file-access-from-files'] });
 const page = await browser.newPage();
 await page.setViewport({ width: 1080, height: 1920, deviceScaleFactor: 1 });
-const enc = ['-c:v', 'libx264', '-preset', 'veryfast', '-crf', '17', '-pix_fmt', 'yuv420p', '-r', String(FPS)];
+const HD = VIDEO === 'oyunhd';
+const enc = ['-c:v', 'libx264', '-preset', HD ? 'medium' : 'veryfast', '-crf', HD ? '13' : '17', '-pix_fmt', 'yuv420p', '-r', String(FPS)];
 for (const sc of process.env.SADECE_KURGU ? [] : SCENES) {
   const file = `${tmp}/${sc.name}.html`;
   writeFileSync(file, sc.html);
@@ -862,7 +945,7 @@ for (const sc of process.env.SADECE_KURGU ? [] : SCENES) {
   for (let f = 0; f < n; f++) {
     await page.evaluate((ms) => document.getAnimations().forEach((a) => { a.pause(); a.currentTime = ms; }), (f * 1000) / FPS);
     await seqFrame(page, f / FPS);
-    await page.screenshot({ path: `${dir}/${String(f).padStart(5, '0')}.jpg`, type: 'jpeg', quality: 92 });
+    await page.screenshot({ path: `${dir}/${String(f).padStart(5, '0')}.jpg`, type: 'jpeg', quality: HD ? 97 : 92 });
   }
   execFileSync(FF, ['-y', '-framerate', String(FPS), '-i', `${dir}/%05d.jpg`, ...enc, `${tmp}/${sc.name}.tmp.mp4`], { stdio: 'ignore' });
   execFileSync('mv', [`${tmp}/${sc.name}.tmp.mp4`, `${tmp}/${sc.name}.mp4`]);
@@ -952,11 +1035,11 @@ if (VIDEO === 'antrenor') {
   cue('duvar', 0.05, 'whoosh', 0.5);
   cue('kaydir', 0.2, 'whoosh', 0.5);
   cue('kaydir', 1.6, 'whoosh', 0.4);
-} else if (VIDEO === 'reklamko' || VIDEO === 'oyunpov') {
+} else if (VIDEO === 'reklamko' || VIDEO === 'oyunpov' || VIDEO === 'oyunhd') {
   add(snd('giris_rock'), 0, 0.3);
   add(snd('music_hub'), 8, 0.2, true);
   add(snd('crowd_loop'), 0, 0.16);
-  const P = VIDEO === 'oyunpov' ? 'p' : 'a';
+  const P = VIDEO === 'oyunpov' || VIDEO === 'oyunhd' ? 'p' : 'a';
   [`${P}1`, `${P}2`, `${P}3`, `${P}4`, `${P}5`, 'end'].forEach((n, i) => cue(n, i === 0 ? 0.05 : 0.12, `${VO_DOSYA}${i + 1}.mp3`, 1.55));
   cue(`${P}1`, 0.88, 'punch3', 0.8);
   cue(`${P}1`, 0.9, 'heavy', 0.7);
@@ -1032,7 +1115,7 @@ fc += ';' + audio.map((a, i) => { const ms = Math.round(a.startSec * 1000); retu
 fc += `;${audio.map((_, i) => `[a${i}]`).join('')}amix=inputs=${audio.length}:duration=longest:normalize=0,afade=t=out:st=${(total - (VO.length ? 0.4 : 1)).toFixed(2)}:d=${VO.length ? 0.4 : 1},alimiter=limit=0.95[aout]`;
 writeFileSync(`${tmp}/filtre.txt`, fc);
 const out = `${root}/store/video/reklam-${VIDEO}.mp4`;
-const r = spawnSync(FF, [...args, '-filter_complex_script', `${tmp}/filtre.txt`, '-map', '[vout]', '-map', '[aout]', '-t', total.toFixed(2), '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-preset', 'medium', '-crf', '19', '-r', String(FPS), '-c:a', 'aac', '-b:a', '192k', '-movflags', '+faststart', `${out}.tmp.mp4`], { encoding: 'utf8' });
+const r = spawnSync(FF, [...args, '-filter_complex_script', `${tmp}/filtre.txt`, '-map', '[vout]', '-map', '[aout]', '-t', total.toFixed(2), '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-preset', HD ? 'slow' : 'medium', '-crf', HD ? '15' : '19', '-r', String(FPS), '-c:a', 'aac', '-b:a', '192k', '-movflags', '+faststart', `${out}.tmp.mp4`], { encoding: 'utf8' });
 if (r.status !== 0) throw new Error('ffmpeg: ' + (r.stderr ?? '').split('\n').slice(-8).join(' | '));
 execFileSync('mv', [`${out}.tmp.mp4`, out]);
 console.log('✅', out, total.toFixed(1), 'sn');
