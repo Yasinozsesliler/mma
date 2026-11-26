@@ -1,5 +1,7 @@
 # Google Play'e otomatik yükleme: mağaza metinleri, ekran görüntüleri, tanıtım görseli ve isteğe bağlı AAB.
-# Çalıştırma: Actions › "Google Play'e yükle" › Run workflow (ya da play-magaza dalına push: metin + görsel).
+# Çalıştırma: play-magaza dalına push. Ne yükleneceği store/play-yukle.json'da:
+#   {"isler": "metin,gorsel,aab", "kanal": "production", "aab_run_id": "", "notlar": "play-whatsnew-1.3.2.txt", "deneme": false}
+# (İş akışı ana dala da eklenirse Actions › "Google Play'e yükle" › Run workflow ile de çalışır.)
 # Gizli anahtar: PLAY_SERVICE_ACCOUNT_JSON (Google Cloud hizmet hesabının JSON anahtarı; Play Console'da yetkili).
 # AAB için: Android derlemesi iş akışının çalışma numarası (run id) verilir; o çalışmanın AAB'si taslak sürüm olarak yüklenir.
 name: Google Play'e yükle
@@ -41,11 +43,24 @@ jobs:
         with:
           node-version: 22
 
+      - name: Ayarlar
+        id: ay
+        run: |
+          node -e '
+            const fs = require("fs");
+            const f = fs.existsSync("store/play-yukle.json") ? JSON.parse(fs.readFileSync("store/play-yukle.json", "utf8")) : {};
+            const i = ${{ toJSON(github.event.inputs) }} || {};
+            const v = (k, d) => (i[k] !== undefined && i[k] !== "" ? i[k] : f[k] !== undefined ? f[k] : d);
+            const out = { isler: v("isler", "metin,gorsel"), kanal: v("kanal", "production"), aab_run_id: v("aab_run_id", ""), notlar: v("notlar", ""), deneme: String(v("deneme", false)) === "true" ? "1" : "0" };
+            for (const [k, x] of Object.entries(out)) fs.appendFileSync(process.env.GITHUB_OUTPUT, `${k}=${x}\n`);
+            console.log(out);
+          '
+
       - name: AAB'yi al
-        if: contains(github.event.inputs.isler, 'aab')
+        if: contains(steps.ay.outputs.isler, 'aab')
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RUN_ID: ${{ github.event.inputs.aab_run_id }}
+          RUN_ID: ${{ steps.ay.outputs.aab_run_id }}
         run: |
           if [ -z "$RUN_ID" ]; then
             RUN_ID=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow android-build.yml --status success --limit 1 --json databaseId --jq '.[0].databaseId')
@@ -57,10 +72,10 @@ jobs:
       - name: Play'e yükle
         env:
           PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
-          PLAY_ISLER: ${{ github.event.inputs.isler || 'metin,gorsel' }}
-          PLAY_KANAL: ${{ github.event.inputs.kanal || 'production' }}
-          PLAY_NOTLAR: ${{ github.event.inputs.notlar && format('store/{0}', github.event.inputs.notlar) || '' }}
-          PLAY_DENEME: ${{ github.event.inputs.deneme == 'true' && '1' || '0' }}
+          PLAY_ISLER: ${{ steps.ay.outputs.isler }}
+          PLAY_KANAL: ${{ steps.ay.outputs.kanal }}
+          PLAY_NOTLAR: ${{ steps.ay.outputs.notlar && format('store/{0}', steps.ay.outputs.notlar) || '' }}
+          PLAY_DENEME: ${{ steps.ay.outputs.deneme }}
           PLAY_AAB: aab/YOL-android.aab
         run: |
           if [ -z "$PLAY_SERVICE_ACCOUNT_JSON" ]; then echo "PLAY_SERVICE_ACCOUNT_JSON gizli anahtarı eksik"; exit 1; fi
