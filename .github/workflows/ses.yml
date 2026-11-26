@@ -1,0 +1,31 @@
+# ElevenLabs seslendirme: store/ses-istek.json'daki isteği çalıştırır, mp3'leri taslak (gizli) bir sürüme ekler.
+# Çalıştırma: ses dalına push. Gizli anahtar: ELEVENLABS_API_KEY
+name: Seslendirme (ElevenLabs)
+
+on:
+  push:
+    branches: [ses]
+
+permissions:
+  contents: write
+
+jobs:
+  ses:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: Seslendir
+        env:
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+        run: node scripts/ses.mjs
+      - name: Taslak sürüme ekle
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="ses-$(date +%Y%m%d-%H%M%S)"
+          gh release create "$TAG" ses/* --repo "$GITHUB_REPOSITORY" --draft --title "Seslendirme $TAG" --notes "ElevenLabs çıktısı" --target "$GITHUB_SHA"
+          echo "Sürüm: $TAG"
