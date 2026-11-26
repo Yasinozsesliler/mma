@@ -1,12 +1,7 @@
-{"islem":"karakter","roller":[
- {"rol":"anlatici","ses":"nPczCjzI2devNBz1zQrb","ayar":{"stability":0.5,"similarity_boost":0.8,"style":0.35},"replikler":[
-  {"ad":"b2bn1","metin":"Can eldivenlere baktı... ve almadı."},
-  {"ad":"b2bn2","metin":"O günden sonra Can, her sabah altıda salondaydı."},
-  {"ad":"b2bn3","metin":"Üç ay geçti. Gençler turnuvasının kurası çekildi."},
-  {"ad":"b2bn4","metin":"Sen olsan ne yapardın? Mert'i gizlice izleyip zayıf noktasını mı arardın, yoksa sadece kendi oyununa mı odaklanırdın?"}]},
- {"rol":"can","ses":"Vv1QW9Yx3WB2mLKFmyZG","replikler":[{"ad":"b2bc1","metin":"İlk maçım... Mert'le."}]},
- {"rol":"mert","ses":"mEf7WY0hvNO6KqdAkUeA","replikler":[{"ad":"b2bm1","metin":"Korktu! Ben demiştim, bebek bu."}]},
- {"rol":"hoca","ses":"0DihkedLJYKoWg7H1u4d","replikler":[
-  {"ad":"b2bh1","metin":"Korkmak ayıp değil. Hazır olmadan ringe çıkmak ayıp."},
-  {"ad":"b2bh2","metin":"Bir daha. Bir daha! Bir daha!"}]}
-]}
+{"islem":"uret","ses":"nPczCjzI2devNBz1zQrb","parcalar":[
+ {"ad":"r01","metin":"Tek yumruk... ve bütün salon ayakta!"},
+ {"ad":"r02","metin":"Ama bu kemere giden yol, on iki yaşında başlıyor."},
+ {"ad":"r03","metin":"Boksta, Muay Thai'de, güreşte pişiyorsun. Sonra kafes."},
+ {"ad":"r04","metin":"Maçın kritik anlarında kararı sen veriyorsun."},
+ {"ad":"r05","metin":"Menajerinle pazarlık et, hatta kendi organizasyonunu kur."},
+ {"ad":"r06","metin":"YOL: Kafesten Kemere. Ücretsiz indir, kendi efsaneni yaz!"}]}
