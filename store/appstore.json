@@ -1,58 +1,58 @@
 {
   "tr": {
     "name": "YOL: MMA Kariyer Simülasyonu",
-    "subtitle": "Kafeste dövüş, kemeri kazan",
-    "promo": "Yeni: rauntları gerçek zamanlı oyna! Jab, direkt, tekme, takedown ve submission ile kafeste kendi elinle dövüş, sokaktan dünya şampiyonluğuna yüksel.",
-    "keywords": "mma,dövüş,boks,kariyer,simülasyon,kafes,güreş,kickboks,muay thai,şampiyon,nakavt,jiu jitsu,spor",
+    "subtitle": "Boks, Muay Thai, Menajer Modu",
+    "promo": "YENİ: Menajer ve Patron Modu, 4 dövüş sporu ligi ve Gençlik Yolu! 12 yaşında başla, kafeste kendi elinle dövüş, kemeri kaldır.",
+    "keywords": "dövüş,kafes,güreş,kickboks,şampiyon,nakavt,jiu jitsu,antrenör,hakem,patron,grappling,dövüşçü,kemer",
     "listing": "tr-TR"
   },
   "en-US": {
-    "name": "YOL: Cage to Belt",
-    "subtitle": "MMA Fighter Career Sim",
-    "promo": "New: play every round in real time! Jab, cross, kick, takedowns and submissions. Fight in the cage with your own hands and rise from the streets to world champion.",
-    "keywords": "mma,fighting,boxing,career,simulator,cage,wrestling,kickboxing,muay thai,champion,knockout,bjj",
+    "name": "YOL: MMA Fighter Career Sim",
+    "subtitle": "Boxing, Muay Thai & Manager",
+    "promo": "NEW: Manager & Promoter modes, 4 combat sports leagues and the Youth Road! Start at 12, fight in the cage with your own hands, raise the belt.",
+    "keywords": "fighting,cage,wrestling,kickboxing,champion,knockout,bjj,coach,referee,promoter,grappling,belt,boxer",
     "listing": "en-US"
   },
   "es-ES": {
-    "name": "YOL: De la Jaula al Cinturón",
-    "subtitle": "Simulador de carrera MMA",
-    "promo": "Nuevo: ¡juega cada asalto en tiempo real! Jab, recto, patada, derribos y sumisiones. Pelea en la jaula con tus propias manos y llega a campeón del mundo.",
-    "keywords": "mma,lucha,boxeo,carrera,simulador,jaula,kickboxing,muay thai,campeón,nocaut,jiu jitsu,deporte",
+    "name": "YOL: Carrera de Luchador MMA",
+    "subtitle": "Boxeo, Muay Thai y Mánager",
+    "promo": "¡NUEVO: modos Mánager y Promotor, 4 ligas de deportes de combate y el Camino Juvenil! Empieza a los 12, pelea en la jaula y alza el cinturón.",
+    "keywords": "lucha,jaula,kickboxing,campeón,nocaut,jiu jitsu,entrenador,árbitro,promotor,grappling,cinturón",
     "listing": "es-ES"
   },
   "pt-BR": {
-    "name": "YOL: Do Octógono ao Cinturão",
-    "subtitle": "Simulador de carreira MMA",
-    "promo": "Novo: jogue cada round em tempo real! Jab, direto, chute, quedas e finalizações. Lute na jaula com as próprias mãos e vire campeão mundial.",
-    "keywords": "mma,luta,boxe,carreira,simulador,octógono,jiu jitsu,muay thai,campeão,nocaute,kickboxing,esporte",
+    "name": "YOL: Carreira de Lutador MMA",
+    "subtitle": "Boxe, Muay Thai e Empresário",
+    "promo": "NOVO: modos Empresário e Promotor, 4 ligas de esportes de combate e o Caminho Jovem! Comece aos 12, lute no octógono e erga o cinturão.",
+    "keywords": "luta,octógono,jiu jitsu,campeão,nocaute,kickboxing,treinador,árbitro,promotor,grappling,cinturão",
     "listing": "pt-BR"
   },
   "ru": {
-    "name": "YOL: Из клетки к поясу",
-    "subtitle": "Симулятор карьеры бойца MMA",
-    "promo": "Новое: играй каждый раунд в реальном времени! Джеб, прямой, удары ногами, проходы и болевые. Дерись в клетке своими руками и стань чемпионом мира.",
-    "keywords": "мма,бои,бокс,карьера,симулятор,клетка,борьба,кикбоксинг,муай тай,чемпион,нокаут,джиу джитсу",
+    "name": "YOL: Карьера бойца ММА",
+    "subtitle": "Бокс, муай-тай и менеджер",
+    "promo": "НОВОЕ: режимы менеджера и промоутера, 4 лиги единоборств и Путь юности! Начни в 12 лет, дерись в клетке и подними пояс.",
+    "keywords": "mma,бои,клетка,борьба,кикбоксинг,чемпион,нокаут,джиу джитсу,тренер,рефери,промоутер,грэпплинг,пояс",
     "listing": "ru-RU"
   },
   "pl": {
-    "name": "YOL: Z klatki do pasa",
-    "subtitle": "Symulator kariery MMA",
-    "promo": "Nowość: graj każdą rundę w czasie rzeczywistym! Jab, prosty, kopnięcia, sprowadzenia i poddania. Walcz w klatce własnymi rękami i zostań mistrzem świata.",
-    "keywords": "mma,walka,boks,kariera,symulator,klatka,zapasy,kickboxing,muay thai,mistrz,nokaut,jiu jitsu,sport",
+    "name": "YOL: Kariera Zawodnika MMA",
+    "subtitle": "Boks, Muay Thai i Menedżer",
+    "promo": "NOWOŚĆ: tryby Menedżera i Promotora, 4 ligi sportów walki i Droga Młodzika! Zacznij w wieku 12 lat, walcz w klatce i unieś pas.",
+    "keywords": "walka,klatka,zapasy,kickboxing,mistrz,nokaut,jiu jitsu,trener,sędzia,promotor,grappling,pas,walki",
     "listing": "pl-PL"
   },
   "it": {
-    "name": "YOL: Dalla Gabbia alla Cintura",
-    "subtitle": "Carriera da lottatore MMA",
-    "promo": "Novità: Percorso giovanile e 4 leghe di sport da combattimento! Inizia da ragazzo, vinci cinture in boxe, Muay Thai, grappling e wrestling.",
-    "keywords": "mma,lotta,boxe,carriera,simulatore,gabbia,kickboxing,muay thai,campione,knockout,bjj,wrestling",
+    "name": "YOL: MMA Carriera da Lottatore",
+    "subtitle": "Boxe, Muay Thai e Manager",
+    "promo": "NOVITÀ: modalità Manager e Promoter, 4 leghe di sport da combattimento e la Strada Giovanile! Inizia a 12 anni, combatti e alza la cintura.",
+    "keywords": "lotta,gabbia,kickboxing,campione,knockout,bjj,allenatore,arbitro,promoter,grappling,cintura",
     "listing": "it-IT"
   },
   "id": {
-    "name": "YOL: Dari Kandang ke Sabuk",
-    "subtitle": "Simulasi Karier Petarung MMA",
-    "promo": "Baru: Jalan Muda dan 4 liga olahraga tarung! Mulai sejak kecil, rebut sabuk di tinju, Muay Thai, grappling, dan gulat. Kini dalam Bahasa Indonesia.",
-    "keywords": "mma,tarung,tinju,karier,simulasi,kandang,gulat,kickboxing,muay thai,juara,knockout,bjj",
+    "name": "YOL: MMA Karier Petarung",
+    "subtitle": "Tinju, Muay Thai & Manajer",
+    "promo": "BARU: Mode Manajer dan Promotor, 4 liga olahraga tarung, dan Jalan Muda! Mulai di usia 12, bertarung di kandang, dan angkat sabuk juara.",
+    "keywords": "tarung,kandang,gulat,kickboxing,juara,knockout,bjj,pelatih,wasit,promotor,grappling,sabuk,petinju",
     "listing": "id"
   }
 }

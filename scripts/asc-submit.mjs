@@ -175,8 +175,60 @@ if (yeni.length && VID !== 'dry') {
   }
 }
 
+// 3c) Mağaza sayfasını yenile (store/magaza-yenile.txt bu sürümü yazıyorsa): her dilde ad, alt başlık, açıklama,
+// anahtar kelimeler, tanıtım metni ve iPhone ekran görüntüleri store/ klasöründekilerle değiştirilir.
+const YENILE = existsSync('store/magaza-yenile.txt') && readFileSync('store/magaza-yenile.txt', 'utf8').trim() === VERSION;
+if (YENILE && VID !== 'dry') {
+  console.log('Mağaza sayfası yenileniyor (ad, alt başlık, metinler, ekran görüntüleri)');
+  const infos = (await api('GET', `/v1/apps/${APP}/appInfos`)).data;
+  const info = infos.find((i) => ['PREPARE_FOR_SUBMISSION', 'DEVELOPER_REJECTED', 'REJECTED', 'METADATA_REJECTED', 'WAITING_FOR_REVIEW'].includes(i.attributes.appStoreState ?? i.attributes.state)) ?? infos[0];
+  const infoLocs = (await api('GET', `/v1/appInfos/${info.id}/appInfoLocalizations?limit=50`)).data;
+  const vlocs = (await api('GET', `/v1/appStoreVersions/${VID}/appStoreVersionLocalizations?limit=50`)).data;
+  for (const [loc, a] of Object.entries(AS)) {
+    const p = PLAY[a.listing];
+    if (!p) continue;
+    // Ad ve alt başlık (uygulama bilgisi)
+    const il = infoLocs.find((x) => x.attributes.locale === loc);
+    if (il) await api('PATCH', `/v1/appInfoLocalizations/${il.id}`, { type: 'appInfoLocalizations', id: il.id, attributes: { name: a.name, subtitle: a.subtitle } });
+    // Sürüm metinleri
+    const vl = vlocs.find((x) => x.attributes.locale === loc);
+    if (!vl) { console.log(` ! ${loc}: sürüm sayfası yok, atlandı`); continue; }
+    await api('PATCH', `/v1/appStoreVersionLocalizations/${vl.id}`, {
+      type: 'appStoreVersionLocalizations', id: vl.id,
+      attributes: { description: noEmoji(p.full), keywords: a.keywords, promotionalText: a.promo, whatsNew: NOTES[loc]?.whatsNew ?? p.releaseNotes, supportUrl: SITE, marketingUrl: SITE },
+    });
+    // Ekran görüntüleri: 6,7" setindekiler silinir, yenileri yüklenir
+    const dir = `store/graphics-ios/${SHOT_DIR[loc] ?? loc}`;
+    const files = existsSync(dir) ? readdirSync(dir).filter((f) => /^\d\d-.*\.png$/.test(f)).sort().slice(0, 10) : [];
+    if (!files.length) { console.log(` ✓ ${loc}: metinler (görsel klasörü yok)`); continue; }
+    const sets = (await api('GET', `/v1/appStoreVersionLocalizations/${vl.id}/appScreenshotSets?include=appScreenshots`)).data;
+    let set = sets.find((x) => x.attributes.screenshotDisplayType === 'APP_IPHONE_67');
+    if (set) {
+      for (const s of set.relationships?.appScreenshots?.data ?? []) await api('DELETE', `/v1/appScreenshots/${s.id}`);
+    } else {
+      set = (await api('POST', '/v1/appScreenshotSets', {
+        type: 'appScreenshotSets', attributes: { screenshotDisplayType: 'APP_IPHONE_67' },
+        relationships: { appStoreVersionLocalization: { data: { type: 'appStoreVersionLocalizations', id: vl.id } } },
+      })).data;
+    }
+    for (const f of files) {
+      const buf = readFileSync(`${dir}/${f}`);
+      const shot = (await api('POST', '/v1/appScreenshots', {
+        type: 'appScreenshots', attributes: { fileName: f, fileSize: buf.length },
+        relationships: { appScreenshotSet: { data: { type: 'appScreenshotSets', id: set.id } } },
+      })).data;
+      for (const op of shot.attributes.uploadOperations) {
+        const r = await fetch(op.url, { method: op.method, headers: Object.fromEntries(op.requestHeaders.map((h) => [h.name, h.value])), body: buf.subarray(op.offset, op.offset + op.length) });
+        if (!r.ok) throw new Error(`Ekran görüntüsü yüklenemedi ${f}: ${r.status}`);
+      }
+      await api('PATCH', `/v1/appScreenshots/${shot.id}`, { type: 'appScreenshots', id: shot.id, attributes: { uploaded: true, sourceFileChecksum: createHash('md5').update(buf).digest('hex') } });
+    }
+    console.log(` ✓ ${loc}: ad, alt başlık, metinler ve ${files.length} ekran görüntüsü`);
+  }
+}
+
 // 4) İncelemeye gönder
-const subs = (await api('GET', `/v1/reviewSubmissions?filter[app]=${APP}&filter[platform]=IOS&filter[state]=READY_FOR_REVIEW,UNRESOLVED_ISSUES&limit=5`)).data;
+const subs =(await api('GET', `/v1/reviewSubmissions?filter[app]=${APP}&filter[platform]=IOS&filter[state]=READY_FOR_REVIEW,UNRESOLVED_ISSUES&limit=5`)).data;
 let sub = subs[0];
 if (!sub) {
   sub = (await api('POST', '/v1/reviewSubmissions', {
