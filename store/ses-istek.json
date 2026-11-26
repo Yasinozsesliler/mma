@@ -1,30 +1,7 @@
-{
- "islem": "uret",
- "ses": "nPczCjzI2devNBz1zQrb",
- "parcalar": [
-  {
-   "ad": "01",
-   "metin": "On iki yaşındasın. Elinde sadece bir hayal var."
-  },
-  {
-   "ad": "02",
-   "metin": "Boksta, Muay Thai'de, güreşte kendini kanıtla."
-  },
-  {
-   "ad": "03",
-   "metin": "Sonra kafes. Her raunt, her karar senin."
-  },
-  {
-   "ad": "04",
-   "metin": "Menajerinle pazarlık et. Kendi organizasyonunu kur."
-  },
-  {
-   "ad": "05",
-   "metin": "Ve bir gece... bütün dünya senin adını haykırır."
-  },
-  {
-   "ad": "06",
-   "metin": "YOL: Kafesten Kemere. Hemen ücretsiz indir!"
-  }
- ]
-}
+{"islem":"uret","ses":"nPczCjzI2devNBz1zQrb","parcalar":[
+ {"ad":"e01","metin":"Kafesin en büyük efsanelerini tanıyorsun."},
+ {"ad":"e02","metin":"Peki ya onların yerinde sen olsaydın?"},
+ {"ad":"e03","metin":"Her bölüm, hayatlarından bir dönem. Her karar senin."},
+ {"ad":"e04","metin":"Kafese çık. Hikâyeyi kendi yumruklarınla yeniden yaz."},
+ {"ad":"e05","metin":"Ya da tarihi değiştir. Rövanşı bu kez sen kazan."},
+ {"ad":"e06","metin":"YOL: Efsane Yolları. İlk efsane ücretsiz!"}]}
