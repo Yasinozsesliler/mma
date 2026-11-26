@@ -181,6 +181,14 @@ const Defsler = () => (
       <Stop offset="0" stopColor="#2a2d36" />
       <Stop offset="1" stopColor="#14161b" />
     </LinearGradient>
+    <LinearGradient id="altKarart" x1="0" y1="0" x2="0" y2="1">
+      <Stop offset="0" stopColor="#000" stopOpacity="0" />
+      <Stop offset="1" stopColor="#000" stopOpacity="0.85" />
+    </LinearGradient>
+    <RadialGradient id="vinyet" cx="0.5" cy="0.5" r="0.75">
+      <Stop offset="0.55" stopColor="#000" stopOpacity="0" />
+      <Stop offset="1" stopColor="#000" stopOpacity="0.85" />
+    </RadialGradient>
     <RadialGradient id="spot" cx="0.5" cy="0.5" r="0.5">
       <Stop offset="0" stopColor="#ffe2a8" stopOpacity="0.5" />
       <Stop offset="1" stopColor="#ffe2a8" stopOpacity="0" />
@@ -302,6 +310,33 @@ function RingOn() {
   );
 }
 const flash = (t: number, a: number) => (t >= a && t < a + 0.25 ? 0.7 * (1 - (t - a) / 0.25) : 0);
+
+// ---------- Sinematik fragman parçaları ----------
+/** Sinema şeritleri + karartma (vinyet) */
+const Sinema = ({ op = 1 }: { op?: number }) => (
+  <G>
+    <Rect x={0} y={0} width={W} height={H} fill="url(#vinyet)" opacity={op} />
+    <Rect x={0} y={1200} width={W} height={570} fill="url(#altKarart)" />
+    <Rect x={0} y={0} width={W} height={150} fill="#000" />
+    <Rect x={0} y={H - 150} width={W} height={150} fill="#000" />
+  </G>
+);
+/** Sinematik yazı: harf aralıklı, yumuşak giriş/çıkış */
+function Yazi({ t, a, b, metin, y, size = 92, renk = '#ffffff', ls = 10 }: { t: number; a: number; b: number; metin: string; y: number; size?: number; renk?: string; ls?: number }) {
+  const op = fade(t, a, b, 0.25);
+  if (!op) return null;
+  const k = 1 + (1 - Math.min(1, (t - a) / 0.6)) * 0.06;
+  return (
+    <G opacity={op} transform={`translate(540 ${y}) scale(${k}) translate(-540 ${-y})`}>
+      <SvgText x={540} y={y} fontFamily="Oswald_700Bold" fontSize={size} fill={renk} textAnchor="middle" letterSpacing={ls}>{metin}</SvgText>
+    </G>
+  );
+}
+/** Oyundan görsel (web'de /ek/ altından) */
+const Resim = ({ href, x, y, w, h, op = 1 }: { href: string; x: number; y: number; w: number; h: number; op?: number }) => (
+  <SvgImage href={`/ek/${href}`} x={x} y={y} width={w} height={h} opacity={op} preserveAspectRatio="xMidYMid slice" />
+);
+const kare = (dir: string, t: number, start = 0, rate = 1, max = 271) => `${dir}/${String(Math.min(max, Math.max(1, Math.floor((start + t * rate) * 30) + 1))).padStart(5, '0')}.jpg`;
 
 // ---------- Sahneler (t: sahne içi saniye) ----------
 type Sahne = (t: number) => { kam?: { x: number; y: number; s: number }; el: React.ReactNode };
@@ -624,7 +659,7 @@ export const SAHNELER: Record<string, Sahne> = {
           ) : null}
           {parca === 2 ? (
             <G>
-              <Aktor kim="hoca" f={-1} t={tt} keys={[{ t: 0, p: 'refSeparate', o: { head: kon(tt, [[0.3, 1.8]]) }, X: 740 }]} />
+              <Aktor kim="hoca" f={-1} t={tt} keys={[{ t: 0, p: 'refSeparate', o: { aL1: 62, aR1: 56, head: kon(tt, [[0.3, 1.8]]) }, X: 790 }]} />
               <Aktor kim="canE" t={tt} keys={[{ t: 0, p: ritim(0.3, 'cross', 'stance'), X: 360 }]} />
             </G>
           ) : null}
@@ -675,6 +710,76 @@ export const SAHNELER: Record<string, Sahne> = {
       ),
     };
   },
+
+  // ===== SİNEMATİK FRAGMAN =====
+  // 1) Gece, yağmur, televizyon ışığı Can'ın yüzünde: "Her efsane... bir yerden başlar." (3.2 sn)
+  fr1: (t) => {
+    const v = SAHNELER.vitrin(1.5 + t * 0.6);
+    return { kam: { x: 120 + t * 10, y: 60, s: 1.45 + t * 0.06 }, el: <G>{v.el}<Rect x={0} y={0} width={W} height={H} fill="#0a1a3a" opacity={0.25} /></G> };
+  },
+  // 2) Ringde yere düşüş, ağır çekim (2.6 sn)
+  fr2: (t) => {
+    const tt = 1.9 + t * 0.55;
+    const v = SAHNELER.b2dovus(tt);
+    return { kam: v.kam, el: v.el };
+  },
+  // 3) Kalkış ve yakın plan: "Daha gong çalmadı." (3.0 sn)
+  fr3: (t) => (t < 1.2 ? SAHNELER.b2dovus(5.9 + t * 1.25) : SAHNELER.b2kalk(t - 1.0)),
+  // 4) Antrenman montajı (3.6 sn): gölge boksu, torba, ped
+  fr4: (t) => SAHNELER.b2bmontaj(t < 0.85 ? 0.2 + t : t < 1.75 ? 1.9 + (t - 0.85) : 3.5 + (t - 1.75)),
+  // 5) Oyundan kafes: geniş şeritte canlı maç (3.4 sn)
+  fr5: (t) => ({
+    el: (
+      <G>
+        <Rect x={0} y={0} width={W} height={H} fill="#07080b" />
+        <G transform={`translate(540 960) scale(${1.25 + t * 0.06}) translate(-540 -960)`}>
+          <Resim href={kare('kafesk', t, 1.0, 1.2)} x={-20} y={690} w={1120} h={556} />
+        </G>
+        <Rect x={0} y={680} width={W} height={10} fill="#000" />
+      </G>
+    ),
+  }),
+  // 6) Kemer: Yeni Şampiyon (3.4 sn)
+  fr6: (t) => ({
+    el: (
+      <G>
+        <Rect x={0} y={0} width={W} height={H} fill="#07080b" />
+        <G transform={`translate(540 960) scale(${1.0 + t * 0.05}) translate(-540 -960)`}>
+          <Resim href="kemer-k.jpg" x={0} y={150} w={W} h={1620} />
+        </G>
+        {Array.from({ length: 40 }, (_, i) => {
+          const x = (i * 211) % W;
+          const y = ((i * 97 + t * (160 + (i % 5) * 60)) % 1500) + 150;
+          return <Rect key={i} x={x} y={y} width={10} height={18} fill={i % 3 ? '#f2c14e' : '#ffffff'} opacity={0.75} transform={`rotate(${i * 37 + t * 200} ${x} ${y})`} />;
+        })}
+      </G>
+    ),
+  }),
+  // 7) Oyun ekranlarından hızlı kesmeler (2.8 sn)
+  fr7: (t) => {
+    const lst = ['karar.jpg', 'genclik.jpg', 'menajer.jpg', 'patron-giris.jpg'];
+    const i = Math.min(lst.length - 1, Math.floor(t / 0.55));
+    return {
+      el: (
+        <G>
+          <Rect x={0} y={0} width={W} height={H} fill="#07080b" />
+          <G transform={`translate(540 960) scale(${1.08 + (t % 0.55) * 0.12}) translate(-540 -960)`}>
+            <Resim href={lst[i]} x={0} y={0} w={W} h={H} />
+          </G>
+          <Rect x={0} y={0} width={W} height={H} fill="#000" opacity={0.62} />
+        </G>
+      ),
+    };
+  },
+  // 8) Kapanış (4.6 sn)
+  fr8: (t) => ({
+    el: (
+      <G>
+        <Rect x={0} y={0} width={W} height={H} fill="#050506" />
+        <Ellipse cx={540} cy={860} rx={620} ry={420} fill="#e63946" opacity={0.12 * Math.min(1, t / 0.8)} />
+      </G>
+    ),
+  }),
 };
 
 type Bolum = { baslikSahne: string; baslik: string; kararSahne: string; kararAn: number; sonAn: number; kart: [string, string][]; sonraki: number };
@@ -685,7 +790,18 @@ const BOLUMLER: Bolum[] = [
 ];
 
 const ALT_Y: Record<string, number> = { b2dovus: 230 };
+// Fragman yazıları: [başlangıç, bitiş, metin, y, boyut, renk]
+const FR: Record<string, [number, number, string, number, number?, string?][]> = {
+  fr1: [[0.05, 1.5, 'HER EFSANE...', 1480, 104], [1.55, 3.0, 'BİR YERDEN BAŞLAR.', 1480, 104]],
+  fr2: [[0.95, 2.4, 'YERE DÜŞERSİN.', 1480, 110]],
+  fr3: [[0.0, 0.0, '', 0]],
+  fr4: [[0.1, 0.85, 'KALKARSIN.', 1480, 110], [0.9, 1.75, 'ÇALIŞIRSIN.', 1480, 110], [1.8, 3.2, 'BİR DAHA. BİR DAHA.', 1480, 96]],
+  fr5: [[0.2, 1.15, 'VE BİR GÜN...', 520, 104], [1.15, 2.9, 'KAFESİN ORTASINDASIN.', 1430, 92, '#ffffff']],
+  fr6: [[0.15, 2.6, 'BÜTÜN DÜNYA', 1610, 92, '#f2c14e'], [0.7, 2.6, 'ADINI HAYKIRIYOR.', 1715, 92]],
+  fr7: [[0.2, 2.6, 'BU HİKÂYEYİ', 880, 120], [1.55, 2.6, 'SEN YAZIYORSUN.', 1020, 120, '#e63946']],
+};
 const ALT: Record<string, Alt[]> = {
+  fr3: [[1.35, 2.84, 'can', 'Daha gong çalmadı.']],
   b2beldiven: [[0.3, 1.75, '', 'Can eldivenlere baktı...'], [1.94, 2.6, '', '...ve almadı.'], [3.0, 3.58, 'mert', 'Korktu!'], [3.81, 5.0, 'mert', 'Ben demiştim, bebek bu.']],
   b2bhoca: [[0.3, 1.33, 'hoca', 'Korkmak ayıp değil.'], [1.85, 3.46, 'hoca', 'Hazır olmadan ringe çıkmak ayıp.']],
   b2bmontaj: [[0.2, 1.37, '', 'O günden sonra Can,'], [1.63, 3.2, '', 'her sabah altıda salondaydı.'], [3.7, 5.16, 'hoca', 'Bir daha. Bir daha! Bir daha!']],
@@ -705,6 +821,25 @@ const ALT: Record<string, Alt[]> = {
   meydan: [[0.35, 2.79, 'mert', 'Öyle mi? Çık o zaman ringe. Hemen şimdi.']],
   karar: [[0.3, 0.9, '', 'İlk günü.'], [1.27, 4.05, '', 'Karşısında iki yaş büyük, bir yıldır çalışan biri.']],
 };
+
+function Kapanis({ t }: { t: number }) {
+  const u = (d: number, f = 0.5) => ease(Math.max(0, Math.min(1, (t - d) / f)));
+  return (
+    <G>
+      <G opacity={u(0.1, 0.6)} transform={`translate(540 860) scale(${1.25 - 0.25 * u(0.1, 0.8)}) translate(-540 -860)`}>
+        <SvgText x={540} y={930} fontFamily="Oswald_700Bold" fontSize={300} fill="#e63946" textAnchor="middle" letterSpacing={60}>YOL</SvgText>
+      </G>
+      <G opacity={u(0.7)}>
+        <SvgText x={540} y={1050} fontFamily="Oswald_700Bold" fontSize={70} fill="#ffffff" textAnchor="middle" letterSpacing={18}>KAFESTEN KEMERE</SvgText>
+      </G>
+      <G opacity={u(1.6)}>
+        <Rect x={250} y={1150} width={580} height={110} rx={55} fill="#e63946" />
+        <SvgText x={540} y={1225} fontFamily="Oswald_700Bold" fontSize={62} fill="#fff" textAnchor="middle" letterSpacing={6}>ŞİMDİ ÜCRETSİZ</SvgText>
+        <SvgText x={540} y={1340} fontFamily="Oswald_700Bold" fontSize={44} fill="#b9b2a6" textAnchor="middle" letterSpacing={8}>APP STORE · GOOGLE PLAY</SvgText>
+      </G>
+    </G>
+  );
+}
 
 export default function Studyo() {
   const [fontOk] = useFonts({ Oswald_700Bold });
@@ -736,6 +871,9 @@ export default function Studyo() {
           </G>
         ))}
         <Altyazi t={t} list={ALT[sahne] ?? []} y={ALT_Y[sahne] ?? 1330} />
+        {sahne.startsWith('fr') ? <Sinema /> : null}
+        {(FR[sahne] ?? []).filter((x) => x[2]).map(([a, b, m, y, sz, r], i) => <Yazi key={i} t={t} a={a} b={b} metin={m} y={y} size={sz ?? 100} renk={r ?? '#fff'} />)}
+        {sahne === 'fr8' ? <Kapanis t={t} /> : null}
       </Svg>
     </View>
   );

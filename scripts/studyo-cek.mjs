@@ -20,6 +20,10 @@ const ciz = async (t) => {
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
     // Görseller yüklenene kadar bekle
     await Promise.all([...document.images].map((i) => (i.complete ? 0 : new Promise((r) => (i.onload = i.onerror = r)))));
+    // SVG <image> öğeleri (oyun görselleri): aynı adresi önceden yükle, sonra bir kare daha bekle
+    const hrefs = [...document.querySelectorAll('image')].map((e) => e.getAttribute('href') || e.getAttribute('xlink:href')).filter(Boolean);
+    await Promise.all(hrefs.map((h) => new Promise((r) => { const im = new Image(); im.onload = im.onerror = r; im.src = h; })));
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
   }, SAHNE, t);
 };
 const list = TEK.length ? TEK.map(Number) : Array.from({ length: Math.round(+SURE * FPS) }, (_, i) => i / FPS);

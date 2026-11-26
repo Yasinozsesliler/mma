@@ -35,8 +35,21 @@ const BOLUMLER = {
     ['b2bkura', 4.9, [['ses:anlatici-b2bn3', 0.2, 1.6], ['heavy', 1.6, 0.45], ['ses:can-b2bc1', 3.3, 1.7]]],
     ['b2bkarar', 13.0, [['swell', 0.25, 0.35], ['ses:anlatici-b2bn4', 0.6, 1.6], ['tap', 1.2, 0.4], ['tap', 1.8, 0.4], ['ses:anlatici-b2n5', 7.6, 1.6], ['chime', 7.45, 0.35]]],
   ],
+  // Sinematik fragman (reklam)
+  fr: [
+    ['fr1', 3.0, [['heavy', 0.0, 0.45], ['ses:anlatici-f1', 0.3, 1.6]]],
+    ['fr2', 2.4, [['heavy', 0.0, 0.4], ['punch3', 0.72, 0.8], ['ooh', 0.8, 0.35], ['slam', 1.9, 0.6], ['ses:anlatici-f2', 0.95, 1.6]]],
+    ['fr3', 2.9, [['swell', 0.2, 0.35], ['ses:can-b2c1', 1.35, 1.7]]],
+    ['fr4', 3.2, [['heavy', 0.0, 0.4], ['ses:anlatici-f3', 0.15, 1.6], ['whoosh', 0.2, 0.3], ['whoosh', 0.5, 0.3], ['punch1', 1.0, 0.45], ['punch2', 1.3, 0.45], ['tap', 1.9, 0.5], ['tap', 2.2, 0.5], ['tap', 2.5, 0.5], ['tap', 2.8, 0.5]]],
+    ['fr5', 2.9, [['bell', 0.05, 0.55], ['crowd_loop', 0, 0.3], ['ses:anlatici-f4', 0.2, 1.6], ['punch1', 1.6, 0.4], ['punch3', 2.2, 0.45]]],
+    ['fr6', 2.6, [['roar', 0.0, 0.6], ['fanfare', 0.05, 0.4], ['ses:anlatici-f5', 0.15, 1.6]]],
+    ['fr7', 2.6, [['tap', 0.0, 0.4], ['tap', 0.55, 0.4], ['tap', 1.1, 0.4], ['tap', 1.65, 0.4], ['ses:anlatici-f6', 0.2, 1.6]]],
+    ['fr8', 4.0, [['heavy', 0.1, 0.6], ['ses:anlatici-f7', 0.3, 1.6], ['chime', 1.6, 0.35]]],
+  ],
 };
 const SAHNE = BOLUMLER[BOLUM];
+// Bölüm/fragman müziği: seri için kısık menü müziği + sona doğru epik giriş; fragman için baştan epik müzik
+const FRAGMAN = BOLUM === 'fr';
 const tmp = `${KARE}/_video`;
 mkdirSync(tmp, { recursive: true });
 const ff = (args) => execFileSync(FF, ['-v', 'error', '-y', ...args], { stdio: 'inherit' });
@@ -56,8 +69,15 @@ for (const [ad, d, sesler] of SAHNE) {
 writeFileSync(`${tmp}/liste.txt`, list.join('\n'));
 ff(['-f', 'concat', '-safe', '0', '-i', `${tmp}/liste.txt`, '-c', 'copy', `${tmp}/goruntu.mp4`]);
 // Müzik: gergin alt zemin (menü müziği kısık), karar anında yükselen davul girişi
-audio.push([`${SND}music_menu.wav`, 0, 0.16, true]);
-audio.push([`${SND}giris_epik.wav`, at - 11.2, 0.22]);
+if (FRAGMAN) {
+  // Karanlık alt zemin; kafese girince epik giriş, kapanışta rock vuruşu
+  audio.push([`${SND}music_menu.wav`, 0, 0.2, true]);
+  audio.push([`${SND}giris_epik.wav`, 11.5, 0.42]);
+  audio.push([`${SND}giris_rock.wav`, at - 5.0, 0.32]);
+} else {
+  audio.push([`${SND}music_menu.wav`, 0, 0.16, true]);
+  audio.push([`${SND}giris_epik.wav`, at - 11.2, 0.22]);
+}
 const ins = audio.flatMap(([f, , , loop]) => (loop ? ['-stream_loop', '-1', '-i', f] : ['-i', f]));
 const fc = audio.map(([, o, v], i) => `[${i + 1}:a]adelay=${Math.round(o * 1000)}|${Math.round(o * 1000)},volume=${v}[a${i}]`).join(';') +
   `;${audio.map((_, i) => `[a${i}]`).join('')}amix=inputs=${audio.length}:duration=longest:normalize=0,atrim=0:${at.toFixed(2)},afade=t=out:st=${(at - 0.8).toFixed(2)}:d=0.8,alimiter=limit=0.95[aout]`;
