@@ -515,8 +515,8 @@ const CONF = (() => {
 })();
 // 20 sn seslendirmeli fragman (ElevenLabs, Brian): 12 yaşından kemere. Malzeme: scripts/viral-yakala.mjs + ses/ (01..06.mp3)
 // Seslendirmeli fragmanlar (ElevenLabs, Brian): her sahne bir cümle; süreler ses/ klasöründeki mp3'lerden
-const VO = { viral: [3.24, 2.64, 2.69, 3.6, 3.58, 3.11], tiktok: [3.24, 2.64, 2.69, 3.6, 3.58, 3.11], efsaneyol: [2.74, 2.93, 3.24, 3.47, 3.37, 3.94] }[VIDEO] ?? [];
-const VO_DOSYA = { viral: '0', tiktok: '0', efsaneyol: 'e0' }[VIDEO];
+const VO = { reklamko: [2.75, 2.7, 3.55, 2.65, 3.35, 4.05], viral: [3.24, 2.64, 2.69, 3.6, 3.58, 3.11], tiktok: [3.24, 2.64, 2.69, 3.6, 3.58, 3.11], efsaneyol: [2.74, 2.93, 3.24, 3.47, 3.37, 3.94] }[VIDEO] ?? [];
+const VO_DOSYA = { reklamko: 'r0', viral: '0', tiktok: '0', efsaneyol: 'e0' }[VIDEO];
 // Telefon çerçevesinde ekran görüntüsü (oran: yükseklik/genişlik; varsayılan iPhone 1170×2532)
 const phone = (file, left, top, w, extra = '', oran = 2532 / 1170) => {
   const sh = Math.round((w - 24) * oran);
@@ -531,7 +531,7 @@ const shotCard = (left, top, w, h, { file, seq, start = 0, t0 = 0, rate = 1 }, e
 };
 // Seslendirmeyle eşzamanlı büyük altyazı: kelimeler sırayla patlar
 // TikTok reklamı: üstteki sekme şeridinden aşağı, ekranın alt yarısında sağdaki simge sütunundan uzak dur
-const TT = VIDEO === 'tiktok';
+const TT = VIDEO === 'tiktok' || VIDEO === 'reklamko';
 const sub = (top, words, t0, step, size = 112) =>
   `<div style="position:absolute;left:${TT && top > 650 ? 90 : 50}px;right:${TT && top > 650 ? 150 : 50}px;top:${TT && top < 420 ? top + 70 : top}px;display:flex;flex-wrap:wrap;justify-content:center;gap:0 26px;z-index:30">${words
     .map(([w, red], i) => `<span style="font-size:${size}px;line-height:1.08;transform:skewX(-7deg);color:${red ? RED : INK};animation:wpop .28s ${(t0 + i * step).toFixed(2)}s cubic-bezier(.2,.9,.3,1.4) both">${w}</span>`)
@@ -596,6 +596,71 @@ if (VIDEO === 'viral' || VIDEO === 'tiktok') {
 // TikTok reklamı: 9-15 sn önerisine göre sadece kanca, kafes ve kemer (+ kapanış)
 if (VIDEO === 'tiktok') for (const n of ['v2', 'v4']) SCENES.splice(SCENES.findIndex((x) => x.name === n), 1);
 
+// Hafta sonu reklamı (TikTok): ilk saniyede gerçek nakavt (ağır çekim), sonra kariyerin hikâyesi; Brian anlatır.
+// Malzeme: scripts/ko-yakala.mjs (mac2 → kok/ ağır çekim kırpım), acik-viral ring/kafes kayıtları, ham ekranlar, ses/r01..r06
+if (VIDEO === 'reklamko') {
+  END_KICK = 'ÜCRETSİZ İNDİR';
+  const KCSS = `${VCSS}@keyframes sars{0%,100%{transform:translate(0,0)}20%{transform:translate(-26px,14px)}40%{transform:translate(22px,-18px)}60%{transform:translate(-14px,10px)}80%{transform:translate(8px,-6px)}}
+    @keyframes slam{0%{opacity:0;transform:scale(3) rotate(-8deg)}60%{opacity:1;transform:scale(.92) rotate(-6deg)}100%{opacity:1;transform:scale(1) rotate(-6deg)}}
+    @keyframes swap{from{opacity:0;transform:translateX(500px) rotate(8deg)}to{opacity:1;transform:rotate(3deg)}}
+    @keyframes cikis{to{opacity:0;transform:translateX(-500px) rotate(-8deg)}}`;
+  // 1) KANCA: tek yumruk, ağır çekim düşüş, NAKAVT!
+  SCENES.push({
+    name: 'a1', d: 3.3,
+    html: page0(
+      `<div style="position:absolute;inset:0;animation:sars .45s .9s linear both">${shotCard(30, 640, 1020, 729, { seq: 'kok' }, 'transform:rotate(-1.5deg)')}</div>` +
+        sub(120, [['TEK'], ['YUMRUK...', 1]], 0.0, 0.3, 130) +
+        `<div style="position:absolute;left:0;right:0;top:1150px;text-align:center;font-size:250px;color:${RED};-webkit-text-stroke:10px #fff;paint-order:stroke;text-shadow:0 24px 50px rgba(0,0,0,.45);z-index:35;animation:slam .35s .92s cubic-bezier(.2,.9,.3,1.3) both">NAKAVT!</div>` +
+        sub(300, [['VE'], ['BÜTÜN'], ['SALON'], ['AYAKTA!', 1]], 1.3, 0.28, 96) +
+        `<div style="position:absolute;inset:0;background:#fff;opacity:0;animation:flash .5s .9s both;z-index:40"></div>`,
+      KCSS,
+    ),
+  });
+  // 2) Kemerden 12 yaşına
+  SCENES.push({
+    name: 'a2', d: d(1),
+    html: page0(
+      phone('kemer.png', 240, 640, 600, 'transform:rotate(-3deg);animation:rise .45s cubic-bezier(.2,.8,.2,1) -.05s both,cikis .4s 1.45s ease-in forwards') +
+        phone('genclik.png', 240, 660, 600, 'animation:swap .45s 1.5s cubic-bezier(.2,.8,.2,1) both') +
+        sub(120, [['KEMERE'], ['GİDEN'], ['YOL...', 1]], 0.05, 0.28, 110) +
+        sub(300, [['12', 1], ['YAŞINDA'], ['BAŞLIYOR.']], 1.45, 0.28, 104),
+      KCSS,
+    ),
+  });
+  // 3) Dövüş sporları → kafes
+  SCENES.push({
+    name: 'a3', d: d(2),
+    html: page0(
+      cage(560, 1020, 0.8, 0, 1, 'transform:rotate(-1.5deg)', '', `${src}/ringk`) +
+        `<div style="position:absolute;inset:0;opacity:0;animation:wpop .3s 2.0s both;z-index:15">${cage(560, 1040, 1.4, 2.0, 1.3, 'transform:rotate(1.5deg)', '', `${src}/kafesk`)}</div>` +
+        [['BOKS', 0.1, 110], ['MUAY THAI', 0.55, 390], ['GÜREŞ', 1.1, 760]].map(([w, at, x], i) => `<div style="position:absolute;left:${x - 60}px;top:${190 + (i % 2) * 120}px;background:${i === 1 ? RED : INK};color:#fff;font-size:76px;padding:6px 30px 10px;border-radius:18px;transform:skewX(-7deg);box-shadow:0 20px 40px rgba(0,0,0,.25);animation:chip .3s ${at}s cubic-bezier(.2,.9,.3,1.4) both;z-index:20">${w}</div>`).join('') +
+        sub(1150, [['SONRA'], ['KAFES.', 1]], 2.0, 0.3, 130),
+      KCSS,
+    ),
+  });
+  // 4) Karar anı: seçeneğe dokun
+  SCENES.push({
+    name: 'a4', d: d(3),
+    html: page0(
+      shotCard(110, 480, 860, 1180, { file: 'karar.jpg' }, 'transform:rotate(-1.5deg);animation:rise .45s cubic-bezier(.2,.8,.2,1) -.05s both') +
+        sub(110, [['KRİTİK'], ['ANDA'], ['KARAR'], ['SENİN.', 1]], 0.05, 0.25, 108) +
+        tapAt(520, 1435, 1.5),
+      KCSS,
+    ),
+  });
+  // 5) Menajer ve Patron Modu
+  SCENES.push({
+    name: 'a5', d: d(4),
+    html: page0(
+      phone('menajer.png', 40, 720, 500, 'transform:rotate(-5deg);animation:chip .45s .05s both') +
+        phone('patron-giris.png', 540, 800, 500, 'transform:rotate(5deg);animation:chip .45s 1.4s both') +
+        `<div style="position:absolute;left:0;right:0;top:70px;z-index:30">${sub(0, [['MENAJERİNLE'], ['PAZARLIK', 1], ['ET.', 1]], 0.15, 0.28, 100)}</div>` +
+        `<div style="position:absolute;left:0;right:0;top:350px;z-index:30">${sub(0, [['ORGANİZASYONUNU'], ['KUR.', 1]], 1.45, 0.3, 100)}</div>`,
+      KCSS,
+    ),
+  });
+}
+
 // Efsane Yolları fragmanı (seslendirmeli): efsaneler → sen olsaydın → bölümler → kafes → "ya öyle olsaydı?"
 // Malzeme: scripts/efsane-yakala.mjs (+ kırpılmış listek/, yuruyusk/, kafesk/, vs-k.jpg) ve ses/e01..e06.mp3
 if (VIDEO === 'efsaneyol') {
@@ -655,7 +720,7 @@ if (VIDEO === 'efsaneyol') {
 }
 
 // Kapanış: krem zemin, logo, mağazalar, düşen konfeti
-const END_D = VIDEO === 'efsaneyol' ? 4.5 : 3.8;
+const END_D = VIDEO === 'efsaneyol' ? 4.5 : VIDEO === 'reklamko' ? 4.6 : 3.8;
 SCENES.push({
   name: 'end', d: END_D,
   html: page0(
@@ -804,6 +869,24 @@ if (VIDEO === 'antrenor') {
   cue('duvar', 0.05, 'whoosh', 0.5);
   cue('kaydir', 0.2, 'whoosh', 0.5);
   cue('kaydir', 1.6, 'whoosh', 0.4);
+} else if (VIDEO === 'reklamko') {
+  add(snd('giris_rock'), 0, 0.3);
+  add(snd('music_hub'), 8, 0.2, true);
+  add(snd('crowd_loop'), 0, 0.16);
+  ['a1', 'a2', 'a3', 'a4', 'a5', 'end'].forEach((n, i) => cue(n, n === 'a1' ? 0.05 : 0.12, `${VO_DOSYA}${i + 1}.mp3`, 1.55));
+  cue('a1', 0.88, 'punch3', 0.8);
+  cue('a1', 0.9, 'heavy', 0.7);
+  cue('a1', 1.2, 'roar', 0.6);
+  cue('a1', 1.9, 'slam', 0.5);
+  cue('a2', 0.05, 'fanfare', 0.3);
+  cue('a2', 1.45, 'whoosh', 0.45);
+  cue('a3', 0.1, 'punch1', 0.45);
+  cue('a3', 0.55, 'punch2', 0.45);
+  cue('a3', 1.1, 'slam', 0.4);
+  cue('a3', 2.0, 'bell', 0.55);
+  cue('a4', 1.6, 'tap', 0.6);
+  cue('a5', 0.1, 'cash', 0.5);
+  cue('a5', 1.45, 'slam', 0.4);
 } else if (VIDEO === 'efsaneyol') {
   add(snd('giris_epik'), 0, 0.3);
   add(snd('music_menu'), 8, 0.2, true);
