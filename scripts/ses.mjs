@@ -31,8 +31,9 @@ const tts = async (voice, text, file, settings = {}) => {
   writeFileSync(file, Buffer.from(await r.arrayBuffer()));
 };
 
-const sub = await get('/v1/user/subscription');
-console.log(`Plan: ${sub.tier} · kalan karakter: ${sub.character_limit - sub.character_count}`);
+// Hesap bilgisi anahtarın izni varsa yazılır
+const kalan = async () => { try { const x = await get('/v1/user/subscription'); return `${x.tier} · kalan karakter ${x.character_limit - x.character_count}`; } catch { return '(hesap bilgisi izni yok)'; } };
+console.log('Plan:', await kalan());
 
 if (REQ.islem === 'ornek') {
   // Kütüphanede Türkçe erkek sesler: önce reklam/anlatım için olanlar, çok kullanılanlar
@@ -74,5 +75,4 @@ if (REQ.islem === 'ornek') {
   }
   writeFileSync(`${OUT}/bilgi.json`, JSON.stringify(REQ, null, 1));
 }
-const sub2 = await get('/v1/user/subscription');
-console.log(`Kalan karakter: ${sub2.character_limit - sub2.character_count}`);
+console.log('Sonra:', await kalan());
