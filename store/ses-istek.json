@@ -1,18 +1,30 @@
 {
- "islem": "ornek",
- "atla": 5,
- "adet": 5,
- "hazir": "Bill|Daniel|George|Callum|Clyde|Arnold",
- "hazirAdet": 5,
- "ekler": [
+ "islem": "uret",
+ "ses": "nPczCjzI2devNBz1zQrb",
+ "parcalar": [
   {
-   "ad": "Brian (daha sert ve vurgulu)",
-   "ses": "nPczCjzI2devNBz1zQrb",
-   "ayar": {
-    "stability": 0.28,
-    "style": 0.75
-   }
+   "ad": "01",
+   "metin": "On iki yaşındasın. Elinde sadece bir hayal var."
+  },
+  {
+   "ad": "02",
+   "metin": "Boksta, Muay Thai'de, güreşte kendini kanıtla."
+  },
+  {
+   "ad": "03",
+   "metin": "Sonra kafes. Her raunt, her karar senin."
+  },
+  {
+   "ad": "04",
+   "metin": "Menajerinle pazarlık et. Kendi organizasyonunu kur."
+  },
+  {
+   "ad": "05",
+   "metin": "Ve bir gece... bütün dünya senin adını haykırır."
+  },
+  {
+   "ad": "06",
+   "metin": "YOL: Kafesten Kemere. Hemen ücretsiz indir!"
   }
- ],
- "metin": "Sıfırdan başladın. Kimse sana inanmadı. Şimdi kafes seni bekliyor. YOL: Kafesten Kemere. Hemen ücretsiz indir!"
+ ]
 }
