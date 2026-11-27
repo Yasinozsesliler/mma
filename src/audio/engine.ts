@@ -68,13 +68,18 @@ type FileKey = keyof typeof FILES;
 const POOL: Partial<Record<FileKey, number>> = { punch1: 2, punch2: 2, punch3: 2, body: 2, whoosh: 2, click: 2 };
 const players = new Map<FileKey, { list: AudioPlayer[]; next: number }>();
 
+function ensure(k: FileKey) {
+  let p = players.get(k);
+  if (!p) {
+    p = { list: Array.from({ length: POOL[k] ?? 1 }, () => createAudioPlayer(FILES[k])), next: 0 };
+    players.set(k, p);
+  }
+  return p;
+}
+
 function player(k: FileKey): AudioPlayer | null {
   try {
-    let p = players.get(k);
-    if (!p) {
-      p = { list: Array.from({ length: POOL[k] ?? 1 }, () => createAudioPlayer(FILES[k])), next: 0 };
-      players.set(k, p);
-    }
+    const p = ensure(k);
     const pl = p.list[p.next];
     p.next = (p.next + 1) % p.list.length;
     return pl;
@@ -132,7 +137,13 @@ function applyLoops() {
   const want: FileKey | null = settings.muzik && active ? (sc === 'menu' ? 'menu' : sc === 'hub' ? 'hub' : null) : null;
   if (music && music.key !== want) {
     const old = music.p;
-    fade(old, 0, 600, () => old.pause());
+    // Sönünce oynatıcı serbest bırakılır; yoksa her müzik geçişinde bir oynatıcı bellekte kalır.
+    fade(old, 0, 600, () => {
+      try {
+        old.pause();
+        old.remove();
+      } catch {}
+    });
     music = null;
   }
   if (want && !music) {
@@ -176,7 +187,21 @@ AppState.addEventListener('change', (st) => {
   applyLoops();
 });
 
+// Dövüş sesleri dövüş başlamadan yüklenir: ilk yumrukta dosya yüklenirken oluşan takılmayı önler.
+const FIGHT_SFX: FileKey[] = ['punch1', 'punch2', 'punch3', 'body', 'heavy', 'whoosh', 'slam', 'tap', 'bell', 'bell2', 'ooh', 'roar', 'swell', 'lock'];
+let fightPreloaded = false;
+export function preloadFightSounds() {
+  if (fightPreloaded) return;
+  fightPreloaded = true;
+  for (const k of FIGHT_SFX) {
+    try {
+      ensure(k);
+    } catch {}
+  }
+}
+
 export function pushScene(s: Scene) {
+  if (s === 'fight') preloadFightSounds();
   scenes.push(s);
   applyLoops();
   return () => {
