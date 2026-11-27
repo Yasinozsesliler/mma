@@ -515,8 +515,8 @@ const CONF = (() => {
 })();
 // 20 sn seslendirmeli fragman (ElevenLabs, Brian): 12 yaşından kemere. Malzeme: scripts/viral-yakala.mjs + ses/ (01..06.mp3)
 // Seslendirmeli fragmanlar (ElevenLabs, Brian): her sahne bir cümle; süreler ses/ klasöründeki mp3'lerden
-const VO = { reklamko: [2.75, 2.7, 3.55, 2.65, 3.35, 4.05], oyunpov: [2.75, 2.7, 3.55, 2.65, 3.35, 4.05], oyunhd: [2.75, 2.7, 3.55, 2.65, 3.35, 4.05], pediahd: [2.45, 3.3, 2.95, 2.05, 2.75, 4.55, 2.85], viral: [3.24, 2.64, 2.69, 3.6, 3.58, 3.11], tiktok: [3.24, 2.64, 2.69, 3.6, 3.58, 3.11], efsaneyol: [2.74, 2.93, 3.24, 3.47, 3.37, 3.94] }[VIDEO] ?? [];
-const VO_DOSYA = { reklamko: 'r0', oyunpov: 'r0', oyunhd: 'r0', pediahd: 'k', viral: '0', tiktok: '0', efsaneyol: 'e0' }[VIDEO];
+const VO = { reklamko: [2.75, 2.7, 3.55, 2.65, 3.35, 4.05], oyunpov: [2.75, 2.7, 3.55, 2.65, 3.35, 4.05], oyunhd: [2.75, 2.7, 3.55, 2.65, 3.35, 4.05], pediahd: [2.45, 3.3, 2.95, 2.05, 2.75, 4.55, 2.85], bitpazari: [2.0, 2.5, 3.3, 2.95, 2.9, 2.95, 2.45], viral: [3.24, 2.64, 2.69, 3.6, 3.58, 3.11], tiktok: [3.24, 2.64, 2.69, 3.6, 3.58, 3.11], efsaneyol: [2.74, 2.93, 3.24, 3.47, 3.37, 3.94] }[VIDEO] ?? [];
+const VO_DOSYA = { reklamko: 'r0', oyunpov: 'r0', oyunhd: 'r0', pediahd: 'k', bitpazari: 'bp', viral: '0', tiktok: '0', efsaneyol: 'e0' }[VIDEO];
 // Telefon çerçevesinde ekran görüntüsü (oran: yükseklik/genişlik; varsayılan iPhone 1170×2532)
 const phone = (file, left, top, w, extra = '', oran = 2532 / 1170) => {
   const sh = Math.round((w - 24) * oran);
@@ -531,7 +531,7 @@ const shotCard = (left, top, w, h, { file, seq, start = 0, t0 = 0, rate = 1 }, e
 };
 // Seslendirmeyle eşzamanlı büyük altyazı: kelimeler sırayla patlar
 // TikTok reklamı: üstteki sekme şeridinden aşağı, ekranın alt yarısında sağdaki simge sütunundan uzak dur
-const TT = VIDEO === 'tiktok' || VIDEO === 'reklamko' || VIDEO === 'oyunpov' || VIDEO === 'oyunhd' || VIDEO === 'pediahd';
+const TT = VIDEO === 'tiktok' || VIDEO === 'reklamko' || VIDEO === 'oyunpov' || VIDEO === 'oyunhd' || VIDEO === 'pediahd' || VIDEO === 'bitpazari';
 const sub = (top, words, t0, step, size = 112) =>
   `<div style="position:absolute;left:${TT && top > 650 ? 90 : 50}px;right:${TT && top > 650 ? 150 : 50}px;top:${TT && top < 420 ? top + 70 : top}px;display:flex;flex-wrap:wrap;justify-content:center;gap:0 26px;z-index:30">${words
     .map(([w, red], i) => `<span style="font-size:${size}px;line-height:1.08;transform:skewX(-7deg);color:${red ? RED : INK};animation:wpop .28s ${(t0 + i * step).toFixed(2)}s cubic-bezier(.2,.9,.3,1.4) both">${w}</span>`)
@@ -970,12 +970,109 @@ if (VIDEO === 'efsaneyol') {
   });
 }
 
+// Bit Pazarı reklamı (OZS Studio'nun antika al-sat oyunu): HD oyun çekimleri (bit-pazari/tools/reklam/hd-yakala.mjs,
+// 432×768 @4x), oyunun kendi yazı tipleri ve renkleri; metin kullanıcının, ses Brian. Kapanış kendi (YOL kapanışı yok).
+if (VIDEO === 'bitpazari') {
+  const BF = '/home/claude/bit-pazari/www/fonts';
+  const FONT = `@font-face{font-family:BPC;font-weight:900;src:url(file://${BF}/cinzel-latin-ext-900-normal.woff2) format('woff2');unicode-range:U+0100-024F}
+    @font-face{font-family:BPC;font-weight:900;src:url(file://${BF}/cinzel-latin-900-normal.woff2) format('woff2')}
+    @font-face{font-family:BPF;font-weight:800;src:url(file://${BF}/fraunces-800.woff) format('woff')}
+    @font-face{font-family:BPN;font-weight:900;src:url(file://${BF}/nunito-latin-ext-900-normal.woff2) format('woff2');unicode-range:U+0100-024F}
+    @font-face{font-family:BPN;font-weight:900;src:url(file://${BF}/nunito-latin-900-normal.woff2) format('woff2')}`;
+  const ekran = ({ seq, file, start = 0, t0 = 0, rate = 1, fx = 540, fy = 960, s0 = 1, s1 = 1.06, d = 4, ease = 'linear' }) => {
+    const id = `e${Math.random().toString(36).slice(2, 8)}`;
+    const img = seq
+      ? `<img data-seq="${src}/${seq}" data-start="${start}" data-t0="${t0}" data-rate="${rate}" data-max="${readdirSync(`${src}/${seq}`).length}" style="width:1080px;height:1920px;display:block"/>`
+      : `<img src="file://${src}/${file}" style="width:1080px;height:1920px;display:block"/>`;
+    return `<style>@keyframes ${id}{from{transform:scale(${s0})}to{transform:scale(${s1})}}</style><div style="position:absolute;left:0;top:0;width:1080px;height:1920px;transform-origin:${fx}px ${fy}px;animation:${id} ${d}s ${ease} ${t0}s both">${img}</div>`;
+  };
+  // Oyunun pirinç-altın başlık stili (Fraunces), koyu kontur
+  const yaz = (top, words, t0, step, size = 100, renk = '#f3c969') =>
+    `<div style="position:absolute;left:70px;right:${top > 650 ? 150 : 70}px;top:${top}px;display:flex;flex-wrap:wrap;justify-content:center;gap:0 22px;z-index:30">${words
+      .map(([w, vurgu], i) => `<span style="font-family:BPF;font-weight:800;font-size:${size}px;line-height:1.1;color:${vurgu ? '#ffffff' : renk};-webkit-text-stroke:${Math.round(size / 8)}px #0b1714;paint-order:stroke;text-shadow:0 10px 28px rgba(0,0,0,.7);animation:wpop .28s ${(t0 + i * step).toFixed(2)}s cubic-bezier(.2,.9,.3,1.4) both">${w}</span>`)
+      .join('')}</div>`;
+  const PCSS = `${FONT}${VCSS}.paper{background:#08120f!important}.grain,.logo{display:none}
+    @keyframes gir{from{opacity:0}to{opacity:1}}
+    @keyframes damga{0%{opacity:0;transform:scale(2.6) rotate(-18deg)}70%{opacity:1;transform:scale(.94) rotate(-12deg)}100%{opacity:1;transform:scale(1) rotate(-12deg)}}`;
+  const golge = (h = 660) => `<div style="position:absolute;left:0;right:0;top:0;height:${h}px;background:linear-gradient(#08120fee 0%,#08120fbb 55%,#08120f00);z-index:20"></div>`;
+  // 1) KANCA: döner 3B gramofon — "Her eşyanın bir hikâyesi var..."
+  SCENES.push({
+    name: 'b1', d: 2.6,
+    html: page0(ekran({ seq: 'menu', start: 0.3, fx: 540, fy: 980, s0: 1.35, s1: 1.5, d: 2.6 }) + golge(560) + yaz(150, [['HER'], ['EŞYANIN'], ['BİR'], ['HİKÂYESİ', 1], ['VAR...']], 0.15, 0.3, 104), PCSS, { logo: false }),
+  });
+  // 2) Dükkânını aç
+  SCENES.push({
+    name: 'b2', d: d(1),
+    html: page0(ekran({ seq: 'acilis', start: 0.25, rate: 1.1, fx: 540, fy: 900, s0: 1.08, s1: 1.14, d: 3 }) + golge() + yaz(150, [["ÇUKURCUMA'DA"], ['KENDİ'], ['ANTİKA', 1], ['DÜKKÂNINI', 1], ['AÇ.']], 0.1, 0.24, 96), PCSS, { logo: false }),
+  });
+  // 3) Pazarlık: kurnaz satıcı
+  SCENES.push({
+    name: 'b3', d: d(2),
+    html: page0(
+      ekran({ seq: 'pazarlik', start: 0.9, rate: 1.15, fx: 540, fy: 1100, s0: 1.08, s1: 1.15, d: 3.9 }) + golge() +
+        yaz(150, [['PAZARLIK', 1], ['ET...']], 0.05, 0.3, 112) +
+        yaz(300, [['AMA'], ['KURNAZLARA', 1], ['KANMA!']], 2.05, 0.28, 100),
+      PCSS, { logo: false },
+    ),
+  });
+  // 4) İnceleme: UV lamba sahteyi yakalar
+  SCENES.push({
+    name: 'b4', d: d(3),
+    html: page0(
+      ekran({ seq: 'inceleme', start: 1.0, rate: 1.25, fx: 540, fy: 900, s0: 1.05, s1: 1.12, d: 3.6 }) + golge(700) +
+        yaz(140, [['HER'], ['AÇIDAN'], ['İNCELE...', 1]], 0.05, 0.28, 108) +
+        `<div style="position:absolute;left:0;right:0;top:1150px;text-align:center;z-index:35;animation:damga .38s 2.05s cubic-bezier(.2,.9,.3,1.3) both"><span style="display:inline-block;font-family:BPC;font-weight:900;font-size:150px;letter-spacing:12px;color:#e0483a;border:14px solid #e0483a;border-radius:28px;padding:0 44px 10px;background:#0b1714cc;box-shadow:0 20px 50px rgba(0,0,0,.6)">SAHTE!</span></div>` +
+        yaz(390, [['SAHTESİNİ'], ['GERÇEĞİNDEN'], ['AYIR.', 1]], 1.55, 0.26, 92),
+      PCSS, { logo: false },
+    ),
+  });
+  // 5) Anadolu Kazısı
+  SCENES.push({
+    name: 'b5', d: d(4),
+    html: page0(
+      ekran({ seq: 'kazi', start: 0.3, rate: 1.45, fx: 540, fy: 1000, s0: 1.12, s1: 1.18, d: 3.5 }) + golge(560) +
+        yaz(140, [['KAZIYA'], ['ÇIK,'], ['TOPRAĞIN'], ['ALTINDAKİ'], ['HAZİNELERİ', 1], ['BUL!', 1]], 0.05, 0.27, 92),
+      PCSS, { logo: false },
+    ),
+  });
+  // 6) Kepenk indi: günün kârı
+  SCENES.push({
+    name: 'b6', d: d(5),
+    html: page0(
+      ekran({ seq: 'aksam', start: 0.3, rate: 1.0, fx: 540, fy: 420, s0: 1.25, s1: 1.32, d: 3.5 }) +
+        `<div style="position:absolute;left:0;right:0;bottom:0;height:980px;background:linear-gradient(#08120f00,#08120fee 30%,#08120f);z-index:20"></div>` +
+        yaz(1000, [['UCUZA'], ['AL,'], ['PAHALIYA', 1], ['SAT...', 1]], 0.05, 0.27, 92) +
+        yaz(1360, [['USTALIĞINI'], ['KONUŞTUR.']], 1.9, 0.3, 92),
+      PCSS, { logo: false },
+    ),
+  });
+  // 7) Kapanış: Bit Pazarı, App Store'da ücretsiz
+  SCENES.push({
+    name: 'end', d: d(6) + 0.6,
+    html: page0(
+      `<div style="position:absolute;inset:0;background:radial-gradient(120% 60% at 50% 30%,#1f4a40 0%,#0d1f1c 55%,#08120f 100%)"></div>
+       <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;transform:translate(-20px,-170px);z-index:10">
+        <img src="file://${src}/ikon.png" style="width:330px;border-radius:72px;box-shadow:0 30px 70px rgba(0,0,0,.55),0 0 0 8px #c9a24a;animation:pop .55s .05s both"/>
+        <div style="font-family:BPF;font-weight:800;font-size:120px;color:#f3c969;margin-top:46px;line-height:1;text-shadow:0 10px 30px #000a;animation:pop .5s .2s both">Bit Pazarı</div>
+        <div style="font-family:BPN;font-weight:900;font-size:46px;letter-spacing:6px;color:#e9dcc0;margin-top:20px;animation:pop .5s .35s both">İSTANBUL ANTİKACISI</div>
+        <div style="margin-top:56px;display:flex;align-items:center;gap:22px;background:#000;color:#fff;border:4px solid #c9a24a;border-radius:30px;padding:20px 44px;animation:pop .5s .9s both">
+          <svg width="66" height="80" viewBox="0 0 384 512" fill="#fff"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>
+          <div style="text-align:left;font-family:BPN;font-weight:900"><div style="font-size:30px;opacity:.85">ŞİMDİ</div><div style="font-size:60px;line-height:1">App Store'da</div></div>
+        </div>
+        <div style="font-family:BPF;font-weight:800;font-size:84px;color:#78d1a2;margin-top:40px;animation:pop .5s 1.1s both">Ücretsiz!</div>
+        <div style="font-family:BPN;font-weight:900;font-size:30px;letter-spacing:5px;color:#9fb3ab;margin-top:34px;animation:pop .5s 1.3s both">BİR OZS STUDIO OYUNU</div>
+       </div>`,
+      PCSS, { logo: false },
+    ),
+  });
+}
+
 // oyunpov: kapanış da karanlık (krem yok)
 const KARANLIK = `.paper{background:radial-gradient(ellipse at 50% 42%,#3a0f14 0%,#0b0a0c 62%)!important}.grain{display:none}body{color:#fff}`;
 
 // Kapanış: krem zemin, logo, mağazalar, düşen konfeti
 const END_D = VIDEO === 'efsaneyol' ? 4.5 : VIDEO === 'reklamko' || VIDEO === 'oyunpov' || VIDEO === 'oyunhd' ? 4.6 : VIDEO === 'pediahd' ? 3.6 : 3.8;
-SCENES.push({
+if (VIDEO !== 'bitpazari') SCENES.push({
   name: 'end', d: END_D,
   html: page0(
     `<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10;${TT ? 'transform:translate(-30px,-190px) scale(.86)' : ''}">
@@ -1011,7 +1108,7 @@ const seqFrame = (pg, t) =>
 const browser = await puppeteer.launch({ executablePath: process.env.CHROME, headless: true, args: ['--no-sandbox', '--allow-file-access-from-files'] });
 const page = await browser.newPage();
 await page.setViewport({ width: 1080, height: 1920, deviceScaleFactor: 1 });
-const HD = VIDEO === 'oyunhd' || VIDEO === 'pediahd';
+const HD = VIDEO === 'oyunhd' || VIDEO === 'pediahd' || VIDEO === 'bitpazari';
 const enc = ['-c:v', 'libx264', '-preset', HD ? 'medium' : 'veryfast', '-crf', HD ? '13' : '17', '-pix_fmt', 'yuv420p', '-r', String(FPS)];
 for (const sc of process.env.SADECE_KURGU ? [] : SCENES) {
   const file = `${tmp}/${sc.name}.html`;
@@ -1124,6 +1221,24 @@ if (VIDEO === 'antrenor') {
   cue('duvar', 0.05, 'whoosh', 0.5);
   cue('kaydir', 0.2, 'whoosh', 0.5);
   cue('kaydir', 1.6, 'whoosh', 0.4);
+} else if (VIDEO === 'bitpazari') {
+  add(snd('music_menu'), 0, 0.26, true);
+  ['b1', 'b2', 'b3', 'b4', 'b5', 'b6', 'end'].forEach((n, i) => cue(n, i === 0 ? 0.05 : 0.12, `${VO_DOSYA}${i + 1}.mp3`, 1.55));
+  cue('b1', 0.0, 'chime', 0.35);
+  cue('b2', 0.0, 'whoosh', 0.4);
+  cue('b2', 1.15, 'tap', 0.5);
+  cue('b3', 0.0, 'whoosh', 0.4);
+  cue('b3', 0.35, 'tap', 0.5);
+  cue('b3', 1.5, 'tap', 0.5);
+  cue('b4', 0.0, 'whoosh', 0.4);
+  cue('b4', 0.5, 'tap', 0.45);
+  cue('b4', 2.05, 'slam', 0.55);
+  cue('b5', 0.0, 'whoosh', 0.4);
+  [0.15, 0.65, 1.2, 1.7, 2.25, 2.75].forEach((t) => cue('b5', t, 'tap', 0.45));
+  cue('b5', 1.25, 'chime', 0.35);
+  cue('b6', 0.1, 'cash', 0.6);
+  cue('b6', 1.9, 'fanfare', 0.35);
+  cue('end', 0.1, 'chime', 0.4);
 } else if (VIDEO === 'pediahd') {
   add(snd('music_hub'), 0, 0.2, true);
   add(snd('giris_epik'), 0, 0.0);
@@ -1206,8 +1321,10 @@ cue('sehir', 1.3, 'slam', 0.7);
 cue('mem0', 0.1, 'swell', 0.5);
 if (VIDEO === 'dunya') for (let k = 0; k < 5; k++) { cue('evr', k * 1.05 + 0.05, 'tap', 0.7); cue('evr', k * 1.05 + 0.25, 'chime', 0.35); }
 cue('heykel', 0.2, 'roar', 0.45);
-cue('end', 0.15, 'bell', VO.length ? 0.4 : 0.85);
-cue('end', 0.35, 'applause', VO.length ? 0.3 : 0.55);
+if (VIDEO !== 'bitpazari') {
+  cue('end', 0.15, 'bell', VO.length ? 0.4 : 0.85);
+  cue('end', 0.35, 'applause', VO.length ? 0.3 : 0.55);
+}
 const args = ['-y'];
 SCENES.forEach((s) => args.push('-i', `${tmp}/${s.name}.mp4`));
 audio.forEach((a) => args.push(...(a.loop ? ['-stream_loop', '-1'] : []), '-i', a.file));
