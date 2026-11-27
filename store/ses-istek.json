@@ -1,10 +1,8 @@
-{"islem":"karakter","roller":[
- {"rol":"anlatici","ses":"nPczCjzI2devNBz1zQrb","ayar":{"stability":0.6,"similarity_boost":0.85,"style":0.25},"replikler":[
-  {"ad":"f1","metin":"Her efsane... bir yerden başlar."},
-  {"ad":"f2","metin":"Yere düşersin."},
-  {"ad":"f3","metin":"Kalkarsın. Çalışırsın. Bir daha... bir daha."},
-  {"ad":"f4","metin":"Ve bir gün... kafesin ortasındasın."},
-  {"ad":"f5","metin":"Bütün dünya senin adını haykırıyor."},
-  {"ad":"f6","metin":"Bu hikâyeyi... sen yazıyorsun."},
-  {"ad":"f7","metin":"YOL: Kafesten Kemere. Şimdi ücretsiz."}]}
-]}
+{"islem":"uret","ses":"nPczCjzI2devNBz1zQrb","parcalar":[
+ {"ad":"k1","metin":"Bu sayfadaki dövüşçü... gerçek değil."},
+ {"ad":"k2","metin":"Onu sen yarattın. Sayfasındaki her satırı da sen yazdın."},
+ {"ad":"k3","metin":"Yirmi iki yaşında, iki galibiyetlik bir çaylak."},
+ {"ad":"k4","metin":"Yirmi dokuzunda, UCC şampiyonu."},
+ {"ad":"k5","metin":"Otuz sekizinde, Onur Listesi'nde bir efsane."},
+ {"ad":"k6","metin":"Rakipler, kemerler, dergi kapakları... hepsi kendiliğinden yazılıyor."},
+ {"ad":"k7","metin":"YOL: Kafesten Kemere. Senin sayfan ne yazacak?"}]}
