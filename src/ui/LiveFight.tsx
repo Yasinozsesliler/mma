@@ -176,6 +176,71 @@ function Letterbox() {
   );
 }
 
+/** Pozlar neredeyse aynıysa (bekleme duruşu) figür yeniden çizilmez. */
+function poseEq(a: Pose, b: Pose) {
+  if (a === b) return true;
+  for (const k in a) if (Math.abs(a[k as keyof Pose] - b[k as keyof Pose]) > 0.05) return false;
+  return true;
+}
+type FigProps = Parameters<typeof Figure>[0];
+const FigureM = memo(Figure, (a: FigProps, b: FigProps) => a.look === b.look && a.kit === b.kit && a.build === b.build && Math.round(a.hasar ?? 0) === Math.round(b.hasar ?? 0) && poseEq(a.p, b.p));
+
+/** Skor tablosu: değerler tam sayıya yuvarlanarak verilir, yalnızca görünen bir şey değişince yeniden çizilir. */
+const Hud = memo(function Hud({ pAd, oAd, raunt, pHp, pSta, oHp, oSta, sec }: { pAd: string; oAd: string; raunt: number; pHp: number; pSta: number; oHp: number; oSta: number; sec: number }) {
+  return (
+    <View style={lf.hud}>
+      <View style={{ flex: 1 }}>
+        <Text style={[lf.name, { color: C.red }]} numberOfLines={1}>
+          {pAd.toLocaleUpperCase(LOC)}
+        </Text>
+        <Bar v={pHp} color={pHp < 35 ? C.orange : C.red} />
+        <View style={{ height: 3 }} />
+        <Bar v={pSta} color={C.gold} />
+      </View>
+      <View style={lf.clock}>
+        <Text style={lf.round}>R{raunt}</Text>
+        <Text style={lf.time}>
+          {Math.floor(sec / 60)}:{String(sec % 60).padStart(2, '0')}
+        </Text>
+      </View>
+      <View style={{ flex: 1, alignItems: 'flex-end' }}>
+        <Text style={[lf.name, { color: C.blue }]} numberOfLines={1}>
+          {oAd.toLocaleUpperCase(LOC)}
+        </Text>
+        <Bar v={oHp} color={oHp < 35 ? C.orange : C.blue} right />
+        <View style={{ height: 3 }} />
+        <Bar v={oSta} color={C.gold} right />
+      </View>
+    </View>
+  );
+});
+
+/** Ana düğmeler ve ipucu: konum ya da rehber değişmedikçe her karede yeniden çizilmez (dokunuşlar daha çabuk yanıt verir). */
+const MainControls = memo(function MainControls({ pos, subDim, hasGuide, guideTarget, onPress }: { pos: 'ayakta' | 'ustte' | 'altta'; subDim: boolean; hasGuide: boolean; guideTarget?: LiveInput; onPress: (k: LiveInput) => void }) {
+  return (
+    <>
+      {BUTTONS[pos].map((row, ri) => (
+        <View key={`${pos}${ri}`} style={lf.row}>
+          {row.map(([k, label, col]) => (
+            <Pressable key={k} {...INSTANT} onPressIn={() => onPress(k)} style={({ pressed }) => [lf.btn, ri === 1 && lf.btnBig, { borderColor: col }, pressed && { backgroundColor: col + '40' }, k === 'sub' && subDim && { opacity: 0.4 }, hasGuide && (guideTarget === k ? lf.btnGuide : lf.btnDim)]}>
+              <Text style={[lf.btnText, { color: col }, label().length > 8 && { fontSize: 13 }, label().length > 11 && { fontSize: 11 }]} numberOfLines={1}>
+                {label()}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+      ))}
+      <Text style={lf.hint}>
+        {pos === 'ustte'
+          ? L("🔒 ya da ⤴️ görünce KONTROL. Rakip yorulunca SUB dene.")
+          : pos === 'altta'
+            ? L("🔒 görünce hemen KURTUL. 👊 gelirken GARD al.")
+            : L("Halka altın olunca KAÇ (⬇️ takedown'a karşı da). DİREKT ve TEKME hazırlığı keser.")}
+      </Text>
+    </>
+  );
+});
+
 function Bar({ v, color, right }: { v: number; color: string; right?: boolean }) {
   return (
     <View style={[lf.bar, right && { transform: [{ scaleX: -1 }] }]}>
@@ -579,6 +644,8 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel }: { fs: FightState; p
     }
   };
 
+  const pressRef = useRef<(k: LiveInput) => void>(() => undefined);
+  const [onPress] = useState(() => (k: LiveInput) => pressRef.current(k));
   const press = (k: LiveInput) => {
     const sm = sim.current;
     if (!sm) return;
@@ -593,6 +660,9 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel }: { fs: FightState; p
     liveStep(sm, now());
     liveInput(sm, k);
   };
+  useEffect(() => {
+    pressRef.current = press;
+  });
   const { t, ring, counter, sx } = frame;
   const left = frame.left;
   const actor = (a: Actor) => {
@@ -604,7 +674,7 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel }: { fs: FightState; p
       <G key={a}>
         <Ellipse cx={X} cy={FLOOR + 3} rx={18} ry={3.5} fill="#000" opacity={0.3} />
         <G transform={`translate(${X} ${Y}) scale(${face} 1) rotate(${ps.rot})`}>
-          <Figure p={{ ...ps, rot: 0 }} look={(a === 'p' ? pLook : oLook) ?? DEFAULT_LOOK} kit={a === 'p' ? kit : BLUE} hasar={100 - (a === 'p' ? frame.pHp : frame.oHp)} />
+          <FigureM p={{ ...ps, rot: 0 }} look={(a === 'p' ? pLook : oLook) ?? DEFAULT_LOOK} kit={a === 'p' ? kit : BLUE} hasar={100 - (a === 'p' ? frame.pHp : frame.oHp)} />
         </G>
       </G>
     );
@@ -622,30 +692,7 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel }: { fs: FightState; p
           <Text style={lf.pauseText}>{paused ? '▶' : 'II'}</Text>
         </Pressable>
         {/* Skor tablosu */}
-        <View style={lf.hud}>
-          <View style={{ flex: 1 }}>
-            <Text style={[lf.name, { color: C.red }]} numberOfLines={1}>
-              {fs.pAd.toLocaleUpperCase(LOC)}
-            </Text>
-            <Bar v={frame.pHp} color={frame.pHp < 35 ? C.orange : C.red} />
-            <View style={{ height: 3 }} />
-            <Bar v={frame.pSta} color={C.gold} />
-          </View>
-          <View style={lf.clock}>
-            <Text style={lf.round}>R{fs.raunt}</Text>
-            <Text style={lf.time}>
-              {Math.floor(left / 60000)}:{String(Math.ceil((left % 60000) / 1000) % 60).padStart(2, '0')}
-            </Text>
-          </View>
-          <View style={{ flex: 1, alignItems: 'flex-end' }}>
-            <Text style={[lf.name, { color: C.blue }]} numberOfLines={1}>
-              {fs.oAd.toLocaleUpperCase(LOC)}
-            </Text>
-            <Bar v={frame.oHp} color={frame.oHp < 35 ? C.orange : C.blue} right />
-            <View style={{ height: 3 }} />
-            <Bar v={frame.oSta} color={C.gold} right />
-          </View>
-        </View>
+        <Hud pAd={fs.pAd} oAd={fs.oAd} raunt={fs.raunt} pHp={Math.round(frame.pHp)} pSta={Math.round(frame.pSta)} oHp={Math.round(frame.oHp)} oSta={Math.round(frame.oSta)} sec={Math.ceil(left / 1000)} />
 
         {/* Sahne */}
         <View style={lf.middle} onLayout={(e) => setMid({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height - 8 })}>
@@ -756,26 +803,11 @@ export function LiveFight({ fs, pLook, oLook, onEnd, ozel }: { fs: FightState; p
               </Text>
             </Pressable>
           ) : null}
-          {frame.kilit ? null : BUTTONS[frame.pos].map((row, ri) => (
-            <View key={`${frame.pos}${ri}`} style={lf.row}>
-              {row.map(([k, label, col]) => (
-                <Pressable key={k} {...INSTANT} onPressIn={() => press(k)} style={({ pressed }) => [lf.btn, ri === 1 && lf.btnBig, { borderColor: col }, pressed && { backgroundColor: col + '40' }, k === 'sub' && frame.pos === 'ustte' && frame.gpos < 0.45 && { opacity: 0.4 }, guide && (guide.target === k ? lf.btnGuide : lf.btnDim)]}>
-                  <Text style={[lf.btnText, { color: col }, label().length > 8 && { fontSize: 13 }, label().length > 11 && { fontSize: 11 }]} numberOfLines={1}>
-                    {label()}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
-          ))}
-          <Text style={lf.hint}>
-            {frame.kilit
-              ? ''
-              : frame.pos === 'ustte'
-              ? L("🔒 ya da ⤴️ görünce KONTROL. Rakip yorulunca SUB dene.")
-              : frame.pos === 'altta'
-                ? L("🔒 görünce hemen KURTUL. 👊 gelirken GARD al.")
-                : L("Halka altın olunca KAÇ (⬇️ takedown'a karşı da). DİREKT ve TEKME hazırlığı keser.")}
-          </Text>
+          {frame.kilit ? (
+            <Text style={lf.hint}>{''}</Text>
+          ) : (
+            <MainControls pos={frame.pos} subDim={frame.pos === 'ustte' && frame.gpos < 0.45} hasGuide={!!guide} guideTarget={guide?.target} onPress={onPress} />
+          )}
         </View>
         {paused ? (
           <View style={lf.overlay}>

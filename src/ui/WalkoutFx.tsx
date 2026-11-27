@@ -2,6 +2,7 @@
 // aynı bileşen kullanılır. Parçacıklar zamana bağlı saf fonksiyonla çizilir (rastgelelik sabit tohumdan).
 import { useEffect, useState, type ReactNode } from 'react';
 import { StyleSheet } from 'react-native';
+import { lowPerf } from '../perfPref';
 import Svg, { Circle, Defs, Ellipse, G, Path, RadialGradient, Rect, Stop } from 'react-native-svg';
 
 import type { FxKind } from '../engine/cosmetics';
@@ -17,14 +18,15 @@ const CONFETTI = ['#f2c14e', '#e63946', '#3aa8ff', '#39ff14', '#ffffff', '#b388f
 
 export function WalkoutFx({ kind, w, h, dense = 1 }: { kind: FxKind; w: number; h: number; dense?: number }) {
   const [t, setT] = useState(0);
+  const [low] = useState(lowPerf);
   useEffect(() => {
     let raf = 0;
     const t0 = Date.now();
     let last = 0;
     const loop = () => {
       const now = Date.now();
-      // ~30 fps yeterli; pil dostu
-      if (now - last > 33) {
+      // ~30 fps yeterli; pil dostu. Hafif modda ~20 fps.
+      if (now - last > (low ? 50 : 33)) {
         last = now;
         setT((now - t0) / 1000);
       }
@@ -32,9 +34,10 @@ export function WalkoutFx({ kind, w, h, dense = 1 }: { kind: FxKind; w: number; 
     };
     raf = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(raf);
-  }, []);
+  }, [low]);
 
-  const n = (k: number) => Math.round(k * dense);
+  // Hafif modda parçacık sayısı yarıya iner
+  const n = (k: number) => Math.round(k * dense * (low ? 0.5 : 1));
   let body: ReactNode = null;
 
   if (kind === 'ates') {

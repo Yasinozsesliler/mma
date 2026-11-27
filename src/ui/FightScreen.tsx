@@ -153,15 +153,21 @@ function Pulse({ children }: { children: ReactNode }) {
   useEffect(() => {
     const loop = Animated.loop(
       Animated.sequence([
-        Animated.timing(a, { toValue: 1, duration: 700, useNativeDriver: false }),
-        Animated.timing(a, { toValue: 0, duration: 700, useNativeDriver: false }),
+        Animated.timing(a, { toValue: 1, duration: 700, useNativeDriver: true }),
+        Animated.timing(a, { toValue: 0, duration: 700, useNativeDriver: true }),
       ]),
     );
     loop.start();
     return () => loop.stop();
   }, [a]);
-  const borderColor = a.interpolate({ inputRange: [0, 1], outputRange: [C.goldDeep, C.gold] });
-  return <Animated.View style={[sb.crit, { borderColor }]}>{children}</Animated.View>;
+  // Kenar rengi JS'te canlandırılamaz (native sürücü renk desteklemez); koyu kenarın üstüne altın kenar
+  // bindirilip yalnızca saydamlığı native olarak oynatılır. Dövüş boyunca JS thread'i meşgul edilmez.
+  return (
+    <View style={[sb.crit, { borderColor: C.goldDeep }]}>
+      <Animated.View pointerEvents="none" style={{ position: 'absolute', top: -2, left: -2, right: -2, bottom: -2, borderWidth: 2, borderRadius: R, borderColor: C.gold, opacity: a }} />
+      {children}
+    </View>
+  );
 }
 
 /** Raundun kimde olduğunu gösteren kontrol çubuğu. */
